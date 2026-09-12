@@ -5,7 +5,7 @@
 //! committed example document, rather than joining either mutation subset.
 //!
 //! Recorded no-oracle decision `sequence-step-graph-mutation-semantics`
-//! (`../../🔮️oracle/🔣️.json`) covers this scenario too: the committed grammar and the committed
+//! (`../../🔮️oracles/🔣️.json`) covers this scenario too: the committed grammar and the committed
 //! artifact disagree, so a second implementation would be refused by clause.
 
 use semio_repo_test_host::Adapter;

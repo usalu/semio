@@ -189,20 +189,9 @@ pub struct Generation3dPlayApp;
 
 /// 🎥️ Parses the flow-graph camera out of `command_from_action`'s JSON args — either a nested
 /// `{camera: {...}}` object or flat `x`/`y`/`zoom` keys.
-fn parse_flow_camera_json(args: &dsl::DslValue) -> semio_framework_artifact_flow_flow::CameraJson {
-    if let Some(camera) = args.get("camera") {
-        // 🌉️ `semio_framework_artifact_flow_flow::CameraJson` derives `ToValue`/`FromValue` alongside its `Serialize`/
-        // `Deserialize` (see `🌊️flow/🗿️artifact/🦀️.rs`), so this decodes straight off the
-        // first-party bridge — no `serde_json` involved.
-        if let Ok(parsed) = dsl::from_dsl_value::<semio_framework_artifact_flow_flow::CameraJson>(camera.clone()) {
-            return parsed;
-        }
-    }
-    semio_framework_artifact_flow_flow::CameraJson {
-        x: args.get("x").and_then(dsl::DslValue::as_f64).unwrap_or(0.0),
-        y: args.get("y").and_then(dsl::DslValue::as_f64).unwrap_or(0.0),
-        zoom: args.get("zoom").and_then(dsl::DslValue::as_f64).unwrap_or(1.0),
-    }
+fn parse_flow_viewport(args: &dsl::DslValue) -> Result<semio_framework::Viewport2d, Fault> {
+    let value = args.get("viewport").cloned().ok_or_else(|| Fault::from("nodeGraphViewport requires viewport"))?;
+    dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
 }
 
 /// 🎥️ Parses the 3D preview camera out of `command_from_action`'s JSON args; falls back to the default
@@ -1388,15 +1377,15 @@ impl ArtifactEditor for Generation3dPlayApp {
         Box::new(Generation3dInstanceOperationOwner::new())
     }
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_document_store_owners())
     }
 
-    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
         Some(semio_framework_plugin::no_draft_store_owners())
     }
 
@@ -1687,7 +1676,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                     value,
                 }))
             }
-            "nodeGraphViewport" => Ok(Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: parse_flow_camera_json(&args) })),
+            "nodeGraphViewport" => Ok(Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: parse_flow_viewport(&args)? })),
             "setLodMode" => Ok(Generation3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: str_arg(&["value", "lodMode", "lod_mode"]).unwrap_or_default() })),
             "setShowMode" => Ok(Generation3dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode", "show_mode"]).unwrap_or_default() })),
             "toggleSun" => Ok(Generation3dCommand::ToggleSun(toggle_sun::ToggleSun {})),
@@ -2523,32 +2512,12 @@ pub fn generation3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData)
 
 //#endregion 🔖️MeshBridge
 
-//#region 🧪️TestSupport
-/// 🧵️ `tessellate_geometry` (flow core brep geometry session) (and the flow-eval neuron kernel cache it sits behind)
-/// is a process-wide cache shared by every test in this ONE merged crate — before the crate
-/// consolidation, the artifact/app constitutional crates each ran in their own `cargo test` process, so
-/// a `TEST_SERIAL` local to one of them never had to coordinate with the other's. Now that every
-/// taxonomy node's tests share one test binary, ANY test that evaluates a flow fixture and/or tessellates
-/// BRep geometry (directly here, or indirectly via the app's preview-window `render()`) must acquire
-/// THIS single crate-wide lock — see `crate::editor::generation3d::modes::edit::windows::preview`'s test
-/// for the app-side half of this. Rehomed from the deleted `⚙️engine`
-/// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-#[cfg(test)]
-#[path = "🧪️tests/🔬️test-support/🦀️.rs"]
-pub(crate) mod test_support;
-//#endregion 🧪️TestSupport
-
-//#region 🧪️Testkit
-#[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
+//#region 🧪️UnitTests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests
+
 
 //#region 🧪️FoldContract
 /// 🧺️ The store's batched fold envelope, as this app's two durable lanes declare it — its own module

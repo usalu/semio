@@ -2,8 +2,8 @@
  * boundary. Mirrors the Rust `TiledMapScene` payload the render function builds, plus the window
  * kind/body/surface ids the manifest and host both address this window by. */
 
-/** 🧮️ Mirror of `Gis2dConfig`'s per-window-relevant fields — the editor's own session view state
- * (`✏️editor/🎚️config/🦀️.rs`), reused here rather than redeclared per window. */
+/** 🧮️ Mirror of `MapWindowConfig`'s per-window-relevant fields — the editor's own session view state
+ * (`⚙️config/🦀️.rs`), owned by each concrete Map window instance. */
 export interface Gis2dMapWindowViewModel {
   windowKindId: "gis2d-main";
   bodyKey: "gis2d.play.composite";

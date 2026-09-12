@@ -34,5 +34,11 @@
         "forwardAllArgs": true
       }
     }
+  },
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/✨️derive/**/*",
+      "sharedGlobals"
+    ]
   }
 }

@@ -345,8 +345,8 @@
     "launchOrder": 410.08
   },
   "oracle": {
-    "manifestInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧲️rust-physical-reference-context/🔮️oracle/⚙️.toml",
-    "sourceInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧲️rust-physical-reference-context/🦀️.rs"
+    "manifestInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔮️oracles/🧲️rust-physical-reference-context/⚙️.toml",
+    "sourceInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔮️oracles/🧲️rust-physical-reference-context/🦀️.rs"
   },
   "transaction": {
     "scope": "🧪️tests/🧪️target",

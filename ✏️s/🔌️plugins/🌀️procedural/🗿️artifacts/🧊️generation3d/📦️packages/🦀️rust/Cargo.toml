@@ -51,6 +51,8 @@ semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-styling = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
 semio-framework-async-macros = { workspace = true }
 # 🧮️ The heap witness the guest-memory laws weigh the contributions install path with — test-only,
 # never a `[dependencies]` entry: a production guest reads its own footprint with `memory.size`.

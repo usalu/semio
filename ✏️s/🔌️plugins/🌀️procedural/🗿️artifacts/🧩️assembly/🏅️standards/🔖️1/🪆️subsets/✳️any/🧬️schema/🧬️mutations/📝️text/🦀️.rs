@@ -1,7 +1,7 @@
 //! ⚡️ Assembly artifact — the mutation vocabulary's single-line TEXT opcodes + grammar.
 //!
 //! One keyword per `AssemblyMutation` variant, in the `KINDS` order the catalog
-//! (`../../../🔮️oracle/🔣️.json`) declares. The operation twin exists for the same reason the
+//! (`../../../🔮️oracles/🔣️.json`) declares. The operation twin exists for the same reason the
 //! snapshot's does — `AssemblyRule::params` is a foreign `SemioValue` — and is bridged through the
 //! snapshot facet's own `slot_to_dsl`/`rule_to_dsl`/`edge_to_dsl` pairs, never a second conversion.
 

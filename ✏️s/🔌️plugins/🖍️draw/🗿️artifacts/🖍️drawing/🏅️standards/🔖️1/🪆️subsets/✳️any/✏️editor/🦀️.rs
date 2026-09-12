@@ -12,9 +12,10 @@ use crate::editor::drawing::commands::{
     add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input,
     engagement_submit, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_fixture_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
 };
-use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use crate::editor::drawing::modes::edit;
 use crate::editor::drawing::modes::edit::windows::canvas as canvas_window;
+use crate::editor::drawing::modes::edit::windows::canvas::config::DrawingCanvasWindowConfig;
+use crate::editor::drawing::modes::edit::windows::canvas::transient::DrawingCanvasWindowTransient;
 use crate::editor::drawing::panels::{catalogue as catalogue_panel, layers as layers_panel, properties as properties_panel};
 use crate::editor::drawing::presence::{DrawingPresence, DrawingPresenceMutation};
 use crate::editor::drawing::terminology::DrawingPlayLabels;
@@ -24,11 +25,12 @@ use semio_framework_job::FixedOperationOwner;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel,
-    Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput,
+    Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput,
     WindowEngagementStatus,
 };
 use store::ArtifactPack;
 use store::EngineHandles;
+use std::collections::HashMap;
 
 pub use canvas_window::{DRAWING_PLAY_BODY_COMPOSITE, DRAWING_PLAY_WINDOW_CANVAS};
 pub use catalogue_panel::DRAWING_PLAY_BODY_CATALOGUE;
@@ -115,7 +117,7 @@ semio_framework_plugin::app_commands! {
     /// 🎯️ `DrawingPlayApp::Command` — the SOLE dispatch surface for drawing's own behavior, covering every
     /// action `create_drawing_app` declares. Field shapes mirror each action's real `args` object.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum DrawingCommand for DrawingSnapshot, DrawingMutation, DrawingConfig, DrawingConfigMutation, ctx = DrawingSession {
+    pub enum DrawingCommand for DrawingSnapshot, DrawingMutation, NoConfig, NoConfigMutation, ctx = DrawingSession {
         "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
         "commitDocument" as "commit-document" => commit_document::CommitDocument,
         "setFixtureJson" as "fixture-json" => set_fixture_json::SetFixtureJson,
@@ -156,16 +158,16 @@ const DRAWING_GESTURE_RETAINED_BYTES: usize = 32_768;
 /// 🛣️ One publication lane row per gesture route, read off each route's real `Emit` construction, not
 /// off its `ActionKind`: every gesture that reaches a commit does so through
 /// `commit_with_utility_reset`/`DrawingDraftQuery::advance` (artifact lane), and the two routes that
-/// additionally write `DrawingConfigMutation::SetTracePointerProgress` — `canvasPointerDown` through
+/// additionally write the exact Canvas `WindowTransient` snapshot — `canvasPointerDown` through
 /// `advance_trace_pointer`, `canvasEscape` through its own trace cancellation — carry the config lane
 /// as well. Under-declaring a lane that is actually emitted faults at publication time.
 const DRAWING_GESTURE_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasDoubleClick", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasCommitDraft", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasEscape", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasEscape", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
 ];
 
 struct DrawingGestureOperationOwner {
@@ -218,7 +220,7 @@ impl DrawingInstanceOperationOwner {
         Self { operations: semio_framework_job::FixedOperationRegistry::new(64 * DRAWING_GESTURE_RETAINED_BYTES), active: None, closing: false }
     }
 
-    fn dispatch(&mut self, payload: &DrawingGestureOperationPayload) -> Result<Option<Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation>>, Fault> {
+    fn dispatch(&mut self, payload: &DrawingGestureOperationPayload) -> Result<Option<(Emit<DrawingMutation, NoConfigMutation, NoDraftMutation>, DrawingCanvasWindowTransient)>, Fault> {
         let key = semio_framework_job::FixedOperationKey::new(semio_framework_job::OperationId(payload.operation_context.operation_id), semio_framework_job::Generation(payload.operation_context.generation));
         let base_revision = payload.operation_context.canonical_base_revision;
         let command = &payload.command;
@@ -249,6 +251,8 @@ impl DrawingInstanceOperationOwner {
         }
         let retained = self.operations.get_mut(live_key).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the exact Drawing gesture owner changed before its bounded reducer step"))?;
         let session = retained.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the Drawing gesture session is already closing"))?;
+        session.window_config = payload.window_config.clone();
+        session.window_transient = payload.window_transient.clone();
         if session.gesture.context.points_overflowed {
             self.operations.cancel(live_key);
             self.active = None;
@@ -260,11 +264,12 @@ impl DrawingInstanceOperationOwner {
             }
             let Some(emit) = query.advance(snapshot) else { return Ok(None) };
             session.draft_query = None;
+            let window_transient = session.window_transient.clone();
             if session.gesture.matches("idle") && session.trace_pointer.is_none() {
                 self.operations.cancel(live_key);
                 self.active = None;
             }
-            return Ok(Some(emit));
+            return Ok(Some((emit, window_transient)));
         }
         if let Some(query) = session.point_query.as_mut() {
             if query.command_id != command.command_id() {
@@ -297,16 +302,17 @@ impl DrawingInstanceOperationOwner {
             let effect = if query.hover { canvas_pointer_down::interaction_hover_effect_from_targets(targets) } else { canvas_pointer_down::interaction_select_effect_from_targets(targets, &query.merge) };
             let mut emit = Emit::default();
             emit.effects.push(effect);
+            let window_transient = session.window_transient.clone();
             if session.gesture.matches("idle") && session.trace_pointer.is_none() {
                 self.operations.cancel(live_key);
                 self.active = None;
             }
-            return Ok(Some(emit));
+            return Ok(Some((emit, window_transient)));
         }
         if let DrawingCommand::CanvasPointerMove(payload) = command {
             if session.gesture.matches("idle") {
-                let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
-                let tolerance = canvas_pointer_down::DRAWING_PICK_TOLERANCE_PX / config.camera.zoom.max(1e-6);
+                let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport, payload.x, payload.y, payload.width, payload.height);
+                let tolerance = canvas_pointer_down::DRAWING_PICK_TOLERANCE_PX / session.window_config.viewport.zoom.max(1e-6);
                 session.point_query = Some(canvas_pointer_down::DrawingPointQuery::new(
                     command.command_id(),
                     canvas_pointer_down::TracePointerJob::new_query(snapshot, [world_x, world_y], tolerance, session.active_utility_id == "selectDirect"),
@@ -319,7 +325,7 @@ impl DrawingInstanceOperationOwner {
         }
         let retained_emit = match command {
             DrawingCommand::CanvasPointerUp(payload) => {
-                let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
+                let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport, payload.x, payload.y, payload.width, payload.height);
                 Some(session.step_gesture_retained(
                     command.command_id(),
                     canvas_pointer_down::drawing_gesture::Event::PointerUp { utility: session.active_utility_id.clone(), world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta },
@@ -332,11 +338,12 @@ impl DrawingInstanceOperationOwner {
         };
         if let Some(retained_emit) = retained_emit {
             let Some(emit) = retained_emit else { return Ok(None) };
+            let window_transient = session.window_transient.clone();
             if session.gesture.matches("idle") && session.trace_pointer.is_none() {
                 self.operations.cancel(live_key);
                 self.active = None;
             }
-            return Ok(Some(emit));
+            return Ok(Some((emit, window_transient)));
         }
         let doc = ArtifactView::with_operation(snapshot, history, operation);
         let cfg = ConfigView { snapshot: config, window: None };
@@ -352,11 +359,12 @@ impl DrawingInstanceOperationOwner {
             self.active = None;
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.point-capacity"), "the fixed Drawing gesture point capacity was exceeded"));
         }
+        let window_transient = session.window_transient.clone();
         if session.gesture.matches("idle") && session.trace_pointer.is_none() {
             self.operations.cancel(live_key);
             self.active = None;
         }
-        Ok(Some(emit))
+        Ok(Some((emit, window_transient)))
     }
 
     fn preview_projection(&mut self, canonical_base_revision: [u8; 32], active_utility: &str) -> Option<DrawingGesturePreview> {
@@ -410,7 +418,10 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawingInstanceO
 struct DrawingGestureOperationPayload {
     command: DrawingCommand,
     snapshot: std::sync::Arc<DrawingSnapshot>,
-    config: std::sync::Arc<DrawingConfig>,
+    config: std::sync::Arc<NoConfig>,
+    window_config: DrawingCanvasWindowConfig,
+    window_transient: DrawingCanvasWindowTransient,
+    view_state: semio_framework_plugin::ViewModel,
     history: std::sync::Arc<semio_framework_plugin::HistoryView>,
     instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     operation_context: semio_framework_plugin::AppOperationContext,
@@ -597,15 +608,33 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
         if !self.completed {
             let Some(payload) = self.payload.as_ref() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
             let emit = payload.instance_owner.with_mut::<DrawingInstanceOperationOwner, _>(|owner| owner.dispatch(payload));
-            let emit = match emit {
-                Ok(Some(emit)) => Ok(emit),
+            let (emit, transient) = match emit {
+                Ok(Some(output)) => output,
                 Ok(None) => {
                     context.consume_fuel(1);
                     return semio_framework_job::StepOutcome::Yield;
                 }
-                Err(error) => Err(error),
+                Err(error) => {
+                    if let Err(rejected) = payload.completion.complete(Err(error), semio_framework_plugin::EphemeralEmit::default()) {
+                        self.pending_completion_rejection = Some(rejected);
+                    }
+                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+                }
             };
-            if let Err(rejected) = payload.completion.complete(emit, semio_framework_plugin::EphemeralEmit::default()) {
+            let window_transient = (transient != payload.window_transient)
+                .then(|| canvas_window::transient::addressed(&payload.view_state, transient))
+                .transpose();
+            let ephemeral = match window_transient {
+                Ok(Some(mutation)) => semio_framework_plugin::EphemeralEmit { window_transient: vec![mutation], ..Default::default() },
+                Ok(None) => semio_framework_plugin::EphemeralEmit::default(),
+                Err(error) => {
+                    if let Err(rejected) = payload.completion.complete(Err(error), semio_framework_plugin::EphemeralEmit::default()) {
+                        self.pending_completion_rejection = Some(rejected);
+                    }
+                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+                }
+            };
+            if let Err(rejected) = payload.completion.complete(Ok(emit), ephemeral) {
                 self.pending_completion_rejection = Some(rejected);
                 return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
             }
@@ -776,7 +805,7 @@ const DRAWING_BOUNDED_WORK_ITEMS: usize = 4_096;
 /// 🛣️ One publication lane row per bounded route, read off each handler's real `Emit` construction
 /// (`🎮️commands/*/🦀️.rs`). The four whole-document routes emit nothing but an `Effect::LoadDocument`
 /// — effects are not a store lane, so those are honestly `HostOnly`; the layer routes emit
-/// `DrawingMutation`s; the view routes emit `DrawingConfigMutation`s.
+/// `DrawingMutation`s; the view routes emit exact Canvas window mutations.
 const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "commitDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
@@ -793,9 +822,9 @@ const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactT
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "combineBoolean", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchLayers", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
 ];
 
 fn drawing_bounded_contract() -> semio_framework::ToolExecutionContract {
@@ -813,29 +842,78 @@ fn drawing_bounded_extent(command: &DrawingCommand, snapshot: &DrawingSnapshot, 
     (items <= DRAWING_BOUNDED_WORK_ITEMS).then_some(1)
 }
 
-/// 🔁️ The bounded reducer runs the SAME `DrawingCommand::dispatch` the ordinary `ArtifactEditor::handle`
-/// route runs, seeded with the same framework-owned selection — migration is wiring, never a rewrite
-/// of a command body.
-#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
-fn drawing_bounded_reduce(
-    command: &DrawingCommand,
-    snapshot: &DrawingSnapshot,
-    config: &DrawingConfig,
-    history: &semio_framework_plugin::HistoryView,
-    interaction: &::protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<DrawingPlayApp>>>,
-    operation: &semio_framework_plugin::AppOperationContext,
-) -> Result<Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation>, Fault> {
-    if !DRAWING_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.bounded.route"), "the bounded Drawing command owner rejects a gesture command"));
+struct DrawingWindowCommandWork {
+    tool_id: &'static str,
+    completed: bool,
+}
+
+impl DrawingWindowCommandWork {
+    fn new(tool_id: &'static str) -> Self { Self { tool_id, completed: false } }
+}
+
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<DrawingPlayApp>> for DrawingWindowCommandWork {
+    fn tool_id(&self) -> &'static str { self.tool_id }
+
+    fn extent(
+        &self,
+        command: &DrawingCommand,
+        snapshot: &DrawingSnapshot,
+        interaction: &protocol::InteractionState,
+        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<DrawingPlayApp>>>,
+    ) -> Option<usize> {
+        if self.completed || command.command_id() != self.tool_id || drawing_bounded_extent(command, snapshot, interaction) != Some(1) { return None; }
+        match command {
+            DrawingCommand::SetCamera(_) | DrawingCommand::SetCameraZoom(_) | DrawingCommand::EngagementInput(_) => context?.view_state.as_ref().map(|_| 1),
+            _ => Some(1),
+        }
     }
-    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let cfg = ConfigView { snapshot: config, window: None };
-    let active_utility = context.and_then(|context| context.view_state.as_ref()).and_then(|view| view.active_utility_id.as_deref()).unwrap_or(DRAWING_DEFAULT_UTILITY);
-    let mut session = DrawingSession::with_active_utility(active_utility);
-    session.interaction.ids = interaction.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
-    command.dispatch(&doc, &cfg, &mut session)
+
+    fn step(
+        &mut self,
+        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<DrawingPlayApp>>,
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<DrawingPlayApp>>, Fault> {
+        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        if self.completed || input.command.command_id() != self.tool_id { return Err(Fault::from("drawing-window-work-terminal")); }
+        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
+        let active_utility = input.context.and_then(|context| context.view_state.as_ref()).and_then(|view| view.active_utility_id.as_deref()).unwrap_or(DRAWING_DEFAULT_UTILITY);
+        let mut session = DrawingSession::with_active_utility(active_utility);
+        session.interaction.ids = input.interaction.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
+        session.window_config = canvas_window::config::from_snapshot(input.context.and_then(|context| context.window_config.as_ref()));
+        session.window_transient = canvas_window::transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
+        let mut emit = Emit::default();
+        let mut transient = None;
+        match input.command {
+            DrawingCommand::SetCamera(payload) => {
+                payload.camera.validate().map_err(|error| Fault::from(error.to_string()))?;
+                let view = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("drawing-canvas-window-required"))?;
+                let mut config = session.window_config;
+                config.viewport = payload.camera;
+                emit.window_config_mutations.push(canvas_window::config::addressed(view, config)?);
+            }
+            DrawingCommand::SetCameraZoom(payload) => {
+                let view = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("drawing-canvas-window-required"))?;
+                let mut config = session.window_config;
+                config.viewport.zoom = payload.value;
+                config.viewport.validate().map_err(|error| Fault::from(error.to_string()))?;
+                emit.window_config_mutations.push(canvas_window::config::addressed(view, config)?);
+            }
+            DrawingCommand::EngagementInput(payload) => {
+                let view = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("drawing-canvas-window-required"))?;
+                session.window_transient.engagement_input = payload.value.clone();
+                transient = Some(canvas_window::transient::addressed(view, session.window_transient)?);
+            }
+            _ => emit = input.command.dispatch(&doc, &cfg, &mut session)?,
+        }
+        self.completed = true;
+        Ok(match transient {
+            Some(mutation) => ArtifactCommandWorkStep::CompleteWithEphemeral {
+                emit,
+                ephemeral: semio_framework_plugin::EphemeralEmit { window_transient: vec![mutation], ..Default::default() },
+            },
+            None => ArtifactCommandWorkStep::Complete(emit),
+        })
+    }
 }
 
 struct DrawingBoundedCommandJobFactory {
@@ -900,8 +978,7 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.bounded.tool-mismatch"), "bounded Drawing command does not match its exact registered tool or exceeds its declared extent"));
     }
     let tool_id = request.command.command_id();
-    let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<DrawingPlayApp>>> =
-        Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, drawing_bounded_reduce, drawing_bounded_extent));
+    let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<DrawingPlayApp>>> = Box::new(DrawingWindowCommandWork::new(tool_id));
     let operation_context = semio_framework_plugin::AppOperationContext {
         app_instance_id: request.app_instance_id,
         parent_document_id: request.parent_document_id.clone(),
@@ -979,7 +1056,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<DrawingSnapshot, DrawingMutat
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("drawing-artifact-lane-or-description-envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(
@@ -1078,120 +1155,6 @@ impl store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation> fo
     }
 }
 
-struct DrawingConfigStorePreparationFactory;
-
-struct DrawingConfigStorePreparation {
-    base: Option<store::SnapshotRead<DrawingConfig>>,
-    mutation: Option<DrawingConfigMutation>,
-    description: Option<String>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<DrawingConfig, DrawingConfigMutation>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
-    cancelled: bool,
-    closing: bool,
-}
-
-impl store::ArtifactStoreOneItemPreparationFactory<DrawingConfig, DrawingConfigMutation> for DrawingConfigStorePreparationFactory {
-    fn preflight(&self, _mutation: &DrawingConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("drawing-config-lane-or-description-envelope".into());
-        }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
-    }
-
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<DrawingConfig, DrawingConfigMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<DrawingConfig, DrawingConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<DrawingConfig, DrawingConfigMutation>> {
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-        {
-            return Err(request);
-        }
-        Ok(Box::new(DrawingConfigStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            description: request.description,
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            cancelled: false,
-            closing: false,
-        }))
-    }
-}
-
-impl store::ArtifactStoreOneItemPreparation<DrawingConfig, DrawingConfigMutation> for DrawingConfigStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use ::protocol::Mutation as _;
-        if !grant.permits_one() || self.cancelled || self.closing {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        let base = self.base.as_ref().ok_or_else(|| "drawing-config-base-owner-missing".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "drawing-config-mutation-owner-missing".to_string())?;
-        let inverse = mutation.inverse(base.get());
-        let post = ::protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
-        let authority = self.authority.as_ref().ok_or_else(|| "drawing-config-authority-missing".to_string())?;
-        let edit = drawing_prepared_edit("drawing-config-bounded", mutation, inverse, self.description.take(), authority);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-    }
-
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<DrawingConfig, DrawingConfigMutation>> {
-        self.prepared.as_ref()
-    }
-
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<DrawingConfig, DrawingConfigMutation>> {
-        self.prepared.take()
-    }
-
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err("drawing-config-base-retirement-rejected".into());
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
-}
 //#endregion 📬️StorePreparation
 
 //#region 🧾️ProofCatalogs
@@ -1231,14 +1194,12 @@ impl DrawingBoundedProofs {
 //#endregion 🧾️ProofCatalogs
 
 //#region 🔖️DrawingPlayApp
-pub(crate) fn drawing_document_revision(doc: &ArtifactView<'_, DrawingSnapshot>, _config: &DrawingConfig) -> String {
+pub(crate) fn drawing_document_revision(doc: &ArtifactView<'_, DrawingSnapshot>) -> String {
     doc.operation_optional().map_or_else(|| "0".repeat(64), |operation| operation.canonical_base_revision_hex())
 }
 
-/// 🧪️ Unit struct apart from `session`: every former `DrawingInteractionState`/`ViewModel`-derived field
-/// lives in [`DrawingConfig`], written through [`DrawingConfigMutation`]s. `session` holds the one piece of
-/// state that is neither document nor view-config — the live gesture statechart — threaded into every
-/// command handler as the `app_commands!` dispatch context.
+/// 🧪️ Drawing editor owner; durable content stays in the document while concrete Canvas windows own
+/// persisted navigation and ephemeral engagement/trace progress.
 pub struct DrawingPlayApp {
     arena_boot_fault: Option<&'static str>,
 }
@@ -1252,7 +1213,7 @@ impl DrawingPlayApp {
 fn render_drawing_body(
     body_key: &str,
     document: &DrawingSnapshot,
-    config: &DrawingConfig,
+    config: &DrawingCanvasWindowConfig,
     preview: &DrawingGesturePreview,
     view_state: &semio_framework_plugin::ViewModel,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -1281,8 +1242,8 @@ impl Default for DrawingPlayApp {
 impl ArtifactEditor for DrawingPlayApp {
     type Snapshot = DrawingSnapshot;
     type Mutation = DrawingMutation;
-    type Config = DrawingConfig;
-    type ConfigMutation = DrawingConfigMutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
     type Presence = DrawingPresence;
@@ -1299,8 +1260,12 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(crate::spr::drawing_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::spr::drawing_document_store_owners())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_owners())
     }
 
     fn build_document_store_initialization_job(
@@ -1315,12 +1280,48 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::no_config_store_disposer())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(store::retirement::SharedValueRetirementFactory::<Self::Presence>::default()))
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(store::retirement::SharedValueRetirementFactory::<Self::Presence>::default()))
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default()).expect("default Drawing presence is the exact empty terminal")))
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(DrawingArtifactStorePreparationFactory))
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(std::sync::Arc::new(DrawingConfigStorePreparationFactory))
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        canvas_window::config::register(registry)
+    }
+
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        canvas_window::transient::register(registry)
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
@@ -1347,6 +1348,9 @@ impl ArtifactEditor for DrawingPlayApp {
         if request.command.command_id() != request.tool_id {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.tool-mismatch"), "Drawing gesture command does not match its exact registered tool"));
         }
+        let view_state = request.context.view_state.clone().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.canvas.window-required"), "Drawing gesture commands require one concrete Canvas window instance"))?;
+        let window_config = canvas_window::config::from_snapshot(request.context.window_config.as_ref());
+        let window_transient = canvas_window::transient::from_snapshot(request.context.window_transient.as_ref());
         let operation_context = semio_framework_plugin::AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id,
@@ -1358,6 +1362,9 @@ impl ArtifactEditor for DrawingPlayApp {
             command: *request.command,
             snapshot: request.snapshot,
             config: request.config,
+            window_config,
+            window_transient,
+            view_state,
             history: request.history,
             instance_owner: request.instance_operation_owner,
             operation_context,
@@ -1368,7 +1375,7 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
-        Some(crate::editor::drawing::config::schema::app_schema_descriptor())
+        Some(crate::editor::drawing::config::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> DrawingSnapshot {
@@ -1409,29 +1416,30 @@ impl ArtifactEditor for DrawingPlayApp {
     fn handle(
         command: &DrawingCommand,
         doc: &ArtifactView<'_, DrawingSnapshot>,
-        cfg: &ConfigView<'_, DrawingConfig>,
+        cfg: &ConfigView<'_, NoConfig>,
         interaction: &InteractionView<'_>,
         view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<DrawingMutation, DrawingConfigMutation, Self::DraftMutation>, Fault> {
+    ) -> Result<Emit<DrawingMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         if DRAWING_GESTURE_TOOL_IDS.contains(&command.command_id()) {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.retained-route"), "Drawing gesture commands are reachable only through their exact retained factory owner"));
         }
         let mut session = DrawingSession::with_active_utility(view_state.and_then(|view| view.active_utility_id.as_deref()).unwrap_or(DRAWING_DEFAULT_UTILITY));
         session.interaction.ids = interaction.selection(DRAWING_INTERACTION_DOMAIN).ids.clone();
+        session.window_config = canvas_window::config::current(cfg);
         command.dispatch(doc, cfg, &mut session)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, DrawingConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        render_drawing_body(body_key, doc.snapshot, cfg.snapshot, &DrawingSession::default().preview(), view_state)
+    fn render(body_key: &str, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &DrawingSession::default().preview(), view_state)
     }
 
     fn render_with_instance_operation_owner(
         owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, DrawingSnapshot>,
-        cfg: &ConfigView<'_, DrawingConfig>,
+        cfg: &ConfigView<'_, NoConfig>,
         view_state: &semio_framework_plugin::ViewModel,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let preview = match doc.render_operation() {
@@ -1441,7 +1449,45 @@ impl ArtifactEditor for DrawingPlayApp {
                 .unwrap_or_default(),
             None => DrawingGesturePreview::default(),
         };
-        render_drawing_body(body_key, doc.snapshot, cfg.snapshot, &preview, view_state)
+        render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &preview, view_state)
+    }
+
+    fn window_engagements(_doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
+        let Some(window_id) = view_state.window_id.clone() else { return HashMap::new() };
+        let engagement = WindowEngagement {
+            session_active: Some(false),
+            options: None,
+            input: Some(WindowEngagementInput {
+                id: Some("drawing-canvas-engagement".into()),
+                value: Some(String::new()),
+                placeholder: Some("Layer name".into()),
+                on_change: Some(drawing_manifest_action("engagementInput")),
+                on_submit: Some(drawing_manifest_action("engagementSubmit")),
+                disabled: None,
+                on_repeat_last: None,
+                on_abort: None,
+            }),
+            control: None,
+            controls: None,
+            status: Some(vec![WindowEngagementStatus { id: "drawing-layer-count".into(), text: "0 layers · 0 selected".into() }]),
+            possible_engagements: None,
+        };
+        HashMap::from([(window_id, engagement)])
+    }
+
+    fn window_engagements_with_request_context(
+        doc: &ArtifactView<'_, DrawingSnapshot>,
+        cfg: &ConfigView<'_, NoConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+    ) -> HashMap<String, WindowEngagement> {
+        let mut engagements = Self::window_engagements(doc, cfg, view_state);
+        let Some(window_id) = view_state.window_id.as_ref() else { return HashMap::new() };
+        let current = canvas_window::transient::current(transient);
+        if let Some(input) = engagements.get_mut(window_id).and_then(|engagement| engagement.input.as_mut()) {
+            input.value = Some(current.engagement_input);
+        }
+        engagements
     }
 }
 //#endregion 🔖️DrawingPlayApp
@@ -1635,15 +1681,9 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
-#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests

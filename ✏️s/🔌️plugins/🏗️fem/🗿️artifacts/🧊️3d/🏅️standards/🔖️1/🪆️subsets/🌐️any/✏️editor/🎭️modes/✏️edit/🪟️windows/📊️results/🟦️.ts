@@ -1,7 +1,5 @@
-/** 📊️ FEM 3D editor — Results window: typed twin of `🦀️.rs`'s
- * `render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig)` boundary — static/modal/buckling analysis views
- * over the same node/member/solid scene the Model window renders, dispatched off `Fem3dConfig`'s
- * `resultMode`/`resultSourceId`/`resultModeIndex` fields (see `../../../../🎚️config/🟦️.ts`). */
+/** 📊️ Results view projection of the concrete window's `Fem3dResultsWindowConfig`.
+ * @see ./🎚️config/🧬️schema/🟦️.ts */
 
 export type Fem3dResultDisplayMode = "static" | "modal" | "buckling";
 

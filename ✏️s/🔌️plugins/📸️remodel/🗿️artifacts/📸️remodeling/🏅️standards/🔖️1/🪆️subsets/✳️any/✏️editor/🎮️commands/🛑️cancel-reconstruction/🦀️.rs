@@ -1,6 +1,6 @@
 //! 🛑️ User-addressable reconstruction cancellation.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::{op::RemodelingMutation, RemodelingSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -13,7 +13,7 @@ pub struct CancelReconstruction {}
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(_payload: &CancelReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(_payload: &CancelReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(crate::editor::remodeling::commands::run_reconstruction::cancel_current_reconstruction(doc.snapshot))
 }
 //#endregion 🔖️Handler

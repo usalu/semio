@@ -15,7 +15,7 @@ import {
   ArtifactCreationProgressNotice,
   artifactCreationProgressRoleV1,
   type ArtifactCreationProgressStateV1,
-} from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🏦️.tsx";
+} from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🟦️.tsx";
 
 const owner = {
   requestId: "1".repeat(32),

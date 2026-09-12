@@ -1,56 +1,50 @@
 {
   "$schema": "../../🧬️schema/🔣️.json",
-  "defaultDirectory": "🧪️oracle",
-  "overrides": {
-    "🎠️kernel": "🔮️oracle"
-  },
+  "directoryName": "🔮️oracles",
   "cases": [
     {
       "owner": "🎠️kernel",
-      "directory": "🔮️oracle",
-      "path": "🎠️kernel/🔮️oracle/🟦️.ts",
+      "path": "🎠️kernel/🔮️oracles/🟦️.ts",
       "owned": true
     },
     {
       "owner": "🎠️kernel",
-      "directory": "🔮️oracle",
-      "path": "🎠️kernel/🧪️oracle/🟦️.ts",
+      "path": "🎠️kernel/🔮️oracle/🟦️.ts",
       "owned": false
     },
     {
       "owner": "🎠️kernel/🧩️child",
-      "directory": "🧪️oracle",
-      "path": "🎠️kernel/🧩️child/🧪️oracle/🟦️.ts",
+      "path": "🎠️kernel/🧩️child/🔮️oracles/🟦️.ts",
       "owned": true
     },
     {
       "owner": "🎠️kernel/🧩️child",
-      "directory": "🧪️oracle",
-      "path": "🎠️kernel/🧩️child/🔮️oracle/🟦️.ts",
+      "path": "🎠️kernel/🧩️child/🧪️oracle/🟦️.ts",
       "owned": false
     },
     {
       "owner": "🎠️kernel-copy",
-      "directory": "🧪️oracle",
-      "path": "🎠️kernel-copy/🔮️oracle/🟦️.ts",
+      "path": "🎠️kernel-copy/🔮️oracles/🟦️.ts",
+      "owned": true
+    },
+    {
+      "owner": "🎠️kernel-copy",
+      "path": "🎠️kernel-copy/⚖️oracle/🟦️.ts",
       "owned": false
     },
     {
       "owner": "🧩️other",
-      "directory": "🧪️oracle",
-      "path": "🧩️other/🧪️oracle/🟦️.ts",
+      "path": "🧩️other/🔮️oracles/🟦️.ts",
       "owned": true
     },
     {
       "owner": "🧩️other",
-      "directory": "🧪️oracle",
-      "path": "🧩️other/🔮️oracle/🟦️.ts",
+      "path": "🧩️other/🧪️oracles/🟦️.ts",
       "owned": false
     },
     {
       "owner": ".",
-      "directory": "🧪️oracle",
-      "path": "🧪️oracle/🟦️.ts",
+      "path": "🔮️oracles/🟦️.ts",
       "owned": true
     }
   ]

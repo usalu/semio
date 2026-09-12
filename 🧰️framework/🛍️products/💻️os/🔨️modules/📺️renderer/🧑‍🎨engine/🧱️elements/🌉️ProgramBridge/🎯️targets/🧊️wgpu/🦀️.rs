@@ -254,6 +254,37 @@ mod wasm_program_exchange {
         expect_done(&outcome.frames, seq)
     }
 
+    pub async fn load_app_document_archive(client: &KernelClient, instance_id: u32, archive: &protocol::DocumentArchivePack) -> Result<(), String> {
+        let operation = next_seq();
+        let admitted = exchange(client, instance_id, vec![AppCommand::LoadDocumentArchive { seq: operation, archive: archive.clone() }]).await?;
+        expect_done(&admitted.frames, operation)?;
+        loop {
+            let seq = next_seq();
+            let outcome = exchange(client, instance_id, vec![AppCommand::PollDocumentArchiveLoad { seq, operation }]).await?;
+            let status = outcome
+                .frames
+                .iter()
+                .find_map(|frame| match frame {
+                    AppFrame::DocumentArchiveLoad { in_reply_to, status } if *in_reply_to == seq && status.operation == operation => Some(status.clone()),
+                    _ => None,
+                })
+                .ok_or_else(|| format!("document archive operation {operation} returned no correlated status"))?;
+            match status.state {
+                protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running => {}
+                protocol::DocumentArchiveLoadState::Ready => {
+                    let seq = next_seq();
+                    let acknowledged = exchange(client, instance_id, vec![AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation }]).await?;
+                    return expect_done(&acknowledged.frames, seq);
+                }
+                protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault => {
+                    let seq = next_seq();
+                    let _ = exchange(client, instance_id, vec![AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation }]).await;
+                    return Err(format!("document archive operation {operation} ended in {:?}", status.state));
+                }
+            }
+        }
+    }
+
     /// 🎠️ H3-wgpu-native — now `async`: this is the plugin call `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s
     /// `pump_sync_events` makes (see `📓️terra-H3-wgpu-native-report.md`'s 3-plugin-blocking-sites
     /// section) — its ONE call site there was changed from a plain call to `.await`, the minimal
@@ -519,6 +550,13 @@ impl ProgramBridgeEntry {
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn load_app_document_archive(&self, instance_id: u32, archive: &protocol::DocumentArchivePack) -> Result<(), String> {
+        match &self.backend {
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::load_app_document_archive(client, instance_id, archive).await,
+        }
+    }
+
     pub async fn render(&self, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel) -> Result<UiDocumentLease, String> {
         self.render_with_document(instance_id, surface_id, body_key, view_state, None, None).await
     }
@@ -669,6 +707,16 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
     dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handle_action result parse failed: {error}"))
 }
 
+/// 🩺️ A readable window of a JSON payload around the column serde refused, so a
+/// `data did not match any variant` naming only a column can be read without re-running the page.
+#[cfg(target_arch = "wasm32")]
+fn json_window_around(text: &str, column: usize) -> String {
+    let center = column.min(text.len());
+    let start = text[..center].char_indices().rev().take(120).last().map(|(index, _)| index).unwrap_or(0);
+    let end = text[center..].char_indices().take(120).last().map(|(index, _)| center + index).unwrap_or(text.len());
+    text[start..end].to_string()
+}
+
 #[cfg(target_arch = "wasm32")]
 async fn dispatch_invoke_extension_js(handle: &Rc<JsValue>, instance_id: u32, extension_id: &str, capability: &str, request_json: &str, req: u64) -> Result<semio_framework::kernel::InvocationResult, String> {
     let dispatch = get_fn(handle.as_ref(), "dispatchInvokeExtension")?;
@@ -710,8 +758,17 @@ async fn push_scoped_contributions_js(handle: &Rc<JsValue>, instance_id: u32, ap
 async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
     let command = Reflect::get(handle.as_ref(), &JsValue::from_str("handleCommand")).map_err(|_| "handleCommand missing")?.dyn_into::<Function>().map_err(|_| "handleCommand is not callable")?;
     let context_json = serde_json::json!({ "viewState": view_state, "actor": "local" }).to_string();
-    let result = command.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(command_json), &JsValue::from_str(&context_json)).map_err(|_| "handleCommand failed")?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|_| "handleCommand promise failed")? } else { result };
+    // 🩺️ The cause, not the verb: a swallowed rejection here reported only `handleCommand promise
+    // failed` for every guest fault, command-address mistake and host-side throw alike
+    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    let result = command
+        .call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(command_json), &JsValue::from_str(&context_json))
+        .map_err(|error| format!("handleCommand failed: {}", describe_js_rejection(&error)))?;
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
+        JsFuture::from(promise.clone()).await.map_err(|error| format!("handleCommand promise failed: {}", describe_js_rejection(&error)))?
+    } else {
+        result
+    };
     let text = resolved.as_string().ok_or_else(|| "handleCommand result not string".to_string())?;
     dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handleCommand result parse failed: {error}"))
 }
@@ -783,7 +840,7 @@ async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface
         #[serde(default)]
         effects: Vec<Effect>,
     }
-    let envelope: BrowserRenderEnvelope = serde_json::from_str(&text).map_err(|error| format!("renderDocument result parse failed: {error}"))?;
+    let envelope: BrowserRenderEnvelope = serde_json::from_str(&text).map_err(|error| { let headroom = ui_contract::ui_value_headroom(); format!("renderDocument result parse failed: {error} headroom collections={} items={} near {}", headroom.collections, headroom.items, json_window_around(&text, error.column())) })?;
     if let Some(sink) = refresh_effects {
         sink.extend(envelope.effects);
     }
@@ -797,8 +854,36 @@ async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface
     if outcome.is_err() {
         retire_browser_assembly(&mut assembly);
     }
+    drop(published);
+    retire_browser_ui_values();
     outcome
 }
+
+/// ♻️ Returns this parse's `UiValue` collection slots to the process-wide arena.
+///
+/// ⚖️ Every `UiList`/`UiMap` in a published node — an action binding's `args`, an extension's
+/// props — is a HANDLE into a fixed arena, and dropping one only QUEUES its slots;
+/// `close_ui_value_page_with_grant` is what actually returns them. The reactor drives exactly this pump
+/// after its own patch intake, and this host drove the DOCUMENT pump but never this one — so every
+/// render leaked one document's worth of maps until `ui_value_headroom().collections` reached 0, after
+/// which each later `UiValue` deserialization failed as `data did not match any variant of untagged
+/// enum UiValue` and the shell stopped painting entirely (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+/// Only reachable once the preview chain drove enough renders to exhaust the arena.
+#[cfg(target_arch = "wasm32")]
+fn retire_browser_ui_values() {
+    for _ in 0..BROWSER_DOCUMENT_ASSEMBLY_OPPORTUNITIES {
+        match ui_contract::close_ui_value_page_with_grant(BROWSER_UI_VALUE_RETIREMENT_ITEMS, BROWSER_DOCUMENT_ASSEMBLY_BYTES) {
+            Ok(step) if step.complete => return,
+            Ok(_) => continue,
+            Err(_) => return,
+        }
+    }
+}
+
+/// ♻️ Pages one `retire_browser_ui_values` step may return — priced per page like every other
+/// retirement grant in this file, never per document.
+#[cfg(target_arch = "wasm32")]
+const BROWSER_UI_VALUE_RETIREMENT_ITEMS: usize = 64;
 
 /// 🎟️ Returns a failed assembly's resident reservation. `open_*` admits the fixed surface ceiling and
 /// `UI_RESIDENT_AGGREGATE_BYTES` is only FOUR of those, so an error path that simply drops the assembly
@@ -813,6 +898,34 @@ fn retire_browser_assembly(assembly: &mut ui_contract::UiDocumentAssembly) {
             Err(_) => return,
         }
     }
+}
+
+/// 🎟️ Names a refused resident reservation against the ledger it was refused by.
+///
+/// ⚖️ `UiResidentFault::Capacity` alone says nothing actionable: the aggregate is process-wide and
+/// shared by every retained root the renderer, the reconciler and this bridge hold at once, so the
+/// only diagnostic that can be acted on is WHAT was asked for beside WHAT was already committed. A
+/// bare `Capacity` was reported six times in one refresh with no way to tell an oversized surface
+/// from an un-retired previous set (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[cfg(target_arch = "wasm32")]
+fn resident_refusal(body_key: &str, items: usize, bytes: usize, fault: ui_contract::UiResidentFault) -> String {
+    let ledger = ui_contract::UiResidentPermit::snapshot().ok();
+    let census = ledger.map_or_else(
+        || "ledger unreadable".to_string(),
+        |snapshot| {
+            format!(
+                "committed items {}/{} bytes {}/{} roots {}/{} (fixed backing {})",
+                snapshot.items,
+                ui_contract::UI_RESIDENT_AGGREGATE_ITEMS,
+                snapshot.bytes,
+                ui_contract::UI_RESIDENT_AGGREGATE_BYTES,
+                snapshot.used_slots,
+                ui_contract::UI_RESIDENT_SLOTS,
+                ui_contract::UiResidentPermit::contract_backing_bytes(),
+            )
+        },
+    );
+    format!("retained document permit failed: {fault:?} ({}) — surface '{body_key}' asked items {items} bytes {bytes}; {census}", fault.reason())
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -837,8 +950,7 @@ fn assemble_browser_document(assembly: &mut ui_contract::UiDocumentAssembly, bod
         .saturating_add(ui_contract::UiDocumentAssembly::required_open_bytes())
         .min(ui_contract::UI_RESIDENT_SURFACE_BYTES);
     let mut permit = None;
-    ui_contract::UiResidentPermit::try_reserve(ui_contract::UiResidentLimits { items, bytes }, &mut permit, BROWSER_DOCUMENT_ASSEMBLY_BYTES)
-        .map_err(|error| format!("retained document permit failed: {error:?}"))?;
+    ui_contract::UiResidentPermit::try_reserve(ui_contract::UiResidentLimits { items, bytes }, &mut permit, BROWSER_DOCUMENT_ASSEMBLY_BYTES).map_err(|error| resident_refusal(body_key, items, bytes, error))?;
     if permit.is_none() {
         return Err(format!("retained document for surface '{body_key}' was refused a resident permit"));
     }

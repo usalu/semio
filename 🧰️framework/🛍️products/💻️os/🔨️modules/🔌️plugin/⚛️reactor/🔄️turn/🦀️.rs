@@ -223,6 +223,34 @@ struct DirtyPollOwners {
     intents: ui_contract::UiFixedList<DirtyIntentBatch, DIRTY_INTENT_INSTANCE_CAPACITY>,
 }
 
+/// 🕹️ Re-dirties EVERY deferred surface whose earlier reconcile the host has already acknowledged, and
+/// answers how many this turn took. A surface is deferred when a dirty render arrived while its own
+/// previous reconcile was still in flight (`PatchTracker::reserve_mounted` refuses an occupied slot),
+/// which for a document-scale world body is the ordinary case rather than the rare one.
+///
+/// 🐢️ Taking ONE of them per turn priced every refused render at a whole host round trip: one
+/// `refreshUi` for a narrowed `UiDirtyScope::Partial` dirties three world bodies plus three panel
+/// bodies, so a pass that found them occupied needed five further turns before the last of them
+/// re-rendered — while the settle driving that refresh
+/// (`🧰️framework/…/🔌️PluginRuntime/🟦️.tsx` `settlePluginTurn`) names NO required surface for a body
+/// that already has a root, and answers the host's cached hash from the still-unrendered retained tree.
+/// That is the starvation half of "the guest never re-publishes its selection lane after a pick"
+/// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B46 §8.1: `interactionSelect` settles twice, no
+/// `interaction selection lost` verdict is recorded, and `data-guest-selection-json` stays
+/// `selectedIds:[]` for 150 s).
+///
+/// 🧯️ Bounded twice over: the deferred ring is fixed-capacity, and every entry handed back is one this
+/// same turn then renders or re-defers, so the loop cannot revisit an entry it has taken.
+fn redirty_acknowledged_deferred_surfaces(patches: &patches::PatchTracker, dirty: &mut DirtyPollOwners) -> Result<usize, semio_framework::Fault> {
+    let mut taken = 0usize;
+    while let Some(surface) = patches.take_deferred_ready() {
+        let Some(instance) = parse_surface_instance(surface.as_ref()) else { continue };
+        dirty.try_surface(instance, surface).map_err(|_| reactor_close_fault("fixed dirty surface authority saturated"))?;
+        taken += 1;
+    }
+    Ok(taken)
+}
+
 impl DirtyPollOwners {
     fn new() -> Self {
         Self { surfaces: ui_contract::UiFixedList::default(), intents: ui_contract::UiFixedList::default() }
@@ -481,11 +509,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     }
     let close_cleanup_work = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
     let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
-    if let Some(surface) = PATCHES.with(patches::PatchTracker::take_deferred_ready) {
-        if let Some(instance) = parse_surface_instance(surface.as_ref()) {
-            dirty.try_surface(instance, surface).map_err(|_| reactor_close_fault("fixed dirty surface authority saturated"))?;
-        }
-    }
+    PATCHES.with(|patches| redirty_acknowledged_deferred_surfaces(patches, &mut dirty))?;
     for event in events {
         match event {
             Event::InstanceOpen { request, app_id, actor, quotas, .. } => {
@@ -1103,7 +1127,25 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         match mounted {
             Ok(grant) => match crate::plugin_runtime::plugin_render_surface(runtime, instance, &surface_key).await {
                 Ok((tree, presence)) => {
-                    let _ = grant.commit_source(tree.root);
+                    // 🕹️ A refused commit THROWS AWAY the tree this turn just rendered and leaves the
+                    // surface at its previous revision, which the host then reads back as `unchanged` —
+                    // indistinguishable from a healthy refresh. It is the one exit on this path that can
+                    // lose a render the host explicitly asked for, so it is recorded as a shell fault
+                    // naming the surface rather than a `let _ =` (ticket 26/09/02/PUZZLE-3D-END-TO-END
+                    // wave B46 §8.1, wave B48 §3). Not a turn-fatal `?`: a commit refused because the
+                    // instance is closing is an ordinary teardown race, and faulting the whole turn for
+                    // it would break the close ladder.
+                    if grant.commit_source(tree.root).is_err() {
+                        effects.push(shell_fault_effect(
+                            instance,
+                            &semio_framework::Fault::new(
+                                semio_framework::FaultOrigin::Os,
+                                semio_framework::FaultCode::new("ui.surface-render-uncommitted"),
+                                format!("the tree rendered for dirty surface {surface_key} was refused by its own reconcile reservation, so that surface keeps its previous revision"),
+                            ),
+                        ));
+                        continue;
+                    }
                     for update in presence {
                         PRESENCE.with(|hub| {
                             let mut hub = hub.borrow_mut();
@@ -1119,9 +1161,20 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                     effects.push(shell_fault_effect(instance, &fault));
                 }
             },
-            Err(surface) => PATCHES.with(|patches| {
-                let _ = patches.defer(surface);
-            }),
+            // 🕹️ A surface whose previous reconcile is still in flight cannot be re-rendered now, so the
+            // dirty render is DEFERRED — and a deferred ring with no room left would drop it, which is a
+            // render the host asked for that no later turn ever performs. That is exactly the shape of
+            // "the guest never re-publishes its selection lane after a pick" (ticket
+            // 26/09/02/PUZZLE-3D-END-TO-END wave B46 §8.1: `interactionSelect` settles, no verdict is
+            // recorded, and `data-guest-selection-json` stays `selectedIds:[]` for 150 s), so it is a
+            // typed fault naming the surface rather than a `let _ =`.
+            Err(surface) => PATCHES.with(|patches| patches.defer(surface)).map_err(|surface| {
+                semio_framework::Fault::new(
+                    semio_framework::FaultOrigin::Os,
+                    semio_framework::FaultCode::new("ui.dirty-surface-deferred-capacity"),
+                    format!("deferred render ring is full, so dirty surface {} would never re-render", surface.as_ref()),
+                )
+            })?,
         }
     }
     let reconcile_work = PATCHES
@@ -1630,151 +1683,9 @@ fn decode_wire_app_event(bytes: &[u8]) -> Result<semio_framework::kernel::AppEve
 
 
 #[cfg(test)]
-mod wire_effect_laws {
-    use super::*;
-    use protocol::ToValue;
-    use semio_framework::kernel::{Effect, RequestId};
+#[path = "🧪️tests/📡️wire-effect-round-trip/🦀️.rs"]
+mod wire_effect_laws;
 
-    #[test]
-    fn request_file_open_survives_wire_effect_round_trip() {
-        let effect = Effect::RequestFileOpen {
-            req: RequestId(121),
-            accept: "application/json,.json".into(),
-            read_as: Some("text".into()),
-            import_action: "importFixture".into(),
-            multiple: false,
-        };
-        let bytes = store::pack_rt::encode_wire_value(&effect.to_value());
-        let decoded = decode_wire_effect(&bytes).expect("RequestFileOpen must survive the browser wire table");
-        match decoded {
-            Effect::RequestFileOpen { accept, read_as, import_action, multiple, .. } => {
-                assert!(accept.contains("json"), "{accept}");
-                assert_eq!(read_as.as_deref(), Some("text"));
-                assert_eq!(import_action, "importFixture");
-                assert!(!multiple);
-            }
-            other => panic!("wire dropped RequestFileOpen: {other:?}"),
-        }
-    }
-
-    fn effect_wire_kind(effect: &Effect) -> &'static str {
-        match effect {
-            Effect::OpenWindow { .. } => "openWindow",
-            Effect::CloseWindow { .. } => "closeWindow",
-            Effect::Notify { .. } => "notify",
-            Effect::ClipboardWrite { .. } => "clipboardWrite",
-            Effect::RequestSync => "requestSync",
-            Effect::Navigate { .. } => "navigate",
-            Effect::LoadDocument { .. } => "loadDocument",
-            Effect::OpenExternalUrl { .. } => "openExternalUrl",
-            Effect::SetPanel { .. } => "setPanel",
-            Effect::DownloadMediaExport { .. } => "downloadMediaExport",
-            Effect::IconRenderExport { .. } => "iconRenderExport",
-            Effect::RequestFileOpen { .. } => "requestFileOpen",
-            Effect::RequestMediaFrames { .. } => "requestMediaFrames",
-            Effect::SpawnPluginInstance { .. } => "spawnPluginInstance",
-            Effect::OpenPluginInstance { .. } => "openPluginInstance",
-            Effect::SetActiveUtility { .. } => "setActiveUtility",
-            Effect::SetActiveTool { .. } => "setActiveTool",
-            Effect::OpenDialog { .. } => "openDialog",
-            Effect::DispatchAction { .. } => "dispatchAction",
-            Effect::ReplayShellCommand { .. } => "replayShellCommand",
-            Effect::InvokeExtension { .. } => "invokeExtension",
-            Effect::SendMessage { .. } => "sendMessage",
-            Effect::PublishEvent { .. } => "publishEvent",
-            Effect::BlobWrite { .. } => "blobWrite",
-            Effect::BlobLoad { .. } => "blobLoad",
-            Effect::HttpRequest { .. } => "httpRequest",
-            Effect::DocumentRead { .. } => "documentRead",
-            Effect::DocumentWrite { .. } => "documentWrite",
-            Effect::LinkResolve { .. } => "linkResolve",
-            Effect::RegistryQuery { .. } => "registryQuery",
-            Effect::IoCompose { .. } => "ioCompose",
-            Effect::CacheDerive { .. } => "cacheDerive",
-            Effect::CacheRead { .. } => "cacheRead",
-            Effect::SetTimer { .. } => "setTimer",
-            Effect::SpawnJob { .. } => "spawnJob",
-            Effect::CancelJob { .. } => "cancelJob",
-            Effect::Respond { .. } => "respond",
-            Effect::StorageRead { .. } => "storageRead",
-            Effect::StorageWrite { .. } => "storageWrite",
-            Effect::StorageDelete { .. } => "storageDelete",
-            Effect::RequestCapability { .. } => "requestCapability",
-            Effect::ReleaseCapability { .. } => "releaseCapability",
-            Effect::Subscribe { .. } => "subscribe",
-            Effect::Unsubscribe { .. } => "unsubscribe",
-            Effect::RequestInferenceProposal { .. } => "requestInferenceProposal",
-        }
-    }
-
-    fn all_effect_wire_fixtures() -> Vec<Effect> {
-        use semio_framework::kernel::{ArtifactHandle, CapabilityId, CapabilityRequest, ClipboardFragment, IconRenderExportItem, InferenceProposalKind, JobPlacement, MessageEndpoint, PluginInstanceId, RequestOutcome, WindowHandle, WindowKindId};
-        use semio_framework::{MediaClass, MediaForm, MediaType};
-        let req = RequestId(7);
-        let media = MediaType { class: MediaClass::Data, form: MediaForm::Value };
-        vec![
-            Effect::OpenWindow { req, kind: WindowKindId("main".into()), params: dsl::DslValue::Null },
-            Effect::CloseWindow { window: WindowHandle(1) },
-            Effect::Notify { message: "n".into() },
-            Effect::ClipboardWrite { fragment: ClipboardFragment { schema: "s".into(), media_type: media.clone(), dsl_text: "{}".into(), pack_bytes: None, source_app: "a".into(), label: "l".into() } },
-            Effect::RequestSync,
-            Effect::Navigate { uri: "semio://x".into() },
-            Effect::LoadDocument { pack: vec![1], spr: vec![2] },
-            Effect::OpenExternalUrl { url: "https://example.test".into() },
-            Effect::SetPanel { panel_json: "{}".into() },
-            Effect::DownloadMediaExport { filename: "a.bin".into(), mime_type: "application/octet-stream".into(), data: "AA==".into(), encoding: None },
-            Effect::IconRenderExport { items: vec![IconRenderExportItem { filename: "i.png".into(), request: dsl::DslValue::Null }] },
-            Effect::RequestFileOpen { req, accept: "*".into(), read_as: None, import_action: "import".into(), multiple: false },
-            Effect::RequestMediaFrames { req, accept: "video/*".into(), frame_action: "frame".into(), done_action: "done".into(), fallback_action: "fallback".into(), sample_stride: 0, max_frames: 0, max_long_edge_px: 0, fps_hint: 0.0, payload: None, args: None },
-            Effect::SpawnPluginInstance { req, plugin_id: "p".into(), app_id: "a".into(), os_instance_id: None, label: None, document_json: None },
-            Effect::OpenPluginInstance { plugin_id: "p".into(), app_id: "a".into(), os_instance_id: None },
-            Effect::SetActiveUtility { window_id: "w".into(), utility_id: "u".into() },
-            Effect::SetActiveTool { tool_id: "t".into() },
-            Effect::OpenDialog { req, dialog_id: "d".into(), args: None },
-            Effect::DispatchAction { req, action: "act".into(), args: None, delay_ms: 0 },
-            Effect::ReplayShellCommand { action_id: "panelTab".into(), args: None },
-            Effect::invoke_extension(req, "ext".into(), "cap".into(), "{}".into()),
-            Effect::SendMessage { target: MessageEndpoint::Topic { name: "t".into() }, payload: vec![1] },
-            Effect::PublishEvent { topic: "t".into(), payload: vec![1] },
-            Effect::BlobWrite { req, media_type: media, bytes: vec![1] },
-            Effect::BlobLoad { req, hash: "h".into() },
-            Effect::HttpRequest { req, method: "GET".into(), url: "https://example.test".into(), headers: Vec::new(), body: None, stream: false },
-            Effect::DocumentRead { req, doc: ArtifactHandle(1), lane: "main".into() },
-            Effect::DocumentWrite { req, doc: ArtifactHandle(1), lane: "main".into(), ops: vec![1] },
-            Effect::LinkResolve { req, link: "l".into() },
-            Effect::RegistryQuery { req, kind: "k".into(), filter: None },
-            Effect::IoCompose { req, key: "k".into(), sources: vec!["s".into()] },
-            Effect::CacheDerive { req, engine_id: "e".into(), input: vec![1] },
-            Effect::CacheRead { req, engine_id: "e".into(), key: "k".into() },
-            Effect::SetTimer { id: 1, after_ms: 1, repeat: false },
-            Effect::SpawnJob { job: 1, kind: "framework.reserved.tool".into(), input: vec![1], placement: JobPlacement::Isolated },
-            Effect::CancelJob { job: 1 },
-            Effect::Respond { req, result: RequestOutcome::Ok(vec![1]) },
-            Effect::StorageRead { req, key: "k".into() },
-            Effect::StorageWrite { req, key: "k".into(), bytes: vec![1] },
-            Effect::StorageDelete { req, key: "k".into() },
-            Effect::RequestCapability { req, capability: CapabilityRequest { id: CapabilityId("c".into()), scope: "s".into(), reason: "r".into(), optional: false } },
-            Effect::ReleaseCapability { id: CapabilityId("c".into()) },
-            Effect::Subscribe { topic: "t".into() },
-            Effect::Unsubscribe { topic: "t".into() },
-            Effect::RequestInferenceProposal { kind: InferenceProposalKind::GisMapBoundsRegion },
-        ]
-    }
-
-    /// 🧪 W-G3 §8.21 — every `Effect` kind survives leftover `pack_rt` encode / `decode_wire_effect`.
-    /// A new variant that is not in `effect_wire_kind` fails compile; a fixture gap fails this count.
-    #[test]
-    fn every_effect_kind_survives_wire_effect_round_trip() {
-        let fixtures = all_effect_wire_fixtures();
-        let mut seen = std::collections::BTreeSet::new();
-        for effect in &fixtures {
-            let kind = effect_wire_kind(effect);
-            assert!(seen.insert(kind), "duplicate wire-table fixture {kind}");
-            let bytes = store::pack_rt::encode_wire_value(&effect.to_value());
-            let decoded = decode_wire_effect(&bytes).unwrap_or_else(|_| panic!("wire table dropped {kind}"));
-            assert_eq!(effect_wire_kind(&decoded), kind, "{kind} decoded as a different arm");
-        }
-        assert_eq!(seen.len(), fixtures.len(), "wire-table completeness fixtures must be unique");
-        assert_eq!(fixtures.len(), 45, "every Effect kind must have a leftover wire-table fixture");
-    }
-}
+#[cfg(test)]
+#[path = "🧪️tests/🕹️deferred-render-drain/🦀️.rs"]
+mod deferred_render_drain_laws;

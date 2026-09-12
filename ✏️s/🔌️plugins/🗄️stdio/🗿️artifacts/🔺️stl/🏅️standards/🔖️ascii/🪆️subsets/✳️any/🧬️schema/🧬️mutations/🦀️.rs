@@ -65,7 +65,7 @@ pub enum StlMutation {
 
 //#region 🔖️Kinds
 /// 🧾️ Kebab-case spelling of every `StlMutation` variant, in declaration order — the vocabulary
-/// `../../🔮️oracle/🔣️.json`'s `stl-ascii-any` catalog is measured against. Kept honest by
+/// `../../🔮️oracles/🔣️.json`'s `stl-ascii-any` catalog is measured against. Kept honest by
 /// `kinds_match_enum_and_catalog` below (the framework never parses Rust to learn this list).
 pub const KINDS: &[&str] = &["set-snapshot", "set-solid-name", "insert-triangle", "remove-triangle", "set-triangle-normal", "set-triangle-vertices"];
 //#endregion 🔖️Kinds

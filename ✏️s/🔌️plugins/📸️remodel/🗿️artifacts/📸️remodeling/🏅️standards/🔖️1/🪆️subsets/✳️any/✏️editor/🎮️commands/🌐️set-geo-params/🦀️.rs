@@ -1,6 +1,6 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-geo-params`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::update_geo_params;
 use crate::op::RemodelingMutation;
 use crate::{GeoParams, RemodelingSnapshot};
@@ -23,7 +23,7 @@ pub struct SetGeoParams {
     pub ortho_max_px: u32,
 }
 
-pub fn handle(payload: &SetGeoParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetGeoParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_geo_params(GeoParams {
         enabled: payload.enabled,
         origin_lon: payload.origin_lon,

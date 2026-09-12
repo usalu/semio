@@ -46,7 +46,7 @@
     "VcsRetainedCommandRoutes": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutesDocument"
+          "$ref": "https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutesDocument"
         },
         {
           "type": "object",
@@ -61,8 +61,8 @@
             },
             "routes": {
               "type": "array",
-              "minItems": 10,
-              "maxItems": 10,
+              "minItems": 9,
+              "maxItems": 9,
               "items": {
                 "type": "object",
                 "additionalProperties": false,
@@ -89,9 +89,9 @@
                     "maxItems": 1,
                     "items": {
                       "enum": [
-                        "artifact",
-                        "config",
-                        "host-only"
+                        "Artifact",
+                        "Config",
+                        "HostOnly"
                       ]
                     }
                   },

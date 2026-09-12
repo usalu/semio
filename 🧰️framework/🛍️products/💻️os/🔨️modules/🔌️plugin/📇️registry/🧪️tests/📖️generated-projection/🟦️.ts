@@ -3,7 +3,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { isHostPlaygroundFilter } from "../../🟦️.ts";
-import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection, resolveRegistryPluginIdsForFilter, type PluginRegistryEntry, type PlaygroundEntry } from "../../📜️script.ts";
+import { type PluginRegistryEntry, resolveRegistryPluginIdsForFilter } from "../../🔎️discovery/🟦️.ts";
+import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection } from "../../📖️catalog-view/🟦️.ts";
+import type { PlaygroundEntry } from "../../🎮️playground/🔎️discovery/🟦️.ts";
 
 const vector = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures", "📖️generated-projection.json"), "utf8")) as {
   readonly entries: PluginRegistryEntry[];

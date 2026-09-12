@@ -35,7 +35,7 @@
 //   bun 📜️script.ts pdf-compare    --input <expected.pdf> --input <actual.pdf>
 //   bun 📜️script.ts gate-inputs    --out <dir>
 //
-// @see 🦀️oracle-probe/🦀️.rs — the readers themselves
+// @see 🔮️oracle/🦀️.rs — the readers themselves
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../../📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️bridge/📜️script.ts — the
 //      spawn/offline/agent-scoped-target pattern this file mirrors
@@ -113,7 +113,7 @@ function main(argv: readonly string[]): number {
   // 🏭️`--offline`: probes run inside a test sweep alongside peer sessions; the shared build-dir
   // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any per-probe override here.
   const run = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", CRATE_BIN, "--", probe, ...rest], {
-    cwd: join(import.meta.dir, "🦀️oracle-probe"),
+    cwd: join(import.meta.dir, "🔮️oracle", "📦️packages", "🦀️rust"),
     encoding: "utf8",
   });
   if (run.status !== 0) {

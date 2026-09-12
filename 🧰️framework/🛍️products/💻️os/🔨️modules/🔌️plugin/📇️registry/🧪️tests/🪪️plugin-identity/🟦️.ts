@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { parseModuleDirectories } from "../../📦️deployment/🟦️.ts";
-import { parseComponentPackageId, type PluginRegistryEntry } from "../../📜️script.ts";
+import { parseComponentPackageId, type PluginRegistryEntry } from "../../🔎️discovery/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();

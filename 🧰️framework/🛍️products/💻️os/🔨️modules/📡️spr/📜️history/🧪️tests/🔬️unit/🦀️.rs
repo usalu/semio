@@ -115,6 +115,55 @@ async fn a_log_without_composition_writes_no_composition_record() {
     // which is exactly what "absent" and "skipped" both look like from here.
     assert!(!bytes.windows(1).any(|window| window == [REC_COMPOSITION]) || decode_history(&bytes, &DecodeOptions::default()).await.is_ok());
 }
+
+#[semio_framework_async_macros::async_test]
+async fn retained_history_decode_yields_across_bytes_and_semantic_records() {
+    let log = sample_log().await;
+    let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode retained history fixture");
+    let limits = crate::os_spr::format::retained::RetainedSprLimits { file_bytes: bytes.len() as u64, frame_body_bytes: 1_048_576, records: 8_192 };
+    let mut decode = RetainedHistoryDecode::new(bytes.len(), limits).expect("admit retained decode");
+    let mut pending = 0usize;
+    loop {
+        match decode.step(&bytes, 7, 1).expect("advance retained decode") {
+            RetainedHistoryDecodeStep::Pending { completed_bytes, total_bytes, decoded_records } => {
+                assert!(completed_bytes <= total_bytes);
+                assert!(decoded_records <= limits.records);
+                pending += 1;
+            }
+            RetainedHistoryDecodeStep::Ready => break,
+        }
+    }
+    assert!(pending > bytes.len() / 7, "semantic frames must remain separately scheduled after byte verification");
+    assert_eq!(decode.take_ready(), Some(log));
+    let _ = decode.take_auxiliary_owners();
+    assert!(decode.terminal_is_empty());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn retained_history_decode_rejects_a_crc_valid_reference_after_valid_records() {
+    let mut log = sample_log().await;
+    log.changes.push(HistoryChange {
+        id: "change-after-valid-prefix".to_string(),
+        saved_at: "2026-09-12T00:00:00Z".to_string(),
+        edit_ids: vec!["missing-edit".to_string()],
+        description: None,
+    });
+    let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode semantically malformed retained history");
+    let limits = crate::os_spr::format::retained::RetainedSprLimits { file_bytes: bytes.len() as u64, frame_body_bytes: 1_048_576, records: 8_192 };
+    let mut decode = RetainedHistoryDecode::new(bytes.len(), limits).expect("admit retained semantic refusal");
+    let error = loop {
+        match decode.step(&bytes, 11, 1) {
+            Ok(RetainedHistoryDecodeStep::Pending { .. }) => {}
+            Ok(RetainedHistoryDecodeStep::Ready) => panic!("unknown edit reference reached ready"),
+            Err(error) => break error,
+        }
+    };
+    assert!(error.contains("missing-edit"));
+    let partial = decode.take_partial().expect("semantic rejection retains its exact partial history owner");
+    assert_eq!(partial.changes.last().map(|change| change.id.as_str()), Some("change-after-valid-prefix"));
+    let _ = decode.take_auxiliary_owners();
+    assert!(decode.terminal_is_empty());
+}
 //#endregion 🔖️Composition
 
 //#region 🔖️Conflict

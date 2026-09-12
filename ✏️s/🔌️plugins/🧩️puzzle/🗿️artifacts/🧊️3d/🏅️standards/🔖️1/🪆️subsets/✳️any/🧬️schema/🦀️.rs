@@ -795,19 +795,13 @@ pub enum Puzzle3dEngineOutcome {
 }
 //#endregion 🔖️PrecomputeCommand
 
-//#region 🧪️PrecomputeTestkit
+//#region 🧪️PrecomputeModelTests
 /// 🧪️ The one puzzle3d-precompute test harness — every sibling app-side precompute test file builds on
 /// it instead of re-deriving a mesh-buffer/scene/fill-plan scaffold of its own. `pub(crate)` so the app's
 /// own `#[cfg(test)]` modules (session/geometry/brush) can reach it across the artifact/app boundary.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️PrecomputeTestkit
-
-//#region 🧪️PrecomputeModelTests
-#[cfg(test)]
 #[path = "🧪️tests/🔬️precompute-model/🦀️.rs"]
-mod precompute_model_tests;
+pub(crate) mod precompute_model_tests;
 //#endregion 🧪️PrecomputeModelTests
 
 //#region 🔁️Re-exports

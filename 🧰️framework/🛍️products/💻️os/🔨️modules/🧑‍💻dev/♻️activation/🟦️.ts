@@ -4,6 +4,25 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const ACTIVATION_RECEIPT_FILE = "🔣️receipt.json";
+export const PLAYGROUND_SESSION_ARTIFACT_KEY = "🎮️playground-session/🟦️.ts";
+export const PLAYGROUND_SESSION_OUTPUT_ROOT_ENV = "SEMIO_PLAYGROUND_SESSION_OUTPUT_ROOT";
+export const PLAYGROUND_SESSION_VITE_SPECIFIER = "virtual:semio-playground-session";
+
+/** 🎮️ Resolves one semantic session source below an explicit generated-output root. */
+export function playgroundSessionOutputPath(outputRoot: string): string {
+  return join(outputRoot, ...PLAYGROUND_SESSION_ARTIFACT_KEY.split("/"));
+}
+
+/** 🎮️ Resolves one variant source below an explicit staging root. */
+export function playgroundSessionStagedOutputPath(stagingRoot: string, variant: string): string {
+  return playgroundSessionOutputPath(join(stagingRoot, variant));
+}
+
+/** 🎮️ Gives Vite and native tests the same pure virtual-session alias. */
+export function playgroundSessionViteAlias(stagingRoot: string, variant: string): { readonly find: string; readonly replacement: string } {
+  return { find: PLAYGROUND_SESSION_VITE_SPECIFIER, replacement: playgroundSessionStagedOutputPath(stagingRoot, variant) };
+}
+
 export type ActivationArtifact = { readonly pluginId: string; readonly artifactSha256: string };
 export type ActivationReceipt = {
   readonly schema: "semio.dev.activation/v1";

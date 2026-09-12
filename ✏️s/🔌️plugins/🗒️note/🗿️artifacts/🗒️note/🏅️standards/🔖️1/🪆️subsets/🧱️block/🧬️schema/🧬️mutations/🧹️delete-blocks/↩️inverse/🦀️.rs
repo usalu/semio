@@ -8,7 +8,7 @@ use crate::NoteSnapshot;
 pub fn inverse(payload: &DeleteBlocks, base: &NoteSnapshot) -> Vec<NoteMutation> {
     // 🩹 Pre-existing bug fixed here (confirmed via `git log --date=iso`: this file was authored
     // 2026-08-12 15:50:51 by an unrelated wave, unrelated to composition — never touched `content`/
-    // `paragraphs`). Every `MutationKind::inverse` caller (`protocol::testkit::assert_mutation_inverse_law`
+    // `paragraphs`). Every `MutationKind::inverse` caller (`protocol::os_spr::protocol_laws::assert_mutation_inverse_law`
     // included) reverses the returned Vec before applying each step in turn. Each `CreateBlock` step
     // reinserts at its ORIGINAL absolute index from `base`, which is only valid if the lowest index is
     // inserted FIRST (so it never gets pushed rightward by an insert that hasn't happened yet). Sorting

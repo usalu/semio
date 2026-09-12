@@ -1,5 +1,7 @@
 /** 🧬️ Fem2d artifact schema — every field with its state class. */
 
+import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+
 //#region 🔖️Entities
 /** 📍️ A structural node in plan (x, y in meters). Mirrors Rust `FemNode` (`🦀️.rs`). */
 export interface FemNode {
@@ -95,13 +97,6 @@ export interface FemAnalysisSettings {
   deformationScale: number;
 }
 
-/** 🎥️ The canvas camera (pan/zoom) for the plugin viewport. Mirrors Rust `FemCamera`
- * (`🦀️.rs`). */
-export interface FemCamera {
-  x: number;
-  y: number;
-  zoom: number;
-}
 //#endregion 🔖️Entities
 
 export interface Fem2dArtifact {
@@ -123,7 +118,6 @@ export interface Fem2dArtifact {
   combinations: FemCombination[];
   /** @state artifact */
   analysis: FemAnalysisSettings;
-  /** @state config */
 }
 
 //#region 🚪️Parsers
@@ -173,8 +167,59 @@ export const femFem2dArtifactGuardConstant = <T extends string | number | boolea
   value === expected ? expected : femFem2dArtifactGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
+function parseFemPoint(value: unknown, at: string): [number, number] {
+  const point = femFem2dArtifactGuardArray(value, at, { minItems: 2, maxItems: 2 });
+  return [femFem2dArtifactGuardNumber(point[0], `${at}[0]`), femFem2dArtifactGuardNumber(point[1], `${at}[1]`)];
+}
+
+export function parseFemElement(value: unknown, at = "$"): FemElement {
+  const kind = femFem2dArtifactGuardMember(femFem2dArtifactGuardObject(value, at)["kind"], `${at}.kind`, ["bar", "beam"] as const);
+  const row = parseSchemaRecord(value, ["kind", "id", "start", "end", "materialId", "sectionId"], at);
+  const base = {
+    id: femFem2dArtifactGuardString(row.id, `${at}.id`),
+    start: femFem2dArtifactGuardString(row.start, `${at}.start`),
+    end: femFem2dArtifactGuardString(row.end, `${at}.end`),
+    materialId: femFem2dArtifactGuardString(row.materialId, `${at}.materialId`),
+    sectionId: femFem2dArtifactGuardString(row.sectionId, `${at}.sectionId`),
+  };
+  return { ...base, kind };
+}
+
+export function parseFemLoad(value: unknown, at = "$"): FemLoad {
+  const kind = femFem2dArtifactGuardMember(femFem2dArtifactGuardObject(value, at)["kind"], `${at}.kind`, ["nodal", "memberUdl", "area"] as const);
+  const fields = kind === "nodal" ? ["nodeId", "dof", "value"] : kind === "memberUdl" ? ["elementId", "wx", "wy"] : ["regionId", "pressure"];
+  const row = parseSchemaRecord(value, ["kind", "id", ...fields], at);
+  const id = femFem2dArtifactGuardString(row.id, `${at}.id`);
+  if (kind === "nodal") return { kind, id, nodeId: femFem2dArtifactGuardString(row.nodeId, `${at}.nodeId`), dof: femFem2dArtifactGuardMember(row.dof, `${at}.dof`, ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] as const), value: femFem2dArtifactGuardNumber(row.value, `${at}.value`) };
+  if (kind === "memberUdl") return { kind, id, elementId: femFem2dArtifactGuardString(row.elementId, `${at}.elementId`), wx: femFem2dArtifactGuardNumber(row.wx, `${at}.wx`), wy: femFem2dArtifactGuardNumber(row.wy, `${at}.wy`) };
+  return { kind, id, regionId: femFem2dArtifactGuardString(row.regionId, `${at}.regionId`), pressure: femFem2dArtifactGuardNumber(row.pressure, `${at}.pressure`) };
+}
+
+export function parseFemLoadCase(value: unknown, at = "$"): FemLoadCase {
+  const row = parseSchemaRecord(value, ["id", "name", "loads", "selfWeight"], at);
+  return {
+    id: femFem2dArtifactGuardString(row.id, `${at}.id`),
+    name: femFem2dArtifactGuardString(row.name, `${at}.name`),
+    loads: femFem2dArtifactGuardArray(row.loads, `${at}.loads`).map((load, index) => parseFemLoad(load, `${at}.loads[${index}]`)),
+    selfWeight: femFem2dArtifactGuardBoolean(row.selfWeight, `${at}.selfWeight`),
+  };
+}
+
+export function parseFemCombination(value: unknown, at = "$"): FemCombination {
+  const row = parseSchemaRecord(value, ["id", "name", "terms"], at);
+  return {
+    id: femFem2dArtifactGuardString(row.id, `${at}.id`),
+    name: femFem2dArtifactGuardString(row.name, `${at}.name`),
+    terms: femFem2dArtifactGuardArray(row.terms, `${at}.terms`).map((value, index) => {
+      const termAt = `${at}.terms[${index}]`;
+      const term = parseSchemaRecord(value, ["caseId", "factor"], termAt);
+      return { caseId: femFem2dArtifactGuardString(term.caseId, `${termAt}.caseId`), factor: femFem2dArtifactGuardNumber(term.factor, `${termAt}.factor`) };
+    }),
+  };
+}
+
 export function parseFem2dArtifact(value: unknown, at = "$"): Fem2dArtifact {
-  const row = femFem2dArtifactGuardObject(value, at);
+  const row = parseSchemaRecord(value, ["nodes", "elements", "materials", "sections", "supports", "loadCases", "combinations", "regions", "analysis"], at);
   return {
     nodes: femFem2dArtifactGuardArray(row["nodes"], `${at}.nodes`).map((item, index) => parseFemNode(item, `${at}.nodes[${index}]`)),
     elements: femFem2dArtifactGuardArray(row["elements"], `${at}.elements`).map((item, index) => parseFemElement(item, `${at}.elements[${index}]`)),
@@ -188,14 +233,6 @@ export function parseFem2dArtifact(value: unknown, at = "$"): Fem2dArtifact {
   };
 }
 
-export function parseFemCamera(value: unknown, at = "$"): FemCamera {
-  const row = femFem2dArtifactGuardObject(value, at);
-  return {
-    x: femFem2dArtifactGuardNumber(row["x"], `${at}.x`),
-    y: femFem2dArtifactGuardNumber(row["y"], `${at}.y`),
-    zoom: femFem2dArtifactGuardNumber(row["zoom"], `${at}.zoom`),
-  };
-}
 
 export function parseFemAnalysisSettings(value: unknown, at = "$"): FemAnalysisSettings {
   const row = femFem2dArtifactGuardObject(value, at);
@@ -220,8 +257,8 @@ export function parseFemRegion(value: unknown, at = "$"): FemRegion {
   return {
     id: femFem2dArtifactGuardString(row["id"], `${at}.id`),
     name: femFem2dArtifactGuardString(row["name"], `${at}.name`),
-    outline: femFem2dArtifactGuardArray(row["outline"], `${at}.outline`, {"minItems": 3}).map((item, index) => femFem2dArtifactGuardArray(item, `${at}.outline[${index}]`, {"minItems": 2, "maxItems": 2}).map((item, index) => femFem2dArtifactGuardNumber(item, `${at}.outline[${index}][${index}]`))),
-    holes: femFem2dArtifactGuardArray(row["holes"], `${at}.holes`).map((item, index) => femFem2dArtifactGuardArray(item, `${at}.holes[${index}]`, {"minItems": 3}).map((item, index) => femFem2dArtifactGuardArray(item, `${at}.holes[${index}][${index}]`, {"minItems": 2, "maxItems": 2}).map((item, index) => femFem2dArtifactGuardNumber(item, `${at}.holes[${index}][${index}][${index}]`)))),
+    outline: femFem2dArtifactGuardArray(row.outline, `${at}.outline`, { minItems: 3 }).map((point, index) => parseFemPoint(point, `${at}.outline[${index}]`)),
+    holes: femFem2dArtifactGuardArray(row.holes, `${at}.holes`).map((hole, index) => femFem2dArtifactGuardArray(hole, `${at}.holes[${index}]`, { minItems: 3 }).map((point, pointIndex) => parseFemPoint(point, `${at}.holes[${index}][${pointIndex}]`))),
     thickness: femFem2dArtifactGuardNumber(row["thickness"], `${at}.thickness`),
     materialId: femFem2dArtifactGuardString(row["materialId"], `${at}.materialId`),
     meshSize: femFem2dArtifactGuardNumber(row["meshSize"], `${at}.meshSize`),

@@ -16,7 +16,7 @@ pub struct SequenceArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.flow")]
+    #[child(kind = "s.stdio.semio")]
     pub content: SequenceContentChild,
 }
 //#endregion 🔖️Artifact

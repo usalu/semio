@@ -1,0 +1,12 @@
+type RemodelingLayerVisibility {
+  mesh: Boolean! @state(class: CONFIG)
+  dense: Boolean! @state(class: CONFIG)
+  sparse: Boolean! @state(class: CONFIG)
+  cameras: Boolean! @state(class: CONFIG)
+  gcps: Boolean! @state(class: CONFIG)
+}
+
+type RemodelingModelWindowConfig {
+  camera: Viewport3dOrbit! @state(class: CONFIG)
+  layers: RemodelingLayerVisibility! @state(class: CONFIG)
+}

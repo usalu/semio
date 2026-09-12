@@ -1,5 +1,5 @@
 //! 🧵️ WASM backbone worker — browser-side `ArtifactHost` actor relaying the same protocol as
-//! `🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts`, without materializing snapshots.
+//! `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts`, without materializing snapshots.
 
 use crate::os_store::sync::{
     backbone_worker_wire::{self, BackboneWorkerRequest, BackboneWorkerResponse},

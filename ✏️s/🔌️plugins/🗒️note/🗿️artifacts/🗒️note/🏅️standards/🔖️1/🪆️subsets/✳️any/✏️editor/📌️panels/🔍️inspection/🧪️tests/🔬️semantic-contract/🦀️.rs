@@ -8,13 +8,13 @@ fn note_semantic_panels_match_the_json_oracle() {
         let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::locale_from_str(row["locale"].as_str().expect("locale")), ..Default::default() };
         let labels = crate::editor::note::terminology::note_play_labels(&view_state);
         let inspector = render(&snapshot, fixture["utility"].as_str().expect("utility"), labels).expect("inspector");
-        let projection = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(inspector)).expect("project and retire inspector");
+        let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(inspector)).expect("project and retire inspector");
         let actual: serde_json::Value = serde_json::from_str(&projection).expect("independent JSON oracle");
         assert_eq!(actual["component"]["label"], row["heading"]);
         let lines: Vec<_> = actual["children"].as_array().expect("summary").iter().map(|child| child["component"]["value"].clone()).collect();
         assert_eq!(lines, *row["lines"].as_array().expect("summary lines"));
         let catalogue = crate::editor::note::panels::catalogue::render(labels).expect("catalogue");
-        let projection = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(catalogue)).expect("project and retire catalogue");
+        let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(catalogue)).expect("project and retire catalogue");
         let actual: serde_json::Value = serde_json::from_str(&projection).expect("catalogue JSON oracle");
         assert_eq!(actual["children"][0]["component"]["label"], row["catalogue"]);
         assert_eq!(actual["children"][0]["children"][0]["component"]["value"], row["firstKind"]);
@@ -37,6 +37,6 @@ fn note_ink_canvas_payload_matches_the_json_oracle() {
         assert_eq!(scene.active_utility, fixture["utility"].as_str().expect("utility"));
         assert_eq!(scene.view_mode, mode);
         assert_eq!(scene.interactive, mode == "composite");
-        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire canvas");
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire canvas");
     }
 }

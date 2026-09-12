@@ -1,6 +1,6 @@
 //! 🎯️ 🎯️ Remodeling play app commands command — `edit-calibration`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::{create_camera_calibration, update_camera_calibration};
 use crate::op::RemodelingMutation;
 use crate::{CameraCalibration, RemodelingSnapshot};
@@ -26,7 +26,7 @@ pub struct EditCalibration {
     pub locked: bool,
 }
 
-pub fn handle(payload: &EditCalibration, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &EditCalibration, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     let entry = CameraCalibration {
         id: payload.camera_id.clone(),
         label: payload.label.clone(),

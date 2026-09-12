@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://fem/engine/elements3d/mounted-stiffness",
+  "title": "FEM 3D mounted stiffness reference matrices",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["oracle", "tolerance", "cases"],
+  "properties": {
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package", "version", "implementation"],
+      "properties": {
+        "package": { "const": "numpy" },
+        "version": { "type": "string", "minLength": 1 },
+        "implementation": { "type": "string", "minLength": 1 }
+      }
+    },
+    "tolerance": { "type": "number", "exclusiveMinimum": 0 },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/bar3" },
+          { "$ref": "#/$defs/frame3" },
+          { "$ref": "#/$defs/tet4" }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "vector3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "number" }
+    },
+    "nodes2": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "nodes4": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "positions2": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/vector3" }
+    },
+    "positions4": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/vector3" }
+    },
+    "matrix6": {
+      "type": "array",
+      "minItems": 36,
+      "maxItems": 36,
+      "items": { "type": "number" }
+    },
+    "matrix12": {
+      "type": "array",
+      "minItems": 144,
+      "maxItems": 144,
+      "items": { "type": "number" }
+    },
+    "bar3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "nodeIds", "positions", "properties", "matrix"],
+      "properties": {
+        "kind": { "const": "bar3" },
+        "nodeIds": { "$ref": "#/$defs/nodes2" },
+        "positions": { "$ref": "#/$defs/positions2" },
+        "properties": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["e", "a"],
+          "properties": {
+            "e": { "type": "number", "exclusiveMinimum": 0 },
+            "a": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "matrix": { "$ref": "#/$defs/matrix6" }
+      }
+    },
+    "frame3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "nodeIds", "positions", "properties", "matrix"],
+      "properties": {
+        "kind": { "const": "frame3" },
+        "nodeIds": { "$ref": "#/$defs/nodes2" },
+        "positions": { "$ref": "#/$defs/positions2" },
+        "properties": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["e", "g", "a", "iy", "iz", "j", "roll"],
+          "properties": {
+            "e": { "type": "number", "exclusiveMinimum": 0 },
+            "g": { "type": "number", "exclusiveMinimum": 0 },
+            "a": { "type": "number", "exclusiveMinimum": 0 },
+            "iy": { "type": "number", "exclusiveMinimum": 0 },
+            "iz": { "type": "number", "exclusiveMinimum": 0 },
+            "j": { "type": "number", "exclusiveMinimum": 0 },
+            "roll": { "type": "number" }
+          }
+        },
+        "matrix": { "$ref": "#/$defs/matrix12" }
+      }
+    },
+    "tet4": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "nodeIds", "positions", "properties", "matrix"],
+      "properties": {
+        "kind": { "const": "tet4" },
+        "nodeIds": { "$ref": "#/$defs/nodes4" },
+        "positions": { "$ref": "#/$defs/positions4" },
+        "properties": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["e", "nu"],
+          "properties": {
+            "e": { "type": "number", "exclusiveMinimum": 0 },
+            "nu": { "type": "number", "exclusiveMinimum": -1, "exclusiveMaximum": 0.5 }
+          }
+        },
+        "matrix": { "$ref": "#/$defs/matrix12" }
+      }
+    }
+  }
+}

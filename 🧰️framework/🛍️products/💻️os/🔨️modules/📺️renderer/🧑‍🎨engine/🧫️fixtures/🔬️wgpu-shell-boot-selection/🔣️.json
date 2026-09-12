@@ -1,44 +1,185 @@
 {
-  "note": "🎯️ Which program+app a standalone wgpu shell boot opens for one playground variant. `programs` is the boot plan in the order the renderer receives it — dependency-first, exactly as `resolvePlaygroundBoot` orders it — so case `dependency-sorts-first` is the live generation3d closure that made the shell open the flow plugin's app and die on the flow actor's first-step trap.",
+  "note": "🎯️ Which program+app a standalone wgpu shell boot opens for one playground variant and one boot ROLE. `programs` is the boot plan in the order the renderer receives it — dependency-first, exactly as `resolvePlaygroundBoot` orders it — so case `dependency-sorts-first` is the live generation3d closure that made the shell open the flow plugin's app and die on the flow actor's first-step trap. `role` is the boot-time surface role (`?role=`, `SEMIO_APP_ROLE`, `VITE_SEMIO_APP_ROLE`); absent means the frozen default `editor`. Every registry row names an `#editor` app, so a viewer boot is a PROJECTION onto the sibling surface of the same dialect — the rule React's `resolveBootPrimaryAppV1` already follows.",
   "cases": [
     {
       "id": "dependency-sorts-first",
       "variant": "generation3d",
       "programs": [
-        { "pluginId": "flow", "appIds": ["s.flow.flow@1/*#editor"] },
-        { "pluginId": "procedural", "appIds": ["s.procedural.generation2d@1/*#editor", "s.procedural.generation3d@1/*#editor"] }
+        {
+          "pluginId": "flow",
+          "appIds": [
+            "s.flow.flow@1/*#editor"
+          ]
+        },
+        {
+          "pluginId": "procedural",
+          "appIds": [
+            "s.procedural.generation2d@1/*#editor",
+            "s.procedural.generation3d@1/*#editor"
+          ]
+        }
       ],
-      "expected": { "index": 1, "appId": "s.procedural.generation3d@1/*#editor" }
+      "expected": {
+        "index": 1,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      }
     },
     {
       "id": "requested-plugin-absent",
       "variant": "generation3d",
-      "programs": [{ "pluginId": "flow", "appIds": ["s.flow.flow@1/*#editor"] }],
+      "programs": [
+        {
+          "pluginId": "flow",
+          "appIds": [
+            "s.flow.flow@1/*#editor"
+          ]
+        }
+      ],
       "expected": null
     },
     {
       "id": "requested-plugin-without-the-declared-app",
       "variant": "generation3d",
       "programs": [
-        { "pluginId": "flow", "appIds": ["s.flow.flow@1/*#editor"] },
-        { "pluginId": "procedural", "appIds": ["s.procedural.generation2d@1/*#editor"] }
+        {
+          "pluginId": "flow",
+          "appIds": [
+            "s.flow.flow@1/*#editor"
+          ]
+        },
+        {
+          "pluginId": "procedural",
+          "appIds": [
+            "s.procedural.generation2d@1/*#editor"
+          ]
+        }
       ],
-      "expected": { "index": 1, "appId": "s.procedural.generation2d@1/*#editor" }
+      "expected": {
+        "index": 1,
+        "appId": "s.procedural.generation2d@1/*#editor"
+      }
     },
     {
       "id": "declaring-program-under-another-id",
       "variant": "generation3d",
       "programs": [
-        { "pluginId": "flow", "appIds": ["s.flow.flow@1/*#editor"] },
-        { "pluginId": "procedural-preview", "appIds": ["s.procedural.generation3d@1/*#editor"] }
+        {
+          "pluginId": "flow",
+          "appIds": [
+            "s.flow.flow@1/*#editor"
+          ]
+        },
+        {
+          "pluginId": "procedural-preview",
+          "appIds": [
+            "s.procedural.generation3d@1/*#editor"
+          ]
+        }
       ],
-      "expected": { "index": 1, "appId": "s.procedural.generation3d@1/*#editor" }
+      "expected": {
+        "index": 1,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      }
     },
     {
       "id": "single-program-variant",
       "variant": "puzzle3d",
-      "programs": [{ "pluginId": "puzzle", "appIds": ["s.puzzle.puzzle3d@1/*#editor"] }],
-      "expected": { "index": 0, "appId": "s.puzzle.puzzle3d@1/*#editor" }
+      "programs": [
+        {
+          "pluginId": "puzzle",
+          "appIds": [
+            "s.puzzle.puzzle3d@1/*#editor"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 0,
+        "appId": "s.puzzle.puzzle3d@1/*#editor"
+      }
+    },
+    {
+      "id": "viewer-role-projects-onto-the-declared-sibling",
+      "variant": "generation3d",
+      "role": "viewer",
+      "programs": [
+        {
+          "pluginId": "flow",
+          "appIds": [
+            "s.flow.flow@1/*#editor"
+          ]
+        },
+        {
+          "pluginId": "procedural",
+          "appIds": [
+            "s.procedural.generation2d@1/*#editor",
+            "s.procedural.generation3d@1/*#editor",
+            "s.procedural.generation3d@1/*#viewer"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 1,
+        "appId": "s.procedural.generation3d@1/*#viewer"
+      }
+    },
+    {
+      "id": "viewer-role-without-a-sibling-keeps-the-anchor",
+      "variant": "generation3d",
+      "role": "viewer",
+      "programs": [
+        {
+          "pluginId": "flow",
+          "appIds": [
+            "s.flow.flow@1/*#editor"
+          ]
+        },
+        {
+          "pluginId": "procedural",
+          "appIds": [
+            "s.procedural.generation3d@1/*#editor"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 1,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      }
+    },
+    {
+      "id": "viewer-role-never-crosses-dialects",
+      "variant": "generation3d",
+      "role": "viewer",
+      "programs": [
+        {
+          "pluginId": "procedural",
+          "appIds": [
+            "s.procedural.generation3d@1/*#editor",
+            "s.procedural.generation2d@1/*#viewer"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 0,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      }
+    },
+    {
+      "id": "editor-role-is-the-frozen-default",
+      "variant": "generation3d",
+      "role": "editor",
+      "programs": [
+        {
+          "pluginId": "procedural",
+          "appIds": [
+            "s.procedural.generation3d@1/*#editor",
+            "s.procedural.generation3d@1/*#viewer"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 0,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      }
     }
   ]
 }

@@ -1,5 +1,5 @@
 /** 📐️ Layout editor — Blueprint window: typed twin of `🦀️.rs`'s view-model. Mirrors the
- * pane's `render(engine: &mut LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig)` boundary —
+ * pane's exact `LayoutWindowConfig` and `LayoutWindowTransient` boundary —
  * the host canvas-2d layer payload plus the authoring surface's own ephemeral camera pose, absent
  * entirely from the viewer's read-only twin (see `👁️viewer/…/👁️preview/🟦️.ts`). */
 

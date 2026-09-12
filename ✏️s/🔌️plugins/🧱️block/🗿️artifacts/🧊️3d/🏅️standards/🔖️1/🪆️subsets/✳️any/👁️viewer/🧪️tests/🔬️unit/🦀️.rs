@@ -19,7 +19,7 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 /// snapshot would leave its `World3d` window blank forever.
 #[semio_framework_async_macros::async_test]
 async fn viewer_boots_with_at_least_one_representation() {
-    let app = semio_framework_plugin::testkit::new_app::<semio_framework_plugin::ViewerApp<Block3dViewer>>().await;
+    let app = semio_framework_plugin::artifact_app_laws::new_app::<semio_framework_plugin::ViewerApp<Block3dViewer>>().await;
     let snapshot = app.snapshot().expect("snapshot");
     assert!(!snapshot.representations.is_empty(), "the viewer must boot with a renderable document");
     assert!(snapshot.representations.iter().all(|representation| representation.mesh_url.is_some()));
@@ -27,9 +27,9 @@ async fn viewer_boots_with_at_least_one_representation() {
 
 #[semio_framework_async_macros::async_test]
 async fn noop_command_round_trips_and_never_mutates() {
-    let mut app = semio_framework_plugin::testkit::new_app::<semio_framework_plugin::ViewerApp<Block3dViewer>>().await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_app::<semio_framework_plugin::ViewerApp<Block3dViewer>>().await;
     let before = app.snapshot().expect("snapshot");
-    app.dispatch_typed(Block3dViewCommand::Noop, &semio_framework_plugin::testkit::meta("local")).await.expect("dispatch");
+    app.dispatch_typed(Block3dViewCommand::Noop, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("dispatch");
     let after = app.snapshot().expect("snapshot");
     assert_eq!(before, after, "the viewer's sole command must never change the document");
 }

@@ -8,7 +8,7 @@
 // 🏭️ Third-party fixture generator for `s.stdio.pdf@1.7/📐️e` — the 12-kind ISO 24517-1:2008 (PDF/E-1)
 // conformance-class catalog.
 //
-// Every before/after pair `🦀️lopdf-engine/src/🏗️generate.rs` writes is produced by the SAME registered `lopdf`
+// Every before/after pair `🔁️codec/🏗️generate/🦀️.rs` writes is produced by the SAME registered `lopdf`
 // 0.44 reference implementation named `lopdf-pdf-1-7-e-mutate` in `../🔣️oracle.json` —
 // `document::pdf_conformance` inside the standalone, already-qualified
 // `semio-s-plugin-stdio-test-oracle` crate, the identical engine the differential test case
@@ -40,13 +40,13 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const ENGINE_DIR = join(HERE, "🦀️lopdf-engine");
+const ENGINE_DIR = join(HERE, "🔁️codec", "📦️packages", "🦀️rust");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 const SUBSET = "e";
 const ORACLE_ID = "lopdf-pdf-1-7-e-mutate-reader";
 const COMPARISON_PROFILE = "semantic-pdf-conformance-e-v1";
-// 🧾️ Kept in step with `🦀️lopdf-engine/src/🏗️generate.rs::KINDS` (itself the same list as
+// 🧾️ Kept in step with `🔁️codec/🏗️generate/🦀️.rs::KINDS` (itself the same list as
 // `../🔣️oracle.json`'s `pdf-1-7-e` catalog) — `manifests` walks whichever recipe directories the
 // engine actually wrote rather than trusting this constant, so a drift here fails loudly as a
 // missing-directory error instead of silently under-registering a kind.
@@ -131,7 +131,7 @@ async function manifests(): Promise<void> {
       comparisonProfile: COMPARISON_PROFILE,
       reproducible: true,
       family: "mechanical",
-      notes: `A minimal lopdf-built seed with the ${kind} mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.`,
+      notes: `A minimal lopdf-built seed with the ${kind} mutation applied THROUGH lopdf's own public COS API (🔁️codec/🦀️.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.`,
     });
   }
   console.log(JSON.stringify(entries, null, 2));

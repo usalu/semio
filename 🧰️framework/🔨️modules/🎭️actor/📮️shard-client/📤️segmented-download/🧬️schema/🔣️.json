@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/actor/shard-client/segmented-download/schema.json",
+  "title": "Segmented Download Chunk Contract",
+  "$defs": {
+    "SegmentedDownloadContract": {
+      "title": "One Chunk Contract For Producer, Worker And Drain",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "scope", "contract", "refusals"],
+      "properties": {
+        "version": { "const": 1 },
+        "scope": { "const": "segmented-download-chunk-contract" },
+        "contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["chunkBytes", "maximumOutstandingChunks", "maximumTotalBytes", "maximumOperationId"],
+          "properties": {
+            "chunkBytes": { "type": "integer", "minimum": 1 },
+            "maximumOutstandingChunks": { "type": "integer", "minimum": 1 },
+            "maximumTotalBytes": { "type": "integer", "minimum": 1 },
+            "maximumOperationId": { "type": "string", "pattern": "^[1-9][0-9]*$" }
+          }
+        },
+        "refusals": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "code"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+              "code": { "type": "string", "pattern": "^segmented-download-[a-z0-9-]+$" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [{ "$ref": "#/$defs/SegmentedDownloadContract" }]
+}

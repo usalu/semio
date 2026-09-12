@@ -419,7 +419,7 @@
         "vitest": "^4.0.17",
       },
     },
-    "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🎯️targets/⚛️5d-react": {
+    "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/📦️packages/🟦️typescript": {
       "name": "@semio-tech/puzzle-5d-react",
       "version": "0.1.0",
     },
@@ -506,7 +506,7 @@
         "typescript": "^5.9.3",
       },
     },
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react": {
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
       "name": "@semio-tech/ui-react",
       "version": "0.1.0",
       "dependencies": {
@@ -633,7 +633,7 @@
       "name": "@semio-tech/flow-core",
       "version": "0.1.0",
     },
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-renderer-wgpu",
       "version": "0.1.0",
       "dependencies": {
@@ -646,7 +646,7 @@
         "vitest": "^4.0.17",
       },
     },
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-renderer-react",
       "version": "0.1.0",
       "dependencies": {
@@ -1694,9 +1694,9 @@
 
     "@semio-tech/framework-os-shell": ["@semio-tech/framework-os-shell@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript"],
 
-    "@semio-tech/framework-renderer-react": ["@semio-tech/framework-renderer-react@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"],
+    "@semio-tech/framework-renderer-react": ["@semio-tech/framework-renderer-react@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"],
 
-    "@semio-tech/framework-renderer-wgpu": ["@semio-tech/framework-renderer-wgpu@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"],
+    "@semio-tech/framework-renderer-wgpu": ["@semio-tech/framework-renderer-wgpu@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"],
 
     "@semio-tech/framework-replication": ["@semio-tech/framework-replication@workspace:🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript"],
 
@@ -1724,7 +1724,7 @@
 
     "@semio-tech/print": ["@semio-tech/print@workspace:🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript"],
 
-    "@semio-tech/puzzle-5d-react": ["@semio-tech/puzzle-5d-react@workspace:✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🎯️targets/⚛️5d-react"],
+    "@semio-tech/puzzle-5d-react": ["@semio-tech/puzzle-5d-react@workspace:✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/📦️packages/🟦️typescript"],
 
     "@semio-tech/puzzle-js": ["@semio-tech/puzzle-js@workspace:✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript"],
 
@@ -1824,7 +1824,7 @@
 
     "@semio-tech/trinity-jack-lsp-worker": ["@semio-tech/trinity-jack-lsp-worker@workspace:✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript"],
 
-    "@semio-tech/ui-react": ["@semio-tech/ui-react@workspace:🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"],
+    "@semio-tech/ui-react": ["@semio-tech/ui-react@workspace:🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript"],
 
     "@semio-tech/ui-styling": ["@semio-tech/ui-styling@workspace:🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript"],
 

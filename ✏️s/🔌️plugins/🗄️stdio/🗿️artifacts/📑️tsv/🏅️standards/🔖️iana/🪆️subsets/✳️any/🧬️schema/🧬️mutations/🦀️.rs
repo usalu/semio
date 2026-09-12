@@ -48,7 +48,7 @@ pub enum TsvMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `TsvMutation` variant, in declaration order — the exhaustive
-/// mutation catalog `tsv-iana-any` (`../../🔮️oracle/🔣️.json`) is measured against this
+/// mutation catalog `tsv-iana-any` (`../../🔮️oracles/🔣️.json`) is measured against this
 /// exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &["set-snapshot", "set-trailing-newline", "set-line-ending", "insert-row", "remove-row", "set-cell"];
 //#endregion 🔖️Mutations

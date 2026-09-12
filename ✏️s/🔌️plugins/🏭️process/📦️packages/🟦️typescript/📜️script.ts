@@ -130,11 +130,11 @@ class TestScript extends BundleScript {
     runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
 
     const pluginRoot = resolve(this.root, "../..");
-    const fixture = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧫️fixtures/⚖️retained-route-laws.json")).json() as Fixture;
-    const module = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json")).json();
+    const testRoot = resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧪️tests/⚖️retained-route-laws");
+    const fixture = await Bun.file(resolve(testRoot, "🧫️fixtures/🔣️.json")).json() as Fixture;
+    const schema = await Bun.file(resolve(testRoot, "🧬️schema/🔣️.json")).json();
     const ajv = new Ajv({ allErrors: true, strict: false, validateFormats: false });
-    ajv.addSchema(module);
-    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/Process3dRetainedRouteLaws` });
+    const validate = ajv.compile(schema);
     if (!validate(fixture)) throw new Error(`Process3d retained route fixture failed Ajv: ${JSON.stringify(validate.errors)}`);
     if (!fixtureOracle(fixture)) throw new Error("Process3d retained route fixture failed its independent extent/partition oracle");
     const source = await Bun.file(resolve(pluginRoot, fixture.source)).text();

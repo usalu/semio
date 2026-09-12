@@ -3,7 +3,7 @@ use crate::editor::gis2d::terminology::gis2d_labels;
 
 #[semio_framework_async_macros::async_test]
 async fn the_group_carries_one_toggle_per_declared_layer() {
-    let config = Gis2dConfig::default();
+    let config = MapWindowConfig::default();
     let WindowMeasure::Group { children, default_open, .. } = measure(&config, gis2d_labels(&semio_framework_plugin::ViewModel::default())) else {
         panic!("layers is a group measure");
     };
@@ -14,7 +14,7 @@ async fn the_group_carries_one_toggle_per_declared_layer() {
 
 #[semio_framework_async_macros::async_test]
 async fn hiding_a_layer_unpresses_just_that_toggle() {
-    let mut config = Gis2dConfig::default();
+    let mut config = MapWindowConfig::default();
     config.layer_visibility.insert("water".into(), false);
     let WindowMeasure::Group { children, .. } = measure(&config, gis2d_labels(&semio_framework_plugin::ViewModel::default())) else {
         panic!("layers is a group measure");

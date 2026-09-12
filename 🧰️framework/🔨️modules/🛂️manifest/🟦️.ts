@@ -6,15 +6,15 @@ export { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "./�
 /** @emoji 🛂️ `@semio-tech/framework` — AppDefinition, PluginManifest, contributions, and declarative UI contract. */
 import type { IconName } from "@semio-tech/assets";
 export type { IconName };
-import { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology, type ShellLocale, type ShellTerminology, type LocalizedLabel } from "./🤖️generated/🎚️ui-axes.ts";
+import { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology, type ShellLocale, type ShellTerminology, type LocalizedLabel } from "./🤖️generated/🎚️ui-axes/🟦️.ts";
 export { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology };
 export type { ShellLocale, ShellTerminology, LocalizedLabel };
 // 🧭️ `ContextMenuItemSpec`/`Effect` are hand-written types owned by sibling modules aggregated
 // alongside this one into `@semio-tech/framework` (see `🟦️.ts`) — that aggregation only helps
 // EXTERNAL consumers of the package; this file's own internal references (`PluginContextMenuResponse`,
 // `PluginUiRefreshResponse`) still need a real import, type-only so the cycle back through
-// `🔺️mesh/🟦️.ts`'s own `ActionDescriptor` import from this file erases cleanly.
-import type { ContextMenuItemSpec } from "../🔺️mesh/🟦️.ts";
+// `🖱️ui/🎬️scene/🟦️.ts`'s own `ActionDescriptor` import from this file erases cleanly.
+import type { ContextMenuItemSpec } from "../🖱️ui/🎬️scene/🟦️.ts";
 import type { Effect } from "../🎠️kernel/🟦️.ts";
 
 // #region 🧬️GeneratedMirror
@@ -134,7 +134,7 @@ import type {
   // 🎫️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION §C8.1: the
   // `🔖️HostResolvedArgs` region below (`ArtifactKindChoice`/`SurfaceAppChoice`/`artifactKindChoices`)
   // names all three by hand, unlike `ArgFormat`'s inline `roles: Array<AppRole>` above.
-} from "./🤖️generated/🪪️manifest.ts";
+} from "./🤖️generated/🪪️manifest/🟦️.ts";
 // #endregion 🧬️GeneratedMirror
 
 // #region 🧬️GeneratedUiContract
@@ -225,7 +225,7 @@ import type {
   SurfaceKind as GeneratedSurfaceKind,
   SurfaceDoc as GeneratedSurfaceDoc,
   SurfaceProps as GeneratedSurfaceProps,
-} from "./🤖️generated/📜️ui-contract.ts";
+} from "./🤖️generated/📜️ui-contract/🟦️.ts";
 
 export type Liveness = GeneratedLiveness;
 export type AccessibilitySpec = GeneratedAccessibilitySpec;

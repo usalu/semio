@@ -1,0 +1,29 @@
+{
+  "oracle": {
+    "package": "numpy",
+    "version": "2.0.2",
+    "implementation": "dense tridiagonal matrix multiplication and nonzero extraction"
+  },
+  "order": 513,
+  "entryCount": 1537,
+  "indptrTail": 1537,
+  "physicalPageBytes": 4096,
+  "vectorRule": {
+    "multiplier": 17,
+    "modulus": 101,
+    "offset": 50,
+    "divisor": 7
+  },
+  "actionSamples": [
+    { "index": 0, "value": -2.428571428571429 },
+    { "index": 1, "value": 0 },
+    { "index": 170, "value": -4.440892098500626e-16 },
+    { "index": 256, "value": -14.428571428571429 },
+    { "index": 341, "value": 0 },
+    { "index": 511, "value": -14.428571428571429 },
+    { "index": 512, "value": 2.428571428571429 }
+  ],
+  "actionL1": 2486.5714285714284,
+  "indicesSha256": "6e245f1b5a9ebc5efe5146db374574490b0cafe2607c5cd0962535cd1851d28c",
+  "valuesSha256": "295521b23a0f1337f3b24d3837ab200feca0438de7333e1d0f13486dc59964b6"
+}

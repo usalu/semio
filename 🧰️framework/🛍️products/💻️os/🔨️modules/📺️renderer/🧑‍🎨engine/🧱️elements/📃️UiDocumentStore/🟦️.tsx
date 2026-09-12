@@ -19,6 +19,8 @@
 
 // #region 🔌️Adapters
 import { useCallback, useSyncExternalStore } from "react";
+import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
+export { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
 import { RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, type RetainedUiTransaction, type RetainedUiState } from "@semio-tech/framework";
 import {
   type AccessibilitySpec,
@@ -46,18 +48,6 @@ import {
 // #endregion 🔌️Adapters
 
 //#region 🔖️Limits
-/** 🛡️ Mirrors `semio-framework-ui-contract`'s `UiDocumentLimits::default()` (`🦀️limits.rs`) field for
- * field — the two MUST stay numerically identical or the two renderers would disagree about which
- * documents are valid. */
-export const DEFAULT_UI_DOCUMENT_LIMITS: UiDocumentLimits = {
-  maxNodes: 20_000,
-  maxDepth: 128,
-  maxChildren: 4_096,
-  maxTextBytes: 65_536,
-  maxPatchOps: 4_096,
-  maxPatchBytes: 1_048_576,
-};
-
 /** 🔢️ UTF-8 byte length, matching Rust's `str::len()` — `String.prototype.length` counts UTF-16 code
  * units and would silently disagree with the Rust side on any non-ASCII text. */
 function utf8ByteLength(value: string): number {

@@ -1,7 +1,7 @@
 //! 📄️ Layout play app panel — the document tree: spreads, pages, frames, parent pages, layers,
 //! stories, links and styles of the current layout document.
 
-use crate::editor::layout::config::LayoutConfig;
+use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig;
 use crate::editor::layout::terminology::LayoutLabels;
 use crate::editor::layout::{layout_action, ui_node_list, ui_value_map, ui_value_text, LAYOUT_GRANULARITY_ELEMENT, LAYOUT_INTERACTION_ELEMENTS};
 use crate::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
@@ -115,7 +115,7 @@ fn selection_args(ids: impl IntoIterator<Item = String>, merge: &str) -> semio_f
 /// interaction domain; `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)?` below has the framework's
 /// renderer translate row hover into `interactionHover` and stamp presence from `InteractionState`,
 /// replacing the deleted `.selected()?`/`.highlighted()?`/`.selection_change()` calls.
-pub fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &LayoutLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &LayoutLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let spread_items = ui_node_list(doc.spreads.iter().map(|spread| layout_tree_item(spread_row_id(&spread.id), Label::data(spread.name.clone()), Some(spread.page_ids.join(", ")), Some("layout".into()), None)))?;
 
     let page_items = ui_node_list(doc.pages.iter().map(|page| {

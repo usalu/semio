@@ -5,68 +5,68 @@
   "routes": [
     {
       "id": "setActiveExample",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "whole child replacement lacks an item-bounded child publication seam"
     },
     {
       "id": "addNode",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "fresh-id derivation clones and scans the complete graph child"
     },
     {
       "id": "addRelationship",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "fresh-id derivation clones and scans the complete graph child"
     },
     {
       "id": "deleteSelection",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "selection resolution requires item-addressable graph child reads"
     },
     {
       "id": "forceLayout",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "layout clones and scans the complete graph child before publishing"
     },
     {
       "id": "reorganize",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "layout clones and scans the complete graph child before publishing"
     },
     {
       "id": "canvasPointerMove",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "window-transient"
+        "WindowTransient"
       ],
       "reason": "The captured canvas advances only its exact transient preview while the gesture is active."
     },
     {
       "id": "canvasPointerDown",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "window-transient"
+        "WindowTransient"
       ],
       "reason": "Concrete canvas drag lifecycle uses the exact retained window transient owner; hit lookup advances one field per work step."
     },
     {
       "id": "canvasPointerUp",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact",
-        "window-transient"
+        "Artifact",
+        "WindowTransient"
       ],
       "reason": "Release scans the current target, rebases the frozen total delta, and atomically publishes one durable move with the exact-window clear."
     },
     {
       "id": "nodeGraphViewport",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "The viewport routes synchronously to the exact canvas WindowConfig owner pending a retained scalar command cursor."
     }

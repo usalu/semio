@@ -4,9 +4,9 @@
 use crate::demo_space_projection;
 use crate::engine::space::config::SpaceConfig;
 use crate::engine::space::terminology::SStudioLabels;
-use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, OsWorkflowCamera, WorkflowSnapshot};
+use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, OsWorkflowCamera, Viewport2d, WorkflowSnapshot};
 use semio_framework_plugin::{resolve_labels, ActionDescriptor, InteractionRef, LocalizedLabel, SurfaceKind, ViewModel, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
-use semio_framework_ui_scene::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene, NodeGraphViewport};
+use semio_framework_ui_scene::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene};
 
 /// 🎯️ Builds a controller-addressed `ActionDescriptor` with no args — the `s_play_action` helper
 /// returns a `UiAssemblyResult<(ActionId, Option<UiValue>)>` tuple (the `UiNode`-tree action shape),
@@ -121,7 +121,7 @@ pub async fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowS
         capabilities_json: Some(r#"{"engine":"flow","spotlight":false,"noteEdit":false,"clusters":false}"#.into()),
         fixture_json: Some(fixture.to_string()),
         presence_peers_json: Some(crate::engine::space::presence_peers_json(app, config).await),
-        ..NodeGraphScene::base(json_array_to_node_graph_nodes(&graph_payload.nodes_json).await, json_array_to_node_graph_edges(&graph_payload.edges_json).await, NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom })
+        ..NodeGraphScene::base(json_array_to_node_graph_nodes(&graph_payload.nodes_json).await, json_array_to_node_graph_edges(&graph_payload.edges_json).await, Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom })
     };
     semio_framework_plugin::scene_surface(S_PLAY_SURFACE_WORKFLOW, semio_framework_ui_contract::SurfaceKind::NodeGraph, &scene)
 }

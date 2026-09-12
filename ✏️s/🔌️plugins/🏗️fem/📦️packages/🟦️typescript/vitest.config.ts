@@ -5,7 +5,7 @@ export default defineConfig({
   root: resolve(import.meta.dirname, "../.."),
   test: {
     name: "@semio-tech/fem-js",
-    include: ["🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts"],
+    include: ["🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "📖️stories/🧭️coordination/🧪️tests/🪟️viewport/🟦️.ts"],
     environment: "node",
     passWithNoTests: false,
   },

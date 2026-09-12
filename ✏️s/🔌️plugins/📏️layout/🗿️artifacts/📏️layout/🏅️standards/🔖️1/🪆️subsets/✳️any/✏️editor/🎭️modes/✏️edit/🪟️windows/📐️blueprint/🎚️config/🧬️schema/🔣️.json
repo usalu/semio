@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "layout.windowconfig",
+  "title": "Layout Window Config",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["activePageId", "camera"],
+  "properties": {
+    "activePageId": { "type": "string" },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "zoom": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

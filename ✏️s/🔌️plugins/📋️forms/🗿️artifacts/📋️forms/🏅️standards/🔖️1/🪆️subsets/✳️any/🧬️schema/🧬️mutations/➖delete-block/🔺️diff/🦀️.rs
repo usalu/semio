@@ -1,7 +1,7 @@
 //! 🔺️ `delete-block` — sparse diff construction: clones only the touched step's own `blocks` Vec.
 
 use super::mutation::DeleteBlock;
-use crate::diff::text::forms_diff_from_delta;
+use crate::schema::diff::forms_diff_from_delta;
 use crate::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
 

@@ -196,8 +196,8 @@ impl ArtifactPack for DemoSnapshot {
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
-            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
+            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(|err| PackError::Schema(err.to_string()))
@@ -1143,12 +1143,13 @@ mod actor_tests {
 
         // Wait until the actor has persisted the local edit to the folder db as real pack+spr bytes.
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
-        let (pack, spr) = wait_until_value("persisted edit on disk", || async {
-            let (pack, spr) = storage.read("doc-a").await.expect("read")?;
-            if spr_op_ids(&spr).await.ok()?.is_empty() {
+        let mut archive = wait_until_value("persisted edit on disk", || async {
+            let bytes = storage.read_archive("doc-a").await.expect("read archive")?;
+            let archive = crate::os_spr::decode_document_archive_bytes(&bytes).await.ok()?;
+            if spr_op_ids(&archive.parent_spr).await.ok()?.is_empty() {
                 None
             } else {
-                Some((pack, spr))
+                Some(archive)
             }
         })
         .await;
@@ -1166,8 +1167,9 @@ mod actor_tests {
             inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
             meta: None,
         };
-        let new_spr = crate::os_store::append_history_edits_to_spr(&spr, &[external_edit]).await.expect("append external edit");
-        storage.write("doc-a", "demo/v1", &pack, &new_spr).await.expect("out-of-band write");
+        archive.parent_spr = crate::os_store::append_history_edits_to_spr(&archive.parent_spr, &[external_edit]).await.expect("append external edit");
+        let bytes = crate::os_spr::encode_document_archive_bytes(&archive).expect("encode externally changed archive");
+        storage.write_archive("doc-a", "demo/v1", &bytes).await.expect("out-of-band archive write");
 
         // Deterministically poke the actor to re-read (notify also wired, but timing-independent here).
         channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
@@ -1738,7 +1740,7 @@ mod actor_tests {
         let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None)).await.expect("valid fixture store");
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
-        wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || async { storage.read(&fixture.document_id).await.expect("read").is_some() }).await;
+        wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || async { storage.read_archive(&fixture.document_id).await.expect("read archive").is_some() }).await;
 
         // Lockstep: apply each stimulus, then wait for its paired expected event before the next
         // (removes any write/poke race). Folder-replayable fixtures pair inbound 1:1 with events.
@@ -1747,7 +1749,8 @@ mod actor_tests {
         for (inbound, expected) in fixture.inbound.iter().zip(fixture.expected_events.iter()) {
             match inbound {
                 FixtureInbound::ExternalEdits { ops_text } => {
-                    let (pack, spr) = storage.read(&fixture.document_id).await.expect("read").expect("some");
+                    let archive_bytes = storage.read_archive(&fixture.document_id).await.expect("read archive").expect("some archive");
+                    let mut archive = crate::os_spr::decode_document_archive_bytes(&archive_bytes).await.expect("decode current archive");
                     let parsed = crate::os_spr::parse_ops_text(ops_text).unwrap_or_else(|error| panic!("fixture {} parse_ops_text: {error}", fixture.name));
                     let mut new_edits: Vec<crate::os_spr::HistoryEdit> = Vec::new();
                     for edit in parsed.edits {
@@ -1759,13 +1762,16 @@ mod actor_tests {
                         }
                         new_edits.push(crate::os_spr::HistoryEdit { ops, meta: None, ..edit });
                     }
-                    let new_spr = crate::os_store::append_history_edits_to_spr(&spr, &new_edits).await.expect("append fixture edits");
-                    storage.write(&fixture.document_id, &fixture.schema, &pack, &new_spr).await.expect("write");
+                    archive.parent_spr = crate::os_store::append_history_edits_to_spr(&archive.parent_spr, &new_edits).await.expect("append fixture edits");
+                    let archive_bytes = crate::os_spr::encode_document_archive_bytes(&archive).expect("encode fixture archive");
+                    storage.write_archive(&fixture.document_id, &fixture.schema, &archive_bytes).await.expect("write archive");
                     channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
                 }
                 FixtureInbound::ReplaceDocument { dsl_text, ops_text } => {
                     let (pack_files, _dsl_mirror) = (codec.compile_dsl)(dsl_text, ops_text).await.unwrap_or_else(|error| panic!("fixture {} compile_dsl: {error}", fixture.name));
-                    storage.write(&fixture.document_id, &fixture.schema, &pack_files.pack, &pack_files.spr).await.expect("replace write");
+                    let archive = crate::os_spr::DocumentArchivePack { parent_pack: pack_files.pack, parent_spr: pack_files.spr, members: Vec::new() };
+                    let archive_bytes = crate::os_spr::encode_document_archive_bytes(&archive).expect("encode replacement archive");
+                    storage.write_archive(&fixture.document_id, &fixture.schema, &archive_bytes).await.expect("replace archive write");
                     channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
                 }
                 FixtureInbound::HubFrame { .. } => {
@@ -1790,7 +1796,7 @@ mod actor_tests {
         match event {
             ArtifactEvent::RemoteMutations { .. } => "remoteMutations",
             ArtifactEvent::DocumentBackbone { .. } => "documentBackbone",
-            ArtifactEvent::SnapshotReplaced { .. } => "snapshotReplaced",
+            ArtifactEvent::DocumentArchiveReplaced { .. } => "documentArchiveReplaced",
             ArtifactEvent::BootstrapProgress { .. } => "bootstrapProgress",
             ArtifactEvent::Status(_) => "status",
             ArtifactEvent::Presence { .. } => "presence",
@@ -1825,6 +1831,112 @@ async fn folder_event_log_storage_round_trips_by_document_id() {
     let mut ids = storage.document_ids().await.expect("document ids");
     ids.sort();
     assert_eq!(ids, vec!["doc-a".to_string(), "doc-b".to_string()], "folder indexes every document");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn document_archive_event_log_storage_round_trips_complete_owned_bytes() {
+    let archive = persisted_recursive_document_archive();
+    let bytes = crate::os_spr::encode_document_archive_bytes(&archive).expect("encode recursive archive");
+    let dir = crate::os_store::test_support::tempdir().expect("tempdir");
+    let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
+    assert_eq!(storage.read_archive("root-1").await.expect("read absent archive"), None);
+    storage.write_archive("root-1", "s.test.root/1/*", &bytes).await.expect("write recursive archive");
+    let persisted = storage.read_archive("root-1").await.expect("read recursive archive").expect("archive exists");
+    assert_eq!(persisted, bytes);
+    assert_eq!(crate::os_spr::decode_document_archive_bytes(&persisted).await.expect("decode persisted recursive archive"), archive);
+    assert!(storage.document_ids().await.expect("archive document index").contains(&"root-1".to_string()));
+    let mut trailing = persisted.clone();
+    trailing.push(0);
+    assert!(storage.write_archive("root-1", "s.test.root/1/*", &trailing).await.is_err());
+    assert_eq!(storage.read_archive("root-1").await.expect("read after malformed refusal").expect("prior archive remains"), persisted);
+    let oversized = vec![1; crate::os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 1];
+    assert!(storage.write_archive("root-1", "s.test.root/1/*", &oversized).await.is_err());
+    assert_eq!(storage.read_archive("root-1").await.expect("read after over-limit refusal").expect("prior archive remains"), bytes);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn persisted_recursive_document_archive() -> crate::os_spr::DocumentArchivePack {
+    let root = crate::os_spr::DocumentArchiveArtifactRef { artifact_id: "root-1".into(), artifact_kind: "s.test.root".into(), standard: "1".into(), subset: "*".into() };
+    let child = crate::os_spr::DocumentArchiveArtifactRef { artifact_id: "child-1".into(), artifact_kind: "s.test.child".into(), standard: "1".into(), subset: "native".into() };
+    let leaf = crate::os_spr::DocumentArchiveArtifactRef { artifact_id: "leaf-1".into(), artifact_kind: "s.test.child".into(), standard: "1".into(), subset: "native".into() };
+    crate::os_spr::DocumentArchivePack {
+        parent_pack: vec![1, 2],
+        parent_spr: vec![3],
+        members: vec![
+            crate::os_spr::OwnedDocumentMemberPackEntry {
+                ordinal: 0,
+                reference: child.clone(),
+                owner: crate::os_spr::DocumentArchiveOwnerRef { parent: root, slot: "children".into(), child_id: child.artifact_id.clone() },
+                envelope_pack: vec![4, 5],
+            },
+            crate::os_spr::OwnedDocumentMemberPackEntry {
+                ordinal: 1,
+                reference: leaf.clone(),
+                owner: crate::os_spr::DocumentArchiveOwnerRef { parent: child, slot: "nested".into(), child_id: leaf.artifact_id.clone() },
+                envelope_pack: vec![6],
+            },
+        ],
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn document_archive_actor_refuses_malformed_and_over_limit_candidates_without_displacing_live_bytes() {
+    let live = crate::os_spr::encode_document_archive_bytes(&persisted_recursive_document_archive()).expect("encode live recursive archive");
+    let (_, remote) = ChannelBackbone::pair("document-archive-refusal").await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, _) = broadcast::channel(8);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { document_id: "root-1".into(), schema: "s.test.root/1/*".into(), bindings: Vec::new(), watch_external: false, actor: "local".into() },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(None)),
+        Arc::new(std::sync::RwLock::new(None)),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    actor.handle_test_document_archive(live.clone()).await;
+    assert_eq!(actor.current_archive_test(), Some(live.clone()));
+
+    let mut trailing = live.clone();
+    trailing.push(0);
+    assert!(artifact_actor_message_bytes(&ArtifactActorMsg::LocalDocumentArchive { archive: trailing.clone() }).is_some());
+    actor.handle_test_document_archive(trailing).await;
+    assert_eq!(actor.current_archive_test(), Some(live.clone()));
+
+    let unsupported = vec![2];
+    assert!(artifact_actor_message_bytes(&ArtifactActorMsg::LocalDocumentArchive { archive: unsupported.clone() }).is_none());
+    actor.handle_test_document_archive(unsupported).await;
+    assert_eq!(actor.current_archive_test(), Some(live.clone()));
+
+    let mut oversized = vec![0; crate::os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 1];
+    oversized[0] = 1;
+    assert!(artifact_actor_message_bytes(&ArtifactActorMsg::LocalDocumentArchive { archive: oversized.clone() }).is_none());
+    actor.handle_test_document_archive(oversized).await;
+    assert_eq!(actor.current_archive_test(), Some(live));
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn document_archive_text_storage_round_trips_complete_owned_bytes() {
+    let archive = persisted_recursive_document_archive();
+    let bytes = crate::os_spr::encode_document_archive_bytes(&archive).expect("encode recursive archive");
+    let dir = crate::os_store::test_support::tempdir().expect("tempdir");
+    let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
+    let files = ArtifactPackFiles { pack: archive.parent_pack.clone(), spr: archive.parent_spr.clone(), ops: String::new() };
+    assert_eq!(storage.read_archive("root-1", "test").await.expect("read absent archive"), None);
+    storage.write_archive("root-1", "test", &bytes, &files, "root = 1\n").await.expect("write recursive archive");
+    let persisted = storage.read_archive("root-1", "test").await.expect("read recursive archive").expect("archive exists");
+    assert_eq!(persisted, bytes);
+    assert_eq!(crate::os_spr::decode_document_archive_bytes(&persisted).await.expect("decode persisted recursive archive"), archive);
+    let mut malformed = persisted.clone();
+    malformed.push(0);
+    assert!(storage.write_archive("root-1", "test", &malformed, &files, "root = 2\n").await.is_err());
+    assert_eq!(storage.read_archive("root-1", "test").await.expect("read after malformed refusal").expect("prior archive remains"), persisted);
 }
 
 /// @emoji 🔐️ The endpoint-level save→load→undo proof: a store's undo/redo position survives a

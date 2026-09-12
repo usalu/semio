@@ -321,7 +321,7 @@ impl<I: EnvelopeInjector> EnvelopeCompletionSink<I> {
 
 impl<I: EnvelopeInjector> CompletionSink for EnvelopeCompletionSink<I> {
     // 🚫️async: E1 — `semio_framework_os_services::CompletionSink::complete` is declared sync
-    // (`🛎️services/🦀️component.rs:1539`), outside this packet's `🔌️plugin/🖥️host` path_scope to
+    // (`🛎️services/🦀️.rs:1539`), outside this packet's `🔌️plugin/🖥️host` path_scope to
     // change. Everything this body needs (`generation_of`, `ensure_subscribed`, `send_message`,
     // `flush`) is genuinely `async` (the last transitively through the generic `I: EnvelopeInjector`,
     // which per this file's own R11(a) note has exactly one implementor today, a recording test
@@ -404,7 +404,7 @@ pub enum RouterEffect {
 // two of the three (`RecordingRouterHandler`, `AlwaysOkRouterHandler`, this file's own `mod tests`)
 // are `#[cfg(test)]`-only while `AsyncEffectExecutor.router_handler: Arc<dyn RouterEffectHandler>`
 // is an always-compiled field — same `dyn_enum_close!`-DSL-has-no-per-variant-`#[cfg]` blocker as
-// `HttpBody`'s own exception note in `🛎️services/🦀️component.rs`. `AsyncEffectExecutor::new` is,
+// `HttpBody`'s own exception note in `🛎️services/🦀️.rs`. `AsyncEffectExecutor::new` is,
 // as of this packet, called ONLY from `mod tests` repo-wide (verified: zero production call sites)
 // — genuinely not wired to a real router yet (see `UnwiredRouterEffectHandler`'s own doc), so there
 // is no live production seam to generic-ize either. Revisit once a real caller exists.

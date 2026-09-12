@@ -1,6 +1,6 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-dense-params`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::update_dense_params;
 use crate::op::RemodelingMutation;
 use crate::{DenseParams, DenseResolution, RemodelingSnapshot};
@@ -17,7 +17,7 @@ pub struct SetDenseParams {
     pub max_points: u32,
 }
 
-pub fn handle(payload: &SetDenseParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetDenseParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_dense_params(DenseParams {
         resolution: match payload.resolution.as_str() {
             "low" => DenseResolution::Low,

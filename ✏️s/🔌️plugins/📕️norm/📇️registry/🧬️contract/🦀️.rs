@@ -14,24 +14,24 @@ extern crate semio_framework_value_derive as value_derive;
 pub mod document;
 
 #[path = "."]
-pub mod config {
-    #[path = "../../🎚️config/🦀️.rs"]
+pub mod results_window_config {
+    #[path = "../../🪟️results/🎚️config/🦀️.rs"]
     mod component;
     pub use component::*;
 
-    #[path = "../../🎚️config/🧬️schema/🦀️.rs"]
+    #[path = "../../🪟️results/🎚️config/🧬️schema/🦀️.rs"]
     pub mod schema;
 
     #[path = "."]
     pub mod mutations {
-        #[path = "../../🎚️config/🧬️schema/🧬️mutations/🦀️.rs"]
+        #[path = "../../🪟️results/🎚️config/🧬️schema/🧬️mutations/🦀️.rs"]
         mod component;
         pub use component::*;
-        #[path = "../../🎚️config/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+        #[path = "../../🪟️results/🎚️config/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
         mod binary;
-        #[path = "../../🎚️config/🧬️schema/🧬️mutations/☑️change-selected-check-index/🦀️.rs"]
+        #[path = "../../🪟️results/🎚️config/🧬️schema/🧬️mutations/☑️change-selected-check-index/🦀️.rs"]
         pub mod change_selected_check_index;
-        #[path = "../../🎚️config/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+        #[path = "../../🪟️results/🎚️config/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
         mod text;
     }
 }

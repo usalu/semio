@@ -6,7 +6,7 @@
 //! and emits no mutations by construction (`ViewEmit`).
 
 use crate::{JackSnapshot, Node, PortDirection};
-use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, Viewport2d, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_contract::SurfaceKind;
 
 //#region 🔖️Constants
@@ -76,7 +76,7 @@ pub fn render(document: &JackSnapshot) -> semio_framework_plugin::UiAssemblyResu
             NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
         })
         .collect();
-    let viewport = NodeGraphViewport { x: document.camera.x, y: document.camera.y, zoom: document.camera.zoom };
+    let viewport = Viewport2d { x: document.camera.x, y: document.camera.y, zoom: document.camera.zoom };
     let mut scene = NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) };
     scene.controls_json = Some(pack::json!({ "controllerId": TRINITY_JACK_VIEW_CONTROLLER_ID }).to_string());
     semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::NodeGraph, &scene)

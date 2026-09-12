@@ -16,7 +16,7 @@ Column names and nullability of both files are kept identical by
 `🧪️tests/🔬️schema/🟦️.ts`.
 
 The exported entity set is the one the client materializes in `ExportResult`
-(`⌨️cli/📤️event_export.go`): technologies, bundles, folders, files, sections and definitions, rooted in
+(`⌨️cli/📤️event-export/🐹️.go`): technologies, bundles, folders, files, sections and definitions, rooted in
 one repo checkpoint. Shared repo state lives in the repo server's PostgreSQL schema
 (`🖥️server/🧬️schema/`), never here.
 

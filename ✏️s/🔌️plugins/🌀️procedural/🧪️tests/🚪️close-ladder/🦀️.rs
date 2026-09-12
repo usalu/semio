@@ -246,26 +246,44 @@ fn session_close_cost(app: &str, documents: usize, renders: usize, label: &str, 
 /// slots) ONE slot per reactor turn, and the app ladder paged one retained window transient per turn on
 /// top of it. Both now drain under the turn's own wall-clock budget, so the geometry costs one turn and
 /// the retained families cost a bounded handful.
+///
+/// Bounded is stated twice, because the turn count is a LATENCY PROXY — how many empty reactor polls
+/// fit while the close pump grinds on the maintenance lane and loses `cell.instance.try_lock()` to the
+/// polling thread — so the absolute numbers move with machine load, all three sessions together
+/// (`📓️close-ladder-budget-2026-09-12.md` §2.3). `maximumCloseTurns` is the browser's own close
+/// budget, and EVERY session must fit the same one whatever it retained. The load-invariant half is
+/// `minimumRetainedWorkDilutionPercent`: the dearest session's turns per retained unit must be at least
+/// that much cheaper than the cheapest non-cold session's, which is what "does not scale with the
+/// session" means once the fixed floor is divided out. Neither a ratio nor an additive spread can say
+/// it — both measure the load (see the fixture's `lawNote` for the ten runs that prove it, one of
+/// which closed the cold session in ZERO turns).
 #[test]
 fn generation3d_close_cost_is_independent_of_the_retained_session() {
     let fixture: serde_json::Value = serde_json::from_str(CLOSE_COST_FIXTURE).expect("close-ladder fixture parses");
     let app = fixture["app"].as_str().expect("fixture app");
     let ceiling = fixture["maximumCloseTurns"].as_u64().expect("fixture ceiling") as usize;
-    let growth = fixture["maximumCloseTurnGrowth"].as_u64().expect("fixture growth") as usize;
+    let dilution_percent = fixture["minimumRetainedWorkDilutionPercent"].as_u64().expect("fixture dilution") as u128;
     let budget = fixture["turnBudget"].as_u64().expect("fixture turn budget") as usize;
-    let mut costs: Vec<(String, usize)> = Vec::new();
+    let mut costs: Vec<(String, usize, usize)> = Vec::new();
     for session in fixture["sessions"].as_array().expect("fixture sessions") {
         let label = session["label"].as_str().expect("session label").to_string();
         let documents = session["documents"].as_u64().expect("session documents") as usize;
         let renders = session["rendersPerDocument"].as_u64().expect("session renders") as usize;
         let spent = session_close_cost(app, documents, renders, &label, budget);
-        costs.push((label, spent));
+        costs.push((label, spent, documents * renders));
     }
-    eprintln!("[DEBUG] close-cost fixture costs={costs:?} ceiling={ceiling} growth={growth}");
-    for (label, spent) in &costs {
+    eprintln!("[DEBUG] close-cost fixture costs={costs:?} ceiling={ceiling} dilution-percent={dilution_percent}");
+    for (label, spent, _) in &costs {
         assert!(*spent <= ceiling, "close after the {label} session spent {spent} turns, ceiling {ceiling}");
     }
-    let low = costs.iter().map(|(_, spent)| *spent).min().expect("one session").max(1);
-    let high = costs.iter().map(|(_, spent)| *spent).max().expect("one session");
-    assert!(high <= low.saturating_mul(growth), "close turn count must not scale with the session: {costs:?} grew {}x, ceiling {growth}x", high / low);
+    let mut retaining: Vec<&(String, usize, usize)> = costs.iter().filter(|(_, _, work)| *work > 0).collect();
+    retaining.sort_by_key(|(_, _, work)| *work);
+    let (lean_label, lean_cost, lean_work) = retaining.first().expect("one session retains work");
+    let (full_label, full_cost, full_work) = retaining.last().expect("one session retains work");
+    assert!(full_work > lean_work, "the fixture must declare one session that retains strictly more than another");
+    let measured_percent = (*lean_cost as u128) * (*full_work as u128) * 100 / ((*full_cost as u128) * (*lean_work as u128)).max(1);
+    assert!(
+        measured_percent >= dilution_percent,
+        "close turn count must not scale with the session: {lean_label} spent {lean_cost} turns on {lean_work} retained units, {full_label} spent {full_cost} turns on {full_work} — a dilution of {measured_percent}%, under the required {dilution_percent}%"
+    );
 }

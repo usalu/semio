@@ -10,7 +10,7 @@ VS Code test-cli configuration entrypoint that defines the compiled test glob an
 
 ## Entity kind catalog
 
-This module owns no catalog. The entity-kind catalog is the `framework.schema` scope (`https://semio.tech/schema/framework/schema/schema.json`, exports `EntityKindCatalog` and `EntityKind`, data in `🧰️framework/🔨️modules/🧬️schema/🔣️entity-kinds.json`). The extension consumes its generated TypeScript projection `🧰️framework/🔨️modules/🧬️schema/🤖️generated/🟦️entity-kinds.ts` and derives `ENTITY_EMOJIS` from the projection's first-wins emoji index.
+This module owns no catalog. The entity-kind catalog is the `framework.schema` scope (`https://semio.tech/schema/framework/schema/schema.json`, exports `EntityKindCatalog` and `EntityKind`, data in `🧰️framework/🔨️modules/🧬️schema/🔣️entity-kinds.json`). The extension consumes its generated TypeScript projection `🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🟦️.ts` and derives `ENTITY_EMOJIS` from the projection's first-wins emoji index.
 
 ## 🧪️tests/🧩️extension/🟦️.ts
 

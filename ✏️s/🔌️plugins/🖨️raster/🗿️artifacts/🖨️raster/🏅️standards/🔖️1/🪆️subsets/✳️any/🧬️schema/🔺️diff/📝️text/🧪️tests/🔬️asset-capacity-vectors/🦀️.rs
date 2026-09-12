@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::binary::test_support::retire_raster_snapshot;
+use crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot;
 use crate::RasterImageAsset;
 
 #[test]

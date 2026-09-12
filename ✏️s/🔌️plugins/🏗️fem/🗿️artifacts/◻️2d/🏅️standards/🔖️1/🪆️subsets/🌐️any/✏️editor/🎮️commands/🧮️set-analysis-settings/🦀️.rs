@@ -1,6 +1,6 @@
 //! 🧮️ 🧮️ Fem2d play app commands command — `set-analysis-settings`.
 
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 use crate::FemAnalysisSettings;
@@ -20,7 +20,7 @@ pub struct SetAnalysisSettings {
     pub deformation_scale: Option<f64>,
 }
 
-pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let current = &doc.snapshot.analysis;
     let settings = FemAnalysisSettings {
         modal_count: payload.modal_count.map_or(current.modal_count, |value| value as usize),

@@ -35,7 +35,7 @@ import { parseFixedDirectoryContractSetScope, parseNamedFixedDirectoryContractSe
 import { parseGeneratorInputProjection, parseSemanticOwnedCurrentSourceRevisions, parseSemanticOwnedDocumentCorrections, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️.ts";
 import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
 import { validateFrozenMarkdownCoordinateEvidenceContracts, type FrozenMarkdownCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
-import { jsonDocumentDuplicateKeys, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, mutationPayloadSchemaProblems, pathEmojiStatuteFindings, reservedDocumentationBasename } from "../🔍️discovery/🟦️.ts";
+import { cargoPackageRootBuildScriptPath, classifyPackageSource, classifyPackageSourceDisposition, fixedSourceDispositionDecision, implementationLeafBasenameFinding, jsonDocumentDuplicateKeys, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, mutationPayloadSchemaProblems, pathEmojiStatuteFindings, reservedDocumentationBasename, targetInsidePackageBoundaryFinding, taxonomyFileKindIsImplementation } from "../🔍️discovery/🟦️.ts";
 import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
 import { artifactPathProjectionCatalogRoots, createTaxonomyPathMatcher, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, validateTaxonomy, type TaxonomyPathMatcher, type SemanticExactOwnedFileCase, type SemanticExactOwnedFileCatalog, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode, type Taxonomy as DiscoveryTaxonomy } from "../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
@@ -283,6 +283,8 @@ export interface TaxonomyInventoryOptions {
   readonly baselineCommit?: string;
   readonly excludedTreeDigests?: readonly OpaqueTreeDigest[];
 }
+
+export type TaxonomyCapturedSourceRead = (absolutePath: string) => Uint8Array;
 
 export type TaxonomySourceOrigin = "tracked" | "nonignored-untracked" | "ignored-generator" | "explicit-ticket";
 export type TaxonomySourceObservedKind = TaxonomyNodeKind | "absent" | "unobserved" | "other";
@@ -796,6 +798,7 @@ interface PackageSourceDisposition {
   readonly contractKind: "fixed" | "configurable";
   readonly disposition: "adapter-source" | "tool-metadata";
   readonly validator: "package-glue" | "command-router" | "vitest-configuration" | "tool-config-vitest" | "tool-config-tailwind" | "tool-config-postcss" | "tool-config-eslint" | "tool-config-dependency-cruiser" | "pytest-configuration" | "eslint-configuration" | "vscode-test-configuration";
+  readonly grammarId?: string;
   readonly authority: string;
   readonly verification: string;
 }
@@ -1613,10 +1616,12 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
   const packageSourceDispositions: Record<string, PackageSourceDisposition> = {};
   for (const [id, value] of Object.entries(sourceDispositionRows)) {
     const spec = record(value, `packageSourceDispositions.${id}`);
-    requireExactKeys(spec, ["contractKind", "disposition", "validator", "authority", "verification"], `packageSourceDispositions.${id}`);
+    requireExactKeys(spec, ["contractKind", "disposition", "validator", ...(spec.grammarId === undefined ? [] : ["grammarId"]), "authority", "verification"], `packageSourceDispositions.${id}`);
     const configValidatorOwner = TOOL_CONFIG_VALIDATORS[spec.validator as string];
     if (spec.contractKind !== "fixed" && spec.contractKind !== "configurable" || spec.disposition !== "adapter-source" && spec.disposition !== "tool-metadata" || spec.validator !== "package-glue" && spec.validator !== "command-router" && configValidatorOwner === undefined || (configValidatorOwner !== undefined && id !== configValidatorOwner)) throw new Error(`Taxonomy v7 packageSourceDispositions.${id} is invalid`);
-    packageSourceDispositions[id] = { contractKind: spec.contractKind, disposition: spec.disposition, validator: spec.validator, authority: requiredString(spec.authority, `packageSourceDispositions.${id}.authority`), verification: requiredString(spec.verification, `packageSourceDispositions.${id}.verification`) };
+    const grammarId = spec.grammarId === undefined ? undefined : requiredString(spec.grammarId, `packageSourceDispositions.${id}.grammarId`);
+    if (grammarId !== undefined && !packageGlueGrammar[grammarId]) throw new Error(`Taxonomy v7 packageSourceDispositions.${id} references unknown grammar ${grammarId}`);
+    packageSourceDispositions[id] = { contractKind: spec.contractKind, disposition: spec.disposition, validator: spec.validator, ...(grammarId === undefined ? {} : { grammarId }), authority: requiredString(spec.authority, `packageSourceDispositions.${id}.authority`), verification: requiredString(spec.verification, `packageSourceDispositions.${id}.verification`) };
   }
   if (Object.keys(packageSourceDispositions).length === 0) throw new Error("Taxonomy v7 packageSourceDispositions must not be empty");
   for (const [id, contract] of Object.entries(fixedFilenameContracts)) if (contract.scope.kind === "package-root" && !packageBoundaryRules[contract.scope.ecosystemId]) throw new Error(`Taxonomy v7 fixedFilenameContracts.${id} references unknown ecosystem ${contract.scope.ecosystemId}`);
@@ -2975,7 +2980,7 @@ export function inventoryTaxonomySources(options: TaxonomyInventoryOptions): Tax
 }
 //#endregion 🔐️Source Admission IO
 
-function contentOf(repoRoot: string, row: CandidatePath): { readonly kind: TaxonomyNodeKind; readonly hash: string; readonly mode: number; readonly size: number; readonly symlinkTarget?: string; readonly bytes?: Uint8Array; readonly violation?: TaxonomyViolation } {
+function contentOf(repoRoot: string, row: CandidatePath, sourceRead: TaxonomyCapturedSourceRead): { readonly kind: TaxonomyNodeKind; readonly hash: string; readonly mode: number; readonly size: number; readonly symlinkTarget?: string; readonly bytes?: Uint8Array; readonly violation?: TaxonomyViolation } {
   if (row.mode === "040000") return { kind: "directory", hash: "", mode: 0, size: 0 };
   const path = absolutePath(repoRoot, row.path);
   if (!existsSync(path) && row.mode !== "120000") return { kind: "file", hash: row.objectId ?? sha256(""), mode: 0, size: 0, violation: violation("tracked-path-missing", row.path, "Tracked path is missing from the worktree") };
@@ -2986,7 +2991,7 @@ function contentOf(repoRoot: string, row: CandidatePath): { readonly kind: Taxon
       return { kind: "symlink", hash: sha256(target), mode: stat.mode & 0o7777, size: Buffer.byteLength(target), symlinkTarget: target };
     }
     if (stat.isDirectory()) return { kind: "directory", hash: "", mode: stat.mode & 0o7777, size: 0 };
-    const bytes = readFileSync(path);
+    const bytes = sourceRead(path);
     return { kind: "file", hash: sha256(bytes), mode: stat.mode & 0o7777, size: bytes.byteLength, bytes };
   } catch (error) {
     return { kind: row.mode === "120000" ? "symlink" : "file", hash: row.objectId ?? sha256(""), mode: 0, size: 0, violation: violation("path-read-failed", row.path, error instanceof Error ? error.message : String(error)) };
@@ -3006,24 +3011,7 @@ function packageLocation(path: string, taxonomy: LoadedTaxonomy): { readonly own
     const selected = ecosystemIds.length === 1 && taxonomy.schema.packageBoundaryRules[ecosystemIds[0]] ? [ecosystemIds[0], taxonomy.schema.packageBoundaryRules[ecosystemIds[0]]] as const : null;
     return { owner, packageRoot: parts.slice(0, packageIndex + 2).join("/"), ecosystemId: selected?.[0] ?? null, rule: selected?.[1] ?? null };
   }
-  // 🦀️ A `generator-crate` directory IS a standalone Rust package root by construction — always
-  // paired with its own Cargo.toml/Cargo.lock directly inside it (e.g.
-  // `…/🏭️generator/🦀️note-oracle-codec`), never nested under a `packages/🦀️rust` ecosystem folder.
-  // Recognizes the same package-root property `packages/<ecosystem>` marks structurally, one level
-  // deep instead of two, so a plugin-nested generator crate is not silently treated as ownerless.
-  const generatorKind = taxonomy.directoryKinds.find((kind) => kind.id === "generator");
-  const generatorCrateKind = taxonomy.directoryKinds.find((kind) => kind.id === "generator-crate");
-  const crateIndex = generatorKind && generatorCrateKind ? parts.findIndex((part, index) => {
-    if (index === 0) return false;
-    const leading = splitLeadingEmojiIdentity(part);
-    if (emojiFold(leading.first) !== emojiFold(generatorCrateKind.emoji)) return false;
-    const parentLeading = splitLeadingEmojiIdentity(parts[index - 1]);
-    return parentLeading.rest === "generator" && emojiFold(parentLeading.first) === emojiFold(generatorKind.emoji);
-  }) : -1;
-  if (crateIndex < 0) return null;
-  const ecosystemId = "🦀️rust";
-  const rule = taxonomy.schema.packageBoundaryRules[ecosystemId] ?? null;
-  return { owner: parts.slice(0, crateIndex).join("/"), packageRoot: parts.slice(0, crateIndex + 1).join("/"), ecosystemId: rule ? ecosystemId : null, rule };
+  return null;
 }
 
 type FixedContract = FixedFilenameContract | FixedDirectoryContract;
@@ -3098,195 +3086,31 @@ function configurableContract(path: string, taxonomy: LoadedTaxonomy, packageInf
   return rows.length === 1 ? rows[0] : null;
 }
 
-/** 🧵️ Every alternative a flat sequence of Rust wiring statements is allowed to be made of: bare
- * `mod`/`use` statements, `extern crate`, a `type` alias (covers `#[cfg(...)] pub type Alias = ...;`
- * backend-selection glue such as `🖥️host/📦️packages/🦀️rust/🦀️backend_alias.rs`), an attribute —
- * though `classifyGlue`'s own comment-stripping already removes every `#`-led line before this ever
- * runs, so the attribute alternative only matters for direct callers of `isRustDeclarativeStatementSequence`
- * — or one call to the framework's own `plugin_exports!` macro (any qualifying `::`-path prefix,
- * e.g. `semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::NoteApps);`): every one of
- * the 33 plugin `🦀️.rs` files ends with exactly this, registering the crate's `Plugin`/`Apps`
- * builder with the framework — never a local definition, never expanded here, pure wiring like the
- * `mod`/`use` lines around it. Named narrowly (not "any macro call") so an actual proc-macro or
- * declarative-macro body elsewhere in a glue file still fails this check and reports its real role.
- * `*`, not `+`: `stripDeclarativeRustModuleBlocks` re-tests a `mod`'s OWN body after already
- * stripping its purely-declarative nested `mod {}` children — a body that held nothing else (e.g.
- * `pub mod any { mod component; pub use component::*; }`) reduces to pure whitespace, and `+` used
- * to reject that empty remainder as "not declarative", poisoning every ancestor wrapper all the way
- * to the file root (this is exactly why every one of the 33 plugin `🦀️.rs` files — pure `mod`
- * nesting around leaf `component.rs` re-exports — read `unresolved` instead of `declaration`). */
-const RUST_DECLARATIVE_STATEMENT_SEQUENCE = /^(?:\s*(?:pub\s+)?(?:mod|use)\b[^;]*;|\s*(?:pub\s+)?extern\s+crate\b[^;]*;|\s*(?:pub\s+)?type\s+\w+[^=;{]*=[^;]*;|\s*#!?\[[^\]]+\]\s*|\s*(?:[\w]+::)*plugin_exports!\s*\([^()]*\)\s*;)*$/s;
-
-function isRustDeclarativeStatementSequence(source: string): boolean {
-  return RUST_DECLARATIVE_STATEMENT_SEQUENCE.test(source.trim());
-}
-
-/** 🪆️ Recursively strips `mod name { ... }`/`pub mod name { ... }` blocks whose entire body is
- * itself nothing but declarative wiring, so a namespacing wrapper around otherwise-thin re-exports —
- * e.g. `📡️replication/📦️packages/🦀️rust/🦀️.rs`'s `pub mod codec { #[path = "..."] mod x; pub use
- * x::*; }` — does not defeat the flat grammar above, which only recognizes semicolon-terminated
- * statements. A block whose body is NOT purely declarative is left untouched, so the outer check
- * correctly still fails on its stray `{`/`}`. */
-function stripDeclarativeRustModuleBlocks(source: string): string {
-  const opener = /(?:pub\s+)?mod\s+\w+\s*\{/g;
-  let result = "";
-  let cursor = 0;
-  let match: RegExpExecArray | null;
-  while ((match = opener.exec(source))) {
-    if (match.index < cursor) continue;
-    const bodyStart = match.index + match[0].length;
-    let depth = 1;
-    let index = bodyStart;
-    while (index < source.length && depth > 0) {
-      if (source[index] === "{") depth++;
-      else if (source[index] === "}") depth--;
-      index++;
-    }
-    if (depth !== 0) break;
-    const body = source.slice(bodyStart, index - 1);
-    if (isRustDeclarativeStatementSequence(stripDeclarativeRustModuleBlocks(body))) {
-      result += source.slice(cursor, match.index);
-      cursor = index;
-    }
-    opener.lastIndex = index;
-  }
-  result += source.slice(cursor);
-  return result;
-}
-
-/** 🧵️ Blanks the contents of every quoted string/template literal (keeping the quotes) so a data
- * value — a file path, say — can never be misread as a code keyword. `🖱️ui`'s React target keeps a
- * `vitest.config.ts` whose `include` list names `🏷️class-name-composition`; `\bclass\b` matches that
- * substring exactly as it would the real keyword, which used to force the whole file to
- * "implementation" before ever reaching either keyword-sniffing check below. */
-function stripStringLiterals(source: string): string {
-  return source.replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`/g, '""');
-}
-
-/** 🗂️ A TypeScript/JavaScript module shaped as pure configuration data: only imports, re-exports,
- * `const` bindings and one `export default`, with no function/class/control-flow anywhere in its
- * body — e.g. `export default { root, test: {...} };` or `export default defineConfig({...});`.
- * `classifyGlue`'s default fallback otherwise calls any non-declaration TS/JS content
- * "implementation", which wrongly caught data-only config modules (`vitest.config.ts`,
- * `🎨️postcss.config.ts`, `🟦️eslint.config.ts`) sitting inside a package boundary. */
-function isConfigDelegationModule(normalized: string): boolean {
-  const withoutTrailingLineComments = normalized.replace(/\/\/[^\n]*$/gm, "");
-  const withoutStringLiterals = stripStringLiterals(withoutTrailingLineComments);
-  const statements = splitTopLevelStatements(withoutTrailingLineComments);
-  if (statements.length === 0) return false;
-  let sawDefaultExport = false;
-  for (const statement of statements) {
-    if (/^import\b/.test(statement)) continue;
-    if (/^export\s+(?:\*|\{[^}]*\}|type\b|interface\b|enum\b)/.test(statement)) continue;
-    if (/^export\s+default\b/.test(statement)) {
-      sawDefaultExport = true;
-      continue;
-    }
-    if (/^const\s+\w+/.test(statement)) continue;
-    return false;
-  }
-  return sawDefaultExport && !/\bfunction\b|=>|\bclass\b|\bif\s*\(|\bfor\s*\(|\bwhile\s*\(|\bswitch\s*\(|\btry\b/.test(withoutStringLiterals);
-}
-
-/** ✂️ Splits source into top-level (bracket-depth-zero) `;`-terminated statements, tolerant of
- * arbitrarily nested `{}`/`()`/`[]` — used by `isConfigDelegationModule` instead of a single regex so
- * a deeply-nested config object (`vitest.config.ts`'s `test: { coverage: { include: [...] } }`) does
- * not need its own bespoke nesting depth. */
-function splitTopLevelStatements(source: string): readonly string[] {
-  const statements: string[] = [];
-  let depth = 0;
-  let start = 0;
-  for (let index = 0; index < source.length; index++) {
-    const char = source[index];
-    if (char === "{" || char === "(" || char === "[") depth++;
-    else if (char === "}" || char === ")" || char === "]") depth--;
-    else if (char === ";" && depth === 0) {
-      statements.push(source.slice(start, index + 1));
-      start = index + 1;
-    }
-  }
-  const rest = source.slice(start).trim();
-  if (rest) statements.push(rest);
-  return statements.map((statement) => statement.trim()).filter(Boolean);
-}
-
-export type PackageGlueAnalyzer = PackageGlueGrammar["analyzer"];
-
-/** 🧪️ Explicit, minimal re-export of the package-boundary content classifier for tests — see
- * `TaxonomyPackageRole` for the result vocabulary. Keeps `PackageGlueGrammar` itself internal; only
- * the plain string-literal `analyzer` id crosses the boundary. */
-export function classifyPackageGlueContent(analyzer: PackageGlueAnalyzer, content: string, maxDelegationStatements: number): TaxonomyPackageRole {
-  return classifyGlue(analyzer, content, maxDelegationStatements);
-}
-
-function classifyGlue(analyzer: PackageGlueGrammar["analyzer"], content: string, maxStatements: number): TaxonomyPackageRole {
-  const normalized = content.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/^\s*#.*$/gm, "").trim();
-  if (normalized.length === 0) return "declaration";
-  if (analyzer === "rust") {
-    if (/\b(?:struct|enum|trait|union|impl)\b/.test(normalized)) return "implementation";
-    const bodies = [...normalized.matchAll(/\bfn\s+\w+[^\{]*\{([\s\S]*?)\}/g)].map((match) => match[1].split(";").map((part) => part.trim()).filter(Boolean).length);
-    if (bodies.some((count) => count > maxStatements)) return "implementation";
-    if (/\bfn\s+(?:main|start|bootstrap)\b/.test(normalized)) return "bootstrap";
-    if (/\b(?:register|provide|bind)\w*\s*\(/i.test(normalized)) return "registration";
-    if (isRustDeclarativeStatementSequence(stripDeclarativeRustModuleBlocks(normalized))) return "declaration";
-    return bodies.length > 0 ? "thin-delegation" : "unresolved";
-  }
-  if (analyzer === "typescript" || analyzer === "javascript") {
-    if (/\b(?:class|namespace)\b/.test(stripStringLiterals(normalized))) return "implementation";
-    if (/^(?:\s*(?:import\b[^;]*;?|export\s+(?:\*|\{[^}]*\}|type\b[^;]*|interface\b[^{]*\{[^}]*\}|enum\b[^{]*\{[^}]*\})[^;]*;?)\s*)+$/s.test(normalized)) return "declaration";
-    if (/\b(?:register|provide|bind)\w*\s*\(/i.test(normalized)) return "registration";
-    const functionBodies = [...normalized.matchAll(/(?:function\s+([\w$]+)[^{]*|(?:const|let)\s+([\w$]+)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>)\{([\s\S]*?)\}/g)];
-    if (functionBodies.length > 0) {
-      const thin = functionBodies.every((match) => {
-        const name = match[1] ?? match[2] ?? "";
-        const statements = match[3].split(";").map((part) => part.trim()).filter(Boolean);
-        return /^(?:main|start|bootstrap|run)$/i.test(name) && statements.length <= maxStatements && statements.every((statement) => /^(?:return\s+)?(?:await\s+)?[\w$.]+\([^;]*\)$/.test(statement));
-      });
-      return thin ? "thin-delegation" : "implementation";
-    }
-    if (/=>|\bfunction\b|\.(?:reduce|map|filter|flatMap|sort)\s*\(/.test(normalized)) return "implementation";
-    if (isConfigDelegationModule(normalized)) return "thin-delegation";
-    return "implementation";
-  }
-  if (analyzer === "go") {
-    if (/\btype\s+\w+\s+(?:struct|interface)\b/.test(normalized)) return "implementation";
-    const bodies = [...normalized.matchAll(/\bfunc\s+(?:main|init)\s*\([^)]*\)\s*\{([\s\S]*?)\}/g)];
-    if (bodies.length > 0 && bodies.every((match) => match[1].split("\n").map((line) => line.trim()).filter(Boolean).length <= maxStatements)) return "bootstrap";
-    if (/^package\s+\w+\s+(?:import\s*(?:\([^)]*\)|"[^"]+")\s*)?$/s.test(normalized)) return "declaration";
-    return "implementation";
-  }
-  if (analyzer === "python") {
-    if (/^\s*(?:class|def)\s+/m.test(normalized)) return "implementation";
-    if (/^(?:\s*(?:from\s+\S+\s+import|import\s+|__all__\s*=)[^\n]*\n?)+$/s.test(normalized)) return "declaration";
-    const statements = normalized.split("\n").map((line) => line.trim()).filter(Boolean).length;
-    if (statements <= maxStatements && /if\s+__name__\s*==\s*["']__main__["']/.test(normalized)) return "bootstrap";
-    return "implementation";
-  }
-  if (analyzer === "c-cpp") {
-    if (/\b(?:class|struct|union|enum)\b|\w+\s*\([^;{}]*\)\s*\{/u.test(normalized)) return "implementation";
-    if (/^(?:\s*(?:#\s*(?:include|define|pragma)\b[^\n]*|(?:using|typedef|extern)\b[^;]*;)\s*)+$/su.test(normalized)) return "declaration";
-    return "unresolved";
-  }
-  if (/\b(?:class|struct|interface|record|enum)\b/.test(normalized)) return "implementation";
-  if (/\b(?:AddSingleton|AddScoped|AddTransient|Register)\b/.test(normalized)) return "registration";
-  if (/^(?:\s*(?:using|global\s+using|\[assembly:)[^;\n]*(?:;|\])\s*)+$/s.test(normalized)) return "declaration";
-  return "unresolved";
-}
-
 function classifyPackageRole(path: string, kindId: string | null, fixedId: string | undefined, content: string | null, taxonomy: LoadedTaxonomy): TaxonomyPackageRole {
   const location = packageLocation(path, taxonomy);
   if (!location) return "not-package";
-  if (fixedId || configurableContract(path, taxonomy, location)) return "configuration";
+  const configurable = configurableContract(path, taxonomy, location);
   if (!location.rule || !location.ecosystemId) return "unresolved";
   if (kindId && !location.rule.allowedFileKindIds.includes(kindId)) return "implementation";
-  if (!content) return "configuration";
-  const grammar = taxonomy.schema.packageGlueGrammar[location.rule.glueGrammarId];
-  const role = classifyGlue(grammar.analyzer, content, grammar.maxDelegationStatements);
+  const contractId = fixedId ?? configurable?.[0];
+  const disposition = contractId ? taxonomy.schema.packageSourceDispositions[contractId] : undefined;
+  const sourceKind = kindId ? taxonomy.schema.fileKinds[kindId]?.role === "source" : false;
+  if (contractId && !sourceKind) return "configuration";
+  if (!content) return contractId ? "unresolved" : "configuration";
+  const grammar = taxonomy.schema.packageGlueGrammar[disposition?.grammarId ?? location.rule.glueGrammarId];
+  if (contractId && !disposition) return "unresolved";
+  const dispositionRole = disposition ? classifyPackageSourceDisposition(content, disposition, grammar) : undefined;
+  const role = dispositionRole === "tool-metadata" ? dispositionRole : classifyPackageSource(content, grammar).role;
+  if (role === "tool-metadata") return "configuration";
   return grammar.allowedRoles.includes(role as PackageGlueGrammar["allowedRoles"][number]) ? role : role === "implementation" ? "implementation" : "unresolved";
 }
 
 function canonicalDirectory(path: string, parentCanonical: string, parentKindId: string | undefined, ancestorKindIds: readonly string[], taxonomy: LoadedTaxonomy): { readonly path: string; readonly kindId: string | null; readonly fixedId?: string; readonly violations: readonly TaxonomyViolation[] } {
   const name = basename(path).normalize("NFC");
+  const topologyFinding = targetInsidePackageBoundaryFinding(path, taxonomy.discoverySchema);
+  const topologyViolations = topologyFinding && topologyFinding.path === path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/+$/u, "").normalize("NFC")
+    ? [violation(topologyFinding.breachId, topologyFinding.path, "A target boundary must own its language packages; it cannot be nested inside one.")]
+    : [];
   const domains = taxonomy.discoverySchema.mutationDomainOwners[dirname(path)], domainOwner = mutationDomainOwnerLocation(path, taxonomy);
   if (domains && Object.hasOwn(domains, name) || domainOwner && path === `${domainOwner.root}/${domainOwner.relativePath}`) return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: "members-of-schema", violations: [] };
   const fixed = matchingFixedContracts(path, taxonomy.schema.fixedDirectoryContracts, taxonomy, packageLocation(path, taxonomy), parentKindId);
@@ -3302,11 +3126,11 @@ function canonicalDirectory(path: string, parentCanonical: string, parentKindId:
   const match = matchDirectoryKind(name, taxonomy, parentKindId, ancestorKindIds);
   if (!match.kind) {
     const message = match.ambiguous.length > 1 ? `Directory semantic kind is ambiguous: ${match.ambiguous.join(", ")}` : "Directory has no registered semantic kind";
-    return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: null, violations: [violation(match.ambiguous.length > 1 ? "directory-kind-ambiguous" : "directory-kind-unresolved", path, message)] };
+    return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: null, violations: [...topologyViolations, violation(match.ambiguous.length > 1 ? "directory-kind-ambiguous" : "directory-kind-unresolved", path, message)] };
   }
   const identity = splitLeadingEmojiIdentity(name);
   const canonicalName = identity.sequence !== identity.first ? name : `${match.kind.emoji}${match.slug}`.normalize("NFC");
-  const violations = identity.first ? pathEmojiStatuteFindings([{ path, nodeKind: "directory" }], []).map((finding) => violation(`path-emoji-${finding.kind}`, path, "Directory emoji must be handpicked, singular, and correctly presented.")) : [];
+  const violations = [...topologyViolations, ...(identity.first ? pathEmojiStatuteFindings([{ path, nodeKind: "directory" }], []).map((finding) => violation(`path-emoji-${finding.kind}`, path, "Directory emoji must be handpicked, singular, and correctly presented.")) : [])];
   return { path: parentCanonical ? `${parentCanonical}/${canonicalName}` : canonicalName, kindId: match.kind.id, violations };
 }
 
@@ -3318,6 +3142,7 @@ function canonicalFile(
   directoryKindByPath: ReadonlyMap<string, string>,
   fixedDirectoryContractByPath: ReadonlyMap<string, string>,
   siblingFixedFilenameContractIdsByParent: ReadonlyMap<string, readonly string[]>,
+  authorizedCargoBuildScriptPaths: ReadonlySet<string>,
   taxonomy: LoadedTaxonomy,
   contentKindId?: string,
 ): { readonly path: string; readonly fileKind: string | null; readonly stem: string | null; readonly fixedId?: string; readonly semanticDirectoryName?: string; readonly violations: readonly TaxonomyViolation[] } {
@@ -3325,12 +3150,14 @@ function canonicalFile(
   let fixedName = basename(path);
   const parent = dirname(path);
   let fixed = matchingFixedContracts(path, taxonomy.schema.fixedFilenameContracts, taxonomy, packageInfo, directoryKindByPath.get(parent), fixedDirectoryContractByPath.get(parent), siblingFixedFilenameContractIdsByParent.get(parent));
+  if (fixed.selected?.[0] === "cargo-build-script" && !authorizedCargoBuildScriptPaths.has(path)) fixed = { selected: null, ambiguous: [] };
   const decoratedFixedName = splitLeadingEmoji(fixedName);
   if (!fixed.selected && fixed.ambiguous.length === 0 && decoratedFixedName.emoji && decoratedFixedName.rest) {
     const candidatePath = dirname(path) === "." ? decoratedFixedName.rest : `${dirname(path)}/${decoratedFixedName.rest}`;
     const candidate = matchingFixedContracts(candidatePath, taxonomy.schema.fixedFilenameContracts, taxonomy, packageLocation(candidatePath, taxonomy), directoryKindByPath.get(parent), fixedDirectoryContractByPath.get(parent), siblingFixedFilenameContractIdsByParent.get(parent));
-    if (candidate.selected || candidate.ambiguous.length > 0) {
-      fixed = candidate;
+    const authorizedCandidate = candidate.selected?.[0] === "cargo-build-script" && !authorizedCargoBuildScriptPaths.has(candidatePath) ? { selected: null, ambiguous: [] } : candidate;
+    if (authorizedCandidate.selected || authorizedCandidate.ambiguous.length > 0) {
+      fixed = authorizedCandidate;
       fixedName = decoratedFixedName.rest;
     }
   }
@@ -3345,7 +3172,7 @@ function canonicalFile(
     return { path: parentCanonical ? `${parentCanonical}/${basename(path).normalize("NFC")}` : basename(path).normalize("NFC"), fileKind: null, stem: null, violations: [violation(resolvedKind.ambiguous.length > 1 ? "file-kind-ambiguous" : "file-kind-unresolved", path, message)] };
   }
   const sourceIdentity = splitLeadingEmojiIdentity(resolvedKind.stem);
-  if (sourceIdentity.first) {
+  if (sourceIdentity.first && !taxonomyFileKindIsImplementation(resolvedKind.kind.id, taxonomy.discoverySchema)) {
     const preserved = basename(path).normalize("NFC");
     const violations = pathEmojiStatuteFindings([{ path, nodeKind: "file" }], []).map((finding) => violation(`path-emoji-${finding.kind}`, path, "File emoji must be handpicked, singular, and correctly presented."));
     return { path: parentCanonical ? `${parentCanonical}/${preserved}` : preserved, fileKind: resolvedKind.kind.id, stem: sourceIdentity.rest || null, violations };
@@ -3356,18 +3183,23 @@ function canonicalFile(
   const testSuffix = sourceStem.endsWith(".test");
   const semanticStem = testSuffix ? sourceStem.slice(0, -".test".length) : sourceStem;
   const kindOnly = `${resolvedKind.kind.emoji}${resolvedKind.extension}`.normalize("NFC");
-  if (!semanticStem || configurable || GENERIC_SEMANTIC_STEMS.has(semanticStem.toLocaleLowerCase("und"))) return { path: parentCanonical ? `${parentCanonical}/${kindOnly}` : kindOnly, fileKind: resolvedKind.kind.id, stem: semanticStem || null, violations: [] };
+  const basenameFinding = implementationLeafBasenameFinding(path, taxonomy.discoverySchema);
+  const violations = [
+    ...(sourceIdentity.first ? pathEmojiStatuteFindings([{ path, nodeKind: "file" }], []).map((finding) => violation(`path-emoji-${finding.kind}`, path, "File emoji must be handpicked, singular, and correctly presented.")) : []),
+    ...(basenameFinding ? [violation(basenameFinding.breachId, path, `Implementation leaf ${JSON.stringify(basenameFinding.actualBasename)} must use ${JSON.stringify(basenameFinding.expectedBasename)}.`)] : []),
+  ];
+  if (!semanticStem || configurable || GENERIC_SEMANTIC_STEMS.has(semanticStem.toLocaleLowerCase("und"))) return { path: parentCanonical ? `${parentCanonical}/${kindOnly}` : kindOnly, fileKind: resolvedKind.kind.id, stem: semanticStem || null, violations };
   const parentSlug = splitLeadingEmoji(basename(dirname(path))).rest;
-  if (parentSlug.normalize("NFC").toLocaleLowerCase("und") === semanticStem.normalize("NFC").toLocaleLowerCase("und")) return { path: parentCanonical ? `${parentCanonical}/${kindOnly}` : kindOnly, fileKind: resolvedKind.kind.id, stem: semanticStem, violations: [] };
+  if (parentSlug.normalize("NFC").toLocaleLowerCase("und") === semanticStem.normalize("NFC").toLocaleLowerCase("und")) return { path: parentCanonical ? `${parentCanonical}/${kindOnly}` : kindOnly, fileKind: resolvedKind.kind.id, stem: semanticStem, violations };
   const roleContext = testSuffix ? "tests" : resolvedKind.kind.role === "asset" ? "assets" : resolvedKind.kind.role === "test" ? "tests" : parentKindId;
   const semantic = matchDirectoryKind(`${semanticEvidence}${semanticStem}`, taxonomy, roleContext);
   if (!semantic.kind) {
     const message = semantic.ambiguous.length > 1 ? `Semantic stem matches multiple directory kinds: ${semantic.ambiguous.join(", ")}` : "Semantic stem has no registered directory kind";
-    return { path: parentCanonical ? `${parentCanonical}/${basename(path).normalize("NFC")}` : basename(path).normalize("NFC"), fileKind: resolvedKind.kind.id, stem: semanticStem, violations: [violation(semantic.ambiguous.length > 1 ? "semantic-stem-ambiguous" : "semantic-stem-unresolved", path, message)] };
+    return { path: parentCanonical ? `${parentCanonical}/${kindOnly}` : kindOnly, fileKind: resolvedKind.kind.id, stem: semanticStem, violations: [...violations, violation(semantic.ambiguous.length > 1 ? "semantic-stem-ambiguous" : "semantic-stem-unresolved", path, message)] };
   }
-  if (parentKindId === semantic.kind.id && parentSlug === semanticStem) return { path: parentCanonical ? `${parentCanonical}/${kindOnly}` : kindOnly, fileKind: resolvedKind.kind.id, stem: semanticStem, violations: [] };
+  if (parentKindId === semantic.kind.id && parentSlug === semanticStem) return { path: parentCanonical ? `${parentCanonical}/${kindOnly}` : kindOnly, fileKind: resolvedKind.kind.id, stem: semanticStem, violations };
   const semanticDirectory = `${semantic.kind.emoji}${semanticStem}`.normalize("NFC");
-  return { path: parentCanonical ? `${parentCanonical}/${semanticDirectory}/${kindOnly}` : `${semanticDirectory}/${kindOnly}`, fileKind: resolvedKind.kind.id, stem: semanticStem, semanticDirectoryName: semanticDirectory, violations: [] };
+  return { path: parentCanonical ? `${parentCanonical}/${semanticDirectory}/${kindOnly}` : `${semanticDirectory}/${kindOnly}`, fileKind: resolvedKind.kind.id, stem: semanticStem, semanticDirectoryName: semanticDirectory, violations };
 }
 
 function packageImplementationDestination(
@@ -5742,7 +5574,7 @@ function projectionCatalogVectors(path: string, source: Pick<MutationProjectionS
 }
 
 function projectionCatalogEntryForSubset(entries: ReadonlyMap<string, MutableInventoryEntry>, subsetRoot: string, taxonomy: LoadedTaxonomy): MutableInventoryEntry | null {
-  const oracleRoot = `${subsetRoot}/${taxonomy.discoverySchema.testContributionDirectoryOverrides[subsetRoot] ?? "🔮️oracle"}`;
+  const oracleRoot = `${subsetRoot}/${taxonomy.discoverySchema.testOraclesDirName}`;
   const candidates = [...entries.values()].filter((entry) => entry.nodeKind === "file" && entry.fileKind === "json" && dirname(entry.sourcePath) === oracleRoot && basename(entry.normalizedPath) === "🔣️.json");
   return candidates.length === 1 ? candidates[0] : null;
 }
@@ -5753,7 +5585,7 @@ function projectionCatalogsForMutationSource(repoRoot: string, entries: Readonly
   const owners = [sourceOwner, ...Object.entries(taxonomy.discoverySchema.mutationCatalogSourceOwners).filter(([, source]) => source === sourceOwner).map(([owner]) => owner)];
   return owners.map((owner) => {
     const entry = projectionCatalogEntryForSubset(entries, owner, taxonomy);
-    const path = entry?.sourcePath ?? `${owner}/${taxonomy.discoverySchema.testContributionDirectoryOverrides[owner] ?? "🔮️oracle"}/🔣️.json`;
+    const path = entry?.sourcePath ?? `${owner}/${taxonomy.discoverySchema.testOraclesDirName}/🔣️.json`;
     const profile = { standardDirectoryName: owner.split("/").at(-3)!, subsetDirectoryName: basename(owner) };
     const catalog = entry ? projectionCatalogVectors(absolutePath(repoRoot, path), profile) : { vectors: [], error: `catalog is missing at ${path}` };
     return { owner, path, entry, ...catalog, vectors: catalog.vectors.map((vector) => ({ ...vector, catalogOwner: owner, catalogPath: path })) };
@@ -6524,8 +6356,13 @@ export function inventoryTaxonomy(options: TaxonomyInventoryOptions): TaxonomyIn
   return inventoryTaxonomyWithSourceParentPruning(options, new Set());
 }
 
+/** 📥️ Inventories admitted physical paths using an explicit captured leaf-byte provider. */
+export function inventoryTaxonomyWithCapturedSourceRead(options: TaxonomyInventoryOptions, sourceRead: TaxonomyCapturedSourceRead): TaxonomyInventory {
+  return inventoryTaxonomyWithSourceParentPruning(options, new Set(), sourceRead);
+}
+
 /** 🪵️ Projects only transaction-proven empty source parents into package authority before final classification. */
-function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOptions, prunableSourceParents: ReadonlySet<string>): TaxonomyInventory {
+function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOptions, prunableSourceParents: ReadonlySet<string>, sourceRead: TaxonomyCapturedSourceRead = (path) => readFileSync(path)): TaxonomyInventory {
   const prepared = sourceAdmissionPrepareOptions(options), { repoRoot, scope } = prepared;
   report(options.progress, "inventory", "setup", 0, 1, scope);
   if (options.workers !== undefined && (!Number.isSafeInteger(options.workers) || options.workers < 1)) throw new Error("workers must be a positive integer");
@@ -6591,6 +6428,16 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
   checkCancellation(repoRoot, options.cancelFile);
   const leaves = [...admitted.values()].filter((row) => row.mode !== "040000" && !row.explicitDirectory).sort((a, b) => Buffer.from(a.path).compare(Buffer.from(b.path)));
   report(options.progress, "inventory", "files", 0, leaves.length);
+  const leafPaths = new Set(leaves.map((row) => row.path));
+  const authorizedCargoBuildScriptPaths = new Set<string>();
+  for (const manifest of leaves.filter((row) => basename(row.path) === "Cargo.toml")) {
+    const location = packageLocation(manifest.path, taxonomy);
+    if (!location || location.ecosystemId !== "🦀️rust" || dirname(manifest.path) !== location.packageRoot) continue;
+    const content = contentOf(repoRoot, manifest, sourceRead);
+    if (content.kind !== "file" || !content.bytes || cargoPackageRootBuildScriptPath(new TextDecoder("utf-8", { fatal: false }).decode(content.bytes)) !== "build.rs") continue;
+    const buildScript = `${location.packageRoot}/build.rs`;
+    if (leafPaths.has(buildScript)) authorizedCargoBuildScriptPaths.add(buildScript);
+  }
   const siblingFixedFilenameContractIdsByParent = new Map<string, readonly string[]>();
   const siblingIds = new Map<string, Set<string>>();
   for (const row of leaves) {
@@ -6605,22 +6452,25 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
   for (let index = 0; index < leaves.length; index++) {
     checkCancellation(repoRoot, options.cancelFile);
     const row = leaves[index];
-    const content = contentOf(repoRoot, row);
+    const content = contentOf(repoRoot, row, sourceRead);
     const parent = dirname(row.path) === "." ? "" : dirname(row.path);
     const contentKind: ContentKindHint = content.kind === "file" ? extensionlessContentKind(row.path, content.bytes, taxonomy) : { kindId: null };
     const parentContextId = directoryKindByPath.get(parent) ?? fixedDirectoryContractByPath.get(parent);
-    const canonical = canonicalFile(row.path, canonicalDirectoryByPath.get(parent) ?? "", parentContextId, ancestorDirectoryKindIds(row.path, directoryKindByPath), directoryKindByPath, fixedDirectoryContractByPath, siblingFixedFilenameContractIdsByParent, taxonomy, contentKind.kindId ?? undefined);
+    const canonical = canonicalFile(row.path, canonicalDirectoryByPath.get(parent) ?? "", parentContextId, ancestorDirectoryKindIds(row.path, directoryKindByPath), directoryKindByPath, fixedDirectoryContractByPath, siblingFixedFilenameContractIdsByParent, authorizedCargoBuildScriptPaths, taxonomy, contentKind.kindId ?? undefined);
     const violations = [...canonical.violations];
     if (content.violation) violations.push(content.violation);
     if (contentKind.violation && !canonical.fixedId) violations.push(contentKind.violation);
     let text: string | null = null;
-    if (content.kind === "file" && content.size <= 16 * 1024 * 1024 && (textualPath(row.path) || (contentKind.kindId !== null && contentKind.kindId !== "binary"))) {
+    if (content.kind === "file" && content.bytes !== undefined && content.size <= 16 * 1024 * 1024 && (textualPath(row.path) || (contentKind.kindId !== null && contentKind.kindId !== "binary"))) {
       try {
         text = new TextDecoder("utf-8", { fatal: true }).decode(content.bytes);
       } catch {
         text = null;
       }
     }
+    const fixedSource = fixedSourceDispositionDecision(canonical.fixedId, text, taxonomy.discoverySchema);
+    if (fixedSource?.finding === "fixed-source-content-unreadable") violations.push(violation(fixedSource.finding, row.path, `Fixed source contract ${fixedSource.contractId} could not read a UTF-8 body for its declared semantic validator`));
+    if (fixedSource?.finding === "fixed-source-disposition-unresolved") violations.push(violation(fixedSource.finding, row.path, `Fixed source contract ${fixedSource.contractId} rejected the body with its declared semantic validator`));
     const role = classifyPackageRole(row.path, canonical.fileKind, canonical.fixedId, text, taxonomy);
     let normalizedPath = canonical.path;
     if (role === "implementation") {

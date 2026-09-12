@@ -1,9 +1,9 @@
-use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, new_viewer};
+use semio_framework_plugin::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, new_viewer};
 use semio_framework_plugin::ViewerApp;
 
 /// 🧪️ Contract §2.5 — real teeth: dispatches `EnergyModelViewCommand::default()` through the full
 /// `VcsArtifactApp<ViewerApp<EnergyModelViewer>>` runtime path and asserts the document/draft
-/// stores are byte-for-byte unchanged before/after (`semio_framework_plugin::testkit`, landed by
+/// stores are byte-for-byte unchanged before/after (`semio_framework_plugin::artifact_app_laws`, landed by
 /// W0-F — see `📓️w0-f-report.md` Gap 2; the pilot's own local stand-in is no longer needed here).
 #[semio_framework_async_macros::async_test]
 async fn energy_model_viewer_never_mutates() {

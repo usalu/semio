@@ -32,7 +32,7 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   `SetSnapshot` replaces `document.body` + `document.styles` only (the typed semantic view this
   subset's own `DocxDocument` models) -- real OPC parts outside that typed view are exercised
   separately by `SetPart`/`RemovePart` and are deliberately left untouched by `SetSnapshot` here, per
-  `../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracle/🔣️.json`'s own comparison-profile note.
+  `../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`'s own comparison-profile note.
 
   `set-part` overwrites the real, pre-existing `docProps/app.xml` (exercising the "replace" branch of
   "inserting or replacing"); `remove-part` deletes the real, pre-existing `docProps/core.xml` --
@@ -69,7 +69,7 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   This does NOT widen the vocabulary: `InsertStyle` still appends by definition, so the
   interior-`remove-style` gap described above is exactly as non-invertible as it was.
 
-  ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law module,
+  ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law module,
   so no scenario can pass merely because the reference composition declined to error.
   `mutate-<kind>` fails unless the mutation MOVES the very projection the case is compared through:
   a kind that applies cleanly and changes nothing observable would otherwise report a green for a
@@ -85,7 +85,7 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   part of it rather than an afterthought. The same three laws are proven again at unit level over
   these very Examples rows by
   `every_declared_kind_is_observable_and_its_inverse_restores_the_document` in
-  ../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracle/🦀️component.rs, which READS this table rather
+  ../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🦀️component.rs, which READS this table rather
   than restating it, so the two can never drift apart — and the same module pins the
   remove-style-of-an-interior-style refusal described above.
 

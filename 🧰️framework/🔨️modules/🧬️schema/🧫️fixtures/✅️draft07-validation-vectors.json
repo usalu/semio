@@ -1,5 +1,5 @@
 {
-  "$comment": "Language-agnostic draft-07 structural-validation vectors. Consumed by the owned Rust validator (⚛️component.rs test `owned_validator_agrees_with_the_shared_draft07_vectors`) and by the ajv + ajv-formats oracle spec (✅️draft07-oracle.test.ts). `errorPath` is a JSON Pointer into the instance, ajv's `instancePath` spelling; the Rust twin renders it as `$`, `$.name`, `$.items[0]`.",
+  "$comment": "Language-agnostic draft-07 structural-validation vectors. Consumed by the owned Rust validator (⚛️component/🦀️.rs test `owned_validator_agrees_with_the_shared_draft07_vectors`) and by the ajv + ajv-formats oracle spec (✅️draft07-oracle.test.ts). `errorPath` is a JSON Pointer into the instance, ajv's `instancePath` spelling; the Rust twin renders it as `$`, `$.name`, `$.items[0]`.",
   "dialect": "http://json-schema.org/draft-07/schema#",
   "cases": [
     {

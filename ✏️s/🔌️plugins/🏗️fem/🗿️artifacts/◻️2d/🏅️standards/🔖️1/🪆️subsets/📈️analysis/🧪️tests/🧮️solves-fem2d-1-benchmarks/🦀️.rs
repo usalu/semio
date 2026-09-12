@@ -2,7 +2,7 @@
 //!
 //! This case is the one fem2d case that judges ANALYSIS RESULTS rather than the model document, and
 //! it is how the `fem2d-1-mutate` third-party-oracle debt recorded in
-//! `../../../🌐️any/🔮️oracle/🔣️.json` is discharged for the twenty-two kinds no mesh carrier could
+//! `../../../🌐️any/🔮️oracles/🔣️.json` is discharged for the twenty-two kinds no mesh carrier could
 //! witness. The reference is `🐍️.py` beside this file: `anastruct`, a third-party 2D structural
 //! analysis package, plus `scipy.linalg` for the two eigenproblems. This adapter registers the
 //! SUBJECT half only — registering an oracle handler here would put this repository's answer on both

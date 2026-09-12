@@ -15,7 +15,7 @@ use super::*;
 use infinite_world::world::{begin_world3d_dynamic_retirement, enqueue_world3d_event, step_world3d_dynamic_retirement, world3d_dynamic_retirement_terminal_is_empty, step_world3d_draw_rebuild, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, World3dBuildContext, World3dSceneBridgeStep, World3dSnapshotApplyStep, World3dState, WorldCursorWakeAuthority, WorldDrawRebuildStep, WorldInteractionAuthorityStep, WorldInteractionIntent};
 use ui_wgpu::wgpu::{Board2dScene, DrawList, FontAtlas, IconAtlas, InputState, SurfaceKind, TiledMapScene, UiPresence, World3dScene};
 
-const ENGINE_SURFACES_FIXTURE: &str = include_str!("🔣️.json");
+const ENGINE_SURFACES_FIXTURE: &str = include_str!("../../🧫️fixtures/🧩️wgpu-engine-surfaces/🔣️.json");
 
 fn fixture() -> Value {
     serde_json::from_str(ENGINE_SURFACES_FIXTURE).expect("committed engine-surface fixture parses")
@@ -430,7 +430,7 @@ fn tiled_map_and_board_windows_attach_their_engines_on_the_same_production_seam(
 }
 
 /// 🧱️ The `boxed_fixed_slots` law for this module's fixed slot tables, against the one committed
-/// budget every implementation of it reads (`semio_framework_async::BOXED_FIXED_SLOTS_FIXTURE`).
+/// budget every implementation of it reads (`the committed fixed-slot fixture`).
 ///
 /// Asserts the measured shape of each table (capacity, one slot's bytes, the owner's own bytes)
 /// against that record, that each owner is smaller than the table it owns — the structural proof the
@@ -439,7 +439,7 @@ fn tiled_map_and_board_windows_attach_their_engines_on_the_same_production_seam(
 /// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
 #[test]
 fn engine_canvas_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
-    let fixture: Value = serde_json::from_str(semio_framework_async::BOXED_FIXED_SLOTS_FIXTURE).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/⏳️async/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")

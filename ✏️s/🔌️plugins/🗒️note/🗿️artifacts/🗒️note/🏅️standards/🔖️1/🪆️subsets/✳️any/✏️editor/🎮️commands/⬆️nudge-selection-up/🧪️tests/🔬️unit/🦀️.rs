@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::note::testkit::{dispatch, note_app_with_registry, select_blocks};
+use crate::editor::note::unit_tests::context::{dispatch, note_app_with_registry, select_blocks};
 use crate::editor::note::NoteCommand;
 use crate::schema::{block_bounds, block_id};
 

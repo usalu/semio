@@ -324,6 +324,9 @@ export type UiTranslationSchema = {
       readonly loadingPlugins: UiLabelValue;
       readonly renderError: UiLabelValue;
       readonly noPluginsLoaded: UiLabelValue;
+      /** 🚑️ The app instance died with its worker and the shell could not rebuild it — the user has
+       * to reload. Never shown for a loss the shell recovered from on its own. */
+      readonly workerLost: UiLabelValue;
       readonly missingWindow: UiLabelValue;
       readonly home: UiLabelValue;
       readonly backToWorkflow: UiLabelValue;

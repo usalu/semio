@@ -1097,7 +1097,11 @@ impl ArtifactEditor for ArchitectPlayApp {
             "importProgramRequest" => Ok(ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {})),
             "importProgram" => Ok(ArchitectCommand::ImportProgram(import_program::ImportProgram { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
             "nodeGraphEdit" => Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), dsl::json::to_json_string) })),
-            "nodeGraphViewport" => Ok(ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: str_field("viewportJson").unwrap_or_default() })),
+            "nodeGraphViewport" => {
+                let value = args.and_then(|value| value.get("viewport")).cloned().ok_or_else(|| Fault::from("nodeGraphViewport requires viewport"))?;
+                let viewport = dsl::from_dsl_value::<semio_framework::Viewport2d>(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
+                Ok(ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport }))
+            }
             "setAdjacencyKind" => Ok(ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind {
                 element_a_id: parse_entity_id(args, "elementAId").map(|id| id.0).unwrap_or_default(),
                 element_b_id: parse_entity_id(args, "elementBId").map(|id| id.0).unwrap_or_default(),
@@ -1268,14 +1272,8 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
-#[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
+//#region 🧪️UnitTests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests

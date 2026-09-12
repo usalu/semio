@@ -18,6 +18,20 @@ async fn sample_envelope(id: &str) -> crate::os_spr::causal::MutationEnvelope {
     }
 }
 
+fn sample_document_archive() -> DocumentArchivePack {
+    let root = DocumentArchiveArtifactRef { artifact_id: "root-1".into(), artifact_kind: "s.test.root".into(), standard: "1".into(), subset: "*".into() };
+    let child = DocumentArchiveArtifactRef { artifact_id: "child-1".into(), artifact_kind: "s.test.child".into(), standard: "1".into(), subset: "native".into() };
+    let grandchild = DocumentArchiveArtifactRef { artifact_id: "grandchild-1".into(), artifact_kind: "s.test.child".into(), standard: "1".into(), subset: "native".into() };
+    DocumentArchivePack {
+        parent_pack: vec![1, 2],
+        parent_spr: vec![3],
+        members: vec![
+            OwnedDocumentMemberPackEntry { ordinal: 0, reference: child.clone(), owner: DocumentArchiveOwnerRef { parent: root, slot: "children".into(), child_id: child.artifact_id.clone() }, envelope_pack: vec![4, 5] },
+            OwnedDocumentMemberPackEntry { ordinal: 1, reference: grandchild.clone(), owner: DocumentArchiveOwnerRef { parent: child, slot: "nested".into(), child_id: grandchild.artifact_id.clone() }, envelope_pack: vec![6] },
+        ],
+    }
+}
+
 /// @emoji #️⃣ Tiny hand-rolled `&[u8] -> String` hex encoder for this crate's own fixture-corpus
 /// tests — mirrors `db_engine`'s `write!("{byte:02x}")` idiom (no `hex` crate dependency exists
 /// anywhere in `framework/product/os`, so this crate does not introduce one either).
@@ -84,6 +98,26 @@ async fn app_command_load_document_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn app_command_read_artifact_round_trips() {
     assert_command_round_trips(&AppCommand::ReadDocument { seq: 9 }).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn app_command_recursive_document_archive_round_trips() {
+    assert_command_round_trips(&AppCommand::LoadDocumentArchive { seq: 10, archive: sample_document_archive() }).await;
+    assert_command_round_trips(&AppCommand::ReadDocumentArchive { seq: 11 }).await;
+    assert_command_round_trips(&AppCommand::PollDocumentArchiveLoad { seq: 12, operation: 10 }).await;
+    assert_command_round_trips(&AppCommand::CancelDocumentArchiveLoad { seq: 13, operation: 10 }).await;
+    assert_command_round_trips(&AppCommand::AcknowledgeDocumentArchiveLoad { seq: 14, operation: 10 }).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn document_archive_persisted_bytes_round_trip_exactly() {
+    let archive = sample_document_archive();
+    let bytes = encode_document_archive_bytes(&archive).expect("encode persisted document archive");
+    assert_eq!(decode_document_archive_bytes(&bytes).await.expect("decode persisted document archive"), archive);
+    let mut trailing = bytes.clone();
+    trailing.push(0);
+    assert!(decode_document_archive_bytes(&trailing).await.is_err());
+    assert!(decode_document_archive_bytes(&[2]).await.is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -232,6 +266,16 @@ async fn app_frame_document_changed_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn app_frame_document_round_trips() {
     assert_frame_round_trips(&AppFrame::Document { in_reply_to: 5, pack: vec![1], spr: vec![2], ops: "set foo = 1".to_string() }).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn app_frame_recursive_document_archive_round_trips() {
+    assert_frame_round_trips(&AppFrame::DocumentArchive { in_reply_to: 6, archive: sample_document_archive() }).await;
+    assert_frame_round_trips(&AppFrame::DocumentArchiveLoad {
+        in_reply_to: 7,
+        status: DocumentArchiveLoadStatus { operation: 10, state: DocumentArchiveLoadState::Running, completed: 3, total: 9, fault: Vec::new() },
+    })
+    .await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -493,9 +537,11 @@ async fn paged_generic_decoder_crosses_a_two_page_field_boundary_without_concate
 
 #[semio_framework_async_macros::async_test]
 async fn paged_generic_decoder_admits_document_config_and_projection_commands_used_during_browser_boot() {
-    let commands = [
+    let commands = vec![
         AppCommand::LoadDocument { seq: 1, pack: vec![1, 2], spr: vec![3] },
         AppCommand::ReadDocument { seq: 2 },
+        AppCommand::LoadDocumentArchive { seq: 10, archive: sample_document_archive() },
+        AppCommand::ReadDocumentArchive { seq: 11 },
         AppCommand::LoadConfig { seq: 3, pack: vec![4], spr: vec![5, 6] },
         AppCommand::ReadConfig { seq: 4 },
         AppCommand::ReadChildren { seq: 5 },
@@ -517,6 +563,57 @@ async fn paged_generic_decoder_admits_document_config_and_projection_commands_us
         assert_eq!(decoded, Some(expected));
         assert!(cursor.terminal_is_empty());
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn paged_recursive_archive_crosses_pages_and_decoded_owner_closes_one_field_per_grant() {
+    let mut archive = sample_document_archive();
+    archive.members[1].envelope_pack = vec![0xA5; COMMAND_PAGE_MAXIMUM_BYTES + 1];
+    let expected = AppCommand::LoadDocumentArchive { seq: 12, archive };
+    let encoded = encode_app_command(&expected).await.unwrap();
+    assert!(encoded.page_len() > 1);
+    let mut cursor = PagedAppCommandDecodeCursor::new(encoded);
+    let mut decoded = None;
+    for _ in 0..64 {
+        decoded = cursor.step().unwrap();
+        if decoded.is_some() {
+            break;
+        }
+    }
+    assert_eq!(decoded, Some(expected));
+    assert!(cursor.terminal_is_empty());
+
+    let mut owner = DecodedAppCommandOwner::new(decoded.unwrap_or_else(|| unreachable!()));
+    let mut released_items = 0;
+    let mut released_bytes = 0;
+    for _ in 0..64 {
+        let (empty, items, bytes) = owner.close_step(COMMAND_PAGE_MAXIMUM_BYTES + 1);
+        released_items += items;
+        released_bytes += bytes;
+        if empty {
+            break;
+        }
+    }
+    assert!(owner.terminal_is_empty());
+    assert!(released_items >= 24);
+    assert!(released_bytes > COMMAND_PAGE_MAXIMUM_BYTES);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn document_archive_decoders_reject_member_counts_beyond_fixed_authority() {
+    let mut bytes = vec![32, 1, 0, 0];
+    crate::os_spr::write_varint_u64(&mut bytes, (DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS + 1) as u64);
+    assert!(decode_app_command(&bytes).await.is_err());
+    let page = FixedCommandPage::try_copy_from(&bytes).unwrap();
+    let mut pages = CommandPageSet::try_new(1).unwrap();
+    pages.try_push(page).unwrap();
+    let mut cursor = PagedAppCommandDecodeCursor::new(PagedCommand::try_from_pages(pages).unwrap());
+    assert!(cursor.step().unwrap().is_none());
+    assert!(cursor.step().unwrap().is_none());
+    assert!(cursor.step().unwrap().is_none());
+    assert_eq!(cursor.step().unwrap_err().code.0, "plugin.document-archive-members");
+    while !cursor.close_step(COMMAND_PAGE_MAXIMUM_BYTES).0 {}
+    assert!(cursor.terminal_is_empty());
 }
 
 #[semio_framework_async_macros::async_test]

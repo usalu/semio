@@ -14,13 +14,13 @@ async fn definition_declares_the_text_editor_surface_and_body_key() {
 async fn a_report_in_the_config_renders_its_section_headings() {
     let report = build_report(&sample_plugin(), ReportKind::ExecutiveSummary);
     let cfg = ArchitectConfig { active_report_json: serde_json::to_string(&report).expect("json"), ..ArchitectConfig::default() };
-    let json = crate::editor::architect::testkit::project_render(render(&cfg));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&cfg));
     assert!(json.contains("Overview"));
     assert!(json.contains("architect-report.section"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn no_report_renders_the_placeholder() {
-    let json = crate::editor::architect::testkit::project_render(render(&ArchitectConfig::default()));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&ArchitectConfig::default()));
     assert!(json.contains("Run validation, analysis, or report"));
 }

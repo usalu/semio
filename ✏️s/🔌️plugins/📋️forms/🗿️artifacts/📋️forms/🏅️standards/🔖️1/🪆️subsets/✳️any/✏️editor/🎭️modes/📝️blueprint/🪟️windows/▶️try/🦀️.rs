@@ -1,5 +1,10 @@
 //! ▶️ Forms play app — the Try window: a wizard preview of the form as an end user would fill it out.
 
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+#[path = "🫧️transient/🦀️.rs"]
+pub mod transient;
+
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::{effective_try_values, forms_action, parse_contributions, render_extension_question, ProgramContributionEntry};
@@ -42,8 +47,16 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn answer_args(key: &str) -> UiAssemblyResult<ui::UiValue> {
-    ui_value_map([("key", ui_value_text(key)?)])
+fn window_owner(view: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<(&str, &str)> {
+    let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("forms.try-window.required", "Forms Try controls require a concrete window"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("forms.try-window.stale", "Forms Try controls require a live window"))?;
+    if kind != FORMS_PLAY_WINDOW_TRY { return Err(semio_framework_plugin::PluginAssemblyError::new("forms.try-window.kind", "Forms Try controls require the Try window kind")); }
+    Ok((id, kind))
+}
+
+fn answer_args(key: &str, view: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ui::UiValue> {
+    let (window_id, window_kind_id) = window_owner(view)?;
+    ui_value_map([("key", ui_value_text(key)?), ("windowId", ui_value_text(window_id)?), ("windowKindId", ui_value_text(window_kind_id)?)])
 }
 
 fn display(value: &str, emphasize: bool) -> UiAssemblyResult<ui::BuiltNode> {
@@ -85,7 +98,7 @@ fn try_field(question: &FormQuestion, error: Option<&str>, child: ui::BuiltNode)
     ui_admit(ui_admit(field.try_child(child))?.try_build())
 }
 
-fn render_try_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels) -> UiAssemblyResult<ui::BuiltNode> {
+fn render_try_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels, view: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ui::BuiltNode> {
     let value = values.get(&question.id).cloned().unwrap_or_else(|| json_value_from_dsl(question));
     let key = question.id.as_str();
     let label = question.label.as_str();
@@ -115,31 +128,32 @@ fn render_try_question(question: &FormQuestion, values: &Object, contributions: 
             if let Some(accept) = &question.accept {
                 input = input.accept(ui_text_value(accept)?);
             }
-            control(input, &format!("forms-try.{key}.input"), label, answer_args(key)?)?
+            control(input, &format!("forms-try.{key}.input"), label, answer_args(key, view)?)?
         }
         "slider" => {
             let mut slider = ui::slider(json_f64_value(&value)).min(question.min.unwrap_or(0.0)).max(question.max.unwrap_or(100.0)).step(question.step.unwrap_or(1.0));
             if let Some(unit) = &question.unit {
                 slider = slider.unit(ui_text_value(unit)?);
             }
-            control(slider, &format!("forms-try.{key}.slider"), label, answer_args(key)?)?
+            control(slider, &format!("forms-try.{key}.slider"), label, answer_args(key, view)?)?
         }
         "boolean" => {
             let on = value.as_bool().unwrap_or(false);
-            control(ui::toggle(on).icon(ui_text_value("check")?).text(ui_label(if on { labels.yes.as_str() } else { labels.no.as_str() })?), &format!("forms-try.{key}.toggle"), label, answer_args(key)?)?
+            control(ui::toggle(on).icon(ui_text_value("check")?).text(ui_label(if on { labels.yes.as_str() } else { labels.no.as_str() })?), &format!("forms-try.{key}.toggle"), label, answer_args(key, view)?)?
         }
         "single" => {
             let mut select = ui::select(ui_text_value(json_string_value(&value))?);
             for option in question.options.iter().flatten() {
                 select = ui_admit(select.try_item(ui_text_value(&option.value)?, ui_label(&option.label)?))?;
             }
-            control(select, &format!("forms-try.{key}.select"), label, answer_args(key)?)?
+            control(select, &format!("forms-try.{key}.select"), label, answer_args(key, view)?)?
         }
         "multi" => {
             let selected: HashSet<&str> = value.as_array().into_iter().flatten().filter_map(Value::as_str).collect();
             let mut children = Vec::new();
             for option in question.options.iter().flatten() {
-                let args = ui_value_map([("key", ui_value_text(key)?), ("optionValue", ui_value_text(&option.value)?)])?;
+                let (window_id, window_kind_id) = window_owner(view)?;
+                let args = ui_value_map([("key", ui_value_text(key)?), ("optionValue", ui_value_text(&option.value)?), ("windowId", ui_value_text(window_id)?), ("windowKindId", ui_value_text(window_kind_id)?)])?;
                 children.push(control(ui::toggle(selected.contains(option.value.as_str())).icon(ui_text_value("hash")?).text(ui_label(&option.label)?), &format!("forms-try.{key}.{}.toggle", option.value), &option.label, args)?);
             }
             stack(ui::Axis::Horizontal, children)?
@@ -148,7 +162,10 @@ fn render_try_question(question: &FormQuestion, values: &Object, contributions: 
             let mut children = Vec::new();
             for (index, field) in question.fields.iter().flatten().enumerate() {
                 let value = value.as_array().and_then(|array| array.get(index)).and_then(Value::as_f64).unwrap_or(field.value.unwrap_or(0.0));
-                let args = || ui_value_map([("key", ui_value_text(key)?), ("vectorIndex", ui_value_number(index as f64))]);
+                let args = || {
+                    let (window_id, window_kind_id) = window_owner(view)?;
+                    ui_value_map([("key", ui_value_text(key)?), ("vectorIndex", ui_value_number(index as f64)), ("windowId", ui_value_text(window_id)?), ("windowKindId", ui_value_text(window_kind_id)?)])
+                };
                 let id = format!("forms-try.{key}.{}.stepper", field.key);
                 let mut node =
                     control(ui_admit(ui::BuiltNode::try_new(&id, ui::Component::NumberStepper(ui::NumberStepperProps { value, step: question.step.unwrap_or(0.1), uniform: true })))?, &id, field.label.as_deref().unwrap_or(&field.key), args()?)?;
@@ -171,23 +188,32 @@ fn json_value_from_dsl(question: &FormQuestion) -> Value {
     crate::schema::dsl_to_value(&default_value_for_question(question))
 }
 
-fn navigation(id: &str, label: &str, icon: &str, command: &str, disabled: bool) -> UiAssemblyResult<ui::BuiltNode> {
-    let (action, args) = forms_action(command, None)?;
+fn navigation(id: &str, label: &str, icon: &str, command: &str, disabled: bool, view: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ui::BuiltNode> {
+    let (window_id, window_kind_id) = window_owner(view)?;
+    let args = ui_value_map([("windowId", ui_value_text(window_id)?), ("windowKindId", ui_value_text(window_kind_id)?)])?;
+    let (action, args) = forms_action(command, Some(args))?;
     let mut node: ui::BuiltNode = ui::button(ui_label(label)?).icon(ui_text_value(icon)?).disabled(disabled).into();
     node.key = ui_text_value(id)?;
     ui_admit(node.bindings.try_push(ui::ActionBinding { trigger: ui::Trigger::Activate, action, args, capability: None }))?;
     Ok(node)
 }
 
-pub fn render(spec: &crate::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiAssemblyResult<ui::BuiltNode> {
+pub fn render(
+    spec: &crate::FormsSnapshot,
+    app_config: &FormsConfig,
+    window_config: &config::FormsTryWindowConfig,
+    transient: &transient::FormsTryWindowTransient,
+    labels: &FormsLabels,
+    view: &semio_framework_plugin::ViewModel,
+) -> UiAssemblyResult<ui::BuiltNode> {
     let steps = crate::forms_steps(spec);
     if steps.is_empty() {
         return display(labels.no_steps_in_form.as_str(), false);
     }
-    let contributions = parse_contributions(config);
-    let step_index = (config.current_step_index as usize).min(steps.len().saturating_sub(1));
+    let contributions = parse_contributions(app_config);
+    let step_index = (window_config.current_step_index as usize).min(steps.len().saturating_sub(1));
     let step = &steps[step_index];
-    let values = effective_try_values(spec, config);
+    let values = effective_try_values(spec, transient);
     let validation_values = values.iter().map(|(key, value)| (key.to_owned(), crate::schema::value_to_dsl(value))).collect();
     let visible = visible_questions(step, &validation_values);
     let errors = step_errors(step, &validation_values);
@@ -198,10 +224,10 @@ pub fn render(spec: &crate::FormsSnapshot, config: &FormsConfig, labels: &FormsL
         children.push(display(description, false)?);
     }
     for question in visible {
-        children.push(render_try_question(question, &values, &contributions, errors_by_question.get(question.id.as_str()).copied(), labels)?);
+        children.push(render_try_question(question, &values, &contributions, errors_by_question.get(question.id.as_str()).copied(), labels, view)?);
     }
-    let next = if step_index + 1 < steps.len() { navigation("forms-try.next", labels.next.as_str(), "chevron-right", "nextStep", !advance)? } else { navigation("forms-try.submit", labels.submit.as_str(), "check", "submit", !advance)? };
-    children.push(stack(ui::Axis::Horizontal, vec![navigation("forms-try.back", labels.back.as_str(), "chevron-left", "previousStep", step_index == 0)?, next])?);
+    let next = if step_index + 1 < steps.len() { navigation("forms-try.next", labels.next.as_str(), "chevron-right", "nextStep", !advance, view)? } else { navigation("forms-try.submit", labels.submit.as_str(), "check", "submit", !advance, view)? };
+    children.push(stack(ui::Axis::Horizontal, vec![navigation("forms-try.back", labels.back.as_str(), "chevron-left", "previousStep", step_index == 0, view)?, next])?);
     stack(ui::Axis::Vertical, children)
 }
 //#endregion 🔖️Render

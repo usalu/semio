@@ -1,11 +1,11 @@
 use super::*;
-use crate::editor::shooting::testkit::{icon_window_measures, shooting_app};
+use crate::editor::shooting::unit_tests::context::{icon_window_measures, shooting_app};
 use serde_json::{json, Value};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_icon_render_scene_with_real_request() {
     let mut app = shooting_app().await;
-    let scene = crate::editor::shooting::testkit::icon_scene(&mut app).await;
+    let scene = crate::editor::shooting::unit_tests::context::icon_scene(&mut app).await;
     let request: Value = serde_json::from_str(&scene.request_json).unwrap();
     assert_eq!(request["assetUrl"], json!("/mesh/🧊️base.glb"));
     assert_eq!(request["format"], json!("svg"));

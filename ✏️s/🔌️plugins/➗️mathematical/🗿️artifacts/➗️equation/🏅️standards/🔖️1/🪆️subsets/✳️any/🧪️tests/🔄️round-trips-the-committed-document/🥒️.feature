@@ -7,7 +7,7 @@ Feature: Parse the real committed equation document, print it back and cross it 
   Examples. It has no vector and no mutation kind, so unlike its three mutation siblings it claims no
   `@mutations-` catalog — `✳️any` owns no mutation catalog of its own now that the graph, the point
   cloud and the equation each have their smallest owner. It carries the same recorded no-oracle
-  decision (`equation-mutation-semantics`, in `../../🔮️oracle/🔣️.json`) because the same debt
+  decision (`equation-mutation-semantics`, in `../../🔮️oracles/🔣️.json`) because the same debt
   applies here too: this subset's committed snapshot text grammar is the repository-wide placeholder
   `payload = OCTET+`, whose header production declares `"schema" SP "stdio.json"` against an artifact
   whose own first line says otherwise.

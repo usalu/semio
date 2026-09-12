@@ -252,9 +252,9 @@ pub fn default_block(id: String, kind: &str) -> crate::PlaybookBlock {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️document-helpers/🦀️.rs"]
-mod document_helpers_tests;
-//#endregion 🔖️DocumentHelpers
+#[path = "🧪️tests/🧱️block-defaults/🦀️.rs"]
+mod block_defaults_tests;
+//#endregion 🔖️BlockDefaults
 
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(

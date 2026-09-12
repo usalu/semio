@@ -1,0 +1,15 @@
+enum SequenceWindowOrientation {
+  LEFT_RIGHT
+  TOP_BOTTOM
+}
+
+type SequenceWindowCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type SequenceMainWindowConfig {
+  orientation: SequenceWindowOrientation!
+  camera: SequenceWindowCamera!
+}

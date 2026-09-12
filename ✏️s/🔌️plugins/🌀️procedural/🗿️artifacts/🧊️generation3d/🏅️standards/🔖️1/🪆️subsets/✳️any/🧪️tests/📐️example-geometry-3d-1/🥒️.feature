@@ -35,7 +35,7 @@ Feature: Every bundled generation3d example evaluates to the geometry its commit
   tell a correct solid from a wrong one on its own — it measures whatever soup it is handed — which
   is why it is paired with, not substituted for, the committed expectation.
 
-  `example-geometry-parry3d` is registered in `🔮️oracle/🔣️.json` but is deliberately NOT an
+  `example-geometry-parry3d` is registered in `🔮️oracles/🔣️.json` but is deliberately NOT an
   `@oracle-` tag on this feature, for the same reason `🚪️io-procedural-3d-1` leaves
   `io-round-trip-parry3d` untagged: a generated repository-test host may not gain a Cargo dependency
   on a plugin crate or on a third-party one, so the `parry3d` half cannot run as this case's rust

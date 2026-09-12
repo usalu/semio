@@ -35,7 +35,7 @@ impl store::ArtifactPack for Generation3dPreviewWindowTransient {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() { return Err(store::PackError::Schema("Generation3d preview window transient pack envelope mismatch".into())); }
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) { return Err(store::PackError::Schema("Generation3d preview window transient pack envelope mismatch".into())); }
         let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }

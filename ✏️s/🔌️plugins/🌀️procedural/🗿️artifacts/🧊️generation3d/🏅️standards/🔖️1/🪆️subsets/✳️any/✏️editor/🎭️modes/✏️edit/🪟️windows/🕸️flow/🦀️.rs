@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::any::schema::{fixture_to_workflow, with_host}
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, HasStackLayout, Trigger, UiAssemblyResult};
-use semio_framework_plugin::{tree_item, tree_item_desc, ActionFactory, BuiltNode, LocalizedLabel, NodeGraphHover, NodeGraphScene, NodeGraphViewport, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{tree_item, tree_item_desc, ActionFactory, BuiltNode, LocalizedLabel, NodeGraphHover, NodeGraphScene, Viewport2d, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
@@ -263,7 +263,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
         let operators = document_operator_records(&host.dag.fixture, &nodes);
         (nodes, edges, operators)
     });
-    let viewport = NodeGraphViewport { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom };
+    let viewport = Viewport2d { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom };
     let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let hover = marks.hovered_graph_target().map(|(node_id, port_id)| NodeGraphHover { node_id: Some(node_id), port_id });
     let outline = graph_outline(&nodes, &edges, flow_extras.status_json.as_ref(), labels)?;
@@ -308,6 +308,6 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "../../🧪️tests/🕸️flow/🔬️unit/🦀️.rs"]
+#[path = "./🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::generation2d::commands::enter_generate;
-use crate::editor::generation2d::testkit::{app, close, dispatch, snapshot_read};
+use crate::editor::generation2d::unit_tests::context::{app, close, dispatch, snapshot_read};
 use crate::editor::generation2d::Generation2dCommand;
 
 #[semio_framework_async_macros::async_test]

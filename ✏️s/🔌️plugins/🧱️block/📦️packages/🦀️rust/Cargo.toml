@@ -14,7 +14,7 @@ package = "semio:block"
 [package.metadata.semio]
 role = "plugin"
 
-# 📖️ Opts this plugin into the generated Storybook scope registry (`.storybook/scopes.ts`'s
+# 📖️ Opts this plugin into the generated Storybook scope registry (`.storybook/📖️stories/🧭️coordination/🟦️.ts`'s
 # `GENERATED_SCOPES`, read via `readSemioMarkerSubTable`) instead of a hand-maintained entry — see
 # 26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG. `"."` is this plugin's OWNER
 # root (`✏️s/🔌️plugins/🧱️block`) itself, matching the pre-existing hand-curated `block` scope.
@@ -22,6 +22,7 @@ role = "plugin"
 id = "block"
 titlePrefix = "🧱️block"
 sourceRoots = ["."]
+storyGlobs = ["📖️stories/**/🧪️.story.tsx"]
 
 [[package.metadata.semio.playground]]
 variant = "block2d"
@@ -66,6 +67,7 @@ semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨
 semio-framework-job = { workspace = true }
 
 [dev-dependencies]
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
 serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

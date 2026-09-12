@@ -1,10 +1,10 @@
 use super::*;
 use crate::editor::animate::commands::{delete_selection, delete_tile, patch_tile_crops, rename_tiles};
-use crate::editor::animate::testkit::{dispatch, presentation_app, presentation_app_with_registry};
+use crate::editor::animate::unit_tests::context::{dispatch, presentation_app, presentation_app_with_registry};
 use crate::editor::animate::PresentationCommand;
-use semio_framework_plugin::testkit::meta;
+use semio_framework_plugin::artifact_app_laws::meta;
 
-async fn seed_2x2(app: &mut crate::editor::animate::testkit::PresentationApp) {
+async fn seed_2x2(app: &mut crate::editor::animate::unit_tests::context::PresentationApp) {
     dispatch(app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
 }
 

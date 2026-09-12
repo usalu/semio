@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[path = "🌳️typed/🧱️component.rs"]
+#[path = "🌳️typed/🧱️component/🦀️.rs"]
 mod typed;
 pub(crate) use typed::{UiTypedRetire, UiTypedRetirementCursor};
 #[path = "📮️handback/🦀️.rs"]

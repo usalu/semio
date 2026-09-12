@@ -8,6 +8,6 @@
     { "id": "path-traversal", "field": "witPath", "value": "../📜️world.wit" },
     { "id": "extra-authority", "field": "fallback", "value": true },
     { "id": "missing-lock", "field": "cargoLockPath", "remove": true },
-    { "id": "stacked-adapter", "field": "adapterPath", "value": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️🧬️.rs" }
+    { "id": "stacked-adapter", "field": "adapterPath", "value": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️🧬️.rs" }
   ]
 }

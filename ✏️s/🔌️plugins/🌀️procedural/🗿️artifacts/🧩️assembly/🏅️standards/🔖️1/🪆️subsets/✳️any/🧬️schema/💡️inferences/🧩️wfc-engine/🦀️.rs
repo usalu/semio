@@ -53,13 +53,16 @@ pub mod job;
 #[path = "🏗️model/🦀️.rs"]
 pub mod model;
 #[cfg(test)]
+#[path = "🧪️tests/🧮️model-vectors/🦀️.rs"]
+pub(crate) mod model_vectors;
+#[cfg(test)]
 #[path = "🎼️motif/🦀️.rs"]
 pub(crate) mod motif;
 #[cfg(test)]
 #[path = "🚫️nogood/🦀️.rs"]
 pub(crate) mod nogood;
 #[cfg(test)]
-#[path = "🔮️oracle/🦀️.rs"]
+#[path = "🔮️oracles/🦀️.rs"]
 pub mod oracle;
 #[cfg(test)]
 #[path = "🏁️outcome/🦀️.rs"]

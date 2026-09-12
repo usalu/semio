@@ -9,7 +9,7 @@
 //! no-oracle case is never dispatched in the oracle role, and an oracle handler that could only
 //! re-read what the subject just produced would be a stub reporting a pass. All evidence therefore
 //! lives in the SUBJECT role below, where each handler asserts its law through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` module before it returns.
+//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module before it returns.
 //!
 //! The subject half is `sut`-gated because the generated host links this repository's crate only
 //! for the subject role (fleet brief §5.3).

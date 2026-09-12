@@ -28,31 +28,31 @@
 //! the authoritative status, decisions, and registrar-requests.
 
 #[cfg(target_os = "macos")]
-#[path = "🍎️backend.rs"]
+#[path = "../../🍎️backend/🦀️.rs"]
 mod backend;
 #[cfg(target_os = "macos")]
-#[path = "📬️frame_buffers.rs"]
+#[path = "../../📬️frame-buffers/🦀️.rs"]
 mod frame_buffers;
 #[cfg(target_os = "macos")]
-#[path = "✨️msl.rs"]
+#[path = "../../✨️msl/🦀️.rs"]
 mod msl;
 #[cfg(target_os = "macos")]
-#[path = "🧭️objective_c.rs"]
+#[path = "../../🧭️objective-c/🦀️.rs"]
 mod objective_c;
 #[cfg(target_os = "macos")]
-#[path = "🏗️pipelines.rs"]
+#[path = "../../🏗️pipelines/🦀️.rs"]
 mod pipelines;
 #[cfg(target_os = "macos")]
-#[path = "🗃️resources.rs"]
+#[path = "../../🗃️resources/🦀️.rs"]
 mod resources;
 #[cfg(target_os = "macos")]
-#[path = "🌫️scene_target.rs"]
+#[path = "../../🌫️scene-target/🦀️.rs"]
 mod scene_target;
 #[cfg(target_os = "macos")]
-#[path = "🧱️types.rs"]
+#[path = "../../🧱️types/🦀️.rs"]
 mod types;
 #[cfg(target_os = "macos")]
-#[path = "🌐️world3d.rs"]
+#[path = "../../🌐️world3d/🦀️.rs"]
 mod world3d;
 
 #[cfg(target_os = "macos")]

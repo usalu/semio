@@ -4341,7 +4341,7 @@ mod plugin_dependency_tests;
 
 // 🚧️ UNBLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `locale`/
 // `terminology` are `ui_wgpu::wgpu::{Locale, Terminology}`, which now have hand-written
-// `ToValue`/`FromValue` in `🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️locale_terminology_value.rs`
+// `ToValue`/`FromValue` in `🖱️ui/🎯️targets/🧊️wgpu/🌐️locale-terminology/🧾️value/🦀️.rs`
 // (that crate's own `🤖️generated.rs` is do-not-edit, so the impls live in a sibling `#[path]`
 // mount instead). Kept additive: `ViewModel` is consumed outside this pass by 🛍️products/💻️os
 // (plugin/renderer modules) and ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue

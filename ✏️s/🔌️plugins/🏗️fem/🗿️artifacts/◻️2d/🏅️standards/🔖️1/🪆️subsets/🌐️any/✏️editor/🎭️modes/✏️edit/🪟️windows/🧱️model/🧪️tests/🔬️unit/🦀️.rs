@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::fem2d::testkit::{fem2d_app, render as render_body};
+use crate::editor::fem2d::unit_tests::context::{fem2d_app, render as render_body};
 
 fn visual_freshness(generation: u64) -> Fem2dVisualFreshness {
     Fem2dVisualFreshness { app_instance_id: 7, model_revision: 11, document_generation: generation, operation: 13, numerical_preview_sequence: 17, surface_generation: generation, renderer_scene_generation: generation }
@@ -36,9 +36,9 @@ async fn renders_fem2d_model_scene() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_preview_renders_region_edges() {
     let mut app = fem2d_app();
-    crate::editor::fem2d::testkit::dispatch(&mut app, crate::editor::fem2d::Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
+    crate::editor::fem2d::unit_tests::context::dispatch(&mut app, crate::editor::fem2d::Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
-    let node = render(&snapshot, &FemCamera::default()).expect("fixture surface admission");
+    let node = render(&snapshot, &Viewport2d::default()).expect("fixture surface admission");
     let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
     let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
     assert!(scene.layers_json.contains("mesh-edge-"), "expected mesh-edge preview layers in the model scene");

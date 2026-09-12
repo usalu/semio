@@ -11,8 +11,9 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, sep } from "node:path";
-import { clearContributionCache, isTestContributionPath, scanDeclaredDependencies, testContributionDirectoryName } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import contributionDirectoryCases from "../../🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json";
+import { minimatch } from "minimatch";
+import { clearContributionCache, isTestOraclePath, scanDeclaredDependencies } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import oracleDirectoryCases from "../../🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json";
 import protocolSchema from "../../🧬️schema/🔣️.json";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
@@ -515,7 +516,7 @@ describe("🌱️ native second implementation", () => {
       mutationCatalogs: [],
       mutationManifests,
       fixtureManifests: [],
-      contributions: [{ owner, manifestPath: `${owner}/🧪️oracle/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests, fixtureManifests: [], probes: [], problems: [] }],
+      contributions: [{ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests, fixtureManifests: [], probes: [], problems: [] }],
     }) as unknown as Registry;
 
   test("isSemioNativeArtifact refuses every s.stdio.* interchange format except s.stdio.semio itself", () => {
@@ -700,7 +701,7 @@ describe("🧫️ mutation without fixture", () => {
       mutationCatalogs: catalogs,
       mutationManifests: manifests,
       fixtureManifests: fixtures,
-      contributions: [{ owner: "test/owner", manifestPath: "test/owner/🧪️oracle/🔣️.json", oracles: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: catalogs, mutationManifests: manifests, fixtureManifests: fixtures, probes: [], problems: [] }],
+      contributions: [{ owner: "test/owner", manifestPath: "test/owner/🔮️oracles/🔣️.json", oracles: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: catalogs, mutationManifests: manifests, fixtureManifests: fixtures, probes: [], problems: [] }],
     }) as unknown as Registry;
 
   test("a mutation with neither a v2 fixture nor a v1 vector is a breach", () => {
@@ -769,13 +770,10 @@ describe("🧫️ mutation without fixture", () => {
       const matches = liveRegistry.contributions.filter((contribution) => contribution.manifestPath === row.path);
       expect(matches.length, row.path).toBe(1);
       const live = matches[0]!;
-      expect(basename(dirname(row.path)), row.path).toBe(testContributionDirectoryName(taxonomy, live.owner));
+      expect(basename(dirname(row.path)), row.path).toBe(taxonomy.testOraclesDirName);
       expect(declarationIds(live), row.path).toEqual(declarationIds(row.value));
       expect(live.fixtureManifests.map((fixture) => fixture.id), row.path).toEqual((row.value.fixtureManifests ?? []).map((fixture: { id: string }) => fixture.id));
-      for (const manifest of row.value.mutationManifests ?? []) if (witnesses.has(manifest.artifact)) {
-        expect(basename(dirname(row.path))).not.toBe(taxonomy.testContributionDirName);
-        observedWitnesses.add(manifest.artifact);
-      }
+      for (const manifest of row.value.mutationManifests ?? []) if (witnesses.has(manifest.artifact)) observedWitnesses.add(manifest.artifact);
     }
     const live = liveRegistry.contributions.filter((contribution) => contribution.owner === owner || contribution.owner.startsWith(`${owner}/`));
     expect(live.flatMap((contribution) => contribution.mutationManifests).flatMap((manifest) => manifest.mutations).length).toBe(physical.flatMap((row) => row.value.mutationManifests ?? []).flatMap((manifest) => manifest.mutations).length);
@@ -940,7 +938,7 @@ describe("🎯 reimplementation-registered-as-third-party is entry-granular, not
       mutationCatalogs: [],
       mutationManifests: [],
       fixtureManifests: [],
-      contributions: [{ owner, manifestPath: `${owner}/🧪️oracle/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], probes: [], problems: [] }],
+      contributions: [{ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], probes: [], problems: [] }],
     }) as unknown as Registry;
 
   /** 🦀️ A `match kind { … }` catch-all whose exact wording is what the detector's `predicts` regex looks
@@ -952,7 +950,7 @@ describe("🎯 reimplementation-registered-as-third-party is entry-granular, not
   const withOracleFile = (owner: string, text: string, run: (root: string) => void): void => {
     const root = mkdtempSync(join(tmpdir(), "reimplementation-entry-granular-"));
     try {
-      const rsPath = join(root, owner, "🧪️oracle", "🦀️.rs");
+      const rsPath = join(root, owner, "🔮️oracles", "🦀️.rs");
       mkdirSync(join(rsPath, ".."), { recursive: true });
       writeFileSync(rsPath, text);
       run(root);
@@ -1019,34 +1017,30 @@ describe("⚖️ artifact comparison profiles", () => {
 
 
 describe("🧭️ contribution directory ownership", () => {
-  test("handpicked owner directories match neutral cases and the lodash map oracle", async () => {
+  test("the canonical oracle collection matches neutral cases and the minimatch oracle", async () => {
     const { default: Ajv } = await import("ajv");
-    const { default: lodash } = await import("lodash");
-    // 🧭️The case directory holds EXAMPLES; the contract they satisfy is a named export of the owning
-    // module, resolved out of it rather than restated beside them.
     const compiler = new Ajv({ strict: false, allErrors: true });
     compiler.addSchema(protocolSchema, "protocol");
     const contract = compiler.getSchema("protocol#/$defs/ContributionDirectoryOwnershipCases");
     expect(contract).toBeDefined();
-    expect(contract!(contributionDirectoryCases)).toBe(true);
-    const taxonomy = { ...testTaxonomy(repoRoot), testContributionDirName: contributionDirectoryCases.defaultDirectory, testContributionDirectoryOverrides: contributionDirectoryCases.overrides };
-    const expected = contributionDirectoryCases.cases.map(({ directory }) => directory);
-    expect(contributionDirectoryCases.cases.map(({ owner }) => testContributionDirectoryName(taxonomy, owner))).toEqual(expected);
-    expect(contributionDirectoryCases.cases.map(({ owner }) => lodash.get(contributionDirectoryCases.overrides, [owner], contributionDirectoryCases.defaultDirectory))).toEqual(expected);
-    expect(contributionDirectoryCases.cases.map(({ path }) => isTestContributionPath(taxonomy, path))).toEqual(contributionDirectoryCases.cases.map(({ owned }) => owned));
+    expect(contract!(oracleDirectoryCases)).toBe(true);
+    const taxonomy = testTaxonomy(repoRoot);
+    expect(oracleDirectoryCases.directoryName).toBe(taxonomy.testOraclesDirName);
+    expect(oracleDirectoryCases.cases.map(({ path }) => isTestOraclePath(taxonomy, path))).toEqual(oracleDirectoryCases.cases.map(({ owned }) => owned));
+    expect(oracleDirectoryCases.cases.map(({ path }) => minimatch(path, `**/${oracleDirectoryCases.directoryName}/**`, { dot: true }))).toEqual(oracleDirectoryCases.cases.map(({ owned }) => owned));
   });
 
-  test("discovery and dependency ownership use exact owner overrides without aliases", () => {
+  test("discovery and dependency ownership use the canonical collection without aliases", () => {
     const root = mkdtempSync(join(tmpdir(), "contribution-directory-ownership-"));
     const vocabulary = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
     const candidates = [
-      { owner: "🎠️kernel", directory: "🔮️oracle", dependency: "selected-reference", owned: true },
-      { owner: "🎠️kernel", directory: "🧪️oracle", dependency: "old-name-production", owned: false },
-      { owner: "🧩️other", directory: "🧪️oracle", dependency: "default-reference", owned: true },
-      { owner: "🧩️other", directory: "🔮️oracle", dependency: "lookalike-production", owned: false },
+      { owner: "🎠️kernel", directory: "🔮️oracles", dependency: "selected-reference", owned: true },
+      { owner: "🎠️kernel", directory: "🔮️oracle", dependency: "singular-reference", owned: false },
+      { owner: "🧩️other", directory: "🔮️oracles", dependency: "other-reference", owned: true },
+      { owner: "🧩️other", directory: "🧪️oracle", dependency: "test-emoji-reference", owned: false },
     ];
     try {
-      const taxonomy = { ...JSON.parse(readFileSync(join(repoRoot, vocabulary), "utf8")), testContributionDirName: contributionDirectoryCases.defaultDirectory, testContributionDirectoryOverrides: contributionDirectoryCases.overrides };
+      const taxonomy = JSON.parse(readFileSync(join(repoRoot, vocabulary), "utf8"));
       mkdirSync(join(root, vocabulary, ".."), { recursive: true });
       writeFileSync(join(root, vocabulary), JSON.stringify(taxonomy));
       for (const candidate of candidates) {
@@ -1061,11 +1055,11 @@ describe("🧭️ contribution directory ownership", () => {
       const dependencies = scanDeclaredDependencies(root);
       for (const candidate of candidates) expect(dependencies.find(({ name }) => name === candidate.dependency)?.productionReachable).toBe(!candidate.owned);
       expect([...new Set(oracleImportsInProduction(root).map(({ path }) => path))].sort()).toEqual(candidates.filter(({ owned }) => !owned).map(({ owner, directory }) => `${owner}/${directory}/🟦️.ts`).sort());
-      writeFileSync(join(root, "🎠️kernel/🔮️oracle/🔣️.json"), "{ malformed");
+      writeFileSync(join(root, "🎠️kernel/🔮️oracles/🔣️.json"), "{ malformed");
       clearContributionCache(root);
       expect(discoverTestContributions(root).map(({ owner }) => owner)).toEqual(["🧩️other"]);
       expect(scanDeclaredDependencies(root).find(({ name }) => name === "selected-reference")?.productionReachable).toBe(false);
-      expect(oracleImportsInProduction(root).some(({ path }) => path.startsWith("🎠️kernel/🔮️oracle/"))).toBe(false);
+      expect(oracleImportsInProduction(root).some(({ path }) => path.startsWith("🎠️kernel/🔮️oracles/"))).toBe(false);
     } finally {
       clearContributionCache(root);
       rmSync(root, { recursive: true, force: true });
@@ -1080,25 +1074,25 @@ describe("🧭️ contribution directory ownership", () => {
     expect(statements).toHaveLength(3);
     const compiled = ts.transpileModule(statements.map((node) => node.getText(source)).join("\n"), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
     const api = new Function("readdirSync", "existsSync", "join", `${compiled}\nreturn { discover: dependencyDiscoverContributionManifests, classify: dependencyClassifyOracleEntry };`)(readdirSync, existsSync, join) as {
-      discover(root: string, directory: string, filename: string, overrides: Readonly<Record<string, string>>): string[];
-      classify(entry: { name: string; version: string; kinds: string[]; users: string[]; declarations: { user: string; version: string; kind: string }[]; oracleConflictUsers?: string[] }, oracleIds: readonly string[], overrides: Readonly<Record<string, string>>, defaultDirectory: string): void;
+      discover(root: string, directory: string, filename: string): string[];
+      classify(entry: { name: string; version: string; kinds: string[]; users: string[]; declarations: { user: string; version: string; kind: string }[]; oracleConflictUsers?: string[] }, oracleIds: readonly string[], directory: string): void;
     };
     const root = mkdtempSync(join(tmpdir(), "root-contribution-directory-"));
     try {
-      for (const row of contributionDirectoryCases.cases) {
+      for (const row of oracleDirectoryCases.cases) {
         const directory = row.path.slice(0, row.path.lastIndexOf("/"));
         mkdirSync(join(root, directory), { recursive: true });
         writeFileSync(join(root, directory, "🔣️.json"), "{}\n");
         const entry = { name: "reference", version: "1.0.0", kinds: ["production-runtime"], users: [row.path], declarations: [{ user: row.path, version: "1.0.0", kind: "production-runtime" }] };
-        api.classify(entry, ["reference"], contributionDirectoryCases.overrides, contributionDirectoryCases.defaultDirectory);
+        api.classify(entry, ["reference"], oracleDirectoryCases.directoryName);
         expect(entry.kinds, row.path).toEqual([row.owned ? "test-oracle" : "production-runtime"]);
       }
-      const expected = contributionDirectoryCases.cases.filter(({ owned }) => owned).map(({ path }) => `${path.slice(0, path.lastIndexOf("/"))}/🔣️.json`).sort();
-      expect(api.discover(root, contributionDirectoryCases.defaultDirectory, "🔣️.json", contributionDirectoryCases.overrides).sort()).toEqual(expected);
-      rmSync(join(root, "🎠️kernel/🔮️oracle/🔣️.json"));
-      expect(api.discover(root, contributionDirectoryCases.defaultDirectory, "🔣️.json", contributionDirectoryCases.overrides).sort()).toEqual(expected.filter((path) => path !== "🎠️kernel/🔮️oracle/🔣️.json"));
-      const absent = { name: "reference", version: "1.0.0", kinds: ["production-runtime"], users: ["🎠️kernel/🔮️oracle/package.json"], declarations: [{ user: "🎠️kernel/🔮️oracle/package.json", version: "1.0.0", kind: "production-runtime" }] };
-      api.classify(absent, ["reference"], contributionDirectoryCases.overrides, contributionDirectoryCases.defaultDirectory);
+      const expected = oracleDirectoryCases.cases.filter(({ owned }) => owned).map(({ path }) => `${path.slice(0, path.lastIndexOf("/"))}/🔣️.json`).sort();
+      expect(api.discover(root, oracleDirectoryCases.directoryName, "🔣️.json").sort()).toEqual(expected);
+      rmSync(join(root, "🎠️kernel/🔮️oracles/🔣️.json"));
+      expect(api.discover(root, oracleDirectoryCases.directoryName, "🔣️.json").sort()).toEqual(expected.filter((path) => path !== "🎠️kernel/🔮️oracles/🔣️.json"));
+      const absent = { name: "reference", version: "1.0.0", kinds: ["production-runtime"], users: ["🎠️kernel/🔮️oracles/package.json"], declarations: [{ user: "🎠️kernel/🔮️oracles/package.json", version: "1.0.0", kind: "production-runtime" }] };
+      api.classify(absent, ["reference"], oracleDirectoryCases.directoryName);
       expect(absent.kinds).toEqual(["test-oracle"]);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -1107,7 +1101,7 @@ describe("🧭️ contribution directory ownership", () => {
 
   test("the handpicked kernel oracle remains discoverable at runtime", () => {
     const contribution = repoContributions.find(({ owner }) => owner === "🧰️framework/🔨️modules/🎠️kernel");
-    expect(contribution?.manifestPath).toBe("🧰️framework/🔨️modules/🎠️kernel/🔮️oracle/🔣️.json");
+    expect(contribution?.manifestPath).toBe("🧰️framework/🔨️modules/🎠️kernel/🔮️oracles/🔣️.json");
     expect(contribution?.oracles.map(({ id }) => id)).toContain("semver");
   }, 60_000);
 });

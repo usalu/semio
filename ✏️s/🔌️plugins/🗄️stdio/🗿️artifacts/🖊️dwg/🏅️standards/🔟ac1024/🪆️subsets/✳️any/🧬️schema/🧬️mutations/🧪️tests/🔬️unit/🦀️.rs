@@ -14,7 +14,7 @@ fn kinds_matches_every_variant_and_both_catalogs() {
     let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
     assert_eq!(from_variants, from_kinds, "KINDS must equal every DwgMutation variant's kind()");
     assert_eq!(KINDS.len(), 2, "KINDS must list exactly the declared 2 kinds");
-    for manifest in [include_str!("../../../../🔮️oracle/🔣️.json"), include_str!("../../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🔮️oracle/🔣️.json")] {
+    for manifest in [include_str!("../../../../🔮️oracles/🔣️.json"), include_str!("../../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🔮️oracles/🔣️.json")] {
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "a committed DWG catalog is missing kind {kind:?}");
         }

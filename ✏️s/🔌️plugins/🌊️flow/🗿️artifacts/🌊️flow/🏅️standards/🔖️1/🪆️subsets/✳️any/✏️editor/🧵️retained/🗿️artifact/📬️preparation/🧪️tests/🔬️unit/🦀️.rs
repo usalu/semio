@@ -17,7 +17,7 @@ async fn semantic_artifact_prepare_publish_retry_cancel_and_close_use_production
                 drop(initial_scene);
                 let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.flow", "retained-recipe", initial, None);
                 let mut store = store::ArtifactStore::new(envelope).await.unwrap();
-                store.install_member_store_owners_exact(crate::retirement::store_owners());
+                store.install_document_store_owners_exact(crate::retirement::store_owners());
                 let generation = store.generation_now();
                 let mutation = dsl::FromValue::from_value(dsl::DslValue::from(row["mutation"].clone())).unwrap();
                 let factory: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<FlowSnapshot, FlowMutation>> = std::sync::Arc::new(PreparationFactory);

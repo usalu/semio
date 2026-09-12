@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::generation3d::testkit::{empty_history_view, retire_flow_eval_session};
+use crate::editor::generation3d::unit_tests::context::{empty_history_view, retire_flow_eval_session};
 use semio_framework_artifact_flow_flow::neural::{Atom, ColdRetire, Dictionary, Value as NeuralValue};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect};
 
@@ -12,7 +12,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Effect};
 /// session itself through the granted close loop — each one panics on a live drop by design.
 #[test]
 fn eval_result_seeds_the_node_cache_and_rearms_the_tick_chain() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let snapshot = Generation3dSnapshot::default();
     let history = empty_history_view();
     let config = Generation3dConfig::default();

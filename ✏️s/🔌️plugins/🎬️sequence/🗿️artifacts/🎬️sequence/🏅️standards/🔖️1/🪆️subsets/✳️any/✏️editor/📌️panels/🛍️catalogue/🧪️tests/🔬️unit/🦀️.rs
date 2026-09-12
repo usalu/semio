@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::sequence::testkit::{new_app, render as render_body};
+use crate::editor::sequence::unit_tests::context::{new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn catalogue_lists_step_kind_actions() {

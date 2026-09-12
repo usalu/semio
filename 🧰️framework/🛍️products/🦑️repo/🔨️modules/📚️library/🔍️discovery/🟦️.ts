@@ -8,6 +8,7 @@ import { ephemeralMap, ephemeralBox } from "@semio-tech/framework";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { readFile as readFileAsync, readdir as readdirAsync } from "node:fs/promises";
 import { basename, dirname, extname, isAbsolute, join, posix, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 //#endregion 🔌️Adapters
@@ -552,6 +553,7 @@ export interface PackageSourceDisposition {
   readonly contractKind: "fixed" | "configurable";
   readonly disposition: "adapter-source" | "tool-metadata";
   readonly validator: "package-glue" | "command-router" | "vitest-configuration" | "tool-config-vitest" | "tool-config-tailwind" | "tool-config-postcss" | "tool-config-eslint" | "tool-config-dependency-cruiser" | "pytest-configuration" | "eslint-configuration" | "vscode-test-configuration";
+  readonly grammarId?: string;
   readonly authority: string;
   readonly verification: string;
 }
@@ -892,6 +894,7 @@ export interface Taxonomy {
   readonly _comment?: string;
   readonly schemaVersion: number;
   readonly fileKinds: Readonly<Record<string, FileKindSpec>>;
+  readonly implementationLeafPolicy: { readonly roles: readonly FileKindSpec["role"][]; readonly fileKindIds: readonly string[]; readonly ignoredPathPatterns: readonly string[] };
   readonly fileKindResolutionRules: Readonly<Record<string, FileKindResolutionRuleSpec>>;
   readonly scopedFileKinds: Readonly<Record<string, ScopedFileKindSpec>>;
   readonly semanticDirectoryKinds: Readonly<Record<string, SemanticDirectoryKindSpec>>;
@@ -940,7 +943,7 @@ export interface Taxonomy {
   readonly targets: Readonly<Record<string, TargetSpec>>;
   readonly rustEntryPathRules: RustEntryPathRules;
   readonly packagesDirName: string;
-  /** 🎯️ Optional per-lang render-target axis: `<owner>/📦️packages/<lang>/🎯️targets/<target>/<manifest>`. */
+  /** 🎯️ Target owner axis: `<owner>/🎯️targets/<target>/📦️packages/<lang>/<manifest>`. */
   readonly targetsDirName: string;
   /** 🧱️ Flat co-location dir holding one subdir per logical element. */
   readonly elementsDirName: string;
@@ -1160,13 +1163,16 @@ export interface Taxonomy {
   readonly testImplementationFileKindIds: readonly string[];
   readonly testLegacyDirectoryNames: readonly string[];
   readonly testFixtureLegacyDirectoryNames: readonly string[];
+  readonly testExamplesDirName: string;
+  readonly testOraclesDirName: string;
+  readonly testObsoleteCategoryStems: readonly string[];
+  readonly testObsoleteTestEmojiCategoryStems: readonly string[];
   readonly testLegacyFilenamePatterns: readonly Readonly<{ id: string; pattern: string }>[];
   readonly testDeliveryScopeDirectoryNames: readonly string[];
   readonly testJavaScriptFrameworkModules: readonly string[];
   readonly testAssertionModules: readonly string[];
   readonly testSelfTestDeclarationPattern: string;
   readonly testContributionFileKindId: string;
-  readonly testContributionDirectoryOverrides: Readonly<Record<string, string>>;
   readonly testOutputMarkerFileKindId: string;
   readonly testOracleRegistryLocation: { readonly directoryPath: string; readonly fileKindId: string };
   readonly testSchemaLocation: { readonly directoryPath: string; readonly fileKindId: string };
@@ -1410,6 +1416,231 @@ export function canonicalLeafFilenameForSourcePath(path: string, taxonomy: Taxon
   const filename = path.replaceAll("\\", "/").split("/").pop()!.toLowerCase();
   const extension = [...kind.extensionChains].sort((left, right) => right.length - left.length).find((chain) => filename.endsWith(chain));
   return extension ? `${kind.emoji}${extension}` : null;
+}
+
+export type TaxonomyImplementationBreachId = "taxonomy/kind-only-basename" | "taxonomy/target-inside-package-boundary";
+
+export interface TaxonomyImplementationFinding {
+  readonly breachId: TaxonomyImplementationBreachId;
+  readonly path: string;
+  readonly fileKindId: string | null;
+  readonly actualBasename: string | null;
+  readonly expectedBasename: string | null;
+  readonly exemptionAuthorityId: string | null;
+}
+
+function implementationPackageLocation(path: string, taxonomy: Taxonomy): Readonly<{ packageRoot: string; ecosystemId: string }> | null {
+  const parts = path.replaceAll("\\", "/").replace(/^\.\//u, "").split("/");
+  const packageIndex = parts.indexOf(taxonomy.packagesDirName);
+  const ecosystemId = parts[packageIndex + 1] ?? "";
+  return packageIndex < 0 || !taxonomy.ecosystems[ecosystemId] ? null : { packageRoot: parts.slice(0, packageIndex + 2).join("/"), ecosystemId };
+}
+
+const implementationContractResolvers = new WeakMap<Taxonomy, ReturnType<typeof createFixedContractResolver>>();
+
+function implementationContractResolver(taxonomy: Taxonomy): ReturnType<typeof createFixedContractResolver> {
+  const retained = implementationContractResolvers.get(taxonomy);
+  if (retained) return retained;
+  const created = createFixedContractResolver(taxonomy);
+  implementationContractResolvers.set(taxonomy, created);
+  return created;
+}
+
+/** 🏗️ Resolves Cargo's active package-root build script from an actual manifest. */
+export function cargoPackageRootBuildScriptPath(source: string): string | null {
+  try {
+    const parsed = cargoProviderTomlParser.parse(source) as { readonly package?: { readonly name?: unknown; readonly build?: unknown } };
+    if (typeof parsed.package?.name !== "string" || !/^[A-Za-z0-9_-]+$/u.test(parsed.package.name)) return null;
+    const configured = parsed.package.build;
+    if (configured === undefined) return "build.rs";
+    if (configured === false) return null;
+    return configured === "build.rs" ? configured : null;
+  } catch {
+    return null;
+  }
+}
+
+function implementationLeafBasenameFindingResolved(
+  path: string,
+  taxonomy: Taxonomy,
+  resolver: ReturnType<typeof createFixedContractResolver>,
+  parentDirectoryKindId?: string,
+  parentFixedDirectoryContractIds?: readonly string[],
+  siblingFixedFilenameContractIds?: readonly string[],
+  authorizedCargoBuildScriptPaths: ReadonlySet<string> = new Set(),
+): TaxonomyImplementationFinding | null {
+  const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize(taxonomy.unicodeNormalization.form);
+  const fileKindId = fileKindIdForSourcePath(normalized, taxonomy);
+  if (!taxonomyFileKindIsImplementation(fileKindId, taxonomy)) return null;
+  const packageLocation = implementationPackageLocation(normalized, taxonomy);
+  const fixed = resolver.filenameIdsForPath(normalized, {
+    packageRoot: packageLocation?.packageRoot === dirname(normalized),
+    ecosystemId: packageLocation?.ecosystemId,
+    parentDirectoryKindId,
+    parentFixedDirectoryContractIds,
+    siblingFixedFilenameContractIds,
+  });
+  if (fixed.some((contractId) => contractId !== "cargo-build-script" || authorizedCargoBuildScriptPaths.has(normalized))) return null;
+  const expectedBasename = canonicalLeafFilenameForSourcePath(normalized, taxonomy)!;
+  const actualBasename = basename(normalized);
+  return actualBasename === expectedBasename ? null : { breachId: "taxonomy/kind-only-basename", path: normalized, fileKindId, actualBasename, expectedBasename, exemptionAuthorityId: null };
+}
+
+/** 🪶️ Classifies implementation kinds from the closed taxonomy policy. */
+export function taxonomyFileKindIsImplementation(fileKindId: string | null | undefined, taxonomy: Taxonomy = loadCatalogTaxonomy()): boolean {
+  const fileKind = fileKindId ? taxonomy.fileKinds[fileKindId] : undefined;
+  return Boolean(fileKind && (taxonomy.implementationLeafPolicy.roles.includes(fileKind.role) || taxonomy.implementationLeafPolicy.fileKindIds.includes(fileKindId!)));
+}
+
+/** 🍂 Enforces one registered implementation leaf after deriving fixed-contract scope from its actual path. */
+export function implementationLeafBasenameFinding(path: string, taxonomy: Taxonomy = loadCatalogTaxonomy()): TaxonomyImplementationFinding | null {
+  const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize(taxonomy.unicodeNormalization.form);
+  const parent = dirname(normalized);
+  const resolver = implementationContractResolver(taxonomy);
+  const parentDirectoryKindId = parent === "." ? undefined : semanticDirectoryKindId(basename(parent), taxonomy) ?? undefined;
+  const grandparent = parent === "." ? "." : dirname(parent);
+  const parentFixedDirectoryContractIds = parent === "." ? [] : resolver.directoryIdsForPath(parent, { parentDirectoryKindId: grandparent === "." ? undefined : semanticDirectoryKindId(basename(grandparent), taxonomy) ?? undefined });
+  return implementationLeafBasenameFindingResolved(normalized, taxonomy, resolver, parentDirectoryKindId, parentFixedDirectoryContractIds);
+}
+
+/** 🎯 Rejects the inverse `<packages>/<language>/<targets>` ownership relation at its boundary. */
+export function targetInsidePackageBoundaryFinding(path: string, taxonomy: Taxonomy = loadCatalogTaxonomy()): TaxonomyImplementationFinding | null {
+  const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/+$/u, "").normalize(taxonomy.unicodeNormalization.form);
+  const parts = normalized.split("/");
+  const packageIndex = parts.indexOf(taxonomy.packagesDirName);
+  if (packageIndex < 0 || !taxonomy.ecosystems[parts[packageIndex + 1] ?? ""] || parts[packageIndex + 2] !== taxonomy.targetsDirName) return null;
+  return { breachId: "taxonomy/target-inside-package-boundary", path: parts.slice(0, packageIndex + 3).join("/"), fileKindId: null, actualBasename: null, expectedBasename: null, exemptionAuthorityId: null };
+}
+
+export interface TaxonomyImplementationCensusProgress {
+  readonly phase: "walk" | "classify" | "complete";
+  readonly pathsVisited: number;
+  readonly pathsClassified: number;
+  readonly findings: number;
+  readonly vanishedDirectories: number;
+}
+
+export interface TaxonomyImplementationCensusOptions {
+  readonly signal?: AbortSignal;
+  readonly onProgress?: (progress: TaxonomyImplementationCensusProgress) => void;
+  readonly yieldEvery?: number;
+}
+
+/** 🌲 Performs the focused cancellable no-follow implementation-leaf and package-topology census. */
+export async function taxonomyImplementationFilesystemFindings(repoRoot: string, taxonomy: Taxonomy = loadCatalogTaxonomy(), options: TaxonomyImplementationCensusOptions = {}): Promise<TaxonomyImplementationFinding[]> {
+  const paths: { readonly path: string; readonly nodeKind: "directory" | "file" }[] = [];
+  const yieldEvery = options.yieldEvery ?? 256;
+  if (!Number.isSafeInteger(yieldEvery) || yieldEvery < 1) throw new TypeError("Taxonomy implementation census yieldEvery must be a positive safe integer.");
+  let pathsVisited = 0, pathsClassified = 0, vanishedDirectories = 0, findingCount = 0, checkpoints = 0;
+  const pathMatcher = createTaxonomyPathMatcher();
+  const ignored = (path: string): boolean => taxonomy.implementationLeafPolicy.ignoredPathPatterns.some((pattern) => pathMatcher.matches(path, pattern));
+  const abort = (): void => {
+    if (!options.signal?.aborted) return;
+    const error = new Error("Taxonomy implementation census was cancelled.");
+    error.name = "AbortError";
+    throw error;
+  };
+  const progress = async (phase: TaxonomyImplementationCensusProgress["phase"], force = false): Promise<void> => {
+    abort();
+    checkpoints += 1;
+    if (force || checkpoints % yieldEvery === 0) {
+      options.onProgress?.({ phase, pathsVisited, pathsClassified, findings: findingCount, vanishedDirectories });
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      abort();
+    }
+  };
+  const entries = async (absolute: string) => {
+    for (let attempt = 0; ; attempt += 1) try {
+      return await readdirAsync(absolute, { withFileTypes: true });
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code === "EINTR" && attempt < 2) continue;
+      if (code === "ENOENT") {
+        vanishedDirectories += 1;
+        await progress("walk", true);
+        return [];
+      }
+      throw error;
+    }
+  };
+  const walk = async (absolute: string, relativePath: string): Promise<void> => {
+    if (relativePath && taxonomyRelativePathIsExcluded(relativePath, taxonomy)) return;
+    for (const entry of (await entries(absolute)).sort((left, right) => Buffer.from(left.name).compare(Buffer.from(right.name)))) {
+      const path = relativePath ? `${relativePath}/${entry.name}` : entry.name;
+      if (taxonomyRelativePathIsExcluded(path, taxonomy)) continue;
+      if (entry.isDirectory()) {
+        if (ignored(path)) continue;
+        paths.push({ path, nodeKind: "directory" });
+        pathsVisited += 1;
+        await progress("walk");
+        await walk(join(absolute, entry.name), path);
+      } else if (entry.isFile()) {
+        paths.push({ path, nodeKind: "file" });
+        pathsVisited += 1;
+        await progress("walk");
+      }
+    }
+  };
+  await walk(repoRoot, "");
+  await progress("walk", true);
+  const resolver = implementationContractResolver(taxonomy);
+  const files = new Set(paths.filter((entry) => entry.nodeKind === "file").map((entry) => entry.path));
+  const authorizedCargoBuildScriptPaths = new Set<string>();
+  for (const manifest of [...files].filter((path) => basename(path) === "Cargo.toml")) {
+    const location = implementationPackageLocation(manifest, taxonomy);
+    if (!location || location.ecosystemId !== "🦀️rust" || dirname(manifest) !== location.packageRoot) continue;
+    let source: string;
+    try {
+      source = await readFileAsync(join(repoRoot, manifest), "utf8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+      throw error;
+    }
+    if (cargoPackageRootBuildScriptPath(source) !== "build.rs") continue;
+    const buildScript = `${location.packageRoot}/build.rs`;
+    if (files.has(buildScript)) authorizedCargoBuildScriptPaths.add(buildScript);
+  }
+  const parentFixed = new Map<string, readonly string[]>();
+  for (const { path } of paths) {
+    const parent = dirname(path) === "." ? "" : dirname(path);
+    if (parentFixed.has(parent)) continue;
+    const grandparent = dirname(parent);
+    const parentDirectoryKindId = parent && grandparent !== "." ? semanticDirectoryKindId(basename(grandparent), taxonomy) ?? undefined : undefined;
+    parentFixed.set(parent, resolver.directoryIdsForPath(parent, { parentDirectoryKindId }));
+  }
+  const preliminaryFixed = new Map<string, readonly string[]>();
+  for (const { path, nodeKind } of paths) {
+    if (nodeKind !== "file") continue;
+    const parent = dirname(path) === "." ? "" : dirname(path);
+    const packageLocation = implementationPackageLocation(path, taxonomy);
+    preliminaryFixed.set(path, resolver.filenameIdsForPath(path, {
+      packageRoot: packageLocation?.packageRoot === parent,
+      ecosystemId: packageLocation?.ecosystemId,
+      parentDirectoryKindId: parent ? semanticDirectoryKindId(basename(parent), taxonomy) ?? undefined : undefined,
+      parentFixedDirectoryContractIds: parentFixed.get(parent),
+    }));
+  }
+  const siblingFixed = new Map<string, readonly string[]>();
+  for (const { path, nodeKind } of paths) {
+    if (nodeKind !== "file") continue;
+    const parent = dirname(path) === "." ? "" : dirname(path);
+    siblingFixed.set(parent, [...new Set([...(siblingFixed.get(parent) ?? []), ...(preliminaryFixed.get(path) ?? [])])]);
+  }
+  const findings: TaxonomyImplementationFinding[] = [];
+  for (const { path, nodeKind } of paths) {
+    pathsClassified += 1;
+    const topology = targetInsidePackageBoundaryFinding(path, taxonomy);
+    if (topology) { findings.push(topology); findingCount += 1; }
+    if (nodeKind !== "file") { await progress("classify"); continue; }
+    const parent = dirname(path) === "." ? "" : dirname(path);
+    const finding = implementationLeafBasenameFindingResolved(path, taxonomy, resolver, parent ? semanticDirectoryKindId(basename(parent), taxonomy) ?? undefined : undefined, parentFixed.get(parent), siblingFixed.get(parent), authorizedCargoBuildScriptPaths);
+    if (finding) { findings.push(finding); findingCount += 1; }
+    await progress("classify");
+  }
+  const unique = [...new Map(findings.map((finding) => [`${finding.path}\0${finding.breachId}`, finding])).values()].sort((left, right) => Buffer.from(`${left.path}\0${left.breachId}`).compare(Buffer.from(`${right.path}\0${right.breachId}`)));
+  findingCount = unique.length;
+  await progress("complete", true);
+  return unique;
 }
 
 /** 🧬️ Renders the default schema location for a newly authored mutation, not existing descriptor authority. */
@@ -3830,6 +4061,13 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       problems.push(`${key} is not a valid v7 path pattern.`);
     }
   };
+  if (record(taxonomy.implementationLeafPolicy, "implementationLeafPolicy")) {
+    const policy = taxonomy.implementationLeafPolicy;
+    const ignoredPathPatterns = ["**/.git", "**/.pytest_cache", "**/.venv", "**/.🧬semio", "**/__pycache__", "**/coverage", "**/dist", "**/node_modules", "**/storybook-static", "**/target", "**/📤️dist", "**/🗑️generated", "**/🔌️plugin-modules", "**/📦️packages/🦀️rust/pkg", "**/📦️packages/🟦️typescript/out", "**/📦️packages/🔷️dotnet/obj"];
+    if (Object.keys(policy).sort().join("\0") !== "fileKindIds\0ignoredPathPatterns\0roles" || policy.roles.join("\0") !== "source" || policy.fileKindIds.join("\0") !== "css\0html" || policy.ignoredPathPatterns.join("\0") !== ignoredPathPatterns.join("\0")) problems.push("implementationLeafPolicy must cover every source role plus exact CSS/HTML authored kinds and only the declared generated, cache and tool-state paths.");
+    ids(policy.fileKindIds, taxonomy.fileKinds, "implementationLeafPolicy.fileKindIds");
+    for (const [index, value] of policy.ignoredPathPatterns.entries()) pathPattern(value, `implementationLeafPolicy.ignoredPathPatterns[${index}]`);
+  }
   const workspacePath = (value: unknown, key: string): value is string => {
     const valid = typeof value === "string" && value.length > 0 && value === value.normalize("NFC") && !value.startsWith("/") && !value.endsWith("/") && !value.includes("\\")
       && !/[*?\[\]{}!]/u.test(value) && value.split("/").every((segment) => segment.length > 0 && segment !== "." && segment !== "..");
@@ -4607,13 +4845,14 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     for (const [id, contract] of Object.entries(taxonomy.configurableEntryContracts)) if (taxonomy.fileKinds[contract.fileKindId]?.role === "source") expected.set(id, "configurable");
     for (const missing of [...expected.keys()].filter((id) => !taxonomy.packageSourceDispositions[id])) problems.push(`packageSourceDispositions is missing source-format contract ${JSON.stringify(missing)}.`);
     for (const [id, disposition] of Object.entries(taxonomy.packageSourceDispositions)) {
-      exactKeys(disposition, ["contractKind", "disposition", "validator", "authority", "verification"], `packageSourceDispositions[${JSON.stringify(id)}]`);
+      exactKeys(disposition, ["contractKind", "disposition", "validator", ...(disposition.grammarId === undefined ? [] : ["grammarId"]), "authority", "verification"], `packageSourceDispositions[${JSON.stringify(id)}]`);
       if (!expected.has(id)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] does not name a source-format fixed/configurable contract.`);
       else if (expected.get(id) !== disposition.contractKind) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].contractKind does not match its registry.`);
       if (!["adapter-source", "tool-metadata"].includes(disposition.disposition)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].disposition is invalid.`);
       const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-vitest": "vitest-config", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config", "vscode-test-configuration": "vscode-test-cli-config" };
       const configValidatorOwner = TOOL_CONFIG_VALIDATORS[disposition.validator];
       if (!["package-glue", "command-router", ...Object.keys(TOOL_CONFIG_VALIDATORS)].includes(disposition.validator) || (disposition.disposition === "adapter-source") !== (disposition.validator === "package-glue") || (configValidatorOwner !== undefined && id !== configValidatorOwner)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] disposition/validator pair is invalid.`);
+      if (disposition.grammarId !== undefined && !taxonomy.packageGlueGrammar[disposition.grammarId]) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].grammarId is missing.`);
       if (!disposition.authority || !disposition.verification) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] must declare authority and verification.`);
     }
   }
@@ -4856,6 +5095,11 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   ids(taxonomy.testImplementationFileKindIds, taxonomy.fileKinds, "testImplementationFileKindIds");
   if (!Array.isArray(taxonomy.testLegacyDirectoryNames) || taxonomy.testLegacyDirectoryNames.some((name) => typeof name !== "string" || !name || /[\\/]/u.test(name))) problems.push("testLegacyDirectoryNames must contain non-empty directory names.");
   if (!Array.isArray(taxonomy.testFixtureLegacyDirectoryNames) || taxonomy.testFixtureLegacyDirectoryNames.some((name) => typeof name !== "string" || !name || /[\\/]/u.test(name))) problems.push("testFixtureLegacyDirectoryNames must contain non-empty directory names.");
+  if (taxonomy.testExamplesDirName !== "📚️examples") problems.push('testExamplesDirName must select the canonical "📚️examples" collection.');
+  if (taxonomy.testOraclesDirName !== "🔮️oracles") problems.push('testOraclesDirName must select the canonical "🔮️oracles" collection.');
+  for (const [key, values] of [["testObsoleteCategoryStems", taxonomy.testObsoleteCategoryStems], ["testObsoleteTestEmojiCategoryStems", taxonomy.testObsoleteTestEmojiCategoryStems]] as const) {
+    if (!Array.isArray(values) || values.some((name) => typeof name !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(name) || name !== name.normalize("NFC")) || new Set(values).size !== values.length) problems.push(`${key} must contain unique normalized lowercase stems.`);
+  }
   if (!Array.isArray(taxonomy.testDeliveryScopeDirectoryNames) || taxonomy.testDeliveryScopeDirectoryNames.some((name) => typeof name !== "string" || !name || /[\\/]/u.test(name))) problems.push("testDeliveryScopeDirectoryNames must contain non-empty directory names.");
   if (!Array.isArray(taxonomy.testJavaScriptFrameworkModules) || taxonomy.testJavaScriptFrameworkModules.some((name) => typeof name !== "string" || !name)) problems.push("testJavaScriptFrameworkModules must contain non-empty module specifiers.");
   if (!Array.isArray(taxonomy.testAssertionModules) || taxonomy.testAssertionModules.some((name) => typeof name !== "string" || !name)) problems.push("testAssertionModules must contain non-empty module specifiers.");
@@ -4872,12 +5116,6 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     ["windowEmptyFacetFileKindId", taxonomy.windowEmptyFacetFileKindId], ["mutationComponentFileKindId", taxonomy.mutationComponentFileKindId], ["mutationDescriptorFileKindId", taxonomy.mutationDescriptorFileKindId], ["testOracleRegistryLocation.fileKindId", taxonomy.testOracleRegistryLocation?.fileKindId],
     ["testSchemaLocation.fileKindId", taxonomy.testSchemaLocation?.fileKindId],
   ] as const) if (!kindId || !taxonomy.fileKinds[kindId]) problems.push(`${key} references a missing file kind.`);
-  if (record(taxonomy.testContributionDirectoryOverrides, "testContributionDirectoryOverrides")) {
-    for (const [owner, name] of Object.entries(taxonomy.testContributionDirectoryOverrides)) {
-      if (!owner || owner.startsWith("/") || owner !== owner.normalize("NFC") || /[\\*?{}\0]/u.test(owner) || owner !== "." && owner.split("/").some((segment) => !segment || segment === "." || segment === "..")) problems.push(`testContributionDirectoryOverrides[${JSON.stringify(owner)}] must name one exact repository owner.`);
-      if (typeof name !== "string" || leadingEmojiIdentity(name).rest !== "oracle" || pathEmojiStatuteFindings([{ path: name, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length > 0 || !semanticDirectoryKindId(name, taxonomy)) problems.push(`testContributionDirectoryOverrides[${JSON.stringify(owner)}] must name one registered single-emoji oracle directory.`);
-    }
-  }
   if (taxonomy.semanticManifestFilenameOverrides !== undefined && record(taxonomy.semanticManifestFilenameOverrides, "semanticManifestFilenameOverrides")) {
     for (const [owner, name] of Object.entries(taxonomy.semanticManifestFilenameOverrides)) {
       if (!owner || owner.startsWith("/") || owner !== owner.normalize("NFC") || /[\\*?{}\0]/u.test(owner) || owner.split("/").some((segment) => !segment || segment === "." || segment === "..")) problems.push(`semanticManifestFilenameOverrides[${JSON.stringify(owner)}] must name one exact repository-relative collection owner.`);
@@ -4957,7 +5195,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   const directoryValues = [
     taxonomy.packagesDirName, taxonomy.targetsDirName, taxonomy.elementsDirName, taxonomy.artifactsDirName, taxonomy.modesDirName,
     taxonomy.windowsDirName, taxonomy.standardsDirName, taxonomy.subsetsDirName, taxonomy.viewerDirName, taxonomy.editorDirName,
-    taxonomy.exampleAssetsDirName, taxonomy.exampleTestsDirName, ...taxonomy.artifactChildDirs, ...taxonomy.newArtifactChildDirs,
+    taxonomy.exampleAssetsDirName, taxonomy.exampleTestsDirName, taxonomy.testExamplesDirName, taxonomy.testOraclesDirName, ...taxonomy.artifactChildDirs, ...taxonomy.newArtifactChildDirs,
     ...taxonomy.standardChildDirs, ...taxonomy.subsetChildDirs, ...taxonomy.surfaceChildDirs, ...taxonomy.modeChildDirs,
     ...taxonomy.windowChildDirs, ...taxonomy.taxonomyLeafParentDirs, ...taxonomy.pluginChildDirs, ...taxonomy.osChildDirs,
     ...taxonomy.rootDataDirNames, ...taxonomy.schemaChildDirs, ...taxonomy.representationDirs, ...taxonomy.ioDirectionDirs,
@@ -5083,6 +5321,7 @@ export interface CanonicalWgpuPackageCatalog {
   readonly kind: "canonical-wgpu-package";
   readonly ownerPath: string;
   readonly packageRelativePath: "📦️packages/🦀️rust";
+  readonly nodePackageRelativePath: "📦️packages/🟦️typescript";
   readonly identity: Readonly<{ cargoPackageName: string; nodePackageName: string; nxProjectName: string }>;
   readonly entryPaths: Readonly<{ cargoLibrary: string; cargoBinary: string; cargoBuild: "build.rs"; nodeLibrary: string }>;
   readonly artifacts: readonly Readonly<{ id: string; relativePath: string; targetRelativePath: string | null; language: "rust" | "typescript"; role: "declaration" | "implementation"; content: string }>[];
@@ -5093,15 +5332,16 @@ export function parseCanonicalWgpuPackageCatalog(bytes: string, digest: string, 
   if (createHash("sha256").update(bytes).digest("hex") !== digest) throw new Error("Current WGPU package catalog digest drift");
   const row = JSON.parse(bytes) as CanonicalWgpuPackageCatalog;
   const exact = (value: unknown, keys: readonly string[]): boolean => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
-  if (!exact(row, ["$schema", "schemaVersion", "kind", "ownerPath", "packageRelativePath", "identity", "entryPaths", "artifacts"]) || row.$schema !== "https://semio.tech/schema/os/renderer/component.json#/$defs/RendererPackageCatalogV1" || row.schemaVersion !== 1 || row.kind !== "canonical-wgpu-package" || row.ownerPath !== profile.ownerPath || row.packageRelativePath !== "📦️packages/🦀️rust") throw new Error("Current WGPU package catalog identity drift");
+  if (!exact(row, ["$schema", "schemaVersion", "kind", "ownerPath", "packageRelativePath", "nodePackageRelativePath", "identity", "entryPaths", "artifacts"]) || row.$schema !== "https://semio.tech/schema/os/renderer/component.json#/$defs/RendererPackageCatalogV1" || row.schemaVersion !== 1 || row.kind !== "canonical-wgpu-package" || row.ownerPath !== profile.ownerPath || row.packageRelativePath !== "📦️packages/🦀️rust" || row.nodePackageRelativePath !== "📦️packages/🟦️typescript") throw new Error("Current WGPU package catalog identity drift");
   if (!exact(row.identity, ["cargoPackageName", "nodePackageName", "nxProjectName"]) || row.identity.cargoPackageName !== "semio-framework-os-renderer-wgpu" || row.identity.nodePackageName !== "@semio-tech/framework-renderer-wgpu" || row.identity.nxProjectName !== row.identity.nodePackageName || !exact(row.entryPaths, ["cargoLibrary", "cargoBinary", "cargoBuild", "nodeLibrary"]) || Object.values(row.entryPaths).some((path) => !exactOwnerPath(path)) || row.entryPaths.cargoBuild !== "build.rs") throw new Error("Current WGPU package manifest authority drift");
   const ids = ["build-adapter", "binary-adapter", "typescript-adapter", "renderer-registration"];
-  if (!Array.isArray(row.artifacts) || row.artifacts.length !== ids.length || row.artifacts.some((artifact, index) => !exact(artifact, ["id", "relativePath", "targetRelativePath", "language", "role", "content"]) || artifact.id !== ids[index] || !exactOwnerPath(artifact.relativePath) || artifact.targetRelativePath !== null && !exactOwnerPath(artifact.targetRelativePath) || !["rust", "typescript"].includes(artifact.language) || !["declaration", "implementation"].includes(artifact.role) || typeof artifact.content !== "string" || classifyPackageSourceRole(artifact.content, taxonomy.packageGlueGrammar[artifact.language]) !== artifact.role) || new Set(row.artifacts.map((artifact) => artifact.relativePath)).size !== ids.length) throw new Error("Current WGPU package artifact authority drift");
+  if (!Array.isArray(row.artifacts) || row.artifacts.length !== ids.length || row.artifacts.some((artifact, index) => !exact(artifact, ["id", "relativePath", "targetRelativePath", "language", "role", "content"]) || artifact.id !== ids[index] || !exactOwnerPath(artifact.relativePath) || artifact.targetRelativePath !== null && !exactOwnerPath(artifact.targetRelativePath) || !["rust", "typescript"].includes(artifact.language) || !["declaration", "implementation"].includes(artifact.role) || typeof artifact.content !== "string" || classifyPackageSource(artifact.content, taxonomy.packageGlueGrammar[artifact.language]).role !== artifact.role) || new Set(row.artifacts.map((artifact) => artifact.relativePath)).size !== ids.length) throw new Error("Current WGPU package artifact authority drift");
   for (const artifact of row.artifacts) {
     if (artifact.id === "renderer-registration") {
       if (artifact.relativePath !== "🧊️renderer/📇️registry/🦀️.rs" || artifact.targetRelativePath !== null || artifact.role !== "implementation") throw new Error("Current WGPU registration ownership drift");
     } else {
-      if (!artifact.relativePath.startsWith(row.packageRelativePath + "/") || !artifact.targetRelativePath || artifact.role !== "declaration") throw new Error("Current WGPU adapter ownership drift");
+      const packageRelativePath = artifact.language === "typescript" ? row.nodePackageRelativePath : row.packageRelativePath;
+      if (!artifact.relativePath.startsWith(packageRelativePath + "/") || !artifact.targetRelativePath || artifact.role !== "declaration") throw new Error("Current WGPU adapter ownership drift");
       const relativeTarget = posix.relative(posix.dirname(artifact.relativePath), artifact.targetRelativePath);
       if (!artifact.content.includes(JSON.stringify(relativeTarget))) throw new Error("Current WGPU adapter target drift");
     }
@@ -5270,11 +5510,11 @@ export function semanticPackageProjectionCatalog(repoRoot: string, taxonomy: Tax
     for (const leaf of row.derivedLeaves) {
       const mapping = row.mappings.find((mapping) => mapping.sourcePath === leaf.originSourcePath);
       const key = leaf.path.normalize("NFC").toLocaleLowerCase("und").replaceAll("\ufe0f", "");
-      if (leaf.id !== "wgpu-renderer-registration" || leaf.path !== row.semanticOwnerRoot + "/🧊️renderer/📇️registry/🦀️.rs" || !exactOwnerPath(leaf.path) || !mapping || leaf.originSourceHash !== mapping.sourceHash || Buffer.byteLength(leaf.path) > taxonomy.collisionPolicy.maxPathBytes || destinations.has(key) || !taxonomy.semanticDirectoryKinds.registry || classifyPackageSourceRole(leaf.content, taxonomy.packageGlueGrammar.rust) !== leaf.expectedRole) throw new Error("Nested Cargo derived registration authority drift");
+      if (leaf.id !== "wgpu-renderer-registration" || leaf.path !== row.semanticOwnerRoot + "/🧊️renderer/📇️registry/🦀️.rs" || !exactOwnerPath(leaf.path) || !mapping || leaf.originSourceHash !== mapping.sourceHash || Buffer.byteLength(leaf.path) > taxonomy.collisionPolicy.maxPathBytes || destinations.has(key) || !taxonomy.semanticDirectoryKinds.registry || classifyPackageSource(leaf.content, taxonomy.packageGlueGrammar.rust).role !== leaf.expectedRole) throw new Error("Nested Cargo derived registration authority drift");
       destinations.add(key);
     }
     for (const adapter of row.adapters) {
-      if (!exactOwnerPath(adapter.path) || !adapter.path.startsWith(row.destinationRoot + "/") || Buffer.byteLength(adapter.path) > taxonomy.collisionPolicy.maxPathBytes || adapter.targetPaths.some((path) => !row.mappings.some((mapping) => mapping.destinationPath === path) && !row.derivedLeaves.some((leaf) => leaf.path === path)) || classifyPackageSourceRole(adapter.content, taxonomy.packageGlueGrammar[adapter.language]) !== adapter.expectedRole) throw new Error("Nested Cargo adapter authority drift");
+      if (!exactOwnerPath(adapter.path) || !adapter.path.startsWith(row.destinationRoot + "/") || Buffer.byteLength(adapter.path) > taxonomy.collisionPolicy.maxPathBytes || adapter.targetPaths.some((path) => !row.mappings.some((mapping) => mapping.destinationPath === path) && !row.derivedLeaves.some((leaf) => leaf.path === path)) || classifyPackageSource(adapter.content, taxonomy.packageGlueGrammar[adapter.language]).role !== adapter.expectedRole) throw new Error("Nested Cargo adapter authority drift");
     }
     if (!Array.isArray(row.sourceSplices) || row.sourceSplices.length !== (row.id === "wgpu-renderer" ? 2 : 0)) throw new Error("Nested Cargo source splice census drift");
     for (const splice of row.sourceSplices) if (!row.mappings.some((mapping) => mapping.sourcePath === splice.sourcePath && mapping.destinationPath === splice.destinationPath) || !splice.oldValue || !splice.newValue) throw new Error("Nested Cargo source splice ownership drift");
@@ -5326,7 +5566,7 @@ export function semanticPackageProjectionAuthority(
   const memberId = row.id === "wgpu-renderer" ? "members-of-wgpu-target" : "members-of-jco-guest";
   const ownerKind = row.id === "wgpu-renderer" ? "wgpu-target" : "jco-guest";
   const members = taxonomy.semanticDirectoryMemberKinds[memberId];
-  const requiredMembers = row.mappings.filter((mapping) => !mapping.destinationPath.startsWith(row.destinationRoot + "/")).map((mapping) => mapping.destinationPath.slice(row.semanticOwnerRoot.length + 1).split("/")[0]!);
+  const requiredMembers = row.mappings.filter((mapping) => !mapping.destinationPath.startsWith(row.semanticOwnerRoot + "/📦️packages/")).map((mapping) => mapping.destinationPath.slice(row.semanticOwnerRoot.length + 1).split("/")[0]!);
   if (!taxonomy.semanticDirectoryKinds[ownerKind] || members?.source !== "registry" || !members.ownerKindIds.includes(ownerKind) || requiredMembers.some((member) => !members.memberNames.includes(member))) problems.push("Nested Cargo semantic owner/member registration is missing");
   const boundary = taxonomy.packageBoundaryRules["🦀️rust"];
   const requiredEntries = row.id === "wgpu-renderer" ? ["rust-library-entry", "rust-binary-entry", "rust-build-entry", "vitest-config-entry"] : ["rust-library-entry"];
@@ -5380,6 +5620,7 @@ export function semanticPackageProjectionAuthority(
     }
   }
   const activeRoot = destination ? row.destinationRoot : row.sourceRoot;
+  const nodeRoot = destination && row.id === "wgpu-renderer" ? row.semanticOwnerRoot + "/📦️packages/🟦️typescript" : activeRoot;
   const manifest = nodes.get(activeRoot + "/Cargo.toml")?.content ?? "";
   if (nestedCargoField(manifest, "package", "name") !== row.identity.cargoPackageName) problems.push("Nested Cargo package name is not the exact registered identity");
   if (nestedCargoField(manifest, "lib", "path") !== (destination ? "📚️library/🦀️.rs" : row.id === "wgpu-renderer" ? "🦀️lib.rs" : "🦀️.rs")) problems.push("Nested Cargo library entry authority drift");
@@ -5399,17 +5640,18 @@ export function semanticPackageProjectionAuthority(
     if (nestedCargoField(binary, "bin", "name") !== "semio-wgpu-native" || nestedCargoField(binary, "bin", "path") !== (destination ? "💾️binary/🦀️.rs" : "📦️bin.rs") || JSON.stringify(nestedCargoField(binary, "bin", "required-features")) !== JSON.stringify(["native-bin"])) problems.push("WGPU Cargo binary entry authority drift");
     if (!(nestedCargoField(facts.cargoWorkspaceContent ?? "", "workspace", "members") as unknown[] | undefined)?.includes(activeRoot)) problems.push("WGPU is absent from the exact root Cargo workspace");
     try {
-      const workspace = JSON.parse(facts.nodeWorkspaceContent ?? "null"), node = JSON.parse(nodes.get(activeRoot + "/package.json")?.content ?? "null"), nx = JSON.parse(nodes.get(activeRoot + "/📋️project.json")?.content ?? "null");
-      if (!Array.isArray(workspace?.workspaces) || !workspace.workspaces.includes(activeRoot) || node?.name !== row.identity.nodePackageName || node?.exports?.["."] !== (destination ? "./🟦️typescript/📚️library/🟦️.ts" : "./🟦️.ts") || nx?.name !== row.identity.nxProjectName || nx?.sourceRoot !== activeRoot || !nx?.targets || Object.values(nx.targets).some((target) => (target as { options?: { cwd?: string } }).options?.cwd !== activeRoot) || destination && (!nx?.namedInputs?.default?.includes(`{workspaceRoot}/${row.semanticOwnerRoot}/**/*`) || node?.repository?.directory !== row.destinationRoot)) problems.push("WGPU Node/Nx workspace identity drift");
+      const workspace = JSON.parse(facts.nodeWorkspaceContent ?? "null"), node = JSON.parse(nodes.get(nodeRoot + "/package.json")?.content ?? "null"), nx = JSON.parse(nodes.get(nodeRoot + "/📋️project.json")?.content ?? "null");
+      const invalidCwd = Object.values(nx?.targets ?? {}).some((target) => { const cwd = (target as { options?: { cwd?: string } }).options?.cwd; return cwd !== undefined && ![nodeRoot, ".", "{projectRoot}"].includes(cwd); });
+      if (!Array.isArray(workspace?.workspaces) || !workspace.workspaces.includes(nodeRoot) || node?.name !== row.identity.nodePackageName || node?.exports?.["."] !== (destination ? "./📚️library/🟦️.ts" : "./🟦️.ts") || nx?.name !== row.identity.nxProjectName || nx?.sourceRoot !== (destination ? row.semanticOwnerRoot : activeRoot) || !nx?.targets || invalidCwd || destination && !nx?.namedInputs?.default?.includes(`{workspaceRoot}/${row.semanticOwnerRoot}/**/*`)) problems.push("WGPU Node/Nx workspace identity drift");
     } catch { problems.push("WGPU requires valid Node and Nx manifest evidence"); }
     const configPath = "vitest.config.ts";
-    const config = nodes.get(activeRoot + "/" + configPath)?.content ?? "", script = nodes.get(activeRoot + "/📜️script.ts")?.content ?? "";
+    const config = nodes.get(nodeRoot + "/" + configPath)?.content ?? "", script = nodes.get(nodeRoot + "/📜️script.ts")?.content ?? "";
     if (classifyPackageSourceDisposition(config, taxonomy.packageSourceDispositions["vitest-config-entry"]!, taxonomy.packageGlueGrammar.typescript!) !== "tool-metadata" || script.split(JSON.stringify(configPath)).length !== 4) problems.push("WGPU exact Vitest configuration authority drift");
   }
   for (const mapping of row.mappings.filter((entry) => entry.sourceRole !== null && entry.disposition !== "adapter" && entry.disposition !== "tool-metadata")) {
     const path = destination ? mapping.destinationPath : mapping.sourcePath, content = nodes.get(path)?.content;
     const grammar = taxonomy.packageGlueGrammar[path.endsWith(".rs") ? "rust" : path.endsWith(".js") ? "javascript" : "typescript"];
-    if (content !== undefined && classifyPackageSourceRole(content, grammar) !== mapping.sourceRole) problems.push("Nested Cargo implementation role drift: " + path);
+    if (content !== undefined && classifyPackageSource(content, grammar).role !== mapping.sourceRole) problems.push("Nested Cargo implementation role drift: " + path);
   }
   return finish();
 }
@@ -5442,7 +5684,7 @@ function semanticPackageGenerationAuthority(repoRoot: string, packageId: Semanti
 }
 /** 🪪️ Rejects noncanonical, colliding or historical coordinates for the single current JCO package. */
 export function parseCurrentJcoPackageDestination(input: unknown): CurrentJcoPackageDestination {
-  const semanticOwnerRoot = "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest";
+  const semanticOwnerRoot = "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest";
   const packageRoot = semanticOwnerRoot + "/📦️packages/🦀️rust";
   const expected: CurrentJcoPackageDestination = { kind: "jco-canonical-package-v1", packageId: "jcoprobe-guest", semanticOwnerRoot, packageRoot, cargoManifestPath: packageRoot + "/Cargo.toml", cargoLockPath: packageRoot + "/Cargo.lock", componentPath: semanticOwnerRoot + "/🧩️component/🦀️.rs", witPath: packageRoot + "/🧬️schema/📜️world.wit", adapterPath: packageRoot + "/📚️library/🦀️.rs" };
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Current JCO destination must be an object");
@@ -7691,6 +7933,28 @@ function rustIncludes(tokens: readonly RustToken[], pairs: ReadonlyMap<number, n
   return facts;
 }
 
+/** 🧩️One literal child-kind attribute with its source line. */
+export interface RustChildKindMetadataFact {
+  readonly kind: string;
+  readonly line: number;
+}
+
+/** 🔗️Reads child-kind attributes from Rust tokens without treating comments or literal contents as declarations. */
+export function inspectRustChildKindMetadata(source: string): readonly RustChildKindMetadataFact[] {
+  const tokens = rustTokens(source);
+  const facts: RustChildKindMetadataFact[] = [];
+  const expected = ["#", "[", "child", "(", "kind", "="];
+  for (let index = 0; index + 8 < tokens.length; index += 1) {
+    if (!expected.every((text, offset) => tokens[index + offset]?.text === text)) continue;
+    if (tokens[index + 7]?.text !== ")" || tokens[index + 8]?.text !== "]") continue;
+    const kind = rustStringValue(tokens[index + 6]);
+    if (kind === null) continue;
+    facts.push({ kind, line: source.slice(0, tokens[index]!.start).split("\n").length });
+    index += 8;
+  }
+  return facts;
+}
+
 /** 🧠️ Extracts a stable schema-versioned structural report from one Rust source string. */
 export function inspectRustStructure(source: string): RustStructuralFacts {
   const tokens = rustTokens(source);
@@ -9273,19 +9537,19 @@ export function inspectTypeScriptDeclarationFacts(source: string, language: "ts"
 
 //#region 🧭️Discovery
 /** 🎭️ Package "kind" declared by the ecosystem's role marker — see `readSemioMarker` and `taxonomy.roles`. */
-export type PackageRole = "plugin" | "framework" | "product" | "hub" | "s-module" | "extension" | "testkit" | "tool";
+export type PackageRole = "plugin" | "framework" | "product" | "hub" | "s-module" | "extension" | "tool";
 
 /** 🌐️ Ecosystem a discovered package's manifest belongs to (`taxonomy.langs`). */
 export type PackageLang = "🦀️rust" | "🟦️typescript" | "🟨️javascript" | "🐹️go" | "🐍️python" | "🔷️dotnet";
 
-/** 🎯️ A lang's render/build target when the package sits under `🎯️targets/<target>/` (three-level shape) — open vocabulary, e.g. `"⚛️react"`, `"🧊️wgpu"`, `"⌨️tui"`. */
+/** 🎯️ A registered render/build target owning `<target>/📦️packages/<lang>/`. */
 export type PackageTarget = string;
 
-/** 📦️ One package discovered under `<owner>/📦️packages/<lang>/` (two-level, e.g. plugins/styling) or `<owner>/📦️packages/<lang>/🎯️targets/<target>/` (three-level, e.g. ui/renderer-engine), with its role/id marker resolved. */
+/** 📦️ One package discovered under `<owner>/📦️packages/<lang>/`, where the owner may be a registered target. */
 export interface DiscoveredPackage {
   readonly ownerRel: string;
   readonly lang: PackageLang;
-  /** 🎯️ Set only for the three-level shape; `undefined` for a direct `📦️packages/<lang>/` package. */
+  /** 🎯️ Set when `ownerRel` ends in `🎯️targets/<registered-target>`. */
   readonly target?: PackageTarget;
   /** 📁️ Repo-relative dir holding the manifest (i.e. `dirname(manifestPath)`). */
   readonly packageRel: string;
@@ -9315,7 +9579,7 @@ export interface DiscoveredOwner {
 
 /** ⚠️ A discovery-time problem `discoverPackages` does not fail on but must not stay silent about — see `discoverPackageProblems`. */
 export interface DiscoveryProblem {
-  readonly kind: "ambiguous-lang-shape" | "target-without-manifest" | "manifest-without-marker" | "unknown-lang" | "unknown-role" | "packaging-violation" | "package-role-unresolved" | "package-implementation";
+  readonly kind: "target-inside-package-boundary" | "target-without-manifest" | "manifest-without-marker" | "unknown-lang" | "unknown-role" | "packaging-violation" | "package-role-unresolved" | "package-implementation";
   readonly path: string;
   readonly message: string;
 }
@@ -9881,68 +10145,1147 @@ export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy =
 
 export type PackageSourceRole = "declaration" | "registration" | "bootstrap" | "thin-delegation" | "tool-metadata" | "implementation" | "unresolved";
 
-/** 🧪️ Conservatively classifies one source leaf against its schema-selected package grammar. */
-export function classifyPackageSourceRole(content: string, grammar: PackageGlueGrammarSpec): PackageSourceRole {
-  const source = content.replace(/\/\*[\s\S]*?\*\//gu, "").replace(/(^|\s)\/\/.*$/gmu, "$1").replace(/(^|\s)#(?!\[).*$/gmu, "$1").trim();
-  if (!source) return "declaration";
-  if (grammar.analyzer === "rust") {
-    if (/\b(?:struct|enum|trait|impl|const|static|fn)\b|\bmacro_rules\s*!/u.test(source)) return "implementation";
-    const rest = source.replace(/#!?\[[^\]]*\]/gu, "").replace(/(?:pub\s+)?(?:use|mod)\s+[^;{}]+[;{]/gu, "").replace(/\bextern\s+crate\s+[^;]+;/gu, "").replace(/\binclude!?\s*\([^;]+;/gu, "").replace(/[{};]/gu, "").trim();
-    if (/^(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*!\s*\([^{}]*\)$/u.test(rest)) return "registration";
-    return rest ? "unresolved" : "declaration";
+export interface PackageSourceDecision {
+  readonly role: PackageSourceRole;
+  readonly evidence: string;
+}
+
+interface PackageFunctionBody {
+  readonly name: string;
+  readonly body: string;
+  readonly start: number;
+  readonly end: number;
+}
+
+/** 🫥️ Preserves program structure while blanking comments and literal payloads. */
+function packageStructuralSource(content: string, analyzer?: PackageGlueGrammarSpec["analyzer"]): { readonly source: string; readonly balanced: boolean } {
+  let source = "", index = 0, balanced = true;
+  const blank = (value: string): string => value.replace(/[^\r\n]/gu, " ");
+  while (index < content.length) {
+    const char = content[index]!, next = content[index + 1];
+    if (char === "/" && next === "/") {
+      const end = content.indexOf("\n", index + 2), stop = end < 0 ? content.length : end;
+      source += blank(content.slice(index, stop)); index = stop; continue;
+    }
+    if (char === "/" && next === "*") {
+      const end = content.indexOf("*/", index + 2), stop = end < 0 ? content.length : end + 2;
+      if (end < 0) balanced = false;
+      source += blank(content.slice(index, stop)); index = stop; continue;
+    }
+    if (char === "#" && index === 0 && next === "!" && content[index + 2] !== "[") {
+      const end = content.indexOf("\n", index + 2), stop = end < 0 ? content.length : end;
+      source += blank(content.slice(index, stop)); index = stop; continue;
+    }
+    if (char === "#" && analyzer === "python" && (index === 0 || content[index - 1] === "\n")) {
+      const end = content.indexOf("\n", index + 1), stop = end < 0 ? content.length : end;
+      source += blank(content.slice(index, stop)); index = stop; continue;
+    }
+    if (char === "'" && analyzer === "rust") {
+      const lifetime = /^'[A-Za-z_][A-Za-z0-9_]*/u.exec(content.slice(index));
+      if (lifetime && content[index + lifetime[0].length] !== "'") { source += lifetime[0]; index += lifetime[0].length; continue; }
+    }
+    if (char === '"' || char === "'" || char === "`") {
+      const quote = char;
+      let end = index + 1, escaped = false;
+      for (; end < content.length; end++) {
+        const value = content[end]!;
+        if (!escaped && value === quote) { end++; break; }
+        escaped = !escaped && value === "\\";
+        if (value !== "\\") escaped = false;
+      }
+      if (end > content.length || content[end - 1] !== quote) balanced = false;
+      source += quote + blank(content.slice(index + 1, Math.max(index + 1, end - 1))) + (content[end - 1] === quote ? quote : "");
+      index = end; continue;
+    }
+    source += char; index++;
   }
-  if (grammar.analyzer === "typescript" || grammar.analyzer === "javascript") {
-    if (/\b(?:class|interface|type|enum|function|namespace)\b/u.test(source) || /\b(?:const|let|var)\s+\w+\s*=\s*(?!await\s+import\b)/u.test(source)) return "implementation";
-    const rest = source.replace(/(?:^|\n)\s*(?:import|export)\b[^;]*(?:;|$)/gu, "\n").trim();
-    if (!rest) return "declaration";
-    const calls = rest.split(";").map((part) => part.trim()).filter(Boolean);
-    if (calls.length <= grammar.maxDelegationStatements && calls.every((call) => /^(?:await\s+)?(?:register|mount|bootstrap|start|run|main|[A-Za-z_$][\w$]*\.[A-Za-z_$][\w$]*)\s*\([^{}]*\)$/u.test(call))) return /\b(?:register|mount)\b/u.test(rest) ? "registration" : "thin-delegation";
-    return "unresolved";
+  const stack: string[] = [], pairs: Readonly<Record<string, string>> = { ")": "(", "]": "[", "}": "{" };
+  for (const char of source) {
+    if (char === "(" || char === "[" || char === "{") stack.push(char);
+    else if (pairs[char] && stack.pop() !== pairs[char]) balanced = false;
   }
-  if (grammar.analyzer === "go") {
-    if (/\btype\s+\w+\s+(?:struct|interface)\b/u.test(source) || /\bfunc\s+(?!main\s*\()/u.test(source)) return "implementation";
-    const rest = source.replace(/^package\s+\w+/mu, "").replace(/import\s*(?:\([^)]*\)|"[^"]+")/gu, "").trim();
-    if (!rest) return "declaration";
-    return /^func\s+main\s*\(\s*\)\s*\{\s*[\w.]+\([^{}]*\)\s*\}\s*$/u.test(rest) ? "bootstrap" : "unresolved";
+  return { source, balanced: balanced && stack.length === 0 };
+}
+
+/** 🧱️ Finds brace-delimited functions without treating nested blocks as separate bodies. */
+function packageFunctionBodies(source: string, opener: RegExp): readonly PackageFunctionBody[] {
+  const rows: PackageFunctionBody[] = [];
+  for (const match of source.matchAll(opener)) {
+    const brace = (match.index ?? 0) + match[0].lastIndexOf("{");
+    let depth = 1, end = brace + 1;
+    for (; end < source.length && depth > 0; end++) {
+      if (source[end] === "{") depth++;
+      else if (source[end] === "}") depth--;
+    }
+    if (depth === 0) rows.push({ name: match[1] ?? match[2] ?? "", body: source.slice(brace + 1, end - 1), start: match.index ?? 0, end });
   }
+  return rows;
+}
+
+function packageWithoutRanges(source: string, ranges: readonly { readonly start: number; readonly end: number }[]): string {
+  const chars = source.split("");
+  for (const range of ranges) for (let index = range.start; index < range.end; index++) if (chars[index] !== "\n") chars[index] = " ";
+  return chars.join("");
+}
+
+function packageStatements(body: string): readonly string[] {
+  const rows: string[] = [];
+  let start = 0, depth = 0;
+  for (let index = 0; index < body.length; index++) {
+    const char = body[index];
+    if (char === "(" || char === "[" || char === "{") depth++;
+    else if (char === ")" || char === "]" || char === "}") depth--;
+    else if ((char === ";" || char === "\n") && depth === 0) {
+      if (char === "\n" && /=>\s*$/u.test(body.slice(start, index))) continue;
+      const row = body.slice(start, index).trim(); if (row) rows.push(row); start = index + 1;
+    }
+  }
+  const row = body.slice(start).trim(); if (row) rows.push(row);
+  return rows;
+}
+
+function ecmaImportedBindings(source: string): ReadonlySet<string> {
+  const bindings = new Set<string>();
+  for (const match of source.matchAll(/\bimport\s+(?:type\s+)?([^;\n]+?)\s+from\s+["']/gu)) {
+    const clause = match[1]!.replace(/^\*\s+as\s+/u, "").replace(/[{}]/gu, "");
+    for (const part of clause.split(",")) {
+      const name = part.trim().split(/\s+as\s+/u).at(-1);
+      if (name && /^[A-Za-z_$][\w$]*$/u.test(name)) bindings.add(name);
+    }
+  }
+  return bindings;
+}
+
+function ecmaCallRoot(expression: string): string | null {
+  const match = /^(?:return\s+)?(?:await\s+)?(?:new\s+)?([A-Za-z_$][\w$]*)(?:\??\.[A-Za-z_$][\w$]*)*\s*\(/u.exec(expression.trim());
+  return match?.[1] ?? null;
+}
+
+function ecmaDelegatedBody(body: string, imports: ReadonlySet<string>, max: number): boolean {
+  const rows = packageStatements(body);
+  if (rows.length === 0 || rows.length > max || /\b(?:if|for|while|switch|try|throw|const|let|var|class|function)\b|(?<![=!<>])=(?!=|>)/u.test(body)) return false;
+  return rows.every((row) => {
+    const jsx = /^(?:return\s+)?<([A-Z][\w$]*)\b[\s\S]*\/?\s*>$/u.exec(row);
+    if (jsx) return imports.has(jsx[1]!);
+    const root = ecmaCallRoot(row);
+    return root !== null && imports.has(root) && !/[+*/%]|\s-\s/u.test(row);
+  });
+}
+
+function ecmaDataModule(source: string): boolean {
+  const functions = packageFunctionBodies(source, /\b(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)[^{}]*\{/gu);
+  if (functions.length > 0 || !/\bexport\s+default\b/u.test(source) || /\b(?:class|namespace|enum|if|for|while|switch|try|throw)\b|=>|\bexport\s+(?:const|let|var)\b/u.test(source)) return false;
+  const rows = packageStatements(source);
+  return rows.length > 0 && rows.every((row) => /^(?:import\b|export\s+(?:type\b|interface\b|\*|\{|default\b)|(?:export\s+)?(?:const|let)\s+[A-Za-z_$][\w$]*(?:\s*:[^=]+)?\s*=)/su.test(row));
+}
+
+function classifyEcmaPackageSource(content: string, grammar: PackageGlueGrammarSpec): PackageSourceDecision {
+  const structural = packageStructuralSource(content, grammar.analyzer), source = structural.source.trim();
+  if (/\b(?:class|namespace|enum)\b/u.test(source)) return { role: "implementation", evidence: "runtime type or namespace declaration" };
+  if (/\b(?:export\s+)?(?:declare\s+)?(?:interface|type)\s+[A-Za-z_$][\w$]*/u.test(source)) return { role: "implementation", evidence: "domain type declaration is owned inside the package" };
+  if (!structural.balanced) return { role: "unresolved", evidence: "unbalanced lexical structure" };
+  if (!source) return { role: "declaration", evidence: "trivia-only module" };
+  const imports = ecmaImportedBindings(content);
+  const functions = packageFunctionBodies(source, /\b(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)[^{}]*\{|\b(?:export\s+)?(?:const|let)\s+([A-Za-z_$][\w$]*)[^=;]*=\s*(?:async\s*)?\([^)]*\)\s*=>\s*\{/gu);
+  if (functions.some((row) => !ecmaDelegatedBody(row.body, imports, grammar.maxDelegationStatements))) return { role: "implementation", evidence: "function body performs non-delegating work" };
+  let rest = packageWithoutRanges(source, functions);
+  rest = rest
+    .replace(/\bimport\s+[\s\S]*?\s+from\s+["'][\s\S]*?["']\s*;?/gu, "")
+    .replace(/\bimport\s*["'][\s\S]*?["']\s*;?/gu, "")
+    .replace(/\bexport\s+(?:type\s+[^;]+|\*\s+(?:as\s+[A-Za-z_$][\w$]*\s+)?from\s+["'][\s\S]*?["']|\{[^}]*\}(?:\s+from\s+["'][\s\S]*?["'])?)\s*;?/gu, "")
+    .replace(/\b(?:export\s+)?(?:declare\s+)?type\s+[A-Za-z_$][\w$]*[\s\S]*?;/gu, "")
+    .replace(/\b(?:export\s+)?(?:declare\s+)?interface\s+[A-Za-z_$][\w$]*[^{}]*\{[^{}]*\}\s*;?/gu, "")
+    .trim();
+  if (!rest) return { role: functions.length > 0 ? "thin-delegation" : "declaration", evidence: functions.length > 0 ? "functions only forward to imported owners" : "import, export, or type wiring only" };
+  if (ecmaDataModule(source)) return { role: "thin-delegation", evidence: "data-only default export module" };
+  const rows = packageStatements(rest.replace(/^export\s+default\s+/gmu, ""));
+  if (rows.length > 0 && rows.length <= grammar.maxDelegationStatements && rows.every((row) => {
+    if (/^[A-Za-z_$][\w$]*$/u.test(row)) return true;
+    const root = ecmaCallRoot(row);
+    return root !== null && imports.has(root) && !/[+*/%]|\s-\s/u.test(row);
+  })) {
+    const registration = rows.some((row) => /^(?:await\s+)?(?:register|mount|provide|bind)[A-Za-z_$]*\s*\(/iu.test(row));
+    return { role: registration ? "registration" : "thin-delegation", evidence: registration ? "registration calls only" : "top-level delegation to imported owners" };
+  }
+  if (/\b(?:function|const|let|var)\b|=>|(?<![=!<>])=(?!=|>)/u.test(rest)) return { role: "implementation", evidence: "runtime declaration or computation remains" };
+  return { role: "unresolved", evidence: "unsupported ECMAScript package form" };
+}
+
+function classifyRustPackageSource(content: string, grammar: PackageGlueGrammarSpec): PackageSourceDecision {
+  const structural = packageStructuralSource(content, grammar.analyzer), source = structural.source.trim();
+  if (/\b(?:struct|enum|trait|union|impl|const|static)\b|\bmacro_rules\s*!/u.test(source)) return { role: "implementation", evidence: "authored Rust item declaration" };
+  const aliases = source.replace(/#\[(?:cfg|cfg_attr)\([^\]]*\)\]\s*(?:pub\s+)?type\s+[A-Za-z_]\w*[^;]*;/gu, "");
+  if (/\btype\s+[A-Za-z_]\w*/u.test(aliases)) return { role: "implementation", evidence: "domain type alias is owned inside the package" };
+  if (!structural.balanced) return { role: "unresolved", evidence: "unbalanced lexical structure" };
+  if (!source) return { role: "declaration", evidence: "trivia-only crate" };
+  const functions = packageFunctionBodies(source, /\bfn\s+([A-Za-z_]\w*)[^{}]*\{/gu);
+  if (functions.length > 0 && (source.match(/#\[proc_macro(?:_attribute|_derive)?(?:\([^\]]*\))?\]/gu) ?? []).length === functions.length && functions.every((row) => !/\b(?:let|if|for|while|match|loop|unsafe)\b|[+*/%]|\s-\s/u.test(row.body))) return { role: "registration", evidence: "compiler registration functions only delegate to semantic owner" };
+  const delegated = (body: string): boolean => {
+    const rows = packageStatements(body);
+    return rows.length > 0 && rows.length <= grammar.maxDelegationStatements && rows.every((row) => /^(?:return\s+)?(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*!?\s*[({][\s\S]*[)}]$/u.test(row) && !/\b(?:let|if|for|while|match|loop|unsafe)\b|[+*/%]|\s-\s/u.test(row));
+  };
+  if (functions.some((row) => !delegated(row.body))) return { role: "implementation", evidence: "Rust function body performs non-delegating work" };
+  let rest = packageWithoutRanges(source, functions)
+    .replace(/#!?\[[^\]]*\]/gu, "")
+    .replace(/(?:pub(?:\([^)]*\))?\s+)?(?:unsafe\s+)?extern\s+crate\s+[^;]+;/gu, "")
+    .replace(/(?:pub(?:\([^)]*\))?\s+)?use\s+[^;]+;/gu, "")
+    .replace(/(?:pub(?:\([^)]*\))?\s+)?(?:mod|type)\s+[^;{}]+;/gu, "")
+    .replace(/\binclude!?\s*\([^;]+;/gu, "")
+    .trim();
+  let previous = "";
+  while (rest !== previous) {
+    previous = rest;
+    rest = rest.replace(/(?:pub\s+)?mod\s+[A-Za-z_]\w*\s*\{(?:\s*(?:(?:pub\s+)?(?:use|mod|type)\s+[^;{}]+;|#!?\[[^\]]*\]))*\s*\}/gu, "").trim();
+  }
+  const macros = [...rest.matchAll(/(?:^|;)\s*((?:[A-Za-z_]\w*::)*[A-Za-z_]\w*)!\s*[({][\s\S]*[)}]\s*;?/gu)];
+  const macroRest = macros.reduce((value, row) => value.replace(row[0], ""), rest).trim();
+  if (macroRest) return { role: "unresolved", evidence: "unsupported Rust package form" };
+  if (macros.length > 0) {
+    const registration = macros.map((row) => {
+      const path = row[1]!, body = /!\s*[({]\s*([\s\S]*?)\s*[)}]\s*;?$/u.exec(row[0])?.[1]?.trim() ?? "";
+      if (path === "semio_framework_plugin::plugin_exports" || path === "semio_framework_plugin::extension_exports") return /^(?:[A-Za-z_]\w*(?:::[A-Za-z_]\w*)?)(?:\s*,\s*[A-Za-z_]\w*(?:::[A-Za-z_]\w*)?)*$/u.test(body) ? "admitted" : "implementation";
+      if (path === "inventory::submit") return /^[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*::new\s*\(\s*&?[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*\s*\)$/u.test(body) ? "admitted" : "implementation";
+      return "unresolved";
+    });
+    if (registration.includes("implementation")) return { role: "implementation", evidence: "registration macro contains an unowned executable body" };
+    if (registration.includes("unresolved")) return { role: "unresolved", evidence: "unregistered macro invocation" };
+    return { role: "registration", evidence: "registration macro invocations only" };
+  }
+  if (functions.length > 0) return { role: functions.every((row) => row.name === "main" || row.name === "start" || row.name === "bootstrap") ? "bootstrap" : "thin-delegation", evidence: "Rust functions only delegate to mounted owners" };
+  return { role: "declaration", evidence: "module, include, re-export, or type wiring only" };
+}
+
+function classifyGoPackageSource(content: string, grammar: PackageGlueGrammarSpec): PackageSourceDecision {
+  const structural = packageStructuralSource(content, grammar.analyzer), source = structural.source.trim();
+  if (!structural.balanced) return { role: "unresolved", evidence: "unbalanced lexical structure" };
+  if (!source) return { role: "unresolved", evidence: "missing Go package declaration" };
+  const functions = packageFunctionBodies(source, /\bfunc\s+([A-Za-z_]\w*)\s*\([^)]*\)[^{]*\{/gu);
+  const delegated = (body: string): boolean => {
+    const rows = packageStatements(body);
+    return rows.length > 0 && rows.length <= grammar.maxDelegationStatements && rows.every((row) => /^(?:return\s+)?[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+\s*\([^{}]*\)$/u.test(row) && !/\b(?:go|defer|if|for|switch|select|var|const)\b|:=|[+*/%]|\s-\s/u.test(row));
+  };
+  if (functions.some((row) => row.name !== "main" && row.name !== "init" || !delegated(row.body))) return { role: "implementation", evidence: "Go function body performs non-bootstrap work" };
+  let rest = packageWithoutRanges(source, functions)
+    .replace(/^\s*package\s+[A-Za-z_]\w*/mu, "")
+    .replace(/\bimport\s*(?:\([^)]*\)|"[^"]*"|'[^']*')/gu, "")
+    .trim();
+  if (/\b(?:type|var|const)\b/u.test(rest)) return { role: "implementation", evidence: "Go runtime declaration remains" };
+  if (rest) return { role: "unresolved", evidence: "unsupported Go package form" };
+  return functions.length > 0 ? { role: "bootstrap", evidence: "main or init only delegates to imported owner" } : { role: "declaration", evidence: "package and import declarations only" };
+}
+
+/** 🧪️ Returns one shared, justified decision for discovery and normalization. */
+export function classifyPackageSource(content: string, grammar: PackageGlueGrammarSpec): PackageSourceDecision {
+  if (grammar.analyzer === "rust") return classifyRustPackageSource(content, grammar);
+  if (grammar.analyzer === "typescript" || grammar.analyzer === "javascript") return classifyEcmaPackageSource(content, grammar);
+  if (grammar.analyzer === "go") return classifyGoPackageSource(content, grammar);
+  const structural = packageStructuralSource(content, grammar.analyzer), source = structural.source.trim();
+  if (!structural.balanced) return { role: "unresolved", evidence: "unbalanced lexical structure" };
+  if (!source) return { role: "declaration", evidence: "trivia-only source" };
   if (grammar.analyzer === "python") {
-    if (/^(?:async\s+)?def\s|^class\s/mu.test(source)) return "implementation";
-    const rest = source.replace(/^(?:from\s+\S+\s+import\s+.+|import\s+.+|__all__\s*=\s*\[[^\]]*\])$/gmu, "").trim();
-    if (!rest) return "declaration";
-    const calls = rest.split("\n").map((line) => line.trim()).filter(Boolean);
-    return calls.length <= grammar.maxDelegationStatements && calls.every((line) => /^(?:register|mount|bootstrap|start|run|main|[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+)\([^:]*\)$/u.test(line)) ? "thin-delegation" : "unresolved";
+    if (/^(?:\s*(?:from\s+\S+\s+import\s+[^\n]+|import\s+[^\n]+|__all__\s*=\s*\[[^\]]*\])\s*)+$/u.test(source)) return { role: "declaration", evidence: "Python import or export declarations only" };
+    return /^(?:async\s+)?def\s|^class\s/mu.test(source) ? { role: "implementation", evidence: "Python function or class declaration" } : { role: "unresolved", evidence: "unsupported Python package form" };
   }
   if (grammar.analyzer === "c-cpp") {
-    if (/\b(?:class|struct|union|enum)\s+\w+[^;{]*\{/u.test(source)) return "implementation";
-    const withoutDirectives = source.replace(/^\s*#\s*(?:include|pragma|define|if|ifdef|ifndef|elif|else|endif)\b.*$/gmu, "").trim();
-    const functionBodies = [...withoutDirectives.matchAll(/(?:^|[;}])\s*(?:extern\s+"C"\s+)?[\w:<>,*&\s]+\s+\w+\s*\([^;{}]*\)\s*\{([^{}]*)\}/gu)];
-    if (functionBodies.length > 0) {
-      const delegated = functionBodies.length <= grammar.maxDelegationStatements && functionBodies.every((match) => /^(?:\s*(?:return\s+)?[A-Za-z_]\w*(?:::\w+)*(?:\.\w+)?\([^;{}]*\)\s*;\s*)$/u.test(match[1] ?? ""));
-      return delegated ? "thin-delegation" : "implementation";
-    }
-    const rest = withoutDirectives
-      .replace(/extern\s+"C"\s*\{/gu, "")
-      .replace(/\b(?:using\s+[^;]+|typedef\s+[^;]+|(?:class|struct|union|enum)\s+\w+|(?:extern\s+(?:"C"\s+)?)?[\w:<>,*&\s]+\s+\w+\s*\([^;{}]*\))\s*;/gu, "")
-      .replace(/[{}]/gu, "")
-      .trim();
-    return rest ? "unresolved" : "declaration";
+    if (/^\s*#\s*define\s+[A-Za-z_]\w*\s*\([^\n]*\)/mu.test(source)) return { role: "implementation", evidence: "C or C++ function-like macro definition" };
+    if (/\b(?:class|struct|union|enum)\s+\w+[^;{]*\{|\w+\s*\([^;{}]*\)\s*\{/u.test(source)) return { role: "implementation", evidence: "C or C++ definition" };
+    return /^(?:\s*(?:#\s*(?:include|pragma)\b[^\n]*|(?:using|typedef|extern)\b[^;]*;)\s*)+$/su.test(source) ? { role: "declaration", evidence: "C or C++ declarations only" } : { role: "unresolved", evidence: "unsupported C or C++ package form" };
   }
-  if (/\b(?:class|record|struct|interface|enum)\b/u.test(source) || /\b(?:public|private|protected|internal)\s+(?:static\s+)?\w+[<\w, >]*\s+\w+\s*\(/u.test(source)) return "implementation";
+  if (/\b(?:class|record|struct|interface|enum)\b|\b(?:public|private|protected|internal)\s+(?:static\s+)?\w+[<\w, >]*\s+\w+\s*\(/u.test(source)) return { role: "implementation", evidence: ".NET type or method definition" };
   const rest = source.replace(/^(?:global\s+)?using\s+[^;]+;/gmu, "").replace(/^namespace\s+[\w.]+\s*;?$/gmu, "").trim();
-  return rest ? "unresolved" : "declaration";
+  return rest ? { role: "unresolved", evidence: "unsupported .NET package form" } : { role: "declaration", evidence: ".NET namespace or using declarations only" };
+}
+
+type EcmaRouteTokenKind = "identifier" | "string" | "number" | "template" | "regex" | "punctuation" | "eof";
+
+interface EcmaRouteToken {
+  readonly kind: EcmaRouteTokenKind;
+  readonly text: string;
+  readonly expressions?: readonly string[];
+}
+
+interface EcmaRoutePattern {
+  readonly names: readonly string[];
+  readonly defaults: boolean;
+  readonly destructured: boolean;
+}
+
+interface EcmaRouteExpression {
+  readonly kind: string;
+  readonly name?: string;
+  readonly operator?: string;
+  readonly value?: string;
+  readonly object?: EcmaRouteExpression;
+  readonly property?: EcmaRouteExpression | string;
+  readonly callee?: EcmaRouteExpression;
+  readonly arguments?: readonly EcmaRouteExpression[];
+  readonly elements?: readonly EcmaRouteExpression[];
+  readonly properties?: readonly { readonly key?: EcmaRouteExpression; readonly value: EcmaRouteExpression; readonly computed?: boolean }[];
+  readonly left?: EcmaRouteExpression;
+  readonly right?: EcmaRouteExpression;
+  readonly condition?: EcmaRouteExpression;
+  readonly whenTrue?: EcmaRouteExpression;
+  readonly whenFalse?: EcmaRouteExpression;
+  readonly parameters?: readonly EcmaRoutePattern[];
+  readonly body?: EcmaRouteExpression | readonly EcmaRouteStatement[];
+  readonly expressions?: readonly EcmaRouteExpression[];
+}
+
+interface EcmaRouteStatement {
+  readonly kind: string;
+  readonly imports?: readonly { readonly local: string; readonly imported: string; readonly runtime: boolean; readonly module: string }[];
+  readonly name?: string;
+  readonly base?: EcmaRouteExpression;
+  readonly parameters?: readonly EcmaRoutePattern[];
+  readonly body?: readonly EcmaRouteStatement[];
+  readonly declarations?: readonly { readonly pattern: EcmaRoutePattern; readonly initializer: EcmaRouteExpression }[];
+  readonly expression?: EcmaRouteExpression;
+  readonly then?: EcmaRouteStatement;
+  readonly otherwise?: EcmaRouteStatement;
+  readonly initializer?: EcmaRoutePattern;
+  readonly iterable?: EcmaRouteExpression;
+  readonly statement?: EcmaRouteStatement;
+}
+
+interface EcmaRouteBinding {
+  readonly kind: "pending" | "import-value" | "import-type" | "class" | "parameter" | "data" | "finite" | "receipt" | "module" | "closure" | "router";
+  readonly imported?: string;
+  readonly module?: string;
+  readonly closure?: EcmaRouteExpression;
+  readonly scope?: EcmaRouteScope;
+}
+
+/** 🧭️ Carries one lexical binding environment without pooling sibling scopes. */
+class EcmaRouteScope {
+  readonly bindings = new Map<string, EcmaRouteBinding>();
+  constructor(readonly parent?: EcmaRouteScope) {}
+  define(name: string, binding: EcmaRouteBinding): boolean {
+    if (this.bindings.has(name)) return false;
+    this.bindings.set(name, binding);
+    return true;
+  }
+  initialize(name: string, binding: EcmaRouteBinding): boolean {
+    if (this.bindings.get(name)?.kind !== "pending") return false;
+    this.bindings.set(name, binding);
+    return true;
+  }
+  resolve(name: string): EcmaRouteBinding | undefined {
+    return this.bindings.get(name) ?? this.parent?.resolve(name);
+  }
+}
+
+/** 🧩️ Finds the closing brace of one template interpolation. */
+function ecmaRouteTemplateEnd(source: string, start: number): number {
+  let depth = 1, quote = "", escaped = false;
+  for (let index = start; index < source.length; index++) {
+    const char = source[index]!, next = source[index + 1];
+    if (quote) {
+      if (!escaped && char === quote) quote = "";
+      escaped = !escaped && char === "\\";
+      if (char !== "\\") escaped = false;
+      continue;
+    }
+    if (char === '"' || char === "'" || char === "`") { quote = char; continue; }
+    if (char === "/" && next === "/") { const end = source.indexOf("\n", index + 2); index = end < 0 ? source.length : end; continue; }
+    if (char === "/" && next === "*") { const end = source.indexOf("*/", index + 2); index = end < 0 ? source.length : end + 1; continue; }
+    if (char === "{") depth++;
+    else if (char === "}" && --depth === 0) return index;
+  }
+  return -1;
+}
+
+/** 🪙️ Tokenizes the closed command-router subset without importing a runtime parser. */
+function ecmaRouteTokens(content: string): readonly EcmaRouteToken[] {
+  const tokens: EcmaRouteToken[] = [];
+  const punctuation = ["===", "!==", "??=", "...", "=>", "?.", "??", "&&", "||", "<=", ">=", "==", "!=", "++", "--", "+=", "-=", "*=", "/=", "**"];
+  let index = 0;
+  const previousAllowsRegex = (): boolean => tokens.length === 0 || ["(", "[", "{", ",", "=", "=>", ":", "!", "&&", "||", "?", ";", "return"].includes(tokens.at(-1)!.text);
+  while (index < content.length) {
+    const char = content[index]!, next = content[index + 1];
+    if (/\s/u.test(char)) { index++; continue; }
+    if (index === 0 && char === "#" && next === "!") { const end = content.indexOf("\n", index + 2); index = end < 0 ? content.length : end + 1; continue; }
+    if (char === "/" && next === "/") { const end = content.indexOf("\n", index + 2); index = end < 0 ? content.length : end + 1; continue; }
+    if (char === "/" && next === "*") { const end = content.indexOf("*/", index + 2); if (end < 0) return [{ kind: "punctuation", text: "invalid" }, { kind: "eof", text: "" }]; index = end + 2; continue; }
+    if (char === '"' || char === "'") {
+      const quote = char, start = index++;
+      let escaped = false;
+      while (index < content.length) {
+        const value = content[index++]!;
+        if (!escaped && value === quote) break;
+        escaped = !escaped && value === "\\";
+        if (value !== "\\") escaped = false;
+      }
+      if (content[index - 1] !== quote) return [{ kind: "punctuation", text: "invalid" }, { kind: "eof", text: "" }];
+      tokens.push({ kind: "string", text: content.slice(start, index) });
+      continue;
+    }
+    if (char === "`") {
+      const start = index++, expressions: string[] = [];
+      let escaped = false, closed = false;
+      while (index < content.length) {
+        const value = content[index]!;
+        if (!escaped && value === "`") { index++; closed = true; break; }
+        if (!escaped && value === "$" && content[index + 1] === "{") {
+          const end = ecmaRouteTemplateEnd(content, index + 2);
+          if (end < 0) break;
+          expressions.push(content.slice(index + 2, end)); index = end + 1; escaped = false; continue;
+        }
+        escaped = !escaped && value === "\\";
+        if (value !== "\\") escaped = false;
+        index++;
+      }
+      if (!closed) return [{ kind: "punctuation", text: "invalid" }, { kind: "eof", text: "" }];
+      tokens.push({ kind: "template", text: content.slice(start, index), expressions });
+      continue;
+    }
+    if (char === "/" && next !== "=" && previousAllowsRegex()) {
+      const start = index++;
+      let escaped = false, bracket = false, closed = false;
+      while (index < content.length) {
+        const value = content[index++]!;
+        if (!escaped && value === "[") bracket = true;
+        else if (!escaped && value === "]") bracket = false;
+        else if (!escaped && value === "/" && !bracket) { closed = true; break; }
+        escaped = !escaped && value === "\\";
+        if (value !== "\\") escaped = false;
+      }
+      if (closed) {
+        while (index < content.length && /[A-Za-z]/u.test(content[index]!)) index++;
+        tokens.push({ kind: "regex", text: content.slice(start, index) });
+        continue;
+      }
+      index = start;
+    }
+    const operator = punctuation.find((value) => content.startsWith(value, index));
+    if (operator) { tokens.push({ kind: "punctuation", text: operator }); index += operator.length; continue; }
+    if (/[A-Za-z_$]/u.test(char)) {
+      const start = index++;
+      while (index < content.length && /[A-Za-z0-9_$]/u.test(content[index]!)) index++;
+      tokens.push({ kind: "identifier", text: content.slice(start, index) });
+      continue;
+    }
+    if (/\d/u.test(char)) {
+      const start = index++;
+      while (index < content.length && /[\d._A-Fa-fxobn]/u.test(content[index]!)) index++;
+      tokens.push({ kind: "number", text: content.slice(start, index) });
+      continue;
+    }
+    tokens.push({ kind: "punctuation", text: char }); index++;
+  }
+  tokens.push({ kind: "eof", text: "" });
+  return tokens;
+}
+
+/** 🌳️ Parses the command-router subset into owned syntax nodes. */
+class EcmaRouteParser {
+  private index = 0;
+  constructor(private readonly tokens: readonly EcmaRouteToken[]) {}
+  private peek(offset = 0): EcmaRouteToken { return this.tokens[this.index + offset] ?? { kind: "eof", text: "" }; }
+  private consume(text: string): boolean { if (this.peek().text !== text) return false; this.index++; return true; }
+  private take(): EcmaRouteToken { return this.tokens[this.index++] ?? { kind: "eof", text: "" }; }
+  private matching(open: number, left: string, right: string): number {
+    let depth = 0;
+    for (let index = open; index < this.tokens.length; index++) {
+      if (this.tokens[index]!.text === left) depth++;
+      else if (this.tokens[index]!.text === right && --depth === 0) return index;
+    }
+    return -1;
+  }
+  private chunks(tokens: readonly EcmaRouteToken[]): readonly (readonly EcmaRouteToken[])[] {
+    const rows: EcmaRouteToken[][] = [[]];
+    let round = 0, square = 0, curly = 0, angle = 0;
+    for (const token of tokens) {
+      if (token.text === "(" ) round++; else if (token.text === ")") round--;
+      else if (token.text === "[") square++; else if (token.text === "]") square--;
+      else if (token.text === "{") curly++; else if (token.text === "}") curly--;
+      else if (token.text === "<") angle++; else if (token.text === ">") angle = Math.max(0, angle - 1);
+      if (token.text === "," && round === 0 && square === 0 && curly === 0 && angle === 0) rows.push([]);
+      else rows.at(-1)!.push(token);
+    }
+    return rows.filter((row) => row.length > 0);
+  }
+  private pattern(tokens: readonly EcmaRouteToken[]): EcmaRoutePattern | null {
+    let values = [...tokens];
+    if (values[0]?.text === "...") values = values.slice(1);
+    const assignment = values.findIndex((token) => token.text === "=");
+    const defaults = assignment >= 0;
+    if (defaults) values = values.slice(0, assignment);
+    if (values[0]?.kind === "identifier") return { names: [values[0].text], defaults, destructured: false };
+    if (!(["{", "["].includes(values[0]?.text ?? "") && ["}", "]"].includes(values.at(-1)?.text ?? ""))) return null;
+    const names: string[] = [];
+    for (const row of this.chunks(values.slice(1, -1))) {
+      const identifiers = row.filter((token) => token.kind === "identifier" && token.text !== "type");
+      const name = identifiers.at(-1)?.text;
+      if (!name) return null;
+      names.push(name);
+    }
+    return { names, defaults: defaults || values.some((token) => token.text === "="), destructured: true };
+  }
+  private parameters(tokens: readonly EcmaRouteToken[]): readonly EcmaRoutePattern[] | null {
+    const rows: EcmaRoutePattern[] = [];
+    for (const chunk of this.chunks(tokens)) {
+      if (chunk.some((token) => token.text === "@")) return null;
+      const pattern = this.pattern(chunk);
+      if (!pattern) return null;
+      rows.push(pattern);
+    }
+    return rows;
+  }
+  private expressionList(end: string): readonly EcmaRouteExpression[] | null {
+    const rows: EcmaRouteExpression[] = [];
+    if (this.consume(end)) return rows;
+    while (this.peek().kind !== "eof") {
+      const spread = this.consume("...");
+      const expression = this.expression();
+      if (!expression) return null;
+      rows.push(spread ? { kind: "spread", object: expression } : expression);
+      if (this.consume(end)) return rows;
+      if (!this.consume(",")) return null;
+      if (this.consume(end)) return rows;
+    }
+    return null;
+  }
+  private primary(): EcmaRouteExpression | null {
+    const token = this.peek();
+    if (token.text === "await" || token.text === "!" || token.text === "+" || token.text === "-" || token.text === "delete" || token.text === "yield") {
+      this.take(); const object = this.primary(); return object ? { kind: "unary", operator: token.text, object } : null;
+    }
+    if (token.text === "new") {
+      this.take(); const callee = this.primary();
+      if (!callee || !this.consume("(")) return null;
+      const args = this.expressionList(")");
+      return args ? { kind: "new", callee, arguments: args } : null;
+    }
+    if (token.text === "(") {
+      const close = this.matching(this.index, "(", ")");
+      if (close > this.index && this.tokens[close + 1]?.text === "=>") {
+        const parameters = this.parameters(this.tokens.slice(this.index + 1, close));
+        if (!parameters) return null;
+        this.index = close + 2;
+        const body = this.peek().text === "{" ? this.block() : this.expression();
+        return body ? { kind: "arrow", parameters, body } : null;
+      }
+      this.take(); const expression = this.expression();
+      if (!expression || !this.consume(")")) return null;
+      return { kind: "parenthesized", object: expression };
+    }
+    if (token.text === "[") {
+      this.take(); const elements = this.expressionList("]");
+      return elements ? { kind: "array", elements } : null;
+    }
+    if (token.text === "{") {
+      this.take(); const properties: { key?: EcmaRouteExpression; value: EcmaRouteExpression; computed?: boolean }[] = [];
+      if (this.consume("}")) return { kind: "object", properties };
+      while (this.peek().kind !== "eof") {
+        if (this.consume("...")) {
+          const value = this.expression(); if (!value) return null;
+          properties.push({ value: { kind: "spread", object: value } });
+        } else {
+          let key: EcmaRouteExpression | undefined, computed = false;
+          if (this.consume("[")) { computed = true; key = this.expression() ?? undefined; if (!key || !this.consume("]")) return null; }
+          else {
+            const name = this.take();
+            if (!["identifier", "string", "number"].includes(name.kind)) return null;
+            key = { kind: name.kind === "identifier" ? "identifier" : "literal", name: name.kind === "identifier" ? name.text : undefined, value: name.text };
+          }
+          if (this.consume(":")) {
+            const value = this.expression(); if (!value) return null;
+            properties.push({ key, value, computed });
+          } else if (key.kind === "identifier") properties.push({ key, value: key, computed });
+          else return null;
+        }
+        if (this.consume("}")) return { kind: "object", properties };
+        if (!this.consume(",")) return null;
+        if (this.consume("}")) return { kind: "object", properties };
+      }
+      return null;
+    }
+    if (token.kind === "template") {
+      this.take();
+      const expressions: EcmaRouteExpression[] = [];
+      for (const source of token.expressions ?? []) {
+        const parser = new EcmaRouteParser(ecmaRouteTokens(source)), expression = parser.expression();
+        if (!expression || parser.peek().kind !== "eof") return null;
+        expressions.push(expression);
+      }
+      return { kind: "template", expressions };
+    }
+    if (["string", "number", "regex"].includes(token.kind) || ["true", "false", "null", "undefined"].includes(token.text)) { this.take(); return { kind: token.kind === "regex" ? "regex" : "literal", value: token.text }; }
+    if (token.kind !== "identifier") return null;
+    this.take();
+    if (this.consume("=>")) {
+      const body = this.peek().text === "{" ? this.block() : this.expression();
+      return body ? { kind: "arrow", parameters: [{ names: [token.text], defaults: false, destructured: false }], body } : null;
+    }
+    return { kind: "identifier", name: token.text };
+  }
+  expression(minimum = 0): EcmaRouteExpression | null {
+    let left = this.primary();
+    if (!left) return null;
+    while (true) {
+      if (this.consume(".") || this.consume("?.")) {
+        const property = this.take(); if (property.kind !== "identifier") return null;
+        left = { kind: "member", object: left, property: property.text }; continue;
+      }
+      if (this.consume("[")) {
+        const property = this.expression(); if (!property || !this.consume("]")) return null;
+        left = { kind: "member", object: left, property }; continue;
+      }
+      if (this.consume("(")) {
+        const args = this.expressionList(")"); if (!args) return null;
+        left = { kind: "call", callee: left, arguments: args }; continue;
+      }
+      if (this.consume("!")) { left = { kind: "nonnull", object: left }; continue; }
+      const precedence: Readonly<Record<string, number>> = { "=": 1, "??=": 1, "+=": 1, "-=": 1, "*=": 1, "/=": 1, "??": 3, "||": 4, "&&": 5, "===": 6, "!==": 6, "==": 6, "!=": 6, "<": 7, "<=": 7, ">": 7, ">=": 7, "+": 8, "-": 8, "*": 9, "/": 9, "%": 9 };
+      const operator = this.peek().text, rank = precedence[operator] ?? 0;
+      if (rank <= minimum) break;
+      this.take(); const right = this.expression(rank - (rank === 1 ? 1 : 0));
+      if (!right) return null;
+      left = { kind: rank === 1 ? "assignment" : "binary", operator, left, right };
+    }
+    if (minimum === 0 && this.consume("?")) {
+      const whenTrue = this.expression();
+      if (!whenTrue || !this.consume(":")) return null;
+      const whenFalse = this.expression();
+      if (!whenFalse) return null;
+      left = { kind: "conditional", condition: left, whenTrue, whenFalse };
+    }
+    return left;
+  }
+  private variable(kind: string): EcmaRouteStatement | null {
+    this.take(); const declarations: { pattern: EcmaRoutePattern; initializer: EcmaRouteExpression }[] = [];
+    while (true) {
+      const start = this.index;
+      let round = 0, square = 0, curly = 0;
+      while (this.peek().kind !== "eof") {
+        const text = this.peek().text;
+        if (text === "(" ) round++; else if (text === ")") round--;
+        else if (text === "[") square++; else if (text === "]") square--;
+        else if (text === "{") curly++; else if (text === "}") curly--;
+        if (text === "=" && round === 0 && square === 0 && curly === 0) break;
+        this.index++;
+      }
+      if (!this.consume("=")) return null;
+      const pattern = this.pattern(this.tokens.slice(start, this.index - 1)), initializer = this.expression();
+      if (!pattern || !initializer) return null;
+      declarations.push({ pattern, initializer });
+      if (!this.consume(",")) break;
+    }
+    this.consume(";");
+    return { kind, declarations };
+  }
+  private importStatement(): EcmaRouteStatement | null {
+    this.take();
+    if (this.peek().kind === "string") { this.take(); this.consume(";"); return { kind: "import", imports: [] }; }
+    const rows: { local: string; imported: string; runtime: boolean; module: string }[] = [];
+    const clauseType = this.consume("type");
+    if (this.peek().kind === "identifier" && this.peek(1).text !== "from") {
+      const local = this.take().text; rows.push({ local, imported: "default", runtime: !clauseType, module: "" }); this.consume(",");
+    }
+    if (this.consume("*")) {
+      if (!this.consume("as") || this.peek().kind !== "identifier") return null;
+      const local = this.take().text; rows.push({ local, imported: "*", runtime: !clauseType, module: "" });
+    } else if (this.consume("{")) {
+      while (!this.consume("}")) {
+        const typeOnly = this.consume("type");
+        const imported = this.take(); if (imported.kind !== "identifier") return null;
+        let local = imported.text;
+        if (this.consume("as")) { const alias = this.take(); if (alias.kind !== "identifier") return null; local = alias.text; }
+        rows.push({ local, imported: imported.text, runtime: !clauseType && !typeOnly, module: "" });
+        if (!this.consume(",") && this.peek().text !== "}") return null;
+      }
+    }
+    if (!this.consume("from") || this.peek().kind !== "string") return null;
+    const module = this.take().text.slice(1, -1);
+    this.consume(";");
+    return { kind: "import", imports: rows.map((row) => ({ ...row, module })) };
+  }
+  private classStatement(): EcmaRouteStatement | null {
+    this.take(); const name = this.take();
+    if (name.kind !== "identifier" || !this.consume("extends")) return null;
+    const base = this.expression(10);
+    if (!base || !this.consume("{")) return null;
+    const methods: EcmaRouteStatement[] = [];
+    while (!this.consume("}")) {
+      if (this.peek().text === "@" || this.peek().kind === "eof") return null;
+      this.consume("async");
+      const method = this.take(); if (method.text !== "run" || !this.consume("(")) return null;
+      const close = this.matching(this.index - 1, "(", ")"); if (close < 0) return null;
+      const parameters = this.parameters(this.tokens.slice(this.index, close)); if (!parameters) return null;
+      this.index = close + 1;
+      if (this.consume(":")) while (this.peek().text !== "{" && this.peek().kind !== "eof") this.index++;
+      const body = this.block(); if (!body) return null;
+      methods.push({ kind: "method", name: "run", parameters, body });
+    }
+    return methods.length === 1 ? { kind: "class", name: name.text, base, body: methods } : null;
+  }
+  private ifStatement(): EcmaRouteStatement | null {
+    this.take(); if (!this.consume("(")) return null;
+    const expression = this.expression(); if (!expression || !this.consume(")")) return null;
+    const then = this.statement(); if (!then) return null;
+    const otherwise = this.consume("else") ? this.statement() ?? undefined : undefined;
+    return { kind: "if", expression, then, otherwise };
+  }
+  private forStatement(): EcmaRouteStatement | null {
+    this.take(); if (!this.consume("(")) return null;
+    const kind = this.take(); if (kind.text !== "const") return null;
+    const start = this.index;
+    while (this.peek().text !== "of" && this.peek().kind !== "eof") this.index++;
+    const initializer = this.pattern(this.tokens.slice(start, this.index));
+    if (!initializer || !this.consume("of")) return null;
+    const iterable = this.expression(); if (!iterable || !this.consume(")")) return null;
+    const statement = this.statement();
+    return statement ? { kind: "for", initializer, iterable, statement } : null;
+  }
+  private block(): readonly EcmaRouteStatement[] | null {
+    if (!this.consume("{")) return null;
+    const rows: EcmaRouteStatement[] = [];
+    while (!this.consume("}")) {
+      const row = this.statement(); if (!row) return null;
+      rows.push(row);
+    }
+    return rows;
+  }
+  private statement(): EcmaRouteStatement | null {
+    while (this.consume(";")) {}
+    if (this.peek().kind === "eof" || this.peek().text === "}") return null;
+    if (this.peek().text === "import" && this.peek(1).text !== "(") return this.importStatement();
+    if (this.peek().text === "export" || this.peek().text === "function" || this.peek().text === "@") return null;
+    if (this.peek().text === "class") return this.classStatement();
+    if (["const", "let", "var"].includes(this.peek().text)) return this.variable(this.peek().text);
+    if (this.peek().text === "if") return this.ifStatement();
+    if (this.peek().text === "for") return this.forStatement();
+    if (this.peek().text === "{") { const body = this.block(); return body ? { kind: "block", body } : null; }
+    if (this.consume("return")) {
+      if (this.consume(";")) return { kind: "return" };
+      const expression = this.expression(); if (!expression) return null;
+      this.consume(";"); return { kind: "return", expression };
+    }
+    if (this.consume("throw")) {
+      const expression = this.expression(); if (!expression) return null;
+      this.consume(";"); return { kind: "throw", expression };
+    }
+    const expression = this.expression(); if (!expression) return null;
+    this.consume(";"); return { kind: "expression", expression };
+  }
+  program(): readonly EcmaRouteStatement[] | null {
+    const rows: EcmaRouteStatement[] = [];
+    while (this.peek().kind !== "eof") {
+      const row = this.statement(); if (!row) return null;
+      rows.push(row);
+    }
+    return rows;
+  }
+}
+
+type EcmaRouteValue = "invalid" | "data" | "finite" | "receipt" | "module" | "closure" | "router" | "error" | "console" | "process";
+
+interface EcmaRouteValidation {
+  terminals: number;
+  readonly classes: Set<string>;
+  readonly wiredClasses: Set<string>;
+}
+
+function ecmaRouteUnwrap(expression: EcmaRouteExpression): EcmaRouteExpression {
+  return ["unary", "parenthesized", "nonnull"].includes(expression.kind) && (expression.kind !== "unary" || expression.operator === "await") ? ecmaRouteUnwrap(expression.object!) : expression;
+}
+
+function ecmaRouteIdentifier(expression: EcmaRouteExpression): string | null {
+  const value = ecmaRouteUnwrap(expression);
+  return value.kind === "identifier" ? value.name! : null;
+}
+
+function ecmaRouteIntrinsic(scope: EcmaRouteScope, name: string): EcmaRouteValue {
+  if (scope.resolve(name)) return "invalid";
+  if (name === "console") return "console";
+  if (name === "process") return "process";
+  return name === "Error" ? "error" : "invalid";
+}
+
+function ecmaRouteImportedRoot(expression: EcmaRouteExpression, scope: EcmaRouteScope): EcmaRouteBinding | undefined {
+  let value = ecmaRouteUnwrap(expression);
+  while (value.kind === "member") value = ecmaRouteUnwrap(value.object!);
+  const name = ecmaRouteIdentifier(value);
+  const binding = name ? scope.resolve(name) : undefined;
+  return binding?.kind === "import-value" ? binding : undefined;
+}
+
+function ecmaRouteArgument(expression: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+  return ["data", "finite", "receipt", "closure", "router"].includes(ecmaRouteValue(expression, scope));
+}
+
+function ecmaRouteClosure(expression: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+  if (expression.kind !== "arrow" || expression.parameters?.some((pattern) => pattern.defaults || pattern.destructured)) return false;
+  const nested = new EcmaRouteScope(scope);
+  for (const pattern of expression.parameters ?? []) for (const name of pattern.names) if (!nested.define(name, { kind: "parameter" })) return false;
+  if (Array.isArray(expression.body)) return ecmaRouteBlock(expression.body, nested, { terminals: 0, classes: new Set(), wiredClasses: new Set() }, true, true);
+  const value = ecmaRouteValue(expression.body as EcmaRouteExpression, nested);
+  return value === "receipt";
+}
+
+function ecmaRouteCollectionCall(expression: EcmaRouteExpression, scope: EcmaRouteScope): EcmaRouteValue {
+  const callee = ecmaRouteUnwrap(expression.callee!), receiver = callee.object!, member = typeof callee.property === "string" ? callee.property : "";
+  const receiverValue = ecmaRouteValue(receiver, scope), args = expression.arguments ?? [];
+  if (member === "at" || member === "includes") return args.every((argument) => ecmaRouteArgument(argument, scope)) && ["data", "finite", "receipt"].includes(receiverValue) ? "data" : "invalid";
+  if (member === "test") return ecmaRouteUnwrap(receiver).kind === "regex" && args.length === 1 && ecmaRouteArgument(args[0]!, scope) ? "data" : "invalid";
+  if (member === "some") {
+    if (!["data", "finite", "receipt"].includes(receiverValue) || args.length !== 1 || args[0]!.kind !== "arrow") return "invalid";
+    const arrow = args[0]!, pattern = arrow.parameters?.[0];
+    if (!pattern || arrow.parameters!.length !== 1 || pattern.defaults || pattern.destructured || Array.isArray(arrow.body)) return "invalid";
+    const nested = new EcmaRouteScope(scope); nested.define(pattern.names[0]!, { kind: "parameter" });
+    return ecmaRouteValue(arrow.body as EcmaRouteExpression, nested) === "data" ? "data" : "invalid";
+  }
+  if (member !== "map" && member !== "flatMap" || receiverValue !== "finite" || args.length !== 1 || args[0]!.kind !== "arrow") return "invalid";
+  const arrow = args[0]!, pattern = arrow.parameters?.[0];
+  if (!pattern || arrow.parameters!.length !== 1 || pattern.defaults || pattern.destructured) return "invalid";
+  const nested = new EcmaRouteScope(scope); nested.define(pattern.names[0]!, { kind: "parameter" });
+  if (Array.isArray(arrow.body)) {
+    if (!ecmaRouteBlock(arrow.body, nested, { terminals: 0, classes: new Set(), wiredClasses: new Set() }, false, true)) return "invalid";
+  } else if (!ecmaRouteArgument(arrow.body as EcmaRouteExpression, nested)) return "invalid";
+  return "finite";
+}
+
+function ecmaRouteRegistrationValue(expression: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+  const value = ecmaRouteUnwrap(expression);
+  if (value.kind === "literal" || value.kind === "regex") return true;
+  if (value.kind === "identifier") {
+    if (value.name === "this" || value.name === "undefined") return true;
+    const binding = scope.resolve(value.name!);
+    return binding?.kind === "class" || binding?.kind === "data" || binding?.kind === "finite" || binding?.kind === "import-value";
+  }
+  if (value.kind === "member") return (typeof value.property === "string" || ecmaRouteRegistrationValue(value.property, scope)) && ecmaRouteValue(value, scope) === "data";
+  if (value.kind === "template") return value.expressions!.every((row) => ecmaRouteRegistrationValue(row, scope));
+  if (value.kind === "array") return value.elements!.every((row) => row.kind === "spread" ? ecmaRouteRegistrationValue(row.object!, scope) : ecmaRouteRegistrationValue(row, scope));
+  if (value.kind === "object") return value.properties!.every((row) => (!row.computed || ecmaRouteRegistrationValue(row.key!, scope)) && ecmaRouteRegistrationValue(row.value.kind === "spread" ? row.value.object! : row.value, scope));
+  if (value.kind === "binary") return ["??", "||", "&&", "===", "!==", "==", "!=", "<", "<=", ">", ">="].includes(value.operator!) && ecmaRouteRegistrationValue(value.left!, scope) && ecmaRouteRegistrationValue(value.right!, scope);
+  if (value.kind === "conditional") return ecmaRouteRegistrationValue(value.condition!, scope) && ecmaRouteRegistrationValue(value.whenTrue!, scope) && ecmaRouteRegistrationValue(value.whenFalse!, scope);
+  if (value.kind === "call") {
+    const binding = ecmaRouteImportedRoot(value.callee!, scope);
+    return (binding?.imported === "dirname" || binding?.imported === "fileURLToPath") && (value.arguments ?? []).length === 1 && ecmaRouteRegistrationValue(value.arguments![0]!, scope);
+  }
+  return false;
+}
+
+function ecmaRouteValue(expression: EcmaRouteExpression, scope: EcmaRouteScope): EcmaRouteValue {
+  if (expression.kind === "unary") {
+    if (expression.operator === "await") return ecmaRouteValue(expression.object!, scope);
+    return expression.operator === "!" && ecmaRouteArgument(expression.object!, scope) ? "data" : "invalid";
+  }
+  const value = ecmaRouteUnwrap(expression);
+  if (value.kind === "literal" || value.kind === "regex") return "data";
+  if (value.kind === "identifier") {
+    if (value.name === "this" || value.name === "undefined") return "data";
+    const binding = scope.resolve(value.name!);
+    if (!binding) return ecmaRouteIntrinsic(scope, value.name!);
+    if (binding.kind === "pending" || binding.kind === "import-type") return "invalid";
+    if (binding.kind === "import-value" || binding.kind === "class" || binding.kind === "parameter" || binding.kind === "data") return "data";
+    return binding.kind;
+  }
+  if (value.kind === "template") return value.expressions!.every((row) => ecmaRouteArgument(row, scope)) ? "data" : "invalid";
+  if (value.kind === "array") return value.elements!.every((row) => row.kind === "spread" ? ecmaRouteArgument(row.object!, scope) : ecmaRouteArgument(row, scope)) ? "finite" : "invalid";
+  if (value.kind === "object") return value.properties!.every((row) => (!row.computed || ecmaRouteArgument(row.key!, scope)) && (row.value.kind === "spread" ? ecmaRouteArgument(row.value.object!, scope) : ecmaRouteArgument(row.value, scope))) ? "data" : "invalid";
+  if (value.kind === "conditional") return ecmaRouteArgument(value.condition!, scope) && ecmaRouteArgument(value.whenTrue!, scope) && ecmaRouteArgument(value.whenFalse!, scope) ? "data" : "invalid";
+  if (value.kind === "binary") return ["??", "||", "&&", "===", "!==", "==", "!=", "<", "<=", ">", ">="].includes(value.operator!) && ecmaRouteArgument(value.left!, scope) && ecmaRouteArgument(value.right!, scope) ? "data" : "invalid";
+  if (value.kind === "arrow") return ecmaRouteClosure(value, scope) ? "closure" : "invalid";
+  if (value.kind === "member") {
+    if (ecmaRouteIdentifier(value.object!) === "import" && value.property === "meta" && !scope.resolve("import")) return "data";
+    const base = ecmaRouteValue(value.object!, scope);
+    if (base === "invalid" || base === "module" || base === "closure" || base === "error") return "invalid";
+    if (typeof value.property !== "string" && !ecmaRouteArgument(value.property, scope)) return "invalid";
+    return base === "finite" ? "finite" : "data";
+  }
+  if (value.kind === "new") {
+    const name = ecmaRouteIdentifier(value.callee!), binding = name ? scope.resolve(name) : undefined;
+    if (name === "Error" && !binding && value.arguments!.every((row) => ecmaRouteStatus(row, scope))) return "error";
+    if (binding?.kind !== "import-value" || !value.arguments!.every((row) => ecmaRouteArgument(row, scope))) return "invalid";
+    if (binding.imported === "ScriptRouter") return value.arguments!.every((row) => ecmaRouteRegistrationValue(row, scope)) ? "router" : "invalid";
+    return "receipt";
+  }
+  if (value.kind !== "call") return "invalid";
+  const callee = ecmaRouteUnwrap(value.callee!);
+  if (callee.kind === "identifier" && callee.name === "import" && !scope.resolve("import")) {
+    const argument = value.arguments?.[0];
+    return value.arguments?.length === 1 && argument?.kind === "literal" && /(?:^|\/)🧪️tests(?:\/|$)|(?:^|\/)🧪️(?:\/|$)/u.test(argument.value!.slice(1, -1)) ? "module" : "invalid";
+  }
+  if (callee.kind === "identifier") {
+    const binding = scope.resolve(callee.name!);
+    if (binding?.kind === "closure") return value.arguments!.every((row) => ecmaRouteArgument(row, scope)) ? "receipt" : "invalid";
+    return binding?.kind === "import-value" && value.arguments!.every((row) => ecmaRouteArgument(row, scope)) ? "receipt" : "invalid";
+  }
+  if (callee.kind !== "member") return "invalid";
+  const member = typeof callee.property === "string" ? callee.property : "";
+  if (!member) return "invalid";
+  const receiver = ecmaRouteValue(callee.object!, scope);
+  if (receiver === "console" && (member === "log" || member === "error")) return value.arguments!.every((row) => ecmaRouteStatus(row, scope)) ? "receipt" : "invalid";
+  if (receiver === "process" && member === "exit") return value.arguments!.length === 1 && ecmaRouteArgument(value.arguments![0]!, scope) ? "receipt" : "invalid";
+  if (["at", "includes", "some", "map", "flatMap", "test"].includes(member)) return ecmaRouteCollectionCall(value, scope);
+  if (member === "run") {
+    const instance = ecmaRouteUnwrap(callee.object!), constructor = instance.kind === "new" ? ecmaRouteIdentifier(instance.callee!) : null, binding = constructor ? scope.resolve(constructor) : undefined;
+    if (binding?.kind === "import-value" && value.arguments!.every((row) => ecmaRouteArgument(row, scope))) return "receipt";
+  }
+  const imported = ecmaRouteImportedRoot(callee, scope);
+  return imported && value.arguments!.every((row) => ecmaRouteArgument(row, scope)) ? "receipt" : "invalid";
+}
+
+function ecmaRouteStatus(expression: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+  const value = ecmaRouteUnwrap(expression);
+  if (value.kind === "binary" && value.operator === "+") return ecmaRouteStatus(value.left!, scope) && ecmaRouteStatus(value.right!, scope);
+  return ecmaRouteArgument(value, scope);
+}
+
+function ecmaRouteDefine(pattern: EcmaRoutePattern, initializer: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+  if (pattern.defaults) return false;
+  const value = ecmaRouteValue(initializer, scope);
+  if (value === "invalid" || value === "console" || value === "process" || value === "error") return false;
+  if (value === "module") return pattern.destructured && pattern.names.every((name) => scope.initialize(name, { kind: "import-value", imported: name, module: "dynamic-test" }));
+  if (value === "closure") return !pattern.destructured && pattern.names.length === 1 && scope.initialize(pattern.names[0]!, { kind: "closure", closure: initializer, scope });
+  const kind: EcmaRouteBinding["kind"] = value === "finite" ? "finite" : value === "receipt" ? "receipt" : value === "router" ? "router" : "data";
+  return pattern.names.every((name) => scope.initialize(name, { kind }));
+}
+
+function ecmaRoutePrebind(rows: readonly EcmaRouteStatement[], scope: EcmaRouteScope): boolean {
+  for (const row of rows) {
+    if (row.kind === "class") {
+      if (!row.name || !scope.define(row.name, { kind: "pending" })) return false;
+      continue;
+    }
+    if (row.kind !== "const" && row.kind !== "let") continue;
+    for (const declaration of row.declarations ?? []) for (const name of declaration.pattern.names) if (!scope.define(name, { kind: "pending" })) return false;
+  }
+  return true;
+}
+
+function ecmaRouteEnvironment(statement: EcmaRouteStatement, scope: EcmaRouteScope): boolean {
+  if (statement.kind !== "expression" || statement.expression?.kind !== "assignment" || statement.expression.operator !== "??=") return false;
+  const left = statement.expression.left!, right = statement.expression.right!;
+  if (right.kind !== "literal" || left.kind !== "member" || typeof left.property !== "string" || !/^[A-Z][A-Z0-9_]*$/u.test(left.property)) return false;
+  const env = ecmaRouteUnwrap(left.object!);
+  return env.kind === "member" && env.property === "env" && ecmaRouteIntrinsic(scope, ecmaRouteIdentifier(env.object!) ?? "") === "process";
+}
+
+function ecmaRouteEnvironmentGuard(expression: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+  const value = ecmaRouteUnwrap(expression);
+  if (value.kind !== "binary" || value.operator !== "===" || value.right?.kind !== "literal") return false;
+  const left = ecmaRouteUnwrap(value.left!);
+  if (left.kind !== "member" || typeof left.property === "string" || left.property.kind !== "literal") return false;
+  const argv = ecmaRouteUnwrap(left.object!);
+  return argv.kind === "member" && argv.property === "argv" && ecmaRouteIntrinsic(scope, ecmaRouteIdentifier(argv.object!) ?? "") === "process";
+}
+
+function ecmaRouteImportMetaMember(expression: EcmaRouteExpression, member: string, scope: EcmaRouteScope): boolean {
+  const value = ecmaRouteUnwrap(expression);
+  if (value.kind !== "member" || value.property !== member) return false;
+  const meta = ecmaRouteUnwrap(value.object!);
+  return meta.kind === "member" && meta.property === "meta" && ecmaRouteIdentifier(meta.object!) === "import" && !scope.resolve("import");
+}
+
+function ecmaRouteBlock(rows: readonly EcmaRouteStatement[], scope: EcmaRouteScope, validation: EcmaRouteValidation, guarded = false, closure = false, maximum = 64): boolean {
+  if (rows.length === 0 || rows.length > maximum || !ecmaRoutePrebind(rows, scope)) return false;
+  for (const row of rows) {
+    if (row.kind === "const") {
+      for (const declaration of row.declarations ?? []) if (!ecmaRouteDefine(declaration.pattern, declaration.initializer, scope)) return false;
+      continue;
+    }
+    if (row.kind === "let" || row.kind === "var" || row.kind === "class" || row.kind === "import") return false;
+    if (row.kind === "expression") {
+      const result = ecmaRouteValue(row.expression!, scope);
+      if (!["receipt", "module"].includes(result)) return false;
+      continue;
+    }
+    if (row.kind === "throw") {
+      if (!guarded || ecmaRouteValue(row.expression!, scope) !== "error") return false;
+      continue;
+    }
+    if (row.kind === "return") {
+      if ((!guarded && !closure) || row.expression && ecmaRouteValue(row.expression, scope) !== "receipt" && !ecmaRouteArgument(row.expression, scope)) return false;
+      continue;
+    }
+    if (row.kind === "block") {
+      if (!ecmaRouteBlock(row.body!, new EcmaRouteScope(scope), validation, guarded, closure, maximum)) return false;
+      continue;
+    }
+    if (row.kind === "if") {
+      if (!ecmaRouteArgument(row.expression!, scope)) return false;
+      const branch = (statement: EcmaRouteStatement): boolean => ecmaRouteBlock(statement.kind === "block" ? statement.body! : [statement], new EcmaRouteScope(scope), validation, true, closure, maximum);
+      if (!branch(row.then!) || row.otherwise && !branch(row.otherwise)) return false;
+      continue;
+    }
+    if (row.kind === "for") {
+      if (row.initializer!.defaults || row.initializer!.destructured || row.initializer!.names.length !== 1) return false;
+      const iterable = ecmaRouteValue(row.iterable!, scope);
+      if (iterable !== "finite") return false;
+      const nested = new EcmaRouteScope(scope); nested.define(row.initializer!.names[0]!, { kind: "parameter" });
+      if (!ecmaRouteBlock(row.statement!.kind === "block" ? row.statement!.body! : [row.statement!], nested, validation, false, closure, maximum)) return false;
+      continue;
+    }
+    return false;
+  }
+  return true;
+}
+
+function ecmaRouteRouter(expression: EcmaRouteExpression, scope: EcmaRouteScope, validation: EcmaRouteValidation): boolean {
+  const value = ecmaRouteUnwrap(expression);
+  if (value.kind === "identifier") return scope.resolve(value.name!)?.kind === "router";
+  if (value.kind === "new") {
+    const name = ecmaRouteIdentifier(value.callee!), binding = name ? scope.resolve(name) : undefined;
+    if (binding?.kind !== "import-value" || binding.imported !== "ScriptRouter") return false;
+  } else if (value.kind === "call") {
+    const callee = ecmaRouteUnwrap(value.callee!);
+    if (callee.kind !== "member" || callee.property !== "register" || !ecmaRouteRouter(callee.object!, scope, validation)) return false;
+  } else return false;
+  const inspect = (argument: EcmaRouteExpression): boolean => {
+    const item = ecmaRouteUnwrap(argument);
+    if (item.kind === "identifier") {
+      const binding = scope.resolve(item.name!);
+      if (binding?.kind === "class") validation.wiredClasses.add(item.name!);
+      return binding?.kind === "class" || binding?.kind === "data" || binding?.kind === "finite" || binding?.kind === "import-value" || item.name === "this" || item.name === "undefined";
+    }
+    if (item.kind === "array") return item.elements!.every((row) => row.kind !== "spread" && inspect(row));
+    if (item.kind === "object") return item.properties!.every((row) => (!row.computed || ecmaRouteArgument(row.key!, scope)) && inspect(row.value));
+    return ecmaRouteRegistrationValue(item, scope);
+  };
+  return (value.arguments ?? []).every(inspect);
+}
+
+function ecmaRouteTerminal(statement: EcmaRouteStatement, scope: EcmaRouteScope, validation: EcmaRouteValidation): boolean {
+  if (statement.kind !== "expression") return false;
+  const expression = ecmaRouteUnwrap(statement.expression!);
+  if (expression.kind !== "call") return false;
+  const name = ecmaRouteIdentifier(expression.callee!), binding = name ? scope.resolve(name) : undefined;
+  if (binding?.kind !== "import-value" || !["runBundleScriptMain", "runWorkspaceScriptMain", "runPolicyOnlyMain", "runArtifactRustPackageMain", "runArtifactTypeScriptPackageMain"].includes(binding.imported ?? "")) return false;
+  if (!expression.arguments!.every((argument) => ecmaRouteRouter(argument, scope, validation) || ["data", "finite"].includes(ecmaRouteValue(argument, scope)))) return false;
+  validation.terminals++;
+  return true;
+}
+
+/** 🚦️ Recognizes only value-bound, lexically scoped command routing. */
+function ecmaCommandRouterModule(content: string, grammar: PackageGlueGrammarSpec): boolean {
+  const parser = new EcmaRouteParser(ecmaRouteTokens(content)), program = parser.program();
+  if (!program) return false;
+  const scope = new EcmaRouteScope(), validation: EcmaRouteValidation = { terminals: 0, classes: new Set(), wiredClasses: new Set() };
+  for (const row of program) if (row.kind === "import") for (const binding of row.imports ?? []) if (!scope.define(binding.local, { kind: binding.runtime ? "import-value" : "import-type", imported: binding.imported, module: binding.module })) return false;
+  if (!ecmaRoutePrebind(program.filter((row) => row.kind !== "import"), scope)) return false;
+  for (const row of program) {
+    if (row.kind === "import") continue;
+    if (row.kind === "class") {
+      const base = ecmaRouteIdentifier(row.base!), binding = base ? scope.resolve(base) : undefined;
+      if (!row.name || binding?.kind !== "import-value" || !["BundleScript", "Script"].includes(binding.imported ?? "") || !scope.initialize(row.name, { kind: "class" })) return false;
+      const method = row.body?.[0];
+      if (!method || method.parameters?.some((pattern) => pattern.defaults || pattern.destructured)) return false;
+      const methodScope = new EcmaRouteScope(scope);
+      for (const pattern of method.parameters ?? []) for (const name of pattern.names) if (!methodScope.define(name, { kind: "parameter" })) return false;
+      if (!ecmaRouteBlock(method.body ?? [], methodScope, validation, false, false, grammar.maxDelegationStatements)) return false;
+      validation.classes.add(row.name);
+      continue;
+    }
+    if (row.kind === "const") {
+      for (const declaration of row.declarations ?? []) {
+        if (ecmaRouteRouter(declaration.initializer, scope, validation)) {
+          if (declaration.pattern.destructured || declaration.pattern.defaults || declaration.pattern.names.length !== 1 || !scope.initialize(declaration.pattern.names[0]!, { kind: "router" })) return false;
+        } else if (!ecmaRouteDefine(declaration.pattern, declaration.initializer, scope)) return false;
+      }
+      continue;
+    }
+    if (row.kind === "if") {
+      const condition = ecmaRouteUnwrap(row.expression!);
+      if (condition.kind === "member" && ecmaRouteImportMetaMember(condition, "main", scope)) {
+        const nested = new EcmaRouteScope(scope), rows = row.then!.kind === "block" ? row.then!.body! : [row.then!];
+        if (!ecmaRoutePrebind(rows, nested)) return false;
+        for (const statement of rows) {
+          if (statement.kind === "const") {
+            for (const declaration of statement.declarations ?? []) {
+              if (!ecmaRouteRouter(declaration.initializer, nested, validation) || declaration.pattern.destructured || declaration.pattern.defaults || declaration.pattern.names.length !== 1 || !nested.initialize(declaration.pattern.names[0]!, { kind: "router" })) return false;
+            }
+          } else if (!ecmaRouteTerminal(statement, nested, validation)) return false;
+        }
+        if (row.otherwise) return false;
+        continue;
+      }
+      if (!ecmaRouteEnvironmentGuard(row.expression!, scope) || row.otherwise) return false;
+      const rows = row.then!.kind === "block" ? row.then!.body! : [row.then!];
+      if (rows.length !== 1 || !ecmaRouteEnvironment(rows[0]!, scope)) return false;
+      continue;
+    }
+    if (!ecmaRouteTerminal(row, scope, validation)) return false;
+  }
+  return validation.terminals === 1 && [...validation.classes].every((name) => validation.wiredClasses.has(name));
+}
+
+function packageToolMetadata(content: string, validator: PackageSourceDisposition["validator"], grammar: PackageGlueGrammarSpec): boolean {
+  const structural = packageStructuralSource(content, grammar.analyzer), source = structural.source;
+  if (validator === "command-router") {
+    return (grammar.analyzer === "typescript" || grammar.analyzer === "javascript") && ecmaCommandRouterModule(content, grammar);
+  }
+  if (!structural.balanced) return false;
+  if (/\bexport\s+(?:interface|type|enum|class|const|let|var|function)\b/u.test(source)) return false;
+  if (validator === "pytest-configuration") return /\bpytest\b/u.test(source) && !/\b(?:def|class)\b/u.test(source);
+  const configuration = (modulePattern: RegExp): boolean => {
+    if (!modulePattern.test(content) || !/\bexport\s+default\s+defineConfig\s*\(/u.test(source) || /\b(?:class|interface|type|enum|namespace)\b/u.test(source) || /\b(?:fetch|writeFile\w*|appendFile\w*|rm\w*|unlink\w*|spawn\w*|exec\w*|listen|connect)\s*\(/u.test(source)) return false;
+    const statements = packageStatements(source);
+    const declarations = new Map<string, string>();
+    const conditionals: string[] = [];
+    let root = "";
+    for (const statement of statements) {
+      if (/^import\b/u.test(statement)) continue;
+      if (/^export\s+default\s+defineConfig\s*\(/u.test(statement)) { if (root) return false; root = statement; continue; }
+      const declaration = /^(?:const\s+([A-Za-z_$][\w$]*)|function\s+([A-Za-z_$][\w$]*))/u.exec(statement);
+      if (declaration) { declarations.set(declaration[1] ?? declaration[2]!, statement); continue; }
+      if (/^if\s*\([\s\S]*\)\s*\{\s*[A-Za-z_$][\w$]*\.push\s*\([\s\S]*\)\s*;?\s*\}$/u.test(statement)) { conditionals.push(statement); continue; }
+      return false;
+    }
+    if (!root) return false;
+    const referenced = new Set<string>(), identifiers = (value: string): readonly string[] => [...value.matchAll(/\b[A-Za-z_$][\w$]*\b/gu)].map((row) => row[0]);
+    for (const name of identifiers(root)) if (declarations.has(name)) referenced.add(name);
+    for (let size = -1; size !== referenced.size;) {
+      size = referenced.size;
+      for (const name of [...referenced]) for (const dependency of identifiers(declarations.get(name)!)) if (declarations.has(dependency)) referenced.add(dependency);
+    }
+    if ([...declarations.keys()].some((name) => !referenced.has(name))) return false;
+    return conditionals.every((statement) => {
+      const target = /^if\s*\([\s\S]*\)\s*\{\s*([A-Za-z_$][\w$]*)\.push/u.exec(statement)?.[1];
+      return target !== undefined && referenced.has(target);
+    });
+  };
+  if (validator === "vscode-test-configuration") return configuration(/from\s+["']@vscode\/test-cli["']/u);
+  if (validator === "eslint-configuration") return ecmaDataModule(source) && /\beslint\b/iu.test(content);
+  if (validator === "vitest-configuration" || validator === "tool-config-vitest") return configuration(/from\s+["']vitest\/config["']/u);
+  const token: Readonly<Record<string, RegExp>> = {
+    "tool-config-tailwind": /\b(?:tailwind|content|theme|plugins)\b/iu,
+    "tool-config-postcss": /\b(?:postcss|plugins)\b/iu,
+    "tool-config-eslint": /\beslint\b/iu,
+    "tool-config-dependency-cruiser": /\b(?:dependency|forbidden|options)\b/iu,
+  };
+  return ecmaDataModule(source) && (token[validator]?.test(content) ?? false);
 }
 
 /** 🧾️ Classifies an explicitly dispositioned source-format fixed/configurable package entry. */
 export function classifyPackageSourceDisposition(content: string, disposition: PackageSourceDisposition, grammar: PackageGlueGrammarSpec): PackageSourceRole {
-  if (disposition.validator === "package-glue") return classifyPackageSourceRole(content, grammar);
-  if (disposition.validator === "vitest-configuration") return /^\s*import\s*\{\s*defineConfig\s*\}\s*from\s*["']vitest\/config["'];\s*export\s+default\s+defineConfig\(\{[\s\S]*\}\);\s*$/u.test(content) && classifyPackageSourceRole(content, grammar) === "declaration" ? "tool-metadata" : "unresolved";
-  return /\bScriptRouter\b/u.test(content) && /\brunBundleScriptMain\b/u.test(content) ? "tool-metadata" : "unresolved";
+  if (disposition.validator === "package-glue") return classifyPackageSource(content, grammar).role;
+  return packageToolMetadata(content, disposition.validator, grammar) ? "tool-metadata" : "unresolved";
+}
+
+export interface FixedSourceDispositionDecision {
+  readonly contractId: string;
+  readonly role: PackageSourceRole | null;
+  readonly finding: "fixed-source-content-unreadable" | "fixed-source-disposition-unresolved" | null;
+}
+
+/** 🧾️ Separates an exact fixed filename's body proof from package membership and filename authority. */
+export function fixedSourceDispositionDecision(contractId: string | undefined, content: string | null, taxonomy: Taxonomy = loadCatalogTaxonomy()): FixedSourceDispositionDecision | null {
+  const disposition = contractId ? taxonomy.packageSourceDispositions[contractId] : undefined;
+  if (!disposition || disposition.contractKind !== "fixed" || !disposition.grammarId) return null;
+  const grammar = taxonomy.packageGlueGrammar[disposition.grammarId];
+  if (!grammar) throw new Error(`Fixed source disposition ${contractId} references unknown grammar ${disposition.grammarId}`);
+  if (content === null) return { contractId: contractId!, role: null, finding: "fixed-source-content-unreadable" };
+  const role = classifyPackageSourceDisposition(content, disposition, grammar);
+  const accepted = disposition.disposition === "tool-metadata" ? role === "tool-metadata" : grammar.allowedRoles.includes(role as PackageGlueGrammarSpec["allowedRoles"][number]);
+  return { contractId: contractId!, role, finding: accepted ? null : "fixed-source-disposition-unresolved" };
 }
 
 /**
- * 🗺️ ONE repo walk answering every discovery question. For each `<owner>/📦️packages/<lang>/` it resolves the
- * package as either a direct manifest (two-level — plugins, styling) or a `🎯️targets/<target>/<manifest>` tree
- * (three-level — ui, renderer-engine: one package per render target), reads its role marker via
+ * 🗺️ ONE repo walk answering every discovery question. For each `<owner>/📦️packages/<lang>/` it resolves one
+ * direct manifest. An owner at `<domain>/🎯️targets/<target>` contributes the registered target identity; the
+ * inverse `<owner>/📦️packages/<lang>/🎯️targets/<target>` relation is only reported and never discovered. It reads its role marker via
  * `readSemioMarker`, and — in the same pass — derives each owner's migration state from disk: residual
  * `⚡️implementations`/`⚡️implementation` dirs and Shape V1 entry files still at the owner root. A package's
  * existence IS the migration marker (`taxonomy.migratedMarker`), so no hand-maintained "already migrated" list
@@ -10045,9 +11388,16 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { readonly vie
           addPackageProblem(owner, path, "package-role-unresolved", "has a source-format fixed/configurable contract without a package source disposition.");
           continue;
         }
-        const role = disposition ? classifyPackageSourceDisposition(content, disposition, grammar) : classifyPackageSourceRole(content, grammar);
-        if (role === "implementation") addPackageProblem(owner, path, "package-implementation", "contains authored implementation inside a package boundary.");
-        else if (role !== "tool-metadata" && (role === "unresolved" || !grammar.allowedRoles.includes(role))) addPackageProblem(owner, path, "package-role-unresolved", `has uncertain or disallowed package role ${JSON.stringify(role)}.`);
+        const sourceGrammar = disposition?.grammarId ? taxonomy.packageGlueGrammar[disposition.grammarId] : grammar;
+        const dispositionRole = disposition && disposition.validator !== "package-glue" ? classifyPackageSourceDisposition(content, disposition, sourceGrammar) : undefined;
+        const generalDecision = classifyPackageSource(content, sourceGrammar);
+        const decision = dispositionRole === "tool-metadata"
+          ? { role: dispositionRole, evidence: `fixed/configurable ${disposition!.validator} validator` }
+          : dispositionRole === "unresolved" && generalDecision.role !== "implementation"
+            ? { role: dispositionRole, evidence: `fixed/configurable ${disposition!.validator} validator rejected the source body` }
+            : generalDecision;
+        if (decision.role === "implementation") addPackageProblem(owner, path, "package-implementation", `contains authored implementation inside a package boundary: ${decision.evidence}.`);
+        else if (decision.role !== "tool-metadata" && (decision.role === "unresolved" || !sourceGrammar.allowedRoles.includes(decision.role))) addPackageProblem(owner, path, "package-role-unresolved", `has uncertain or disallowed package role ${JSON.stringify(decision.role)}: ${decision.evidence}.`);
       }
     };
     visit(packageRoot);
@@ -10080,6 +11430,12 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { readonly vie
     });
   };
 
+  const ownerTarget = (ownerRel: string): PackageTarget | undefined => {
+    const parts = ownerRel.split("/");
+    const target = parts.at(-1);
+    return parts.at(-2) === targetsDirName && target && taxonomy.targets[target] ? target : undefined;
+  };
+
   const scanPackagesDir = (packagesAbs: string, owner: OwnerAccumulator): void => {
     if (pathIsExcluded(repoRoot, packagesAbs, taxonomy)) return;
     for (const langEntry of catalogEntries(packagesAbs)) {
@@ -10100,28 +11456,14 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { readonly vie
       const targetsAbs = join(langAbs, targetsDirName);
       const hasDirect = catalogExists(directManifestAbs);
       const hasTargets = catalogExists(targetsAbs);
-      if (hasDirect && hasTargets) {
-        problems.push({ kind: "ambiguous-lang-shape", path: rel(langAbs), message: `"${rel(langAbs)}" has both a direct manifest and a target directory.` });
-        continue;
-      }
+      const target = ownerTarget(owner.ownerRel);
+      if (hasTargets) addPackageProblem(owner, targetsAbs, "target-inside-package-boundary", "places a target subtree inside a package boundary.");
+      collectPackageRoles(langAbs, lang, owner, target ? taxonomy.targets[target]!.entryContractIds : ecosystem.entryContractIds);
       if (hasDirect) {
-        resolveOne(directManifestAbs, lang, owner, undefined);
-        collectPackageRoles(langAbs, lang, owner, ecosystem.entryContractIds);
+        resolveOne(directManifestAbs, lang, owner, target);
         continue;
       }
-      if (!hasTargets) continue;
-      for (const targetEntry of catalogEntries(targetsAbs)) {
-        if (!targetEntry.isDirectory()) continue;
-        const targetAbs = join(targetsAbs, targetEntry.name);
-        if (pathIsExcluded(repoRoot, targetAbs, taxonomy)) continue;
-        const targetManifestAbs = join(targetAbs, manifestFilename);
-        if (!catalogExists(targetManifestAbs)) {
-          problems.push({ kind: "target-without-manifest", path: rel(targetAbs), message: `"${rel(targetAbs)}" has no exact manifest contract ${JSON.stringify(manifestFilename)}.` });
-          continue;
-        }
-        resolveOne(targetManifestAbs, lang, owner, targetEntry.name);
-        collectPackageRoles(targetAbs, lang, owner, taxonomy.targets[targetEntry.name]?.entryContractIds ?? ecosystem.entryContractIds);
-      }
+      if (target) problems.push({ kind: "target-without-manifest", path: rel(langAbs), message: `"${rel(langAbs)}" has no exact manifest contract ${JSON.stringify(manifestFilename)}.` });
     }
   };
 
@@ -10211,7 +11553,7 @@ export function discoverOwners(repoRoot: string, taxonomy: Taxonomy = loadTaxono
   return [...scan(repoRoot, taxonomy).owners];
 }
 
-/** ⚠️ Diagnostics half of the scan (ambiguous shapes, dangling target dirs, unknown langs/roles, unmarked manifests outside legacy areas). */
+/** ⚠️ Diagnostics half of the scan (inverse target boundaries, missing target manifests, unknown langs/roles, and unmarked manifests). */
 export function discoverPackageProblems(repoRoot: string, taxonomy: Taxonomy = loadTaxonomy()): DiscoveryProblem[] {
   return [...scan(repoRoot, taxonomy).problems];
 }

@@ -1,4 +1,4 @@
-use crate::editor::sequence::testkit::{dispatch, new_app};
+use crate::editor::sequence::unit_tests::context::{dispatch, new_app};
 use crate::editor::sequence::SequenceCommand;
 
 use super::connect_steps::ConnectSteps;

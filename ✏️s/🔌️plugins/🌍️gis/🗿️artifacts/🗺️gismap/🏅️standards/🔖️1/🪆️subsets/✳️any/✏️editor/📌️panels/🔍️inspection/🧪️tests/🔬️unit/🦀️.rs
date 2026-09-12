@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::gis2d::testkit::{app, close, render as render_body};
+use crate::editor::gis2d::unit_tests::context::{app, close, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn the_inspector_always_summarises_the_schema_and_visible_count() {

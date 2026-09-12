@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::editor::sourcing::testkit::{new_app, render as render_body};
+use crate::editor::sourcing::unit_tests::context::{new_app, render as render_body};
 
 /// 🧬️ Direct unit coverage for `render`'s own id-lookup logic — the app-level call site always
 /// passes an empty slice (see the `selected_ids` doc comment above) until a future wave threads
@@ -14,7 +14,7 @@ async fn preview_renders_selected_mesh_id() {
     let document = crate::schema::default_document();
     let object_id = crate::stock_of(&document)[0].id.clone();
     let node = render(&document, &[object_id.clone()], crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::default())).expect("bounded preview");
-    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::testkit::built_surface_scene(&node).expect("assemble world3d scene");
+    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
     assert!(scene.meshes_json.contains(&object_id), "the selected kind's mesh must be in the scene");
     assert!(scene.instances_json.contains(&object_id), "the selected kind must be instanced once");
 }

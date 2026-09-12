@@ -22,13 +22,13 @@ async fn assert_artifact_wal_fail_stop_case(name: &str) {
     let fixture = fail_stop_fixture();
     let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == name).unwrap();
     let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
-    let storage = crate::db_testkit::FaultStorage::new(inner.clone()).await;
+    let storage = crate::db_fault_testing::FaultStorage::new(inner.clone()).await;
     let document = ArtifactId::from(format!("retained-artifact-wal-fail-stop-{name}"));
     let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
     let baseline = fail_stop_segment_bytes(&storage, &document).await;
     let append_boundary = storage.append_calls().await + 1;
     let sync_boundary = storage.sync_calls().await + 1;
-    let mut script = crate::db_testkit::FaultScript::default();
+    let mut script = crate::db_fault_testing::FaultScript::default();
     match case["fault"].as_str().unwrap() {
         "shortAppend" => script.torn_write_at = Some((append_boundary, case["keepBytes"].as_u64().unwrap())),
         "appendError" => script.fail_nth_write = Some(append_boundary),
@@ -273,11 +273,11 @@ async fn artifact_wal_sync_error_is_fail_stop_until_reopen() {
 async fn artifact_wal_successor_failure_after_seal_is_fail_stop_until_reopen() {
     assert!(fail_stop_fixture()["cases"].as_array().unwrap().iter().any(|case| case["fault"] == "successorAppendError"));
     let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
-    let storage = crate::db_testkit::FaultStorage::new(inner.clone()).await;
+    let storage = crate::db_fault_testing::FaultStorage::new(inner.clone()).await;
     let document = ArtifactId::from("retained-artifact-wal-successor-fail-stop");
     let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
     wal.max_segment_bytes = 1;
-    storage.set_script(crate::db_testkit::FaultScript { fail_nth_write: Some(storage.append_calls().await + 2), ..crate::db_testkit::FaultScript::default() }).await;
+    storage.set_script(crate::db_fault_testing::FaultScript { fail_nth_write: Some(storage.append_calls().await + 2), ..crate::db_fault_testing::FaultScript::default() }).await;
     let mut admission = WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 128).unwrap();
     let command = WalBytes::try_admit(b"committed-before-successor-failure".to_vec(), 64, &mut admission).await.unwrap();
     let mut batch = WalRecordBatch::new();

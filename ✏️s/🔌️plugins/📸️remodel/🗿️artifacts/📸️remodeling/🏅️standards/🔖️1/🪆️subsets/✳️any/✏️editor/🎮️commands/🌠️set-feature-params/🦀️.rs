@@ -1,6 +1,6 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-feature-params`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::update_feature_params;
 use crate::op::RemodelingMutation;
 use crate::{FeatureDetector, FeatureParams, RemodelingSnapshot};
@@ -16,7 +16,7 @@ pub struct SetFeatureParams {
     pub edge_threshold: f32,
 }
 
-pub fn handle(payload: &SetFeatureParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetFeatureParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_feature_params(FeatureParams {
         detector: match payload.detector.as_str() {
             "akaze" => FeatureDetector::Akaze,

@@ -251,29 +251,29 @@ async fn fem3d_op_text_round_trips_every_variant() {
 async fn mutation_law_create_node_inverse_and_diff_absorb() {
     let base = Fem3dSnapshot::default();
     let mutation = Fem3dMutation::CreateNode(create_node::CreateNode { node: FemNode { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 } });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let after = d1.apply(&base).expect("valid mutation diff");
     let d2 = Fem3dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: "none".into(), new_self_weight: true }).diff(&after).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn mutation_law_replace_material_inverse() {
     let (base, ..) = cantilever_fixture();
     let mutation = Fem3dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "steel".into(), new_material: FemMaterial { id: "steel".into(), name: "Steel 2".into(), e: 200e9, g: 79e9, nu: 0.3, rho: 7900.0 } });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn mutation_law_add_load_inverse_and_diff_absorb() {
     let base = solid_slab_doc();
     let mutation = Fem3dMutation::AddLoad(add_load::AddLoad { case_id: "self".into(), load: Box::new(FemLoad::Area { id: "l9".into(), solid_id: "sol1".into(), pressure: 400.0 }) });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let after = d1.apply(&base).expect("valid mutation diff");
     let d2 = Fem3dMutation::DeleteCombination(delete_combination::DeleteCombination { id: "none".into() }).diff(&after).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -295,19 +295,19 @@ async fn every_mutation_registers_a_semantic_descriptor() {
 #[semio_framework_async_macros::async_test]
 async fn create_support_missing_node_is_error() {
     let base = Fem3dSnapshot::default();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::CreateSupport(create_support::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "ghost".into(), fixed: vec![] } })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::CreateSupport(create_support::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "ghost".into(), fixed: vec![] } })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_node_missing_target_is_error() {
     let base = Fem3dSnapshot::default();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::DeleteNode(delete_node::DeleteNode { id: "ghost".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::DeleteNode(delete_node::DeleteNode { id: "ghost".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn replace_material_missing_target_is_error() {
     let base = Fem3dSnapshot::default();
-    protocol::os_spr::testkit::assert_missing_target_is_error(
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(
         &base,
         &Fem3dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, g: 1.0, nu: 0.3, rho: 1.0 } }),
     )
@@ -317,26 +317,26 @@ async fn replace_material_missing_target_is_error() {
 #[semio_framework_async_macros::async_test]
 async fn add_load_missing_case_is_error() {
     let base = Fem3dSnapshot::default();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::AddLoad(add_load::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Tz, value: 1.0 }) })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::AddLoad(add_load::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Tz, value: 1.0 }) })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn remove_load_missing_case_is_error() {
     let base = Fem3dSnapshot::default();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::RemoveLoad(remove_load::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::RemoveLoad(remove_load::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn change_load_case_self_weight_missing_target_is_error() {
     let base = Fem3dSnapshot::default();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: "ghost".into(), new_self_weight: true })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: "ghost".into(), new_self_weight: true })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_node_duplicate_id_is_fatal() {
     let (base, ..) = cantilever_fixture();
     let outcome = Fem3dMutation::CreateNode(create_node::CreateNode { node: FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 } }).diff(&base);
-    protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
     assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
 }
 //#endregion 🔖️OutcomeLaws

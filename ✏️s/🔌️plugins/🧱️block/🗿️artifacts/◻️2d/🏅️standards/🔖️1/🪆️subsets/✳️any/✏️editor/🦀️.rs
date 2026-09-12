@@ -641,14 +641,9 @@ pub fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
-#[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
+//#region 🧪️UnitTests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests
+

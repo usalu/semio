@@ -38,7 +38,7 @@ fn missing_required_field_reports_the_field_name() {
 }
 
 /// 🕸️ `NodeGraphScene` is the deepest nesting in this crate — it embeds `NodeGraphNodeRecord`
-/// (itself embedding `NodeGraphPortRecord`), `NodeGraphEdgeRecord`, `NodeGraphViewport` and
+/// (itself embedding `NodeGraphPortRecord`), `NodeGraphEdgeRecord`, shared `Viewport2d` and
 /// `NodeGraphHover` — one round trip here exercises every nested `NodeGraph*Record` the SCENE still
 /// carries. `scene.operators` stays DOCUMENT-derived (see its own docstring); the registered operator
 /// catalogue is app-static and rides the reserved `framework.section.catalogue` surface, which is why
@@ -48,7 +48,7 @@ fn node_graph_scene_round_trips_through_every_nested_record_type() {
     let port = NodeGraphPortRecord { id: "a".into(), label: Some("A".into()), code: None, abbreviation: None, full_name: None, artifact_kind: None };
     let node = NodeGraphNodeRecord { id: "n1".into(), label: Some("Node".into()), x: 1.0, y: 2.0, width: 100.0, height: 50.0, inputs: vec![port], outputs: Vec::new(), instance_id: Some("i1".into()), plugin_id: None, app_id: None, icon: None };
     let edge = NodeGraphEdgeRecord { id: "e1".into(), source_node_id: "n1".into(), source_port_id: "a".into(), target_node_id: "n1".into(), target_port_id: "a".into(), label: None };
-    let mut scene = NodeGraphScene::base(vec![node], vec![edge], NodeGraphViewport { x: 1.0, y: 2.0, zoom: 1.5 });
+    let mut scene = NodeGraphScene::base(vec![node], vec![edge], semio_framework_ui_viewport::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 });
     scene.hover = Some(NodeGraphHover { node_id: Some("n1".into()), port_id: Some("a".into()) });
     scene.find_items = vec![NodeGraphFindItem { id: "f1".into(), label: "Find".into(), category: "cat".into() }];
     scene.highlighted = vec!["n1".into()];
@@ -83,8 +83,8 @@ fn node_graph_operator_catalogue_records_round_trip() {
 
 #[test]
 fn node_graph_viewport_and_hover_round_trip_including_all_none() {
-    let viewport = NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 };
-    assert_eq!(NodeGraphViewport::from_value(viewport.to_value()), Ok(viewport));
+    let viewport = semio_framework_ui_viewport::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
+    assert_eq!(semio_framework_ui_viewport::Viewport2d::from_value(viewport.to_value()), Ok(viewport));
     let hover = NodeGraphHover { node_id: None, port_id: None };
     assert_eq!(NodeGraphHover::from_value(hover.to_value()), Ok(hover.clone()));
     assert_eq!(hover.to_value(), DslValue::object([]));

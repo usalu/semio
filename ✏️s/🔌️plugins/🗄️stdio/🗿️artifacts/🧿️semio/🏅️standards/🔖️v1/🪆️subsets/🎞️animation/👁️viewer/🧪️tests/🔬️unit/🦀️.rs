@@ -14,5 +14,5 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn viewer_never_mutates_the_document_or_draft_store() {
-    semio_framework_plugin::testkit::assert_viewer_never_mutates::<SemioAnimationViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<SemioAnimationViewer>().await;
 }

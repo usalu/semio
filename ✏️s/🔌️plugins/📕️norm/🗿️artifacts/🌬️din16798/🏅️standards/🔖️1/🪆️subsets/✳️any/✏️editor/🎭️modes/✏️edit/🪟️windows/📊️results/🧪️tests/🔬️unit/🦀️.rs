@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::din16798::testkit;
+use crate::editor::din16798::unit_tests::context;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_this_windows_body_key() {
@@ -9,7 +9,7 @@ async fn definition_declares_this_windows_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn renders_the_computed_checks() {
-    let mut app = testkit::app_with_registry().await;
-    let rendered = testkit::render(&mut app, BODY_RESULTS).await;
+    let mut app = context::app_with_registry().await;
+    let rendered = context::render(&mut app, BODY_RESULTS).await;
     assert!(!rendered.contains("No checks computed."), "the default document must compute at least one check: {rendered}");
 }

@@ -1,0 +1,62 @@
+{
+  "document": { "id": "map-document-stable", "positions": [], "routes": [], "regions": [] },
+  "windowInstances": [
+    { "id": "gis-map-left", "windowKindId": "gis2d-main" },
+    { "id": "gis-map-right", "windowKindId": "gis2d-main" },
+    { "id": "gis-map-other", "windowKindId": "other-window" }
+  ],
+  "baseConfig": {
+    "layerVisibility": {},
+    "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+    "renderMode": "combined",
+    "vectorStyle": "colored",
+    "lodMode": "automatic",
+    "layerStrokeScale": {}
+  },
+  "mutations": [
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setLayerVisibility", "layerId": "water", "visible": false } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setCamera", "cameraJson": "{\"x\":12,\"y\":-8,\"zoom\":2}" } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setRenderMode", "value": "vector" } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setVectorStyle", "value": "figureGround" } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setLodMode", "value": "city" } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setLayerStrokeScale", "layerId": "roads", "value": 2.5 } }
+  ],
+  "undoMutations": [
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setLayerStrokeScale", "layerId": "roads", "value": null } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setLodMode", "value": "automatic" } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setVectorStyle", "value": "colored" } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setRenderMode", "value": "combined" } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setCamera", "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}" } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setLayerVisibility", "layerId": "water", "visible": null } }
+  ],
+  "redoMutations": [
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setLayerVisibility", "layerId": "water", "visible": false } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setCamera", "cameraJson": "{\"x\":12,\"y\":-8,\"zoom\":2}" } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setRenderMode", "value": "vector" } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setVectorStyle", "value": "figureGround" } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setLodMode", "value": "city" } },
+    { "windowId": "gis-map-left", "windowKindId": "gis2d-main", "mutation": { "operation": "setLayerStrokeScale", "layerId": "roads", "value": 2.5 } }
+  ],
+  "expected": {
+    "gis-map-left": {
+      "layerVisibility": { "water": false },
+      "cameraJson": "{\"x\":12,\"y\":-8,\"zoom\":2}",
+      "renderMode": "vector",
+      "vectorStyle": "figureGround",
+      "lodMode": "city",
+      "layerStrokeScale": { "roads": 2.5 }
+    },
+    "gis-map-right": {
+      "layerVisibility": {},
+      "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+      "renderMode": "combined",
+      "vectorStyle": "colored",
+      "lodMode": "automatic",
+      "layerStrokeScale": {}
+    }
+  },
+  "rejections": [
+    { "windowId": "gis-map-missing", "claimedWindowKindId": "gis2d-main", "code": "gis-map-window-stale" },
+    { "windowId": "gis-map-other", "claimedWindowKindId": "gis2d-main", "code": "gis-map-window-kind" }
+  ]
+}

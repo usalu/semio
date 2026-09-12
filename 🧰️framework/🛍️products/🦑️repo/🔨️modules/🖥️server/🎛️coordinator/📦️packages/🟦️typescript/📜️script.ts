@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ Coordinator package router: `bun ./📜️script.ts build|test|policy`. */
 import type { BundleLinter } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { dependencyBoundaryBreachesForBundleDir, getWorkspaceRoot, BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel, runCmd, daemonBudgetOpts, defineLint, goLevelTestArgs, runCanonicalGoTests } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { dependencyBoundaryBreachesForBundleDir, getWorkspaceRoot, BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel, runCmd, daemonBudgetOpts, defineLint, goLevelTestArgs, runCanonicalGoBuild, runCanonicalGoTests } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { dirname, join } from "node:path";
 
 export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLinter) => {
@@ -13,7 +13,7 @@ class BuildScript extends BundleScript {
   run(): void {
     const ext = process.platform === "win32" ? ".exe" : "";
     const ownerRoot = join(dirname(import.meta.dir), "..");
-    runCmd("go", ["build", "-o", `server${ext}`, "."], { cwd: ownerRoot });
+    runCanonicalGoBuild(ownerRoot, ["-o", `server${ext}`, "."]);
   }
 }
 

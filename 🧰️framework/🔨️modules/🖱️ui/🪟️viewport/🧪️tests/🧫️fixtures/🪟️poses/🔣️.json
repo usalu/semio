@@ -1,0 +1,331 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "canvas identity",
+      "dimension": "2d",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "valid": true
+    },
+    {
+      "name": "canvas panned and zoomed",
+      "dimension": "2d",
+      "value": {
+        "x": 12.5,
+        "y": -6.5,
+        "zoom": 3.5
+      },
+      "valid": true
+    },
+    {
+      "name": "canvas zero zoom",
+      "dimension": "2d",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "zoom": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "canvas negative zoom",
+      "dimension": "2d",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "zoom": -1
+      },
+      "valid": false
+    },
+    {
+      "name": "canvas missing y",
+      "dimension": "2d",
+      "value": {
+        "x": 0,
+        "zoom": 1
+      },
+      "valid": false
+    },
+    {
+      "name": "canvas foreign locale",
+      "dimension": "2d",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1,
+        "locale": "de"
+      },
+      "valid": false
+    },
+    {
+      "name": "canvas scalar string",
+      "dimension": "2d",
+      "value": {
+        "x": "0",
+        "y": 0,
+        "zoom": 1
+      },
+      "valid": false
+    },
+    {
+      "name": "canvas positional record",
+      "dimension": "2d",
+      "value": [
+        0,
+        0,
+        1
+      ],
+      "valid": false
+    },
+    {
+      "name": "orbit renderer gesture",
+      "dimension": "3d",
+      "value": {
+        "position": [
+          8,
+          -3,
+          5
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 1.25
+      },
+      "valid": true
+    },
+    {
+      "name": "orbit explicit up",
+      "dimension": "3d",
+      "value": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          3,
+          2,
+          1
+        ],
+        "zoom": 0.5,
+        "up": [
+          0,
+          0,
+          1
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "orbit opaque camera",
+      "dimension": "3d",
+      "value": {
+        "json": "{}"
+      },
+      "valid": false
+    },
+    {
+      "name": "orbit json string",
+      "dimension": "3d",
+      "value": "{\"position\":[8,-3,5],\"target\":[0,0,0],\"zoom\":1.25}",
+      "valid": false
+    },
+    {
+      "name": "orbit positional record",
+      "dimension": "3d",
+      "value": [
+        [
+          8,
+          -3,
+          5
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        1.25
+      ],
+      "valid": false
+    },
+    {
+      "name": "orbit short position",
+      "dimension": "3d",
+      "value": {
+        "position": [
+          8,
+          -3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 1.25
+      },
+      "valid": false
+    },
+    {
+      "name": "orbit long target",
+      "dimension": "3d",
+      "value": {
+        "position": [
+          8,
+          -3,
+          5
+        ],
+        "target": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "zoom": 1.25
+      },
+      "valid": false
+    },
+    {
+      "name": "orbit missing zoom",
+      "dimension": "3d",
+      "value": {
+        "position": [
+          8,
+          -3,
+          5
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "orbit zero zoom",
+      "dimension": "3d",
+      "value": {
+        "position": [
+          8,
+          -3,
+          5
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "orbit projection mixed into pose",
+      "dimension": "3d",
+      "value": {
+        "position": [
+          8,
+          -3,
+          5
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 1.25,
+        "projection": "orthographic"
+      },
+      "valid": false
+    },
+    {
+      "name": "orbit null up",
+      "dimension": "3d",
+      "value": {
+        "position": [
+          8,
+          -3,
+          5
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 1.25,
+        "up": null
+      },
+      "valid": false
+    },
+    {
+      "name": "orbit invalid up coordinate",
+      "dimension": "3d",
+      "value": {
+        "position": [
+          8,
+          -3,
+          5
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 1.25,
+        "up": [
+          0,
+          "0",
+          1
+        ]
+      },
+      "valid": false
+    }
+  ],
+  "windowIsolation": {
+    "left": {
+      "position": [
+        8,
+        -3,
+        5
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "zoom": 1.25
+    },
+    "right": {
+      "position": [
+        1,
+        2,
+        3
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "zoom": 2
+    },
+    "replacement": {
+      "position": [
+        -8,
+        4,
+        6
+      ],
+      "target": [
+        1,
+        1,
+        1
+      ],
+      "zoom": 0.75
+    }
+  }
+}

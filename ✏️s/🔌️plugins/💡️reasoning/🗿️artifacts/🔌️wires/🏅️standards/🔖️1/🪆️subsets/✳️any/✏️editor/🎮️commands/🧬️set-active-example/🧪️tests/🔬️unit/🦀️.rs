@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::wires::testkit::{dispatch, metabolism_app, new_app};
+use crate::editor::wires::unit_tests::context::{dispatch, metabolism_app, new_app};
 use crate::editor::wires::WiresCommand;
 use crate::schema::fixture_nodes;
 

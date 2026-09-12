@@ -7,21 +7,48 @@
   "required": [],
   "properties": {
     "artifact": {
-      "title": "CurationArtifact",
-      "type": "object",
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/s/sourcing/curation/artifact.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "catalog": {
-      "type": "object",
+      "anyOf": [
+        {
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/kit"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio.kit"
+      "x-semio-child": "s.stdio.semio"
     },
     "stockExtra": {
-      "$ref": "#/$defs/CurationStockExtraDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CurationStockExtraDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "curated": {
-      "$ref": "#/$defs/CurationCuratedDelta",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CurationCuratedDelta"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     }
   },
@@ -67,10 +94,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -116,10 +150,17 @@
           }
         },
         "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -135,8 +176,16 @@
           "type": "string"
         },
         "count": {
-          "type": "integer",
-          "format": "uint32"
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     }

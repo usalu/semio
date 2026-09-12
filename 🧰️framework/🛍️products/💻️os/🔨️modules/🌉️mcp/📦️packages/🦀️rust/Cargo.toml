@@ -23,7 +23,7 @@ doctest = false
 
 [[bin]]
 name = "semio-os-mcp"
-path = "../../🚀️bin.rs"
+path = "../../🏗️bootstrap/🦀️.rs"
 
 [dependencies]
 # 🔀️ O1 (drop dyn dispatch, dedyn-fw-os-misc): `#[dyn_enum]`/`dyn_enum_close!` — closes

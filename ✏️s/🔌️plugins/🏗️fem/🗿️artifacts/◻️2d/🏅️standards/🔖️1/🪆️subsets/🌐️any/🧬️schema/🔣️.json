@@ -78,30 +78,6 @@
     }
   },
   "$defs": {
-    "FemCamera": {
-      "title": "FemCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
     "FemAnalysisSettings": {
       "title": "FemAnalysisSettings",
       "type": "object",

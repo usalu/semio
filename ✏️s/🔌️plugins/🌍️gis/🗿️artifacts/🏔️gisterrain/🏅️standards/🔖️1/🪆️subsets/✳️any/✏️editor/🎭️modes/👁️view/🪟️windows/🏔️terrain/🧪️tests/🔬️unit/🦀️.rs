@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::gis3d::testkit::{app, close, render as render_body};
+use crate::editor::gis3d::unit_tests::context::{app, close, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_the_world_3d_terrain_scene() {

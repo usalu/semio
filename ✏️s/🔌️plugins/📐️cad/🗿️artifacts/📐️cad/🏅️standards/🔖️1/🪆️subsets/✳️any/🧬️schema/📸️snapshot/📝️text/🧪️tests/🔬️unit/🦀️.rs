@@ -1,5 +1,5 @@
 use super::*;
-use crate::testkit::sample_scene;
+use crate::sample_scene_fixture::sample_scene;
 
 /// 🧪️ `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` predates this wave's snapshot-schema
 /// rewrite (`schema=`/`shapeModel=`/… lines replace the old `objects=`/`shapeGeometry=` shape)

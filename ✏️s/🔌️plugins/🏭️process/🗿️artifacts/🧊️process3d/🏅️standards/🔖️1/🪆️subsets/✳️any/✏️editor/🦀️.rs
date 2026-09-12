@@ -1377,11 +1377,11 @@ impl ArtifactEditor for Process3dPlayApp {
         Some(crate::spr::process3d_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::spr::process3d_document_store_owners())
     }
 
-    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
 
@@ -2014,16 +2014,11 @@ pub fn catalog_machine(contributions_json: &str, catalog_id: &str, machine_id: &
 }
 //#endregion 🔧️Behavior
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
 /// able to drive the whole app without re-deriving the harness.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
-#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests
+

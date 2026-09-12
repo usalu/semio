@@ -1,8 +1,8 @@
 // #region 🧲️Header
-// 💻️ .storybook/puzzle-3d-5d-infinite.spec.ts
+// 💻️ ✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧊️storybook-spatial/🟦️.ts
 // Specs: End-to-end smoke + light-interaction checks for the `puzzle/3d`, `puzzle/5d`, and `infinite` Storybook scopes' new real-fixture stories, plus `puzzle/2d`'s `Fixtures.stories.tsx`.
-// Summary: Every story gets the same base assertion as `./puzzle-2d.spec.ts`'s `expectBoardStory` (page loads, no page/console errors, `#storybook-root` mounts) via `expectStoryLoads`; a handful of stories get an additional readout/interaction assertion (fixture counts via each story's `data-testid` debug `<pre>`, the puzzle-5d timeline scrub, the mock GraphWasmCanvas pointer counter, ReferenceMedia's per-file load status).
-// NOTE for whoever wires this into CI: this file is not yet listed in `playwright.config.ts`'s `testMatch` (currently hardcoded to `["puzzle-2d.spec.ts"]`) nor in `script.ts`'s `test storybook` pipeline — both are shared files outside this ticket's edit scope. Run directly with `bunx playwright test .storybook/puzzle-3d-5d-infinite.spec.ts --config .storybook/playwright.config.ts` against a running (or `storybook-static`-served) build with every scope active (`STORYBOOK_SCOPE` unset, or including `puzzle/3d,puzzle/5d,puzzle/2d,infinite`).
+// Summary: Every story gets the same base assertion as the sibling 2D Storybook case's `expectBoardStory` (page loads, no page/console errors, `#storybook-root` mounts) via `expectStoryLoads`; a handful of stories get an additional readout/interaction assertion (fixture counts via each story's `data-testid` debug `<pre>`, the puzzle-5d timeline scrub, the mock GraphWasmCanvas pointer counter, ReferenceMedia's per-file load status).
+// Summary: The registered Storybook browser runner includes this case and exercises it against a built Storybook with the puzzle and infinite scopes active.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
@@ -12,7 +12,7 @@ function significantConsoleErrors(messages: string[]): string[] {
   return messages.filter((text) => !/Failed to load resource:.*\b40[0-9]\b/i.test(text));
 }
 
-/** @emoji 🧪️ Base assertion shared by every story in this file — mirrors `./puzzle-2d.spec.ts`'s `expectBoardStory` minus the board-specific canvas lookup. */
+/** @emoji 🧪️ Base assertion shared by every story in this file, minus the 2D board-specific canvas lookup. */
 async function expectStoryLoads(page: Page, storyId: string): Promise<void> {
   const pageErrors: Error[] = [];
   const consoleErrors: string[] = [];

@@ -1,0 +1,16 @@
+syntax = "proto3";
+import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🛰️.proto";
+package semio.window.remodel.remodeling.model;
+
+message RemodelingLayerVisibility {
+  bool mesh = 1;
+  bool dense = 2;
+  bool sparse = 3;
+  bool cameras = 4;
+  bool gcps = 5;
+}
+
+message RemodelingModelWindowConfig {
+  semio.framework.ui.viewport.Viewport3dOrbit camera = 1;
+  RemodelingLayerVisibility layers = 2;
+}

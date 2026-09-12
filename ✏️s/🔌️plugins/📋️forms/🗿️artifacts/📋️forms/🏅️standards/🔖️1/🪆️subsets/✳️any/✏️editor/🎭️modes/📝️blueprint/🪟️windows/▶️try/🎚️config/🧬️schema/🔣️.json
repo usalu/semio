@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/forms/try-window-config.json",
+  "title": "FormsTryWindowConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["currentStepIndex"],
+  "properties": {
+    "currentStepIndex": { "type": "integer", "minimum": 0, "x-semio-state": "window-config" }
+  }
+}

@@ -121,6 +121,7 @@ semio-s-artifact-norm-iso16757 = { workspace = true }
 semio-s-artifact-norm-vdi3805 = { workspace = true }
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }
 semio-s-artifact-norm-contract = { workspace = true }
 serde = { workspace = true }

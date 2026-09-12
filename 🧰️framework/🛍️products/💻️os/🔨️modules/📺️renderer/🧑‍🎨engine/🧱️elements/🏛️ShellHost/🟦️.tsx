@@ -155,10 +155,12 @@ import {
   buildRemoteBackboneUri,
   decodeBackboneMessage,
   decodeBackboneWorkerResponse,
+  decodeDocumentArchiveBytes,
   decodePackValue,
   BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
-  BACKBONE_SNAPSHOT_MAXIMUM_BYTES,
+  DOCUMENT_ARCHIVE_MAXIMUM_BYTES,
   encodeBackboneWorkerRequest,
+  encodeDocumentArchiveBytes,
   encodeMutationEnvelopesPack,
   encodePackValue,
   FRAMEWORK_SYNC_CONTROLLER_ID,
@@ -174,6 +176,7 @@ import {
   type DirectorySpaceAdministrationPageV1,
   parseDirectorySpaceAdministrationPageV1,
   type DocumentScope,
+  type DocumentArchivePack,
   type ArtifactFrontier,
   type DirectoryStreamMessage,
   documentRuntimeKeyV1,
@@ -210,7 +213,7 @@ let localBrowserBrokerProof = (() => {
  * `🟦️glue.backbone-worker.ts` shim and the export entry), so this import goes straight to the
  * owner-root file by the same relative path the `new Worker(new URL(...))` call below already uses.
  * Never redefined here. */
-import { IDENTITY_CONFIG_SCHEMA, identityActorConfig, foldIdentityEvent } from "../../../../../🧵️backbone-worker.ts";
+import { IDENTITY_CONFIG_SCHEMA, identityActorConfig, foldIdentityEvent } from "../../../../🏪️store/👷️worker/🟦️.ts";
 /** 🪪️ Self-contained identity facet (see that file's header doc for why it isn't re-exported through
  * `🎚️config/🧬️schema/**`) — `Identity`/mutation vocabulary, never redeclared here. */
 import {
@@ -390,6 +393,7 @@ import {
   selectQuarantinedConflicts,
   ShellFaultBoundary,
   shellReducer,
+  shouldAutoStartIntroduction,
   shouldPersistIntroductionSeen,
   shouldReplayIntroductionOnLoad,
   type SpacePanelState,
@@ -594,7 +598,7 @@ import {
   ShellRouteNotFoundPage,
   useNamedLayoutHost,
 } from "../📌️ChromePanels/🟦️.tsx";
-import { PluginBootShardLostError, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, leftoverBrushPreviewWindowHash, leftoverBrushPreviewRefreshScope, leftoverBrushPreviewRefreshReady, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
+import { onPluginInstancesLost, PluginBootShardLostError, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, leftoverBrushPreviewWindowHash, leftoverBrushPreviewRefreshScope, leftoverBrushPreviewRefreshReady, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
 import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { BrowserActorActionMailboxV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
@@ -602,11 +606,11 @@ import { publishBrowserActorHostEffectsV1 } from "../../../../🔌️plugin/🌐
 import { InferencePortOpeningMailboxV1 } from "../../../../💡️inference/🚪️opening/🟦️.ts";
 import { isShardLostError } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { type WindowFault, type WindowFaultClass, windowFaultFromError } from "./🩺️fault/🟦️.ts";
-import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
+import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { BootstrapStatusNotice, ExecutionTargetStatusNotice, GisMapInferenceRequestControl, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🪪️host-bootstrap/🟦️.tsx";
-import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1, type ArtifactCreationProgressUiStateV1 } from "./🌱️artifact-creation/🏦️.tsx";
+import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1, type ArtifactCreationProgressUiStateV1 } from "./🌱️artifact-creation/🟦️.tsx";
 import {
   DirectoryBootstrapStatusNotice,
   applyDirectoryEventPageBootstrapV1,
@@ -1167,7 +1171,7 @@ function readViteSEnv(name: "VITE_S_HUB_URL" | "VITE_S_DATA_DIR"): string | unde
 }
 
 /** 🪪️ One `MutationEnvelope` wrapping an {@link IdentityConfigMutation} — mirrors the exact shape the
- * in-source `foldIdentityEvent` tests build (`🧵️backbone-worker.ts`'s `🔖️DirectoryLaneTests`/identity
+ * in-source `foldIdentityEvent` tests build (`🏪️store/👷️worker/🟦️.ts`'s `🔖️DirectoryLaneTests`/identity
  * fold vectors), since this facet's diff is whole-record (never merged) and has no history/undo chrome
  * wired to it this wave (no real inverse chain needed beyond a structurally valid envelope). */
 function identityMutationEnvelope(actor: string, mutation: IdentityConfigMutation, base: Identity | null): MutationEnvelope {
@@ -1679,6 +1683,11 @@ function captureExtensionCompletion(requestingPlugin: LoadedProgramState, instan
   return completion;
 }
 
+/** 🚑️ The typed fault an extension request carries when its callee's WORKER was taken down (the host
+ * watchdog, or a crash) rather than the guest refusing. Retryable by construction: the shard is
+ * rebuilt before this is even raised, so re-issuing the identical request is the correct response. */
+export const EXTENSION_WORKER_LOST_FAULT = "extension.worker-lost";
+
 async function runCapturedExtensionEffect(
   completion: PluginExtensionCompletion,
   extensionEntry: LoadedProgramState | undefined,
@@ -1722,7 +1731,16 @@ async function runCapturedExtensionEffect(
     outcome = { ok: encodePackValue(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw))) };
   } catch (error) {
     completion.assertActive();
-    const fault: Fault = error instanceof SemioFaultError ? error.fault : {
+    // 🚑️ A worker the host's own watchdog took down is NOT an anonymous invocation failure: it is a
+    // recoverable, retryable loss of the callee, and the requester's surface must be able to say so
+    // (`flow.extension-evaluate-failed` carries `faultCode` straight into the preview status). Naming
+    // it `extension.invoke-failed` alongside a genuine guest refusal left the surface unable to
+    // distinguish "the geometry kernel refused this" from "the geometry kernel's worker died"
+    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`).
+    const fault: Fault = error instanceof SemioFaultError ? error.fault : isShardLostError(error) ? {
+      origin: "os", code: EXTENSION_WORKER_LOST_FAULT, severity: "error", message: error instanceof Error ? error.message : String(error),
+      scope: { pluginId: extensionId, instanceId: String(instanceId) }, retryable: true,
+    } : {
       origin: "os", code: "extension.invoke-failed", severity: "error", message: error instanceof Error ? error.message : String(error),
       scope: { pluginId: extensionId, instanceId: String(instanceId) }, retryable: false,
     };
@@ -1956,15 +1974,12 @@ function FrameworkOsShellInner({
   };
   const forceReloadLiveUiStoresV1 = (cache: Map<string, { hash?: string; value?: unknown }>) => {
     const storeCache = builtNodeStoreCacheRef.current;
-    const keys: string[] = [];
     for (const [key, entry] of cache) {
       if (!entry?.value) continue;
       if (!key.startsWith("window:") && !key.startsWith("panel:")) continue;
       storeCache.forceReload(key, entry.value as BuiltNode);
-      keys.push(key);
     }
     storeCache.flushPendingReloads();
-    console.warn("[DEBUG] leftover forceReload", JSON.stringify({ keys }));
   };
   const leftoverBrushHoverKeyRef = useRef<string | null>(null);
   const leftoverBrushTickSettledRef = useRef(false);
@@ -2013,7 +2028,6 @@ function FrameworkOsShellInner({
       leftoverInspectionEpochRef.current += 1;
       setLeftoverInspectionEpoch(leftoverInspectionEpochRef.current);
     }
-    console.warn("[DEBUG] leftover InteractionView", JSON.stringify({ selectedIds: overlay.ids, publishedIds: published.selectedIds, locked: published.locked, gumball: overlay.gumballActive, hoverTarget: published.hoverTarget }));
     const hoverVortex = overlay.hoveredId && (overlay.hoveredDomain === "vortex" || overlay.hoveredId.includes(":")) ? overlay.hoveredId : null;
     const utility = overlay.activeUtility ?? priorLeftover?.activeUtility;
     armLeftoverBrushPreview(utility, hoverVortex, published.brushPreviewJson);
@@ -2288,7 +2302,7 @@ function FrameworkOsShellInner({
   const sessionRefreshRef = useRef<DirectorySessionRefreshV1 | null>(null);
   /** 🪪️ REST-only client for the identity boot handshake (`me`/`mintSession`) — distinct from the
    * directory-lane's persistent `/directory/socket/v1` subscription, which the shell never opens itself (§C6:
-   * `🧵️backbone-worker.ts`'s `🔖️Directory` region is the only socket owner). Re-created only if the
+   * `🏪️store/👷️worker/🟦️.ts`'s `🔖️Directory` region is the only socket owner). Re-created only if the
    * hub base url or token actually changes. */
   const localBrowserBrokerRef = useRef<BrowserBrokerPortClientV1 | null>(null);
   const hubEnv = useMemo(() => {
@@ -2354,7 +2368,8 @@ function FrameworkOsShellInner({
     port: ActorDocumentMessagePortV1 | null;
     pending: Uint8Array[];
     pendingBytes: number;
-    replacements: LatestDocumentReplacementV1<Readonly<{ pack: Uint8Array; spr: Uint8Array }>>;
+    replacements: LatestDocumentReplacementV1<DocumentArchivePack>;
+    archivePersistence: () => Promise<void>;
     creationMount: ArtifactCreationCatalogMountV1 | null;
     ready: Promise<void>;
     resolveReady(): void;
@@ -2453,7 +2468,7 @@ function FrameworkOsShellInner({
   const [inferenceHistoryByRuntimeKey, setInferenceHistoryByRuntimeKey] = useState<Readonly<Record<string, MountedInferenceHistoryV1>>>({});
   const inferenceHistoryByRuntimeKeyRef = useRef<Readonly<Record<string, MountedInferenceHistoryV1>>>({});
   inferenceHistoryByRuntimeKeyRef.current = inferenceHistoryByRuntimeKey;
-  /** 🪪️ Settled once by the identity bootstrap effect's very first `snapshotReplaced` for
+  /** 🪪️ Settled once by the identity bootstrap effect's very first `documentArchiveReplaced` for
    * `IDENTITY_CONFIG_SCHEMA` (a previously-persisted session) — see that effect for the bounded
    * timeout that resolves it to `null` when no such file exists (never blocks the UI thread). */
   const identitySnapshotResolverRef = useRef<((value: Identity | null) => void) | null>(null);
@@ -2516,6 +2531,7 @@ function FrameworkOsShellInner({
         if (!current() || backboneWorkerRef.current !== worker) return;
         if (documentBackboneEffectV1(message) === "remote-ingest-receipt") return;
         worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "documentBackbone", message } }) });
+        void entry.archivePersistence().catch(error => failDocumentBackbone(runtimeKey, entry, error));
       },
       merge: (conflicts, report) => { if (current()) applyRemoteMergeRef.current(conflicts, report); },
       prepared: port => {
@@ -2545,17 +2561,18 @@ function FrameworkOsShellInner({
     }
     if (current()) entry.resolveReady();
   }, [receiveDocumentBackbone]);
-  const loadDocumentPair = useCallback(async (plugin: PluginWasmHandle, instanceId: number, pack: Uint8Array, spr: Uint8Array, current: () => boolean): Promise<boolean> => {
-    if (pack.length + spr.length > BACKBONE_SNAPSHOT_MAXIMUM_BYTES) throw new Error("document-backbone.snapshot-capacity");
-    if (!plugin.loadAppDocumentPack) throw new Error("document-backbone.loader-unavailable");
-    const load = plugin.loadAppDocumentPack;
+  const loadDocumentArchive = useCallback(async (plugin: PluginWasmHandle, instanceId: number, archive: DocumentArchivePack, current: () => boolean): Promise<boolean> => {
+    const archiveBytes = encodeDocumentArchiveBytes(archive);
+    if (archiveBytes.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("document-backbone.archive-capacity");
+    if (!plugin.loadAppDocumentArchive) throw new Error("document-backbone.archive-loader-unavailable");
+    const load = plugin.loadAppDocumentArchive;
     const owned = [...openDocumentSessionsRef.current].find(([, entry]) => entry.plugin === plugin && entry.session.instanceId === instanceId);
     const lane = documentAttachmentLane(plugin, instanceId);
     if (owned === undefined) {
       const owner = `cold:${crypto.randomUUID()}`;
       const unbound = () => current() && ![...openDocumentSessionsRef.current.values()].some(entry => entry.plugin === plugin && entry.session.instanceId === instanceId);
       let loaded = false;
-      try { await lane.replace(owner, unbound, async () => { if (unbound()) { await load(instanceId, pack, spr); loaded = unbound(); } }); }
+      try { await lane.replace(owner, unbound, async () => { if (unbound()) { await load(instanceId, archive); loaded = unbound(); } }); }
       finally { await lane.close(owner); }
       return loaded;
     }
@@ -2563,16 +2580,18 @@ function FrameworkOsShellInner({
     const retirement = entry.port?.retire();
     void retirement?.catch(() => {});
     entry.port = null;
-    return entry.replacements.replace({ pack, spr }, async (pair, latest) => {
+    return entry.replacements.replace(archive, async (candidate, latest) => {
       const exact = () => latest() && current() && openDocumentSessionsRef.current.get(runtimeKey) === entry;
       await lane.replace(entry.clientInstanceId, exact, async () => {
         await retirement;
         if (!exact()) return;
-        await load(instanceId, pair.pack, pair.spr);
+        await load(instanceId, candidate);
         if (exact()) await bindDocumentBackbone(runtimeKey, entry, latest);
       });
     });
   }, [bindDocumentBackbone, documentAttachmentLane]);
+  const loadDocumentPair = useCallback(async (plugin: PluginWasmHandle, instanceId: number, pack: Uint8Array, spr: Uint8Array, current: () => boolean): Promise<boolean> =>
+    loadDocumentArchive(plugin, instanceId, { parent_pack: Array.from(pack), parent_spr: Array.from(spr), members: [] }, current), [loadDocumentArchive]);
   const captureDialogOrigin = useCallback((target: ActiveSession | null): ShellDialogOriginV1 | null =>
     shellDialogOriginV1(target, [...openDocumentSessionsRef.current].map(([runtimeKey, entry]) => ({ runtimeKey, ...entry }))), []);
   const isCurrentDialogOrigin = useCallback((origin: ShellDialogOriginV1 | null): boolean =>
@@ -2649,7 +2668,7 @@ function FrameworkOsShellInner({
 
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
-    const worker = new Worker(new URL("../../../../../🧵️backbone-worker.ts", import.meta.url), { type: "module" });
+    const worker = new Worker(new URL("../../../../🏪️store/👷️worker/🟦️.ts", import.meta.url), { type: "module" });
     const brokerChannel = new MessageChannel();
     worker.postMessage({ kind: "semio-browser-broker-port", port: brokerChannel.port2 }, [brokerChannel.port2]);
     localBrowserBrokerRef.current = new BrowserBrokerPortClientV1(brokerChannel.port1, localBrowserBrokerProof);
@@ -2973,14 +2992,15 @@ function FrameworkOsShellInner({
       // 🪪️ §C3 identity facet — opened directly (never through `openDocument`, so it never gets an
       // `openDocumentSessionsRef` entry: it has no plugin/session, only the shell itself). Routed here,
       // ahead of the `!entry` early return below, which would otherwise silently drop every one of its
-      // events. `snapshotReplaced` (whole-record pack, the folder read-back) resolves the bootstrap
+      // events. `documentArchiveReplaced` (whole-record archive, the folder read-back) resolves the bootstrap
       // effect's one-shot wait; `remoteMutations` (another tab's sign-in/out, echoed over this
       // document's `BroadcastChannel`) folds via {@link foldIdentityEvent} like `OpeningPreferences`.
       if (message.kind === "event" && message.documentId === IDENTITY_CONFIG_SCHEMA) {
         if (identityClientInstanceIdRef.current !== message.clientInstanceId) return;
         const identityEvent = message.event;
-        if (identityEvent.kind === "snapshotReplaced") {
-          const decoded = decodeIdentityPayload(decodePackValue(new Uint8Array(identityEvent.pack)));
+        if (identityEvent.kind === "documentArchiveReplaced") {
+          const archive = decodeDocumentArchiveBytes(new Uint8Array(identityEvent.archive));
+          const decoded = decodeIdentityPayload(decodePackValue(new Uint8Array(archive.parent_pack)));
           if (decoded !== undefined) {
             if (verifiedSessionAuthorityRef.current === null) setIdentity(decoded);
             identitySnapshotResolverRef.current?.(decoded);
@@ -3008,16 +3028,12 @@ function FrameworkOsShellInner({
         });
       } else if (event.kind === "documentBackbone") {
         receiveDocumentBackbone(runtimeKey, entry, event.message);
-      } else if (event.kind === "snapshotReplaced") {
-        if (event.pack.length + event.spr.length > BACKBONE_SNAPSHOT_MAXIMUM_BYTES) {
-          failDocumentBackbone(runtimeKey, entry, new Error("document-backbone.snapshot-capacity"));
-          return;
-        }
-        const packBytes = new Uint8Array(event.pack);
-        const sprBytes = new Uint8Array(event.spr);
+      } else if (event.kind === "documentArchiveReplaced") {
+        const archiveBytes = new Uint8Array(event.archive);
         void (async () => {
           try {
-            if (!await loadDocumentPair(entry.plugin, entry.session.instanceId, packBytes, sprBytes, () => openDocumentSessionsRef.current.get(runtimeKey) === entry)) return;
+            const archive = decodeDocumentArchiveBytes(archiveBytes);
+            if (!await loadDocumentArchive(entry.plugin, entry.session.instanceId, archive, () => openDocumentSessionsRef.current.get(runtimeKey) === entry)) return;
             if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
             const discarded = rebootstrapDiscardedSessionsRef.current.get(runtimeKey);
             if (discarded) {
@@ -3062,7 +3078,7 @@ function FrameworkOsShellInner({
     worker.addEventListener("messageerror", failBrowserActorActions);
     backboneWorkerRef.current = worker;
     return worker;
-  }, [cancelSpaceArtifactCreationsForRuntime, captureDialogOrigin, failDocumentBackbone, hubEnv, loadDocumentPair, receiveDocumentBackbone, retireBrowserActorUi]);
+  }, [cancelSpaceArtifactCreationsForRuntime, captureDialogOrigin, failDocumentBackbone, hubEnv, loadDocumentArchive, receiveDocumentBackbone, retireBrowserActorUi]);
 
   handleDirectoryEventPageRef.current = (message) => {
     const owner = directoryHomeOwnerRef.current;
@@ -3224,9 +3240,9 @@ function FrameworkOsShellInner({
       // any prior state for the same id first).
       worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, ...identityConfig }) });
       // 📇️ terra-web-shellhost (finding 3) — event-driven wait for a previously-persisted identity's
-      // `snapshotReplaced`, raced against a 2s `AbortSignal.timeout` instead of an unconditional fixed
-      // `setTimeout`: a 404/no-file-yet folder read never emits a `snapshotReplaced` at all (see
-      // `pollFolderOnce`'s doc in `🧵️backbone-worker.ts`), so the timeout branch is still the only way
+      // `documentArchiveReplaced`, raced against a 2s `AbortSignal.timeout` instead of an unconditional fixed
+      // `setTimeout`: a 404/no-file-yet folder read never emits a `documentArchiveReplaced` at all (see
+      // `pollFolderOnce`'s doc in `🏪️store/👷️worker/🟦️.ts`), so the timeout branch is still the only way
       // a session with no persisted identity ever proceeds — but a REAL event now resolves as soon as
       // it arrives instead of always paying the full 2s. `identityWaitAbort` folds into the same raced
       // signal so an unmount tears the subscription down immediately (this effect's own cleanup below)
@@ -3275,7 +3291,8 @@ function FrameworkOsShellInner({
           const envelope = identityMutationEnvelope(shellActorIdRef.current, signIn(resolved), cachedIdentity);
           cachedIdentity = resolved;
           worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } }) });
-          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localSnapshot", pack: Array.from(encodePackValue(resolved)), spr: [] } }) });
+          const archive = encodeDocumentArchiveBytes({ parent_pack: Array.from(encodePackValue(resolved)), parent_spr: [], members: [] });
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localDocumentArchive", archive: Array.from(archive) } }) });
         },
         onUnavailable: () => {
           if (!ownerIsCurrent()) return;
@@ -3484,6 +3501,37 @@ function FrameworkOsShellInner({
     [establishPrimarySession],
   );
 
+  /** 🚑️ A LIVE session whose worker was taken down is recoverable exactly the way a killed boot is:
+   * `ShardClient.rebuild` has already replaced the worker and `PluginRuntime` has already retired the
+   * dead instance's bookkeeping (see `onPluginInstancesLost`), so a fresh `createApp` on the rebuilt
+   * shard re-opens the document and the session continues.
+   *
+   * Without this the shard restore brought the ACTOR back and nothing else: the guest returned empty,
+   * every later command page failed its liveness check with `plugin.command-page-invalid`, and the
+   * session was dead until the user reloaded — measured on 2026-09-12 after a 16 s `brep.bool.cut`
+   * tripped the watchdog (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+   * `📓️extension-evaluate-budget-2026-09-12.md`).
+   *
+   * If the rebuild ALSO fails there is nothing left to try in-page, so the shell says so in the
+   * user's own language rather than leaving a session that answers nothing. */
+  useEffect(() => {
+    return onPluginInstancesLost((_shardIndex, lost) => {
+      const session = sessionRef.current;
+      if (!session) return;
+      const ours = lost.find((entry) => entry.pluginId === session.pluginId && entry.instanceId === session.instanceId);
+      if (!ours) return;
+      const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === ours.pluginId)?.handle;
+      if (!handle) {
+        dispatch({ type: "SET_ERROR", value: shellLabel("ui.common.workerLost") });
+        return;
+      }
+      void establishPrimaryWithShardRetry(handle).catch((error: unknown) => {
+        console.error(`ShellHost: could not re-establish ${ours.pluginId} after a worker loss`, error);
+        dispatch({ type: "SET_ERROR", value: shellLabel("ui.common.workerLost") });
+      });
+    });
+  }, [establishPrimaryWithShardRetry]);
+
   /** 🔌️ Installs a registry entry that isn't loaded yet: acquires its module (worker-backed, refcounted
    * — see `acquirePluginModule`), upserts it into `loadedPlugins`, and — if this is the primary plugin
    * and no session exists yet — establishes the session. Shared by the boot effect (primary plugin
@@ -3637,7 +3685,7 @@ function FrameworkOsShellInner({
         // faulted) is a leak to report, never a reason to destroy the successor
         // (ticket 26/09/02 wave B17).
         if (committed) {
-          console.warn(`[DEBUG] hot-swap ${pluginId} retained its committed handle; predecessor retirement failed`, error);
+          console.warn(`hot-swap ${pluginId} retained its committed handle; predecessor retirement failed`, error);
           dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: ownsSession ? "running" : "loaded" });
         } else {
           console.warn(`[DEBUG] hot-swap rolled back for ${pluginId}`, error);
@@ -3981,6 +4029,11 @@ function FrameworkOsShellInner({
   const persistIntroductionSeen = shouldPersistIntroductionSeen(brand);
   const activeIntroductionRef = useRef(activeIntroduction);
   activeIntroductionRef.current = activeIntroduction;
+  /** 🎓️ App ids whose tour this shell session has already offered AND had answered (Skip or Done) — the
+   * session-durable half of {@link shouldAutoStartIntroduction}, see its own reasoning for why the
+   * device-local seen flag alone cannot carry this. Lives for the shell mount, exactly the lifetime of
+   * "this session", so a `replayIntroductionOnLoad` brand still replays on the next load. */
+  const dismissedIntroductionAppIdsRef = useRef<Set<string>>(new Set());
 
   // 🎓️ Auto-starts an app's introduction the first time it launches on this device (or every load when
   // the brand opts in); replaying stays available afterward via the shell-owned Introduce App command.
@@ -3988,7 +4041,7 @@ function FrameworkOsShellInner({
   // just below (the TutorialOrchestration block's state resolution); read via `shellState.tutorial`
   // directly here rather than the not-yet-declared local to avoid a definition-order dependency.
   useEffect(() => {
-    if (!session || !activeIntroduction || shellState.tutorial.activeTutorialId != null) return;
+    if (!session) return;
     if (typeof window !== "undefined" && window.self !== window.top) return;
     // Embedded multi-shell hosts (demonstrator grid) pass suppressAutoIntroduction while a pane is
     // backgrounded. That must both block auto-start AND tear down an already-running tour — otherwise the
@@ -3998,7 +4051,16 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
       return;
     }
-    if (!replayIntroductionOnLoad && readStoredIntroductionSeen(scope.storage, introductionSeenKey)) return;
+    const armable = shouldAutoStartIntroduction({
+      appId: session.app.id,
+      hasIntroduction: activeIntroduction != null,
+      tutorialActive: shellState.tutorial.activeTutorialId != null,
+      suppressed: suppressAutoIntroduction,
+      replayOnLoad: replayIntroductionOnLoad,
+      seenOnDevice: readStoredIntroductionSeen(scope.storage, introductionSeenKey),
+      dismissedAppIds: dismissedIntroductionAppIdsRef.current,
+    });
+    if (!armable) return;
     dispatch({ type: "AUTO_START_INTRODUCTION", key: introductionSeenKey });
   }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad, shellState.tutorial.activeTutorialId, suppressAutoIntroduction]);
 
@@ -4111,12 +4173,15 @@ function FrameworkOsShellInner({
     if (plugin) observeLocalInteraction({ plugin, instanceId: session.instanceId });
   }, [loadedPlugins, observeLocalInteraction, session?.instanceId, session?.pluginId]);
 
-  /** 🎓️ Ends the active introduction — persists the seen flag when configured, and on successful
-   * completion (Done / last interaction) fires the tour-finale {@link celebrateAllElements} stamp
-   * across every mounted UI element. Skip/escape passes `completed: false` and does not celebrate. */
+  /** 🎓️ Ends the active introduction — records the answer for this shell session (see
+   * {@link dismissedIntroductionAppIdsRef}), persists the device-local seen flag when configured, and on
+   * successful completion (Done / last interaction) fires the tour-finale {@link celebrateAllElements}
+   * stamp across every mounted UI element. Skip/escape passes `completed: false` and does not celebrate. */
   const dismissIntroduction = useCallback(
     (completed: boolean) => {
       if (completed && scope.rootRef.current) celebrateAllElements(CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
+      const appId = sessionRef.current?.app.id;
+      if (appId) dismissedIntroductionAppIdsRef.current.add(appId);
       dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
       if (persistIntroductionSeen) writeStoredIntroductionSeen(scope.storage, introductionSeenKey);
     },
@@ -4836,7 +4901,7 @@ function FrameworkOsShellInner({
         await runUiRefreshPassRef.current(request.session, request.scope, request.extraInstances, request.replaceBodies);
         const owedEffects = owedPassEffectsRef.current;
         owedPassEffectsRef.current = null;
-        if (owedEffects) void applyHostEffectsRef.current(owedEffects.effects, owedEffects.session, { kind: "full" }, owedEffects.owner).catch((error) => console.error("[DEBUG] refresh-owed host effects failed", error));
+        if (owedEffects) void applyHostEffectsRef.current(owedEffects.effects, owedEffects.session, { kind: "full" }, owedEffects.owner).catch((error) => console.error("refresh-owed host effects failed", error));
       },
       (owed, next) => ({ session: next.session, scope: mergeUiDirtyScopeV1(owed.scope, next.scope), extraInstances: next.extraInstances ?? owed.extraInstances, replaceBodies: owed.replaceBodies || next.replaceBodies }),
       (decision, scope, passes) => {
@@ -5050,7 +5115,7 @@ function FrameworkOsShellInner({
               const quiet = await quiesceSessionWorkV1(() => sessionWorkRef.current.pending(retiring.pluginId, retiring.instanceId));
               // ⏳️ A refusal has to name what it waited on, or the next person reading the console sees
               // only a number and cannot tell a stuck guest turn from a stuck extension round trip.
-              if (!quiet.settled) console.warn(`[DEBUG] surface-switch draining ${retiring.pluginId}#${retiring.instanceId} ${sessionWorkRef.current.outstanding(retiring.pluginId, retiring.instanceId)}`);
+              if (!quiet.settled) console.warn(`surface-switch draining ${retiring.pluginId}#${retiring.instanceId} ${sessionWorkRef.current.outstanding(retiring.pluginId, retiring.instanceId)}`);
               return quiet;
             },
             seal: (retiring) => sealedInstancesRef.current.seal(retiring.pluginId, retiring.instanceId),
@@ -5079,12 +5144,10 @@ function FrameworkOsShellInner({
               }
             },
             refresh: refreshUi,
-            trace: (step, detail) => console.warn(`[DEBUG] surface-switch ${step} ${detail}`),
           },
           { pluginId, appId, viewState },
-          (retired, retireError) => console.warn(`[DEBUG] switchToPluginApp: predecessor ${retired.pluginId}/${retired.app.id} retirement failed`, retireError),
+          (retired, retireError) => console.warn(`switchToPluginApp: predecessor ${retired.pluginId}/${retired.app.id} retirement failed`, retireError),
         );
-        console.warn(`[DEBUG] surface-switch outcome ${outcome.status} ${appId} pending=${outcome.pending}`);
         // 🚦️ `draining` and `busy` both mean "the switch did NOT happen": the predecessor kept its
         // instance and the shell kept its surface. Telling the user so is the whole difference between
         // a refusal and a silent no-op — the alternative the fixture rules out is tearing the
@@ -5327,7 +5390,7 @@ function FrameworkOsShellInner({
             // 🌊 The ASSEMBLED sink, not the File System Access stream: a segmented download must reach the
             // user as the same kind of file the inline lane produces, and `createSegmentedDownloadSink`
             // fails closed wherever `showSaveFilePicker` is absent — which turned every over-budget export
-            // into silence. Bounded by the drain's own `MAX_SEGMENTED_DOWNLOAD_BYTES` total cap.
+            // into silence. Bounded by the drain's own `SEGMENTED_DOWNLOAD_CONTRACT.maximumTotalBytes` cap.
             await drainSegmentedMediaExport(filename, mimeType, data, encodingText, (operationId) => pluginEntry.handle.takeSegmentedDownloadChunk(baseSession.instanceId, operationId), {
               signal: segmentedDownloadAbortRef.current.signal,
               sinkFactory: shellSegmentedDownloadSinkFactory,
@@ -5521,9 +5584,6 @@ function FrameworkOsShellInner({
           const pluginsNow = loadedPluginsRef.current;
           const requesterId = pluginsNow.some((entry) => entry.handle.pluginId === baseSession.pluginId) ? baseSession.pluginId : sessionRef.current?.pluginId;
           const requester = requesterId && pluginsNow.some((entry) => entry.handle.pluginId === requesterId) ? { pluginId: requesterId, instanceId: baseSession.instanceId } : baseSession;
-          if (!pluginsNow.some((entry) => entry.handle.pluginId === requester.pluginId)) {
-            console.error("[DEBUG] invokeExtension requester missing", JSON.stringify({ requested: baseSession.pluginId, instanceId: baseSession.instanceId, session: sessionRef.current?.pluginId ?? null, loaded: pluginsNow.map((entry) => entry.handle.pluginId), extensionId: effect.invokeExtension.extensionId }));
-          }
           // ⏳️ An extension round trip holds the REQUESTER's captured activation from dispatch until its
           // `Completed` frame lands, so a switch that retires the requester in between is exactly the
           // `invokeExtension dispatch failed … no actor for instance N` measured on 6018. Registering
@@ -5674,7 +5734,7 @@ function FrameworkOsShellInner({
         const owner = captureEffectOwner(target, captureDialogOrigin(target));
         if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] completion apply", JSON.stringify({ operation: completion.operation, scope: completion.uiScope, refresh, historyPatch: completion.historyPatch !== undefined, ownerCurrent: isCurrentEffectOwner(owner), sessionCurrent: shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, target), targetInstance: target.instanceId, currentInstance: shellStateRef.current.pluginRuntime.session?.instanceId }));
         if (refresh === null) return;
-        void applyHostEffects(completion.requestedEffects, target, refresh, owner).catch((error) => console.error("[DEBUG] typed-operation completion effects failed", error));
+        void applyHostEffects(completion.requestedEffects, target, refresh, owner).catch((error) => console.error("typed-operation completion effects failed", error));
       });
     } catch (error) {
       console.error("[DEBUG] typed-operation completion subscription failed", error);
@@ -5824,7 +5884,16 @@ function FrameworkOsShellInner({
       let resolveReady!: () => void, rejectReady!: (error: Error) => void;
       const ready = new Promise<void>((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
       void ready.catch(() => {});
-      const entry: OpenDocumentSession = { session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacements: new LatestDocumentReplacementV1(), creationMount, ready, resolveReady, rejectReady };
+      const persistToFolder = resolvedBindings.some((binding) => binding.kind === "folder");
+      const entry: OpenDocumentSession = { session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacements: new LatestDocumentReplacementV1(), archivePersistence: async () => {}, creationMount, ready, resolveReady, rejectReady };
+      entry.archivePersistence = latestWins(async () => {
+        if (!persistToFolder || openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
+        if (!plugin.readAppDocumentArchive) throw new Error("document-backbone.archive-reader-unavailable");
+        const archive = await plugin.readAppDocumentArchive(targetSession.instanceId);
+        if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
+        const archiveBytes = encodeDocumentArchiveBytes(archive);
+        worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "localDocumentArchive", archive: Array.from(archiveBytes) } }) });
+      });
       const parked = parkDocumentOpeningReplacementV1({ runtimeKey, plugin, instanceId: targetSession.instanceId, background: target?.background === true }, openDocumentSessionsRef.current, entry);
       if (parked === null) return null;
       const predecessorActor = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
@@ -6226,7 +6295,6 @@ function FrameworkOsShellInner({
           },
           { kind: "allWindows" },
         );
-        console.warn(`[DEBUG] setActiveTool hop leftover tool=${next ?? ""} utility=${next === "fill" ? "fill" : "select"}`);
         if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "tool" && interaction.on.id === next);
         const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
         const program = pluginEntry?.handle;
@@ -6644,9 +6712,9 @@ function FrameworkOsShellInner({
     if (!active || !tutorialRunRef.current?.ready) return;
     for (const action of tutorialInteractionSelectionActions(active.app.controllerId, selection)) onActionRef.current(action);
   }, []);
-  const tutorialRunRef = useRef<OwnedTutorialRunV1 | null>(null);
+  const tutorialRunRef = useRef<OwnedTutorialRunV1<DocumentArchivePack> | null>(null);
   const tutorialTransitionEpochRef = useRef(0);
-  const tutorialInitializingRunRef = useRef<OwnedTutorialRunV1 | null>(null);
+  const tutorialInitializingRunRef = useRef<OwnedTutorialRunV1<DocumentArchivePack> | null>(null);
   const uiBridgeCtxRef = useRef<TutorialUiBridgeContext>({
     session,
     restoreDialog: (dialogId, seedArgs) => {
@@ -6925,12 +6993,12 @@ function FrameworkOsShellInner({
         await previous?.stop().catch((error) => console.error("[DEBUG] tutorial sandbox restore failed", error));
         if (tutorialRunRef.current === previous) tutorialRunRef.current = null;
         if (epoch !== tutorialTransitionEpochRef.current || !isCurrentEffectOwner(owner)) return;
-        const run: OwnedTutorialRunV1 = new OwnedTutorialRunV1(tutorialId, origin, (): boolean => tutorialRunRef.current === run && isCurrentEffectOwner(owner), {
-          read: async () => plugin.readAppDocumentPack ? plugin.readAppDocumentPack(session.instanceId) : null,
+        const run: OwnedTutorialRunV1<DocumentArchivePack> = new OwnedTutorialRunV1(tutorialId, origin, (): boolean => tutorialRunRef.current === run && isCurrentEffectOwner(owner), {
+          read: async () => plugin.readAppDocumentArchive ? plugin.readAppDocumentArchive(session.instanceId) : null,
           drain: () => tutorialDrivenRef.current.drain(),
           restore: async (snapshot) => {
             if (!isCurrentEffectOwner(owner)) return;
-            await loadDocumentPair(plugin, session.instanceId, snapshot.pack, snapshot.spr, () => isCurrentEffectOwner(owner));
+            await loadDocumentArchive(plugin, session.instanceId, snapshot, () => isCurrentEffectOwner(owner));
             if (isCurrentEffectOwner(owner)) await refreshUi(session, { kind: "full" });
           },
         });
@@ -6939,7 +7007,7 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_TUTORIAL", value: tutorialId });
       })().catch((error) => console.error("[DEBUG] tutorial transition failed", error));
     },
-    [activeTutorials, session, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, loadDocumentPair, tutorialClock, refreshUi],
+    [activeTutorials, session, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, loadDocumentArchive, tutorialClock, refreshUi],
   );
   const stopTutorial = useCallback(() => {
     tutorialTransitionEpochRef.current += 1;
@@ -7327,14 +7395,14 @@ function FrameworkOsShellInner({
   );
   useActionHotkey(
     SURFACE_ROLE_CONTROL_IDS.editor,
-    useCallback(() => void switchToSessionRole("editor").catch((switchError) => console.error("[DEBUG] role switch to editor failed", switchError)), [switchToSessionRole]),
+    useCallback(() => void switchToSessionRole("editor").catch((switchError) => console.error("role switch to editor failed", switchError)), [switchToSessionRole]),
     { preventDefault: true },
     [switchToSessionRole],
     { overrides: uiKeybindingOverrides },
   );
   useActionHotkey(
     SURFACE_ROLE_CONTROL_IDS.viewer,
-    useCallback(() => void switchToSessionRole("viewer").catch((switchError) => console.error("[DEBUG] role switch to viewer failed", switchError)), [switchToSessionRole]),
+    useCallback(() => void switchToSessionRole("viewer").catch((switchError) => console.error("role switch to viewer failed", switchError)), [switchToSessionRole]),
     { preventDefault: true },
     [switchToSessionRole],
     { overrides: uiKeybindingOverrides },
@@ -8866,7 +8934,7 @@ function FrameworkOsShellInner({
               aria-pressed={isActive}
               disabled={surfaceSwitchBusy && !isActive}
               aria-keyshortcuts={ariaKeyshortcutsText(controlKeybindings.get(SURFACE_ROLE_CONTROL_IDS[role]))}
-              onClick={() => void switchToSessionRole(role).catch((switchError) => console.error(`[DEBUG] role switch to ${role} failed`, switchError))}
+              onClick={() => void switchToSessionRole(role).catch((switchError) => console.error(`role switch to ${role} failed`, switchError))}
               icon={SURFACE_ROLE_ICON_IDS[role]}
               text={resolveManifestLabel(app.label as LocalizedLabel | string, uiTerminology, uiLocale)}
             />
@@ -9464,7 +9532,6 @@ function FrameworkOsShellInner({
       let cancelled = false;
       const timer = window.setTimeout(() => {
         if (cancelled) return;
-        console.warn("[DEBUG] leftover Inspection refresh", JSON.stringify({ epoch: leftoverInspectionEpoch, selectedIds: leftoverIds, hashBust: inspectionHash === undefined, cached: cachedInspection?.hash ?? null, replaceBodies: true }));
         void refreshUi(currentSession, scope, undefined, true);
       }, 250);
       return () => {
@@ -9515,7 +9582,6 @@ function FrameworkOsShellInner({
           for (const key of [...uiRefreshCacheRef.current.keys()]) {
             if (key.startsWith("window:")) uiRefreshCacheRef.current.delete(key);
           }
-          console.warn("[DEBUG] leftover brushPreview refresh", JSON.stringify({ hover: liveHover, utility: live?.activeUtility ?? null, replaceBodies: true, pump: true, windowBodies }));
           await refreshUi(liveSession, liveScope, undefined, true);
         }
       } finally {

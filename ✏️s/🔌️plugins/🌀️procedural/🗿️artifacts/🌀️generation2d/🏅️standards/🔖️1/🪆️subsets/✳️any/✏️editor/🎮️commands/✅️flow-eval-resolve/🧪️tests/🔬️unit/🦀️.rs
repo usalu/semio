@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::generation2d::testkit::{empty_history_view, retire_flow_eval_session};
+use crate::editor::generation2d::unit_tests::context::{empty_history_view, retire_flow_eval_session};
 use semio_framework_artifact_flow_flow::neural::{Atom, ColdRetire, Dictionary, Value as NeuralValue};
 use semio_framework_plugin::{ArtifactView, ConfigView};
 

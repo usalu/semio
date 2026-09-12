@@ -8,7 +8,8 @@
 #![allow(async_fn_in_trait)]
 
 extern crate semio_framework_os_kernel as pack;
-pub use semio_framework_os_kernel::os_pack::testkit as pack_testkit;
+#[cfg(test)]
+pub use semio_framework_pack::corruption_testing as pack_corruption;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
@@ -80,8 +81,9 @@ pub mod db_security;
 #[path = "../../👁️observe/🦀️.rs"]
 pub mod db_observe;
 
-#[path = "../../🧪️testkit/🦀️.rs"]
-pub mod db_testkit;
+#[cfg(test)]
+#[path = "../../🧪️tests/🧯️fault-storage/🦀️.rs"]
+pub mod db_fault_testing;
 
 #[path = "../../📝️wal/🦀️.rs"]
 pub mod db_wal;

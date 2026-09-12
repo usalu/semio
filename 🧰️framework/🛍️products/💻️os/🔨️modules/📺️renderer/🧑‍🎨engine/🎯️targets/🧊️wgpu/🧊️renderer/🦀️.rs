@@ -44,8 +44,8 @@ pub mod program_bridge;
 //#region 🏠️🧳️PluginHostConfig
 // 🐛️ Lives at the crate root, not inside `program_bridge` above (see that module's own `PluginHostConfig`
 // region for why) — this is the file's real directory, so the 3-`..` climb to
-// `framework/plugin/registry/generated/🖥️hosts.rs` actually resolves.
-#[path = "../../../../../🔌️plugin/📇️registry/🤖️generated/🖥️hosts.rs"]
+// `framework/plugin/registry/generated/🖥️hosts/🦀️.rs` actually resolves.
+#[path = "../../../../../🔌️plugin/📇️registry/🤖️generated/🖥️hosts/🦀️.rs"]
 mod generated_plugin_hosts;
 //#endregion 🏠️🧳️PluginHostConfig
 
@@ -3439,7 +3439,7 @@ pub(crate) mod kernel_runtime {
     /// source of truth for "which extensions activate alongside plugin X" — `📓️design-unified.md`
     /// §M6. Embedded at COMPILE time via `include_str!` (never a runtime path lookup into `🤖️
     /// generated/**`, which is gitignored and has no stable runtime location once packaged) — the
-    /// same registry `🖥️hosts.rs` a few lines above this module already mounts as real Rust source,
+    /// same registry `🖥️hosts/🦀️.rs` a few lines above this module already mounts as real Rust source,
     /// just read as data here instead of compiled as code. READ-ONLY: this file is `🤖️generated/**`,
     /// registrar-owned; never edited by this packet.
     const PLUGINS_REGISTRY_JSON: &str = include_str!("../../../../../🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
@@ -4850,6 +4850,12 @@ pub(crate) mod kernel_runtime {
     impl TypedOperationResultPage {
         const PAGE_MAGIC: &'static [u8] = b"semio.typed-operation-page.v1\0";
         const ACK_MAGIC: &'static [u8] = b"semio.typed-operation-ack.v1\0";
+        /// 🛤️ Highest `TypedOperationResultLane` discriminant the guest writes at byte 25 of a
+        /// page (`🔌️plugin/🦀️.rs`: Artifact 0 … Fault 11, Interaction 12, WindowTransient 13,
+        /// WindowConfig 14). Capped at 12 this demux refused the guest's OWN mesh publication lane and
+        /// fell the page through to `decode_app_frame`, which cannot read it either
+        /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END); the neutral lane fixture is the oracle.
+        const LANE_MAX: u8 = 14;
 
         pub(crate) fn try_copy_from(token: TypedOperationResultToken, lane: u8, bytes: &[u8]) -> Result<Self, &'static str> {
             if bytes.len() > TYPED_OPERATION_RESULT_PAGE_BYTES {
@@ -4877,7 +4883,7 @@ pub(crate) mod kernel_runtime {
                 attempt: body[24],
             };
             let lane = body[25];
-            if lane > 12 {
+            if lane > Self::LANE_MAX {
                 return None;
             }
             let len = u32::from_le_bytes(body[26..30].try_into().ok()?) as usize;
@@ -11455,7 +11461,9 @@ impl FrameTransaction {
                     }
                     WorldDrawRebuildStep::Complete => {}
                 }
-                match step_world3d_snapshot(state, context) {
+                let snapshot_step = step_world3d_snapshot(state, context);
+                world3d_ingest_trace(&surface_id, state, snapshot_step);
+                match snapshot_step {
                     World3dSnapshotApplyStep::Idle | World3dSnapshotApplyStep::Complete => {
                         self.world3d_authority_cursor += 1;
                         AppFrameTransactionStep::Pending
@@ -13669,6 +13677,31 @@ impl AppInteractionState {
 // before/after per site.
 //#endregion 🔖️OsHostDecomposition — SemioApp deletion
 
+
+/// 🩺️ Rate-limited `[DEBUG] ` trace of one World3d surface's MESH INGEST, taken where the frame
+/// transaction actually drives it rather than where the chrome paints it.
+///
+/// ⚖️ A retained window republishes its cached paint while its revision is unchanged, so
+/// `render_world_3d` — and with it the only existing world3d console line — runs once per DOCUMENT,
+/// not once per frame. An ingest that stalls between two documents is therefore invisible: on 6118
+/// the preview sat at `apply=true state-meshes=2 draws=0` with no further evidence for 95 s
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Every terminal step is reported, and a `Pending` one
+/// every `WORLD3D_INGEST_TRACE_STRIDE` frames.
+fn world3d_ingest_trace(surface_id: &str, state: &infinite_world::world::World3dState, step: World3dSnapshotApplyStep) {
+    const WORLD3D_INGEST_TRACE_STRIDE: u32 = 256;
+    static PENDING_STEPS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+    if matches!(step, World3dSnapshotApplyStep::Idle) {
+        return;
+    }
+    if matches!(step, World3dSnapshotApplyStep::Pending) {
+        let seen = PENDING_STEPS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        if seen % WORLD3D_INGEST_TRACE_STRIDE != 0 {
+            return;
+        }
+    }
+    log_debug(&format!("world3d ingest surface={surface_id} step={step:?} {}", state.ingest_census()));
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 async fn boot_runtime(
     window: Arc<Window>,
@@ -14214,6 +14247,32 @@ fn resolve_native_boot_role() -> ui_wgpu::wgpu::component::role_chrome::ChromeRo
 pub fn semio_wgpu_set_app_role(role: String) {
     BOOT_APP_ROLE.with(|cell| *cell.borrow_mut() = ui_wgpu::wgpu::component::role_chrome::ChromeRole::from_boot_env(Some(role.as_str())));
 }
+
+//#region 🎭️ModeBoot
+// 🎭️ The boot-time MODE, the second axis `?mode=` carries beside `?role=`. Same idiom as the role
+// above for the same reason: a `thread_local` a caller opts into reading, set once from the boot
+// descriptor before the shell opens its session. Without it the wgpu playground could only ever open
+// an app's `default_mode_id` — `generation3d`'s three-pane `generate` layout had no reachable entry
+// on this target at all, since the wgpu navbar has no mode group yet
+// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+thread_local! {
+    static BOOT_APP_MODE: RefCell<Option<String>> = const { RefCell::new(None) };
+}
+
+/// 🌐️ wasm boot hook — `🟦️.ts` calls this once, before/at mount time, with `?mode=`'s value when the
+/// url carries one. An empty string clears it, so a url without `mode` keeps the app's own default.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuSetBootMode)]
+pub fn semio_wgpu_set_boot_mode(mode: String) {
+    BOOT_APP_MODE.with(|cell| *cell.borrow_mut() = (!mode.is_empty()).then_some(mode));
+}
+
+/// 🎭️ The boot-requested mode id, or `None` when the url named none. A mode the open app does not
+/// declare is ignored by the reader (`ShellState::boot`), never a boot failure.
+pub fn boot_app_mode() -> Option<String> {
+    BOOT_APP_MODE.with(|cell| cell.borrow().clone())
+}
+//#endregion 🎭️ModeBoot
 
 /// 👁️✏️ The boot-resolved role, contract freeze §5 — `SemioApp`'s session/window-open path is meant
 /// to read this to call `Shell::set_window_role`/`set_locale`; wiring that specific call site is

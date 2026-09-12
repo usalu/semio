@@ -4,7 +4,7 @@ import {
   type DiagramLayoutDescriptor,
   type DiagramLayoutIngressPage,
   type DiagramLayoutWorkerJob,
-} from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout.ts";
+} from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/🟦️.ts";
 import {
   INTERACTIVE_JOB_INPUT_BYTE_CAPACITY,
   INTERACTIVE_JOB_INPUT_ITEM_CAPACITY,

@@ -3,7 +3,7 @@
 @comparison-semantic-gltf-v1
 @mutations-gltf-2-0-material
 Feature: Apply every registered glTF 2.0 material mutation to a real-world document
-  The `gltf-2-0-material` catalog (`../../🔮️oracle/🔣️.json`) declares the 18 kinds the 4 families
+  The `gltf-2-0-material` catalog (`../../🔮️oracles/🔣️.json`) declares the 18 kinds the 4 families
   `document/materials` (§5.20), `document/textures` (§5.31), `document/images` (§5.24) and
   `document/samplers` (§5.29) own — `create`/`delete`/`move`/`reorder` per family, plus
   `change-material-alpha-mode`/`change-material-double-sided` (already claimed by the
@@ -26,13 +26,13 @@ Feature: Apply every registered glTF 2.0 material mutation to a real-world docum
   material (`pbrMetallicRoughness.{baseColorTexture,metallicRoughnessTexture}.index`,
   `normalTexture.index`, `occlusionTexture.index`, `emissiveTexture.index`), each wrapped in its own
   `Option<TextureInfo>` CLEARED ENTIRELY (not just the index field) when the referenced texture is
-  deleted — `apply_texture_info_ref_change` (`../../../♾️any/🔮️oracle/🦀️.rs`) reimplements this
+  deleted — `apply_texture_info_ref_change` (`../../../♾️any/🔮️oracles/🦀️.rs`) reimplements this
   cascading-clear shape independently.
 
   All four `create-*` payloads (`GltfCreate{Material,Texture,Image,Sampler}Payload { position }`)
   carry no field content — the same shape `create-skin`/`create-animation` already established — so
   every `delete-*`'s inverse is special-cased through a bespoke `undo_delete_*`
-  (`../../../♾️any/🔮️oracle/🦀️.rs`, restoring the exact removed content AND every reference straight
+  (`../../../♾️any/🔮️oracles/🦀️.rs`, restoring the exact removed content AND every reference straight
   off the original document) rather than a second `create-*` call, mirroring `undo_delete_skin`/
   `undo_delete_animation` exactly.
 

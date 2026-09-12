@@ -769,8 +769,8 @@ impl store::SnapshotRetirementFactory<Generation2dSnapshot> for Generation2dReta
     }
 }
 
-pub fn generation2d_document_store_owners() -> store::MemberStoreOwners<Generation2dSnapshot, Generation2dMutation> {
-    store::MemberStoreOwners::new(
+pub fn generation2d_document_store_owners() -> store::DocumentStoreOwners<Generation2dSnapshot, Generation2dMutation> {
+    store::DocumentStoreOwners::new(
         std::sync::Arc::new(Generation2dRetainedSnapshotRetirementFactory),
         std::sync::Arc::new(Generation2dRetainedSnapshotRetirementFactory),
         std::sync::Arc::new(Generation2dRetainedMutationRetirementFactory),

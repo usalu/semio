@@ -1,6 +1,6 @@
 use super::*;
 use crate::mutations::create_shape_model::CreateShapeModel;
-use crate::{empty_cad_snapshot, testkit::sample_model_child, CAD_DOCUMENT_SCHEMA};
+use crate::{empty_cad_snapshot, sample_scene_fixture::sample_model_child, CAD_DOCUMENT_SCHEMA};
 use store::{create_document_envelope, ArtifactCommand};
 
 #[semio_framework_async_macros::async_test]

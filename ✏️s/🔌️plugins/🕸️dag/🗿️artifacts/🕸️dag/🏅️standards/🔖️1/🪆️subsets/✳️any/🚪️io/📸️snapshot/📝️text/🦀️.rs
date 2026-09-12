@@ -1,7 +1,7 @@
 //! 📜️ DAG document text codec. The graph snapshot owns the canonical node/edge wire grammar;
 //! the artifact reconstructs its composed child owner when decoding that graph.
 
-use crate::{DagSnapshot, DAG_DOCUMENT_SCHEMA};
+use crate::DagSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -9,9 +9,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-/// 📄️ The canonical DAG fixture, handcrafted in the `.dag` DSL — the same file the DAG kernel's own
-/// tests parse.
-pub const DAG_EXAMPLE_TEXT: &str = semio_framework_artifact_infinite_dag::DAG_DEMO_TEXT;
+/// 📄️ Canonical plugin document; its marker belongs to this artifact owner.
 
 /// 📖️ Parses `.dag` DSL text into a `DagSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<DagSnapshot, store::TextError> {
@@ -30,9 +28,14 @@ impl store::ArtifactDsl for DagSnapshot {
         "dag.dag"
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        if let Ok((envelope, _)) = store::semio_format::split_text_preamble(text) {
+            if !envelope.matches_identity(Self::envelope_id(), store::semio_format::Component::Dsl, 1) {
+                return Err(store::TextError::new("DAG text envelope mismatch", dsl::TextSpan::at(1, 1)));
+            }
+        }
         let graph = <semio_framework_artifact_infinite_dag::DagSnapshot as store::ArtifactDsl>::parse_dsl(text)?;
-        let mut snapshot: Self = graph.into();
-        snapshot.schema = DAG_DOCUMENT_SCHEMA.into();
+        let snapshot: Self = graph.into();
+        snapshot.validate().map_err(|message| store::TextError::new(message, dsl::TextSpan::at(1, 1)))?;
         Ok(snapshot)
     }
     fn print_dsl(&self) -> String {

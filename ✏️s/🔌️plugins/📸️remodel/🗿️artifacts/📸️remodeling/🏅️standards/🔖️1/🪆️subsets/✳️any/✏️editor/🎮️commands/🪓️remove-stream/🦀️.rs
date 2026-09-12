@@ -1,6 +1,6 @@
 //! 📥️ 📥️ Remodeling play app commands command — `remove-stream`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::delete_stream;
 use crate::op::RemodelingMutation;
 use crate::RemodelingSnapshot;
@@ -13,6 +13,6 @@ pub struct RemoveStream {
     pub stream_id: String,
 }
 
-pub fn handle(payload: &RemoveStream, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &RemoveStream, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![delete_stream(payload.stream_id.clone())]))
 }

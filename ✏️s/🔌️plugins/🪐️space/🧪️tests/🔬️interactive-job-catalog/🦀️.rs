@@ -31,7 +31,7 @@ fn declared_dispositions(definition: &AppDefinition) -> BTreeMap<String, Interac
 }
 
 /// 📜️ The `execution`/`status` fixture shape (studio, space index): ids whose status is
-/// `migrated`, plus the tool ids whose sole publication lane is `hostOnly`.
+/// `Migrated`, plus the tool ids whose sole publication lane is `HostOnly`.
 fn migrated_and_host_only(fixture: &str) -> (BTreeSet<String>, BTreeSet<String>) {
     let document: pack::JsonValue = pack::parse_json(fixture).expect("language-neutral retained catalog fixture");
     let migrated = document
@@ -39,7 +39,7 @@ fn migrated_and_host_only(fixture: &str) -> (BTreeSet<String>, BTreeSet<String>)
         .and_then(pack::JsonValue::as_array)
         .expect("routes array")
         .iter()
-        .filter(|route| route.get("status").and_then(pack::JsonValue::as_str) == Some("migrated"))
+        .filter(|route| route.get("status").and_then(pack::JsonValue::as_str) == Some("Migrated"))
         .filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string))
         .collect::<BTreeSet<_>>();
     let host_only = document
@@ -47,7 +47,7 @@ fn migrated_and_host_only(fixture: &str) -> (BTreeSet<String>, BTreeSet<String>)
         .and_then(pack::JsonValue::as_array)
         .expect("publication contracts array")
         .iter()
-        .filter(|contract| contract.get("lanes").and_then(pack::JsonValue::as_array).is_some_and(|lanes| lanes.as_slice() == [pack::JsonValue::String("hostOnly".into())]))
+        .filter(|contract| contract.get("lanes").and_then(pack::JsonValue::as_array).is_some_and(|lanes| lanes.as_slice() == [pack::JsonValue::String("HostOnly".into())]))
         .filter_map(|contract| contract.get("toolId").and_then(pack::JsonValue::as_str).map(str::to_string))
         .collect::<BTreeSet<_>>();
     (migrated, host_only)
@@ -248,7 +248,7 @@ async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
     assert_eq!(<engine::space::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 15);
     assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 18);
     assert_eq!(<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 14);
-    testkit::close_registered_fixture_app(&mut studio);
-    testkit::close_registered_fixture_app(&mut home);
-    testkit::close_registered_fixture_app(&mut index);
+    artifact_app_laws::close_registered_fixture_app(&mut studio);
+    artifact_app_laws::close_registered_fixture_app(&mut home);
+    artifact_app_laws::close_registered_fixture_app(&mut index);
 }

@@ -43,6 +43,7 @@ import {
 } from "@semio-tech/ui-react";
 import {
   nodeGraphActions,
+  parseViewport2d,
   windowElementId,
   type ActionDescriptor,
   type ComponentSceneHostProps,
@@ -53,7 +54,7 @@ import {
   type NodeGraphNodeRecord,
   type NodeGraphPortRecord,
   type NodeGraphScene,
-  type NodeGraphViewport,
+  type Viewport2d,
   type PluginContextMenuRequest,
   type PluginContextMenuSurfaceTarget,
   type PresencePeer,
@@ -138,8 +139,12 @@ function syncOptionalGraphCanvasTheme(session: FrameworkGraphSession | null): vo
 //#endregion 🎯️GraphPickContract
 
 //#region Viewport
-export function nodeGraphViewportActionArgs(cameraJson: string): { readonly viewportJson: string } {
-  return { viewportJson: cameraJson };
+export function parseNodeGraphSessionViewport(value: unknown): Viewport2d {
+  return parseViewport2d(typeof value === "string" ? JSON.parse(value) : value);
+}
+
+export function nodeGraphViewportActionArgs(viewport: Viewport2d): { readonly viewport: Viewport2d } {
+  return { viewport: parseViewport2d(viewport) };
 }
 
 type NodeGraphInteractionIds = {
@@ -164,7 +169,7 @@ export function nodeGraphHoverActionArgs(nodeId: string | null | undefined, port
 //#endregion Viewport
 
 //#region Parsing
-const DEFAULT_NODE_GRAPH_VIEWPORT: NodeGraphViewport = { x: 0, y: 0, zoom: 1 };
+const DEFAULT_NODE_GRAPH_VIEWPORT: Viewport2d = { x: 0, y: 0, zoom: 1 };
 
 /** @emoji 🔎️ Resolves a flow fixture widget id to the workflow instance id it previews, used to open an app instance without depending on plugin-side selection state. */
 export function resolveFixtureWidgetInstanceId(fixtureJson: string | undefined, widgetId: string | undefined | null): string | undefined {
@@ -728,7 +733,7 @@ function WasmGraphSurface({
       dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds }));
       const hovered = session.hoveredNodeId();
       dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered));
-      dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(session.cameraJson()));
+      dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(session.cameraJson())));
       const openId = session.takePendingOpenInstanceId?.();
       if (openId) dispatch("openInstance", { instanceId: openId });
     } catch {
@@ -1438,7 +1443,7 @@ const DAG_LABEL_LEGIBLE_MIN_PX = 8;
 /** ✂️ Longest prefix of `text` that still fits `maxWidth` once {@link DAG_LABEL_ELLIPSIS} is
  * appended, measured by the CALLER's own measure. The JavaScript twin of
  * `canvas::text::ellipsize_by_measure`; both are pinned to the rows of
- * `♾️infinite/🖼️canvas/🧪️tests/🏷️label-fit/🔣️.json`.
+ * `♾️infinite/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json`.
  *
  * Empty text and a non-positive budget draw nothing; a budget too narrow for even one glyph plus
  * the ellipsis draws the bare ellipsis, so a clipped caption is always visibly clipped. */
@@ -2055,7 +2060,7 @@ function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: Node
  * persists a fit exactly the way it persists a pan or a zoom gesture, so the next open honours it.
  *
  * Twin of `DagHost::adopt_camera_or_fit`; the law itself is {@link dagStartupCamera}, pinned by
- * `♾️infinite/🖼️canvas/🧪️tests/📷️camera-fit/🔣️.json`. */
+ * `♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json`. */
 function applyFlowStartupCamera(session: FlowWasmSession, scene: NodeGraphScene, width: number, height: number): { readonly camera: DagCameraState; readonly fitted: boolean } {
   const stored = scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT;
   const decision = dagStartupCamera(stored, dagContentBounds(scene.nodes), width, height);
@@ -2416,7 +2421,7 @@ export function FlowGraphCanvasHost({
       void channelValue;
       dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered));
       const cameraJson = flowJsonText(cameraValue);
-      if (cameraJson) dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(cameraJson));
+      if (cameraJson) dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(cameraJson)));
     }).catch(() => {});
     paintOverlays();
   }, [dispatch, paintOverlays]);
@@ -2484,7 +2489,7 @@ export function FlowGraphCanvasHost({
         framedGraphSignatureRef.current = nodeGraphContentSignature(sceneRef.current.nodes);
         if (opening.fitted) {
           console.log("[DEBUG] node-graph fit on open surface=%s %s", surfaceId, JSON.stringify(opening.camera));
-          dispatchRef.current(nodeGraphActions.viewport, nodeGraphViewportActionArgs(JSON.stringify(opening.camera)));
+          dispatchRef.current(nodeGraphActions.viewport, nodeGraphViewportActionArgs(opening.camera));
         }
         syncFlowCanvasTheme(session);
         // 📏️ The container observer above already owns both backing stores; this only hands the freshly
@@ -2545,7 +2550,7 @@ export function FlowGraphCanvasHost({
               const fitted = refitFlowCameraIfContentLeftView(live, sceneRef.current, parseDagCameraState(flowJsonText(value)), Math.round(rect.width), Math.round(rect.height));
               if (!fitted) return;
               console.log("[DEBUG] node-graph refit after graph change surface=%s %s", surfaceId, JSON.stringify(fitted));
-              dispatchRef.current(nodeGraphActions.viewport, nodeGraphViewportActionArgs(JSON.stringify(fitted)));
+              dispatchRef.current(nodeGraphActions.viewport, nodeGraphViewportActionArgs(fitted));
               renderFlow();
               paintOverlays();
             })
@@ -2818,7 +2823,7 @@ export function FlowGraphCanvasHost({
     const camera = dagFitCamera(content, Math.round(rect.width), Math.round(rect.height));
     observeFlowTask(session, "setCamera", session.setCamera(camera.x, camera.y, camera.zoom));
     framedGraphSignatureRef.current = nodeGraphContentSignature(sceneRef.current.nodes);
-    dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(JSON.stringify(camera)));
+    dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(camera));
     renderFlow();
     paintOverlays();
     schedulerRef.current?.invalidate();
@@ -3007,7 +3012,7 @@ export function FlowGraphCanvasHost({
           observeFlowTask(session, "wheelScreen", session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, 0, delta, true));
           renderFlow();
           observeFlowTask(session, "cameraJson:wheel", session.cameraJson(), (value) => {
-            dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(flowJsonText(value)));
+            dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(flowJsonText(value))));
           });
           paintOverlays();
         }}

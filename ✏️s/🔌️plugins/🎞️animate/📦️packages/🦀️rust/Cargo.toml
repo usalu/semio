@@ -14,7 +14,7 @@ package = "semio:animate"
 [package.metadata.semio]
 role = "plugin"
 
-# 📖️ Opts this plugin into the generated Storybook scope registry (`.storybook/scopes.ts`'s
+# 📖️ Opts this plugin into the generated Storybook scope registry (`.storybook/📖️stories/🧭️coordination/🟦️.ts`'s
 # `GENERATED_SCOPES`, read via `readSemioMarkerSubTable`) instead of a hand-maintained entry — see
 # 26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG. `sourceRoots` are relative to
 # this plugin's OWNER dir (`✏️s/🔌️plugins/🎞️animate`), matching the pre-existing hand-curated `animate` scope.
@@ -22,6 +22,7 @@ role = "plugin"
 id = "animate"
 titlePrefix = "🎬️animate"
 sourceRoots = ["🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react"]
+storyGlobs = ["📖️stories/**/🧪️.story.tsx"]
 
 [[package.metadata.semio.playground]]
 variant = "animate"
@@ -76,6 +77,7 @@ features = ["rwh_06"]
 optional = true
 
 [dev-dependencies]
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
 roxmltree = "0.20.0"
 serde.workspace = true
 serde_json.workspace = true

@@ -410,7 +410,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, arm) in KINDS[1..].iter().zip(arms) {
         assert_eq!(*kind, semio_subset_tag(&enveloped(arm)), "KINDS must follow SemioSubsetSnapshot's own declaration order and the envelope's own runtime subset tag");
     }
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

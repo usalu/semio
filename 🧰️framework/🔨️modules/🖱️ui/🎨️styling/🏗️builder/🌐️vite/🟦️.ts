@@ -1,0 +1,1582 @@
+// #region 🧲️Header
+/** 🌐️ Vite plugins serving the asset-owned `/🖼️assets/*` namespace. */
+// #endregion 🧲️Header
+
+// #region 🔌️Adapters
+import { ephemeralBox, ephemeralMap } from "@semio-tech/framework";
+import { createServer, type Server } from "node:http";
+import { cpSync, createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  defineOwnedBuildConfig,
+  uiReactBuildPlugin,
+  uiTailwindBuildPlugins,
+  type OwnedBuildConfig,
+  type OwnedBuildMiddleware,
+  type OwnedBuildPlugin,
+} from "../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import {
+  PLAYGROUND_PORTS,
+  allPlaygroundReservedPorts,
+  playgroundDevPort,
+  playgroundDevPortString,
+  playgroundPlayViteDefine,
+  playgroundPortEnv,
+  playgroundTestPort,
+  playgroundTestPortString,
+  type PlaygroundHostKind,
+} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
+import type { PlaygroundAssetSpec } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset, type MeshDeliveryCatalog } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
+import { assetPathFromRequest, SEMIO_ASSET_DIRECTORY } from "../../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
+import faviconDelivery from "../../🌐️favicon/🔣️.json" with { type: "json" };
+import { playgroundIframeEmbedHeadersPlugin } from "../../🌐️iframe/🟦️.ts";
+// #endregion 🔌️Adapters
+
+export type { PlaygroundAssetSpec };
+export { playgroundIframeEmbedHeadersPlugin };
+
+export {
+  PLAYGROUND_PORTS,
+  allPlaygroundReservedPorts,
+  playgroundDevPort,
+  playgroundDevPortString,
+  playgroundPortEnv,
+  playgroundTestPort,
+  playgroundTestPortString,
+  type PlaygroundHostKind,
+};
+
+//#region 🔖️ViteElementsAssets
+/** @emoji 📦️ Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
+export function playgroundStaticSiteBuildOptions(overrides?: OwnedBuildConfig["build"]): NonNullable<OwnedBuildConfig["build"]> {
+  return {
+    target: "esnext",
+    outDir: "dist",
+    emptyOutDir: true,
+    ...overrides,
+  };
+}
+
+/** @emoji 🚀️ Production Vite `build` defaults: minify, strip console/debugger, no sourcemaps. */
+export function semioViteProductionBuild(overrides?: OwnedBuildConfig["build"]): NonNullable<OwnedBuildConfig["build"]> {
+  return {
+    target: "es2022",
+    sourcemap: false,
+    minify: "esbuild",
+    cssMinify: true,
+    reportCompressedSize: false,
+    ...overrides,
+    esbuild: {
+      drop: ["console", "debugger"],
+      legalComments: "none",
+      ...(overrides?.esbuild ?? {}),
+    },
+  };
+}
+
+/** @emoji 🧭️ Vite's URL prefix for prebundled chunks under `cacheDir`: root-relative inside `root`, `/@fs/` outside. https://vite.dev/config/shared-options.html#cachedir */
+export function playgroundOptimizedDepUrlPrefix(root: string, cacheDir: string): string {
+  const path = relative(root, cacheDir).replaceAll("\\", "/");
+  return path.startsWith("..") || isAbsolute(path) ? `/@fs/${resolve(cacheDir).replaceAll("\\", "/").replace(/^\/+/, "")}/deps/` : `/${path}/deps/`;
+}
+
+/** @emoji 🔗️ True when a percent-encoded request targets this server's Vite prebundled chunks. */
+export function isPlaygroundOptimizedDepUrl(url: string, prefix: string): boolean {
+  try { return decodeURI(url).includes(prefix); } catch { return false; }
+}
+
+/** @emoji 🧱️ Stubs vitest and testing-library when test regions enter the browser graph. */
+export function playgroundVitestDevStubPlugin(): OwnedBuildPlugin {
+  const vitestStubId = "\0playground-vitest-dev-stub";
+  const testingLibraryStubId = "\0playground-testing-library-dev-stub";
+  return {
+    name: "playground-vitest-dev-stub",
+    enforce: "pre",
+    resolveId(id) {
+      if (id === "vitest" || id.startsWith("vitest/") || id.startsWith("@vitest/")) return vitestStubId;
+      if (id === "@testing-library/react" || id.startsWith("@testing-library/")) return testingLibraryStubId;
+      return undefined;
+    },
+    load(id) {
+      if (id === vitestStubId) {
+        return "export default {}; export const describe = () => {}; export const it = () => {}; export const expect = () => ({ toBe: () => {}, toEqual: () => {} }); export const vi = { fn: () => {}, mock: () => {}, spyOn: () => {} };";
+      }
+      if (id === testingLibraryStubId) {
+        return "export default {}; export const render = () => ({}); export const screen = {}; export const fireEvent = {}; export const waitFor = async (fn) => fn();";
+      }
+    },
+  };
+}
+
+const PLAYGROUND_PLAYWRIGHT_DEV_STUB_ID = "\0playground-playwright-dev-stub";
+
+
+const PLAYGROUND_WASM_STUB_PREFIX = "\0playground-wasm-stub/";
+
+/** 🗂️ Vite's URL form for an absolute filesystem path outside the project root. */
+const FS_URL_PREFIX = "/@fs/";
+
+function playgroundWasmStubKey(cleanId: string): string {
+  return cleanId.replace(/\//g, "__");
+}
+
+function playgroundWasmStubKeyDecode(key: string): string {
+  return key.replace(/__/g, "/");
+}
+
+const PLAYGROUND_WASM_JS_STUB = `const wasmMissing = () => { throw new Error("wasm pkg not built — run the matching nx wasm target"); };
+const wasmJson = () => "{}";
+const dagLodScaleJson = () => ${JSON.stringify(
+  JSON.stringify([
+    { id: "minimap", name: "Minimap", description: "Whole-graph silhouette; fill only.", maxZoom: 0.4 },
+    { id: "overview", name: "Overview", description: "Node icons only.", maxZoom: 0.6 },
+    { id: "compact", name: "Compact", description: "Horizontal abbreviations.", maxZoom: 0.8 },
+    { id: "normal", name: "Normal", description: "Vertical names with sections; channel abbreviations on ports.", maxZoom: 1.5 },
+    { id: "detail", name: "Detail", description: "Channel names on ports, port handles, and control text.", maxZoom: 2.75 },
+    { id: "micro", name: "Micro", description: "Full channel names on ports and maximum node fidelity.", maxZoom: Number.MAX_VALUE },
+  ]),
+)};
+export default async function initWasm() {}
+export const initSync = () => {};
+export class FlowSession { lodScaleJson() { return dagLodScaleJson(); } attachCanvas() { return Promise.resolve(); } setSize() {} renderFrame() {} loadFixtureJson() {} fixtureJson() { return "{}"; } setCatalogueJson() {} catalogueJson() { return "[]"; } setNeuronKindInfosJson() {} setComputingProgress() {} setAutomaticLod() {} setForcedDrawLodLabel() {} setCanvasThemeJson() {} setCamera() {} pointerDownScreen() {} pointerMoveScreen() {} pointerUpScreen() {} wheelScreen() {} labelOverlayPaintStateJson() { return '{"labels":[]}'; } sliderOverlayStateJson() { return '{"sliders":[]}'; } selectionUnionBoundsScreenJson() { return "{}"; } selectionPreviewPointsJson() { return "[]"; } selectionPreviewCrossing() { return false; } selectedWidgetIds() { return "[]"; } hoveredWidgetId() { return undefined; } hoveredChannelJson() { return "{}"; } pickTargetsAtScreenJson() { return "[]"; } previewText() { return ""; } preselectWidgetIdsJson() { return "[]"; } previewOffWidgetIds() { return "[]"; } alignSelection() {} undo() { return false; } redo() { return false; } selectAll() {} deleteSelection() {} addWidget() { return ""; } setGhostWidget() {} clearGhostWidget() {} worldFromScreen() { return '{"x":0,"y":0}'; } applyEvalOutputsJson() {} setSliderValue() {} setNeuronParams() {} setSelection() {} setPreviewOff() {} syncFromSceneJson() {}}
+export class GraphSession { lodScaleJson() { return dagLodScaleJson(); } syncFromSceneJson() {} syncFromScenePack() {} labelOverlayPaintStateJson() { return '{"labels":[]}'; } selectionUnionBoundsScreenJson() { return '{}'; } selectionPreviewPointsJson() { return '[]'; } selectionPreviewCrossing() { return false; } selectionPreviewMethod() { return 'rectangle'; } selectedNodeIdsJson() { return '[]'; } hoveredNodeId() { return null; } hoveredChannelJson() { return '{}'; } cameraJson() { return '{"x":0,"y":0,"zoom":1}'; } pointerDownScreen() {} pointerMoveScreen() {} pointerUpScreen() {} wheelScreen() {} }
+export class EditorSession { syncFromSceneJson() {} syncFromScenePack() {} setText() {} text() { return ''; } caret() { return 0; } anchor() { return 0; } pointerDownScreen() {} pointerMoveScreen() {} pointerUpScreen() {} wheelScrollScreen() {} insertText() {} backspace() {} deleteForward() {} selectAll() {} replaceSelection() {} selectionText() { return ''; } hoverTokenRangeJson() { return 'null'; } setHoverRange() {} cameraJson() { return '{}'; } }
+export class DagSession { lodScaleJson() { return dagLodScaleJson(); } }
+export class BoardSession { lodScaleJson() { return dagLodScaleJson(); } }
+export class WriterSession {}
+export class ImperativeSession {}
+export class SequenceSession {}
+export class RasterSession {}
+export class MapSession {}
+export class Puzzle3dPrecomputeSession {}
+export class TrinitySession {}
+export class JackLspSession {}
+export const render_drawing_scene = wasmMissing;
+export const export_drawing_svg = wasmMissing;
+export const export_drawing_pdf = wasmMissing;
+export const dispose_drawing = () => {};
+export const trace_drawing_bitmap = wasmMissing;
+export const boolean_drawing_segments = wasmMissing;
+export const tessellate = async () => JSON.stringify({ positions: [], normals: [], index: [], edges: [], points: [], faceGroups: [] });
+export const dispose = () => {};
+export const evaluate = wasmMissing;
+export const ruleQueryJson = wasmJson;
+export const boardComputeEdgeBezier = wasmJson;
+export const boardHandlePositionCircle = wasmJson;
+export const boardHandlePositionRectangle = wasmJson;
+export const boardRedrawHandlesFixtureJson = wasmJson;
+export const boardRedrawLayoutFixtureJson = wasmJson;
+`;
+
+function workspaceWasmPkgResolveCandidates(repoRoot: string, pkgName: string, subpath: string | undefined): string[] {
+  const pkgRoot = resolve(repoRoot, "node_modules", pkgName);
+  const candidates: string[] = [];
+  let manifest: { exports?: Record<string, string | { import?: string; default?: string }>; module?: string; main?: string } | undefined;
+  try {
+    manifest = JSON.parse(readFileSync(resolve(pkgRoot, "package.json"), "utf8"));
+  } catch {
+    /* package.json may be absent for a half-linked workspace package */
+  }
+  const pushExportTarget = (key: string) => {
+    const exp = manifest?.exports?.[key];
+    const target = typeof exp === "string" ? exp : (exp?.import ?? exp?.default);
+    if (target) candidates.push(resolve(pkgRoot, target));
+  };
+  if (subpath) {
+    candidates.push(resolve(pkgRoot, subpath));
+    if (subpath.startsWith("pkg/")) {
+      candidates.push(resolve(pkgRoot, "rs", subpath));
+      candidates.push(resolve(pkgRoot, subpath.slice("pkg/".length)));
+    }
+    pushExportTarget(`./${subpath}`);
+    pushExportTarget(subpath);
+  } else {
+    pushExportTarget(".");
+    if (manifest?.module) candidates.push(resolve(pkgRoot, manifest.module));
+    if (manifest?.main) candidates.push(resolve(pkgRoot, manifest.main));
+  }
+  return candidates;
+}
+
+/** @emoji 🧱️ Stubs missing wasm pkg imports until `nx run …:wasm` artifacts exist. */
+export function playgroundFlowWasmDevStubPlugin(repoRoot: string): OwnedBuildPlugin {
+  return {
+    name: "playground-flow-wasm-dev-stub",
+    enforce: "pre",
+    resolveId(id, importer) {
+      if (!importer || id.startsWith(PLAYGROUND_WASM_STUB_PREFIX)) return undefined;
+      const cleanId = id.split("?", 1)[0] ?? id;
+      // 🗂️ A module the browser requests directly arrives as Vite's own `/@fs/<absolute path>` URL, not
+      // as the specifier the importer wrote. Testing that URL for existence always fails, which used to
+      // hand back the "wasm pkg not built" stub for a pkg that is sitting right there on disk.
+      const fsId = cleanId.startsWith(FS_URL_PREFIX) ? cleanId.slice(FS_URL_PREFIX.length - 1) : cleanId;
+      const isWasmPkg = cleanId.includes("/pkg/") || cleanId.endsWith(".wasm") || cleanId === "@semio-tech/flow-core" || cleanId === "@semio-tech/flow-core/pkg/flow_core.js" || cleanId === "@semio-tech/flow-core/flow_core.js";
+      if (!isWasmPkg) return undefined;
+      if (fsId.startsWith(".")) {
+        if (existsSync(resolve(dirname(importer), fsId))) return undefined;
+        return `${PLAYGROUND_WASM_STUB_PREFIX}${playgroundWasmStubKey(cleanId)}`;
+      }
+      const workspacePkg = fsId.match(/^(@semio-tech\/[^/]+)(?:\/(.+))?$/);
+      const candidates: string[] = [];
+      if (workspacePkg) {
+        const [, pkgName, subpath] = workspacePkg;
+        candidates.push(...workspaceWasmPkgResolveCandidates(repoRoot, pkgName, subpath));
+      } else {
+        candidates.push(resolve(repoRoot, fsId));
+      }
+      const hit = candidates.find((abs) => existsSync(abs));
+      if (hit) return hit;
+      return `${PLAYGROUND_WASM_STUB_PREFIX}${playgroundWasmStubKey(cleanId)}`;
+    },
+    load(id) {
+      if (!id.startsWith(PLAYGROUND_WASM_STUB_PREFIX)) return undefined;
+      const cleanId = playgroundWasmStubKeyDecode(id.slice(PLAYGROUND_WASM_STUB_PREFIX.length).split("?", 1)[0] ?? "");
+      if (cleanId.endsWith(".wasm")) return `export default "";`;
+      return PLAYGROUND_WASM_JS_STUB;
+    },
+  };
+}
+
+/** @emoji 🧱️ Stubs Playwright when test-only regions are pulled into the browser graph. */
+export function playgroundPlaywrightDevStubPlugin(): OwnedBuildPlugin {
+  return {
+    name: "playground-playwright-dev-stub",
+    enforce: "pre",
+    resolveId(id) {
+      if (id === "@playwright/test" || id === "playwright" || id === "playwright-core" || id === "chromium-bidi") {
+        return PLAYGROUND_PLAYWRIGHT_DEV_STUB_ID;
+      }
+      return undefined;
+    },
+    load(id) {
+      if (id !== PLAYGROUND_PLAYWRIGHT_DEV_STUB_ID) return;
+      return "export default {}; export const test = () => {}; export const expect = () => ({ toBe: () => {}, toEqual: () => {} });";
+    },
+  };
+}
+
+/** @emoji 🔄️ Full-reload connected clients when a stale optimized-dep chunk returns 504. */
+export function playgroundStaleOptimizeDepPlugin(): OwnedBuildPlugin {
+  return {
+    name: "playground-stale-optimize-dep",
+    configureServer(server) {
+      const prefix = playgroundOptimizedDepUrlPrefix(server.config.root, server.config.cacheDir);
+      server.middlewares.use((req, res, next) => {
+        if (!isPlaygroundOptimizedDepUrl(req.url ?? "", prefix)) {
+          next();
+          return;
+        }
+        res.on("finish", () => {
+          if (res.statusCode === 504) {
+            server.ws.send({ type: "full-reload", path: "*" });
+          }
+        });
+        next();
+      });
+    },
+  };
+}
+
+function contentTypeForUiAsset(filePath: string): string | undefined {
+  if (filePath.endsWith(".woff2")) {
+    return "font/woff2";
+  }
+  if (filePath.endsWith(".svg")) {
+    return "image/svg+xml";
+  }
+  if (filePath.endsWith(".wasm")) {
+    return "application/wasm";
+  }
+  return undefined;
+}
+
+function createUiAssetsMiddleware(assetsRoot: string): OwnedBuildMiddleware {
+  const assetsRootResolved = resolve(assetsRoot);
+  return (req, res, next) => {
+    const rel = req.url ? assetPathFromRequest(req.url) : null;
+    if (rel === null) {
+      next();
+      return;
+    }
+    const filePath = resolve(assetsRootResolved, rel);
+    const relToRoot = relative(assetsRootResolved, filePath);
+    if (relToRoot.startsWith("..") || isAbsolute(relToRoot) || !existsSync(filePath) || !statSync(filePath).isFile()) {
+      next();
+      return;
+    }
+    const contentType = contentTypeForUiAsset(filePath);
+    if (contentType) {
+      res.setHeader("Content-Type", contentType);
+    }
+    createReadStream(filePath).pipe(res);
+  };
+}
+
+//#region 🔖️MeshCollectionAssetPlugin
+function readMeshDeliveryCatalog(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): MeshDeliveryCatalog {
+  if (spec.route !== "/mesh") throw new Error(`Unsupported mesh catalog route: ${spec.route}`);
+  const read = (path: string): unknown => JSON.parse(readFileSync(resolve(repoRoot, path), "utf8"));
+  return parseMeshDeliveryCatalog(read(spec.catalog), read);
+}
+
+/** 🌐️ Serves only explicit catalog transport paths, retaining public identity at the caller boundary. */
+function createMeshCollectionMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): OwnedBuildMiddleware {
+  const route = `${spec.route}/`;
+  const catalog = new Map(readMeshDeliveryCatalog(repoRoot, spec).map(entry => [`${route}${entry.path}`, entry]));
+  return (req, res, next) => {
+    if (!req.url?.startsWith(route)) {
+      next();
+      return;
+    }
+    let path: string;
+    try {
+      path = decodeURIComponent(req.url.split(/[?#]/, 1)[0] ?? "");
+    } catch {
+      res.statusCode = 400;
+      res.end();
+      return;
+    }
+    const entry = catalog.get(path);
+    if (!entry) return next();
+    const source = resolve(repoRoot, entry.source);
+    if (!existsSync(source) || !statSync(source).isFile()) return next();
+    res.setHeader("Content-Type", "model/gltf-binary");
+    createReadStream(source).pipe(res);
+  };
+}
+
+/** 📦️ Copies only admitted source entries to their exact handpicked nested delivery paths. */
+function copyMeshCollectionGlbs(repoRoot: string, catalog: MeshDeliveryCatalog, dest: string): void {
+  mkdirSync(dest, { recursive: true });
+  for (const entry of catalog) {
+    const source = resolve(repoRoot, entry.source);
+    if (!existsSync(source) || !statSync(source).isFile()) throw new Error(`Missing catalog mesh source: ${entry.source}`);
+    const destination = resolve(dest, entry.path);
+    mkdirSync(dirname(destination), { recursive: true });
+    cpSync(source, destination);
+  }
+}
+
+/** 🧊️ Dev and static delivery share one explicit public-ID/source/output authority. */
+export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): OwnedBuildPlugin[] {
+  const serveMeshes = createMeshCollectionMiddleware(repoRoot, spec);
+  const catalog = readMeshDeliveryCatalog(repoRoot, spec);
+  const destName = spec.route.replace(/^\//, "");
+  let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
+  return [
+    {
+      name: `mesh-collection-serve${spec.route}`,
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveMeshes);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveMeshes);
+      },
+    },
+    {
+      name: `mesh-collection-build${spec.route}`,
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
+      },
+      closeBundle() {
+        if (!writeOutput) return;
+        const dest = resolve(outDir, destName);
+        mkdirSync(outDir, { recursive: true });
+        copyMeshCollectionGlbs(repoRoot, catalog, dest);
+      },
+    },
+  ];
+}
+//#endregion 🔖️MeshCollectionAssetPlugin
+
+//#region 🔖️HostHtmlPlugin
+/** @emoji 🎬️ Inline shell paint before Tailwind finishes compiling the play stylesheet. */
+export const PLAYGROUND_PLAY_BOOT_INLINE_STYLE =
+  "html{color-scheme:light dark}html,body,#root{height:100%;margin:0}body{background-color:#f7f3e3;color:#001117}html.dark body{background-color:#001117;color:#f7f3e3}html:not([data-semio-styled]) body{visibility:hidden}";
+
+/** @emoji 🌓️ Synchronous appearance bootstrap for play `🌐️.html` heads — prefers persisted `ui.chrome.appearance`, else system. */
+export const PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT = `(function(){var d=document.documentElement,m=window.matchMedia("(prefers-color-scheme: dark)");var stored=null;try{stored=localStorage.getItem("ui.chrome.appearance")}catch(e){}var dark=stored==="dark"||(stored!=="light"&&m.matches);d.classList.toggle("dark",dark);d.dataset.uiAppearance=dark?"dark":"light";d.style.colorScheme=dark?"dark":"light";if(document.body){document.body.style.colorScheme=dark?"dark":"light";document.body.style.backgroundColor=dark?"#001117":"#f7f3e3";document.body.style.color=dark?"#f7f3e3":"#001117";}})();`;
+
+/** @emoji 👁️ Reveals the play shell after the linked globals stylesheet finishes loading. */
+export const PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT = `(function(){function reveal(){document.documentElement.dataset.semioStyled="ready"}var link=document.getElementById("semio-play-styles");if(link){if(link.sheet)reveal();else link.addEventListener("load",reveal,{once:true})}else{reveal()}setTimeout(reveal,8000)})();`;
+
+/** @emoji 🎨️ Synchronous active-theme bootstrap for play `🌐️.html` heads: reapplies the persisted `UiTheme` snapshot's colors before first paint so non-semio themes don't flash the semio defaults. Runs after {@link PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT} so its resolved light/dark class wins the appearance choice; this script only overrides colors. */
+export const PLAYGROUND_PLAY_BOOT_THEME_SCRIPT = `(function(){try{var raw=localStorage.getItem("ui.chrome.theme.snapshot");if(!raw)return;var t=JSON.parse(raw);if(!t||!t.colors)return;var d=document.documentElement;var dark=d.classList.contains("dark");for(var k in t.colors){d.style.setProperty("--color-"+k.replace(/_/g,"-"),t.colors[k])}if(t.spacing)for(var s in t.spacing){d.style.setProperty("--spacing-"+s.replace(/_/g,"-"),t.spacing[s])}d.dataset.uiTheme=t.id;var appearance=t.appearances&&t.appearances[dark?"dark":"light"];var chrome=appearance&&appearance.chrome;function resolveSimple(ref){return ref&&ref.token&&t.colors[ref.token]?t.colors[ref.token]:undefined}var base=chrome&&resolveSimple(chrome.base);var fg=chrome&&resolveSimple(chrome.foreground);if(document.body){if(base)document.body.style.backgroundColor=base;if(fg)document.body.style.color=fg}}catch(e){}})();`;
+
+/** @emoji 🧬️ Boot-time head tags every semio host document shares (color-scheme inline style + synchronous
+ * appearance/theme scripts) — single source both {@link semioHostHtmlString} and
+ * {@link playgroundPlayBootHtmlPlugin} inject from, so the generalized host and playground never drift. */
+function semioHostBootHeadTags(): { readonly tag: string; readonly attrs?: Record<string, string>; readonly children?: string; readonly injectTo: "head-prepend" | "head" }[] {
+  return [
+    { tag: "style", children: PLAYGROUND_PLAY_BOOT_INLINE_STYLE, injectTo: "head-prepend" },
+    { tag: "script", children: PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, injectTo: "head-prepend" },
+    { tag: "script", children: PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, injectTo: "head-prepend" },
+  ];
+}
+
+/** @emoji 🎬️ Vite: inject early appearance + theme + stylesheet link into play `🌐️.html` to avoid unstyled flashes — additive tag injection onto each play's own hand-authored `🌐️.html`, sharing its boot-head fragment ({@link semioHostBootHeadTags}) with {@link semioHostHtmlVitePlugin} instead of duplicating the style/script assembly. */
+export function playgroundPlayBootHtmlPlugin(): OwnedBuildPlugin {
+  return {
+    name: "playground-play-boot-html",
+    transformIndexHtml: {
+      order: "pre",
+      handler() {
+        return {
+          tags: [
+            ...semioHostBootHeadTags(),
+            { tag: "link", attrs: { rel: "stylesheet", href: "./🎨️.css", id: "semio-play-styles" }, injectTo: "head" },
+            { tag: "script", children: PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, injectTo: "head" },
+          ],
+        };
+      },
+    },
+  };
+}
+
+/** @emoji 🔖️ Canonical semio emblem favicon `<link>` tags for playground and app `🌐️.html` heads. */
+export const SEMIO_FAVICON_HEAD_HTML = `<link rel="icon" href="./${faviconDelivery.svg}" type="image/svg+xml" />\n    <link rel="icon" href="./${faviconDelivery.ico}" sizes="any" />`;
+
+/** @emoji 🔖️ Repo-root paths for the round dark emblem SVG and ICO fallback (matches {@link SemioLogo}). */
+export function semioFaviconSources(repoRoot: string): { readonly svg: string; readonly ico: string } {
+  const logoRoot = resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/🪧️logos");
+  return {
+    svg: resolve(logoRoot, "🛡️emblem/🌘️dark-round/🖋️vector.svg"),
+    ico: resolve(logoRoot, "🌐️favicon/🌘️dark-round/📏️size-32.ico"),
+  };
+}
+
+const SEMIO_FAVICON_BLEED_RECT = '<rect width="350" height="350" fill="#001117"/>';
+
+/** @emoji 🔖️ Favicon SVG with opaque bleed so ICO rasterization avoids white matte outside the round emblem. */
+export function semioFaviconSvgMarkup(svgPath: string): string | undefined {
+  if (!existsSync(svgPath)) {
+    return undefined;
+  }
+  const raw = readFileSync(svgPath, "utf8");
+  if (raw.includes(SEMIO_FAVICON_BLEED_RECT)) {
+    return raw;
+  }
+  const open = raw.match(/<svg[^>]*>/)?.[0];
+  if (!open) {
+    return raw;
+  }
+  return raw.replace(open, `${open}${SEMIO_FAVICON_BLEED_RECT}`);
+}
+
+/** @emoji 🔖️ Resolved favicon content for one host: inline SVG markup plus an optional ICO fallback path. */
+type FaviconContent = { readonly svgMarkup?: string; readonly icoPath?: string };
+
+function createFaviconMiddleware(content: FaviconContent): OwnedBuildMiddleware {
+  return (req, res, next) => {
+    let url: string;
+    try { url = decodeURIComponent(req.url?.split(/[?#]/, 1)[0] ?? ""); } catch { next(); return; }
+    if (url === `/${faviconDelivery.svg}` && content.svgMarkup) {
+      res.setHeader("Content-Type", "image/svg+xml");
+      res.end(content.svgMarkup);
+      return;
+    }
+    if (url === `/${faviconDelivery.ico}` && content.icoPath && existsSync(content.icoPath)) {
+      res.setHeader("Content-Type", "image/x-icon");
+      createReadStream(content.icoPath).pipe(res);
+      return;
+    }
+    next();
+  };
+}
+
+/** @emoji 🔖️ Vite: serve and copy the given emblem SVG and bookmark ICO under their exact publication names. */
+function faviconVitePlugins(content: FaviconContent): OwnedBuildPlugin[] {
+  const serveFavicon = createFaviconMiddleware(content);
+  let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
+  return [
+    {
+      name: "semio-favicon-serve",
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveFavicon);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveFavicon);
+      },
+    },
+    {
+      name: "semio-favicon-build",
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
+      },
+      closeBundle() {
+        if (!writeOutput) return;
+        const dist = outDir;
+        mkdirSync(dist, { recursive: true });
+        if (content.svgMarkup) {
+          writeFileSync(resolve(dist, faviconDelivery.svg), content.svgMarkup);
+        }
+        if (content.icoPath && existsSync(content.icoPath)) {
+          cpSync(content.icoPath, resolve(dist, faviconDelivery.ico));
+        }
+      },
+    },
+  ];
+}
+
+/** @emoji 🔖️ Vite: serve and copy semio emblem favicons at `/🛡️favicon.svg` and `/🔖️favicon.ico`. */
+export function semioFaviconVitePlugin(repoRoot: string): OwnedBuildPlugin[] {
+  const favicons = semioFaviconSources(repoRoot);
+  return faviconVitePlugins({ svgMarkup: semioFaviconSvgMarkup(favicons.svg), icoPath: favicons.ico });
+}
+
+/** @emoji 🏷️ The host-chrome surface of a shell brand (structural subset of `framework/core/js`'s `ShellBrand`, so this styling layer never imports framework types). */
+export type ShellBrandHostChrome = {
+  readonly windowTitle: string;
+  readonly logoSvg?: string;
+  readonly faviconIcoPath?: string;
+  /** 🌐️ Custom domain this brand's static build deploys to (e.g. GitHub Pages) — written verbatim into a `CNAME` file at the build root. */
+  readonly cnameHost?: string;
+};
+
+/** @emoji 🚫️ Vite: writes `dist/.nojekyll` on every build (unconditionally — any static host that runs
+ * Jekyll, e.g. GitHub Pages, silently drops files/dirs starting with `_` otherwise, breaking Vite's own
+ * `__vite-browser-external-*.js` shim chunk) and `dist/CNAME` when a brand declares `cnameHost`. */
+function staticDeployMarkerVitePlugins(cnameHost: string | undefined): OwnedBuildPlugin[] {
+  let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
+  return [
+    {
+      name: "static-deploy-markers",
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
+      },
+      closeBundle() {
+        if (!writeOutput) return;
+        mkdirSync(outDir, { recursive: true });
+        writeFileSync(resolve(outDir, ".nojekyll"), "");
+        if (cnameHost) writeFileSync(resolve(outDir, "CNAME"), `${cnameHost}\n`);
+      },
+    },
+  ];
+}
+
+/** @emoji 🧭️ Rewrites Vite's SPA fallback target `/index.html` onto the constitutional emoji entry path. */
+export function rewriteSpaFallbackToEmojiEntry(url: string, entryPath: string): string {
+  const [pathOnly, ...rest] = url.split(/(?=[?#])/);
+  const base = pathOnly ?? url;
+  if (base !== "/index.html") return url;
+  return `${entryPath}${rest.join("")}`;
+}
+
+function semioEmojiIndexHtmlRootRewrite(entry: string): OwnedBuildMiddleware {
+  return (req, _res, next) => {
+    const url = req.url ?? "";
+    if (url === "/" || url.startsWith("/?")) req.url = `${entry}${url.slice(1)}`;
+    next();
+  };
+}
+
+function semioEmojiIndexHtmlSpaFallbackRewrite(entry: string): OwnedBuildMiddleware {
+  return (req, _res, next) => {
+    const url = req.url ?? "";
+    const nextUrl = rewriteSpaFallbackToEmojiEntry(url, entry);
+    if (nextUrl !== url) req.url = nextUrl;
+    next();
+  };
+}
+
+/** @emoji 🌐️ Vite: treat hand-authored `🌐️.html` as the app index (`/` + build input). Vite's default
+ * `index.html` name does not match the constitutional emoji entry filename. */
+export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐️.html"): OwnedBuildPlugin {
+  const entry = `/${fileName}`;
+  return {
+    name: "semio-emoji-index-html",
+    enforce: "pre",
+    config() {
+      return {
+        build: {
+          rollupOptions: {
+            input: resolve(rootDir, fileName),
+          },
+        },
+      };
+    },
+    configureServer(server) {
+      server.middlewares.use(semioEmojiIndexHtmlRootRewrite(entry));
+      return () => {
+        server.middlewares.use(semioEmojiIndexHtmlSpaFallbackRewrite(entry));
+      };
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(semioEmojiIndexHtmlRootRewrite(entry));
+      return () => {
+        server.middlewares.use(semioEmojiIndexHtmlSpaFallbackRewrite(entry));
+      };
+    },
+  };
+}
+
+/** @emoji 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle`, serves/copies the brand mark at `/🛡️favicon.svg` (ICO only when the brand provides one), and writes the static-deploy markers above; no brand ⇒ canonical semio favicons (still with `.nojekyll`). */
+export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHostChrome | undefined): OwnedBuildPlugin[] {
+  if (!brand) return [...semioFaviconVitePlugin(repoRoot), ...staticDeployMarkerVitePlugins(undefined)];
+  return [
+    ...faviconVitePlugins({ svgMarkup: brand.logoSvg, icoPath: brand.faviconIcoPath ? resolve(repoRoot, brand.faviconIcoPath) : undefined }),
+    ...staticDeployMarkerVitePlugins(brand.cnameHost),
+    {
+      name: "semio-brand-html",
+      transformIndexHtml: {
+        order: "pre",
+        handler: (html) => html.replace(/<title>[^<]*<\/title>/, `<title>${brand.windowTitle}</title>`),
+      },
+    },
+  ];
+}
+
+/** @emoji 🧬️ Full-document spec for a semio host `🌐️.html`: title, entry module, mount point, and
+ * optional CSP + pre-mount loading copy — everything an app needs beyond the shared boot scripts so it
+ * stops hand-authoring its own splash screen and `<style>` blocks. */
+export type SemioHostHtmlSpec = {
+  readonly title: string;
+  readonly entry: string;
+  readonly rootId?: string;
+  readonly bodyClass?: string;
+  readonly csp?: string;
+  readonly loading?: { readonly title: string };
+  /** 🌐️ Custom domain this app's static build deploys to (e.g. GitHub Pages) — written verbatim into a
+   * `CNAME` file at the build root, alongside the always-written `.nojekyll` marker. */
+  readonly cnameHost?: string;
+};
+
+/** @emoji 🪧️ Pre-mount placeholder markup shown inside `#{rootId}` until the entry module mounts and
+ * replaces it — inline-styled so it renders before any external stylesheet loads. */
+function semioHostLoadingHtml(loading: SemioHostHtmlSpec["loading"]): string {
+  if (!loading) {
+    return "";
+  }
+  return `<div style="display:flex;align-items:center;justify-content:center;height:100%;font:14px system-ui,sans-serif">${loading.title}</div>`;
+}
+
+/** @emoji 📄️ Generates a complete semio host `🌐️.html` document: doctype/head (title, favicon,
+ * optional CSP, boot style + appearance/theme scripts) and body (`#{rootId}` mount with pre-mount loading
+ * copy, the reveal script, and the entry module script) — the single source of truth
+ * {@link semioHostHtmlVitePlugin} renders from, reusable as-is by non-Vite hosts such as a VS Code webview. */
+export function semioHostHtmlString(spec: SemioHostHtmlSpec): string {
+  const rootId = spec.rootId ?? "root";
+  const cspTag = spec.csp ? `<meta http-equiv="Content-Security-Policy" content="${spec.csp}" />\n    ` : "";
+  const headTags = semioHostBootHeadTags()
+    .map((tag) => (tag.tag === "style" ? `<style>${tag.children}</style>` : `<script>${tag.children}</script>`))
+    .join("\n    ");
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    ${cspTag}<title>${spec.title}</title>
+    ${SEMIO_FAVICON_HEAD_HTML}
+    ${headTags}
+  </head>
+  <body${spec.bodyClass ? ` class="${spec.bodyClass}"` : ""}>
+    <div id="${rootId}">${semioHostLoadingHtml(spec.loading)}</div>
+    <script>${PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT}</script>
+    <script type="module" src="${spec.entry}"></script>
+  </body>
+</html>
+`;
+}
+
+/** @emoji 🎬️ Vite: renders {@link semioHostHtmlString} as the app's `🌐️.html` on every request/build
+ * (full-document replace, `order: "pre"` so later plugins such as `@vitejs/plugin-react`'s HMR preamble
+ * still layer on top), bundles semio favicon serving ({@link semioFaviconVitePlugin}), and writes the
+ * static-deploy markers ({@link staticDeployMarkerVitePlugins} — `.nojekyll` always, `CNAME` when
+ * `spec.cnameHost` is set) — one call wires an app's whole boot + deploy surface instead of a
+ * hand-authored `🌐️.html` plus a separate build-output step. */
+export function semioHostHtmlVitePlugin(repoRoot: string, spec: SemioHostHtmlSpec): OwnedBuildPlugin[] {
+  return [
+    ...semioFaviconVitePlugin(repoRoot),
+    ...staticDeployMarkerVitePlugins(spec.cnameHost),
+    {
+      name: "semio-host-html",
+      transformIndexHtml: {
+        order: "pre",
+        handler() {
+          return semioHostHtmlString(spec);
+        },
+      },
+    },
+  ];
+}
+//#endregion 🔖️HostHtmlPlugin
+
+//#region 🔖️StatusSurfaceHtml
+/** @emoji 🎨️ Light/dark background+foreground hex pair mirrored from {@link PLAYGROUND_PLAY_BOOT_INLINE_STYLE}
+ * / {@link PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT} — this file has no `../🎨️styling/🔣️.json` import, so these are the
+ * canonical values already baked into every other boot surface here, not new ones. */
+const SEMIO_STATUS_SURFACE_COLORS = { lightBg: "#f7f3e3", lightFg: "#001117", darkBg: "#001117", darkFg: "#f7f3e3" } as const;
+
+const SEMIO_STATUS_SURFACE_GLYPH: Record<"empty" | "error" | "loading", string> = { empty: "◌️", error: "⚠️", loading: "…" };
+
+function semioStatusSurfaceInlineStyle(): string {
+  const c = SEMIO_STATUS_SURFACE_COLORS;
+  return `html{color-scheme:light dark}html,body{height:100%;margin:0}body{background-color:${c.lightBg};color:${c.lightFg};display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif}@media (prefers-color-scheme: dark){body{background-color:${c.darkBg};color:${c.darkFg}}}`;
+}
+
+/** @emoji 🚦️ Minimal, standalone status document (empty/error/loading) for host-agnostic contexts that
+ * can't run React — e.g. a WebView2 navigation-failure page — fully inline-styled so it renders with zero
+ * external CSS/JS dependency, reusing the same light/dark hex values every other boot surface in this
+ * file uses. */
+export function statusSurfaceHtml(spec: { readonly kind: "empty" | "error" | "loading"; readonly title: string; readonly description?: string }): string {
+  const description = spec.description ? `<p style="margin:8px 0 0;font-size:14px;opacity:0.72">${spec.description}</p>` : "";
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${spec.title}</title>
+    <style>${semioStatusSurfaceInlineStyle()}</style>
+  </head>
+  <body data-status-kind="${spec.kind}">
+    <div style="text-align:center;max-width:28rem;padding:0 24px">
+      <p style="margin:0 0 8px;font-size:28px" aria-hidden="true">${SEMIO_STATUS_SURFACE_GLYPH[spec.kind]}</p>
+      <p style="margin:0;font-size:16px;font-weight:600">${spec.title}</p>
+      ${description}
+    </div>
+  </body>
+</html>
+`;
+}
+//#endregion 🔖️StatusSurfaceHtml
+
+/** 🗂️ Canonical repo-relative root of the asset-owned public namespace. */
+export const SEMIO_ASSET_ROOT = "🧰️framework/🔨️modules/🖼️assets";
+
+/** @emoji 📂 Resolves and validates the merged Semio asset package root (fonts required). */
+export function resolveSemioAssetRoot(repoRoot: string): string {
+  const assetsRoot = resolve(repoRoot, SEMIO_ASSET_ROOT);
+  const fontDir = resolve(assetsRoot, "🔤️fonts");
+  if (!existsSync(assetsRoot) || !statSync(assetsRoot).isDirectory() || !existsSync(fontDir)) {
+    throw new Error(`Missing Semio asset root at ${assetsRoot} (expected ${SEMIO_ASSET_ROOT} with 🔤️fonts)`);
+  }
+  return assetsRoot;
+}
+
+function uiAssetsVitePluginsForRoot(assetsRoot: string): OwnedBuildPlugin[] {
+  let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
+  const serveAssets = createUiAssetsMiddleware(assetsRoot);
+  return [
+    {
+      name: "ui-assets-serve",
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveAssets);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveAssets);
+      },
+    },
+    {
+      name: "ui-assets-build",
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
+      },
+      closeBundle() {
+        if (!writeOutput) return;
+        if (!existsSync(assetsRoot)) {
+          return;
+        }
+        const dest = resolve(outDir, SEMIO_ASSET_DIRECTORY);
+        mkdirSync(outDir, { recursive: true });
+        cpSync(assetsRoot, dest, { recursive: true });
+      },
+    },
+  ];
+}
+
+/** 🌐️ Serves and copies shared fonts and cursors at `/🖼️assets/*`. */
+export function semioAssetsVitePlugin(repoRoot: string): OwnedBuildPlugin[] {
+  return uiAssetsVitePluginsForRoot(resolveSemioAssetRoot(repoRoot));
+}
+
+/** @emoji 🌐️ @deprecated Use {@link semioAssetsVitePlugin} — caller-supplied roots caused silent font 404s. */
+export function uiAssetsVitePlugin(assetsRoot: string): OwnedBuildPlugin[] {
+  const fontDir = resolve(assetsRoot, "🔤️fonts");
+  if (!existsSync(assetsRoot) || !existsSync(fontDir)) {
+    throw new Error(`uiAssetsVitePlugin: invalid asset root ${assetsRoot} (missing 🔤️fonts); use semioAssetsVitePlugin(repoRoot)`);
+  }
+  return uiAssetsVitePluginsForRoot(assetsRoot);
+}
+
+/** @emoji 🛝️ Playground app kind for Vite play harness config (validated against manifest scan). */
+export type PlaygroundRendererPuzzleKind = string;
+
+function namedImportSpecifiersForModule(source: string, moduleId: string): string[] {
+  const escaped = moduleId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`import\\s*\\{([^}]+)\\}\\s*from\\s*["']${escaped}["']`, "gs");
+  const names: string[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(source))) {
+    for (const part of match[1].split(",")) {
+      const trimmed = part.trim();
+      if (!trimmed) continue;
+      const name = trimmed
+        .replace(/^type\s+/, "")
+        .split(/\s+as\s+/)[0]
+        ?.trim();
+      if (name) names.push(name);
+    }
+  }
+  return names;
+}
+
+/** @emoji 🔁️ Named import specifiers duplicated within the same module import block(s). */
+export function duplicateNamedImportsForModule(source: string, moduleId: string): string[] {
+  const names = namedImportSpecifiersForModule(source, moduleId);
+  const seen = new Set<string>();
+  const dupes: string[] = [];
+  for (const name of names) {
+    if (seen.has(name)) dupes.push(name);
+    else seen.add(name);
+  }
+  return dupes;
+}
+
+const PRESENTATION_RENDERER_VITEST_START = "//#region 🧪️Tests";
+
+/** @emoji ✂️ Drops vitest regions from animate present renderer in browser dev. */
+export function animatePresentRendererVitestStripPlugin(animatePresentIndexPath: string): OwnedBuildPlugin {
+  return {
+    name: "animate-present-renderer-vitest-strip",
+    enforce: "pre",
+    load(id) {
+      if (process.env.VITEST) return;
+      const filePath = id.split("?")[0];
+      if (filePath !== animatePresentIndexPath) return;
+      const source = readFileSync(animatePresentIndexPath, "utf8");
+      const testsStart = source.indexOf(PRESENTATION_RENDERER_VITEST_START);
+      if (testsStart < 0) return source;
+      return source.slice(0, testsStart);
+    },
+  };
+}
+
+/** @deprecated Use {@link animatePresentRendererVitestStripPlugin}. */
+export const presentationRendererVitestStripPlugin = animatePresentRendererVitestStripPlugin;
+
+export type PlaygroundPlayViteOptions = {
+  readonly playDir: string;
+  readonly repoRoot: string;
+  /** @emoji 🎯️ When set, `import.meta.env.PLAYGROUND_APP_KIND` gates browser boot in that play's `index.ts`. */
+  readonly playEntryKind?: string;
+  readonly extraAliases?: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }>;
+  readonly extraPlugins?: readonly OwnedBuildPlugin[];
+  readonly watchIgnored?: readonly string[];
+  readonly build?: OwnedBuildConfig["build"];
+  readonly server?: OwnedBuildConfig["server"];
+  readonly optimizeDeps?: OwnedBuildConfig["optimizeDeps"];
+  readonly resolveDedupe?: readonly string[];
+};
+
+/** @emoji 🎬️ R3F packages that must resolve once with {@link sceneHostPort} and drei controls. */
+export const PLAYGROUND_SCENE_HOST_DEDUPE = ["@react-three/fiber", "@react-three/drei"] as const;
+
+/** @emoji 🎬️ Vite aliases that pin R3F to a single node_modules entry (avoids duplicate Canvas stores). */
+export function playgroundSceneHostResolveAliases(repoRoot: string): ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> {
+  return [
+    { find: /^@react-three\/fiber$/, replacement: resolve(repoRoot, "node_modules/@react-three/fiber/dist/react-three-fiber.esm.js") },
+    { find: /^@react-three\/drei$/, replacement: resolve(repoRoot, "node_modules/@react-three/drei/index.js") },
+  ];
+}
+
+//#region 🔖️MapTileCache
+/** @emoji 🗺️ Compliant User-Agent for OSM / MapLibre demotiles in map play. */
+export const GIS_MAP_TILE_USER_AGENT = "ComposeGisMapPlay/0.1 (+https://github.com/usalu/semio; dev playground)";
+
+/** @emoji 🗺️ Default dev prefetch bounds (Switzerland) for GIS map play. */
+export const GIS_MAP_DEFAULT_PREFETCH_BOUNDS = {
+  west: 5.95,
+  south: 45.82,
+  east: 10.52,
+  north: 47.81,
+} as const;
+
+export type GisMapPrefetchBounds = {
+  readonly west: number;
+  readonly south: number;
+  readonly east: number;
+  readonly north: number;
+};
+
+export const GIS_MAP_OSM_TILE_MAX_Z = 19;
+/** @emoji 🗺️ OpenFreeMap / OpenMapTiles planet MVT (OSM); matches raster detail up to z14. */
+export const GIS_MAP_VECTOR_TILE_MAX_Z = 14;
+export const GIS_MAP_OPENFREEMAP_TILEJSON = "https://tiles.openfreemap.org/planet";
+/** @emoji 🗺️ Highest zoom prefetched for offline map play (matches `GIS_MAP_LOD_TILE_Z` building band). */
+export const GIS_MAP_PREFETCH_RASTER_Z_MAX = 13;
+
+/** @emoji 🗺️ `fetch` loads missing tiles at runtime; `bundle` serves only cached tiles and copies them into `dist` on build. */
+export type GisMapTileServeMode = "fetch" | "bundle";
+
+export const GIS_MAP_TILE_SERVE_MODE_ENV = "GIS_MAP_TILE_SERVE_MODE";
+
+export function resolveGisMapTileServeMode(value?: string): GisMapTileServeMode {
+  return value === "bundle" ? "bundle" : "fetch";
+}
+
+export function mapTileCacheRoots(repoRoot: string): { readonly osm: string; readonly vt: string } {
+  return {
+    osm: resolve(repoRoot, ".🧬semio/🗺️map", "osm-tiles"),
+    vt: resolve(repoRoot, ".🧬semio/🗺️map", "openfreemap-vt"),
+  };
+}
+
+/** @emoji 🧭️ Web Mercator tile index for a lon/lat at zoom `z`. */
+export function lonLatToTileXY(lon: number, lat: number, z: number): { x: number; y: number } {
+  const n = 2 ** z;
+  const x = Math.floor(((lon + 180) / 360) * n);
+  const latRad = (lat * Math.PI) / 180;
+  const y = Math.floor(((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n);
+  return { x: Math.max(0, Math.min(n - 1, x)), y: Math.max(0, Math.min(n - 1, y)) };
+}
+
+/** @emoji 📐️ Inclusive OSM tile index range covering `bounds` at zoom `z`. */
+export function tileRangeForBounds(bounds: GisMapPrefetchBounds, z: number): { x0: number; x1: number; y0: number; y1: number } {
+  const sw = lonLatToTileXY(bounds.west, bounds.south, z);
+  const ne = lonLatToTileXY(bounds.east, bounds.north, z);
+  return {
+    x0: Math.min(sw.x, ne.x),
+    x1: Math.max(sw.x, ne.x),
+    y0: Math.min(sw.y, ne.y),
+    y1: Math.max(sw.y, ne.y),
+  };
+}
+
+export type GisMapTileCoord = { readonly z: number; readonly x: number; readonly y: number };
+
+/** @emoji 📋️ Lists every tile in `bounds` for zoom levels `zMin`…`zMax` (inclusive). */
+export function listMapTilesForBounds(bounds: GisMapPrefetchBounds, zMin: number, zMax: number): GisMapTileCoord[] {
+  const lo = Math.max(0, Math.min(zMin, zMax));
+  const hi = Math.max(lo, zMax);
+  const out: GisMapTileCoord[] = [];
+  for (let z = lo; z <= hi; z++) {
+    const { x0, x1, y0, y1 } = tileRangeForBounds(bounds, z);
+    for (let x = x0; x <= x1; x++) {
+      for (let y = y0; y <= y1; y++) {
+        out.push({ z, x, y });
+      }
+    }
+  }
+  return out;
+}
+
+export type PrefetchMapTilesResult = {
+  readonly downloaded: number;
+  readonly skipped: number;
+  readonly failed: number;
+};
+
+export type PrefetchMapTilesOptions = {
+  readonly repoRoot: string;
+  readonly bounds?: GisMapPrefetchBounds;
+  readonly raster?: boolean;
+  readonly vector?: boolean;
+  readonly zMinRaster?: number;
+  readonly zMaxRaster?: number;
+  readonly zMinVector?: number;
+  readonly zMaxVector?: number;
+  readonly concurrency?: number;
+  readonly skipExisting?: boolean;
+  readonly delayMs?: number;
+  readonly log?: (line: string) => void;
+};
+
+async function fetchOsmTileToCache(cacheRoot: string, z: number, x: number, y: number): Promise<boolean> {
+  const rel = `${z}/${x}/${y}.png`;
+  const filePath = resolve(cacheRoot, rel);
+  const relToRoot = relative(cacheRoot, filePath);
+  if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
+    return false;
+  }
+  await mkdir(resolve(filePath, ".."), { recursive: true });
+  const upstream = await fetch(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`, {
+    headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT },
+  });
+  if (!upstream.ok) {
+    return false;
+  }
+  await writeFile(filePath, Buffer.from(await upstream.arrayBuffer()));
+  return true;
+}
+
+const openFreeMapTileTemplate = ephemeralBox<string | null>("framework.modules.ui.styling.packages.rust.vite.elements.assets.ts.openFreeMapTileTemplate", null);
+const openFreeMapTileTemplateAt = ephemeralBox("framework.modules.ui.styling.packages.rust.vite.elements.assets.ts.openFreeMapTileTemplateAt", 0);
+const OPENFREEMAP_TILE_TEMPLATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+async function resolveOpenFreeMapTileTemplate(): Promise<string> {
+  const now = Date.now();
+  if (openFreeMapTileTemplate.current && now - openFreeMapTileTemplateAt.current < OPENFREEMAP_TILE_TEMPLATE_TTL_MS) {
+    return openFreeMapTileTemplate.current;
+  }
+  const res = await fetch(GIS_MAP_OPENFREEMAP_TILEJSON, { headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT } });
+  if (!res.ok) {
+    throw new Error(`OpenFreeMap TileJSON failed: ${res.status}`);
+  }
+  const json = (await res.json()) as { tiles?: string[] };
+  const template = json.tiles?.[0];
+  if (typeof template !== "string" || !template.includes("{z}")) {
+    throw new Error("OpenFreeMap TileJSON missing tiles URL template");
+  }
+  openFreeMapTileTemplate.current = template;
+  openFreeMapTileTemplateAt.current = now;
+  return template;
+}
+
+async function fetchVtTileToCache(cacheRoot: string, z: number, x: number, y: number): Promise<boolean> {
+  const rel = `${z}/${x}/${y}.pbf`;
+  const filePath = resolve(cacheRoot, rel);
+  const relToRoot = relative(cacheRoot, filePath);
+  if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
+    return false;
+  }
+  await mkdir(resolve(filePath, ".."), { recursive: true });
+  const template = await resolveOpenFreeMapTileTemplate();
+  const url = template.replace("{z}", String(z)).replace("{x}", String(x)).replace("{y}", String(y));
+  const upstream = await fetch(url, { headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT } });
+  if (!upstream.ok) {
+    return false;
+  }
+  const buf = Buffer.from(await upstream.arrayBuffer());
+  if (buf.length === 0) {
+    return false;
+  }
+  await writeFile(filePath, buf);
+  return true;
+}
+
+/** @emoji ⬇️ Prefetch OSM PNG and MapLibre MVT tiles into `.🧬semio/🗺️map` for offline map play. */
+export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promise<PrefetchMapTilesResult> {
+  const {
+    repoRoot,
+    bounds = GIS_MAP_DEFAULT_PREFETCH_BOUNDS,
+    raster = true,
+    vector = true,
+    zMinRaster = 0,
+    zMaxRaster = GIS_MAP_PREFETCH_RASTER_Z_MAX,
+    zMinVector = 0,
+    zMaxVector = GIS_MAP_VECTOR_TILE_MAX_Z,
+    concurrency = 4,
+    skipExisting = true,
+    delayMs = 120,
+    log = (line) => console.log(line),
+  } = options;
+  const { osm, vt } = mapTileCacheRoots(repoRoot);
+  const jobs: { kind: "osm" | "vt"; z: number; x: number; y: number }[] = [];
+  if (raster) {
+    for (const { z, x, y } of listMapTilesForBounds(bounds, zMinRaster, Math.min(zMaxRaster, GIS_MAP_OSM_TILE_MAX_Z))) {
+      jobs.push({ kind: "osm", z, x, y });
+    }
+  }
+  if (vector) {
+    for (const { z, x, y } of listMapTilesForBounds(bounds, zMinVector, Math.min(zMaxVector, GIS_MAP_VECTOR_TILE_MAX_Z))) {
+      jobs.push({ kind: "vt", z, x, y });
+    }
+  }
+  const zoomLabel = `(raster z${zMinRaster}-${zMaxRaster}, vector z${zMinVector}-${zMaxVector})`;
+  let skipped = 0;
+  const pending = skipExisting
+    ? jobs.filter((job) => {
+        const cacheRoot = job.kind === "osm" ? osm : vt;
+        const ext = job.kind === "osm" ? "png" : "pbf";
+        const filePath = resolve(cacheRoot, `${job.z}/${job.x}/${job.y}.${ext}`);
+        if (existsSync(filePath)) {
+          skipped++;
+          return false;
+        }
+        return true;
+      })
+    : jobs;
+  log(`[gis/2d/play] prefetch ${jobs.length} tiles ${zoomLabel}` + (skipExisting ? ` (${skipped} cached, ${pending.length} to fetch)` : ""));
+  if (pending.length === 0) {
+    log(`[gis/2d/play] prefetch done: downloaded=0 skipped=${skipped} failed=0`);
+    return { downloaded: 0, skipped, failed: 0 };
+  }
+  let downloaded = 0;
+  let failed = 0;
+  const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+  for (let i = 0; i < pending.length; i += concurrency) {
+    const batch = pending.slice(i, i + concurrency);
+    await Promise.all(
+      batch.map(async (job) => {
+        const cacheRoot = job.kind === "osm" ? osm : vt;
+        const ok = job.kind === "osm" ? await fetchOsmTileToCache(cacheRoot, job.z, job.x, job.y) : await fetchVtTileToCache(cacheRoot, job.z, job.x, job.y);
+        if (ok) {
+          downloaded++;
+        } else {
+          failed++;
+        }
+      }),
+    );
+    if (delayMs > 0 && i + concurrency < pending.length) {
+      await sleep(delayMs);
+    }
+  }
+  log(`[gis/2d/play] prefetch done: downloaded=${downloaded} skipped=${skipped} failed=${failed}`);
+  return { downloaded, skipped, failed };
+}
+//#endregion 🔖️MapTileCache
+
+//#region 🔖️TileProxyAssetPlugin
+/** @emoji 🧩️ Extension implied by a resolved tile URL template's tail (`.png`, `.pbf`, …), `"bin"` if absent. */
+function tileProxyExtFromTemplate(template: string): string {
+  const clean = template.split(/[?#]/, 1)[0] ?? template;
+  const ext = clean.split(".").pop();
+  return ext && ext.length <= 4 ? ext : "bin";
+}
+
+function contentTypeForTileExt(ext: string): string {
+  if (ext === "png") return "image/png";
+  if (ext === "pbf" || ext === "mvt") return "application/x-protobuf";
+  return "application/octet-stream";
+}
+
+const tileProxyTemplateCache = ephemeralMap<string, { readonly template: string; readonly at: number }>("framework.modules.ui.styling.packages.rust.vite.elements.assets.ts.tileProxyTemplateCache");
+const TILE_PROXY_TEMPLATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** @emoji 🧭️ Resolves a `tile-proxy` spec's `upstream` to a concrete `{z}/{x}/{y}` URL template: used
+ * directly when it already contains `{z}`, otherwise treated as a TileJSON endpoint and resolved
+ * (cached, 7-day TTL) — generalizes the previous OpenFreeMap-only MVT template resolution so any
+ * TileJSON-backed upstream (not just OpenFreeMap) works the same way. */
+async function resolveTileProxyUrlTemplate(upstream: string): Promise<string> {
+  if (upstream.includes("{z}")) {
+    return upstream;
+  }
+  const now = Date.now();
+  const cached = tileProxyTemplateCache.get(upstream);
+  if (cached && now - cached.at < TILE_PROXY_TEMPLATE_TTL_MS) {
+    return cached.template;
+  }
+  const res = await fetch(upstream, { headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT } });
+  if (!res.ok) {
+    throw new Error(`tile proxy upstream TileJSON failed: ${res.status}`);
+  }
+  const json = (await res.json()) as { tiles?: string[] };
+  const template = json.tiles?.[0];
+  if (typeof template !== "string" || !template.includes("{z}")) {
+    throw new Error("tile proxy TileJSON missing tiles URL template");
+  }
+  tileProxyTemplateCache.set(upstream, { template, at: now });
+  return template;
+}
+
+async function fetchTileProxyTileToCache(cacheRoot: string, upstream: string, z: number, x: number, y: number): Promise<{ readonly ok: boolean; readonly ext: string }> {
+  const template = await resolveTileProxyUrlTemplate(upstream);
+  const ext = tileProxyExtFromTemplate(template);
+  const filePath = resolve(cacheRoot, `${z}/${x}/${y}.${ext}`);
+  const relToRoot = relative(cacheRoot, filePath);
+  if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
+    return { ok: false, ext };
+  }
+  await mkdir(resolve(filePath, ".."), { recursive: true });
+  const url = template.replace("{z}", String(z)).replace("{x}", String(x)).replace("{y}", String(y));
+  const upstreamRes = await fetch(url, { headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT } });
+  if (!upstreamRes.ok) {
+    return { ok: false, ext };
+  }
+  const buf = Buffer.from(await upstreamRes.arrayBuffer());
+  if (buf.length === 0) {
+    return { ok: false, ext };
+  }
+  await writeFile(filePath, buf);
+  return { ok: true, ext };
+}
+
+/** @emoji 🌐️ Connect middleware serving `{route}/{z}/{x}/{y}.{ext}` tiles from `cacheRoot`, fetching
+ * (and caching) from `upstream` on a miss — generalizes the previous OSM/OpenFreeMap/Terrarium
+ * middlewares into one route-driven implementation. */
+function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: string, mode: GisMapTileServeMode): OwnedBuildMiddleware {
+  const prefix = route.endsWith("/") ? route : `${route}/`;
+  const pattern = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\d+)/(\\d+)/(\\d+)\\.(\\w+)(?:\\?.*)?$`);
+  return async (req, res, next) => {
+    const match = req.url?.match(pattern);
+    if (!match) {
+      next();
+      return;
+    }
+    const [, zs, xs, ys, ext] = match as unknown as [string, string, string, string, string];
+    const z = Number(zs);
+    const x = Number(xs);
+    const y = Number(ys);
+    const filePath = resolve(cacheRoot, `${z}/${x}/${y}.${ext}`);
+    const relToRoot = relative(cacheRoot, filePath);
+    if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
+      next();
+      return;
+    }
+    if (existsSync(filePath)) {
+      res.setHeader("Content-Type", contentTypeForTileExt(ext));
+      createReadStream(filePath).pipe(res);
+      return;
+    }
+    if (mode === "bundle") {
+      res.statusCode = 404;
+      res.end();
+      return;
+    }
+    try {
+      const result = await fetchTileProxyTileToCache(cacheRoot, upstream, z, x, y);
+      if (!result.ok) {
+        res.statusCode = 404;
+        res.end();
+        return;
+      }
+      res.setHeader("Content-Type", contentTypeForTileExt(result.ext));
+      createReadStream(filePath).pipe(res);
+    } catch {
+      res.statusCode = 502;
+      res.end();
+    }
+  };
+}
+
+/** @emoji 🌐️ Generic dev/preview/build Vite plugin pair for one `tile-proxy` asset spec — replaces the
+ * previous `gisMapTilesVitePlugins`/`terrainTilesVitePlugins`/`osmTileProxyVitePlugin`/
+ * `mapLibreVectorTileProxyVitePlugin` quartet with a single spec-driven implementation. */
+export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }>, mode: GisMapTileServeMode = "fetch"): OwnedBuildPlugin[] {
+  const cacheRoot = resolve(repoRoot, ".🧬semio/🗺️map", spec.cache);
+  const serveTiles = createTileProxyMiddleware(spec.route, cacheRoot, spec.upstream, mode);
+  let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
+  const plugins: OwnedBuildPlugin[] = [
+    {
+      name: `tile-proxy-serve${spec.route}`,
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveTiles);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveTiles);
+      },
+    },
+  ];
+  if (mode === "bundle") {
+    plugins.push({
+      name: `tile-proxy-build${spec.route}`,
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
+      },
+      closeBundle() {
+        if (!writeOutput) return;
+        const dist = outDir;
+        mkdirSync(dist, { recursive: true });
+        if (existsSync(cacheRoot)) {
+          cpSync(cacheRoot, resolve(dist, spec.route.replace(/^\//, "")), { recursive: true });
+        }
+      },
+    });
+  }
+  return plugins;
+}
+
+/** @emoji 🌐️ Standalone HTTP server for every declared playground asset kind (tile-proxy, mesh-collection,
+ * static-dir) — wgpu Trunk proxies and native-bin `SEMIO_ASSET_BASE_URL` hit this instead of Vite. */
+export function startAssetServer(repoRoot: string, port: number, specs: readonly PlaygroundAssetSpec[], mode: GisMapTileServeMode = "fetch", host = "127.0.0.1"): Server {
+  const seen = new Set<string>();
+  const middlewares: OwnedBuildMiddleware[] = [];
+  for (const spec of specs) {
+    const key = `${spec.kind}:${spec.route}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (spec.kind === "tile-proxy") {
+      middlewares.push(createTileProxyMiddleware(spec.route, resolve(repoRoot, ".🧬semio/🗺️map", spec.cache), spec.upstream, mode));
+    } else if (spec.kind === "mesh-collection") {
+      middlewares.push(createMeshCollectionMiddleware(repoRoot, spec));
+    } else {
+      middlewares.push(createStaticDirMiddleware(repoRoot, spec));
+    }
+  }
+  const server = createServer((req, res) => {
+    const run = (i: number): void => {
+      if (i >= middlewares.length) {
+        res.statusCode = 404;
+        res.end();
+        return;
+      }
+      middlewares[i]!(req, res, () => run(i + 1));
+    };
+    run(0);
+  });
+  server.listen(port, host);
+  return server;
+}
+//#endregion 🔖️TileProxyAssetPlugin
+
+//#region 🔖️PlaygroundAssetVitePlugins
+/** @emoji 🚦️ Dispatches every declared `[[package.metadata.semio.assets]]` spec to its generic Vite
+ * plugin factory — the single driver a dev `vite.config` calls with a playground's resolved `assets`
+ * metadata instead of hand-picking per-app plugin factories. */
+export function playgroundAssetVitePlugins(repoRoot: string, specs: readonly PlaygroundAssetSpec[], mode: GisMapTileServeMode = "fetch"): OwnedBuildPlugin[] {
+  const seen = new Set<string>();
+  const plugins: OwnedBuildPlugin[] = [];
+  for (const spec of specs) {
+    const key = `${spec.kind}:${spec.route}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    if (spec.kind === "tile-proxy") {
+      plugins.push(...tileProxyVitePlugin(repoRoot, spec, mode));
+    } else if (spec.kind === "static-dir") {
+      plugins.push(...staticDirVitePlugin(repoRoot, spec));
+    } else {
+      plugins.push(...meshCollectionVitePlugin(repoRoot, spec));
+    }
+  }
+  return plugins;
+}
+//#endregion 🔖️PlaygroundAssetVitePlugins
+
+/** @emoji 🦀️ Vite `optimizeDeps.exclude` entries for wasm-bindgen flow modules (must not be prebundled). */
+export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
+  "@semio-tech/flow-module-core",
+  "@semio-tech/flow-module-math",
+  "@semio-tech/flow-module-text",
+  "@semio-tech/flow-module-logic",
+  "@semio-tech/flow-module-dictionary",
+  "@semio-tech/flow-module-list",
+  "@semio-tech/flow-module-draw",
+] as const;
+
+/** @emoji 🧭️ Workspace Vite resolve preset: dedupe, fs.allow, optimizeDeps.exclude, scene-host aliases. */
+export function createWorkspaceViteResolveConfig(repoRoot: string, extraAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = []): Pick<OwnedBuildConfig, "resolve" | "server" | "optimizeDeps"> {
+  return {
+    resolve: {
+      alias: [...extraAliases],
+      dedupe: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei"],
+    },
+    server: {
+      fs: { allow: [repoRoot] },
+    },
+    optimizeDeps: {
+      exclude: [...findWorkspacePackages(repoRoot), ...FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE],
+    },
+  };
+}
+
+//#region 🔖️StaticDirAssetPlugin
+function contentTypeForStaticDirAsset(filePath: string): string | undefined {
+  if (filePath.endsWith(".js") || filePath.endsWith(".mjs")) {
+    return "text/javascript";
+  }
+  if (filePath.endsWith(".wasm")) {
+    return "application/wasm";
+  }
+  if (filePath.endsWith(".json")) {
+    return "application/json";
+  }
+  if (filePath.endsWith(".png")) {
+    return "image/png";
+  }
+  if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) {
+    return "image/jpeg";
+  }
+  if (filePath.endsWith(".pdf")) {
+    return "application/pdf";
+  }
+  if (filePath.endsWith(".svg")) {
+    return "image/svg+xml";
+  }
+  return undefined;
+}
+
+/** @emoji 🗂️ Connect middleware: serve one `static-dir` spec's files at `{route}/…`. */
+function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): OwnedBuildMiddleware {
+  const fixtureRoot = resolve(repoRoot, spec.root);
+  const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
+  return (req, res, next) => {
+    const rawUrl = req.url ?? "";
+    const pathOnly = rawUrl.split(/[?#]/, 1)[0] ?? "";
+    let decodedPath = pathOnly;
+    try {
+      decodedPath = decodeURIComponent(pathOnly);
+    } catch {
+      next();
+      return;
+    }
+    if (!decodedPath.startsWith(route)) {
+      next();
+      return;
+    }
+    const rel = decodedPath.slice(route.length);
+    const filePath = resolve(fixtureRoot, rel);
+    const relToRoot = relative(fixtureRoot, filePath);
+    if (relToRoot.startsWith("..") || isAbsolute(relToRoot) || !existsSync(filePath) || !statSync(filePath).isFile()) {
+      next();
+      return;
+    }
+    const contentType = contentTypeForStaticDirAsset(filePath);
+    if (contentType) {
+      res.setHeader("Content-Type", contentType);
+    }
+    createReadStream(filePath).pipe(res);
+  };
+}
+
+/** @emoji 🖼️ Generic dev/build Vite plugin pair for one `static-dir` asset spec: serves and copies
+ * `spec.root` at `spec.route` — replaces the previous `cadFixtureVitePlugin`/`infiniteFixtureVitePlugin`
+ * pair (byte-identical serving logic, now route/root-driven instead of hardcoded per fixture tree). */
+export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): OwnedBuildPlugin[] {
+  const serveFixture = createStaticDirMiddleware(repoRoot, spec);
+  const fixtureRoot = resolve(repoRoot, spec.root);
+  const destName = spec.route.replace(/^\//, "");
+  let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
+  return [
+    {
+      name: `static-dir-serve${spec.route}`,
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveFixture);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveFixture);
+      },
+    },
+    {
+      name: `static-dir-build${spec.route}`,
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        // 🖼️ `config.build.outDir` is root-relative unless already absolute — `resolve` handles both, so a
+        // brand's custom `outDir` (see `ShellBrand.distDir`) is honored instead of assuming `<root>/dist`.
+        outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
+      },
+      closeBundle() {
+        if (!writeOutput) return;
+        if (!existsSync(fixtureRoot)) {
+          return;
+        }
+        const dest = resolve(outDir, destName);
+        mkdirSync(outDir, { recursive: true });
+        cpSync(fixtureRoot, dest, { recursive: true });
+      },
+    },
+  ];
+}
+
+/** @emoji 🌐️ Reference-plane assets every `*-play` static bundle serves unconditionally. */
+export const PLAYGROUND_PLAY_STATIC_ASSETS: readonly Extract<PlaygroundAssetSpec, { kind: "static-dir" }>[] = [
+  { kind: "static-dir", route: "/infinite-assets", root: "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets" },
+];
+//#endregion 🔖️StaticDirAssetPlugin
+
+export function findWorkspacePackages(repoRoot: string): string[] {
+  const packages: string[] = [];
+  const scan = (dir: string) => {
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (entry === "node_modules" || entry === "dist" || entry === "target" || entry === "storybook-static" || entry.startsWith(".")) continue;
+      const full = resolve(dir, entry);
+      try {
+        const stat = statSync(full);
+        if (stat.isDirectory()) {
+          scan(full);
+        } else if (entry === "package.json" && full !== resolve(repoRoot, "package.json")) {
+          const pkg = JSON.parse(readFileSync(full, "utf8"));
+          if (pkg.name && typeof pkg.name === "string" && pkg.name.startsWith("@semio-tech/")) {
+            packages.push(pkg.name);
+          }
+        }
+      } catch {
+        /* ignore statSync or readFileSync errors (e.g. broken symlinks or unreadable files) */
+      }
+    }
+  };
+  scan(repoRoot);
+  return packages;
+}
+
+/** @emoji 🛝️ `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
+export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
+  const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
+  const osHubAliases =
+    playEntryKind === "s"
+      ? [
+          {
+            find: "@semio-tech/graph-dsl-core",
+            replacement: resolve(repoRoot, "mathematical/graph/dsl/core/js/index.ts"),
+          },
+        ]
+      : [];
+  const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [...extraAliases, ...osHubAliases]);
+  const workerStubPlugins = [playgroundPlaywrightDevStubPlugin(), playgroundVitestDevStubPlugin()];
+  return defineOwnedBuildConfig({
+    root: playDir,
+    base: "./",
+    publicDir: resolve(playDir, "public"),
+    assetsInclude: ["**/*.wasm"],
+    worker: {
+      format: "es",
+      plugins: () => workerStubPlugins,
+    },
+    define: {
+      ...playgroundPlayViteDefine(playEntryKind ? { "import.meta.env.PLAYGROUND_APP_KIND": JSON.stringify(playEntryKind) } : {}),
+    },
+    plugins: [
+      playgroundPlayBootHtmlPlugin(),
+      playgroundFlowWasmDevStubPlugin(repoRoot),
+      ...semioAssetsVitePlugin(repoRoot),
+      ...semioFaviconVitePlugin(repoRoot),
+      ...playgroundAssetVitePlugins(repoRoot, PLAYGROUND_PLAY_STATIC_ASSETS),
+      ...uiTailwindBuildPlugins(),
+      uiReactBuildPlugin(),
+      playgroundPlaywrightDevStubPlugin(),
+      playgroundVitestDevStubPlugin(),
+      playgroundIframeEmbedHeadersPlugin(),
+      playgroundStaleOptimizeDepPlugin(),
+      ...extraPlugins,
+    ],
+    build: playgroundStaticSiteBuildOptions(build),
+    server: {
+      ...workspaceResolve.server,
+      ...(watchIgnored ? { watch: { ignored: watchIgnored } } : {}),
+      ...server,
+    },
+    resolve: {
+      ...workspaceResolve.resolve,
+      dedupe: [...(workspaceResolve.resolve?.dedupe ?? []), ...(resolveDedupe ?? [])],
+    },
+    optimizeDeps: {
+      ...workspaceResolve.optimizeDeps,
+      ...optimizeDeps,
+      exclude: [...(workspaceResolve.optimizeDeps?.exclude ?? []), ...(optimizeDeps?.exclude ?? [])],
+    },
+  });
+}
+
+if (import.meta.vitest) {
+  const { registerTests1 } = await import("../../🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts");
+  await registerTests1(import.meta.vitest, { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, statusSurfaceHtml, tileProxyVitePlugin, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
+}
+//#endregion 🔖️ViteElementsAssets

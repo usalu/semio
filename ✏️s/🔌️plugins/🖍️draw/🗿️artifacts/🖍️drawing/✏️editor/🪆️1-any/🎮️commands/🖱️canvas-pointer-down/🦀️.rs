@@ -1,10 +1,12 @@
 //! 🖱️ 🖱️ Drawing play app commands command — `canvas-pointer-down`.
 
-use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::drawing::{DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY};
+use crate::editor::drawing::modes::edit::windows::canvas::config::DrawingCanvasWindowConfig;
+use crate::editor::drawing::modes::edit::windows::canvas::transient::DrawingCanvasWindowTransient;
 use crate::op::DrawingMutation;
 use crate::schema::{create_drawing_path_layer, create_drawing_trace_layer, layer_id};
-use crate::{DrawingCamera, DrawingLayerNode, DrawingSnapshot, PathSegment};
+use crate::{DrawingLayerNode, DrawingSnapshot, PathSegment};
 use semio_framework_plugin::{kernel::Effect, ArtifactView, ConfigView, Emit, Fault, RequestId, UiFixedList};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -50,9 +52,9 @@ fn gesture_context_from_input(_input: ()) -> GestureContext {
 //#endregion 🔖️GestureContext
 
 //#region 🔖️DocumentHelpers
-pub(crate) fn canvas_point_to_world(camera: &DrawingCamera, x: f64, y: f64, viewport_w: f64, viewport_h: f64) -> (f64, f64) {
-    let zoom = camera.zoom.max(0.01);
-    ((x - viewport_w * 0.5) / zoom + camera.x, (y - viewport_h * 0.5) / zoom + camera.y)
+pub(crate) fn canvas_point_to_world(viewport: &store::Viewport2d, x: f64, y: f64, viewport_w: f64, viewport_h: f64) -> (f64, f64) {
+    let zoom = viewport.zoom.max(0.01);
+    ((x - viewport_w * 0.5) / zoom + viewport.x, (y - viewport_h * 0.5) / zoom + viewport.y)
 }
 
 /// 🎯️ Maps shift/ctrl/meta modifiers to a framework `MergeMode` wire string (matches
@@ -78,7 +80,7 @@ pub(crate) fn selection_merge_mode(shift: bool, ctrl: bool, meta: bool) -> &'sta
 /// 🕹️ Requests the shell to redispatch a framework-owned interaction verb (`interactionSelect`/
 /// `interactionHover`) through its normal action funnel — the only way an `ArtifactApp::handle`
 /// (or its gesture machine) can drive selection/hover now that both are framework-owned state,
-/// never a `DrawingConfigMutation` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+/// never a `NoConfigMutation` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub(crate) fn request_interaction_action(action_id: &str, args: dsl::DslValue) -> Effect {
     Effect::ReplayShellCommand { action_id: action_id.into(), args: Some(args) }
 }
@@ -202,7 +204,7 @@ fn commit_trace_source(doc: &DrawingSnapshot, source_key: Option<String>) -> Vec
 
 /// 🧰️ Wraps a committed gesture's `operations` as a single described edit plus the host effect that returns
 /// the canvas to the default select utility (the active utility is host-owned, never a document operation).
-fn commit_with_utility_reset(operations: Vec<DrawingMutation>, description: &str) -> Emit<DrawingMutation, DrawingConfigMutation> {
+fn commit_with_utility_reset(operations: Vec<DrawingMutation>, description: &str) -> Emit<DrawingMutation, NoConfigMutation> {
     if operations.is_empty() {
         return Emit::default();
     }
@@ -761,6 +763,8 @@ pub struct DrawingSession {
     /// 🕹️ Current `"strokes"` selection — set by `ArtifactApp::handle` before every dispatch.
     pub(crate) interaction: DrawingInteractionSnapshot,
     pub(crate) active_utility_id: String,
+    pub(crate) window_config: DrawingCanvasWindowConfig,
+    pub(crate) window_transient: DrawingCanvasWindowTransient,
     pub(crate) trace_pointer: Option<TracePointerJob>,
     pub(crate) point_query: Option<DrawingPointQuery>,
     pub(crate) draft_query: Option<DrawingDraftQuery>,
@@ -849,7 +853,7 @@ impl DrawingDraftQuery {
         Self { command_id, utility, points, cursor: 0, path_segments: Vec::with_capacity(capacity), polygon_points: Vec::with_capacity(capacity) }
     }
 
-    pub(crate) fn advance(&mut self, document: &DrawingSnapshot) -> Option<Emit<DrawingMutation, DrawingConfigMutation>> {
+    pub(crate) fn advance(&mut self, document: &DrawingSnapshot) -> Option<Emit<DrawingMutation, NoConfigMutation>> {
         if self.points.len() < 2 {
             return Some(Emit::default());
         }
@@ -887,6 +891,8 @@ impl Default for DrawingSession {
             preview_seq: 0,
             interaction: DrawingInteractionSnapshot::default(),
             active_utility_id: crate::editor::drawing::DRAWING_DEFAULT_UTILITY.into(),
+            window_config: DrawingCanvasWindowConfig::default(),
+            window_transient: DrawingCanvasWindowTransient::default(),
             trace_pointer: None,
             point_query: None,
             draft_query: None,
@@ -936,7 +942,7 @@ impl DrawingSession {
         DrawingGesturePreview { sequence: self.preview_seq, phase, context: self.gesture.context.clone() }
     }
 
-    pub(crate) fn step_gesture_retained(&mut self, command_id: &'static str, event: drawing_gesture::Event, document: &DrawingSnapshot, config: &DrawingConfig) -> Option<Emit<DrawingMutation, DrawingConfigMutation>> {
+    pub(crate) fn step_gesture_retained(&mut self, command_id: &'static str, event: drawing_gesture::Event, document: &DrawingSnapshot, _config: &NoConfig) -> Option<Emit<DrawingMutation, NoConfigMutation>> {
         let mut sink: Vec<fsm::Command<drawing_gesture::DrawingGesture>> = Vec::new();
         fsm::macrostep(&mut self.gesture, event, &mut sink, &mut fsm::NullInspector);
         self.preview_seq = self.preview_seq.wrapping_add(1);
@@ -949,13 +955,13 @@ impl DrawingSession {
                     if active {
                         self.point_query = Some(DrawingPointQuery::new(command_id, TracePointerJob::new_marquee(document, start, end, end[0] < start[0]), false, merge, true));
                     } else {
-                        let tolerance = DRAWING_PICK_TOLERANCE_PX / config.camera.zoom.max(1e-6);
+                        let tolerance = DRAWING_PICK_TOLERANCE_PX / self.window_config.viewport.zoom.max(1e-6);
                         self.point_query = Some(DrawingPointQuery::new(command_id, TracePointerJob::new_query(document, end, tolerance, false), false, selection_merge_mode(shift, ctrl, meta).into(), false));
                     }
                     return None;
                 }
                 GestureEffect::PickPoint { world, shift, ctrl, meta } => {
-                    let tolerance = DRAWING_PICK_TOLERANCE_PX / config.camera.zoom.max(1e-6);
+                    let tolerance = DRAWING_PICK_TOLERANCE_PX / self.window_config.viewport.zoom.max(1e-6);
                     self.point_query = Some(DrawingPointQuery::new(command_id, TracePointerJob::new_query(document, world, tolerance, true), false, selection_merge_mode(shift, ctrl, meta).into(), false));
                     return None;
                 }
@@ -982,7 +988,7 @@ impl DrawingSession {
     /// zoom for hit-test tolerance); a pick/marquee hit becomes an `interactionSelect` request riding
     /// as a `Effect` on the returned `Emit` — selection itself is framework-owned now, never
     /// written back into `config`.
-    pub(crate) fn step_gesture(&mut self, event: drawing_gesture::Event, document: &DrawingSnapshot, _config: &DrawingConfig) -> Emit<DrawingMutation, DrawingConfigMutation> {
+    pub(crate) fn step_gesture(&mut self, event: drawing_gesture::Event, document: &DrawingSnapshot, _config: &NoConfig) -> Emit<DrawingMutation, NoConfigMutation> {
         let mut sink: Vec<fsm::Command<drawing_gesture::DrawingGesture>> = Vec::new();
         fsm::macrostep(&mut self.gesture, event, &mut sink, &mut fsm::NullInspector);
         self.preview_seq = self.preview_seq.wrapping_add(1);
@@ -1009,8 +1015,10 @@ impl DrawingSession {
 use dsl::{FromValue, ToValue};
 
 //#region 🧵️TracePointerContinuation
-fn trace_progress(job: &TracePointerJob) -> DrawingConfigMutation {
-    DrawingConfigMutation::SetTracePointerProgress { generation: job.generation, completed_work: job.completed_work as u64, pending_work: job.work.len() as u64 }
+fn retain_trace_progress(session: &mut DrawingSession, job: &TracePointerJob) {
+    session.window_transient.trace_pointer_generation = job.generation;
+    session.window_transient.trace_pointer_completed_work = job.completed_work as u64;
+    session.window_transient.trace_pointer_pending_work = job.work.len() as u64;
 }
 
 fn queue_trace_pointer(payload: &CanvasPointerDown, job: &TracePointerJob) -> Effect {
@@ -1030,16 +1038,18 @@ fn queue_trace_pointer(payload: &CanvasPointerDown, job: &TracePointerJob) -> Ef
     Effect::DispatchAction { req: RequestId(NEXT_TRACE_POINTER_REQUEST.fetch_add(1, Ordering::Relaxed)), action: "canvasPointerDown".into(), args, delay_ms: 0 }
 }
 
-fn advance_trace_pointer(session: &mut DrawingSession, mut job: TracePointerJob, payload: &CanvasPointerDown, document: &DrawingSnapshot) -> Emit<DrawingMutation, DrawingConfigMutation> {
+fn advance_trace_pointer(session: &mut DrawingSession, mut job: TracePointerJob, payload: &CanvasPointerDown, document: &DrawingSnapshot) -> Emit<DrawingMutation, NoConfigMutation> {
     if !job.advance(document) {
         let effect = queue_trace_pointer(payload, &job);
-        let progress = trace_progress(&job);
+        retain_trace_progress(session, &job);
         let _ = session.retain_trace_pointer(job);
-        return Emit { config_mutations: vec![progress], effects: vec![effect], ..Default::default() };
+        return Emit { effects: vec![effect], ..Default::default() };
     }
     let source_key = job.best.and_then(|candidate| candidate.image_key).or_else(|| document.assets.keys().next().cloned());
     let mut emit = commit_with_utility_reset(commit_trace_source(document, source_key), "Trace image");
-    emit.config_mutations.push(DrawingConfigMutation::SetTracePointerProgress { generation: 0, completed_work: 0, pending_work: 0 });
+    session.window_transient.trace_pointer_generation = 0;
+    session.window_transient.trace_pointer_completed_work = 0;
+    session.window_transient.trace_pointer_pending_work = 0;
     emit
 }
 //#endregion 🧵️TracePointerContinuation
@@ -1075,16 +1085,16 @@ pub struct CanvasPointerDown {
     pub checkpoint_pending_work: Option<u64>,
 }
 
-pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, DrawingConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, DrawingConfigMutation>, Fault> {
+pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     let operation = doc.operation()?;
-    let document_revision = crate::editor::drawing::drawing_document_revision(doc, cfg.snapshot);
+    let document_revision = crate::editor::drawing::drawing_document_revision(doc);
     if let Some(generation) = payload.generation {
         let Some(base_revision) = payload.base_revision.as_deref() else { return Ok(Emit::default()) };
         if base_revision.len() != 64
             || payload.parent_document_id.as_ref().is_some_and(|id| id.len() > 256)
             || session.active_utility_id != "trace"
-            || cfg.snapshot.trace_pointer_generation != generation
+            || session.window_transient.trace_pointer_generation != generation
             || payload.app_instance_id != Some(operation.app_instance_id)
             || payload.parent_document_id.as_deref() != Some(operation.parent_document_id.as_str())
             || base_revision != document_revision
@@ -1100,17 +1110,16 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, DrawingSnapsho
         }
         return Ok(advance_trace_pointer(session, job, payload, document));
     }
-    let config = cfg.snapshot;
-    let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
+    let (world_x, world_y) = canvas_point_to_world(&session.window_config.viewport, payload.x, payload.y, payload.width, payload.height);
     let active_utility = session.active_utility_id.clone();
     if active_utility == "trace" {
-        session.cancel_trace_pointer(operation.app_instance_id, &operation.parent_document_id, config.trace_pointer_generation);
+        session.cancel_trace_pointer(operation.app_instance_id, &operation.parent_document_id, session.window_transient.trace_pointer_generation);
         let mut sink: Vec<fsm::Command<drawing_gesture::DrawingGesture>> = Vec::new();
         fsm::macrostep(&mut session.gesture, drawing_gesture::Event::PointerDown { utility: "trace".into(), world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta }, &mut sink, &mut fsm::NullInspector);
         session.preview_seq = session.preview_seq.wrapping_add(1);
         return Ok(advance_trace_pointer(session, TracePointerJob::new_operation(operation, document, [world_x, world_y]), payload, document));
     }
-    let emit = session.step_gesture(drawing_gesture::Event::PointerDown { utility: active_utility, world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta }, document, config);
+    let emit = session.step_gesture(drawing_gesture::Event::PointerDown { utility: active_utility, world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta }, document, cfg.snapshot);
     Ok(emit)
 }
 

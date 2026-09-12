@@ -2,7 +2,7 @@
 use super::*;
 use crate::editor::sourcing::SourcingCurationCommand;
 use crate::editor::sourcing::modes::edit::windows::pool;
-use crate::editor::sourcing::testkit::{dispatch, new_app, render};
+use crate::editor::sourcing::unit_tests::context::{dispatch, new_app, render};
 
 #[semio_framework_async_macros::async_test]
 async fn set_filter_min_availability_clamps_to_zero() {

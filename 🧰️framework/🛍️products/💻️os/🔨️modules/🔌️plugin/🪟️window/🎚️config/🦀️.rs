@@ -17,7 +17,7 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
     type State: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ConfigRecord + store::ArtifactPack + 'static;
     type Mutation: protocol::Mutation<Self::State> + PartialEq + Send + protocol::OpText + protocol::OpBinary + 'static;
 
-    fn build_store_owners() -> store::MemberStoreOwners<Self::State, Self::Mutation>;
+    fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation>;
     fn build_one_item_preparation_factory() -> Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>>;
     fn build_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>>;
 }
@@ -198,7 +198,7 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparation<O::State, O::M
     }
 }
 
-pub fn bounded_window_config_store_owners<O: WindowConfigOwner>() -> store::MemberStoreOwners<O::State, O::Mutation> {
+pub fn bounded_window_config_store_owners<O: WindowConfigOwner>() -> store::DocumentStoreOwners<O::State, O::Mutation> {
     super::app::bounded_config_store_owners::<O::State, O::Mutation>()
 }
 
@@ -368,7 +368,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigStoreOwner<O> {
             let id = format!("window-config:{}:{window_id}", O::WINDOW_KIND_ID);
             let envelope = store::create_config_envelope::<O::State, O::Mutation>(O::SCHEMA, &id, O::State::default(), None).await;
             let mut config = store::ConfigStore::new(envelope).await.map_err(|error| error.into_fault())?;
-            config.install_member_store_owners_exact(O::build_store_owners());
+            config.install_document_store_owners_exact(O::build_store_owners());
             self.partitions.insert(window_id.to_string(), WindowConfigPartition { store: config, disposer: Some(O::build_store_disposer()) });
         }
         Ok(self.partitions.get_mut(window_id).expect("initialized window config partition remains owned"))

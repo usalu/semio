@@ -1,4 +1,4 @@
-use crate::editor::sequence::testkit::{dispatch, new_app, new_app_with_registry_wired, select_steps};
+use crate::editor::sequence::unit_tests::context::{dispatch, new_app, new_app_with_registry_wired, select_steps};
 use crate::editor::sequence::SequenceCommand;
 use crate::SequenceCamera;
 use semio_framework_plugin::{PluginApp, ViewModel};
@@ -10,13 +10,13 @@ use super::set_viewport::SetViewport;
 #[semio_framework_async_macros::async_test]
 async fn set_viewport_writes_config_not_operations() {
     let mut app = new_app().await;
-    let result = app.dispatch_typed(SequenceCommand::SetViewport(SetViewport { camera: SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 } }), &semio_framework_plugin::testkit::meta("local")).await.expect("viewport pan/zoom");
+    let result = app.dispatch_typed(SequenceCommand::SetViewport(SetViewport { camera: SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 } }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("viewport pan/zoom");
     assert!(result.mutations.is_empty(), "setViewport must not emit a VCS operation");
     let node = app.render(crate::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, None, &ViewModel::default()).await.expect("render");
     let semio_framework_plugin::Component::Surface(props) = &node.root.component else { panic!("semantic graph") };
     let scene: semio_framework_plugin::NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed graph");
     assert_eq!(scene.viewport.expect("camera viewport").zoom, 2.0);
-    semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("retire viewport graph");
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(node).expect("retire viewport graph");
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's

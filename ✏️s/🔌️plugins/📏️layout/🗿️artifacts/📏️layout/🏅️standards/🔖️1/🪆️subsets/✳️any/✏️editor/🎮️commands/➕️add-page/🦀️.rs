@@ -1,6 +1,7 @@
 //! ✏️ ✏️ Layout play app commands command — `add-page`.
 
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use crate::editor::layout::modes::edit::windows::blueprint::config::current;
 use crate::mutations::create_page::CreatePage;
 use crate::mutations::LayoutMutation;
 use crate::{LayoutSnapshot, PageColumns, PageMargins};
@@ -11,9 +12,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "add-page")]
 pub struct AddPage {}
 
-pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let config = cfg.snapshot;
+    let config = current(cfg);
     let template = document.pages.iter().find(|page| page.id == config.active_page_id).or_else(|| document.pages.first());
     let (width, height, spread_id, parent_page_id, margins, columns) = template.map_or((595.0, 842.0, "spread-1".into(), None, PageMargins { top: 48.0, right: 36.0, bottom: 48.0, left: 36.0 }, PageColumns { count: 1, gutter: 0.0 }), |page| {
         (page.width, page.height, page.spread_id.clone(), page.parent_page_id.clone(), page.margins.clone(), page.columns.clone())
@@ -44,7 +45,6 @@ pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
     // surface to the new page.
     Ok(Emit {
         artifact_mutations: vec![LayoutMutation::CreatePage(CreatePage { page, index: Some(index) })],
-        config_mutations: vec![LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id })],
         ..Default::default()
     })
 }

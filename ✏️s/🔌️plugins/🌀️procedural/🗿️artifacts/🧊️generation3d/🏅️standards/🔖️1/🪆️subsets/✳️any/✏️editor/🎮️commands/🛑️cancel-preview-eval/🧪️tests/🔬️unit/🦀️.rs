@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::generation3d::testkit::{empty_history_view, retire_flow_eval_session};
+use crate::editor::generation3d::unit_tests::context::{empty_history_view, retire_flow_eval_session};
 use semio_framework_plugin::{ArtifactView, ConfigView};
 
 const PREVIEW_CANCEL_FIXTURE_JSON: &str = include_str!("../../../../../🧫️fixtures/🛑️preview-cancel.json");
@@ -131,7 +131,7 @@ fn assert_status(observed: &serde_json::Value, expected: &ExpectedStatus, labels
 /// further tick is owed) yet resumable (a later gesture arms exactly one).
 #[test]
 fn the_cancel_gesture_obeys_its_fixture_end_to_end() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let fixture = preview_cancel_fixture();
     assert_eq!(fixture.cancel_action, "cancelPreviewEval");
     assert_eq!(fixture.geometry_extension_id, crate::preview_eval::GENERATION_3D_GEOMETRY_EXTENSION_ID);
@@ -215,7 +215,7 @@ fn the_cancel_gesture_obeys_its_fixture_end_to_end() {
 /// not a cancellation.
 #[test]
 fn an_unaddressable_kernel_cancels_locally_and_emits_nothing() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut session = FlowEvalSession::new();
     assert!(session.note_pending_tessellate(node_hash("brep:solid-9"), "brep:solid-9".into()));
     let payload = CancelPreviewEval { window_id: CANCEL_WINDOW_ID.into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() };

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "layout.windowtransient",
+  "title": "Layout Window Transient",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dropPreview", "engagementInput"],
+  "properties": {
+    "dropPreview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "x", "y"],
+      "properties": {
+        "kind": { "type": "string" },
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "engagementInput": { "type": "string" }
+  }
+}

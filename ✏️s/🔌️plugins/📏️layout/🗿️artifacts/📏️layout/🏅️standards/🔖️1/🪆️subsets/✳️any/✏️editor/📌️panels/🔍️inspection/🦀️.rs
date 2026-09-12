@@ -1,7 +1,7 @@
 //! 🔍️ Layout play app panel — the inspector: a document summary (was field editors for the current
 //! selection; see `render`'s doc comment for why that's gone).
 
-use crate::editor::layout::config::LayoutConfig;
+use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig;
 use crate::editor::layout::terminology::LayoutLabels;
 use crate::editor::layout::ui_label;
 use crate::{LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
@@ -33,7 +33,7 @@ pub fn definition() -> PanelTabDefinition {
 /// against and always falls through to the document summary below — the same gap gis2d's and
 /// puzzle3d's inspection panels flag (see this ticket's w3b-summary.md). Not fixed here (framework
 /// file, out of this crate's remit).
-pub fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn render(doc: &LayoutSnapshot, config: &LayoutWindowConfig, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
     let mut section =
         semio_framework_ui_contract::section(ui_label(labels.inspection.as_str())?).default_open(true).try_id("layout-play-inspector.empty").map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout inspector id admission failed"))?;
     for (index, value) in [

@@ -14,7 +14,7 @@ package = "semio:cad"
 [package.metadata.semio]
 role = "plugin"
 
-# 📖️ Opts this plugin into the generated Storybook scope registry (`.storybook/scopes.ts`'s
+# 📖️ Opts this plugin into the generated Storybook scope registry (`.storybook/📖️stories/🧭️coordination/🟦️.ts`'s
 # `GENERATED_SCOPES`, read via `readSemioMarkerSubTable`) instead of a hand-maintained entry — see
 # 26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG. `sourceRoots` are relative to
 # this plugin's OWNER dir (`✏️s/🔌️plugins/📐️cad`), matching the pre-existing hand-curated `cad` scope.
@@ -22,6 +22,7 @@ role = "plugin"
 id = "cad"
 titlePrefix = "📐️cad"
 sourceRoots = ["🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer", "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets"]
+storyGlobs = ["📖️stories/**/🧪️.story.tsx"]
 
 [[package.metadata.semio.playground]]
 variant = "cad"
@@ -73,6 +74,7 @@ semio-framework-job = { path = "../../../../../🧰️framework/🔨️modules/�
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 
 [dev-dependencies]
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
 serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

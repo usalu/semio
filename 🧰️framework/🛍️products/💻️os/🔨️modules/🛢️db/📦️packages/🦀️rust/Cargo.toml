@@ -62,6 +62,7 @@ sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio",
 neo4rs = { version = "0.8", optional = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["testkit"] }
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+semio-framework-pack = { workspace = true, features = ["corruption-testing"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true, features = ["testkit"] }

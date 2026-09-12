@@ -9,16 +9,23 @@ use std::collections::BTreeSet;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 //#region 🔖️Artifact
 /// 🧬️ DAG document artifact state.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.dag.dag")]
 pub struct DagArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.graph")]
+    #[child(kind = "s.stdio.semio")]
     pub content: DagContentChild,
 }
+
+impl dsl::FromValue for DagArtifact {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        <crate::DagSnapshot as dsl::FromValue>::from_value(value).map(Self::from_snapshot)
+    }
+}
+
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
@@ -281,8 +288,8 @@ pub fn remove_nodes_operations(document: &DagSnapshot, node_ids: &[String]) -> V
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️document-helpers/🦀️.rs"]
-mod document_helpers_tests;
+#[path = "🧪️tests/🧩️document-behavior/🦀️.rs"]
+mod document_behavior_tests;
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports
@@ -291,3 +298,7 @@ pub use crate::DagFixtureEdge;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::DagNodeSpec;
 //#endregion 🔁️Re-exports
+
+#[cfg(test)]
+#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
+mod document_contract_tests;

@@ -739,17 +739,6 @@ impl store::ArtifactOwnedValueRetirementFactory<RasterSnapshot> for RasterSnapsh
     }
 }
 
-/// 🧪️ Test-only retirement drive for a snapshot a test built and owns outright.
-///
-/// `RasterOwnedMap`'s `Drop` fails closed (`🗿️artifacts/🖨️raster/🦀️.rs:252`) — a populated snapshot
-/// that merely goes out of scope aborts the whole test binary with a non-unwinding
-/// "panic in a destructor during cleanup". Production reaches terminal through
-/// `RasterSnapshotRetirementFactory`; a test that mints its own populated `RasterSnapshot` must reach
-/// the same terminal, one owner per grant, which is exactly what this drives.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️test-support/🦀️.rs"]
-pub(crate) mod test_support;
-
 struct RasterSnapshotRootRetirement {
     owner: std::mem::ManuallyDrop<Option<std::sync::Arc<RasterSnapshot>>>,
     value: std::mem::ManuallyDrop<Option<RasterSnapshot>>,
@@ -3351,8 +3340,8 @@ impl Drop for RasterMutationCandidateAuthority {
     }
 }
 
-pub fn raster_document_store_owners() -> store::MemberStoreOwners<RasterSnapshot, RasterMutation> {
-    store::MemberStoreOwners::new(
+pub fn raster_document_store_owners() -> store::DocumentStoreOwners<RasterSnapshot, RasterMutation> {
+    store::DocumentStoreOwners::new(
         std::sync::Arc::new(RasterSnapshotRetirementFactory),
         std::sync::Arc::new(RasterSnapshotRetirementFactory),
         std::sync::Arc::new(RasterMutationRetirementFactory),
@@ -4035,5 +4024,5 @@ pub fn raster_document_store_initialization_job(
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub(crate) mod unit_tests;
 //#endregion 🧪️Tests

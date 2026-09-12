@@ -6,7 +6,7 @@ Feature: Apply every typed s.mathematical.equation graph mutation to its committ
 
   `s.mathematical.equation` is a semio-NATIVE artifact and no third party reads `.dsl.semio`.
   That is recorded as the `equation-mutation-semantics` no-oracle decision in
-  `../../../✳️any/🔮️oracle/🔣️.json`, which also records why `petgraph` and the external CAS
+  `../../../✳️any/🔮️oracles/🔣️.json`, which also records why `petgraph` and the external CAS
   candidates were surveyed and DECLINED.
 
   ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. What blocks a second
@@ -32,7 +32,7 @@ Feature: Apply every typed s.mathematical.equation graph mutation to its committ
 
   Where the assertions live. This case records a no-oracle decision, so the runner dispatches NO
   oracle role at all. Every law below is asserted INSIDE the adapter's handler, through the shared
-  law module `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` that the stdio subsets use —
+  law module `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` that the stdio subsets use —
   `divergence` for a path-named first difference, `mutation_is_observable` for the forward law,
   `inverse_restores` for the inverse law.
 

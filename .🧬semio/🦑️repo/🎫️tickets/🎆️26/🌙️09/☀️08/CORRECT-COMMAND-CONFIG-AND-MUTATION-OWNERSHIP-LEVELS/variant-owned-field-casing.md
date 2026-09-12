@@ -1,0 +1,13 @@
+# Variant-Owned Field Casing
+
+The populated FEM document native law fails with `elements.0.missing field material_id`, while its declared variant attribute and JSON Schema require `materialId`. Native10 confirms the failure; the other four selected FEM window laws pass. The value derive parses variant attributes using its field-attribute parser, silently falls back to defaults on the unsupported variant `rename_all`, and applies only the container's `rename_all_fields` to named variant fields. The variant's own field-casing scope therefore never takes effect.
+
+The correction belongs in value-derive attribute handling. Container tag casing remains separate from container field defaults, a variant's field-casing override takes precedence for that variant, and explicit field rename takes precedence over both. The existing native serde comparison suite now has a neutral three-shape corpus for internal, external and adjacent tagging. It includes a variant with both an explicit tag rename and field-casing override, plus an explicitly renamed field. The new registered `framework-variant-field-casing` command runs that complete integration suite and is available in both launch catalogs.
+
+The regression suite ran before the macro correction and exited nonzero: 15 existing laws passed, while the new neutral/Serde law failed because native encoding emitted `material_id` where both the fixture and Serde emitted `materialId`. This is the intended runtime failure, recorded in `🗑️generated/framework-variant-field-casing-red.log`.
+
+The macro now parses variant attributes through a dedicated `VariantAttrs` owner, propagates invalid variant-attribute errors, and applies variant field casing before the container default in both encoding and decoding. A source inventory of immediate variant attributes in framework and artifact Rust files found `rename` (155) and `rename_all` (30); no additional variant-attribute kind was observed.
+
+The registered corrected suite exited zero with **16 passed, zero failed** and the native `[DEBUG]` confirmation of agreement with Serde and all three neutral wire shapes. Existing container-only casing, struct casing, and newtype carrier behavior remain covered by the same executed suite. Evidence: `🗑️generated/framework-variant-field-casing-green.log`. FEM's populated native document admission is running against the correction; its result is not implied by the derive suite.
+
+Files changed for this slice: value derive `⚙️expansion/🦀️.rs`, `🧪️tests/🐫️variant-field-casing/🦀️.rs`, and `🧫️fixtures/🐫️variant-field-casing/🔣️.json`; root `📜️script.ts` and `📋️project.json`; both `.vscode` launch catalogs; ticket validation `📜️script.ts` and `project.json`; this report.

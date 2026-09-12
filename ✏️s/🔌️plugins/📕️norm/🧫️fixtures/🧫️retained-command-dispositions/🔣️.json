@@ -59,7 +59,7 @@
       ],
       "execution": "bounded",
       "admission": "migrated",
-      "reducer": "🎮️commands/☑️selected-check — NormConfigMutation::ChangeSelectedCheckIndex"
+      "reducer": "🎮️commands/☑️selected-check — exact Results WindowConfigMutation::ChangeSelectedCheckIndex"
     }
   ],
   "apps": [

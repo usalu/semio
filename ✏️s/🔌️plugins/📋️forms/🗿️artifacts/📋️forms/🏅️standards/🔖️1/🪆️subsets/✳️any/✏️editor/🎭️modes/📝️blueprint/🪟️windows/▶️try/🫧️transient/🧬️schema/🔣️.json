@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/forms/try-window-transient.json",
+  "title": "FormsTryWindowTransient",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tryValues"],
+  "properties": {
+    "tryValues": {
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": { "maxLength": 512 },
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string", "maxLength": 4096 }
+      },
+      "x-semio-state": "window-transient"
+    }
+  }
+}

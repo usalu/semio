@@ -10,9 +10,10 @@
 //! `nodeGraphHoverActionArgs`, `nodeGraphViewportActionArgs`).
 
 use super::*;
-use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiPresence};
+use semio_framework_os_kernel::Viewport2d;
+use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, NodeGraphScene, SurfaceKind, UiPresence};
 
-const NODE_GRAPH_SCENE_FIXTURE: &str = include_str!("🔣️.json");
+const NODE_GRAPH_SCENE_FIXTURE: &str = include_str!("../../🧫️fixtures/🕸️wgpu-node-graph/🔣️.json");
 
 fn hexagonal_mushroom_column_fixture_json() -> String {
     let value: Value = serde_json::from_str(NODE_GRAPH_SCENE_FIXTURE).expect("committed generation3d flow fixture parses");
@@ -35,7 +36,7 @@ fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
             fixture_json: Some(hexagonal_mushroom_column_fixture_json()),
             capabilities_json: Some(json!({ "engine": "flow", "spotlight": true }).to_string()),
             lod_json: Some(json!({ "automatic": true }).to_string()),
-            ..NodeGraphScene::base(Vec::new(), Vec::new(), NodeGraphViewport { x: 94.755_815_717_374_45, y: -97.508_331_346_796_68, zoom: 1.784_432_561_601_109_9 })
+            ..NodeGraphScene::base(Vec::new(), Vec::new(), Viewport2d { x: 94.755_815_717_374_45, y: -97.508_331_346_796_68, zoom: 1.784_432_561_601_109_9 })
         }),
         text_editor: None,
         table: None,

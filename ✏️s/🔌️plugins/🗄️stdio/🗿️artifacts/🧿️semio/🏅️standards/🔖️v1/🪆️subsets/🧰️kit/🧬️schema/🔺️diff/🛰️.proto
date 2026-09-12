@@ -1,6 +1,25 @@
 syntax = "proto3";
-package semio.s_stdio_semio_kit.diff;
+package semio.s.stdio.semio.v1.kit.diff;
+import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
+message SemioKitTypeList { repeated semio.s.stdio.semio.v1.kit.snapshot.SemioKitType values = 1; }
+message SemioKitDesignList { repeated semio.s.stdio.semio.v1.kit.snapshot.SemioKitDesign values = 1; }
+message SemioKitObjectChildList { repeated semio.os.store.ArtifactChild values = 1; }
+message SemioKitModelChildList { repeated semio.os.store.ArtifactChild values = 1; }
+message SemioKitLinkList { repeated semio.os.store.ArtifactLink values = 1; }
+message ClearProperties {}
+message SemioKitPropertiesChange {
+  oneof operation {
+    semio.os.store.ArtifactChild value = 1;
+    ClearProperties clear = 2;
+  }
+}
 message SemioKitDiff {
-  bool types_touched = 1; bool designs_touched = 2; bool objects_touched = 3;
-  bool models_touched = 4; bool properties_touched = 5; bool representations_touched = 6;
+  SemioKitTypeList types = 1;
+  SemioKitDesignList designs = 2;
+  SemioKitObjectChildList objects = 3;
+  SemioKitModelChildList models = 4;
+  SemioKitPropertiesChange properties = 5;
+  SemioKitLinkList representations = 6;
 }

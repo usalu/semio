@@ -5,7 +5,7 @@ use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
 use crate::standards::v1::subsets::any::schema::{fixture_to_workflow, with_host};
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, Viewport2d, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const GENERATION2D_PLAY_WINDOW_MAIN: &str = "generation2d-main";
@@ -38,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, session: &FlowEvalSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.fixture;
     let (nodes, edges) = with_host(fixture, |host| fixture_to_workflow(&host.dag.fixture));
-    let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
+    let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     let flow_extras = flow_backed_node_graph_extras(fixture, "", 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     // 🕹️ `render` carries no `InteractionView` and `NodeGraphScene` has no `interaction_domain` field
     // for the wrapper to stamp post-render either (see the `🧊️3d` sibling window's identical note,
@@ -63,6 +63,6 @@ pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, sess
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "../../🧪️tests/🕸️flow/🔬️unit/🦀️.rs"]
+#[path = "./🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "default": {
+    "variant": "s",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts",
+    "producerScript": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+  },
+  "isolation": {
+    "canonicalOutputRoot": "default",
+    "stagedOutputRoot": "variants",
+    "canonicalRootEnvironment": "SEMIO_PLAYGROUND_SESSION_OUTPUT_ROOT",
+    "resolverSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts"
+  },
+  "staging": {
+    "rootPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions",
+    "ownerDirectory": "🎮️playground-session",
+    "sourceLeaf": "🟦️.ts",
+    "artifactKey": "🎮️playground-session/🟦️.ts",
+    "viteConfigPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
+    "viteSpecifier": "virtual:semio-playground-session",
+    "variants": [
+      {
+        "variant": "note",
+        "pluginId": "note"
+      },
+      {
+        "variant": "puzzle5d",
+        "pluginId": "puzzle"
+      }
+    ]
+  }
+}

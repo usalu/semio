@@ -1,6 +1,6 @@
 //! 📄️ 📄️ Drawing play app commands command — `commit-document`.
 
-use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::DrawingMutation;
 use crate::DrawingSnapshot;
 use dsl::{FromValue, ToValue};
@@ -16,8 +16,8 @@ pub struct CommitDocument {
 pub fn handle(
     payload: &CommitDocument,
     _doc: &ArtifactView<'_, DrawingSnapshot>,
-    _cfg: &ConfigView<'_, DrawingConfig>,
+    _cfg: &ConfigView<'_, NoConfig>,
     _session: &mut crate::editor::drawing::commands::canvas_pointer_down::DrawingSession,
-) -> Result<Emit<DrawingMutation, DrawingConfigMutation>, Fault> {
+) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     Ok(Emit { effects: vec![crate::editor::drawing::drawing_reset_document_effect(&payload.snapshot)], ..Default::default() })
 }

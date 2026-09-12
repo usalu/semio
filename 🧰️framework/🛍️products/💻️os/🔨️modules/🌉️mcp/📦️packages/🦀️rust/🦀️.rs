@@ -49,8 +49,8 @@ pub mod context;
 pub mod conformance;
 
 #[cfg(test)]
-#[path = "../../🧪️testkit/🦀️.rs"]
-pub(crate) mod testkit;
+#[path = "../../🧪️tests/🧱️source-builders/🦀️.rs"]
+pub(crate) mod source_builders;
 
 #[path = "../../🔀️dispatch/🦀️.rs"]
 #[macro_use]

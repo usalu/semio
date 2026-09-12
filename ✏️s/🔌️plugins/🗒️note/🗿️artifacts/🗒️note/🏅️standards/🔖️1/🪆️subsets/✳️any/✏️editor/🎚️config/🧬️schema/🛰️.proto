@@ -1,3 +1,0 @@
-syntax = "proto3";
-package semio.app.note.note;
-message NoteConfig { reserved 1, 2, 3, 4, 5; }

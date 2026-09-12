@@ -1,20 +1,8 @@
 syntax = "proto3";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 package semio.s.sourcing.curation.artifact;
 
 // 🧬️ Curation artifact schema — every field with its state class.
-
-message TableSort {
-  string column_id = 1;
-  string direction = 2;
-}
-
-message Filters {
-  string query = 1;
-  repeated string module_ids = 2;
-  repeated string typology_path = 3;
-  uint32 min_availability = 4;
-  optional TableSort sort = 5;
-}
 
 message GeometryRecipeBox {
   string kind = 1;
@@ -72,23 +60,17 @@ message ObjectKindExtra {
   GeometryRecipe geometry = 6;
 }
 
-message ArtifactChildHandle { string child_id = 1; string target = 2; }
-
 message CuratedItem {
   string object_id = 1;
   uint32 count = 2;
 }
 
 message CurationArtifact {
-  // @state artifact @child kind=s.stdio.semio.kit
-  ArtifactChildHandle catalog = 1;
+  // @state artifact @child kind=s.stdio.semio
+  semio.os.store.ArtifactChild catalog = 1;
   // @state artifact
   repeated ObjectKindExtra stock_extra = 2;
   // @state artifact
   repeated CuratedItem curated = 3;
-  // @state config
 }
 
-message SortDirection {
-  string value = 1;
-}

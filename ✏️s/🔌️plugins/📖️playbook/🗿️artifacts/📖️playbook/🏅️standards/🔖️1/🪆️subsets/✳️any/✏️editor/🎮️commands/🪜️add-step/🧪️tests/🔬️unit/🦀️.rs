@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::playbook::commands::move_step::MoveStep;
 use crate::editor::playbook::commands::remove_step::RemoveStep;
 use crate::editor::playbook::commands::update_playbook::UpdatePlaybook;
-use crate::editor::playbook::testkit::{dispatch, playbook_app};
+use crate::editor::playbook::unit_tests::context::{dispatch, playbook_app};
 use crate::editor::playbook::PlaybookCommand;
 use semio_framework_plugin::PluginApp;
 use AddStep;
@@ -41,6 +41,6 @@ async fn update_playbook_title_coalesces_into_one_undo_step() {
         dispatch(&mut app, PlaybookCommand::UpdatePlaybook(UpdatePlaybook { value: title.into() })).await;
     }
     assert_eq!(app.snapshot().expect("projection").title.as_deref(), Some("Recipe"));
-    app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     assert_eq!(app.snapshot().expect("projection").title, None, "coalesced typing is one undo step");
 }

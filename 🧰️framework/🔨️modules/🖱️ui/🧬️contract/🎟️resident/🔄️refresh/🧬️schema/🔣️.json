@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/ui/contract/resident/refresh/schema.json",
+  "title": "Ui Contract Resident Refresh Cycle Schema Module",
+  "$defs": {
+    "ResidentRefreshSurface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "nodes"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "nodes": { "type": "integer", "minimum": 1, "maximum": 128 }
+      }
+    },
+    "ResidentRefreshMeasurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "run", "seconds", "surfaces", "residentRoots", "residentBytes", "fixedBackingBytes", "capacityFaults"],
+      "properties": {
+        "target": { "type": "string", "minLength": 1 },
+        "run": { "type": "string", "minLength": 1 },
+        "seconds": { "type": "integer", "minimum": 1 },
+        "surfaces": { "type": "integer", "minimum": 1 },
+        "residentRoots": { "type": "integer", "minimum": 0 },
+        "residentBytes": { "type": "integer", "minimum": 0 },
+        "fixedBackingBytes": { "type": "integer", "minimum": 0 },
+        "capacityFaults": { "const": 0 }
+      }
+    },
+    "ResidentRefresh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "aggregateBytes",
+        "surfaceBytes",
+        "surfaceItems",
+        "documentNodes",
+        "nodeRecordBytes",
+        "openBytes",
+        "refreshes",
+        "retirementGrantItems",
+        "retirementGrantBytes",
+        "surfaces",
+        "peakResidentRoots",
+        "peakResidentBytes",
+        "permitFaults",
+        "doubleBufferedPeakRoots",
+        "doubleBufferedPeakBytes",
+        "ceilingSizedRoots",
+        "measured",
+        "laws"
+      ],
+      "properties": {
+        "version": { "const": 1 },
+        "aggregateBytes": { "const": 33554432 },
+        "surfaceBytes": { "const": 8388608 },
+        "surfaceItems": { "const": 4097 },
+        "documentNodes": { "const": 128 },
+        "nodeRecordBytes": { "type": "integer", "minimum": 1 },
+        "openBytes": { "type": "integer", "minimum": 1 },
+        "refreshes": { "type": "integer", "minimum": 2 },
+        "retirementGrantItems": { "type": "integer", "minimum": 1 },
+        "retirementGrantBytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "surfaces": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/ResidentRefreshSurface" } },
+        "peakResidentRoots": { "type": "integer", "minimum": 1 },
+        "peakResidentBytes": { "type": "integer", "minimum": 1 },
+        "permitFaults": { "const": 0 },
+        "doubleBufferedPeakRoots": { "type": "integer", "minimum": 2 },
+        "doubleBufferedPeakBytes": { "type": "integer", "minimum": 2 },
+        "ceilingSizedRoots": { "type": "integer", "minimum": 1 },
+        "measured": { "$ref": "#/$defs/ResidentRefreshMeasurement" },
+        "laws": { "type": "array", "minItems": 4, "items": { "type": "string", "minLength": 1 } }
+      }
+    }
+  },
+  "allOf": [{ "$ref": "#/$defs/ResidentRefresh" }]
+}

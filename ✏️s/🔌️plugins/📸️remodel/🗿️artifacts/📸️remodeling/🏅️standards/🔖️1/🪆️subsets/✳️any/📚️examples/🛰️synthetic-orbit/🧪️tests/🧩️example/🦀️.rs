@@ -13,7 +13,7 @@ use crate::editor::remodeling::commands::cancel_reconstruction::CancelReconstruc
 use crate::editor::remodeling::commands::import_frame_payload::ImportFramePayload;
 use crate::editor::remodeling::commands::run_reconstruction::{AdvanceReconstruction, RunReconstruction, ADVANCE_RECONSTRUCTION_ACTION_ID};
 use crate::editor::remodeling::engine::images as remodeling_image;
-use crate::editor::remodeling::testkit::{app_with_registry, dispatch, RemodelingApp};
+use crate::editor::remodeling::unit_tests::context::{app_with_registry, dispatch, RemodelingApp};
 use crate::editor::remodeling::RemodelingCommand;
 use crate::lie::{umeyama, Quatd, Sim3, So3};
 use crate::{CameraCalibration, FrameRef, MediaKind, MediaStream, RemodelingSnapshot};
@@ -601,7 +601,7 @@ async fn cancel_requested_mid_run_terminates_the_synthetic_orbit_reconstruction(
 #[test]
 #[ignore = "regenerates committed fixture assets; run explicitly"]
 fn regenerates_the_synthetic_orbit_example() {
-    let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🖼️assets");
+    let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🖼️assets");
     std::fs::create_dir_all(&assets).expect("example asset directory");
 
     let markers = generate_markers();

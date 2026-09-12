@@ -2,17 +2,18 @@
 
 use framework_schema::ArtifactSchema;
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.draw.drawing.presence")]
 pub struct DrawingPresence {
     #[state(presence)]
     pub engagement_input: String,
     #[state(presence)]
-    pub camera: DrawingCamera,
+    pub camera: store::Viewport2d,
 }
 
-//#region 🔁️Re-exports
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::DrawingCamera;
-//#endregion 🔁️Re-exports
+impl Default for DrawingPresence {
+    fn default() -> Self {
+        Self { engagement_input: String::new(), camera: store::Viewport2d { x: 512.0, y: 512.0, zoom: 0.75 } }
+    }
+}

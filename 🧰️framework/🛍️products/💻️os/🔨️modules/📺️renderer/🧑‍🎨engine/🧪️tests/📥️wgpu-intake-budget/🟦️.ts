@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { encodePackValue } from "@semio-tech/framework-os";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { RETAINED_UI_INTAKE_SLICE_STEPS, RETAINED_UI_INTAKE_STEPS_PER_NODE, retainedUiIntakeStepCeiling } from "../../🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts";
-import { WGPU_UI_INTAKE_STEP_CEILING, WgpuUiIntakeCursor } from "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
+import { WGPU_UI_INTAKE_STEP_CEILING, WgpuUiIntakeCursor } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
 import intakeFixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧫️fixtures/📥️intake/🔣️.json";
 
 /** @emoji 📏️ The fixed TOTAL budget the wgpu target applied before this suite existed. Kept as a literal

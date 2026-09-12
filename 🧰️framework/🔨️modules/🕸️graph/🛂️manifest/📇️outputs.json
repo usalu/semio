@@ -2,9 +2,9 @@
   "$schema": "./🧬️schema/🔣️.json",
   "version": 1,
   "shared": {
-    "rustRegistry": "🦀️registry.rs",
+    "rustRegistry": "📇️registry/🦀️.rs",
     "typescriptIndex": "🟦️.ts",
-    "typescriptTypes": "🔠️types.ts"
+    "typescriptTypes": "🔠️types/🟦️.ts"
   },
   "manifests": [
     { "id": "drawing-layers", "rust": "🖌️drawing-layers/🦀️.rs", "typescript": "🖌️drawing-layers/🟦️.ts" },

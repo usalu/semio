@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "maximumPageBytes": 4096,
+  "counter": {
+    "allocatorMultiplier": 2,
+    "signedLimits": [
+      {
+        "bits": 32,
+        "limit": "2147483647",
+        "before": "2147483639",
+        "requested": "8",
+        "actual": "16",
+        "grant": "16",
+        "retained": "2147483655",
+        "result": "rejected-owner-retained"
+      },
+      {
+        "bits": 64,
+        "limit": "9223372036854775807",
+        "before": "9223372036854775799",
+        "requested": "8",
+        "actual": "16",
+        "grant": "16",
+        "retained": "9223372036854775815",
+        "result": "rejected-owner-retained"
+      }
+    ]
+  },
+  "ordered": {
+    "count": 600,
+    "sum": 179700
+  },
+  "capacity": {
+    "maximum": 600,
+    "rejected": 601
+  },
+  "oversized": {
+    "elementBytes": 32769,
+    "grantBytes": 32768
+  }
+}

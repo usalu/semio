@@ -3,7 +3,7 @@
 @comparison-semantic-gltf-v1
 @mutations-gltf-2-0-skin
 Feature: Apply every registered glTF 2.0 skin mutation to a real-world document
-  The `gltf-2-0-skin` catalog (`../../🔮️oracle/🔣️.json`) declares the 4 kinds `document/skins` owns
+  The `gltf-2-0-skin` catalog (`../../🔮️oracles/🔣️.json`) declares the 4 kinds `document/skins` owns
   (§5.7.3/§20.7): `create-skin`, `delete-skin`, `move-skin`, `reorder-skins`. Shard A6 already
   scaffolded this catalog and its 4 committed `⬅️before.gltf`/`➡️after.gltf` fixture pairs
   (the exact `fixture` coordinates in Examples below), each derived from the same `gltf-2-0-any-reader-oracle` base
@@ -13,7 +13,7 @@ Feature: Apply every registered glTF 2.0 skin mutation to a real-world document
   mutation root — the exact registered domain/operation owners are declared through this catalog and the manifest's per-mutation `subset`
   override, never through moving the directory.
 
-  The independent oracle (`../../../♾️any/🔮️oracle/🦀️.rs`) is the SAME domain-blind `json`-crate
+  The independent oracle (`../../../♾️any/🔮️oracles/🦀️.rs`) is the SAME domain-blind `json`-crate
   GLB/JSON reader the artifact-root case measures its 7 kinds through and the `🎥️camera` case
   extends with 4 more; this case adds 4 further kinds sharing the SAME generic `IndexChange`/
   `remap_index`/`apply_node_ref_change` machinery camera's kinds introduced (the identical
@@ -25,7 +25,7 @@ Feature: Apply every registered glTF 2.0 skin mutation to a real-world document
   be expressed as a second `create-skin` call the way camera's content-bearing `create-camera` could
   invert `delete-camera` — production dispatches this inverse through `DeleteSkinMutation`'s own
   diff-based `Restore` variant instead, which this domain-blind reader has no typed access to.
-  `undo_delete_skin` (`../../../♾️any/🔮️oracle/🦀️.rs`) reimplements the SAME "restore the exact
+  `undo_delete_skin` (`../../../♾️any/🔮️oracles/🦀️.rs`) reimplements the SAME "restore the exact
   removed content" law directly against the original document's own `skins`/`nodes[].skin` fields —
   documented in the oracle module alongside its sibling `undo_create_scene`, which the artifact-root
   case's own `create-scene` needs for the identical reason.

@@ -5532,6 +5532,7 @@ dependencies = [
  "semio-framework-os-services",
  "semio-framework-pack",
  "semio-framework-replication",
+ "semio-framework-ui-viewport",
  "semio-framework-value-derive",
  "serde",
  "serde_json",
@@ -5554,6 +5555,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-hash",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-replication",
  "semio-framework-trace",
  "serde",
@@ -6025,6 +6027,7 @@ dependencies = [
  "semio-framework-geometry",
  "semio-framework-replication",
  "semio-framework-ui-contract",
+ "semio-framework-ui-viewport",
  "serde",
  "serde_json",
 ]
@@ -6032,6 +6035,15 @@ dependencies = [
 [[package]]
 name = "semio-framework-ui-styling"
 version = "0.1.0"
+
+[[package]]
+name = "semio-framework-ui-viewport"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-replication",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "semio-framework-value-derive"
@@ -6352,6 +6364,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
+ "semio-framework-replication",
  "semio-framework-schema",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",

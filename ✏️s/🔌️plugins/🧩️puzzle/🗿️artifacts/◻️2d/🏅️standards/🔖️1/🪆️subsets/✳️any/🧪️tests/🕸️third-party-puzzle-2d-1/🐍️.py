@@ -45,7 +45,7 @@ scenario added tomorrow is checked without touching this file.
 implementation and the committed vectors.
 
 @see ../◻️mutate-puzzle-2d-1/🐍️.py
-@see ../../🔮️oracle/🔣️.json
+@see ../../🔮️oracles/🔣️.json
 """
 
 # region 🔖️Imports

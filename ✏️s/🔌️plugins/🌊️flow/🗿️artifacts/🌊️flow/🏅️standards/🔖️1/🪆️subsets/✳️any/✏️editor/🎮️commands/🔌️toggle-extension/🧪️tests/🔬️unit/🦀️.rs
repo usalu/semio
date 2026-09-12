@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::flow::testkit::{dispatch, flow_app};
+use crate::editor::flow::unit_tests::context::{dispatch, flow_app};
 use crate::editor::flow::FlowCommand;
 
 #[semio_framework_async_macros::async_test]

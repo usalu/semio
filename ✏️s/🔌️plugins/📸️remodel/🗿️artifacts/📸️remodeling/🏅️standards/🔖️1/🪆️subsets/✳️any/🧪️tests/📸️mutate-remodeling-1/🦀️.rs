@@ -14,7 +14,7 @@
 //! repeat. The plan pins each file's digest, so a silently edited vector changes the plan rather
 //! than the answer.
 //!
-//! **What is asserted, through the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` module.**
+//! **What is asserted, through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module.**
 //! `law::divergence` names the first divergence by JSON path, `law::mutation_is_observable` refuses
 //! a kind that moved nothing, `law::inverse_restores` is the inverse law itself, and
 //! `law::round_trip_preserves` plus `law::carrier_is_exact` are the identity law's two halves.

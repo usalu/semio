@@ -7,7 +7,7 @@
 //! **Where the assertions live.** The oracle role is the Python second implementation beside this
 //! file, reached through the feature's `@oracle-` tag; the subject role is this repository's own
 //! `energy_model_mutation_report_json`. Each asserts the forward and inverse laws in role, through
-//! the shared law module `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs`, before the two are compared
+//! the shared law module `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs`, before the two are compared
 //! byte for byte. The subject half is gated behind the generated host's `sut` feature so an
 //! oracle-only run never compiles the local implementation.
 

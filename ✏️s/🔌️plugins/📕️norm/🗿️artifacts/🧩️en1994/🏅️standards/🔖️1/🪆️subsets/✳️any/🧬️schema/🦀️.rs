@@ -470,8 +470,8 @@ pub fn check_composite_beam(m_ed_knm: f64, v_ed_kn: f64, m_pla: f64, m_pl_rd: f6
 
 //#endregion 🔖️ComplianceHelpers
 
-//#region 🧪️ComplianceHelpersTests
+//#region 🧪️ComplianceTests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️compliance-helpers/🦀️.rs"]
-mod compliance_helpers_tests;
-//#endregion 🧪️ComplianceHelpersTests
+#[path = "🧪️tests/⚖️compliance/🦀️.rs"]
+mod compliance_tests;
+//#endregion 🧪️ComplianceTests

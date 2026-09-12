@@ -12,6 +12,6 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="🔷️.cs" />
+    <Compile Include="../../🖥️host/🔷️.cs" Link="🔷️.cs" />
   </ItemGroup>
 </Project>

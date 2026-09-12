@@ -8,7 +8,7 @@
 //!   reactor and all actor deadlines use the pool's `TimerWheel`.
 //! - **Browser wgpu build** (`wasm32-unknown-unknown`): the actor runs on the owned browser-local
 //!   executor with a `web_sys::WebSocket` semio_hub transport (no threads, no filesystem). The
-//!   production browser shell instead uses a TS twin (`🧵️backbone-worker.ts`, WS-E); this wasm actor
+//!   production browser shell instead uses a TS twin (`🏪️store/👷️worker/🟦️.ts`, WS-E); this wasm actor
 //!   keeps the crate coherent for a future in-wasm host.
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
@@ -163,6 +163,8 @@ pub enum ArtifactActorMsg {
     /// @emoji 🪢️ One canonical Store `BackboneMessage::Mutations` retained byte-for-byte by a
     /// mounted document port until its authoritative Hub command acknowledgment.
     DocumentBackbone { message: Vec<u8> },
+    /// @emoji 🗃️ One exact versioned root plus recursive-owned-member archive for durable persistence.
+    LocalDocumentArchive { archive: Vec<u8> },
     /// @emoji 📡️ Broadcasts this peer's presence/selection to the semio_hub.
     PresenceHeartbeat { peer: Box<PresencePeer> },
     /// @emoji 👻️ Publishes an ephemeral, best-effort UI-state blob on the semio_hub's uncredited preview
@@ -176,7 +178,7 @@ pub enum ArtifactActorMsg {
 }
 
 pub const ARTIFACT_MAILBOX_ITEMS: usize = 64;
-pub const ARTIFACT_MAILBOX_BYTES: usize = 1_048_576;
+pub const ARTIFACT_MAILBOX_BYTES: usize = crate::os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 65_536;
 
 #[derive(Debug)]
 pub enum ArtifactMailboxSendError {
@@ -438,6 +440,12 @@ fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize> {
             }
             add(&mut bytes, field(message.len())?)?;
         }
+        ArtifactActorMsg::LocalDocumentArchive { archive } => {
+            if archive.is_empty() || archive.len() > crate::os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES || archive[0] != 1 {
+                return None;
+            }
+            add(&mut bytes, field(archive.len())?)?;
+        }
         ArtifactActorMsg::PresenceHeartbeat { peer } => {
             text(&mut bytes, &peer.actor)?;
             add(&mut bytes, 8)?;
@@ -537,9 +545,8 @@ pub enum ArtifactEvent {
     },
     /// @emoji 🪢️ One canonical Hub mutation batch for an exact mounted guest document port.
     DocumentBackbone { message: Vec<u8> },
-    /// @emoji 📸️ The whole document was replaced (divergent external history / semio_hub snapshot swap),
-    /// as real pack+spr bytes — no JSON envelope anywhere in this actor's own path.
-    SnapshotReplaced { pack: Vec<u8>, spr: Vec<u8> },
+    /// @emoji 🗃️ The whole root plus recursive owned-member closure was replaced atomically.
+    DocumentArchiveReplaced { archive: Vec<u8> },
     /// @emoji 📈️ Monotonic, bounded progress for one descriptor-bound artifact bootstrap.
     /// A new transfer starts at zero after reconnect; no progress event implies a committed frontier.
     BootstrapProgress { received_bytes: u64, total_bytes: u64, received_chunks: u32, total_chunks: u32 },
@@ -663,7 +670,7 @@ pub enum CommandAckOutcome {
 
 //#region 🔖️BackboneWorkerWire
 /// @emoji 🧵️ Binary worker seam: `MAGIC` + `crate::os_store::pack_rt::encode_wire_value` over a `DslValue`
-/// tree (serde-shaped), shared by the wasm `store_worker` and `🧵️backbone-worker.ts`.
+/// tree (serde-shaped), shared by the wasm `store_worker` and `🏪️store/👷️worker/🟦️.ts`.
 pub mod backbone_worker_wire {
     use super::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, PersistenceBinding};
     use crate::os_dsl::{from_dsl_value, to_dsl_value};
@@ -768,14 +775,9 @@ async fn op_ids_of(edit: &crate::os_spr::HistoryEdit) -> Vec<String> {
     }
 }
 
-/// @emoji #⃣ Content hash over the concatenated pack+spr bytes, for the actor's self-write
-/// suppression check (was a hash over the JSON envelope string; same purpose, real bytes now).
 #[cfg(not(target_arch = "wasm32"))]
-fn backbone_pack_hash(pack: &[u8], spr: &[u8]) -> String {
-    let mut combined = Vec::with_capacity(pack.len() + spr.len());
-    combined.extend_from_slice(pack);
-    combined.extend_from_slice(spr);
-    semio_framework_hash::hash_bytes(&combined)
+fn document_archive_hash(archive: &[u8]) -> String {
+    semio_framework_hash::hash_bytes(archive)
 }
 
 /// @emoji 🆔️ Every op id across every edit in an spr byte log — the actor's dedup/known-ids set,
@@ -1487,41 +1489,47 @@ mod native_actor {
     }
 
     impl FolderEndpoint {
-        /// @emoji 📖️ `Ok(None)` = nothing persisted yet; `Ok(Some(pack, spr))` = the authoritative
-        /// binary pair, resolved pack-first (falling back to compiling the DSL mirror for
-        /// hand-authored/imported documents with no `.pack` file yet — `Sqlite` has no such
-        /// fallback, a row is always written pack+spr together); `Err` = a real storage failure.
-        async fn read(&self) -> Result<Option<(Vec<u8>, Vec<u8>)>, String> {
+        /// @emoji 🗃️ Reads one exact versioned recursive-document archive.
+        async fn read_archive(&self) -> Result<Option<Vec<u8>>, String> {
             match self {
-                FolderEndpoint::EventLog { storage, document_id, .. } => storage.read(document_id).await.map_err(|error| error.to_string()),
+                FolderEndpoint::EventLog { storage, document_id, .. } => storage.read_archive(document_id).await.map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                    if let Some(pack_files) = storage.read_pack(document_id, extension).await.map_err(|error| error.to_string())? {
-                        return Ok(Some((pack_files.pack, pack_files.spr)));
+                    if let Some(archive) = storage.read_archive(document_id, extension).await.map_err(|error| error.to_string())? {
+                        return Ok(Some(archive));
                     }
-                    let Some(text_files) = storage.read(document_id, extension).await.map_err(|error| error.to_string())? else {
-                        return Ok(None);
+                    let pair = match storage.read_pack(document_id, extension).await.map_err(|error| error.to_string())? {
+                        Some(files) => Some((files.pack, files.spr)),
+                        None => match storage.read(document_id, extension).await.map_err(|error| error.to_string())? {
+                            Some(files) => {
+                                let codec = crate::os_store::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only source"))?;
+                                let (pack, _) = (codec.compile_dsl)(&files.dsl, &files.ops).await.map_err(|error| error.to_string())?;
+                                Some((pack.pack, pack.spr))
+                            }
+                            None => None,
+                        },
                     };
-                    let codec = crate::os_store::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only fallback"))?;
-                    let (pack_files, _dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).await.map_err(|error| error.to_string())?;
-                    Ok(Some((pack_files.pack, pack_files.spr)))
+                    pair.map(|(parent_pack, parent_spr)| {
+                        crate::os_spr::encode_document_archive_bytes(&crate::os_spr::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).map_err(|error| error.to_string())
+                    })
+                    .transpose()
                 }
             }
         }
 
-        /// @emoji ✍️ Persists the authoritative `pack`+`spr` pair. `Sqlite` needs no codec at all;
-        /// `Pack` additionally writes the `.dsl`/`.ops` logging mirrors when a codec is registered
-        /// and schema codec; a missing or unavailable codec aborts the write before storage changes.
-        async fn write(&self, pack: &[u8], spr: &[u8]) -> Result<(), String> {
+        /// @emoji 🗃️ Persists one exact versioned recursive-document archive and its root text mirrors.
+        async fn write_archive(&self, archive_bytes: &[u8]) -> Result<(), String> {
+            let archive = crate::os_spr::decode_document_archive_bytes(archive_bytes).await.map_err(|error| error.to_string())?;
             match self {
-                FolderEndpoint::EventLog { storage, document_id, schema } => storage.write(document_id, schema, pack, spr).await.map_err(|error| error.to_string()),
+                FolderEndpoint::EventLog { storage, document_id, schema } => storage.write_archive(document_id, schema, archive_bytes).await.map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                    let codec = crate::os_store::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot persist synchronized pack mirrors"))?;
-                    let mirror = (codec.print_mirror)(pack, spr).await.map_err(|error| error.to_string())?;
-                    let pack_files = ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
-                    storage.write_pack(document_id, extension, &pack_files, &mirror.dsl).await.map_err(|error| error.to_string())
+                    let codec = crate::os_store::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot persist synchronized archive mirrors"))?;
+                    let mirror = (codec.print_mirror)(&archive.parent_pack, &archive.parent_spr).await.map_err(|error| error.to_string())?;
+                    let pack_files = ArtifactPackFiles { pack: archive.parent_pack, spr: archive.parent_spr, ops: mirror.ops };
+                    storage.write_archive(document_id, extension, archive_bytes, &pack_files, &mirror.dsl).await.map_err(|error| error.to_string())
                 }
             }
         }
+
     }
 
     /// @emoji 🎭️ One document's backbone actor: drains the store's outbound queue to persist + relay,
@@ -1578,6 +1586,7 @@ mod native_actor {
         hlc_counter: u64,
         current_pack: Option<Vec<u8>>,
         current_spr: Option<Vec<u8>>,
+        current_archive: Option<Vec<u8>>,
         known_op_ids: HashSet<String>,
         last_written_hash: Option<String>,
         remote_state: RemoteState,
@@ -1670,6 +1679,7 @@ mod native_actor {
                 hlc_counter: 0,
                 current_pack: None,
                 current_spr: None,
+                current_archive: None,
                 known_op_ids: HashSet::new(),
                 last_written_hash: None,
                 remote_state: RemoteState::Detached,
@@ -1808,18 +1818,23 @@ mod native_actor {
             ArtifactDrive::MoreWork
         }
 
-        /// @emoji 🌱️ Seeds persistence state from any already-stored pack+spr and installs the file watcher.
+        /// @emoji 🌱️ Seeds persistence state from any already-stored recursive archive and installs the file watcher.
         async fn setup(&mut self) {
             let seeded = match self.folder.as_ref() {
-                Some(folder) => folder.read().await.ok().flatten(),
+                Some(folder) => folder.read_archive().await.ok().flatten(),
                 None => None,
             };
-            if let Some((pack, spr)) = seeded {
-                if let Ok(op_ids) = spr_op_ids(&spr).await {
+            if let Some(bytes) = seeded {
+                if let Ok(archive) = crate::os_spr::decode_document_archive_bytes(&bytes).await {
+                    let pack = archive.parent_pack;
+                    let spr = archive.parent_spr;
+                    if let Ok(op_ids) = spr_op_ids(&spr).await {
                     self.known_op_ids = op_ids;
-                    self.last_written_hash = Some(backbone_pack_hash(&pack, &spr));
+                    self.last_written_hash = Some(document_archive_hash(&bytes));
                     self.current_pack = Some(pack);
                     self.current_spr = Some(spr);
+                    self.current_archive = Some(bytes);
+                    }
                 }
             }
             if self.watch_external {
@@ -1866,6 +1881,12 @@ mod native_actor {
                     }
                     false
                 }
+                ArtifactActorMsg::LocalDocumentArchive { archive } => {
+                    if let Ok(decoded) = crate::os_spr::decode_document_archive_bytes(&archive).await {
+                        self.persist_archive(archive, decoded).await;
+                    }
+                    false
+                }
                 ArtifactActorMsg::PresenceHeartbeat { mut peer } => {
                     stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref()).await;
                     self.send_client_frame(ClientFrame::Presence { peer: presence_to_bytes(&peer).await }, Lane::Preview).await;
@@ -1905,31 +1926,36 @@ mod native_actor {
         }
 
         //#region 🔖️Folder
-        /// @emoji ✍️ Persists the current pack+spr bytes to the folder binding and records the
+        /// @emoji ✍️ Persists the current recursive archive to the folder binding and records the
         /// content hash for self-write suppression. A write failure (e.g. no `crate::os_store::ArtifactCodec`
-        /// registered for this document's schema on the `Pack` endpoint — see `FolderEndpoint::write`)
+        /// registered for this document's schema on the `Pack` endpoint — see `FolderEndpoint::write_archive`)
         /// is swallowed here the same way every other best-effort path in this actor already is, but
         /// deliberately does NOT record `last_written_hash` on failure — a false "persisted" mark
         /// would make `handle_external_change` mistake the still-stale on-disk content for a
         /// self-write and ignore a real external change.
-        async fn persist_write(&mut self, pack: &[u8], spr: &[u8]) {
+        async fn persist_write_archive(&mut self, archive: &[u8]) {
             let Some(folder) = self.folder.as_ref() else { return };
-            if folder.write(pack, spr).await.is_ok() {
-                self.last_written_hash = Some(backbone_pack_hash(pack, spr));
+            if folder.write_archive(archive).await.is_ok() {
+                self.last_written_hash = Some(document_archive_hash(archive));
             }
+        }
+
+        async fn persist_archive(&mut self, bytes: Vec<u8>, archive: crate::os_spr::DocumentArchivePack) {
+            if let Ok(op_ids) = spr_op_ids(&archive.parent_spr).await {
+                self.known_op_ids = op_ids;
+            }
+            self.persist_write_archive(&bytes).await;
+            self.current_pack = Some(archive.parent_pack);
+            self.current_spr = Some(archive.parent_spr);
+            self.current_archive = Some(bytes);
         }
 
         /// @emoji 📸️ Records a full pack+spr snapshot as the canonical persisted state.
         async fn persist_snapshot(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
-            if self.folder.is_none() {
-                return;
+            let archive = crate::os_spr::DocumentArchivePack { parent_pack: pack, parent_spr: spr, members: Vec::new() };
+            if let Ok(bytes) = crate::os_spr::encode_document_archive_bytes(&archive) {
+                self.persist_archive(bytes, archive).await;
             }
-            if let Ok(op_ids) = spr_op_ids(&spr).await {
-                self.known_op_ids = op_ids;
-            }
-            self.persist_write(&pack, &spr).await;
-            self.current_pack = Some(pack);
-            self.current_spr = Some(spr);
         }
 
         /// @emoji ➕️ Appends locally-applied operations to the persisted spr log (append-only),
@@ -1947,21 +1973,33 @@ mod native_actor {
                 return;
             }
             let Ok(new_spr) = crate::os_store::append_history_edits_to_spr(&spr, &new_edits).await else { return };
-            self.persist_write(&pack, &new_spr).await;
+            let mut archive = match self.current_archive.as_deref() {
+                Some(bytes) => crate::os_spr::decode_document_archive_bytes(bytes).await.ok(),
+                None => None,
+            }
+            .unwrap_or(crate::os_spr::DocumentArchivePack { parent_pack: pack.clone(), parent_spr: spr, members: Vec::new() });
+            archive.parent_spr = new_spr.clone();
+            if let Ok(bytes) = crate::os_spr::encode_document_archive_bytes(&archive) {
+                self.persist_write_archive(&bytes).await;
+                self.current_archive = Some(bytes);
+            }
             self.current_pack = Some(pack);
             self.current_spr = Some(new_spr);
         }
 
         /// @emoji 👁️ Re-reads the folder binding and classifies the change: append-only → `RemoteMutations`,
-        /// divergence → `SnapshotReplaced`, divergence with local pending operations → `Conflict`. Self-writes
+        /// divergence → `DocumentArchiveReplaced`, divergence with local pending operations → `Conflict`. Self-writes
         /// (content hash match) are ignored.
         async fn handle_external_change(&mut self) {
             let seeded = match self.folder.as_ref() {
-                Some(folder) => folder.read().await.ok().flatten(),
+                Some(folder) => folder.read_archive().await.ok().flatten(),
                 None => None,
             };
-            let Some((pack, spr)) = seeded else { return };
-            let hash = backbone_pack_hash(&pack, &spr);
+            let Some(bytes) = seeded else { return };
+            let Ok(archive) = crate::os_spr::decode_document_archive_bytes(&bytes).await else { return };
+            let pack = archive.parent_pack.clone();
+            let spr = archive.parent_spr.clone();
+            let hash = document_archive_hash(&bytes);
             if self.last_written_hash.as_deref() == Some(hash.as_str()) {
                 return;
             }
@@ -1983,6 +2021,7 @@ mod native_actor {
                 self.known_op_ids.extend(new_ids);
                 self.current_pack = Some(pack);
                 self.current_spr = Some(spr);
+                self.current_archive = Some(bytes);
                 self.last_written_hash = Some(hash);
                 let _ = self.deliver_remote_operations(appended).await;
             } else if !lost.is_empty() {
@@ -1998,8 +2037,9 @@ mod native_actor {
                     self.known_op_ids = file_ids;
                     self.current_pack = Some(pack.clone());
                     self.current_spr = Some(spr.clone());
+                    self.current_archive = Some(bytes.clone());
                     self.last_written_hash = Some(hash);
-                    self.deliver_snapshot(pack, spr).await;
+                    self.deliver_archive(bytes, archive).await;
                 }
             }
         }
@@ -2269,23 +2309,26 @@ mod native_actor {
             }
             (codec.print_mirror)(&pair.pack, &pair.spr).await.map_err(|error| format!("artifact bootstrap decode failed: {error}"))?;
             let op_ids = spr_op_ids(&pair.spr).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
-            let previous = self.current_pack.clone().zip(self.current_spr.clone());
+            let archive = crate::os_spr::DocumentArchivePack { parent_pack: pair.pack.clone(), parent_spr: pair.spr.clone(), members: Vec::new() };
+            let archive_bytes = crate::os_spr::encode_document_archive_bytes(&archive).map_err(|error| format!("artifact bootstrap archive failed: {error}"))?;
+            let previous = self.current_archive.clone();
             if let Some(folder) = self.folder.as_ref() {
-                folder.write(&pair.pack, &pair.spr).await.map_err(|error| format!("artifact bootstrap persistence failed: {error}"))?;
+                folder.write_archive(&archive_bytes).await.map_err(|error| format!("artifact bootstrap persistence failed: {error}"))?;
             }
             if let Err(error) = self.remote.push(BackboneMessage::Snapshot { pack: pair.pack.clone(), spr: pair.spr.clone() }).await {
-                if let (Some(folder), Some((pack, spr))) = (self.folder.as_ref(), previous) {
-                    let _ = folder.write(&pack, &spr).await;
+                if let (Some(folder), Some(previous)) = (self.folder.as_ref(), previous) {
+                    let _ = folder.write_archive(&previous).await;
                 }
                 return Err(format!("artifact bootstrap store replacement failed: {error}"));
             }
             self.known_op_ids = op_ids;
             self.current_pack = Some(pair.pack.clone());
             self.current_spr = Some(pair.spr.clone());
+            self.current_archive = Some(archive_bytes.clone());
             if self.folder.is_some() {
-                self.last_written_hash = Some(backbone_pack_hash(&pair.pack, &pair.spr));
+                self.last_written_hash = Some(document_archive_hash(&archive_bytes));
             }
-            self.emit(ArtifactEvent::SnapshotReplaced { pack: pair.pack, spr: pair.spr });
+            self.emit(ArtifactEvent::DocumentArchiveReplaced { archive: archive_bytes });
             self.server_frontier = Some(pending.baseline_frontier);
             self.pending_resume_token = Some(pending.resume_token);
             self.required_tail_frontier = Some(pending.required_tail_frontier);
@@ -2394,6 +2437,16 @@ mod native_actor {
         #[cfg(test)]
         pub(super) async fn relay_test_envelope(&mut self, envelope: MutationEnvelope) {
             self.relay_operations_to_hub(std::slice::from_ref(&envelope)).await;
+        }
+
+        #[cfg(test)]
+        pub(super) async fn handle_test_document_archive(&mut self, archive: Vec<u8>) {
+            let _ = self.handle_cmd(ArtifactActorMsg::LocalDocumentArchive { archive }).await;
+        }
+
+        #[cfg(test)]
+        pub(super) fn current_archive_test(&self) -> Option<Vec<u8>> {
+            self.current_archive.clone()
         }
 
         #[cfg(test)]
@@ -2650,10 +2703,10 @@ mod native_actor {
             true
         }
 
-        /// @emoji 📸️ Pushes a full pack+spr snapshot into the store's inbound queue and notifies subscribers.
-        async fn deliver_snapshot(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
-            let _ = self.remote.push(BackboneMessage::Snapshot { pack: pack.clone(), spr: spr.clone() }).await;
-            self.emit(ArtifactEvent::SnapshotReplaced { pack, spr });
+        /// @emoji 🗃️ Pushes a recursive archive's root snapshot into the store queue and publishes the complete closure.
+        async fn deliver_archive(&mut self, bytes: Vec<u8>, archive: crate::os_spr::DocumentArchivePack) {
+            let _ = self.remote.push(BackboneMessage::Snapshot { pack: archive.parent_pack, spr: archive.parent_spr }).await;
+            self.emit(ArtifactEvent::DocumentArchiveReplaced { archive: bytes });
         }
 
         /// 🚫️async: E1 pure sync body — `broadcast::Sender::send` never suspends. Declaring this
@@ -3450,6 +3503,9 @@ mod wasm_actor {
                         self.document_backbone_retention.release(&envelopes);
                     }
                 }
+                ArtifactActorMsg::LocalDocumentArchive { archive } => {
+                    let _ = crate::os_spr::decode_document_archive_bytes(&archive).await;
+                }
                 ArtifactActorMsg::PresenceHeartbeat { mut peer } => {
                     stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref()).await;
                     self.send_frame(&ClientFrame::Presence { peer: presence_to_bytes(&peer).await }, Lane::Preview).await;
@@ -3574,7 +3630,9 @@ mod wasm_actor {
             }
             (codec.print_mirror)(&pair.pack, &pair.spr).await.map_err(|error| error.to_string())?;
             self.remote.push(BackboneMessage::Snapshot { pack: pair.pack.clone(), spr: pair.spr.clone() }).await.map_err(|error| error.to_string())?;
-            let _ = self.events.send(ArtifactEvent::SnapshotReplaced { pack: pair.pack, spr: pair.spr });
+            let archive = crate::os_spr::DocumentArchivePack { parent_pack: pair.pack, parent_spr: pair.spr, members: Vec::new() };
+            let archive = crate::os_spr::encode_document_archive_bytes(&archive).map_err(|error| error.to_string())?;
+            let _ = self.events.send(ArtifactEvent::DocumentArchiveReplaced { archive });
             self.server_frontier = Some(pending.baseline_frontier);
             self.pending_resume_token = Some(pending.resume_token);
             self.required_tail_frontier = Some(pending.required_tail_frontier);
@@ -3855,7 +3913,7 @@ pub enum FixtureInbound {
     /// @emoji 📬️ A raw `crate::os_spr::wire::ServerFrame`'s encoded bytes (`crate::os_spr::encode_server_frame`
     /// output, `lane` byte included), delivered as if received over the semio_hub WebSocket — already
     /// real binary, not document/op content, so it stays inline in the manifest as a JSON number
-    /// array. Driven by `🧵️backbone-worker.ts`'s TS fallback vitest harness (which decodes these
+    /// array. Driven by `🏪️store/👷️worker/🟦️.ts`'s TS fallback vitest harness (which decodes these
     /// bytes with its own binary decoder); the folder-only Rust harness skips these.
     HubFrame { frame_bytes: Vec<u8> },
     /// @emoji 📁️ An external folder edit: `.ops`-grammar text (one or more `edit ...` blocks) to
@@ -4020,6 +4078,9 @@ const BLOB_PUT_EVENT: u8 = 2;
 const BLOB_DELETE_EVENT: u8 = 3;
 
 #[cfg(not(target_arch = "wasm32"))]
+const DOCUMENT_ARCHIVE_PUT_EVENT: u8 = 4;
+
+#[cfg(not(target_arch = "wasm32"))]
 struct FolderEvent {
     kind: u8,
     updated_at_ms: u64,
@@ -4117,7 +4178,7 @@ impl FolderEventLogStorage {
     fn decode_event(bytes: &[u8]) -> Result<FolderEvent, vcs::VcsError> {
         let mut reader = FolderEventReader { bytes, cursor: 0 };
         let event = FolderEvent { kind: reader.u8()?, updated_at_ms: reader.u64()?, key: reader.text()?, metadata: reader.text()?, primary: reader.data()?, secondary: reader.data()? };
-        if !matches!(event.kind, DOCUMENT_PUT_EVENT | BLOB_PUT_EVENT | BLOB_DELETE_EVENT) {
+        if !matches!(event.kind, DOCUMENT_PUT_EVENT | BLOB_PUT_EVENT | BLOB_DELETE_EVENT | DOCUMENT_ARCHIVE_PUT_EVENT) {
             return Err(vcs::VcsError::Backbone(format!("unknown folder event kind {}", event.kind)));
         }
         if reader.cursor != bytes.len() {
@@ -4197,11 +4258,22 @@ impl FolderEventLogStorage {
         self.append(&FolderEvent { kind: DOCUMENT_PUT_EVENT, updated_at_ms: now_ms().await, key: document_id.into(), metadata: schema.into(), primary: pack.into(), secondary: spr.into() })
     }
 
+    /// @emoji 🗃️ Folds the latest exact recursive archive for `document_id`.
+    pub async fn read_archive(&self, document_id: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
+        Ok(self.events()?.into_iter().rev().find(|event| event.kind == DOCUMENT_ARCHIVE_PUT_EVENT && event.key == document_id).map(|event| event.primary))
+    }
+
+    /// @emoji 🗃️ Appends one indivisible recursive-document archive event.
+    pub async fn write_archive(&self, document_id: &str, schema: &str, archive: &[u8]) -> Result<(), vcs::VcsError> {
+        crate::os_spr::decode_document_archive_bytes(archive).await.map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        self.append(&FolderEvent { kind: DOCUMENT_ARCHIVE_PUT_EVENT, updated_at_ms: now_ms().await, key: document_id.into(), metadata: schema.into(), primary: archive.into(), secondary: Vec::new() })
+    }
+
     /// @emoji 📇️ Lists latest document events in newest-write-first order.
     pub async fn document_ids(&self) -> Result<Vec<String>, vcs::VcsError> {
         let mut latest = std::collections::HashMap::<String, u64>::new();
         for event in self.events()? {
-            if event.kind == DOCUMENT_PUT_EVENT {
+            if matches!(event.kind, DOCUMENT_PUT_EVENT | DOCUMENT_ARCHIVE_PUT_EVENT) {
                 latest.insert(event.key, event.updated_at_ms);
             }
         }
@@ -4245,6 +4317,40 @@ impl FolderTextStorage {
     /// @emoji 🏷️ Path of the authoritative binary op-log file.
     pub async fn spr_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
         self.folder.join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Spr))
+    }
+
+    /// @emoji 🗃️ Path of the authoritative recursive-document archive.
+    pub async fn archive_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
+        self.folder.join(format!("{document_id}.{envelope_id}.archive.semio"))
+    }
+
+    /// @emoji 🗃️ Reads one exact recursive-document archive, or `None` when none was persisted.
+    pub async fn read_archive(&self, document_id: &str, envelope_id: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
+        let bytes = match std::fs::read(self.archive_path(document_id, envelope_id).await) {
+            Ok(bytes) => bytes,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(error) => return Err(vcs::VcsError::Backbone(error.to_string())),
+        };
+        crate::os_spr::decode_document_archive_bytes(&bytes).await.map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        Ok(Some(bytes))
+    }
+
+    /// @emoji 🗃️ Publishes derived root mirrors before atomically replacing archive authority.
+    pub async fn write_archive(&self, document_id: &str, envelope_id: &str, archive: &[u8], files: &ArtifactPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
+        crate::os_spr::decode_document_archive_bytes(archive).await.map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        std::fs::create_dir_all(&self.folder).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        let target = self.archive_path(document_id, envelope_id).await;
+        let staged = target.with_extension("semio.stage");
+        std::fs::write(&staged, archive).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        if let Err(error) = self.write_pack(document_id, envelope_id, files, dsl_mirror).await {
+            let _ = std::fs::remove_file(&staged);
+            return Err(error);
+        }
+        if let Err(error) = std::fs::rename(&staged, &target) {
+            let _ = std::fs::remove_file(&staged);
+            return Err(vcs::VcsError::Backbone(error.to_string()));
+        }
+        Ok(())
     }
 
     /// @emoji 📖️ Reads both files for `document_id`, or `None` if the DSL file does not exist yet.

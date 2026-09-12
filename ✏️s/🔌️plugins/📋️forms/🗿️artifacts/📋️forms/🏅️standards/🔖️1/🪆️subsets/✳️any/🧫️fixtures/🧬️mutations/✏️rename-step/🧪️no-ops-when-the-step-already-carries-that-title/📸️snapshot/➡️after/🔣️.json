@@ -4,9 +4,9 @@
   "version": "1",
   "title": "Site Survey",
   "structure": {
-    "childId": "forms-scene-rename-step-unchanged-title",
+    "childId": "forms-value-rename-step-unchanged-title",
     "target": {
-      "artifactId": "forms-value",
+      "artifactId": "forms-value-rename-step-unchanged-title",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -15,9 +15,9 @@
     }
   },
   "results": {
-    "childId": "forms-scene-rename-step-unchanged-title",
+    "childId": "forms-table-rename-step-unchanged-title",
     "target": {
-      "artifactId": "forms-table",
+      "artifactId": "forms-table-rename-step-unchanged-title",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

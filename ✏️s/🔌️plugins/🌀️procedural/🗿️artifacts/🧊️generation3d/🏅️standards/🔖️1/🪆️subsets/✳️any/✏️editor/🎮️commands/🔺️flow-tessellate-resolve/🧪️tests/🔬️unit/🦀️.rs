@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::generation3d::testkit::{empty_history_view, retire_flow_eval_session};
+use crate::editor::generation3d::unit_tests::context::{empty_history_view, retire_flow_eval_session};
 use semio_framework_plugin::{ArtifactView, ConfigView};
 
 /// 🔺️ One triangle as the `pack` mesh body the extension now ships — base64 of
@@ -19,7 +19,7 @@ fn complete_envelope(pack: &str) -> String {
 /// in-flight entry — the half of the brep preview round trip that lives inside the app.
 #[test]
 fn tessellate_result_resolves_the_pending_handle() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let snapshot = Generation3dSnapshot::default();
     let history = empty_history_view();
     let config = Generation3dConfig::default();
@@ -41,7 +41,7 @@ fn tessellate_result_resolves_the_pending_handle() {
 /// and reports monotone progress on the way.
 #[test]
 fn a_partial_step_re_arms_the_tick_chain_with_progress() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let snapshot = Generation3dSnapshot::default();
     let history = empty_history_view();
     let config = Generation3dConfig::default();
@@ -65,7 +65,7 @@ fn a_partial_step_re_arms_the_tick_chain_with_progress() {
 /// chunk re-arms one more round trip and advances the chunk cursor.
 #[test]
 fn a_chunked_mesh_body_only_lands_on_its_last_chunk() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let snapshot = Generation3dSnapshot::default();
     let history = empty_history_view();
     let config = Generation3dConfig::default();
@@ -95,7 +95,7 @@ fn a_chunked_mesh_body_only_lands_on_its_last_chunk() {
 /// every tick, i.e. a multi-chunk mesh could never land.
 #[test]
 fn the_liveness_sweep_preserves_a_half_transferred_mesh_body() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let snapshot = Generation3dSnapshot::default();
     let history = empty_history_view();
     let config = Generation3dConfig::default();
@@ -122,7 +122,7 @@ fn the_liveness_sweep_preserves_a_half_transferred_mesh_body() {
 /// tessellation must not leak its partial transfer.
 #[test]
 fn the_liveness_sweep_drops_a_dead_handles_partial_body() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let snapshot = Generation3dSnapshot::default();
     let history = empty_history_view();
     let config = Generation3dConfig::default();
@@ -143,7 +143,7 @@ fn the_liveness_sweep_drops_a_dead_handles_partial_body() {
 /// the handle, and the handle is not re-requested.
 #[test]
 fn an_invalid_solid_becomes_a_typed_diagnostic_not_a_mesh() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let snapshot = Generation3dSnapshot::default();
     let history = empty_history_view();
     let config = Generation3dConfig::default();
@@ -165,7 +165,7 @@ fn an_invalid_solid_becomes_a_typed_diagnostic_not_a_mesh() {
 /// idempotent against a stale or foreign completion.
 #[test]
 fn unknown_node_hash_resolves_nothing() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let snapshot = Generation3dSnapshot::default();
     let history = empty_history_view();
     let config = Generation3dConfig::default();

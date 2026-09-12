@@ -2,10 +2,10 @@
 /** @emoji 🧵️ Bounded, operation-owned browser download streaming. */
 // #endregion 🧲️Header
 
+import { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts";
+export { SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts";
+
 export const SEGMENTED_DOWNLOAD_MARKER_PREFIX = "semio-segmented-handle-v1:";
-export const MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4_096;
-export const MAX_SEGMENTED_DOWNLOAD_BYTES = 32 << 20;
-const MAX_U64 = (1n << 64n) - 1n;
 
 export type SegmentedDownloadEncoding = "base64" | "identity";
 
@@ -27,9 +27,11 @@ export function parseSegmentedDownloadMarker(marker: string | undefined): Segmen
 /** 🔢 Accepts the runtime's canonical positive decimal operation authority without lossy u64 coercion. */
 export function parseSegmentedDownloadOperationId(value: string): bigint {
   if (!/^[1-9][0-9]*$/.test(value)) throw new Error("segmented-download-operation-invalid");
-  const operationId = BigInt(value);
-  if (operationId > MAX_U64) throw new Error("segmented-download-operation-invalid");
-  return operationId;
+  try {
+    return admitSegmentedDownloadOperationId(BigInt(value));
+  } catch {
+    throw new Error("segmented-download-operation-invalid");
+  }
 }
 
 function segmentedAbortReason(signal: AbortSignal | undefined): unknown {
@@ -71,7 +73,7 @@ export async function createSegmentedDownloadSink(filename: string, mimeType: st
  * API is absent — which is every browser without `showSaveFilePicker`, and every automated context where a
  * native Save-As dialog cannot be answered. Without a second sink a segmented download is therefore silence,
  * exactly the symptom the segmented lane exists to remove. The assembled path is bounded by the drain's own
- * total cap ({@link MAX_SEGMENTED_DOWNLOAD_BYTES}), so "in memory" here is at most 32 MiB, and it delivers
+ * total cap ({@link SEGMENTED_DOWNLOAD_CONTRACT}`.maximumTotalBytes`), so "in memory" here is at most 32 MiB, and it delivers
  * through the same blob-and-anchor mechanism the INLINE `download-media-export` lane already uses — one
  * download, no dialog, whatever the payload size.
  *
@@ -107,12 +109,18 @@ export function createBufferedDownloadSink(filename: string, mimeType: string, d
  * 🧾 {@link createSegmentedDownloadSink} stays exported for a caller that genuinely wants the File System
  * Access stream — it opens a native Save-As dialog and is unavailable outside Chromium, so it can neither be
  * the default for a plain "Export" press nor the thing an automated check drives. Everything the drain admits
- * is bounded by {@link MAX_SEGMENTED_DOWNLOAD_BYTES}, so assembling is bounded too. */
+ * is bounded by {@link SEGMENTED_DOWNLOAD_CONTRACT}`.maximumTotalBytes`, so assembling is bounded too. */
 export function segmentedDownloadSinkFactory(deliver: (filename: string, mimeType: string, bytes: Uint8Array) => void): SegmentedDownloadSinkFactory {
   return async (filename, mimeType) => createBufferedDownloadSink(filename, mimeType, deliver);
 }
 
-/** 🧵 Drains exactly one capped producer chunk per awaited turn, preserving order and cancellation. */
+/** 🧵 Drains exactly one capped producer chunk per awaited turn, preserving order and cancellation.
+ *
+ * 🧾️ Every bound comes from {@link SEGMENTED_DOWNLOAD_CONTRACT} — the same record the producer slices by
+ * and the shard worker admits against — and each taken chunk RETIRES in the producer's outstanding table
+ * as it is taken (`🔌️plugin/🦀️.rs`'s `take_chunk` pops the queue and the terminal `None` removes the
+ * registry entry), so the loop is bounded by `maximumOutstandingChunks` rather than by the producer's
+ * goodwill: a producer that never answers `None` is refused, not spun on forever. */
 export async function drainSegmentedMediaExport(
   filename: string,
   mimeType: string,
@@ -123,12 +131,13 @@ export async function drainSegmentedMediaExport(
 ): Promise<void> {
   const encoding = parseSegmentedDownloadMarker(marker);
   const operationId = parseSegmentedDownloadOperationId(operation);
-  const maximumBytes = options.maximumBytes ?? MAX_SEGMENTED_DOWNLOAD_BYTES;
-  if (!Number.isSafeInteger(maximumBytes) || maximumBytes < 0 || maximumBytes > MAX_SEGMENTED_DOWNLOAD_BYTES) throw new Error("segmented-download-cap-invalid");
+  const maximumBytes = options.maximumBytes ?? SEGMENTED_DOWNLOAD_CONTRACT.maximumTotalBytes;
+  if (!Number.isSafeInteger(maximumBytes) || maximumBytes < 0 || maximumBytes > SEGMENTED_DOWNLOAD_CONTRACT.maximumTotalBytes) throw new Error("segmented-download-cap-invalid");
   const initialAbort = segmentedAbortReason(options.signal);
   if (initialAbort !== undefined) throw initialAbort;
   const sink = await (options.sinkFactory ?? createSegmentedDownloadSink)(filename, mimeType);
   let sourceBytes = 0;
+  let taken = 0;
   let base64Tail = "";
   try {
     while (true) {
@@ -137,15 +146,17 @@ export async function drainSegmentedMediaExport(
       const chunk = await takeChunk(operationId);
       const afterReadAbort = segmentedAbortReason(options.signal);
       if (afterReadAbort !== undefined) throw afterReadAbort;
-      if (chunk === undefined) break;
-      if (Object.prototype.toString.call(chunk) !== "[object Uint8Array]" || chunk.byteLength === 0 || chunk.byteLength > MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES) throw new Error("segmented-download-chunk-limit");
-      sourceBytes += chunk.byteLength;
-      if (sourceBytes > maximumBytes) throw new Error("segmented-download-total-limit");
+      const admitted = admitSegmentedDownloadChunk(chunk);
+      if (admitted === undefined) break;
+      taken += 1;
+      if (taken > SEGMENTED_DOWNLOAD_CONTRACT.maximumOutstandingChunks) throw new Error(SEGMENTED_DOWNLOAD_REFUSAL.outstandingOverCap);
+      sourceBytes += admitted.byteLength;
+      if (sourceBytes > maximumBytes) throw new Error(SEGMENTED_DOWNLOAD_REFUSAL.totalOverCap);
       if (encoding === "identity") {
-        if (chunk.byteLength > 0) await sink.write(chunk);
+        await sink.write(admitted);
         continue;
       }
-      const available = base64Tail + asciiChunk(chunk);
+      const available = base64Tail + asciiChunk(admitted);
       const completeBytes = Math.max(0, available.length - (available.length % 4) - 4);
       if (completeBytes > 0) await sink.write(decodeBase64Block(available.slice(0, completeBytes), false));
       base64Tail = available.slice(completeBytes);

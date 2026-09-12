@@ -1,34 +1,15 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://semio.tech/schema/app/forms/forms/config/schema.json",
   "title": "FormsConfig",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "currentStepIndex",
-    "tryValues",
-    "contributionsJson"
-  ],
+  "required": ["contributionsJson"],
   "properties": {
-    "currentStepIndex": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "tryValues": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "array",
-        "items": {
-          "type": "string",
-          "maxLength": 4096
-        }
-      },
-      "x-semio-state": "config"
-    },
     "contributionsJson": {
       "type": "string",
-      "x-semio-state": "config"
+      "x-semio-state": "config",
+      "description": "Host contribution projection."
     }
   }
 }

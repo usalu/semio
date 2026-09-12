@@ -112,7 +112,7 @@ async fn change_eta_non_finite_is_fatal() {
     let base = En1994Snapshot::default();
     let mutation = En1994Mutation::ChangeEta(change_eta::ChangeEta { new_eta: f64::NAN });
     let outcome = mutation.diff(&base);
-    protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
     assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
 }
 
@@ -129,6 +129,6 @@ async fn change_annex_same_value_is_no_op() {
 async fn change_span_m_is_deterministic() {
     let base = En1994Snapshot::default();
     let mutation = En1994Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: 12.0 });
-    protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_deterministic(&base, &mutation).await;
 }
 //#endregion 🔖️OutcomeLaws

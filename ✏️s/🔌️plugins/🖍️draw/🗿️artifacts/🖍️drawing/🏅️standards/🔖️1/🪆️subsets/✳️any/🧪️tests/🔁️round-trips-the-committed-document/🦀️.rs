@@ -4,7 +4,7 @@
 //! This scenario carries no mutation kind and no vector, so it stays with `✳️any`, the owner of the
 //! committed example document, rather than joining any of the four mutation subsets.
 //!
-//! Recorded no-oracle decision `drawing-mutation-semantics` (`../../🔮️oracle/🔣️.json`) covers this
+//! Recorded no-oracle decision `drawing-mutation-semantics` (`../../🔮️oracles/🔣️.json`) covers this
 //! scenario too: the committed grammar is the generic `family-scene` canvas grammar and the
 //! committed artifact carries no `layers` block at all, so a second implementation would be refused
 //! by clause.

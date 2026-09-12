@@ -3,7 +3,7 @@
 @comparison-semantic-gltf-v1
 @mutations-gltf-2-0-asset
 Feature: Apply every registered glTF 2.0 asset/document mutation to a real-world document
-  The `gltf-2-0-asset` catalog (`../../🔮️oracle/🔣️.json`) declares the 14 kinds `document/asset`,
+  The `gltf-2-0-asset` catalog (`../../🔮️oracles/🔣️.json`) declares the 14 kinds `document/asset`,
   `document/extensionsUsed`, `document/extensionsRequired`, `document/extensions` and
   `document/extras` own (§2.7/§3.9): `add-required-extension`, `add-used-extension`,
   `change-asset-descriptive-metadata`, `change-asset-extension-data`, `change-asset-extra-data`,
@@ -27,7 +27,7 @@ Feature: Apply every registered glTF 2.0 asset/document mutation to a real-world
   🦀️.rs`'s own match arms before writing anything (no `GltfTopLevelFamily` variant exists for either
   array).
 
-  The independent oracle (`../../../♾️any/🔮️oracle/🦀️.rs`) is the SAME domain-blind `json`-crate
+  The independent oracle (`../../../♾️any/🔮️oracles/🦀️.rs`) is the SAME domain-blind `json`-crate
   GLB/JSON reader `🎥️camera`/`🦴️skin`/`🎞️animation` already extended, extended again here with 14
   more kinds reimplemented from scratch against the parsed tree: `add_extension`/`remove_extension`/
   `move_extension`/`reorder_extensions` operate generically on either string array by KEY name

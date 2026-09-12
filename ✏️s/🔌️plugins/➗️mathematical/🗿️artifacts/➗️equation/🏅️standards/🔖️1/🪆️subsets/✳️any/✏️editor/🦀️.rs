@@ -531,7 +531,9 @@ impl EquationRetainedCommandWork {
             EquationCommand::NodeGraphViewport(payload) => {
                 let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("equation-graph-window-context-required"))?;
                 let mut emit = Emit::default();
-                emit.window_config_mutations.push(graph_window::config::addressed(view, EquationGraphWindowConfigMutation::SetCamera(graph_window::config::SetCamera { camera: payload.camera.clone() }))?);
+                emit.window_config_mutations.push(graph_window::config::addressed(view, EquationGraphWindowConfigMutation::SetCamera(graph_window::config::SetCamera {
+                    camera: EquationCamera { x: payload.viewport.x, y: payload.viewport.y, zoom: payload.viewport.zoom },
+                }))?);
                 emit
             }
         })
@@ -1175,7 +1177,7 @@ impl ArtifactEditor for EquationPlayApp {
     const DIALECT: Dialect = EQUATION_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners())
     }
 
@@ -1187,7 +1189,7 @@ impl ArtifactEditor for EquationPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::no_config_store_owners())
     }
 
@@ -1195,7 +1197,7 @@ impl ArtifactEditor for EquationPlayApp {
         Some(semio_framework_plugin::no_config_store_disposer())
     }
 
-    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
         Some(semio_framework_plugin::no_draft_store_owners())
     }
 
@@ -1312,7 +1314,9 @@ impl ArtifactEditor for EquationPlayApp {
         if let EquationCommand::NodeGraphViewport(payload) = command {
             let view = view_state.ok_or_else(|| Fault::from("equation-graph-window-context-required"))?;
             let mut emit = Emit::default();
-            emit.window_config_mutations.push(graph_window::config::addressed(view, EquationGraphWindowConfigMutation::SetCamera(graph_window::config::SetCamera { camera: payload.camera.clone() }))?);
+            emit.window_config_mutations.push(graph_window::config::addressed(view, EquationGraphWindowConfigMutation::SetCamera(graph_window::config::SetCamera {
+                camera: EquationCamera { x: payload.viewport.x, y: payload.viewport.y, zoom: payload.viewport.zoom },
+            }))?);
             return Ok(emit);
         }
         command.dispatch(doc, cfg)
@@ -1406,16 +1410,10 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
 /// able to drive the whole app without re-deriving the harness.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
-#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests

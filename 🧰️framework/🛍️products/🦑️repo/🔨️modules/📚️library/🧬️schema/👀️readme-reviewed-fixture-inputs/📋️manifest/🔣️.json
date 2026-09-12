@@ -21,7 +21,7 @@
     "catalog": {
       "const": {
         "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/⚖️readme-license-owner-authority/🔣️.json",
-        "sha256": "2dcb31628412a9e95b4adfc8756d8fbe9dfa1b397742b3f8a47c603ad15ccc79",
+        "sha256": "b60f16acbde34545d29abfeb50a55d5db6115b2d316b33011db07da34ca7afe9",
         "caseIndex": 31
       }
     },
@@ -72,7 +72,7 @@
               "pointer": "/revisions/testing-readme-protocol-v2-reviewed/expectationsPath"
             },
             "preimage": {
-              "sha256": "b2a6129ad3abb7d1ea6140a7050c2200b0c29f5ab178bad7fe81f02cbcbdd0a3",
+              "sha256": "e821d6835b7bc0054ae7d0d3c4e7907692263b7ad947c3d7230a4c848c730320",
               "size": 12355,
               "mode": 420
             }

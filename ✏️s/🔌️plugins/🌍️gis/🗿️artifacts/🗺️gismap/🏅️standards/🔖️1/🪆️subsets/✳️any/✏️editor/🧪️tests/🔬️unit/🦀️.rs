@@ -1,5 +1,95 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::app::TypedOperationResultLane;
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry};
+    use semio_framework_plugin::{EditorApp, Effect, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+
+    pub type Gis2dApp = VcsArtifactApp<EditorApp<Gis2dPlayApp>>;
+
+    /// 🧬️ Builds the real registered fixture and binds the instance addressed by [`meta`].
+    pub async fn app() -> Gis2dApp {
+        let mut app = new_app_with_registry::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_tests).await;
+        app.bind_instance_id(meta("local").instance_id).await;
+        app
+    }
+
+    /// ✏️ Adapts `create_gis2d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
+    /// examples }` shape `context::assert_declared_actions_bridge_to_commands` still expects —
+    /// framework test context gap, not modifiable here.
+    pub fn gis2d_app_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_gis2d_app(), examples: Vec::new() }
+    }
+
+    /// 🪟️ Targets the real GIS Map window instance for render, config, and measure authority.
+    pub fn main_window_view() -> ViewModel {
+        ViewModel { window_id: Some("gis-map-main-test".into()), window_instances: vec![ViewWindowInstance { id: "gis-map-main-test".into(), window_kind_id: map::GIS2D_PLAY_WINDOW_MAIN.into() }], ..Default::default() }
+    }
+
+    /// 🧹️ Drives a GIS Map fixture to its exact terminal-empty ownership witness.
+    pub fn close(app: &mut Gis2dApp) {
+        close_registered_fixture_app(app);
+    }
+
+    /// 📬️ Host-visible publication collected after one GIS Map command reaches quiescence.
+    pub struct Gis2dDispatchReceipt(semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt);
+
+    impl Gis2dDispatchReceipt {
+        pub fn artifact_publication_count(&self) -> usize {
+            self.0.lanes.iter().filter(|lane| **lane == TypedOperationResultLane::Artifact).count()
+        }
+
+        pub fn effects(&self) -> &[Effect] {
+            &self.0.effects
+        }
+    }
+
+    /// 🎯️ Dispatches a typed GIS Map command and drives its retained publication to exact ACK.
+    pub async fn dispatch(app: &mut Gis2dApp, command: Gis2dCommand) -> Gis2dDispatchReceipt {
+        let mut action_meta = meta("local");
+        action_meta.view_state = Some(main_window_view());
+        app.dispatch_typed(command, &action_meta).await.expect("dispatch admission");
+        Gis2dDispatchReceipt(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, action_meta.instance_id).await.expect("dispatch publication"))
+    }
+
+    /// 🖼️ Renders and retires one GIS Map fixture component tree.
+    pub async fn render(app: &mut Gis2dApp, body_key: &str) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &main_window_view()).await.expect("render")).expect("render projection")
+    }
+
+    /// 📐️ Projects the main GIS Map window measures through the registered fixture.
+    pub async fn main_window_measures(app: &mut Gis2dApp) -> Vec<WindowMeasure> {
+        let view = main_window_view();
+        app.window_measures(&view).await.remove(view.window_id.as_deref().unwrap_or_default()).unwrap_or_default()
+    }
+
+    /// 🤝️ Applies disjoint commands to two registered, bound instances and proves convergence.
+    pub async fn assert_two_instances_converge<P>(channel: &str, command_a: Gis2dCommand, command_b: Gis2dCommand, probe: impl Fn(&Gis2dApp) -> P)
+    where
+        P: PartialEq + std::fmt::Debug,
+    {
+        let mut instance_a = app().await;
+        let mut instance_b = app().await;
+        assert_eq!(instance_a.artifact_generation_now(), instance_b.artifact_generation_now(), "hot peers start at the same generation");
+        assert_eq!(instance_a.snapshot().expect("initial a"), instance_b.snapshot().expect("initial b"), "hot peers start from the same independently materialized document");
+        let document_a = instance_a.document_text().await.expect("initial document a");
+        let document_b = instance_b.document_text().await.expect("initial document b");
+        assert_eq!(document_a.dsl, document_b.dsl, "hot peers start from the same serialized initial snapshot");
+        assert_eq!(document_a.ops, document_b.ops, "hot peers start with the same document identity and history cursor");
+        let (backbone_a, backbone_b) = store::MemoryBackbone::pair(channel, channel).await;
+        instance_a.attach_hot_backbone(store::Backbones::Memory(backbone_a)).await.expect("hot attach a after equal initial state proof");
+        instance_b.attach_hot_backbone(store::Backbones::Memory(backbone_b)).await.expect("hot attach b after equal initial state proof");
+        dispatch(&mut instance_a, command_a).await;
+        dispatch(&mut instance_b, command_b).await;
+        instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
+        assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
+        close(&mut instance_a);
+        close(&mut instance_b);
+    }
+}
+
 use super::*;
-use crate::editor::gis2d::testkit::{app, close, gis2d_app_manifest_for_testkit, render};
+use crate::editor::gis2d::unit_tests::context::{app, close, gis2d_app_manifest_for_tests, render};
 use semio_framework_plugin::{ContextMenuRequest, EditorApp, PluginApp, VcsArtifactApp};
 
 #[test]
@@ -23,6 +113,63 @@ fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
     let drawing = gis_map_drawing_stamped_one_item_preparation_factory(stamped.clone());
     let value = gis_map_value_stamped_one_item_preparation_factory(stamped);
     assert_eq!([std::sync::Arc::strong_count(&parent), std::sync::Arc::strong_count(&drawing), std::sync::Arc::strong_count(&value)], [1, 1, 1]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_once() {
+    let snapshot = crate::schema::empty_gis_map_snapshot();
+    let envelope = store::create_document_envelope(crate::GIS_MAP_SCHEMA, "gis-map-preparation-law", snapshot, None);
+    let mut store = store::ArtifactStore::new(envelope)
+        .await
+        .expect("GIS Map preparation-law Store opens");
+    store.install_document_store_owners_exact(crate::spr::gis_map_document_store_owners());
+    let factory = gis_map_parent_one_item_preparation_factory();
+    let mutation = GisMapMutation::CreatePosition(crate::mutations::create_position::CreatePosition {
+        index: 0,
+        item: crate::MapFeature { id: "preparation-law".into(), data: dsl::DslValue::Null },
+    });
+    let mut publication = store
+        .begin_apply_batch(
+            semio_framework_job::OperationId(991),
+            store.generation_now(),
+            store.content_revision_now(),
+            "gis-map-preparation-law".into(),
+            vec![mutation],
+            Some("candidate transfer".into()),
+            store::HistoryLane::Document,
+            Some(&factory),
+        )
+        .expect("GIS Map one-item publication admits its exact factory");
+    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES };
+    let mut published = false;
+    for _ in 0..64 {
+        match store.advance_apply_batch(&mut publication, grant).expect("GIS Map candidate transfer turn") {
+            store::ArtifactStoreOneItemAdvance::Published(_) => {
+                published = true;
+                break;
+            }
+            store::ArtifactStoreOneItemAdvance::Blocked => panic!("GIS Map one-item preparation blocked after admitting its exact candidate"),
+            store::ArtifactStoreOneItemAdvance::Progress(_) => {}
+            store::ArtifactStoreOneItemAdvance::AwaitingAck(_) => panic!("GIS Map one-item preparation reached ACK without exposing its exact publication receipt"),
+            store::ArtifactStoreOneItemAdvance::Complete => panic!("GIS Map one-item preparation completed before publishing its exact candidate"),
+        }
+    }
+    assert!(published, "GIS Map one-item preparation must publish after one semantic-candidate turn and one exact transfer turn");
+    assert!(publication.acknowledge());
+    for _ in 0..64 {
+        if matches!(publication.close_step(grant).expect("GIS Map publication close"), store::SnapshotRetirementStep::Complete) {
+            break;
+        }
+    }
+    assert!(publication.terminal_is_empty());
+    drop(publication);
+    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<GisMapSnapshot, GisMapMutation>::new();
+    for _ in 0..100_000 {
+        if matches!(semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS Map preparation-law Store close"), semio_framework_plugin::PluginCloseStep::Complete) {
+            break;
+        }
+    }
+    assert!(semio_framework_plugin::ArtifactOwnedDisposer::terminal_is_empty(&disposer, &store));
 }
 
 fn gis_map_envelope_wire() -> Vec<u8> {
@@ -192,7 +339,7 @@ async fn patch_routes_empty_route_ids_round_trips_text_and_binary() {
 /// knows the framework-injected ids to skip (`undo`/`copy`/`recordTutorial`/…).
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-    semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_testkit).await;
+    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_tests).await;
     assert!(Gis2dPlayApp::command_from_action("noSuchAction", None).is_err());
 }
 //#endregion 🔖️CommandSurface

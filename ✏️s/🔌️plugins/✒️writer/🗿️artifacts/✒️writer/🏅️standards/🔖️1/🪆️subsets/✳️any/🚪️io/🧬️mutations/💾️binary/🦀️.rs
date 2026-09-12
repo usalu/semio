@@ -1087,8 +1087,8 @@ pub fn writer_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOwn
     store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(WriterEnvelopeOwnedFieldCatalog), std::sync::Arc::new(WriterSnapshotRetirementFactory), std::sync::Arc::new(WriterMutationRetirementFactory))
 }
 
-pub fn writer_document_store_owners() -> store::MemberStoreOwners<WriterSnapshot, WriterMutation> {
-    store::MemberStoreOwners::new(
+pub fn writer_document_store_owners() -> store::DocumentStoreOwners<WriterSnapshot, WriterMutation> {
+    store::DocumentStoreOwners::new(
         std::sync::Arc::new(WriterSnapshotRetirementFactory),
         std::sync::Arc::new(WriterSnapshotRetirementFactory),
         std::sync::Arc::new(WriterMutationRetirementFactory),

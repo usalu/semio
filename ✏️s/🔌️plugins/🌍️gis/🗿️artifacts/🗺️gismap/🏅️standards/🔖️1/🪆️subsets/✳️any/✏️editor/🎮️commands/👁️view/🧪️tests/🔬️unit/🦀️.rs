@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::gis2d::modes::edit::windows::map::GIS2D_PLAY_BODY_COMPOSITE;
-use crate::editor::gis2d::testkit::{app, close, dispatch, render};
+use crate::editor::gis2d::unit_tests::context::{app, close, dispatch, render};
 use crate::editor::gis2d::Gis2dCommand;
 
 #[semio_framework_async_macros::async_test]

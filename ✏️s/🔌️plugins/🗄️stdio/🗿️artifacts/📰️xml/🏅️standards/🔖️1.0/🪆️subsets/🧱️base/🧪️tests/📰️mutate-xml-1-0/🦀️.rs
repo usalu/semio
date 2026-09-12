@@ -4,7 +4,7 @@
 //! Every scenario copies the real, committed `🏷️.xml` fixture (extracted once
 //! from the real ECMA-376 example DOCX — see the feature file's own header) into the case work
 //! directory first; the committed fixture is never written to. `oracle` drives the registered
-//! `quick-xml` reference implementation (`../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🔮️oracle/🦀️.rs`'s
+//! `quick-xml` reference implementation (`../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`'s
 //! own `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's
 //! own `XmlSnapshot::import_utf8`/`export_utf8`/`apply_xml_mutation` over the full 8-kind
 //! `XmlMutation` vocabulary. Both results are read back by the SAME independent `project_xml_1_0`

@@ -38,11 +38,16 @@ pub const MAX_LAYOUT_EXPORT_STRING_BYTES: usize = 8 << 10;
 pub const MAX_LAYOUT_EXPORT_DIMENSION: u32 = 2_048;
 pub const MAX_LAYOUT_EXPORT_PIXELS: u64 = 4_194_304;
 pub const MAX_LAYOUT_EXPORT_FILES: usize = 3;
-pub const MAX_LAYOUT_EXPORT_OUTPUT_BYTES: usize = 32 << 20;
+/// 📤️ Derived, never a literal: the framework's own end-to-end segmented-download total cap, so this
+/// plugin's export budget cannot drift from the bound the shard worker and the host drain enforce
+/// (`🎭️actor/📮️shard-client/📤️segmented-download/🧫️fixtures/🔣️.json`'s `contract.maximumTotalBytes`).
+pub const MAX_LAYOUT_EXPORT_OUTPUT_BYTES: usize = ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES;
 pub const MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES: usize = 634;
 pub const MAX_LAYOUT_EXPORT_DECODED_ITEMS: usize = 131_072;
 pub const MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES: usize = 64 << 10;
-const OUTPUT_CHUNK_BYTES: usize = 4_096;
+/// 📤️ Derived, never a literal: the exact per-chunk cap [`ArtifactOutputChunks::push`] enforces. A
+/// literal that drifts from it turns a correct producer into a runtime fault on the wire.
+const OUTPUT_CHUNK_BYTES: usize = ArtifactOutputChunks::CHUNK_BYTES;
 const MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS: usize = MAX_LAYOUT_EXPORT_OUTPUT_BYTES.div_ceil(OUTPUT_CHUNK_BYTES);
 const BASE64_INPUT_BYTES_PER_UNIT: usize = 3_072;
 const PNG_PIXELS_PER_UNIT: u32 = 256;

@@ -2,7 +2,7 @@
 use super::*;
 use crate::demo_space_projection;
 use crate::engine::space::SpaceCommand;
-use crate::engine::space::testkit::{apply_config, studio_emit};
+use crate::engine::space::unit_tests::context::{apply_config, studio_emit};
 use serde_json::json;
 
 #[semio_framework_async_macros::async_test]
@@ -18,7 +18,7 @@ const DWG_FORMAT_ID: &str = "s.stdio.dwg.standard.ac1018.representation.document
 
 #[semio_framework_async_macros::async_test]
 async fn export_media_emits_download_effect_and_import_requests_file_open() {
-    crate::engine::space::testkit::seed_draw_plugin().await;
+    crate::engine::space::unit_tests::context::seed_draw_plugin().await;
     semio_framework::register_format_descriptors([semio_framework::FormatDescriptor {
         kind_id: DWG_FORMAT_ID.into(),
         short_id: DWG_FORMAT_ID.into(),

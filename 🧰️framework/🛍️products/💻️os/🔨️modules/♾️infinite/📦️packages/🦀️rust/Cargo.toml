@@ -25,7 +25,7 @@ session-bindgen = []
 
 [[bin]]
 name = "dump-guestslim-typst-fonts"
-path = "../../🖼️canvas/🔨️bin/📤️dump_guestslim_typst_fonts.rs"
+path = "../../🖼️canvas/🔤️fonts/🦀️.rs"
 required-features = ["render"]
 
 [lib]

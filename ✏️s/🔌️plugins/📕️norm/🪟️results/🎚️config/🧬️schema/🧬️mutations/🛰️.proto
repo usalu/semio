@@ -1,0 +1,12 @@
+syntax = "proto3";
+package semio.window.norm.results;
+
+message ChangeSelectedCheckIndex {
+  optional uint32 index = 1;
+}
+
+message NormResultsWindowConfigMutation {
+  oneof mutation {
+    ChangeSelectedCheckIndex change_selected_check_index = 1;
+  }
+}

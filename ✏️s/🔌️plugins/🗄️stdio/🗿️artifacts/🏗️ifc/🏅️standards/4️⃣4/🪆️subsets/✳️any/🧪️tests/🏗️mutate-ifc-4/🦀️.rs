@@ -1,7 +1,7 @@
 //! 🦀️ IFC4/✳️any mutation case — Rust adapter. Exhaustive: every declared `IfcMutation` kind
 //! (`ifc-4-any`, 11 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one identity
 //! round trip. `ruststep` 0.4 can only READ Part-21 text (confirmed empirically — see the feature
-//! file's own description), so the oracle dispatcher (`../../🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracle/
+//! file's own description), so the oracle dispatcher (`../../🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracles/
 //! 🦀️.rs`) performs every kind with its own from-scratch Part-21 writer against a
 //! `ruststep`-parsed document, independent of this subset's own `IfcSnapshot`/`step::engine::part21`
 //! codec; the subject fully parses into `IfcSnapshot` and re-serializes from it alone (no byte

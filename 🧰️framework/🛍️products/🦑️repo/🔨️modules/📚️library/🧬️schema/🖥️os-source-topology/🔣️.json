@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/os-source-topology.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "moves", "packageBoundary"],
+  "properties": {
+    "version": { "const": 1 },
+    "moves": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "owner", "kind", "sourceDisposition", "anchor", "consumers"],
+        "properties": {
+          "source": { "type": "string", "minLength": 1 },
+          "owner": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["javascript", "powershell", "rust", "typescript", "typescript-declaration", "typescript-jsx"] },
+          "sourceDisposition": { "enum": ["removed", "package-glue"] },
+          "anchor": { "type": "string", "minLength": 1 },
+          "consumers": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "packageBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cargoRoot", "nodeRoot", "nodeManifest", "nxManifest", "nodeEntry", "name"],
+      "properties": {
+        "cargoRoot": { "type": "string", "minLength": 1 },
+        "nodeRoot": { "type": "string", "minLength": 1 },
+        "nodeManifest": { "const": "package.json" },
+        "nxManifest": { "const": "📋️project.json" },
+        "nodeEntry": { "const": "📚️library/🟦️.ts" },
+        "name": { "const": "@semio-tech/framework-renderer-wgpu" }
+      }
+    }
+  }
+}

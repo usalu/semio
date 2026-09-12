@@ -459,7 +459,7 @@ impl MetricRegistry {
 
 //#region 🔖️Span
 /// @emoji ⏱️ Wall-clock seam so `SpanRegistry` durations are testable without real sleeps — the
-/// family's `db_testkit::SimClock` (not a dependency of this crate) is the deterministic-
+/// family's `db_fault_testing::SimClock` (not a dependency of this crate) is the deterministic-
 /// simulation analog; this crate only needs the read side.
 pub trait Clock: Send + Sync {
     async fn now_ms(&self) -> u64;
@@ -625,7 +625,7 @@ pub struct DivergenceReport {
 /// @emoji 🧬️ Runtime cross-check that two (or more) independently-produced state-hash streams
 /// for the same document agree at every sequence number — e.g. a live execution's per-command
 /// `state_hash` (see the frozen `CommandReceipt`) against a replay's recomputation. Complements
-/// (does not replace) `db_testkit::assert_replay_deterministic`, a test-only harness in a crate
+/// (does not replace) `db_fault_testing::assert_replay_deterministic`, a test-only harness in a crate
 /// this one may not depend on; this is the always-on runtime version.
 pub struct DeterminismVerifier {
     expected_labels: Vec<String>,

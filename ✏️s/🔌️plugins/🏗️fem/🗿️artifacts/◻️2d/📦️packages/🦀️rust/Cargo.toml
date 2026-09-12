@@ -24,6 +24,7 @@ semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
+replication = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-csv = { workspace = true }
@@ -37,6 +38,8 @@ semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-scene = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }

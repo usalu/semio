@@ -87,7 +87,7 @@ mod tests;
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `Process3dMutation` variant, in declaration order — the vocabulary the `process3d-1-any` mutation catalog
-/// (`../../🔮️oracle/🔣️.json`) declares and the `🏭️mutate-process3d-1` exhaustive test case measures
+/// (`../../🔮️oracles/🔣️.json`) declares and the `🏭️mutate-process3d-1` exhaustive test case measures
 /// itself against. The framework never parses Rust, so `kinds_match_the_enum_and_the_catalog` below is
 /// what keeps this list honest in both directions.
 pub const KINDS: &[&str] = &[
@@ -126,7 +126,7 @@ pub const KINDS: &[&str] = &[
 /// so the inverse law is checked against the mutation's OWN computed inverse rather than against a
 /// hand-written undo.
 ///
-/// @see ../../🔮️oracle/🔣️.json — the catalog and the recorded no-oracle decision.
+/// @see ../../🔮️oracles/🔣️.json — the catalog and the recorded no-oracle decision.
 pub fn process3d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<Process3dSnapshot, String> {
         let decoded: Process3dSnapshot = semio_framework_os_kernel::json::from_json_str(text).map_err(|error| error.to_string())?;

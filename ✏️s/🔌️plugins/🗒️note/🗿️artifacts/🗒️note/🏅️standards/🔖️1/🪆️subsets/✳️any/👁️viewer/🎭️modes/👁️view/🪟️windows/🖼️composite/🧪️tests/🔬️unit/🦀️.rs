@@ -15,5 +15,5 @@ async fn render_produces_a_read_only_ink_canvas_scene_for_the_empty_document() {
     let scene: InkCanvasScene = semio_framework_ui_scene::decode(props).expect("packed viewer scene");
     assert!(!scene.interactive);
     assert!(scene.active_utility.is_empty());
-    semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire viewer canvas");
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire viewer canvas");
 }

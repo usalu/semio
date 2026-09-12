@@ -4,7 +4,7 @@ import type { ArtifactChild } from "../../../../../../../../../../../🧰️fram
 export interface SequenceDiff {
   /** @state artifact */ artifact?: SequenceArtifact;
   /** @state artifact */ schema?: string;
-  /** @state artifact @child kind=s.stdio.semio.flow */ content?: ArtifactChild;
+  /** @state artifact @child kind=s.stdio.semio */ content?: ArtifactChild;
 }
 export interface SequenceStepsDelta { added: SequenceStep[]; removed: string[]; patched: SequenceStepPatchEntry[]; reordered?: string[]; }
 export interface SequenceEdgesDelta { added: SequenceEdge[]; removed: string[]; patched: SequenceEdgePatchEntry[]; reordered?: string[]; }

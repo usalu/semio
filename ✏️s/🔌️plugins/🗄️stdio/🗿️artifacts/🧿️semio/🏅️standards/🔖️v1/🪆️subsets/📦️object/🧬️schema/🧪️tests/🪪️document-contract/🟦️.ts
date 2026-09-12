@@ -17,7 +17,7 @@ export function testSemioObjectDocumentContract(): void {
   const ajv = new Ajv({ strict: true, allErrors: true });
   for (const key of ["x-semio-state", "x-semio-child"]) ajv.addKeyword(key);
   for (const path of ["../../../../../../../../../../../..//🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json","../../../../../../../../../../../..//🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json","../../../../✉️base/🧬️schema/🪆️child/🔣️.json","../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json"]) ajv.addSchema(read(path));
-  const fixtures = read("./🧫️fixtures/🔣️.json");
+  const fixtures = read("../../🧫️fixtures/🪪️document-contract/🔣️.json");
   const childIdentity = (value: any): boolean => ["brep", "mesh", "properties"].every((field) => !value[field] || ajv.compile({ const: value[field].target.artifactId })(value[field].childId));
   const a = ajv.compile(read("../../🔣️.json"));
   const s = ajv.compile(read("../../📸️snapshot/🔣️.json"));

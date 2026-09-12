@@ -1,10 +1,10 @@
 use super::*;
 use crate::editor::wires::commands::{add_node, canvas_pointer_move, canvas_pointer_up};
-use crate::editor::wires::testkit::{dispatch, new_app};
+use crate::editor::wires::unit_tests::context::{dispatch, new_app};
 use crate::editor::wires::WiresCommand;
 use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::{testkit, PluginApp, INTERACTION_SELECT_ACTION_ID};
+use semio_framework_plugin::{artifact_app_laws, PluginApp, INTERACTION_SELECT_ACTION_ID};
 
 #[semio_framework_async_macros::async_test]
 async fn pointer_drag_translates_node_by_screen_delta() {
@@ -17,7 +17,7 @@ async fn pointer_drag_translates_node_by_screen_delta() {
     assert_eq!(node.get("y").and_then(|value| value.as_f64()), Some(30.0));
     dispatch(&mut app, WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {})).await;
     // A coalesced drag collapses to a single undo step restoring the origin.
-    app.handle_action("undo", None, &testkit::meta("local")).await.expect("undo");
+    app.handle_action("undo", None, &artifact_app_laws::meta("local")).await.expect("undo");
     let node = find_board_node(&app.snapshot().expect("snapshot"), "node-1").expect("node-1").clone();
     assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(0.0));
 }

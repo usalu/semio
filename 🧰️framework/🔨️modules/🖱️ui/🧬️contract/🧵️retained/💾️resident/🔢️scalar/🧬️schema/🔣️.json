@@ -3736,8 +3736,8 @@
           "const": {
             "status": "source-oracle-contract",
             "nxTarget": "@semio-tech/framework-renderer-react:test-long",
-            "router": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts",
-            "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📋️project.json",
+            "router": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+            "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
             "testHost": "UiDocumentStore/🟦️.tsx / TypedWire",
             "selectors": [
               "OwnedResidentScalarDeclaration",

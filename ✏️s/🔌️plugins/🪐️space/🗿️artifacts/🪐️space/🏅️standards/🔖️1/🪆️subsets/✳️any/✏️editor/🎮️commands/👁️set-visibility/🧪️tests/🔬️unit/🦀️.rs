@@ -1,11 +1,11 @@
 
 use super::*;
-use crate::editor::space_index::{SpaceIndexCommand, testkit};
+use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn set_visibility_relays_the_directory_command() {
-    let mut app = testkit::new_app().await;
-    let result = app.dispatch_typed(SpaceIndexCommand::SetVisibility(SetVisibility { visibility: "public".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("set visibility");
+    let mut app = artifact_app_laws::new_app().await;
+    let result = app.dispatch_typed(SpaceIndexCommand::SetVisibility(SetVisibility { visibility: "public".into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("set visibility");
     assert_eq!(result.requested_effects.len(), 1);
     match &result.requested_effects[0] {
         Effect::ReplayShellCommand { action_id, args } => {

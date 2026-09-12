@@ -1,4 +1,139 @@
-use super::testkit::*;
+pub(crate) mod context {
+    //! 🧪️ The one cad-app test harness — every other taxonomy node's `🧪️Tests` region builds on it
+    //! instead of re-deriving a store/dispatch/render scaffold of its own.
+    use super::super::*;
+    use protocol::{Mutation, MutationDiff};
+    use semio_framework_plugin::app::EditorApp;
+    use semio_framework_plugin::{ActionMeta, HistoryView, UiMenuRef, VcsArtifactApp};
+    
+    pub fn meta(actor: &str) -> ActionMeta {
+        semio_framework_plugin::artifact_app_laws::meta(actor)
+    }
+    
+    /// ✏️ `CadPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime `ArtifactApp`
+    /// — `EditorApp<CadPlayApp>` (SDK adapter, contract §2.1) is the real `ArtifactApp` implementor
+    /// `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<CadPlayApp>` builds it.
+    pub async fn new_app() -> VcsArtifactApp<EditorApp<CadPlayApp>> {
+        semio_framework_plugin::artifact_app_laws::new_app::<EditorApp<CadPlayApp>>().await
+    }
+    
+    /// ✏️ Adapts `create_cad_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
+    /// examples }` shape `context::assert_declared_actions_bridge_to_commands` still expects —
+    /// framework test context gap, not modifiable here (`🧰️framework/**` is outside this packet's lease).
+    pub fn cad_app_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_cad_app(), examples: Vec::new() }
+    }
+    
+    pub fn empty_history() -> HistoryView {
+        HistoryView::empty()
+    }
+    
+    /// 🔀️ Keeps the legacy test-harness call shape while exercising the production action bridge —
+    /// `cad_command_from_action` speaks `DslValue`, so this bridges the `pack::json::Value`-shaped
+    /// test-harness `args` via `protocol::json::to_dsl_value` right at the call site.
+    pub fn command_from_action(action: &str, args: Option<&Value>) -> CadCommand {
+        cad_command_from_action(action, args.map(json::to_dsl_value).as_ref()).unwrap_or_else(|error| panic!("command_from_action: {error:?}"))
+    }
+    
+    /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped, config defaulted) so tests can
+    /// inspect the emitted document/config operations directly.
+    pub fn drive(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>) -> Emit<CadMutation, CadConfigMutation> {
+        drive_with_config(app, scene, action, args, &CadConfig::default())
+    }
+    
+    /// 🧪️ `args` stays owned so every ported test keeps the pre-migration `(action id, json!(..))`
+    /// call shape verbatim; `command_from_action` only ever reads it.
+    ///
+    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): dispatches straight through
+    /// `CadCommand::dispatch` instead of the `ArtifactApp::handle` trait method — `handle`'s
+    /// `interaction: &semio_framework_plugin::app::InteractionView<'_>` parameter has `pub(crate)`
+    /// fields in that crate, so this crate's own tests cannot construct one; `dispatch` only needs
+    /// the app-owned `CadDispatchCtx` (whose `interaction: CadInteractionSnapshot` field IS plain
+    /// and cad-owned), so tests build that by hand and skip the adaptation `handle` exists for.
+    #[allow(clippy::needless_pass_by_value)]
+    pub fn drive_with_config(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig) -> Emit<CadMutation, CadConfigMutation> {
+        let operation = CadPreviewOperationIdentity { app_instance_id: 1, parent_document_id: "cad-test-document".into(), operation_id: 1, operation_generation: 1, canonical_base_revision: "00".repeat(32) };
+        drive_with_operation(app, scene, action, args, config, Some(operation)).expect("cad command handled")
+    }
+    
+    /// 🪪️ Production-dispatch harness with an explicit public operation identity, including the
+    /// missing-context case used by fail-closed transition fixtures.
+    #[allow(clippy::needless_pass_by_value)]
+    pub fn drive_with_operation(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig, preview_operation: Option<CadPreviewOperationIdentity>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let _ = app;
+        let history = empty_history();
+        let doc = ArtifactView::new(scene, &history);
+        let cfg = ConfigView { snapshot: config, window: None };
+        let command = command_from_action(action, args.as_ref());
+        let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation, view_state: None };
+        command.dispatch(&doc, &cfg, &mut ctx)
+    }
+    
+    /// 🪟️ Dispatches one command with a host-authenticated concrete CAD window instance.
+    pub fn drive_in_window(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig, window_id: &str, window_kind_id: &str) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let _ = app;
+        let history = empty_history();
+        let doc = ArtifactView::new(scene, &history);
+        let cfg = ConfigView { snapshot: config, window: None };
+        let command = command_from_action(action, args.as_ref());
+        let view_state = ViewModel {
+            window_id: Some(window_id.into()),
+            active_window_kind_id: Some(window_kind_id.into()),
+            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: window_kind_id.into() }],
+            ..ViewModel::default()
+        };
+        let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation: None, view_state: Some(view_state) };
+        command.dispatch(&doc, &cfg, &mut ctx)
+    }
+    
+    pub fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+        let cfg = ConfigView { snapshot: config, window: None };
+        CadPlayApp::render(body_key, doc, &cfg, view_state).map(|tree| tree.root)
+    }
+    
+    pub fn window_measures_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        let cfg = ConfigView { snapshot: config, window: None };
+        CadPlayApp::window_measures(doc, &cfg, view_state)
+    }
+    
+    pub fn context_menu_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        let cfg = ConfigView { snapshot: config, window: None };
+        let request = ContextMenuRequest { menu: UiMenuRef { id: "world3d".into(), args: None }, surface: None, window_instance_id: None, point: None };
+        CadPlayApp::context_menu(&request, doc, &cfg, view_state, registry)
+    }
+    
+    /// 🧮️ Folds a list of `CadMutation`s onto a scene via the core `Mutation`/`MutationDiff` impls —
+    /// mirrors what the wrapping `VcsArtifactApp` store does when it dispatches the emitted operations.
+    pub fn apply_mutations(scene: &CadSnapshot, operations: &[CadMutation]) -> CadSnapshot {
+        let mut next = scene.clone();
+        for operation in operations {
+            next = operation.diff(&next).diff().apply(&next).expect("valid mutation diff");
+        }
+        next
+    }
+    
+    /// 🧮️ `apply_mutations`'s config-targeted twin — folds an `Emit`'s `config_mutations` onto a base
+    /// `CadConfig` (mirrors what `VcsArtifactApp`'s config store does when it dispatches them).
+    pub fn config_after(emit: &Emit<CadMutation, CadConfigMutation>, base: &CadConfig) -> CadConfig {
+        let mut next = base.clone();
+        for operation in &emit.config_mutations {
+            next = operation.diff(&next).diff().clone();
+        }
+        next
+    }
+    
+    /// 🧮️ `config_after` plus the `CadConfig -> CadPlayRuntime` boundary conversion — the direct
+    /// replacement for the pre-B1 `app.runtime.borrow()` most tests below inspected after `drive(..)`.
+    pub fn runtime_after(emit: &Emit<CadMutation, CadConfigMutation>, base: &CadConfig) -> CadPlayRuntime {
+        cad_runtime_from_config(&config_after(emit, base))
+    }
+    
+    pub fn view(scene: CadSnapshot, runtime: CadPlayRuntime) -> CadPlayView {
+        CadPlayView { document: scene, runtime }
+    }
+}
+
+use context::*;
 use super::*;
 use crate::standards::v1::subsets::any::io::scene_from_spatial_payload;
 use crate::standards::v1::subsets::any::schema::inferences::{
@@ -107,7 +242,7 @@ async fn retained_cad_presence_close_empty_lanes_have_exact_owners() {
     let maximum_bytes = fixture["grant"]["maximumBytes"].as_u64().unwrap() as usize;
     let envelope = store::create_document_envelope::<NoDraft, NoDraftMutation>("draft.empty", "cad-draft-close", NoDraft::default(), None);
     let mut draft = store::DraftStore::new(envelope).await.unwrap();
-    draft.install_member_store_owners_exact(<CadPlayApp as ArtifactEditor>::build_draft_store_owners().unwrap());
+    draft.install_document_store_owners_exact(<CadPlayApp as ArtifactEditor>::build_draft_store_owners().unwrap());
     let mut disposer = <CadPlayApp as ArtifactEditor>::build_draft_store_disposer().unwrap();
     for turn in 0..100_000 {
         match disposer.close_step(&mut draft, maximum_items, maximum_bytes).unwrap() {
@@ -261,7 +396,7 @@ fn retained_route_fixture_matches_the_exact_owner_manifest_and_laws() {
 /// `setActiveExample`: chrome that declares an action no command row backs.
 #[semio_framework_async_macros::async_test]
 async fn every_rendered_action_bridges_through_the_framework_harness() {
-    semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<CadPlayApp>>(cad_app_manifest_for_testkit).await;
+    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<CadPlayApp>>(cad_app_manifest_for_tests).await;
 }
 
 /// ⚖️ Text and binary are two projections of the same command, and every printed line starts with
@@ -588,19 +723,17 @@ async fn gumball_config_fields_present_regardless_of_dislocate_activation() {
     assert!(!selection.contains("\"gumballTarget\""));
 }
 
-/// 🎥️ `setCamera`/`setProjection`/`setProjectionParam` are `ActionKind::View` (see the `.view_action`
-/// registrations below) — they must never emit a `CadMutation` (no VCS edit, no undo entry) and
-/// instead write a coalesced `CadConfigMutation`, isolated per pane.
+/// 🎥️ Camera edits target the host-authenticated exact window and never app or document state.
 #[semio_framework_async_macros::async_test]
 async fn set_camera_writes_config_not_mutations() {
     let app = CadPlayApp::default();
     let scene = default_document();
-    let emit = drive(&app, &scene, "setCamera", Some(json!({ "surfaceId": "cad.play.scene3d/building", "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 2.0, "fov": 60.0 } })));
+    let emit = drive_in_window(&app, &scene, "setCamera", Some(json!({ "surfaceId": "cad.play.scene3d/building", "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 2.0, "fov": 60.0 } })), &CadConfig::default(), "building-right", building::WINDOW_KIND_ID).expect("addressed camera command");
     assert!(emit.artifact_mutations.is_empty(), "setCamera must not emit a VCS operation");
-    assert!(!emit.config_mutations.is_empty(), "setCamera must write a config operation");
-    let runtime = runtime_after(&emit, &CadConfig::default());
-    assert_eq!(cad_pane_camera_runtime(&runtime, CadPaneId::Building).zoom, 2.0);
-    assert_eq!(cad_pane_camera_runtime(&runtime, CadPaneId::Shape).zoom, 1.0, "panes stay isolated");
+    assert!(emit.config_mutations.is_empty(), "setCamera must not mutate app configuration");
+    assert_eq!(emit.window_config_mutations.len(), 1);
+    assert_eq!(emit.window_config_mutations[0].window_id(), "building-right");
+    assert_eq!(emit.window_config_mutations[0].window_kind_id(), building::WINDOW_KIND_ID);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -686,32 +819,17 @@ async fn context_menu_is_grouped_and_keeps_delete_object_last() {
     assert_eq!(items.last().and_then(|item| item.destructive), Some(true), "trailing deleteObject must be marked destructive: {items:?}");
 }
 
-/// @emoji 🎛️ Dislocate move/rotate options are now keyed by PANE (`CadConfig::dislocate_shape`/
-/// `dislocate_building`/…), not by an arbitrary host-pushed window-instance id — the direct
-/// replacement for the pre-B1 per-window-instance isolation test.
+/// 🎛️ Dislocate preferences target an exact window instance.
 #[semio_framework_async_macros::async_test]
 async fn dislocate_move_and_rotate_options_are_per_pane() {
     let app = CadPlayApp::default();
     let scene = default_document();
-    let emit = drive(&app, &scene, "setDislocateOption", Some(json!({ "pane": "building", "option": "rotate", "pressed": false })));
-    let config = config_after(&emit, &CadConfig::default());
-    let history = empty_history();
-    let doc = ArtifactView::new(&scene, &history);
-    let view_state = ViewModel::default();
-    let measures = window_measures_direct(&app, &doc, &config, &view_state);
-    let rotate_pressed = |window_id: &str| {
-        measures.get(window_id).and_then(|items| {
-            items.iter().find_map(|measure| match measure {
-                WindowMeasure::Group { id, children, .. } if id == "cad-play-utility-options-dislocate" => children.iter().find_map(|child| match child {
-                    WindowMeasure::Toggle { id, pressed, .. } if id == "cad-dislocate-rotate" => Some(*pressed),
-                    _ => None,
-                }),
-                _ => None,
-            })
-        })
-    };
-    assert_eq!(rotate_pressed(shape::WINDOW_KIND_ID), Some(true));
-    assert_eq!(rotate_pressed(building::WINDOW_KIND_ID), Some(false));
+    let emit = drive_in_window(&app, &scene, "setDislocateOption", Some(json!({ "pane": "building", "option": "rotate", "pressed": false })), &CadConfig::default(), "building-left", building::WINDOW_KIND_ID).expect("addressed utility command");
+    assert!(emit.artifact_mutations.is_empty());
+    assert!(emit.config_mutations.is_empty());
+    assert_eq!(emit.window_config_mutations.len(), 1);
+    assert_eq!(emit.window_config_mutations[0].window_id(), "building-left");
+    assert_eq!(emit.window_config_mutations[0].window_kind_id(), building::WINDOW_KIND_ID);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -734,18 +852,22 @@ async fn utility_switch_has_no_plugin_command_or_config_lane() {
 async fn sun_measures_registered_for_all_four_panes_and_default_off() {
     let app = CadPlayApp::default();
     let base_config = CadConfig::default();
-    assert!(!base_config.sun.enabled, "sun must be off by default");
+    assert!(!edit::windows::config::CadWorldWindowConfig::default().sun.enabled, "sun must be off by default");
     let scene = default_document();
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
-    let view_state = ViewModel::default();
+    let view_state = ViewModel {
+        window_id: Some("shape-sun".into()),
+        active_window_kind_id: Some(shape::WINDOW_KIND_ID.into()),
+        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "shape-sun".into(), window_kind_id: shape::WINDOW_KIND_ID.into() }],
+        ..ViewModel::default()
+    };
     let measures = window_measures_direct(&app, &doc, &base_config, &view_state);
-    for window_kind in [shape::WINDOW_KIND_ID, building::WINDOW_KIND_ID, energy::WINDOW_KIND_ID, structure_classic::WINDOW_KIND_ID] {
-        assert!(measures.contains_key(window_kind), "missing sun measures for {window_kind}");
-    }
-    let emit = drive(&app, &scene, "toggleSun", None);
-    let runtime = runtime_after(&emit, &base_config);
-    assert!(runtime.sun.enabled);
+    assert!(measures.contains_key("shape-sun"), "missing exact-window sun measures");
+    let emit = drive_in_window(&app, &scene, "toggleSun", None, &base_config, "shape-sun", shape::WINDOW_KIND_ID).expect("addressed sun command");
+    assert!(emit.config_mutations.is_empty());
+    assert_eq!(emit.window_config_mutations.len(), 1);
+    assert_eq!(emit.window_config_mutations[0].window_id(), "shape-sun");
 }
 
 // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `worldPick`/`setHover`/`setSelection`
@@ -1267,11 +1389,11 @@ async fn import_cad_file_action_imports_obj_by_extension() {
 async fn undo_redo_round_trips_added_node_through_generic_helper() {
     // ⚠️ `AddObject` is a documented no-op pending the child-dispatch seam (see
     // `commands/🧱️object/component.rs`'s module doc) — this exercises the generic
-    // `assert_undo_redo_round_trip` testkit helper (distinct from `undo_redo_round_trips_added_node_through_wrapper`
+    // `assert_undo_redo_round_trip` test context helper (distinct from `undo_redo_round_trips_added_node_through_wrapper`
     // below, which drives the manual add/undo/redo dance) against the real `AddNode` command.
     let mut app = new_app().await;
     let before = app.snapshot().expect("snapshot").nodes.len();
-    semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1).await;
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app, CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1).await;
 }
 
 #[semio_framework_async_macros::async_test]

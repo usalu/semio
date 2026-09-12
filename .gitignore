@@ -13,6 +13,8 @@ old
 generated
 reports
 **dist*
+!🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/
+!🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/**
 target*
 🎯️target/
 🎯️target-*/
@@ -90,8 +92,12 @@ test-results
 /playwright/.auth/
 #--------------------------------------OUTPUTS--------------------------------------
 **/🤖️generated/
+!/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/
+!/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js
 **/🤖️generated.*
-/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🦀️tokens.generated.rs
+/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs
+/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🐍️.py
+/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🔷️.cs
 **/🔌️plugin-modules/
 **/🧩️extension-modules/
 **/📺️renderer-modules/
@@ -103,11 +109,10 @@ test-results
 **/*.map
 **/pkg/
 **/🟨️boot.js
-**/🟦️tokens.generated.ts
 **/🟦️next-env.d.ts
 **/forge.env.d.ts
 **/Palette.g.cs
-**/🐹️entity_kinds.g.go
+/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🏷️entity-kinds/🐹️.go
 #--------------------------------------VITE--------------------------------------
 .vite
 **/coverage/

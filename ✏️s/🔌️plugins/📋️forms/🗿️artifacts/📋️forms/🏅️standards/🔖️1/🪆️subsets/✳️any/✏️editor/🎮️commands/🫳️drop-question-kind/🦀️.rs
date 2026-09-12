@@ -1,7 +1,6 @@
 //! ❓️ ❓️ Forms play app commands command — `drop-question-kind`.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::reset_try_config_mutations;
 use crate::schema::{create_form_id, locate_question, update_block_operation, value_to_dsl};
 use crate::{forms_steps, op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
 use dsl::os_pack::json::{object, Value};
@@ -201,5 +200,5 @@ pub fn handle(payload: &DropQuestionKind, doc: &ArtifactView<'_, FormsSnapshot>,
     };
     let index = resolve_question_insert_index(spec, &step_id, &payload.target_id, &payload.drop_position);
     let question = default_question_for_kind(&payload.kind, create_form_id("q"));
-    Ok(Emit { artifact_mutations: vec![FormMutation::CreateBlock(crate::mutations::create_block::mutation::CreateBlock { step_id, block: question, index })], config_mutations: reset_try_config_mutations(), ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![FormMutation::CreateBlock(crate::mutations::create_block::mutation::CreateBlock { step_id, block: question, index })], ..Default::default() })
 }

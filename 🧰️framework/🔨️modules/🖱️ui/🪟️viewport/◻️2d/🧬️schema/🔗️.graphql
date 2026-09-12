@@ -1,0 +1,8 @@
+"""
+🪟️ Exact-window two-dimensional navigation pose; zoom is positive and every scalar is finite.
+"""
+type Viewport2d {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

@@ -1,6 +1,6 @@
 mod tests {
     use super::super::kernel::{init, macrostep};
-    use super::super::testing::support::{UnitToggleContext, UnitToggleEvent, UnitToggleMachine, unit_toggle_definition};
+    use super::super::testing::toggle_model::{UnitToggleContext, UnitToggleEvent, UnitToggleMachine, unit_toggle_definition};
     use super::*;
 
     #[semio_framework_async_macros::async_test]

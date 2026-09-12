@@ -30,7 +30,7 @@ function packedCarrierRoot(bodyKey: string, children: readonly number[]): UiNode
 }
 
 export async function registerTests1(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: PluginRuntimeTestDependenciesV1, source: { url: string }): Promise<void> {
-  const { testState, leftoverShellInvocationFrames, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
+  const { testState, leftoverShellInvocationFrames, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
   const { describe, expect, it, vi } = vitest;
   describe("isolated job admission batch", () => {
     it("fails-before one slice per admission; passes-after a yield-sized batch", () => {
@@ -110,7 +110,8 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     });
   });
   describe("surface render ViewModel", () => {
-    it("binds two instances of one body to distinct surfaces and packed window projections", () => {
+    it("binds two instances of one body to distinct surfaces, the leftover default window alias, and packed window projections", () => {
+      const { DEFAULT_LEFTOVER_WINDOW_SURFACE } = dependencies;
       const events = uiRefreshSurfaceEvents(7, {
         viewState: {
           locale: "de",
@@ -131,15 +132,17 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       expect(events.map((event: { payload: { surface: { surface: string }; bodyKey: string } }) => [event.payload.surface.surface, event.payload.bodyKey])).toEqual([
         ["first", "canvas-body"],
         ["second", "canvas-body"],
+        [DEFAULT_LEFTOVER_WINDOW_SURFACE, "canvas-body"],
         ["details", "details-body"],
       ]);
       const views = events.map((event: { payload: { viewState: Uint8Array } }) => decodePackValue(event.payload.viewState));
       expect(views).toMatchObject([
         { locale: "de", terminology: "reuse", windowId: "first", activeWindowKindId: "canvas", activeUtilityId: "inspect" },
         { locale: "de", terminology: "reuse", windowId: "second", activeWindowKindId: "canvas", activeUtilityId: "measure" },
+        { locale: "de", terminology: "reuse", windowId: "second", activeWindowKindId: "canvas", activeUtilityId: "measure" },
         { locale: "de", terminology: "reuse" },
       ]);
-      expect((views[2] as { windowId?: string | null }).windowId == null).toBe(true);
+      expect((views[3] as { windowId?: string | null }).windowId == null).toBe(true);
       console.info("[DEBUG] concrete render surfaces received packed locale, terminology, and per-window utility context");
     });
   });
@@ -287,7 +290,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   
       it("preserves nested UTF-8 payloads and exact u64 ids in both renderer decoders", async () => {
         const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
-        const { wireEffectToFriendly: sharedDecode } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts");
+        const { wireEffectToFriendly: sharedDecode } = await import("../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts");
         const requestJson = JSON.stringify({ ...fixture.request, label: "Hölzer 日本語" });
         for (const id of fixture.requestIds) {
           const req = BigInt(id);
@@ -1525,7 +1528,12 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         expect(handle.documentPack(instanceId)).toEqual({ pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) });
       });
   
-      it("readAppDocumentPack() returns the AppFrame::Document pack/spr, and null when the reply carries no document frame", async () => {
+      /** 📜️ `ops` is the third half of the frame, not decoration: `🏛️ShellHost`'s contributions push
+       * reads it (`documentSourcesFromPack` → `resolveDocumentOperatorKinds`) and treats a MISSING
+       * one as `{ status: "unresolved", reason: "document-ops-missing" }`, so an adapter that drops
+       * it silently unresolves every operator scope. This law therefore pins the text crossing
+       * verbatim, not merely that a document was read. */
+      it("readAppDocumentPack() returns the AppFrame::Document pack/spr/ops, and null when the reply carries no document frame", async () => {
         const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
         const turnBroadcast = createTurnOutcomeBroadcast<TurnOutcome>();
         let replyWithDocument = true;
@@ -1540,7 +1548,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
               const frames = commands.map((command) => {
                 if (!("ReadDocument" in command)) throw new Error(`unexpected command ${JSON.stringify(command)}`);
                 const seq = command.ReadDocument.seq;
-                return replyWithDocument ? encodeAppFrame({ Document: { in_reply_to: seq, pack: [7, 8], spr: [9], ops: "" } }) : encodeAppFrame({ Done: { in_reply_to: seq } });
+                return replyWithDocument ? encodeAppFrame({ Document: { in_reply_to: seq, pack: [7, 8], spr: [9], ops: "(extrude (polygon 6))" } }) : encodeAppFrame({ Done: { in_reply_to: seq } });
               });
               turnBroadcast.push({ instanceId, frames });
             },
@@ -1551,7 +1559,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         };
         const handle = await adaptPluginHandle("c-plugin", fakeLease);
         const instanceId = await handle.createApp("app-c");
-        expect(await handle.readAppDocumentPack?.(instanceId)).toEqual({ pack: new Uint8Array([7, 8]), spr: new Uint8Array([9]) });
+        expect(await handle.readAppDocumentPack?.(instanceId)).toEqual({ pack: new Uint8Array([7, 8]), spr: new Uint8Array([9]), ops: "(extrude (polygon 6))" });
         replyWithDocument = false;
         expect(await handle.readAppDocumentPack?.(instanceId)).toBeNull();
       });
@@ -2596,6 +2604,63 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         }
       });
   
+      /** ⚖️ LAW: restoring the ACTOR is not restoring the APP. A watchdog kill takes no checkpoint, so
+       * the guest comes back with no `createApp` instance at all and every later command page fails
+       * the guest's own liveness check (`plugin.command-page-invalid`) — the session is dead until the
+       * user reloads. The runtime must therefore retire each lost instance's bookkeeping AND announce
+       * it, so whoever created the instance can create it again
+       * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`). */
+      it("handlePluginShardLost retires the app instances those actors hosted and announces exactly them", () => {
+        const released: string[] = [];
+        const announced: Array<{ readonly shardIndex: number; readonly lost: readonly { readonly pluginId: string; readonly instanceId: number; readonly actorId: string }[] }> = [];
+        const previous = testState.sharedActivationRegistry;
+        testState.sharedActivationRegistry = { handleShardLost: () => {} } as unknown as ActivationRegistry;
+        const unsubscribe = onPluginInstancesLost((shardIndex, lost) => announced.push({ shardIndex, lost }));
+        rememberInstanceForRecovery({ pluginId: "procedural", instanceId: 1, actorId: "procedural#1", release: () => released.push("procedural#1") });
+        rememberInstanceForRecovery({ pluginId: "other", instanceId: 4, actorId: "other#4", release: () => released.push("other#4") });
+        try {
+          // 🪪️ `flow-extension-brep#request` is an extension's REQUEST actor: it owns no app instance,
+          // so it is restored and contributes nothing to announce.
+          handlePluginShardLost(0, ["procedural#1", "flow-extension-brep#request"]);
+          expect(released).toEqual(["procedural#1"]);
+          expect(announced).toHaveLength(1);
+          expect(announced[0]?.shardIndex).toBe(0);
+          expect(announced[0]?.lost).toEqual([{ pluginId: "procedural", instanceId: 1, actorId: "procedural#1" }]);
+          // 🧹️ Retiring is idempotent: a second loss of the same actor announces nothing, because the
+          // instance is already gone.
+          handlePluginShardLost(0, ["procedural#1"]);
+          expect(released).toEqual(["procedural#1"]);
+          expect(announced).toHaveLength(1);
+          // 🧹️ An instance that closed normally is forgotten, so its later shard loss is silent too.
+          forgetInstanceForRecovery("other#4");
+          handlePluginShardLost(1, ["other#4"]);
+          expect(released).toEqual(["procedural#1"]);
+          expect(announced).toHaveLength(1);
+        } finally {
+          unsubscribe();
+          forgetInstanceForRecovery("procedural#1");
+          forgetInstanceForRecovery("other#4");
+          testState.sharedActivationRegistry = previous;
+        }
+      });
+
+      /** ⚖️ LAW: a shard loss with NO live app instance on it announces nothing at all — an extension
+       * request actor dying is a retryable request failure, not a lost session. */
+      it("a lost shard that hosted no app instance announces nothing", () => {
+        const announced: unknown[] = [];
+        const previous = testState.sharedActivationRegistry;
+        testState.sharedActivationRegistry = { handleShardLost: () => {} } as unknown as ActivationRegistry;
+        const unsubscribe = onPluginInstancesLost((_shardIndex, lost) => announced.push(lost));
+        try {
+          handlePluginShardLost(3, ["flow-extension-brep#request"]);
+          expect(announced).toEqual([]);
+          expect(PLUGIN_ACTOR_INSTANCE_LOST_FAULT).toBe("plugin.actor-instance-lost");
+        } finally {
+          unsubscribe();
+          testState.sharedActivationRegistry = previous;
+        }
+      });
+
       it("buildShardClientOptions wires onShardLost to handlePluginShardLost (not a bare console.error) and sizes shardCount via poolConcurrency", () => {
         const fakeCreateWorker = () => ({ postMessage: () => {}, terminate: () => {}, onmessage: null, onerror: null }) as unknown as ShardWorkerLike;
         const options = buildShardClientOptions(fakeCreateWorker);

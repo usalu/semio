@@ -12,9 +12,6 @@ type Fem3dArtifact {
   analysis: FemAnalysisSettings! @state(class: ARTIFACT)
 }
 
-type FemCamera {
-  json: String!
-}
 
 type FemAnalysisSettings {
   modalCount: Int!

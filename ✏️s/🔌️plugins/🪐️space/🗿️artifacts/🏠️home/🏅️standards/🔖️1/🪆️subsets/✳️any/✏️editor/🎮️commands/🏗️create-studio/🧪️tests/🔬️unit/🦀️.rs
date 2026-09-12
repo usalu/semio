@@ -1,7 +1,7 @@
 
 use super::*;
 use semio_framework_os::list_os_space_catalog_entries;
-use semio_framework_plugin::{EditorApp, HistoryView, VcsArtifactApp, testkit};
+use semio_framework_plugin::{EditorApp, HistoryView, VcsArtifactApp, artifact_app_laws};
 
 #[semio_framework_async_macros::async_test]
 async fn home_command_op_text_round_trips_every_variant() {
@@ -19,7 +19,7 @@ async fn creates_studio_via_home_action() {
     let port = crate::catalog_port().await;
     let before = list_os_space_catalog_entries(&port).expect("list").len();
     let mut home: VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>> = VcsArtifactApp::new(EditorApp::<crate::editor::home::HomeApp>::default()).await;
-    home.dispatch_typed(crate::editor::home::HomeCommand::CreateStudio(CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }), &testkit::meta("local")).await.expect("create");
+    home.dispatch_typed(crate::editor::home::HomeCommand::CreateStudio(CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }), &artifact_app_laws::meta("local")).await.expect("create");
     let after = list_os_space_catalog_entries(&port).expect("list").len();
     assert!(after >= before);
 }

@@ -18,7 +18,7 @@ pub type Generation3dFixtureStore = store::ArtifactStore<Generation3dSnapshot, G
 /// 🏗️ A document store over `snapshot` carrying the artifact's own owner catalog.
 pub async fn document_store(snapshot: Generation3dSnapshot) -> Generation3dFixtureStore {
     let mut store = Generation3dFixtureStore::new(store::create_document_envelope(crate::GENERATION_3D_SCHEMA, "generation3d", snapshot, None)).await.expect("valid artifact store fixture");
-    store.install_member_store_owners_exact(generation3d_document_store_owners());
+    store.install_document_store_owners_exact(generation3d_document_store_owners());
     store
 }
 

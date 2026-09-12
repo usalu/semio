@@ -3,7 +3,7 @@ use crate::mutations::create_node::CreateNode;
 use crate::mutations::delete_node::DeleteNode;
 use crate::mutations::rename_node::RenameNode;
 use crate::op::CadMutation;
-use crate::testkit::sample_scene;
+use crate::sample_scene_fixture::sample_scene;
 use protocol::Mutation;
 
 /// ⚖️ `CadDiff.artifact` (a whole-artifact replacement fragment) still exists as a `CadDiff`

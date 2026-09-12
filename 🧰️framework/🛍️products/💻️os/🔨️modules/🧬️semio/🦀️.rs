@@ -82,6 +82,11 @@ pub struct SemioEnvelope {
 }
 
 impl SemioEnvelope {
+    /// 🪪️ Matches the complete container identity before a domain codec reads its body.
+    pub fn matches_identity(&self, envelope_id: &str, component: Component, version: u16) -> bool {
+        envelope_id.strip_prefix(&self.plugin).and_then(|rest| rest.strip_prefix('.')) == Some(self.artifact.as_str()) && self.component == component && self.version == version
+    }
+
     /// @emoji 🪪️ Dotted artifact id (`plugin.artifact`) used in `ArtifactDsl::ENVELOPE_ID`.
     pub fn envelope_id(&self) -> String {
         format!("{}.{}", self.plugin, self.artifact)

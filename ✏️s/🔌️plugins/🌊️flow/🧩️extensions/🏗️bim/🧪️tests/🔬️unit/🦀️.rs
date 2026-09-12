@@ -158,7 +158,11 @@ async fn extension_bundle_extends_flow_and_evaluates() {
     let input_json = pack::json::to_string(&pack::json::object([("length".to_string(), json_number(4.0)), ("height".to_string(), json_number(2.8)), ("thickness".to_string(), json_number(0.2))]));
     let req =
         pack::json::to_string(&pack::json::object([("operatorId".to_string(), pack::json::Value::from("bim.element.wall")), ("inputJson".to_string(), pack::json::Value::from(input_json)), ("nodeHash".to_string(), pack::json::Value::from(1_i64))]));
+    // ⏱️ `evaluate` answers the BUDGET envelope; a wall element offers no resumable job, so it
+    // finishes inside its first round trip (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let out_bytes = extension_invoke("evaluate", req.as_bytes()).await.unwrap();
-    let out = pack::json::parse_bytes(&out_bytes).unwrap();
+    let envelope = pack::json::parse_bytes(&out_bytes).unwrap();
+    assert_eq!(envelope.get("done").and_then(pack::json::Value::as_bool), Some(true));
+    let out = pack::json::parse(envelope.get("outputJson").and_then(pack::json::Value::as_str).unwrap()).unwrap();
     assert_eq!(out.get("wall").and_then(|value| value.get("$schema")).and_then(pack::json::Value::as_str), Some("wall"));
 }

@@ -262,6 +262,22 @@ impl DockState {
         sizes
     }
 
+    /// 📐️ The raw stack FRAMES this layout solves for `bounds` — the pure axis arithmetic, before any
+    /// theme, tab cap or silhouette touches it. `stack_body_rects` is this minus each stack's cap;
+    /// separating them is what lets one language-neutral fixture state a layout's geometry without
+    /// also pinning a theme metric (`🧫️fixtures/🪟️app-mode-layouts/🔣️.json`).
+    pub fn stack_frame_rects(&self, bounds: Rect) -> Vec<(DockPath, Rect, String)> {
+        let mut out = Vec::new();
+        if let Some(path) = &self.maximized_stack {
+            if let Some(DockNode::Stack { active, .. }) = node_at(&self.root, path) {
+                out.push((path.clone(), bounds, active.clone()));
+            }
+            return out;
+        }
+        collect_stack_frames(&self.root, bounds, &empty_path(), &mut out);
+        out
+    }
+
     pub fn stack_body_rects(&self, bounds: Rect, theme: &Theme, window_labels: &HashMap<String, String>, atlas: &mut FontAtlas) -> Vec<(DockPath, Rect, String)> {
         self.stack_body_rects_with_silhouettes(bounds, theme, window_labels, atlas).0
     }
@@ -1544,6 +1560,34 @@ pub fn parse_path(value: &str) -> DockPath {
     value.split(',').filter_map(|part| part.parse().ok()).collect()
 }
 
+fn collect_stack_frames(node: &DockNode, bounds: Rect, path: &[usize], out: &mut Vec<(DockPath, Rect, String)>) {
+    match node {
+        DockNode::Row(children) => {
+            let total: f32 = children.iter().map(|(_, size)| *size).sum::<f32>().max(0.001);
+            let mut x = bounds.x;
+            for (index, (child, size)) in children.iter().enumerate() {
+                let w = bounds.w * (*size / total);
+                let mut child_path = path.to_vec();
+                child_path.push(index);
+                collect_stack_frames(child, Rect::new(x, bounds.y, w, bounds.h), &child_path, out);
+                x += w;
+            }
+        }
+        DockNode::Column(children) => {
+            let total: f32 = children.iter().map(|(_, size)| *size).sum::<f32>().max(0.001);
+            let mut y = bounds.y;
+            for (index, (child, size)) in children.iter().enumerate() {
+                let h = bounds.h * (*size / total);
+                let mut child_path = path.to_vec();
+                child_path.push(index);
+                collect_stack_frames(child, Rect::new(bounds.x, y, bounds.w, h), &child_path, out);
+                y += h;
+            }
+        }
+        DockNode::Stack { active, .. } => out.push((path.to_vec(), bounds, active.clone())),
+    }
+}
+
 fn collect_stack_bodies(
     node: &DockNode,
     bounds: Rect,
@@ -1602,4 +1646,8 @@ fn dock_text(ctx: &mut DockRenderContext<'_>, text: &str, x: f32, y: f32, size: 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../🧪️tests/🔬️wgpu-unit/🦀️.rs"]
 mod tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🪟️app-mode-layouts/🦀️.rs"]
+mod app_mode_layout_tests;
 //#endregion DockTests

@@ -147,6 +147,7 @@ process = { path = "../../../🏭️process/📦️packages/🦀️rust", packag
 gis = { path = "../../../🌍️gis/📦️packages/🦀️rust", package = "semio-s-plugin-gis", default-features = false }
 
 [dev-dependencies]
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
 serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

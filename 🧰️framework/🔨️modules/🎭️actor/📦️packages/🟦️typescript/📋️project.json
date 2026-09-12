@@ -38,5 +38,11 @@
         "forwardAllArgs": true
       }
     }
+  },
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*",
+      "sharedGlobals"
+    ]
   }
 }

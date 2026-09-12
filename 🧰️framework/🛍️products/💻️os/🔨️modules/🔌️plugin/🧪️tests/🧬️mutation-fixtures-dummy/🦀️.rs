@@ -1,10 +1,10 @@
-#[path = "../../🧪️testkit/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/🦀️.rs"]
+#[path = "../../🧫️fixtures/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{DummyMutation, SetDummyCount};
 
-// 🧪️ Proves each `testkit` primitive against a minimal dummy `ArtifactApp` before any real app
+// 🧪️ Proves each `artifact_app_laws` primitive against a minimal dummy `ArtifactApp` before any real app
 // adopts them.
-use crate::app::testkit::{assert_registered_ingest_idempotent, assert_two_registered_instances_converge, assert_undo_redo_round_trip, close_registered_fixture_app, meta, new_app, new_registered_app};
+use crate::app::artifact_app_laws::{assert_registered_ingest_idempotent, assert_two_registered_instances_converge, assert_undo_redo_round_trip, close_registered_fixture_app, meta, new_app, new_registered_app};
 use crate::app::{
     built_text_to_component_tree, ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
     DraftView, Emit, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, UiAssemblyResult,
@@ -252,13 +252,13 @@ impl ArtifactApp for DummyApp {
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
     }
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
     }
-    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
-    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
         Some(crate::app::bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
     }
     fn build_document_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {

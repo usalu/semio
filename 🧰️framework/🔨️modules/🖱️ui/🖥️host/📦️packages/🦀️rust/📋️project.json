@@ -5,11 +5,8 @@
   "projectType": "library",
   "namedInputs": {
     "default": [
-      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🌉️abi/🦀️.rs",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/📜️script.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️test/🔣️s.json",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧬️schema/🔣️.json",
       "sharedGlobals"
     ]
   },

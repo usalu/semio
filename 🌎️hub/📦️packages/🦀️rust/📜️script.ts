@@ -65,15 +65,9 @@ import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_
 import { foldAll as foldDirectoryIndexEvents } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts";
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, descriptorDigestEncodingV1, validDocumentIndexEntryV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 import type { TestBrowserHostRootsV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🟦️.ts";
-import {
-  produceFreshComponentV1,
-  testFreshComponentStagingV1,
-  testFreshComponentProcessV1,
-  testFreshComponentSourceEpochV1,
-  type FreshBuildControlV1,
-  type FreshComponentReceiptV1,
-} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
-import { verifyFreshCatalogPackageV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
+import { produceFreshComponentV1, testFreshComponentStagingV1, testFreshComponentProcessV1, testFreshComponentSourceEpochV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
+import { type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
+import { verifyFreshCatalogPackageV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
 import { buildClosedBrowserActorArtifactV1, type ClosedBrowserActorArtifactV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
 import { proveGisComponentColdMapPatch } from "../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts";
 /** 🌎️ `os-hub` router: `bun ./📜️script.ts <setup|build|test|dev>`. */
@@ -1197,7 +1191,7 @@ function mcpExecutable(repoRoot: string): string {
 }
 
 function proveMcpCredentialSourceOrder(repoRoot: string): void {
-  const entrypoint = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🚀️bin.rs"), "utf8");
+  const entrypoint = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏗️bootstrap/🦀️.rs"), "utf8");
   const workspace = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs"), "utf8");
   const remote = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs"), "utf8");
   const directory = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
@@ -1293,7 +1287,7 @@ function checkpointPublicationProcessFixture(): { readonly root: string; readonl
   const fixture = JSON.parse(readFileSync(join(root, "fixture.json"), "utf8")) as CheckpointPublicationProcessFixtureV1;
   if (
     fixture.schema !== "semio.hub.checkpoint-publication-process-fixture/v1" ||
-    fixture.profileId !== "gis-map-test-support" ||
+    fixture.profileId !== "gis-map-integration-fixtures" ||
     !/^[0-9a-f]{64}$/u.test(fixture.generationId) ||
     fixture.artifact.kind !== "s.gis.gismap" ||
     fixture.artifact.schema !== "gis.map" ||
@@ -2677,7 +2671,7 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
         };
         state.worker = worker;
       },
-      { workerUrl: `/@fs${join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts")}`, proof: proofHex, openWire },
+      { workerUrl: `/@fs${join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts")}`, proof: proofHex, openWire },
     );
     await page.waitForFunction(() => (globalThis as any).__semio?.errors?.length > 0 || (globalThis as any).__semio?.messages?.length > 1, undefined, { timeout: 10_000 });
     const deadline = Date.now() + 10_000;
@@ -3556,7 +3550,7 @@ async function proveRetainedShortAdmin(repoRoot: string): Promise<number> {
   } finally {
     oracle.close();
   }
-  const source = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const source = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   const routeStart = source.indexOf("fn admin_effect_receipt_claim(");
   const route = source.slice(routeStart, source.indexOf("async fn admin_overview(", routeStart));
   const staleStart = source.indexOf("async fn reconcile_stale_admin_acceptance(");
@@ -3834,7 +3828,7 @@ class DirectoryMessageAuthorityCheckScript extends BundleScript {
       oracle.close();
     }
 
-    const hubSource = readFileSync(join(this.root, "🚀️bin.rs"), "utf8");
+    const hubSource = readFileSync(join(this.root, "../../🏗️bootstrap/🦀️.rs"), "utf8");
     if (!directoryMessageAuthoritySourceConforms(hubSource)) throw new Error("directory global sender lacks a single retained transient message authority union");
     const mutants = [
       hubSource.replace("directory_message_bindings(record, message)).await", "record.bindings()).await"),
@@ -4013,7 +4007,7 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
   const provider = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
   if (!provider.includes('pub const NATIVE_OPENABLE_PROVIDER_SET_V1_ID: &str = "' + fixture.production.providerId + '";') || !provider.includes("pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = " + fixture.production.receiptCount + ";"))
     throw new Error("production provider identity or receipt closure drifted");
-  const startup = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const startup = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   if (
     !startup.includes("providers: Option<&dyn NativeCodecProviderSourceV1>") ||
     !startup.includes("configured trusted catalog requires the native-artifact-execution provider") ||
@@ -4059,7 +4053,7 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
     limits.relayDeadlineMs !== EXECUTION_TARGET_RELAY_DEADLINE_MS
   )
     throw new Error("execution-target relay bound drift");
-  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const hub = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   const selection = hub.slice(hub.indexOf("async fn document_execution_target_selection("), hub.indexOf("async fn issue_document_execution_target("));
   const finalFence = selection.slice(selection.indexOf("fields.validate()"));
   if (
@@ -4734,7 +4728,7 @@ function documentOpenPublicKeysAreRedacted(value: unknown): boolean {
 async function proveDocumentOpenPlanFixture(repoRoot: string): Promise<void> {
   const fixturePath = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json");
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Record<string, any>;
-  const hubSource = readFileSync(resolve(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const hubSource = readFileSync(resolve(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   const routePaths = [...hubSource.matchAll(/\.route\(\s*"([^"]+)"/g)].map((match) => match[1]!);
   const productionSource = hubSource.slice(0, hubSource.indexOf("\nmod tests {"));
   const catalogSource = readFileSync(resolve(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
@@ -6077,7 +6071,7 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
 }
 
 function proveExecutionTargetLeaseSource(repoRoot: string): void {
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
   const region = worker.slice(worker.indexOf("//#region 🪪️ExecutionTargetLease"), worker.indexOf("//#endregion 🪪️ExecutionTargetLease"));
   if (region.length === 0) throw new Error("browser execution-target lease region is absent");
   for (const forbidden of ["loadPluginModule", "ActivationRegistry", "load_wasm_plugins", "attach_backbone"]) {
@@ -6087,7 +6081,7 @@ function proveExecutionTargetLeaseSource(repoRoot: string): void {
   if (!region.includes("descriptor.executionProtocol") || !region.includes("DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1")) throw new Error("browser execution-target lease lost compiled app-channel admission");
   if (!region.includes("state.docAbort.signal")) throw new Error("browser execution-target lease no longer shares the document cancellation scope");
   if (!worker.includes('plan.surface.rendererTarget !== "react" && (leaseFields === undefined')) throw new Error("browser plan authority no longer gates a non-react renderer on a live lease");
-  const bin = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const bin = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   for (const asset of ["manifest", "component", "descriptor", "browser-actor"]) {
     if (!bin.includes(`/spaces/{space_id}/documents/{id}/execution-target/${asset}`)) throw new Error(`hub execution-target ${asset} route is not mounted`);
   }
@@ -6152,7 +6146,7 @@ class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
     const validate = new Ajv({ strict: true }).compile(schema);
     if (!validate(fixture)) throw new Error("child Worker fixture: " + JSON.stringify(validate.errors));
     const ts = await import("typescript");
-    const program = ts.createProgram([join(this.repoRoot, ownerPath, "🟦️.ts"), join(this.repoRoot, ownerPath, "🧵️worker.ts")], {
+    const program = ts.createProgram([join(this.repoRoot, ownerPath, "🟦️.ts"), join(this.repoRoot, ownerPath, "👷️worker/🟦️.ts")], {
       noEmit: true,
       strict: true,
       skipLibCheck: true,
@@ -6436,7 +6430,7 @@ class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
       );
       if (!diagnostics.includes("log:[browser actor stdout] AB") || !diagnostics.includes("warning:[browser actor stderr] CD") || diagnostics.some((value) => value.includes("[browser actor stdout] ZZ")))
         throw new Error("child WASI synchronous output was not observed exactly before caller mutation");
-      if (!workerRequests.some((url) => decodeURI(url).includes("/🧵️child/🧵️worker.ts"))) throw new Error("static child was not requested");
+      if (!workerRequests.some((url) => decodeURI(url).includes("/🧵️child/👷️worker/🟦️.ts"))) throw new Error("static child was not requested");
       if (diagnostics.some((row) => row.startsWith("pageerror:"))) throw new Error(diagnostics.join("\n"));
       console.log("browser-actor-child-worker-containment: ajv=1 typescript=1 chromium=1 " + JSON.stringify(result) + " passed");
     } catch (error) {
@@ -7488,7 +7482,7 @@ async function proveGisInferenceCheckpointControlFixture(repoRoot: string): Prom
     throw new Error(`GIS inference checkpoint control exact oracle admitted hostile ${index}`);
   }
   const runtime = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🏃️runtime", "🦀️.rs"), "utf8");
-  const hubBin = readFileSync(join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "🚀️bin.rs"), "utf8");
+  const hubBin = readFileSync(join(repoRoot, "🌎️hub", "🏗️bootstrap", "🦀️.rs"), "utf8");
   const runner = readFileSync(join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "📜️script.ts"), "utf8");
   // 🧬️The frame TYPE is a `hub.inference` scope export and is declared in the scope module; the
   // runtime owns only the framing that reads and writes it over the inherited descriptor.
@@ -7506,14 +7500,14 @@ async function proveGisInferenceCheckpointControlFixture(repoRoot: string): Prom
   ])
     if (!runtime.includes(symbol)) throw new Error(`GIS inference checkpoint runtime is missing ${symbol}`);
   if (!hubBin.includes('std::env::var_os("OS_HUB_TEST_INFERENCE_CHECKPOINT_FD")') || !hubBin.includes('descriptor.to_str() != Some("4")') || !hubBin.includes("mode != HubMode::Development")) {
-    throw new Error("GIS inference checkpoint control is not test-support-only on fixed inherited descriptor 4");
+    throw new Error("GIS inference checkpoint control is not integration-fixtures-only on fixed inherited descriptor 4");
   }
   for (const symbol of ["inferenceCheckpointControl: true", "waitForGisInferenceCheckpointControl(run, jobIdB)", "releaseGisInferenceCheckpointControl(run, jobIdB)", 'name: "inference_cancel"'])
     if (!runner.includes(symbol)) throw new Error(`GIS inference process runner is missing ${symbol}`);
   const heartbeat = runtime.indexOf("ledger().heartbeat(");
   const pause = runtime.indexOf("gate.checkpoint(&owner.control", heartbeat);
   if (heartbeat < 0 || pause <= heartbeat) throw new Error("GIS inference test checkpoint is not downstream of its durable heartbeat");
-  console.log(`gis-inference-checkpoint-control-oracle: ajv=1 exact=2 hostile=${fixture.hostiles.length} fd=4 post-heartbeat=1 test-support-only=1 passed`);
+  console.log(`gis-inference-checkpoint-control-oracle: ajv=1 exact=2 hostile=${fixture.hostiles.length} fd=4 post-heartbeat=1 integration-fixtures-only=1 passed`);
   return fixture.hostiles.length;
 }
 
@@ -7786,8 +7780,8 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
     documentWriteRelease <= checkpointAppliedCall
   )
     throw new Error("retained GIS Map committer capacity, write authority, typed journal, or publication-before-apply boundary drifted");
-  const hubBin = readFileSync(join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "🚀️bin.rs"), "utf8");
-  // 🧪️The binary's own laws live beside it in `🌎️hub/🧪️tests/**`, not inside `🚀️bin.rs`, so the law
+  const hubBin = readFileSync(join(repoRoot, "🌎️hub", "🏗️bootstrap", "🦀️.rs"), "utf8");
+  // 🧪️The binary's own laws live beside it in `🌎️hub/🧪️tests/**`, not inside `🏗️bootstrap/🦀️.rs`, so the law
   // names are asserted against the whole test tree — a further test-layout move cannot silently red this.
   const hubBinLaws = moduleRustSource(join(repoRoot, "🌎️hub", "🧪️tests"));
   for (const symbol of ["HubGisMapApprovalIngressAuthorityV1", "acquire_gis_map_approval_ingress", "revalidate_gis_map_approval_delivery", "InferenceApprovalRouteContextV1", "inference_runtime.close().await", "publish_gis_map_checkpoint_change"])
@@ -7968,7 +7962,7 @@ async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number
   if (remainingPaths.size !== 0) throw new Error(`frozen binding fields lack substitution coverage: ${[...remainingPaths].join(", ")}`);
   const catalog = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "📇️catalog", "🦀️.rs"), "utf8");
   const trusted = readFileSync(join(repoRoot, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog", "🦀️.rs"), "utf8");
-  const startup = readFileSync(join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "🚀️bin.rs"), "utf8");
+  const startup = readFileSync(join(repoRoot, "🌎️hub", "🏗️bootstrap", "🦀️.rs"), "utf8");
   const required = [
     "VerifiedGisMapArtifactBindingV1",
     "Arc<VerifiedTrustedCatalog>",
@@ -8823,7 +8817,7 @@ async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<v
   );
   assert(fixture.denials.every((row: any) => row.providerCalls === 0 && row.codecPublished === false));
   const source = moduleRustSource(root);
-  const startup = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const startup = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   const required = [
     "TrustedCatalogDataRoot",
     "TrustedCatalogGenerationRoot",
@@ -10911,14 +10905,14 @@ async function proveTrustedPublicationCli(repoRoot: string, hubRoot: string): Pr
   if (!artifactRoot || !cargoTargetDir || !isAbsolute(artifactRoot) || !isAbsolute(cargoTargetDir) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("publication CLI laws require exact ticket-owned artifact and Cargo roots");
   await runExactCargoLaws({
     cwd: repoRoot, ...exactCargoStageEnvironments(), artifactDir: artifactRoot,
-    groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--features", "test-support"], laws: [
+    groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--features", "integration-fixtures"], laws: [
       "trusted_catalog_command::tests::trusted_publication_transport_matches_neutral_arguments_and_input_bounds",
       "tests::checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog",
     ] }],
     buildBudgetMs: buildBudgetMs(), listBudgetMs: 120_000, lawBudgetMs: 180_000,
     progress(event) { console.log(`trusted-publication-cli-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
   });
-  await runCargo(["build", "--manifest-path", "Cargo.toml", "--features", "test-support", "--bin", "os-hub"], hubRoot);
+  await runCargo(["build", "--manifest-path", "Cargo.toml", "--features", "integration-fixtures", "--bin", "os-hub"], hubRoot);
   const binaryPath = join(cargoTargetDir, "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
   const fixtureData = join(artifactRoot, "checkpoint-publication-process-fixture", "data");
   const fixtureCurrent = trustedBootstrapReadCurrentPointer(fixtureData);
@@ -12556,7 +12550,7 @@ class GisMapProposalCheckScript extends BundleScript {
         ...exactCargoStageEnvironments(),
         groups: [
           { package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,native-artifact-execution"], laws: libraryLaws },
-          { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,test-support,native-artifact-execution"], laws: routeLaws },
+          { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"], laws: routeLaws },
         ],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
@@ -12571,7 +12565,7 @@ class GisMapProposalCheckScript extends BundleScript {
     }
     if (mode === "--process") {
       const nativeEnv = { ...process.env, RUST_MIN_STACK: "268435456" };
-      runCargo(["build", "--manifest-path", "Cargo.toml", "-p", "semio-hub", "--bin", "os-hub", "--no-default-features", "--features", "sqlite,test-support,native-artifact-execution"], this.repoRoot, nativeEnv);
+      runCargo(["build", "--manifest-path", "Cargo.toml", "-p", "semio-hub", "--bin", "os-hub", "--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"], this.repoRoot, nativeEnv);
       runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
       await proveGisMapProposalProcess(this.repoRoot, this.root);
       console.log("gis-map-proposal-process-check: two real Author sockets and credential-FD MCP clients observed one exact paused owner-job cancellation, one later owner-private proposal, one peer-private denial boundary, one public approval, one owner-only durable undo with stale refusal and exact replay, four equal RebootstrapRequired controls, and four equal refreshed durable pairs; no external provider, Shell scene, WGPU render, or durable collaborative redo claim");
@@ -12951,7 +12945,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     await proveTrustedStdioGisBootstrapFixture(this.repoRoot);
     await proveGisComponentColdMapPatch(this.repoRoot);
     await proveGisMapTwoAuthorCompositionFixture(this.repoRoot);
-    const describeSource = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts"), "utf8");
+    const describeSource = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"), "utf8");
     const producerStart = describeSource.indexOf("function freshStage(");
     const producerEnd = describeSource.indexOf("\n/** @emoji 🛂️ Shared implementation", producerStart);
     const producer = describeSource.slice(producerStart, producerEnd);
@@ -12975,8 +12969,8 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       throw new Error("fresh component producer is not isolated, descriptor-verified, bounded, close-before-cleanup, or side-effect free");
     const catalogSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
     const providerSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
-    const runtimeSource = readFileSync(resolve(this.repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8").split("\nmod tests {")[0]!;
-    const registrySource = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts"), "utf8");
+    const runtimeSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8").split("\nmod tests {")[0]!;
+    const registrySource = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts"), "utf8");
     const runtimeCompact = runtimeSource.replace(/\s+/g, "");
     const receiptResolution = runtimeCompact.indexOf(".authority_for_authenticated_exchange(&intent.plan_receipt");
     const targetResolution = runtimeCompact.indexOf("catalog.resolve_document_open(&authority.descriptor", receiptResolution);
@@ -13074,7 +13068,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       const hubBuildControl = trustedBootstrapBuildControl(buildBudgetMs());
       console.log("trusted-native-hub build:start artifacts=" + hubBuildRoot);
       try {
-        const targets = segments[0] === "--two-author-shell" ? ["-p", "semio-hub", "-p", "semio-framework-os-mcp", "--bins", "--features", "semio-hub/test-support"] : ["--bin", "os-hub"];
+        const targets = segments[0] === "--two-author-shell" ? ["-p", "semio-hub", "-p", "semio-framework-os-mcp", "--bins", "--features", "semio-hub/integration-fixtures"] : ["--bin", "os-hub"];
         const result = await runExactCargoLawProcess("cargo", ["build", "--manifest-path", "Cargo.toml", ...targets, "--message-format=json"], {
           cwd: this.root,
           env: { ...hubEnv, CARGO_TERM_COLOR: "never" },
@@ -13101,7 +13095,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       }
       if (segments[0] === "--two-author-shell") await runExactCargoLaws({
         cwd: this.root, env: hubEnv, nativeEnv: { RUST_MIN_STACK: "268435456" }, artifactDir: artifactPath,
-        groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,test-support,native-artifact-execution"], laws: ["checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog"] }],
+        groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"], laws: ["checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog"] }],
         buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 120_000,
         progress(event) { console.log(`[DEBUG] two-author Shell seed ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
       });
@@ -13444,7 +13438,7 @@ async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number>
   if (sessionContract({ ...fixture.session, unknown: true }) || sessionContract({ ...fixture.session, bindingSha256: `${fixture.session.bindingSha256}00` }) || sessionContract({ ...fixture.session, authorizationGeneration: 0 }))
     throw new Error("directory event page route session contract admitted an unknown or concatenated binding");
   const shared = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
-  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const hub = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   const sqlite = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🪶️sqlite/🦀️.rs"), "utf8");
   const postgres = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🐘️postgres/🦀️.rs"), "utf8");
   const neo4j = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🌐️neo4j/🦀️.rs"), "utf8");
@@ -13815,7 +13809,7 @@ async function proveDirectoryHomeBrowserProcessSource(repoRoot: string): Promise
   if (!hostTarget) throw new Error(`directory Home Space native target oracle failed: ${rustc.stderr}`);
   const nativeTree = runProbe("cargo", ["tree", "-e", "features", "-p", fixture.spaceGuest.package, "--target", hostTarget, "-i", "semio-framework-os"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
   if (nativeTree.status !== 0 || !nativeTree.stdout.includes(`semio-framework-os feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error("directory Home Space native graph lost os-host-full");
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
   const owner = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx"), "utf8");
   const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
   const sourceClosed = (workerSource: string, ownerSource: string, shellSource: string): boolean => {
@@ -14332,7 +14326,7 @@ async function serveScopedPresenceBrowserRuntime(repoRoot: string): Promise<void
     process.env.SEMIO_PLUGIN = "s";
     process.env.SEMIO_RENDERER = "react";
     const componentPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/👥️presence-scope/🌐️browser/🟦️.tsx");
-    const workerPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts");
+    const workerPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts");
     const shellEntryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🟦️.ts");
     const browserConfig = {
       hubOrigin,
@@ -15005,7 +14999,7 @@ async function proveCheckpointPublicationCommandV1(repoRoot: string): Promise<nu
   const webDigest = Buffer.from(await webcrypto.subtle.digest("SHA-256", bytes)).toString("hex");
   if (nodeDigest !== webDigest) throw new Error("checkpoint publication independent SHA-256 oracles disagree");
 
-  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const hub = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   const actor = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs"), "utf8");
   const engine = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs"), "utf8");
   const directory = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🦀️.rs"), "utf8");
@@ -15216,7 +15210,7 @@ class SpaceArtifactCreationCheckScript extends BundleScript {
         groups.push({
           package: "semio-hub",
           target: { kind: "bin", name: "os-hub" },
-          cargoArgs: ["--no-default-features", "--features", "sqlite,test-support"],
+          cargoArgs: ["--no-default-features", "--features", "sqlite,integration-fixtures"],
           laws: [
             "tests::artifact_creation_admission_cannot_activate_after_shutdown_deadline",
             "tests::space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_backed",
@@ -15251,7 +15245,7 @@ class CheckpointPublicationCheckScript extends BundleScript {
           {
             package: "semio-hub",
             target: { kind: "bin", name: "os-hub" },
-            cargoArgs: ["--no-default-features", "--features", phase === "process" ? "sqlite,test-support" : "sqlite,native-artifact-execution"],
+            cargoArgs: ["--no-default-features", "--features", phase === "process" ? "sqlite,integration-fixtures" : "sqlite,native-artifact-execution"],
             laws,
           },
         ],
@@ -15592,11 +15586,11 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
 
   const contract = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
   const typescript = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts"), "utf8");
-  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const hub = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   const sqlite = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🪶️sqlite/🦀️.rs"), "utf8");
   const postgres = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🐘️postgres/🦀️.rs"), "utf8");
   const neo4j = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🌐️neo4j/🦀️.rs"), "utf8");
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
   const space = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️.rs"), "utf8");
   const sourceClosed = (rust: string, ts: string, route: string, sq: string, pg: string, neo: string, browser: string, home: string): boolean => {
     const read = route.indexOf("list_space_administration_members_page(space_id, member_after.as_deref(), SPACE_ADMINISTRATION_PAGE_FETCH_MAX)");
@@ -15788,7 +15782,7 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
     { ...fixture.vectors[0]!.expected.final[0]!, unknown: true },
   ];
   if (summaryHostiles.some((candidate) => presenceSummary(candidate))) throw new Error("presence lease scope-summary contract admitted an unbounded projection");
-  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const hub = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   const sourceClosed = (source: string): boolean => {
     const publish = source.indexOf("self.fanout_for(key).send(ServerFrame::Presence");
     const directory = source.indexOf("self.directory_service.publish(DirectoryStreamMessage::Presence", publish);
@@ -15935,7 +15929,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
     if ((normalized !== undefined) !== vector.expected.accepted || (normalized?.toString("hex") ?? null) !== vector.expected.normalizedPeerHex) throw new Error(`presence normalization vector failed: ${vector.name}`);
   }
   console.log(`presence-normalization-independent-oracle: AJV=1 LEB128=1 exact-vectors=${fixture.vectors.length}`);
-  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const hub = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   const start = hub.indexOf("async fn refresh_document_presence(");
   const end = hub.indexOf("async fn refresh_presence(", start);
   const ingress = hub.slice(start, end);
@@ -16011,7 +16005,7 @@ class AdminPresenceTargetRecoveryCheckScript extends BundleScript {
     if (JSON.stringify(members) !== JSON.stringify(fixture.expected.members) || new Set(fixture.members.map((member: { id: string }) => member.id)).size !== 2) throw new Error("membership recovery oracle differs");
     console.log("admin-presence-target-recovery-independent-oracle: AJV=1 scoped-removal=1");
     const law = "admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen";
-    const hub = readFileSync(join(root, "🚀️bin.rs"), "utf8");
+    const hub = readFileSync(join(root, "../../🏗️bootstrap/🦀️.rs"), "utf8");
     if (!hub.includes(`fn ${law}(`) || !hub.includes("with_graceful_shutdown") || !hub.includes("test_state_with_directory")) throw new Error("missing composed SQLite shutdown/reopen acceptance journey");
     if (hub.match(/const STUDIO: &str = "([^"]+)";/)?.[1] !== fixture.scope.spaceId) throw new Error("recovery fixture differs from seeded test space");
     if (phase === "native") {
@@ -16310,7 +16304,7 @@ async function proveInviteRedemptionTransaction(repoRoot: string): Promise<numbe
     if (sourceClosed(hostile[0]!, hostile[1]!, hostile[2]!, hostile[3]!)) throw new Error(`invite redemption source oracle admitted removed transaction fence ${index}`);
   });
 
-  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const hub = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   const stateAuthorityClosed = (shared: string, sq: string, pg: string, neo: string, server: string): boolean => {
     const preflight = body(shared, "pub(crate) fn invite_redemption_preflight(");
     const hint = body(shared, "pub(crate) fn verify_invite_redemption_scope_hint(");
@@ -16668,7 +16662,7 @@ async function proveDirectorySpaceJourneyV1(repoRoot: string): Promise<Readonly<
   const marker = runner.indexOf("\nasync function proveDirectorySpaceJourneyV1Process(");
   if (marker < 0) throw new Error("space journey process runner is not present");
   const runnerBody = runner.slice(marker, runner.indexOf("\nclass SpaceJourneyCheckScript", marker));
-  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const hub = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   checks += spaceJourneyFixtureLaws(fixture, hub, runnerBody);
   for (const hostile of spaceJourneyHostiles(fixture)) {
     let admitted = true;

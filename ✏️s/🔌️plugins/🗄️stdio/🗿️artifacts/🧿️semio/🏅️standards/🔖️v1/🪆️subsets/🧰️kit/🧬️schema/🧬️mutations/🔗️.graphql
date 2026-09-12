@@ -1,6 +1,34 @@
-enum SemioKitMutationKind {
-  CREATE_OBJECT DELETE_OBJECT CREATE_MODEL DELETE_MODEL CREATE_PROPERTIES DELETE_PROPERTIES
-  BIND_REPRESENTATION UNBIND_REPRESENTATION CHANGE_REPRESENTATION_PIN
-  ADD_TYPE REMOVE_TYPE RENAME_TYPE ADD_DESIGN REMOVE_DESIGN EDIT_DESIGN
-}
-type SemioKitMutation { kind: SemioKitMutationKind! payloadWire: String! }
+# import ArtifactRef from "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️.graphql"
+# import LinkPin from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql"
+# import SemioKitPiece, SemioKitConnection from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🔗️.graphql"
+# import EmptyRecord from "🧰️framework/🔨️modules/🧬️schema/🧾️record/🔗️.graphql"
+type CreateObject { child_id: String! target: ArtifactRef! }
+type CreateObjectMutation { CreateObject: CreateObject! }
+type DeleteObject { child_id: String! }
+type DeleteObjectMutation { DeleteObject: DeleteObject! }
+type CreateModel { child_id: String! target: ArtifactRef! }
+type CreateModelMutation { CreateModel: CreateModel! }
+type DeleteModel { child_id: String! }
+type DeleteModelMutation { DeleteModel: DeleteModel! }
+type CreateProperties { child_id: String! target: ArtifactRef! }
+type CreatePropertiesMutation { CreateProperties: CreateProperties! }
+type DeletePropertiesMutation { DeleteProperties: EmptyRecord! }
+type BindRepresentation { target: ArtifactRef! pin: LinkPin! role: String! }
+type BindRepresentationMutation { BindRepresentation: BindRepresentation! }
+type UnbindRepresentation { index: Int! }
+type UnbindRepresentationMutation { UnbindRepresentation: UnbindRepresentation! }
+type ChangeRepresentationPin { index: Int! pin: LinkPin! }
+type ChangeRepresentationPinMutation { ChangeRepresentationPin: ChangeRepresentationPin! }
+type AddType { id: String! name: String! category: String! }
+type AddTypeMutation { AddType: AddType! }
+type RemoveType { id: String! }
+type RemoveTypeMutation { RemoveType: RemoveType! }
+type RenameType { id: String! new_name: String! }
+type RenameTypeMutation { RenameType: RenameType! }
+type AddDesign { id: String! name: String! }
+type AddDesignMutation { AddDesign: AddDesign! }
+type RemoveDesign { id: String! }
+type RemoveDesignMutation { RemoveDesign: RemoveDesign! }
+type EditDesign { id: String! pieces: [SemioKitPiece!]! connections: [SemioKitConnection!]! }
+type EditDesignMutation { EditDesign: EditDesign! }
+union SemioKitMutation = CreateObjectMutation | DeleteObjectMutation | CreateModelMutation | DeleteModelMutation | CreatePropertiesMutation | DeletePropertiesMutation | BindRepresentationMutation | UnbindRepresentationMutation | ChangeRepresentationPinMutation | AddTypeMutation | RemoveTypeMutation | RenameTypeMutation | AddDesignMutation | RemoveDesignMutation | EditDesignMutation

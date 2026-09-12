@@ -428,6 +428,494 @@
           }
         }
       }
+    },
+    {
+      "name": "rename",
+      "before": {
+        "schema": "forms.form",
+        "id": "site-survey",
+        "version": "1",
+        "title": "Site Survey",
+        "structure": {
+          "childId": "forms-value",
+          "target": {
+            "artifactId": "forms-value",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "results": {
+          "childId": "forms-table",
+          "target": {
+            "artifactId": "forms-table",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
+        }
+      },
+      "diff": {
+        "title": "Revised Survey"
+      },
+      "after": {
+        "schema": "forms.form",
+        "id": "site-survey",
+        "version": "1",
+        "title": "Revised Survey",
+        "structure": {
+          "childId": "forms-value",
+          "target": {
+            "artifactId": "forms-value",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "results": {
+          "childId": "forms-table",
+          "target": {
+            "artifactId": "forms-table",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "clear-title",
+      "before": {
+        "schema": "forms.form",
+        "id": "site-survey",
+        "version": "1",
+        "title": "Site Survey",
+        "structure": {
+          "childId": "forms-value",
+          "target": {
+            "artifactId": "forms-value",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "results": {
+          "childId": "forms-table",
+          "target": {
+            "artifactId": "forms-table",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
+        }
+      },
+      "diff": {
+        "title": null
+      },
+      "after": {
+        "schema": "forms.form",
+        "id": "site-survey",
+        "version": "1",
+        "structure": {
+          "childId": "forms-value",
+          "target": {
+            "artifactId": "forms-value",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "results": {
+          "childId": "forms-table",
+          "target": {
+            "artifactId": "forms-table",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "version",
+      "before": {
+        "schema": "forms.form",
+        "id": "site-survey",
+        "version": "1",
+        "title": "Site Survey",
+        "structure": {
+          "childId": "forms-value",
+          "target": {
+            "artifactId": "forms-value",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "results": {
+          "childId": "forms-table",
+          "target": {
+            "artifactId": "forms-table",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
+        }
+      },
+      "diff": {
+        "version": "2"
+      },
+      "after": {
+        "schema": "forms.form",
+        "id": "site-survey",
+        "version": "2",
+        "title": "Site Survey",
+        "structure": {
+          "childId": "forms-value",
+          "target": {
+            "artifactId": "forms-value",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "results": {
+          "childId": "forms-table",
+          "target": {
+            "artifactId": "forms-table",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "replace-structure",
+      "before": {
+        "schema": "forms.form",
+        "id": "site-survey",
+        "version": "1",
+        "title": "Site Survey",
+        "structure": {
+          "childId": "forms-value",
+          "target": {
+            "artifactId": "forms-value",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "results": {
+          "childId": "forms-table",
+          "target": {
+            "artifactId": "forms-table",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
+        }
+      },
+      "diff": {
+        "structure": {
+          "childId": "forms-value-replacement",
+          "target": {
+            "artifactId": "forms-value-replacement",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        }
+      },
+      "after": {
+        "schema": "forms.form",
+        "id": "site-survey",
+        "version": "1",
+        "title": "Site Survey",
+        "structure": {
+          "childId": "forms-value-replacement",
+          "target": {
+            "artifactId": "forms-value-replacement",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "results": {
+          "childId": "forms-table",
+          "target": {
+            "artifactId": "forms-table",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "replace-results",
+      "before": {
+        "schema": "forms.form",
+        "id": "site-survey",
+        "version": "1",
+        "title": "Site Survey",
+        "structure": {
+          "childId": "forms-value",
+          "target": {
+            "artifactId": "forms-value",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "results": {
+          "childId": "forms-table",
+          "target": {
+            "artifactId": "forms-table",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
+        }
+      },
+      "diff": {
+        "results": {
+          "childId": "forms-table-replacement",
+          "target": {
+            "artifactId": "forms-table-replacement",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
+        }
+      },
+      "after": {
+        "schema": "forms.form",
+        "id": "site-survey",
+        "version": "1",
+        "title": "Site Survey",
+        "structure": {
+          "childId": "forms-value",
+          "target": {
+            "artifactId": "forms-value",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "value"
+            }
+          }
+        },
+        "results": {
+          "childId": "forms-table-replacement",
+          "target": {
+            "artifactId": "forms-table-replacement",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "table"
+            }
+          }
+        }
+      }
     }
+  ],
+  "invalidDiffs": [
+    {
+      "schema": null
+    },
+    {
+      "structure": null
+    },
+    {
+      "results": null
+    },
+    {
+      "structure": {
+        "childId": "different-child",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      }
+    },
+    {
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "foreign",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      }
+    },
+    {
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "foreign",
+            "subset": "value"
+          }
+        }
+      }
+    },
+    {
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "foreign"
+          }
+        }
+      }
+    },
+    {
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        },
+        "locale": "de"
+      }
+    },
+    {
+      "results": {
+        "childId": "different-child",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      }
+    },
+    {
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "foreign",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      }
+    },
+    {
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "foreign",
+            "subset": "table"
+          }
+        }
+      }
+    },
+    {
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "foreign"
+          }
+        }
+      }
+    },
+    {
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        },
+        "locale": "de"
+      }
+    },
+    {
+      "locale": "de"
+    },
+    {
+      "schema": "foreign.document"
+    }
+  ],
+  "invalidTextEnvelopes": [
+    "semio foreign.form.dsl v1",
+    "semio forms.form.pack v1",
+    "semio forms.form.dsl v2"
+  ],
+  "invalidPackEnvelopes": [
+    "semio foreign.forms.pack v1",
+    "semio forms.form.dsl v1",
+    "semio forms.form.pack v2"
   ]
 }

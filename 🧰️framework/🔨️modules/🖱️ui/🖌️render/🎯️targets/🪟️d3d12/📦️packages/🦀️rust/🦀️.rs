@@ -28,28 +28,28 @@
 //! the authoritative status, decisions, and registrar-requests.
 
 #[cfg(target_os = "windows")]
-#[path = "🪟️backend.rs"]
+#[path = "../../🪟️backend/🦀️.rs"]
 mod backend;
 #[cfg(target_os = "windows")]
-#[path = "📬️frame_buffers.rs"]
+#[path = "../../📬️frame-buffers/🦀️.rs"]
 mod frame_buffers;
 #[cfg(target_os = "windows")]
-#[path = "✨️hlsl.rs"]
+#[path = "../../✨️hlsl/🦀️.rs"]
 mod hlsl;
 #[cfg(target_os = "windows")]
-#[path = "🏗️pipelines.rs"]
+#[path = "../../🏗️pipelines/🦀️.rs"]
 mod pipelines;
 #[cfg(target_os = "windows")]
-#[path = "🗃️resources.rs"]
+#[path = "../../🗃️resources/🦀️.rs"]
 mod resources;
 #[cfg(target_os = "windows")]
-#[path = "🌫️scene_target.rs"]
+#[path = "../../🌫️scene-target/🦀️.rs"]
 mod scene_target;
 #[cfg(target_os = "windows")]
-#[path = "🧱️types.rs"]
+#[path = "../../🧱️types/🦀️.rs"]
 mod types;
 #[cfg(target_os = "windows")]
-#[path = "🌐️world3d.rs"]
+#[path = "../../🌐️world3d/🦀️.rs"]
 mod world3d;
 
 #[cfg(target_os = "windows")]

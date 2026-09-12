@@ -1,0 +1,69 @@
+{
+  "json": [
+    {
+      "value": {},
+      "accepted": true
+    },
+    {
+      "value": {
+        "camera": {}
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "locale": "de"
+      },
+      "accepted": false
+    },
+    {
+      "value": [],
+      "accepted": false
+    },
+    {
+      "value": null,
+      "accepted": false
+    },
+    {
+      "value": "",
+      "accepted": false
+    },
+    {
+      "value": 0,
+      "accepted": false
+    }
+  ],
+  "text": [
+    {
+      "value": "",
+      "accepted": true
+    },
+    {
+      "value": " \n\t",
+      "accepted": true
+    },
+    {
+      "value": "camera=1",
+      "accepted": false
+    }
+  ],
+  "pack": [
+    {
+      "value": [],
+      "accepted": true
+    },
+    {
+      "value": [
+        0
+      ],
+      "accepted": false
+    },
+    {
+      "value": [
+        123,
+        125
+      ],
+      "accepted": false
+    }
+  ]
+}

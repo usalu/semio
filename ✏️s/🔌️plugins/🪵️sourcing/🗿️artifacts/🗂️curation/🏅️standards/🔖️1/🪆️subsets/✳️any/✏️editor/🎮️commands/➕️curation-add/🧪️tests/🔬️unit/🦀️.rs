@@ -2,7 +2,7 @@
 use super::*;
 use crate::editor::sourcing::SourcingCurationCommand;
 use crate::editor::sourcing::commands::{curation_remove, curation_set_count, drop_on_curated, drop_on_pool};
-use crate::editor::sourcing::testkit::{dispatch, new_app};
+use crate::editor::sourcing::unit_tests::context::{dispatch, new_app};
 use crate::schema::curated_count;
 
 #[semio_framework_async_macros::async_test]

@@ -26,7 +26,7 @@ Run directly: `.venv/bin/python3 "🐍️.py"` from this directory, or `uv run p
 root (collected by `pyproject.toml`'s `python_files = ["🐍️.py"]`).
 
 @see 🥒️.feature
-@see ../../🔮️oracle/🔣️.json — the `parry3d` + `scipy` registration this case's tags name.
+@see ../../🔮️oracles/🔣️.json — the `parry3d` + `scipy` registration this case's tags name.
 @see ../../📚️examples/🧪️tests/🧩️geometry/🦀️.rs — the subject half.
 """
 

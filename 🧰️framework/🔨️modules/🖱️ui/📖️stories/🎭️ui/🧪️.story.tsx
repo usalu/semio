@@ -1,0 +1,80 @@
+// #region 🧲️Header
+// 🧪️ 🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️ui/🧪️.story.tsx
+// #endregion 🧲️Header
+
+// #region 🔌️Adapters
+import { App, Mode, Ui, reactHostPort } from "@semio-tech/ui-react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+// #endregion 🔌️Adapters
+
+// `Mode` mounts each `windows[].children` inside a `mode-dock-stack-body` (level="base") wrapping
+// a `<Window>` (level="window"), both of which already fill `ui-surface`/`ui-glass` — this stays
+// bg-transparent so it doesn't double-tint either ancestor fill.
+const Pane = ({ title }: { title: string }) => (
+  <div className="flex h-full items-center justify-center bg-transparent">
+    <h2 className="text-xl font-bold">{title}</h2>
+  </div>
+);
+
+const meta = {
+  title: "🖱️ui⚛️react/Ui",
+  component: Ui,
+  parameters: { layout: "fullscreen" },
+  tags: ["autodocs"],
+} satisfies Meta<typeof Ui>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  render: () => {
+    const [activeAppId, setActiveAppId] = reactHostPort.useState("editor");
+    return (
+      <div className="h-[480px] w-full">
+        <Ui
+          apps={[
+            {
+              id: "editor",
+              label: "Editor",
+              children: (
+                <App
+                  modes={[
+                    {
+                      id: "design",
+                      label: "Design",
+                      children: (
+                        <Mode
+                          windows={[
+                            { id: "scene", children: <Pane title="Scene" /> },
+                            { id: "tree", children: <Pane title="Tree" /> },
+                          ]}
+                          activeWindowId="scene"
+                          onActiveWindowChange={() => {}}
+                        />
+                      ),
+                    },
+                    {
+                      id: "review",
+                      label: "Review",
+                      children: <Mode windows={[{ id: "preview", children: <Pane title="Preview" /> }]} activeWindowId="preview" />,
+                    },
+                  ]}
+                  activeModeId="design"
+                  onActiveModeChange={() => {}}
+                />
+              ),
+            },
+            {
+              id: "dashboard",
+              label: "Dashboard",
+              children: <Mode windows={[{ id: "stats", children: <Pane title="Statistics" /> }]} activeWindowId="stats" />,
+            },
+          ]}
+          activeAppId={activeAppId}
+          onActiveAppChange={setActiveAppId}
+        />
+      </div>
+    );
+  },
+};

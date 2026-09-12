@@ -1,0 +1,89 @@
+{
+  "document": {
+    "bytes": "c2VtaW8tZm9ybS1kb2N1bWVudA=="
+  },
+  "windows": {
+    "left": {
+      "lease": {
+        "windowId": "forms-try-left",
+        "windowKindId": "forms-try",
+        "windowGeneration": 7,
+        "documentGeneration": 13
+      },
+      "config": {
+        "currentStepIndex": 0
+      },
+      "transient": {
+        "tryValues": {}
+      }
+    },
+    "right": {
+      "lease": {
+        "windowId": "forms-try-right",
+        "windowKindId": "forms-try",
+        "windowGeneration": 11,
+        "documentGeneration": 13
+      },
+      "config": {
+        "currentStepIndex": 2
+      },
+      "transient": {
+        "tryValues": {
+          "right-answer": ["\"unchanged\""]
+        }
+      }
+    }
+  },
+  "leftMutations": {
+    "advance": {
+      "kind": "snapshot",
+      "config": {
+        "currentStepIndex": 1
+      }
+    },
+    "stage": {
+      "kind": "snapshot",
+      "transient": {
+        "tryValues": {
+          "left-answer": ["\"Ada\""]
+        }
+      }
+    },
+    "resetConfig": {
+      "kind": "snapshot",
+      "config": {
+        "currentStepIndex": 0
+      }
+    },
+    "resetTransient": {
+      "kind": "snapshot",
+      "transient": {
+        "tryValues": {}
+      }
+    }
+  },
+  "continuations": {
+    "left": {
+      "appId": "1",
+      "documentId": "form-document",
+      "operationId": "41",
+      "generation": 3,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000",
+      "windowId": "forms-try-left",
+      "windowKindId": "forms-try",
+      "windowGeneration": 7,
+      "documentGeneration": 13
+    },
+    "right": {
+      "appId": "1",
+      "documentId": "form-document",
+      "operationId": "41",
+      "generation": 3,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000",
+      "windowId": "forms-try-right",
+      "windowKindId": "forms-try",
+      "windowGeneration": 11,
+      "documentGeneration": 13
+    }
+  }
+}

@@ -24,7 +24,7 @@
  * geometry check would add engine count without adding evidence.
  *
  * @see ../🕸️third-party-puzzle-2d-1/🐍️.py
- * @see ../../🔮️oracle/🔣️.json
+ * @see ../../🔮️oracles/🔣️.json
  */
 
 // #region 🔌️Adapters

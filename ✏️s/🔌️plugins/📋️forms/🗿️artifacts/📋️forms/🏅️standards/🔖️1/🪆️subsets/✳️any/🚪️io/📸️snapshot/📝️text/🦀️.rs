@@ -79,29 +79,37 @@ fn parse_forms_snapshot_body(body: &str) -> Result<FormsSnapshot, String> {
             continue;
         }
         if let Some(rest) = line.strip_prefix("schema=") {
+            if schema.is_some() { return Err("duplicate Forms schema".into()); }
             schema = Some(dec_str(rest)?);
         } else if let Some(rest) = line.strip_prefix("id=") {
+            if id.is_some() { return Err("duplicate Forms id".into()); }
             id = Some(dec_str(rest)?);
         } else if let Some(rest) = line.strip_prefix("version=") {
+            if version.is_some() { return Err("duplicate Forms version".into()); }
             version = Some(dec_str(rest)?);
         } else if let Some(rest) = line.strip_prefix("title=") {
+            if title.is_some() { return Err("duplicate Forms title".into()); }
             title = Some(dec_opt_str(rest)?);
         } else if let Some(rest) = line.strip_prefix("structure=") {
+            if structure.is_some() { return Err("duplicate Forms structure".into()); }
             structure = Some(dec_child(rest)?);
         } else if let Some(rest) = line.strip_prefix("results=") {
+            if results.is_some() { return Err("duplicate Forms results".into()); }
             results = Some(dec_child(rest)?);
         } else {
             return Err(format!("forms snapshot: unknown line {line:?}"));
         }
     }
-    Ok(FormsSnapshot {
+    let snapshot = FormsSnapshot {
         schema: schema.ok_or_else(|| "forms snapshot: missing schema line".to_string())?,
         id: id.ok_or_else(|| "forms snapshot: missing id line".to_string())?,
         version: version.ok_or_else(|| "forms snapshot: missing version line".to_string())?,
         title: title.unwrap_or(None),
         structure: structure.ok_or_else(|| "forms snapshot: missing structure line".to_string())?,
         results: results.ok_or_else(|| "forms snapshot: missing results line".to_string())?,
-    })
+    };
+    snapshot.validate()?;
+    Ok(snapshot)
 }
 //#endregion 🔖️TextPrimitives
 
@@ -119,7 +127,12 @@ impl store::ArtifactDsl for FormsSnapshot {
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
+            Ok((envelope, rest)) => {
+                if !envelope.matches_identity(Self::envelope_id(), store::semio_format::Component::Dsl, 1) {
+                    return Err(store::TextError::new("Forms text envelope mismatch", dsl::TextSpan::at(1, 1)));
+                }
+                rest
+            },
             Err(_) => text,
         };
         parse_forms_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))

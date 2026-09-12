@@ -2,7 +2,7 @@
 //! `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //!
 //! Recorded no-oracle decision `lowpoly-mutation-semantics`
-//! (`../../🔮️oracle/🔣️.json`): this is a semio-NATIVE
+//! (`../../🔮️oracles/🔣️.json`): this is a semio-NATIVE
 //! document and `LowpolyMutation` IS its specification, so there is nothing third-party to register. What
 //! stands in for an oracle is named there and exercised here: the committed
 //! `(before, mutation, diff, outcome, after)` quintets under
@@ -25,7 +25,7 @@
 //! `apply(inverse(m), apply(m, base)) == base` stays with the production `inverse()` implementation
 //! and the per-leaf fixture tests that already exercise it.
 //!
-//! @see ../../../../../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs — the shared law helpers.
+//! @see ../../../../../../../../../🗄️stdio/🔮️oracles/⚖️law/🦀️.rs — the shared law helpers.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
@@ -37,7 +37,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 /// implicit `🦀️component/` child directory.
 #[path = "."]
 mod shared {
-    #[path = "../../../../../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs"]
+    #[path = "../../../../../../../../../🗄️stdio/🔮️oracles/⚖️law/🦀️.rs"]
     pub mod law;
 }
 use shared::law;

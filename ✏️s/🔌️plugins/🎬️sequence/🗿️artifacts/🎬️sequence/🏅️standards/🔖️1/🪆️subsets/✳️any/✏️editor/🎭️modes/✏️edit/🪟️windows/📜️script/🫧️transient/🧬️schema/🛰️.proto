@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.sequence.scriptwindowtransient.v1;
+
+message SequenceScriptWindowTransient {
+  string last_run_json = 1;
+}

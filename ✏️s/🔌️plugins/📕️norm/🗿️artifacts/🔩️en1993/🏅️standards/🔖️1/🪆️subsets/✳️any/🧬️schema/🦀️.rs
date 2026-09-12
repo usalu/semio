@@ -1222,8 +1222,8 @@ pub fn check_steel_member_from_fem(span_m: f64, udl_kn_m: f64, a_mm2: f64, w_pl_
 // #endregion 🔖️Fem
 //#endregion 🔖️ComplianceHelpers
 
-//#region 🧪️ComplianceHelpersTests
+//#region 🧪️ComplianceTests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️compliance-helpers/🦀️.rs"]
-mod compliance_helpers_tests;
-//#endregion 🧪️ComplianceHelpersTests
+#[path = "🧪️tests/⚖️compliance/🦀️.rs"]
+mod compliance_tests;
+//#endregion 🧪️ComplianceTests

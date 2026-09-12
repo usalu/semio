@@ -1,0 +1,58 @@
+{
+  "oracle": {
+    "package": "fast-json-patch",
+    "version": "3.1.1",
+    "implementation": "independent retained candidate transition"
+  },
+  "cases": [
+    {
+      "lane": "full",
+      "sourceCursor": 0,
+      "candidate": { "sequence": 42, "row": 3, "column": 5, "value": 12.25 },
+      "destinationCapacity": 2,
+      "destination": [
+        { "sequence": 1, "row": 0, "column": 0, "value": 1 },
+        { "sequence": 2, "row": 1, "column": 1, "value": 2 }
+      ],
+      "refused": {
+        "sourceCursor": 0,
+        "candidate": { "sequence": 42, "row": 3, "column": 5, "value": 12.25 },
+        "destination": [
+          { "sequence": 1, "row": 0, "column": 0, "value": 1 },
+          { "sequence": 2, "row": 1, "column": 1, "value": 2 }
+        ]
+      },
+      "retried": {
+        "sourceCursor": 1,
+        "candidate": null,
+        "destination": [
+          { "sequence": 1, "row": 0, "column": 0, "value": 1 },
+          { "sequence": 42, "row": 3, "column": 5, "value": 12.25 }
+        ]
+      }
+    },
+    {
+      "lane": "free",
+      "sourceCursor": 0,
+      "candidate": { "sequence": 77, "row": 2, "column": 4, "value": -3.5 },
+      "destinationCapacity": 1,
+      "destination": [
+        { "sequence": 3, "row": 0, "column": 0, "value": 0.5 }
+      ],
+      "refused": {
+        "sourceCursor": 0,
+        "candidate": { "sequence": 77, "row": 2, "column": 4, "value": -3.5 },
+        "destination": [
+          { "sequence": 3, "row": 0, "column": 0, "value": 0.5 }
+        ]
+      },
+      "retried": {
+        "sourceCursor": 1,
+        "candidate": null,
+        "destination": [
+          { "sequence": 77, "row": 2, "column": 4, "value": -3.5 }
+        ]
+      }
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "version": 1,
   "html": "🌐️.html",
   "manifest": "package.json",
-  "entry": "./🚪️index.tsx",
+  "entry": "./🟦️.tsx",
   "laws": [
     "html-module-entry-exists",
     "package-export-matches-html",

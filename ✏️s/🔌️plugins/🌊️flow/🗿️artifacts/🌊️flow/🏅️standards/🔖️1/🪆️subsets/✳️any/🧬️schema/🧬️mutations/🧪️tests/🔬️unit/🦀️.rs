@@ -8,7 +8,7 @@ use crate::schema::mutations::reorder_synapses::ReorderSynapses;
 use crate::schema::mutations::reorder_widgets::ReorderWidgets;
 use crate::schema::mutations::replace_widget::ReplaceWidget;
 use crate::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
-use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
 use semio_framework_artifact_flow_flow::{FlowLayoutEntry, Widget, WidgetLayout};
 
 fn widget_note(id: &str) -> Widget {
@@ -187,7 +187,7 @@ async fn update_synapse_endpoints_unchanged_is_no_op() {
 fn kinds_match_the_enum_and_the_catalog() {
     let declared: Vec<&str> = <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
     assert_eq!(KINDS, declared.as_slice(), "KINDS must name every FlowMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog flow-1-any");
     }

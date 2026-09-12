@@ -8,6 +8,32 @@ use crate::formulation::{b_matrix_plane, d_matrix_plane_stress, gauss_tri, jacob
 use crate::model::Elements;
 use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, MemberUdl, ShellState, SolidStress};
 
+#[derive(Clone, Copy)]
+struct Line3Geometry {
+    length: f64,
+    direction: [f64; 3],
+}
+
+/// 📐️ Resolves one finite nondegenerate 3D line without allocating an element matrix.
+fn line3_geometry(ctx: &ElementContext) -> Option<Line3Geometry> {
+    if ctx.positions.len() != 2 {
+        return None;
+    }
+    let delta = vec3d_sub(ctx.positions[1], ctx.positions[0]);
+    let length = vec3d_length(delta);
+    if !length.is_finite() || length <= f64::EPSILON {
+        return None;
+    }
+    let direction = [delta[0] / length, delta[1] / length, delta[2] / length];
+    direction.iter().all(|component| component.is_finite()).then_some(Line3Geometry { length, direction })
+}
+
+/// 🧮️ Evaluates one Bar3 stiffness cell from its fixed line geometry.
+fn bar3_stiffness_cell(e: f64, area: f64, geometry: Line3Geometry, row: usize, column: usize) -> f64 {
+    let sign = if row / 3 == column / 3 { 1.0 } else { -1.0 };
+    e * area / geometry.length * sign * geometry.direction[row % 3] * geometry.direction[column % 3]
+}
+
 // #region 🔖️Bar3
 /// 🪵️ Two-node 3D axial truss element — carries only translational DOFs, stiffness `k = EA/L`
 /// projected onto the member's unit direction.
@@ -29,27 +55,35 @@ impl Element for Bar3 {
         vec![self.node_a.clone(), self.node_b.clone()]
     }
 
+    fn mounted_node_id(&self, index: usize) -> Option<&str> {
+        [self.node_a.as_str(), self.node_b.as_str()].get(index).copied()
+    }
+
+    fn mounted_node_id_count(&self) -> Option<usize> {
+        Some(2)
+    }
+
     fn dofs_per_node(&self) -> &[Dof] {
         const DOFS: [Dof; 3] = [Dof::Tx, Dof::Ty, Dof::Tz];
         &DOFS
     }
 
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
-        let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
-        let l = vec3d_length(d);
-        let c = vec3d_normalize(d);
-        let k = self.e * self.a / l;
+        let geometry = line3_geometry(ctx).expect("non-degenerate bar3");
         let mut ke = MatD::zeros(6, 6);
-        for i in 0..3 {
-            for j in 0..3 {
-                let v = k * c[i] * c[j];
-                ke.set(i, j, v);
-                ke.set(i, j + 3, -v);
-                ke.set(i + 3, j, -v);
-                ke.set(i + 3, j + 3, v);
+        for row in 0..6 {
+            for column in 0..6 {
+                ke.set(row, column, bar3_stiffness_cell(self.e, self.a, geometry, row, column));
             }
         }
         ke
+    }
+
+    fn mounted_stiffness_cell(&self, ctx: &ElementContext, row: usize, column: usize) -> Option<f64> {
+        if row >= 6 || column >= 6 {
+            return None;
+        }
+        Some(bar3_stiffness_cell(self.e, self.a, line3_geometry(ctx)?, row, column))
     }
 
     fn recover(&self, ctx: &ElementContext, u_elem: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
@@ -114,16 +148,6 @@ impl Element for Bar3 {
 // #endregion 🔖️Bar3
 
 // #region 🔖️Frame3
-/// 🧮️ Places a 4x4 bending block into `k` at the given DOF indices (used for both the y- and z-bending
-/// planes, which are decoupled from each other and from axial/torsion).
-fn set_bend_block(k: &mut MatD, idx: [usize; 4], block: [[f64; 4]; 4]) {
-    for (bi, &gi) in idx.iter().enumerate() {
-        for (bj, &gj) in idx.iter().enumerate() {
-            k.set(gi, gj, block[bi][bj]);
-        }
-    }
-}
-
 /// 🏗️ Two-node 3D Euler-Bernoulli frame element with torsion — full 6-DOF-per-node member. Local x
 /// runs node-a to node-b; local y/z are built from a reference "up" vector and rotated by `roll`
 /// (radians) about local x. `stiffness_global`/`recover` rotate the decoupled axial/torsion/biaxial
@@ -145,58 +169,102 @@ pub struct Frame3 {
 /// ↕️ `θy = −∂w/∂x` sign flip of the odd (`L`-carrying) rows/columns in the y-bending block.
 const Y_PLANE_SIGN: [f64; 4] = [1.0, -1.0, 1.0, -1.0];
 
+#[derive(Clone, Copy)]
+struct Frame3Geometry {
+    length: f64,
+    axes: [[f64; 3]; 3],
+}
+
+/// 🧭️ Resolves Frame3's rolled orthonormal local basis as fixed-size scalar state.
+fn frame3_geometry(ctx: &ElementContext, roll: f64) -> Option<Frame3Geometry> {
+    if !roll.is_finite() {
+        return None;
+    }
+    let line = line3_geometry(ctx)?;
+    let reference = if line.direction[2].abs() > 0.99 { [1.0, 0.0, 0.0] } else { [0.0, 0.0, 1.0] };
+    let y_cross = vec3d_cross(reference, line.direction);
+    let y_length = vec3d_length(y_cross);
+    if !y_length.is_finite() || y_length <= f64::EPSILON {
+        return None;
+    }
+    let y_unrotated = [y_cross[0] / y_length, y_cross[1] / y_length, y_cross[2] / y_length];
+    let z_unrotated = vec3d_cross(line.direction, y_unrotated);
+    let (sin_roll, cos_roll) = roll.sin_cos();
+    let local_y = [y_unrotated[0] * cos_roll + z_unrotated[0] * sin_roll, y_unrotated[1] * cos_roll + z_unrotated[1] * sin_roll, y_unrotated[2] * cos_roll + z_unrotated[2] * sin_roll];
+    let local_z = [z_unrotated[0] * cos_roll - y_unrotated[0] * sin_roll, z_unrotated[1] * cos_roll - y_unrotated[1] * sin_roll, z_unrotated[2] * cos_roll - y_unrotated[2] * sin_roll];
+    local_y.iter().chain(local_z.iter()).all(|component| component.is_finite()).then_some(Frame3Geometry { length: line.length, axes: [line.direction, local_y, local_z] })
+}
+
+/// 🏛️ Evaluates one Euler-Bernoulli bending-block cell before optional plane sign changes.
+fn frame3_bending_cell(length: f64, rigidity: f64, row: usize, column: usize) -> f64 {
+    let base = rigidity / length;
+    let length_squared = length * length;
+    [
+        [12.0 * base / length_squared, 6.0 * base / length, -12.0 * base / length_squared, 6.0 * base / length],
+        [6.0 * base / length, 4.0 * base, -6.0 * base / length, 2.0 * base],
+        [-12.0 * base / length_squared, -6.0 * base / length, 12.0 * base / length_squared, -6.0 * base / length],
+        [6.0 * base / length, 2.0 * base, -6.0 * base / length, 4.0 * base],
+    ][row][column]
+}
+
 impl Frame3 {
     /// 🧭️ Builds the member length, local 12x12 stiffness, and the 12x12 global<->local block-diagonal
     /// rotation `T` (four `R^T` 3x3 blocks) shared by `stiffness_global` and `recover`.
     fn local_system(&self, ctx: &ElementContext) -> (f64, MatD, MatD) {
-        let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
-        let l = vec3d_length(d);
-        let cx = vec3d_normalize(d);
-        let reference = if cx[2].abs() > 0.99 { [1.0, 0.0, 0.0] } else { [0.0, 0.0, 1.0] };
-        let y_unrot = vec3d_normalize(vec3d_cross(reference, cx));
-        let z_unrot = vec3d_cross(cx, y_unrot);
-        let (sin_r, cos_r) = self.roll.sin_cos();
-        let local_y = [y_unrot[0] * cos_r + z_unrot[0] * sin_r, y_unrot[1] * cos_r + z_unrot[1] * sin_r, y_unrot[2] * cos_r + z_unrot[2] * sin_r];
-        let local_z = [z_unrot[0] * cos_r - y_unrot[0] * sin_r, z_unrot[1] * cos_r - y_unrot[1] * sin_r, z_unrot[2] * cos_r - y_unrot[2] * sin_r];
-        let rt = Mat3d::from_axes(cx, local_y, local_z).transpose();
+        let geometry = frame3_geometry(ctx, self.roll).expect("non-degenerate frame3");
         let mut t = MatD::zeros(12, 12);
         for offset in [0usize, 3, 6, 9] {
             for row in 0..3 {
                 for col in 0..3 {
-                    t.set(offset + row, offset + col, rt.cols[col][row]);
+                    t.set(offset + row, offset + col, geometry.axes[row][col]);
                 }
             }
         }
-        (l, self.local_stiffness(l), t)
+        (geometry.length, self.local_stiffness(geometry.length), t)
     }
 
     /// 🧮️ Decoupled local 12x12 stiffness: axial, torsion, and biaxial (y/z) Euler-Bernoulli bending.
     fn local_stiffness(&self, l: f64) -> MatD {
         let mut k = MatD::zeros(12, 12);
-        let l2 = l * l;
-        let ax = self.e * self.a / l;
-        k.set(0, 0, ax);
-        k.set(0, 6, -ax);
-        k.set(6, 0, -ax);
-        k.set(6, 6, ax);
-        let tor = self.g * self.j / l;
-        k.set(3, 3, tor);
-        k.set(3, 9, -tor);
-        k.set(9, 3, -tor);
-        k.set(9, 9, tor);
-        let bz = self.e * self.iz / l;
-        set_bend_block(
-            &mut k,
-            [1, 5, 7, 11],
-            [[12.0 * bz / l2, 6.0 * bz / l, -12.0 * bz / l2, 6.0 * bz / l], [6.0 * bz / l, 4.0 * bz, -6.0 * bz / l, 2.0 * bz], [-12.0 * bz / l2, -6.0 * bz / l, 12.0 * bz / l2, -6.0 * bz / l], [6.0 * bz / l, 2.0 * bz, -6.0 * bz / l, 4.0 * bz]],
-        );
-        let by = self.e * self.iy / l;
-        set_bend_block(
-            &mut k,
-            [2, 4, 8, 10],
-            [[12.0 * by / l2, -6.0 * by / l, -12.0 * by / l2, -6.0 * by / l], [-6.0 * by / l, 4.0 * by, 6.0 * by / l, 2.0 * by], [-12.0 * by / l2, 6.0 * by / l, 12.0 * by / l2, 6.0 * by / l], [-6.0 * by / l, 2.0 * by, 6.0 * by / l, 4.0 * by]],
-        );
+        for row in 0..12 {
+            for column in 0..12 {
+                k.set(row, column, self.local_stiffness_cell(l, row, column));
+            }
+        }
         k
+    }
+
+    /// 🔩️ Evaluates one local axial, torsion, or bending cell without allocating a matrix.
+    fn local_stiffness_cell(&self, length: f64, row: usize, column: usize) -> f64 {
+        if [0usize, 6].contains(&row) && [0usize, 6].contains(&column) {
+            return self.e * self.a / length * if row == column { 1.0 } else { -1.0 };
+        }
+        if [3usize, 9].contains(&row) && [3usize, 9].contains(&column) {
+            return self.g * self.j / length * if row == column { 1.0 } else { -1.0 };
+        }
+        const Z_PLANE: [usize; 4] = [1, 5, 7, 11];
+        if let (Some(local_row), Some(local_column)) = (Z_PLANE.iter().position(|index| *index == row), Z_PLANE.iter().position(|index| *index == column)) {
+            return frame3_bending_cell(length, self.e * self.iz, local_row, local_column);
+        }
+        const Y_PLANE: [usize; 4] = [2, 4, 8, 10];
+        if let (Some(local_row), Some(local_column)) = (Y_PLANE.iter().position(|index| *index == row), Y_PLANE.iter().position(|index| *index == column)) {
+            return Y_PLANE_SIGN[local_row] * Y_PLANE_SIGN[local_column] * frame3_bending_cell(length, self.e * self.iy, local_row, local_column);
+        }
+        0.0
+    }
+
+    /// 🌐️ Evaluates one transformed global cell from fixed local geometry.
+    fn global_stiffness_cell(&self, geometry: Frame3Geometry, row: usize, column: usize) -> f64 {
+        let mut value = 0.0;
+        for local_row_component in 0..3 {
+            let local_row = row / 3 * 3 + local_row_component;
+            let left = geometry.axes[local_row_component][row % 3];
+            for local_column_component in 0..3 {
+                let local_column = column / 3 * 3 + local_column_component;
+                value += left * self.local_stiffness_cell(geometry.length, local_row, local_column) * geometry.axes[local_column_component][column % 3];
+            }
+        }
+        value
     }
 
     /// 🏋️ Local 12x12 consistent mass: axial `ρAL/6*[[2,1],[1,2]]` at `(0,6)`, torsion `ρJL/6*[[2,1],[1,2]]`
@@ -299,14 +367,35 @@ impl Element for Frame3 {
         vec![self.node_a.clone(), self.node_b.clone()]
     }
 
+    fn mounted_node_id(&self, index: usize) -> Option<&str> {
+        [self.node_a.as_str(), self.node_b.as_str()].get(index).copied()
+    }
+
+    fn mounted_node_id_count(&self) -> Option<usize> {
+        Some(2)
+    }
+
     fn dofs_per_node(&self) -> &[Dof] {
         const DOFS: [Dof; 6] = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz];
         &DOFS
     }
 
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
-        let (_l, k_local, t) = self.local_system(ctx);
-        t.transpose().matmul(&k_local).matmul(&t)
+        let geometry = frame3_geometry(ctx, self.roll).expect("non-degenerate frame3");
+        let mut stiffness = MatD::zeros(12, 12);
+        for row in 0..12 {
+            for column in 0..12 {
+                stiffness.set(row, column, self.global_stiffness_cell(geometry, row, column));
+            }
+        }
+        stiffness
+    }
+
+    fn mounted_stiffness_cell(&self, ctx: &ElementContext, row: usize, column: usize) -> Option<f64> {
+        if row >= 12 || column >= 12 {
+            return None;
+        }
+        Some(self.global_stiffness_cell(frame3_geometry(ctx, self.roll)?, row, column))
     }
 
     fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
@@ -393,6 +482,32 @@ fn solid_b_matrix(grads: &[[f64; 3]]) -> MatD {
     b
 }
 
+/// 🧬️ Resolves one displacement column of the 3D strain-displacement matrix.
+fn solid_b_column(gradient: [f64; 3], component: usize) -> [f64; 6] {
+    match component {
+        0 => [gradient[0], 0.0, 0.0, gradient[1], 0.0, gradient[2]],
+        1 => [0.0, gradient[1], 0.0, gradient[0], gradient[2], 0.0],
+        2 => [0.0, 0.0, gradient[2], 0.0, gradient[1], gradient[0]],
+        _ => [0.0; 6],
+    }
+}
+
+/// 🪨️ Contracts two fixed strain columns through the isotropic solid constitutive tensor.
+fn solid_constitutive_bilinear(e: f64, nu: f64, left: [f64; 6], right: [f64; 6]) -> f64 {
+    let scale = e / ((1.0 + nu) * (1.0 - 2.0 * nu));
+    let mut value = 0.0;
+    for row in 0..3 {
+        for column in 0..3 {
+            value += left[row] * scale * if row == column { 1.0 - nu } else { nu } * right[column];
+        }
+    }
+    let shear = scale * (1.0 - 2.0 * nu) / 2.0;
+    for index in 3..6 {
+        value += left[index] * shear * right[index];
+    }
+    value
+}
+
 /// 🧮️ Von Mises equivalent stress from the full 3D stress state.
 fn von_mises_solid(sxx: f64, syy: f64, szz: f64, sxy: f64, syz: f64, sxz: f64) -> f64 {
     (0.5 * ((sxx - syy).powi(2) + (syy - szz).powi(2) + (szz - sxx).powi(2) + 6.0 * (sxy * sxy + syz * syz + sxz * sxz))).sqrt()
@@ -411,37 +526,54 @@ pub struct Tet4 {
     pub density: f64,
 }
 
+#[derive(Clone, Copy)]
+struct Tet4Geometry {
+    volume: f64,
+    gradients: [[f64; 3]; 4],
+}
+
+/// 🔺️ Resolves tetrahedral volume and barycentric gradients with fixed-size vector products.
+fn tet4_geometry(ctx: &ElementContext) -> Option<Tet4Geometry> {
+    if ctx.positions.len() != 4 {
+        return None;
+    }
+    let first = vec3d_sub(ctx.positions[1], ctx.positions[0]);
+    let second = vec3d_sub(ctx.positions[2], ctx.positions[0]);
+    let third = vec3d_sub(ctx.positions[3], ctx.positions[0]);
+    let first_gradient_numerator = vec3d_cross(second, third);
+    let determinant = first[0] * first_gradient_numerator[0] + first[1] * first_gradient_numerator[1] + first[2] * first_gradient_numerator[2];
+    if !determinant.is_finite() || determinant.abs() <= f64::EPSILON {
+        return None;
+    }
+    let second_gradient_numerator = vec3d_cross(third, first);
+    let third_gradient_numerator = vec3d_cross(first, second);
+    let inverse = 1.0 / determinant;
+    let gradient_one = [first_gradient_numerator[0] * inverse, first_gradient_numerator[1] * inverse, first_gradient_numerator[2] * inverse];
+    let gradient_two = [second_gradient_numerator[0] * inverse, second_gradient_numerator[1] * inverse, second_gradient_numerator[2] * inverse];
+    let gradient_three = [third_gradient_numerator[0] * inverse, third_gradient_numerator[1] * inverse, third_gradient_numerator[2] * inverse];
+    let gradient_zero = [-(gradient_one[0] + gradient_two[0] + gradient_three[0]), -(gradient_one[1] + gradient_two[1] + gradient_three[1]), -(gradient_one[2] + gradient_two[2] + gradient_three[2])];
+    let gradients = [gradient_zero, gradient_one, gradient_two, gradient_three];
+    gradients.iter().flatten().all(|component| component.is_finite()).then_some(Tet4Geometry { volume: determinant.abs() / 6.0, gradients })
+}
+
 impl Tet4 {
     /// 🧭️ Signed volume via the scalar triple product of edge vectors from node 0.
     fn volume(ctx: &ElementContext) -> f64 {
-        let p = &ctx.positions;
-        let e1 = vec3d_sub(p[1], p[0]);
-        let e2 = vec3d_sub(p[2], p[0]);
-        let e3 = vec3d_sub(p[3], p[0]);
-        let cross = vec3d_cross(e1, e2);
-        (cross[0] * e3[0] + cross[1] * e3[1] + cross[2] * e3[2]).abs() / 6.0
+        tet4_geometry(ctx).expect("non-degenerate tet4").volume
     }
 
     /// 🧭️ Constant per-node shape-function gradients `[∂Li/∂x, ∂Li/∂y, ∂Li/∂z]`. `Li(x,y,z) = a+bx+cy+dz`
     /// with `Li(node_j) = δij` for all j — solving `R·[a,b,c,d]ᵀ = e_i` per node (`R`'s row j is
     /// `[1,xj,yj,zj]`) gives node i's coefficients directly, gradient in components 1..4.
     fn gradients(ctx: &ElementContext) -> [[f64; 3]; 4] {
-        let p = &ctx.positions;
-        let mut r = MatD::zeros(4, 4);
-        for (j, pj) in p.iter().enumerate() {
-            r.set(j, 0, 1.0);
-            r.set(j, 1, pj[0]);
-            r.set(j, 2, pj[1]);
-            r.set(j, 3, pj[2]);
-        }
-        let mut grads = [[0.0; 3]; 4];
-        for (i, slot) in grads.iter_mut().enumerate() {
-            let mut e = VecD::zeros(4);
-            e.set(i, 1.0);
-            let coeffs = r.lu_solve(&e).expect("non-degenerate tet4");
-            *slot = [coeffs.get(1), coeffs.get(2), coeffs.get(3)];
-        }
-        grads
+        tet4_geometry(ctx).expect("non-degenerate tet4").gradients
+    }
+
+    /// 🧊️ Evaluates one constant-strain tetrahedral stiffness cell from fixed geometry.
+    fn stiffness_cell(&self, geometry: Tet4Geometry, row: usize, column: usize) -> f64 {
+        let left = solid_b_column(geometry.gradients[row / 3], row % 3);
+        let right = solid_b_column(geometry.gradients[column / 3], column % 3);
+        geometry.volume * solid_constitutive_bilinear(self.e, self.nu, left, right)
     }
 }
 
@@ -454,19 +586,35 @@ impl Element for Tet4 {
         self.nodes.to_vec()
     }
 
+    fn mounted_node_id(&self, index: usize) -> Option<&str> {
+        self.nodes.get(index).map(String::as_str)
+    }
+
+    fn mounted_node_id_count(&self) -> Option<usize> {
+        Some(4)
+    }
+
     fn dofs_per_node(&self) -> &[Dof] {
         const DOFS: [Dof; 3] = [Dof::Tx, Dof::Ty, Dof::Tz];
         &DOFS
     }
 
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
-        let v = Self::volume(ctx);
-        let grads = Self::gradients(ctx);
-        let b = solid_b_matrix(&grads);
-        let d = d_matrix_solid(self.e, self.nu);
-        let mut ke = MatD::zeros(12, 12);
-        ke.add_triple_product(&b, &d, v);
-        ke
+        let geometry = tet4_geometry(ctx).expect("non-degenerate tet4");
+        let mut stiffness = MatD::zeros(12, 12);
+        for row in 0..12 {
+            for column in 0..12 {
+                stiffness.set(row, column, self.stiffness_cell(geometry, row, column));
+            }
+        }
+        stiffness
+    }
+
+    fn mounted_stiffness_cell(&self, ctx: &ElementContext, row: usize, column: usize) -> Option<f64> {
+        if row >= 12 || column >= 12 {
+            return None;
+        }
+        Some(self.stiffness_cell(tet4_geometry(ctx)?, row, column))
     }
 
     fn recover(&self, ctx: &ElementContext, u_elem: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {

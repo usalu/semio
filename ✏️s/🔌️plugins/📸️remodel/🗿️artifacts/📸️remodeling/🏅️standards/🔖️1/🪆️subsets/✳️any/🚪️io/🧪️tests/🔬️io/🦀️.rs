@@ -3,7 +3,7 @@
 //! repo's own encoders), so reading one back is a genuine cross-implementation check rather than a
 //! self-round-trip. The two formats without such a fixture (`las`, `gltf`) are covered by an
 //! encode→decode pass through stdio's real codecs — see `📓️w6-io.md` for the third-party oracle
-//! rows (`las` 0.11, `ply-rs`, `tobj`, `stl_io`) that belong in this subset's `🔮️oracle/🔣️.json`.
+//! rows (`las` 0.11, `ply-rs`, `tobj`, `stl_io`) that belong in this subset's `🔮️oracles/🔣️.json`.
 
 use super::*;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::remodeling::testkit::{app, render as render_body};
+use crate::editor::remodeling::unit_tests::context::{app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn an_empty_track_list_renders_the_documented_gap_message() {

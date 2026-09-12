@@ -1,47 +1,13 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://semio.tech/schema/app/drawing/drawing/presence/schema.json",
-  "title": "DrawingPresence",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "engagementInput",
-    "camera"
-  ],
+  "required": ["engagementInput", "camera"],
   "properties": {
-    "engagementInput": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
+    "engagementInput": { "type": "string" },
     "camera": {
-      "$ref": "#/$defs/DrawingCamera",
-      "x-semio-state": "presence"
-    }
-  },
-  "$defs": {
-    "DrawingCamera": {
-      "title": "DrawingCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        }
-      }
+      "$ref": "https://semio.tech/schema/framework/ui/viewport/2d"
     }
   }
 }

@@ -1,8 +1,8 @@
 use super::*;
 use crate::editor::remodeling::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks};
-use crate::editor::remodeling::testkit::{app, dispatch};
+use crate::editor::remodeling::unit_tests::context::{app, dispatch};
 use crate::editor::remodeling::RemodelingCommand;
-use semio_framework_plugin::testkit;
+use semio_framework_plugin::artifact_app_laws;
 
 /// 🧩️ `results.mesh.mesh` is a composed CHILD handle now — reads the real vertex count through
 /// `remodeling_mesh_workspace`'s working-scene cache (0 on a cold cache, matching an empty mesh).
@@ -26,7 +26,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = app().await;
     let placeholder_vertex_count = mesh_vertex_count(&app.snapshot().expect("materialize projection"));
     assert!(placeholder_vertex_count > 0, "the seeded placeholder box must have vertices");
-    testkit::assert_undo_redo_round_trip(&mut app, RemodelingCommand::ClearResult(clear_result::ClearResult {}), |app| mesh_vertex_count(&app.snapshot().expect("materialize projection")), placeholder_vertex_count, 0).await;
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app, RemodelingCommand::ClearResult(clear_result::ClearResult {}), |app| mesh_vertex_count(&app.snapshot().expect("materialize projection")), placeholder_vertex_count, 0).await;
 }
 
 #[semio_framework_async_macros::async_test]

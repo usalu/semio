@@ -8,7 +8,8 @@ import { createHash } from "node:crypto";
 /** 🔒️ Keeps Trunk's build/serve Cargo invocation on the committed dependency lock. */
 export async function testTrunkLockfile(workspace: string, native = false): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8"));
-  for (const path of fixture.configs) {
+  for (const config of fixture.configs) {
+    const path = config.trunk;
     const source = readFileSync(join(workspace, path), "utf8"), parsed = Bun.TOML.parse(source) as { build: Record<string, unknown>; hooks?: { stage: string; command: string; command_arguments: string[] }[] };
     assert.deepEqual(parsed, require("smol-toml").parse(source));
     for (const [key, value] of Object.entries(fixture.build)) assert.equal(parsed.build[key], value, `${path}: build.${key}`);
@@ -18,12 +19,12 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
     assert.deepEqual(hook.command_arguments.slice(1, -1), fixture.hook.command_arguments);
     assert.equal(resolve(dirname(join(workspace, path)), hook.command_arguments[0]), resolve(import.meta.dir, "../../🦀️cargo/📜️script.ts"));
     assert.equal(resolve(workspace, hook.command_arguments.at(-1)!), join(dirname(join(workspace, path)), "Cargo.toml"));
-    const project = JSON.parse(readFileSync(join(dirname(join(workspace, path)), "📋️project.json"), "utf8")), target = project.targets[fixture.target];
+    const projectPath = join(workspace, config.project), project = JSON.parse(readFileSync(projectPath, "utf8")), target = project.targets[fixture.target];
     assert.equal(project.name, fixture.project);
     assert.deepEqual(target.outputs, []);
     assert.ok(target.options.command.includes("native cargo metadata --manifest"));
     const { cacheInternals } = await import("../../../🟨️.mjs");
-    const projectRoot = fixture.configs[0].slice(0, -"/Trunk.toml".length);
+    const projectRoot = config.project.slice(0, -"/📋️project.json".length);
     const prepared = cacheInternals.withNativePreparation({ ...structuredClone(project), root: projectRoot }, workspace, { fixture: { ownership: "owned", target: "fixture:generate", nativeConsumers: [projectRoot] } });
     assert.deepEqual(prepared.targets[fixture.target].dependsOn ?? [], [], "Cargo metadata must not schedule native source generators");
     assert.equal(cacheInternals.targetPolicy(fixture.target, target).cache, true, "the lock guard replays once every manifest it validates is hashed");
@@ -46,10 +47,10 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
 /** 🔬️ Proves stale-lock rejection before compilation, including subsequent native watch rebuilds. */
 export async function testNativeTrunkLockfile(workspace: string, generated: string): Promise<void> {
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8")), root = mkdtempSync(join(generated, "trunk-lockfile-"));
-  const config = Bun.TOML.parse(readFileSync(join(workspace, fixture.configs[0]), "utf8")) as any;
+  const trunkPath = fixture.configs[0].trunk, config = Bun.TOML.parse(readFileSync(join(workspace, trunkPath), "utf8")) as any;
   const hook = config.hooks.find((value: any) => value.stage === fixture.hook.stage);
   const args = [...hook.command_arguments];
-  args[0] = resolve(dirname(join(workspace, fixture.configs[0])), args[0]);
+  args[0] = resolve(dirname(join(workspace, trunkPath)), args[0]);
   args[args.length - 1] = join(root, "Cargo.toml");
   for (const [path, contents] of Object.entries(fixture.probe.files)) writeFileSync(join(root, path), contents as string);
   writeFileSync(join(root, "Trunk.toml"), fixture.probe.files["Trunk.toml"] + `\n[[hooks]]\nstage=${JSON.stringify(hook.stage)}\ncommand=${JSON.stringify(hook.command)}\ncommand_arguments=${JSON.stringify(args)}\n`);

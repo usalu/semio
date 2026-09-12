@@ -1,0 +1,35 @@
+{
+  "valid": [
+    {
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "kind": "unknown"
+    },
+    {
+      "kind": "camera-null"
+    },
+    {
+      "kind": "camera-unknown"
+    },
+    {
+      "kind": "camera-zero"
+    },
+    {
+      "kind": "camera-negative"
+    }
+  ],
+  "patch": [
+    {
+      "op": "replace",
+      "path": "/camera/zoom",
+      "value": 2.5
+    }
+  ]
+}

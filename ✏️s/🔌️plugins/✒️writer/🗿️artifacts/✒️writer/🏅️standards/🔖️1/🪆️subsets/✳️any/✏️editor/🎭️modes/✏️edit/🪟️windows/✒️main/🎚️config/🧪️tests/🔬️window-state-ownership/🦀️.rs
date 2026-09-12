@@ -25,15 +25,15 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                 use crate::editor::writer::commands::{engagement_input, lint_document, set_camera, set_editor_selection, set_font_px};
                 use crate::editor::writer::{create_writer_app, WriterCommand, WriterPlayApp, WRITER_PLAY_BODY_MAIN};
                 use crate::WriterCamera;
-                use semio_framework_plugin::{testkit, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
+                use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
                 fn manifest() -> App {
                     App { definition: create_writer_app(), examples: Vec::new() }
                 }
                 async fn render(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>>, view: &ViewModel) -> Result<semio_framework_plugin::TextEditorScene, String> {
                     let tree = app.render(WRITER_PLAY_BODY_MAIN, None, view).await.map_err(|error| format!("{error:?}"))?;
-                    let json = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
-                    testkit::decode_fixture_scene::<semio_framework_plugin::TextEditorScene>(&json).map_err(str::to_string)
+                    let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+                    artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::TextEditorScene>(&json).map_err(str::to_string)
                 }
                 fn scene_json(text: Option<&String>, field: &str) -> Result<serde_json::Value, String> {
                     let text = text.ok_or_else(|| format!("missing Writer scene field {field}"))?;
@@ -73,8 +73,8 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                 let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WriterMainWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..Default::default() };
                 let left = view.for_window_instance(left_id).unwrap();
                 let right = view.for_window_instance(right_id).unwrap();
-                let mut app = Box::new(testkit::new_app_with_registry::<EditorApp<WriterPlayApp>>(manifest).await);
-                let mut reopened = Box::new(testkit::new_app_with_registry::<EditorApp<WriterPlayApp>>(manifest).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<WriterPlayApp>>(manifest).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<WriterPlayApp>>(manifest).await);
                 app.bind_instance_id(1).await;
                 reopened.bind_instance_id(2).await;
                 let outcome: Result<(), String> = async {
@@ -86,10 +86,10 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                         (&right, WriterCommand::SetFontPx(set_font_px::SetFontPx { value: 16 })),
                         (&left, WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "format".into() })),
                     ] {
-                        app.dispatch_typed(command, &ActionMeta { view_state: Some(context.clone()), ..testkit::meta("writer-window-state") }).await.map_err(|error| format!("{error:?}"))?;
+                        app.dispatch_typed(command, &ActionMeta { view_state: Some(context.clone()), ..artifact_app_laws::meta("writer-window-state") }).await.map_err(|error| format!("{error:?}"))?;
                     }
                     let (mut config_receipts, mut transient_receipts) = drain(&mut app).await?;
-                    app.dispatch_typed(WriterCommand::LintDocument(lint_document::LintDocument {}), &ActionMeta { view_state: Some(left.clone()), ..testkit::meta("writer-window-state") }).await.map_err(|error| format!("{error:?}"))?;
+                    app.dispatch_typed(WriterCommand::LintDocument(lint_document::LintDocument {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("writer-window-state") }).await.map_err(|error| format!("{error:?}"))?;
                     let (next_config_receipts, next_transient_receipts) = drain(&mut app).await?;
                     config_receipts += next_config_receipts;
                     transient_receipts += next_transient_receipts;
@@ -157,8 +157,8 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                 if let Err(error) = &outcome {
                     eprintln!("[DEBUG] Writer exact-window runtime failure before close: {error}");
                 }
-                testkit::close_registered_fixture_app(reopened.as_mut());
-                testkit::close_registered_fixture_app(app.as_mut());
+                artifact_app_laws::close_registered_fixture_app(reopened.as_mut());
+                artifact_app_laws::close_registered_fixture_app(app.as_mut());
                 outcome.expect("retained Writer exact-window ownership and persistence");
                 eprintln!("[DEBUG] two Writer windows published config/transient state independently, preserved document/app config, and reloaded only persisted config");
             })

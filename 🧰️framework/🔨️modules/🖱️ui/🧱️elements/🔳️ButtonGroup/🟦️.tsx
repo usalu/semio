@@ -9,7 +9,7 @@
 import * as React from "react";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️slot.tsx";
+import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️slot/🟦️.tsx";
 import { styleVariants, type StyleVariantProps } from "../../🔨️modules/🧬️style-variants/🟦️.ts";
 import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx";

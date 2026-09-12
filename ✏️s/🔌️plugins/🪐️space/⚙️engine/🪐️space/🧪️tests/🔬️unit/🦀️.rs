@@ -1,3 +1,153 @@
+pub(crate) mod context {
+    
+    use super::super::*;
+    use semio_framework_os::{ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity, apply_workflow_operation, register_app_io};
+    use semio_framework_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort, WorkflowNode};
+    use semio_framework_plugin::{App, AppIo, HistoryView, LocalizedLabel};
+    
+    pub(crate) fn empty_history() -> HistoryView {
+        HistoryView::empty()
+    }
+    
+    pub type SpaceVcsApp = semio_framework_plugin::VcsArtifactApp<SpaceApp>;
+    
+    /// 🕹️ Creates a fixture with the real manifest registry and graph interaction domain.
+    pub(crate) async fn app_with_registry() -> SpaceVcsApp {
+        semio_framework_plugin::artifact_app_laws::new_registered_app::<SpaceApp, _>(create_space_app()).await
+    }
+    
+    pub(crate) async fn dispatch(app: &mut SpaceVcsApp, command: SpaceCommand) -> semio_framework_plugin::InvocationResult {
+        app.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("dispatch")
+    }
+    
+    /// 🕹️ Routes through `SpaceCommand::dispatch` (the `app_commands!`-generated, framework-fixed
+    /// 3-arg path — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), NOT
+    /// `SpaceApp::handle` (which now needs a real `InteractionView`, only obtainable through a full
+    /// `VcsArtifactApp` dispatch — see `context::app`/`dispatch` below for that path). The 7 commands
+    /// that read live selection (`deleteSelection`/`nodeGraphEdit`/`reorganizeWorkflow`/
+    /// `copyAppInstance`/`duplicateAppInstance`/`removeAppInstance`/`renameAppInstance`) fall back to
+    /// treating the selection as empty here — exactly the same degradation `SpaceApp::render`'s own
+    /// selection-dependent branches already carry — so this helper stays usable for every OTHER
+    /// command's non-selection-dependent behavior unchanged.
+    pub(crate) async fn studio_emit(projection: &WorkflowSnapshot, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let history = empty_history();
+        let doc = ArtifactView::new(projection, &history);
+        let cfg = ConfigView { snapshot: config, window: None };
+        command.dispatch(&doc, &cfg)
+    }
+    
+    /// 📽️ Folds studio document operations onto a projection the way the store would (minus history).
+    pub(crate) async fn apply_mutations(projection: &WorkflowSnapshot, operations: &[WorkflowMutation]) -> WorkflowSnapshot {
+        operations.iter().fold(projection.clone(), |current, operation| apply_workflow_operation(&current, operation))
+    }
+    
+    /// 📽️ Folds studio config operations onto a config snapshot the way the store would.
+    pub(crate) async fn apply_config(config: &SpaceConfig, operations: &[SpaceConfigMutation]) -> SpaceConfig {
+        apply_config_mutations(config, operations).await
+    }
+    
+    /// 🪪️ Canonical surface id for a synthetic test-registry app (ticket
+    /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET §1) — every `App::builder(...)` id must parse
+    /// via `semio_framework::parse_surface_app_id`, so this mirrors `surface_app_id` over a throwaway
+    /// `s.<slug>@1/*` dialect. Shared by `seed_app` and every command test module that dispatches
+    /// `SpawnApp`/looks the registration back up, so both sides agree on the same string.
+    pub(crate) async fn test_surface_id(slug: &str) -> String {
+        semio_framework::surface_app_id(&semio_framework::ArtifactDialect { artifact_kind: format!("s.{slug}"), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
+    }
+    
+    async fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str], document_schema: &str, ports: Vec<MediaPortSpec>) {
+        let surface_id = test_surface_id(app_id).await;
+        let definition = App::builder(surface_id, LocalizedLabel::data(label))
+            .await
+            .document(document.iter().map(|segment| segment.to_string()))
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
+            .await
+            .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), semio_framework_ui_contract::SurfaceKind::Canvas2d, "square-pen")
+            .await
+            .io(AppIo::from_document(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() })
+                .await
+                .with_ports(ports)
+                .await)
+            .await
+            .build_definition();
+        register_app_io(plugin_id, &definition);
+    }
+    
+    pub(crate) async fn seed_draw_plugin() {
+        seed_app("draw", "draw", "Draw", &["semio", "draw"], "draw.document", Vec::new()).await;
+    }
+    
+    pub(crate) async fn seed_multi_port_plugins() {
+        let puzzle_ports = vec![
+            MediaPortSpec {
+                id: "in-a".into(),
+                label: "In A".into(),
+                direction: MediaPortDirection::In,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                kind_id: Some("topology".into()),
+                required: false,
+                multiplicity: PortMultiplicity::One,
+            },
+            MediaPortSpec {
+                id: "out-a".into(),
+                label: "Out A".into(),
+                direction: MediaPortDirection::Out,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                kind_id: Some("topology".into()),
+                required: false,
+                multiplicity: PortMultiplicity::One,
+            },
+            MediaPortSpec {
+                id: "out-b".into(),
+                label: "Out B".into(),
+                direction: MediaPortDirection::Out,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                kind_id: Some("topology".into()),
+                required: false,
+                multiplicity: PortMultiplicity::One,
+            },
+        ];
+        seed_app("puzzle.5d", "puzzle5d", "Puzzle 5D", &["semio", "puzzle", "5d"], "puzzle5d.document", puzzle_ports).await;
+    
+        let shooting_ports = vec![MediaPortSpec {
+            id: "scene-in".into(),
+            label: "Scene".into(),
+            direction: MediaPortDirection::In,
+            media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+            kind_id: Some("2d.shooting".into()),
+            required: true,
+            multiplicity: PortMultiplicity::One,
+        }];
+        seed_app("shooting", "shooting", "Shooting", &["semio", "shooting"], "shooting.document", shooting_ports).await;
+    }
+    
+    pub(crate) async fn test_node(id: &str, inputs: Vec<WorkflowMediaPort>, outputs: Vec<WorkflowMediaPort>) -> WorkflowNode {
+        WorkflowNode {
+            id: id.into(),
+            plugin_id: "test".into(),
+            app_id: "test".into(),
+            label: id.into(),
+            yields: String::new(),
+            artifact_ref: format!("artifacts/{id}"),
+            config_ref: format!("config/{id}"),
+            x: 0.0,
+            y: 0.0,
+            width: 1.0,
+            height: 1.0,
+            inputs,
+            outputs,
+        }
+    }
+    
+    pub(crate) async fn test_port(node_id: &str, spec_id: &str, direction: MediaPortDirection, media_type: MediaType, kind_id: &str) -> WorkflowMediaPort {
+        let dir_word = match direction {
+            MediaPortDirection::In => "in",
+            MediaPortDirection::Out => "out",
+        };
+        WorkflowMediaPort { id: format!("{node_id}:{spec_id}:{dir_word}"), spec: MediaPortSpec { id: spec_id.into(), label: spec_id.into(), direction, media_type, kind_id: Some(kind_id.into()), required: false, multiplicity: PortMultiplicity::One } }
+    }
+}
+
 
 use super::*;
 
@@ -30,8 +180,8 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
 }
 //#endregion 🧪️RetainedConfigOracle
 use crate::demo_space_projection;
-use crate::engine::space::testkit::{empty_history, studio_emit};
-use semio_framework_plugin::testkit as plugin_testkit;
+use crate::engine::space::unit_tests::context::{empty_history, studio_emit};
+use semio_framework_plugin::artifact_app_laws as plugin_laws;
 use semio_framework_plugin::{PluginApp, VcsArtifactApp};
 
 //#region 🧪️RetainedCatalogOracle
@@ -64,13 +214,13 @@ impl SpaceRetainedCatalogOracle for SerdeJsonSpaceRetainedCatalogOracle {
             .collect::<std::collections::BTreeSet<_>>();
         let batch = routes.iter().filter(|route| route.get("execution").and_then(pack::JsonValue::as_str) == Some("batch")).count();
         let migrated_ids =
-            routes.iter().filter(|route| route.get("status").and_then(pack::JsonValue::as_str) == Some("migrated")).filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string)).collect::<std::collections::BTreeSet<_>>();
+            routes.iter().filter(|route| route.get("status").and_then(pack::JsonValue::as_str) == Some("Migrated")).filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string)).collect::<std::collections::BTreeSet<_>>();
         let host_only_ids = document
             .get("publicationContracts")
             .and_then(pack::JsonValue::as_array)
             .expect("publication contracts array")
             .iter()
-            .filter(|contract| contract.get("lanes").and_then(pack::JsonValue::as_array).is_some_and(|lanes| lanes.as_slice() == [pack::JsonValue::String("hostOnly".into())]))
+            .filter(|contract| contract.get("lanes").and_then(pack::JsonValue::as_array).is_some_and(|lanes| lanes.as_slice() == [pack::JsonValue::String("HostOnly".into())]))
             .filter_map(|contract| contract.get("toolId").and_then(pack::JsonValue::as_str).map(str::to_string))
             .collect::<std::collections::BTreeSet<_>>();
         let ids = routes.iter().filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str)).collect::<std::collections::BTreeSet<_>>();
@@ -97,7 +247,7 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
 async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
     let fixture = include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
     let expected = ["setActiveExample", "importSpacePack", "goHome", "navigateVirtualFileSystemNode", "importSpacePackPayload", "setAppRegistrations"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
-    let wrong_lane = fixture.replacen("\"hostOnly\"", "\"artifact\"", 1);
+    let wrong_lane = fixture.replacen("\"HostOnly\"", "\"Artifact\"", 1);
     let wrong_tool = fixture.replacen("\"setActiveExample\"", "\"forgedTool\"", 1);
     assert_ne!(SerdeJsonSpaceRetainedCatalogOracle.summarize(&wrong_lane).host_only_ids, expected);
     assert_ne!(SerdeJsonSpaceRetainedCatalogOracle.summarize(&wrong_tool).host_only_ids, expected);
@@ -158,33 +308,33 @@ async fn space_manifest_uses_studio_app_id() {
 #[semio_framework_async_macros::async_test]
 async fn commit_checkpoint_round_trips_projection() {
     use crate::engine::space::commands::spawn_app;
-    testkit::seed_draw_plugin().await;
+    context::seed_draw_plugin().await;
     let mut app = VcsArtifactApp::<SpaceApp>::new(SpaceApp::default()).await;
-    app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).await.expect("spawn");
+    app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_laws::meta("local")).await.expect("spawn");
     let before = app.snapshot().expect("projection").graph.nodes.len();
     let commit_args = pack::json_to_dsl_value(&pack::json!({ "message": "snapshot" }));
-    app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_testkit::meta("local")).await.expect("commit");
+    app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_laws::meta("local")).await.expect("commit");
     assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), before);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn checkout_checkpoint_restores_projection() {
     use crate::engine::space::commands::spawn_app;
-    testkit::seed_draw_plugin().await;
+    context::seed_draw_plugin().await;
     let mut app = VcsArtifactApp::<SpaceApp>::new(SpaceApp::default()).await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
-    app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).await.expect("spawn");
+    app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_laws::meta("local")).await.expect("spawn");
     let commit_args = pack::json_to_dsl_value(&pack::json!({ "message": "after-first-spawn" }));
-    app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_testkit::meta("local")).await.expect("commit");
+    app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_laws::meta("local")).await.expect("commit");
     let after_first = app.snapshot().expect("projection").graph.nodes.len();
     assert!(after_first > before);
     let files = app.document_pack().await.expect("document pack");
     let parsed: store::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::parse_document_pack(&files.pack, &files.spr).await.expect("parse document pack");
     let checkpoint_id = parsed.envelope.vcs.checkpoints[0].id.clone();
-    app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).await.expect("spawn2");
+    app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_laws::meta("local")).await.expect("spawn2");
     assert!(app.snapshot().expect("projection").graph.nodes.len() > after_first);
     let checkout_args = pack::json_to_dsl_value(&pack::json!({ "checkpointId": checkpoint_id }));
-    app.handle_action("checkoutCheckpoint", Some(&checkout_args), &plugin_testkit::meta("local")).await.expect("checkout");
+    app.handle_action("checkoutCheckpoint", Some(&checkout_args), &plugin_laws::meta("local")).await.expect("checkout");
     assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), after_first);
 }
 
@@ -216,11 +366,11 @@ async fn checkout_checkpoint_restores_projection() {
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_on_disjoint_edits_via_backbone() {
     use crate::engine::space::commands::spawn_app;
-    testkit::seed_draw_plugin().await;
-    testkit::seed_multi_port_plugins().await;
-    let draw_surface_id = testkit::test_surface_id("draw").await;
-    let shooting_surface_id = testkit::test_surface_id("shooting").await;
-    plugin_testkit::assert_two_instances_converge::<SpaceApp, (usize, usize)>(
+    context::seed_draw_plugin().await;
+    context::seed_multi_port_plugins().await;
+    let draw_surface_id = context::test_surface_id("draw").await;
+    let shooting_surface_id = context::test_surface_id("shooting").await;
+    plugin_laws::assert_two_instances_converge::<SpaceApp, (usize, usize)>(
         "mem://s-studio-convergence",
         SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: draw_surface_id, x: 80.0, y: 80.0 }),
         SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "shooting".into(), app_id: shooting_surface_id, x: 300.0, y: 100.0 }),
@@ -255,11 +405,11 @@ async fn space_labels_resolve_native_english_by_default() {
     let cfg = ConfigView { snapshot: &config, window: None };
     let _app = SpaceApp::default();
     let catalogue_tree = SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::default()).await.expect("catalogue tree");
-    let catalogue_json = plugin_testkit::project_and_retire_fixture_tree(catalogue_tree).expect("catalogue projection");
+    let catalogue_json = plugin_laws::project_and_retire_fixture_tree(catalogue_tree).expect("catalogue projection");
     assert!(catalogue_json.contains("\"Apps\""));
 
     let parameters_tree = SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::default()).await.expect("parameters tree");
-    let parameters_json = plugin_testkit::project_and_retire_fixture_tree(parameters_tree).expect("parameters projection");
+    let parameters_json = plugin_laws::project_and_retire_fixture_tree(parameters_tree).expect("parameters projection");
     assert!(parameters_json.contains("Add Parameter"));
     assert!(parameters_json.contains("\"Name\""));
     assert!(parameters_json.contains("\"Remove\""));
@@ -298,9 +448,9 @@ async fn graph_hit_context_menu_owns_the_remove_target_argument() {
 }
 
 // 🌉️ Keeps `studio_emit`/`empty_history` imports exercised at this module's own level too (every
-// command-group file also imports them directly from `testkit`).
+// command-group file also imports them directly from `test context`).
 #[semio_framework_async_macros::async_test]
-async fn testkit_studio_emit_smoke_test() {
+async fn artifact_app_laws_studio_emit_smoke_test() {
     let projection = demo_space_projection().await;
     let config = SpaceConfig::default();
     let _ = empty_history();

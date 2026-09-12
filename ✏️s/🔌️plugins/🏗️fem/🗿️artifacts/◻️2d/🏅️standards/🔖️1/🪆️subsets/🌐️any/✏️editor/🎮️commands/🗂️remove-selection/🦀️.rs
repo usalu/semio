@@ -1,6 +1,6 @@
 //! 🗂️ 🗂️ Fem2d play app commands command — `remove-selection`.
 
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{delete_combination, delete_element, delete_load_case, delete_material, delete_node, delete_region, delete_section, delete_support};
 use crate::{element_id, Fem2dSnapshot};
@@ -16,7 +16,7 @@ pub struct RemoveSelection {
 /// 🗂️ Each id is looked up against every collection in a fixed precedence (nodes, elements,
 /// materials, sections, supports, load cases, regions, combinations) and removed from the first
 /// one it matches — mirrors the pre-migration `handle_action`'s exact search order.
-pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let mut operations = Vec::new();
     for id in &payload.ids {

@@ -1,6 +1,6 @@
 //! 🗺️ GIS 2D play app — the map window (edit mode): the tiled-map canvas and its chrome measures.
 
-use crate::editor::gis2d::config::Gis2dConfig;
+use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use crate::editor::gis2d::GIS_MAP_LAYER_IDS;
 use crate::schema::gis_map_descriptor_json;
@@ -39,7 +39,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🎚️ Collects this window's chrome from its own `🎚️options/*` nodes rather than re-listing them —
 /// measures are config-derived per frame by `ArtifactEditor::window_measures`, never frozen into the
 /// manifest.
-pub fn window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> Vec<WindowMeasure> {
     use crate::editor::gis2d::modes::edit::windows::map::options;
     vec![options::render_mode::measure(cfg, labels), options::vector_style::measure(cfg, labels), options::lod_mode::measure(cfg, labels), options::layers::measure(cfg, labels), options::layer_weights::measure(cfg, labels)]
 }
@@ -50,7 +50,7 @@ fn default_layer_visibility() -> HashMap<String, bool> {
     GIS_MAP_LAYER_IDS.iter().map(|(id, _, _)| ((*id).into(), true)).collect()
 }
 
-fn layer_visibility_json(cfg: &Gis2dConfig) -> String {
+fn layer_visibility_json(cfg: &MapWindowConfig) -> String {
     let mut map = default_layer_visibility();
     for (id, visible) in &cfg.layer_visibility {
         map.insert(id.clone(), *visible);
@@ -58,7 +58,7 @@ fn layer_visibility_json(cfg: &Gis2dConfig) -> String {
     serde_json::to_string(&map).unwrap_or_else(|_| "{}".into())
 }
 
-fn layer_stroke_scale_json(cfg: &Gis2dConfig) -> String {
+fn layer_stroke_scale_json(cfg: &MapWindowConfig) -> String {
     let mut map: HashMap<String, f64> = GIS_MAP_LAYER_IDS.iter().map(|(id, _, _)| ((*id).into(), 1.0)).collect();
     for (id, weight) in &cfg.layer_stroke_scale {
         map.insert(id.clone(), clamp_map_layer_weight(*weight));
@@ -77,7 +77,7 @@ fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
     scene.vector_tile_url_template = format!("{base}/vt/{{z}}/{{x}}/{{y}}.pbf");
 }
 
-pub fn render(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &GisMapSnapshot, cfg: &MapWindowConfig) -> UiAssemblyResult<BuiltNode> {
     let mut scene = TiledMapScene::base(gis_map_descriptor_json(document), cfg.camera_json.clone());
     scene.render_mode = cfg.render_mode.clone();
     scene.vector_style = cfg.vector_style.clone();

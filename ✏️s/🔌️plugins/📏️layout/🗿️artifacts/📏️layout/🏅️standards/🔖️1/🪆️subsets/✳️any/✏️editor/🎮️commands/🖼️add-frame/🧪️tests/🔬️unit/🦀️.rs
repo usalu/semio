@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::layout::commands::{patch_frame, patch_page};
-use crate::editor::layout::testkit::{dispatch, layout_app};
+use crate::editor::layout::unit_tests::context::{dispatch, layout_app};
 use crate::editor::layout::LayoutCommand;
 
 #[semio_framework_async_macros::async_test]
@@ -16,7 +16,7 @@ async fn add_frame_action_appends_rect() {
 async fn undo_redo_round_trips_add_frame() {
     let mut app = layout_app().await;
     let before = app.snapshot().expect("projection").pages[0].frames.len();
-    semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, LayoutCommand::AddFrame(AddFrame { kind: "rect".into(), x: None, y: None }), |app| app.snapshot().expect("projection").pages[0].frames.len(), before, before + 1).await;
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app, LayoutCommand::AddFrame(AddFrame { kind: "rect".into(), x: None, y: None }), |app| app.snapshot().expect("projection").pages[0].frames.len(), before, before + 1).await;
 }
 
 #[semio_framework_async_macros::async_test]

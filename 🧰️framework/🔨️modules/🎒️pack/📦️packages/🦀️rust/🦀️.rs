@@ -35,8 +35,9 @@ pub mod http;
 #[path = "../../🔌️io/🦀️.rs"]
 pub mod io;
 
-#[path = "../../🧨️testkit/🦀️.rs"]
-pub mod testkit;
+#[cfg(any(test, feature = "corruption-testing"))]
+#[path = "../../🧪️tests/🧨️corruption/🦀️.rs"]
+pub mod corruption_testing;
 
 #[path = "../../🦀️.rs"]
 mod component;

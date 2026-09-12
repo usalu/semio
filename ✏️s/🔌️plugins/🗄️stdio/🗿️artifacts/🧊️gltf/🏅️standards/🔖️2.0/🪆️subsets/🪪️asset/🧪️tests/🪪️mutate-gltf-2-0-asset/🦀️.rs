@@ -1,5 +1,5 @@
 //! 🦀️ glTF 2.0 `🪪️asset` subset mutation case — Rust adapter. Covers the 14 kinds
-//! `../../🔮️oracle/🔣️.json`'s `gltf-2-0-asset` catalog declares: `add-required-extension`,
+//! `../../🔮️oracles/🔣️.json`'s `gltf-2-0-asset` catalog declares: `add-required-extension`,
 //! `add-used-extension`, `change-asset-descriptive-metadata`, `change-asset-extension-data`,
 //! `change-asset-extra-data`, `change-asset-version`, `change-document-extension-data`,
 //! `change-document-extra-data`, `move-required-extension`, `move-used-extension`,
@@ -11,7 +11,7 @@
 //! 📃️document/{🧩️change-extensions,📝️change-extras}}/🦀️.rs`) stays physically owned by `♾️any` —
 //! `validate_mutation_leaf_source` requires the exact registered domain/operation owner beneath its
 //! aggregate mutation root, so this case reaches it by import. The oracle performs every kind by independent GLB/JSON-tree
-//! manipulation (`../../../♾️any/🔮️oracle/🦀️.rs`, extended with these 14 kinds by this same change,
+//! manipulation (`../../../♾️any/🔮️oracles/🦀️.rs`, extended with these 14 kinds by this same change,
 //! using `json` 0.12 as the JSON layer only, never this subset's own codec); the subject fully parses
 //! each kind's own committed fixture into `GltfSnapshot` via `parse_gltf_document` and re-serializes
 //! with `serialize_gltf_document` alone, dispatching through each leaf's own typed `apply()` function
@@ -83,7 +83,7 @@ const GLTF_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "generator", "c
 /// derived from the committed fixture's own before/after diff, documented in the feature file. An
 /// object member's inverse omits a key entirely (rather than writing `null`) whenever the BEFORE
 /// document never carried that key — the same `Option::None`-is-absence convention
-/// `optional_str_param`/`optional_object_param` (`../../../♾️any/🔮️oracle/🦀️.rs`) read on the way in.
+/// `optional_str_param`/`optional_object_param` (`../../../♾️any/🔮️oracles/🦀️.rs`) read on the way in.
 fn inverse_spec(kind: &str) -> Json {
     match kind {
         "add-required-extension" => json_spec("remove-required-extension", json_obj(vec![("extension", json_str("KHR_materials_unlit"))])),
@@ -174,7 +174,7 @@ mod subject {
         }
     }
     /// 🌉️ This host's own `Json` → `GltfJson` — structural only, the production twin of the
-    /// oracle's `from_host_json`/`to_host_json` bridge (`../../../♾️any/🔮️oracle/🦀️.rs`), used
+    /// oracle's `from_host_json`/`to_host_json` bridge (`../../../♾️any/🔮️oracles/🦀️.rs`), used
     /// solely to carry `change-{asset,document}-{extension,extra}-data`'s opaque `data` param into
     /// a typed payload without this adapter needing any of `GltfJson`'s own variant names beyond
     /// its shape (`Null`/`Bool`/`Number`/`String`/`Array`/`Object` — verified structurally identical

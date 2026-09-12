@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { mkdirSync, mkdtempSync, readFileSync, utimesSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
-import * as configuration from "../../📦️packages/🟦️typescript/⚙️build/🟦️.ts";
+import * as configuration from "../../🏗️builder/🟦️.ts";
 
 /** 📦️ Compares VSCE selection and repeated archive bytes with the fixture and independent ZIP metadata decoding. */
 export async function testExtensionPackage(generated: string): Promise<void> {

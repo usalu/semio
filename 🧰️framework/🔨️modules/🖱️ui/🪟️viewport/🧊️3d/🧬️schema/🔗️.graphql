@@ -1,0 +1,14 @@
+"""
+📐️ Restricts a vector field to exactly three finite coordinates.
+"""
+directive @vector3 on FIELD_DEFINITION
+
+"""
+🪟️ Exact-window orbit navigation pose; zoom is positive and supplied coordinates are finite.
+"""
+type Viewport3dOrbit {
+  position: [Float!]! @vector3
+  target: [Float!]! @vector3
+  zoom: Float!
+  up: [Float!] @vector3
+}

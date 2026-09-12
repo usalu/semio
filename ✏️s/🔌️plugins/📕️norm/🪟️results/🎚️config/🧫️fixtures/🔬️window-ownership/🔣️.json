@@ -1,0 +1,60 @@
+{
+  "document": { "id": "norm-document-stable", "loads": [], "materials": [] },
+  "resultsWindowKinds": [
+    "norm-din16798-results",
+    "norm-din18599-results",
+    "norm-din4108-results",
+    "norm-en1990-results",
+    "norm-en1991-results",
+    "norm-en1992-results",
+    "norm-en1993-results",
+    "norm-en1994-results",
+    "norm-en1995-results",
+    "norm-en1996-results",
+    "norm-en1997-results",
+    "norm-en1998-results",
+    "norm-en1999-results",
+    "norm-iso16757-results",
+    "norm-vdi3805-results"
+  ],
+  "windowInstances": [
+    { "id": "norm-results-left", "windowKindId": "norm-en1996-results" },
+    { "id": "norm-results-right", "windowKindId": "norm-en1996-results" },
+    { "id": "norm-inputs", "windowKindId": "norm-en1996-inputs" }
+  ],
+  "baseConfig": {},
+  "mutations": [
+    { "windowId": "norm-results-left", "claimedWindowKindId": "norm-en1996-results", "mutation": { "ChangeSelectedCheckIndex": { "index": 1 } } },
+    { "focusedWindowId": "norm-results-right", "claimedWindowKindId": "norm-en1996-results", "mutation": { "ChangeSelectedCheckIndex": { "index": 2 } } }
+  ],
+  "undoMutations": [
+    { "windowId": "norm-results-left", "claimedWindowKindId": "norm-en1996-results", "mutation": { "ChangeSelectedCheckIndex": { "index": null } } },
+    { "focusedWindowId": "norm-results-right", "claimedWindowKindId": "norm-en1996-results", "mutation": { "ChangeSelectedCheckIndex": {} } }
+  ],
+  "redoMutations": [
+    { "windowId": "norm-results-left", "claimedWindowKindId": "norm-en1996-results", "mutation": { "ChangeSelectedCheckIndex": { "index": 1 } } },
+    { "focusedWindowId": "norm-results-right", "claimedWindowKindId": "norm-en1996-results", "mutation": { "ChangeSelectedCheckIndex": { "index": 2 } } }
+  ],
+  "expected": {
+    "norm-results-left": { "selectedCheckIndex": 1 },
+    "norm-results-right": { "selectedCheckIndex": 2 }
+  },
+  "rejections": [
+    { "windowId": "norm-results-missing", "claimedWindowKindId": "norm-en1996-results", "code": "norm-results-window-stale" },
+    { "windowId": "norm-inputs", "claimedWindowKindId": "norm-en1996-results", "code": "norm-results-window-kind-required" },
+    { "claimedWindowKindId": "norm-en1996-results", "code": "norm-results-window-required" }
+  ],
+  "validConfigs": [
+    {},
+    { "selectedCheckIndex": 0 },
+    { "selectedCheckIndex": 4294967295 }
+  ],
+  "invalidConfigs": [
+    null,
+    { "selectedCheckIndex": -1 },
+    { "selectedCheckIndex": 0.5 },
+    { "selectedCheckIndex": "1" },
+    { "selectedCheckIndex": 4294967296 },
+    { "unknown": true }
+  ]
+}

@@ -1,7 +1,7 @@
 use super::*;
 use crate::default_snapshot;
 use protocol::{
-    os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_inverse_law},
+    os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_inverse_law},
     Mutation,
 };
 

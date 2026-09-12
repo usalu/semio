@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::generation3d::testkit::{empty_history_view, retire_flow_eval_session};
+use crate::editor::generation3d::unit_tests::context::{empty_history_view, retire_flow_eval_session};
 use semio_framework_plugin::{ArtifactView, ConfigView};
 
 /// ⚖️ LAW: folding the geometry extension's cancel acknowledgement arms NOTHING. The gesture already
@@ -8,7 +8,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView};
 /// reused it as its response action.
 #[test]
 fn the_cancel_acknowledgement_arms_nothing() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let snapshot = Generation3dSnapshot::default();
     let history = empty_history_view();
     let config = Generation3dConfig::default();

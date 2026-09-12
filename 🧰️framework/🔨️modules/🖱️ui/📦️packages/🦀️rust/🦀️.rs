@@ -11,9 +11,9 @@
 extern crate semio_framework_os_kernel as dsl;
 
 #[cfg(feature = "tui")]
-#[path = "🎯️targets/⌨️tui/🦀️.rs"]
+#[path = "../../🎯️targets/⌨️tui/🦀️.rs"]
 pub mod tui;
 
 #[cfg(feature = "wgpu")]
-#[path = "🎯️targets/🧊️wgpu/🦀️.rs"]
+#[path = "../../🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod wgpu;

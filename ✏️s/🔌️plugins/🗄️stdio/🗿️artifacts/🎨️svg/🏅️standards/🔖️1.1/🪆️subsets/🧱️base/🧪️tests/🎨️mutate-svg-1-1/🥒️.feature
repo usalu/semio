@@ -15,7 +15,7 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
   committed document is never written to. The oracle drives `quick-xml` 0.42 (registered here for
   the first time under the `svg-1-1-mutate` capability — the shared stdio manifest never reaches it
   for SVG) over this subset's own 11-kind `SvgMutation` vocabulary, reimplemented independently in
-  `../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔮️oracle/🦀️component.rs` against a small hand-rolled
+  `../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔮️oracles/🦀️component.rs` against a small hand-rolled
   element tree, never importing this subset's own `xml_document_from_text`/`write_svg_xml` codec.
   Both the oracle's and the subject's results are read back by the SAME independent `quick-xml`
   projection before comparison, never against each other's own writing.

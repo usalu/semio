@@ -1,6 +1,6 @@
 //! 🎯️ 🎯️ Remodeling play app commands command — `place-gcp-observation`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::add_gcp_observation;
 use crate::op::RemodelingMutation;
 use crate::{GcpObservation, RemodelingSnapshot};
@@ -17,7 +17,7 @@ pub struct PlaceGcpObservation {
     pub pixel_y: f32,
 }
 
-pub fn handle(payload: &PlaceGcpObservation, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &PlaceGcpObservation, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     if !doc.snapshot.gcps.iter().any(|gcp| gcp.id == payload.gcp_id) {
         return Ok(Emit::default());
     }

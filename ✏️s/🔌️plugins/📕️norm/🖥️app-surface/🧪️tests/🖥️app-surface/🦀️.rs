@@ -1,6 +1,6 @@
 //! 🧪️ Every public norm editor/viewer wrapper renders its declared language-neutral surface inventory.
 
-use semio_framework_plugin::testkit::{close_registered_fixture_app, project_and_retire_fixture_tree};
+use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, project_and_retire_fixture_tree};
 use semio_framework_plugin::{AppDefinition, Locale, PanelTabDefinition, PluginApp, Terminology, ViewModel};
 use std::collections::BTreeSet;
 
@@ -144,8 +144,8 @@ struct RetainedFixture {
 macro_rules! assert_norm_pair {
     ($($artifact:path => ($editor:path, $viewer:path)),+ $(,)?) => {
         $(
-            semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<$editor, $viewer>().await;
-            semio_framework_plugin::testkit::assert_viewer_never_mutates::<$viewer>().await;
+            semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<$editor, $viewer>().await;
+            semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<$viewer>().await;
         )+
     };
 }

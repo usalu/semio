@@ -14,7 +14,7 @@ use store::EngineHandles;
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant — real per-command payload modules the way `✏️editor/🎮️commands/*` carries
 /// them would be pure ceremony for a surface that never dispatches anything through `handle`. Derives
-/// `Default` (`#[default]` on the sole variant) — required by `testkit::assert_viewer_never_mutates`.
+/// `Default` (`#[default]` on the sole variant) — required by `artifact_app_laws::assert_viewer_never_mutates`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum RasterViewCommand {
     #[default]

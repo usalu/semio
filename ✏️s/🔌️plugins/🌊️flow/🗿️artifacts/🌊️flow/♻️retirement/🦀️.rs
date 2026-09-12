@@ -11,8 +11,8 @@ mod snapshot;
 pub use snapshot::SnapshotRetirementFactory;
 
 /// 🏪️ Exact document catalog shared by every surface that owns a Flow document.
-pub fn store_owners() -> store::MemberStoreOwners<FlowSnapshot, FlowMutation> {
-    store::MemberStoreOwners::new(Arc::new(SnapshotRetirementFactory), Arc::new(SnapshotRetirementFactory), Arc::new(MutationRetirementFactory), Box::new(store::ArtifactStoreCursorDisposer::<FlowSnapshot, FlowMutation>::new()))
+pub fn store_owners() -> store::DocumentStoreOwners<FlowSnapshot, FlowMutation> {
+    store::DocumentStoreOwners::new(Arc::new(SnapshotRetirementFactory), Arc::new(SnapshotRetirementFactory), Arc::new(MutationRetirementFactory), Box::new(store::ArtifactStoreCursorDisposer::<FlowSnapshot, FlowMutation>::new()))
 }
 
 pub(crate) fn retire_scene(scene: FlowWorkingScene) -> FlowRetirement {

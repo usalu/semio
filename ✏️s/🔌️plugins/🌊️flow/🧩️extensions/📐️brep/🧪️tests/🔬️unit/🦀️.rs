@@ -346,7 +346,12 @@ async fn extension_bundle_extends_flow_and_evaluates_box() {
     let input_json = pack::json::to_string(&pack::json::object([("width".to_string(), json_number(1.0)), ("depth".to_string(), json_number(1.0)), ("height".to_string(), json_number(1.0))]));
     let req =
         pack::json::to_string(&pack::json::object([("operatorId".to_string(), pack::json::Value::from("brep.prim3d.box")), ("inputJson".to_string(), pack::json::Value::from(input_json)), ("nodeHash".to_string(), pack::json::Value::from(1_i64))]));
-    let out = pack::json::parse_bytes(&extension_invoke("evaluate", req.as_bytes()).await.unwrap()).unwrap();
+    // ⏱️ `evaluate` answers the BUDGET envelope, not a bare out dictionary — a primitive finishes
+    // inside its first round trip, so this one is `done` with its output inside
+    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`).
+    let envelope = pack::json::parse_bytes(&extension_invoke("evaluate", req.as_bytes()).await.unwrap()).unwrap();
+    assert_eq!(envelope.get("done").and_then(pack::json::Value::as_bool), Some(true));
+    let out = pack::json::parse(envelope.get("outputJson").and_then(pack::json::Value::as_str).unwrap()).unwrap();
     assert_eq!(out.get("solid").and_then(|value| value.get("$schema")).and_then(pack::json::Value::as_str), Some("geometry"));
 }
 
@@ -527,3 +532,10 @@ async fn every_kernel_operation_is_either_a_node_or_explicitly_unexposed() {
     }
     assert_eq!(seen.len(), BREP_KERNEL_OPERATIONS.len());
 }
+
+/// ⏱️ The BUDGET law of the `evaluate` capability — its own module because the law is about how a
+/// long set operation YIELDS, not about what any one operator computes. Mounted INSIDE this module
+/// so it shares the process-wide kernel serialisation and reset helpers above
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[path = "../🔬️evaluate-budget/🦀️.rs"]
+mod evaluate_budget;

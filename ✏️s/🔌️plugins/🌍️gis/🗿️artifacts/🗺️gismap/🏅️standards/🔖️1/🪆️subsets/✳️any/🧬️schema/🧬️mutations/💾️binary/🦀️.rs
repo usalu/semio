@@ -707,8 +707,8 @@ impl Drop for GisMapSnapshotCloneAuthority {
     }
 }
 
-pub fn gis_map_document_store_owners() -> store::MemberStoreOwners<GisMapSnapshot, GisMapMutation> {
-    store::MemberStoreOwners::new(
+pub fn gis_map_document_store_owners() -> store::DocumentStoreOwners<GisMapSnapshot, GisMapMutation> {
+    store::DocumentStoreOwners::new(
         std::sync::Arc::new(GisMapSnapshotRetirementFactory),
         std::sync::Arc::new(GisMapSnapshotRetirementFactory),
         std::sync::Arc::new(GisMapMutationRetirementFactory),

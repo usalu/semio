@@ -3,7 +3,7 @@
 // #endregion 🧲️Header
 
 //#region 🔖️CatalogIcons
-import { ICONS, isIconName, type IconName } from "../🔣️icons/🤖️generated/🟦️icons.ts";
+import { ICONS, isIconName, type IconName } from "../🔣️icons/🤖️generated/🖼️icons/🟦️.ts";
 import type { UiThemeIcons } from "../../🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts";
 
 /** @emoji 🖼️ Resolves catalog icon SVG markup with optional theme aliases and variants. */
@@ -25,7 +25,7 @@ export function resolveCatalogIconNameFromTheme(name: IconName, icons: UiThemeIc
 //#endregion 🔖️CatalogIcons
 
 //#region 🔖️MetabolismIcons
-import { METABOLISM_ICONS, isMetabolismIconName, type MetabolismIconName } from "../🌱️metabolism/🔣️icons/🤖️generated/🟦️metabolism_icons.ts";
+import { METABOLISM_ICONS, isMetabolismIconName, type MetabolismIconName } from "../🌱️metabolism/🔣️icons/🤖️generated/🖼️icons/🟦️.ts";
 
 /** @emoji 🖼️ Resolves metabolism icon SVG markup with optional theme aliases and variants. */
 export function resolveMetabolismIconSvgFromTheme(name: MetabolismIconName, icons: UiThemeIcons | undefined): string {

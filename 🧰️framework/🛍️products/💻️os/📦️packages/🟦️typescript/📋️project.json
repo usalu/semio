@@ -4,7 +4,7 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧫️fixtures/**/*",
       "{projectRoot}/**/*"

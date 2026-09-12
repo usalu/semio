@@ -1,9 +1,9 @@
 //! 📽️ Sequence play app — the main node-graph window: the editable step/flow canvas.
 
-use crate::editor::sequence::config::SequenceConfig;
-use crate::editor::sequence::host_from_snapshot;
-use crate::SequenceSnapshot;
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use super::config::SequenceMainWindowConfig;
+use crate::editor::sequence::host_from_fixture;
+use crate::SequenceFixture;
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, Viewport2d, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_WINDOW_MAIN: &str = "sequence-main";
@@ -68,11 +68,11 @@ fn fixture_to_workflow(fixture: &semio_framework_artifact_infinite_dag::DagFixtu
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiAssemblyResult<BuiltNode> {
-    let mut host = host_from_snapshot(fixture);
+pub fn render(fixture: &SequenceFixture, config: &SequenceMainWindowConfig) -> UiAssemblyResult<BuiltNode> {
+    let mut host = neural_engine::ColdOwner::new(host_from_fixture(fixture));
     host.layout_expanded_slots();
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
-    let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
+    let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
     // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) and
     // `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either

@@ -8,7 +8,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   under, and the engine-owned results — not a point cloud or a mesh file. A reader of COLMAP, LAS or
   PLY output would therefore be judging a different artifact, and nothing reads `.dsl.semio`. That is
   recorded as the `remodeling-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`. That decision is narrowed to an empty
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`. That decision is narrowed to an empty
   `capabilities` list rather than deleted (it already was, by a prior shard of this same ticket),
   because its own investigation remains the honest record of what was checked; a dated note is
   appended recording that the `asset://` blocker it named is now resolved.

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Semio.Framework.Ui.Styling</RootNamespace>
+    <AssemblyName>Semio.Framework.Ui.Styling</AssemblyName>
+    <PackageId>Semio.Framework.Ui.Styling</PackageId>
+    <Version>0.1.0</Version>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <IsPackable>true</IsPackable>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../🎨️palette/🔷️.cs" Link="🎨️palette/🔷️.cs" />
+  </ItemGroup>
+</Project>

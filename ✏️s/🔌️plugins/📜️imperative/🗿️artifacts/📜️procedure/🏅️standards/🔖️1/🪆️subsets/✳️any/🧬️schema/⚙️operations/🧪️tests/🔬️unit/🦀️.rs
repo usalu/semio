@@ -2,7 +2,7 @@ use super::*;
 use crate::schema::default_snapshot;
 use crate::Dictionary;
 use neural_engine::{Atom, Value};
-use protocol::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 use protocol::SemanticMutation;
 
 use std::collections::BTreeMap;
@@ -27,7 +27,7 @@ async fn delete_step_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn delete_step_missing_target_is_error() {
     let base = default_snapshot();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &delete_step(PathRef::default(), "step-missing".into())).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &delete_step(PathRef::default(), "step-missing".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -39,7 +39,7 @@ async fn reorder_steps_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn reorder_steps_missing_target_is_error() {
     let base = default_snapshot();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &reorder_steps(PathRef::default(), "step-missing".into(), 0)).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &reorder_steps(PathRef::default(), "step-missing".into(), 0)).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -52,14 +52,14 @@ async fn edit_step_params_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn edit_step_params_missing_target_is_error() {
     let base = default_snapshot();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &edit_step_params(PathRef::default(), "step-missing".into(), Dictionary::new())).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &edit_step_params(PathRef::default(), "step-missing".into(), Dictionary::new())).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_step_duplicate_id_fatal_never_applies() {
     let base = default_snapshot();
     let mutation = create_step(PathRef::default(), step("step-1", "log.print"));
-    protocol::os_spr::testkit::assert_fatal_never_applies(&protocol::Mutation::diff(&mutation, &base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&protocol::Mutation::diff(&mutation, &base)).await;
 }
 
 #[semio_framework_async_macros::async_test]

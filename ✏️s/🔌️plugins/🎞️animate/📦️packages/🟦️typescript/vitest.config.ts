@@ -17,7 +17,7 @@ export default defineConfig({
       { find: "@semio-tech/animate-presentation-core", replacement: resolve(repoRoot, "./✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️presentation/⚡️implementations/🟦️typescript/🟦️.ts") },
       { find: "@semio-tech/animate-js", replacement: resolve(root, "🟦️.ts") },
       { find: "@semio-tech/framework", replacement: resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
-      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
+      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
       {
         find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
         replacement: resolve(repoRoot, "./♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/🟦️.ts"),
@@ -28,7 +28,7 @@ export default defineConfig({
     name: "@semio-tech/animate-js",
     mode: "test",
     environment: "jsdom",
-    include: ["../../🎛️apps/🎬️presentation/⚡️implementations/🟦️typescript/🧪️index.test.ts"],
+    include: ["../../🎛️apps/🎬️presentation/🧪️tests/🧩️index/🟦️.ts"],
     coverage: { include: ["../../🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️.tsx"] },
     includeSource: [
       "../../🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️.tsx",
@@ -36,6 +36,6 @@ export default defineConfig({
       "../../🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🔨️modules/🔌️pdf-canvas-port/🟦️.ts",
     ],
     passWithNoTests: false,
-    setupFiles: ["../../🪨️tests/🟦️.ts"],
+    setupFiles: ["../../🧫️fixtures/🌐️browser-environment/🟦️.ts"],
   },
 });

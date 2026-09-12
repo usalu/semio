@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::lowpoly::testkit::{app, dispatch};
+use crate::editor::lowpoly::unit_tests::context::{app, dispatch};
 use crate::editor::lowpoly::LowpolyCommand;
 
 #[semio_framework_async_macros::async_test]
@@ -31,9 +31,9 @@ async fn add_primitive_supports_every_known_kind() {
 /// the extruded mesh is not reverted/lost in the process.
 #[semio_framework_async_macros::async_test]
 async fn add_primitive_after_mesh_edit_adds_object_and_preserves_the_edit() {
-    let mut a = crate::editor::lowpoly::testkit::app_with_registry().await;
+    let mut a = crate::editor::lowpoly::unit_tests::context::app_with_registry().await;
     let object_id = a.snapshot().expect("projection").objects[0].id.clone();
-    crate::editor::lowpoly::testkit::select_face(&mut a, &object_id, 0).await;
+    crate::editor::lowpoly::unit_tests::context::select_face(&mut a, &object_id, 0).await;
     dispatch(&mut a, LowpolyCommand::Extrude(crate::editor::lowpoly::commands::mesh_edit::extrude::Extrude { extrude_distance: None })).await;
     let extruded_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
     assert!(extruded_mesh.is_some(), "extrude must have produced a mesh handle to guard");

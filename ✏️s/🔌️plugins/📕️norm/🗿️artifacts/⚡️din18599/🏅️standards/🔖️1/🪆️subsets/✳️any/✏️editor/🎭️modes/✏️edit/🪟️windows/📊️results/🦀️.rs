@@ -6,6 +6,8 @@ use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_RESULTS: &str = "norm-din18599-results";
+crate::norm_results_window_config_owner!(ResultsWindowConfigOwner, WINDOW_RESULTS);
+
 pub const BODY_RESULTS: &str = "norm.din18599.play.results";
 //#endregion 🔖️Constants
 

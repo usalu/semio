@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::animate::commands::engagement_input;
-use crate::editor::animate::testkit::{dispatch, presentation_app};
+use crate::editor::animate::unit_tests::context::{dispatch, presentation_app};
 use crate::editor::animate::PresentationCommand;
 use semio_framework_plugin::Effect;
 
@@ -14,7 +14,7 @@ async fn engagement_input_stores_draft_and_submit_parses_grid_pattern() {
 
 #[semio_framework_async_macros::async_test]
 async fn engagement_submit_add_clear_and_copy_keywords() {
-    use semio_framework_plugin::testkit::meta;
+    use semio_framework_plugin::artifact_app_laws::meta;
     let mut app = presentation_app().await;
     dispatch(&mut app, PresentationCommand::EngagementSubmit(EngagementSubmit { value: "add".into() })).await;
     assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 1);
@@ -29,7 +29,7 @@ async fn engagement_submit_add_clear_and_copy_keywords() {
 
 #[semio_framework_async_macros::async_test]
 async fn engagement_submit_unrecognized_input_is_a_no_op() {
-    use semio_framework_plugin::testkit::meta;
+    use semio_framework_plugin::artifact_app_laws::meta;
     let mut app = presentation_app().await;
     let result = app.dispatch_typed(PresentationCommand::EngagementSubmit(EngagementSubmit { value: "gibberish".into() }), &meta("local")).await.expect("unrecognized");
     assert!(result.mutations.is_empty());

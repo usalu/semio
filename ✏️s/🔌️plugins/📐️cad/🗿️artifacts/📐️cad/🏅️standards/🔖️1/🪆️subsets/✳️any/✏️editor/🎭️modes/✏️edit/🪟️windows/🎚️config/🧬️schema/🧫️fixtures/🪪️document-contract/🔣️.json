@@ -1,0 +1,33 @@
+{
+  "valid": [{
+    "camera": {
+      "position": [12, -12, 8], "target": [0, 0, 0], "zoom": 1, "fov": 50,
+      "projection": {
+        "kind": "threePoint", "orthographicView": "top", "axonometricVariant": "isometric", "axonometricAngleA": 15, "axonometricAngleB": 12, "axonometricQuadrant": "ne",
+        "obliqueVariant": "cavalier", "obliqueAngle": 45, "obliqueDepth": 1, "onePointAxis": "y", "fov": 50, "twoPointShift": 0,
+        "curvilinearFov": 120, "curvilinearStrength": 1, "curvilinearMapping": "fisheye"
+      }
+    },
+    "sun": { "enabled": false, "azimuth": 45, "elevation": 35, "intensity": 0.85, "color": "#ffffff" },
+    "dislocateOptions": { "moveEnabled": true, "rotateEnabled": true }
+  }],
+  "invalid": [
+    { "kind": "unknown", "path": "locale", "value": "de" },
+    { "kind": "position", "value": [0, 1] },
+    { "kind": "sun", "value": null }
+  ],
+  "patch": [{ "op": "replace", "path": "/camera/zoom", "value": 2.5 }],
+  "patchedZoom": 2.5,
+  "ownership": {
+    "leftId": "cad-shape-left",
+    "rightId": "cad-shape-right",
+    "wrongId": "cad-building",
+    "cameraPosition": [18, -9, 6],
+    "cameraTarget": [1, 2, 3],
+    "cameraZoom": 2.5,
+    "projectionKind": "onePoint",
+    "projectionFov": 37,
+    "sunAzimuth": 123,
+    "rotateEnabled": false
+  }
+}

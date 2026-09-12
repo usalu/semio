@@ -1,4 +1,4 @@
-import mapping from "./🔣️.json";
+import mapping from "./🔣️.json" with { type: "json" };
 
 export const PLAYGROUND_LOCKED_EXAMPLE_ENV = "PLAYGROUND_LOCKED_EXAMPLE_ID";
 export const SEMIO_LOCKED_LOCALE_ENV = "SEMIO_LOCKED_LOCALE";

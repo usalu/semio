@@ -10,7 +10,7 @@ import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { shellFloorPaints, shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
 import { useSurface, SurfaceScope, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
-import { NavbarTrailingFullscreenSlot } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
+import { NavbarTrailingFullscreenSlot } from "../../🎯️targets/⚛️react/🟦️";
 // #endregion 🔌️Adapters
 
 // #region 🩺️Navbar

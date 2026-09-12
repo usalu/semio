@@ -1,11 +1,11 @@
 //! 🦀️ glTF 2.0 `🎞️animation` subset mutation case — Rust adapter. Covers the 4 kinds
-//! `../../🔮️oracle/🔣️.json`'s `gltf-2-0-animation` catalog declares: `create-animation`,
+//! `../../🔮️oracles/🔣️.json`'s `gltf-2-0-animation` catalog declares: `create-animation`,
 //! `delete-animation`, `move-animation`, `reorder-animations`. Every leaf's own `apply()`
 //! (`../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/{🌱️create,🗑️delete,🚚️move,🔀️reorder}/🦀️.rs`)
 //! stays physically owned by `♾️any` — `validate_mutation_leaf_source` requires the exact registered
 //! domain/operation owner beneath its aggregate mutation root, so this case reaches it by import. The
 //! oracle performs every kind by independent GLB/JSON-tree manipulation (`../../../♾️any/
-//! 🧪️oracle/🦀️.rs`, extended with these 4 kinds by this same change); the subject fully parses
+//! 🔮️oracles/🦀️.rs`, extended with these 4 kinds by this same change); the subject fully parses
 //! each kind's own committed fixture into `GltfSnapshot` via `parse_gltf_document` and re-serializes
 //! with `serialize_gltf_document` alone, dispatching through each leaf's own typed `apply()`
 //! function directly. `delete-animation`'s inverse is special-cased on both sides (see the feature
@@ -151,7 +151,7 @@ mod subject {
     /// ↩️ `delete-animation`'s own inverse, restoring `document/animations` DIRECTLY from `before` —
     /// the exact typed values this snapshot already holds, not a same-shaped substitute a second
     /// `create-animation` call could only approximate (its own payload carries no field content —
-    /// see the feature file's own doc comment). Mirrors `../../../♾️any/🔮️oracle/🦀️.rs`'s
+    /// see the feature file's own doc comment). Mirrors `../../../♾️any/🔮️oracles/🦀️.rs`'s
     /// `undo_delete_animation` on the independent-reader side.
     fn undo_delete_animation(before: &GltfSnapshot, mutated: &GltfSnapshot) -> GltfSnapshot {
         let mut restored = mutated.clone();

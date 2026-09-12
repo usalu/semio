@@ -111,7 +111,7 @@ pub fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every [`NoteMutation`] variant, in declaration order — the vocabulary the
-/// `note-1-any` mutation catalog (`../../🔮️oracle/🔣️.json`) declares and the
+/// `note-1-any` mutation catalog (`../../🔮️oracles/🔣️.json`) declares and the
 /// exhaustive `mutate-*` case measures itself against (9 document-root scalars, 3 asset-pool kinds and 21 block-tree kinds). The framework never
 /// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest
 /// against both the enum and the committed catalog.

@@ -18,7 +18,7 @@ import { type PanelTabNode, usePanelTabSelection, findPanelTabNode, PanelTabBar,
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
 import { CanvasSkeleton } from "../🦴️Skeletons/🟦️.tsx";
 import { LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
-import { type Anchor, ANCHORS, UiMobileProvider, GhostProvider, PanelGhostRoot, chromeStatusBorderClass, shellChromeFrameLayerClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
+import { type Anchor, ANCHORS, UiMobileProvider, GhostProvider, PanelGhostRoot, chromeStatusBorderClass, shellChromeFrameLayerClass } from "../../🎯️targets/⚛️react/🟦️";
 // #endregion 🔌️Adapters
 
 // #region 🪨️Layout

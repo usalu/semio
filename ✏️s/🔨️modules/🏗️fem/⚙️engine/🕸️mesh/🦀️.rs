@@ -50,7 +50,7 @@ pub struct MountedPlanarPolygon {
 }
 
 impl MountedPlanarPolygon {
-    fn new() -> Self {
+    const fn new() -> Self {
         Self { points: [[0.0; 2]; MOUNTED_DOMAIN_POINT_SLOTS], admitted: 0, len: 0 }
     }
 
@@ -102,7 +102,7 @@ pub struct MountedPlanarDomain {
 
 impl MountedPlanarDomain {
     pub fn new() -> Self {
-        Self { outer: MountedPlanarPolygon::new(), holes: std::array::from_fn(|_| MountedPlanarPolygon::new()), admitted_holes: 0, hole_count: 0, close_hole: 0 }
+        Self { outer: MountedPlanarPolygon::new(), holes: [const { MountedPlanarPolygon::new() }; MOUNTED_DOMAIN_HOLE_SLOTS], admitted_holes: 0, hole_count: 0, close_hole: 0 }
     }
 
     pub fn admit_outer_one(&mut self, target: usize) -> Result<bool, MountedDomainFault> {
@@ -1208,8 +1208,6 @@ pub struct MeshJob {
     prepared_input: Option<(Vec<[f64; 2]>, Vec<Edge>)>,
     triangulation: Option<OwnedTriangulation>,
     constraints: Vec<Edge>,
-    fixed_constraints: Vec<Edge>,
-    indexed_edges: Vec<Edge>,
     indexed_constraint_edges: Vec<IndexedConstraintEdge>,
     edge_index_cursor: usize,
     edge_index_local_cursor: usize,
@@ -1263,8 +1261,6 @@ impl MeshJob {
             prepared_input: None,
             triangulation: None,
             constraints: Vec::new(),
-            fixed_constraints: Vec::new(),
-            indexed_edges: Vec::new(),
             indexed_constraint_edges: Vec::new(),
             edge_index_cursor: 0,
             edge_index_local_cursor: 0,
@@ -1485,7 +1481,7 @@ impl MeshJob {
                         continue;
                     }
                 },
-                6 => match close_vec_owner_step(&mut self.fixed_constraints, maximum_bytes) {
+                6 => match close_vec_owner_step(&mut self.mesh.points, maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -1493,7 +1489,7 @@ impl MeshJob {
                         continue;
                     }
                 },
-                7 => match close_vec_owner_step(&mut self.indexed_edges, maximum_bytes) {
+                7 => match close_vec_owner_step(&mut self.mesh.tris, maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -1501,7 +1497,7 @@ impl MeshJob {
                         continue;
                     }
                 },
-                8 => match close_vec_owner_step(&mut self.mesh.points, maximum_bytes) {
+                8 => match close_vec_owner_step(&mut self.point_index, maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -1509,23 +1505,7 @@ impl MeshJob {
                         continue;
                     }
                 },
-                9 => match close_vec_owner_step(&mut self.mesh.tris, maximum_bytes) {
-                    Ok(Some(step)) => step,
-                    Err(()) => return (false, 0, 0),
-                    Ok(None) => {
-                        self.close_lane += 1;
-                        continue;
-                    }
-                },
-                10 => match close_vec_owner_step(&mut self.point_index, maximum_bytes) {
-                    Ok(Some(step)) => step,
-                    Err(()) => return (false, 0, 0),
-                    Ok(None) => {
-                        self.close_lane += 1;
-                        continue;
-                    }
-                },
-                11 => match close_vec_owner_step(&mut self.indexed_constraint_edges, maximum_bytes) {
+                9 => match close_vec_owner_step(&mut self.indexed_constraint_edges, maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -2102,7 +2082,7 @@ impl InteractiveJob for MeshJob {
                         self.constraints = remap_constraints(&prepared_points, &triangulation.points[..triangulation.input_len], input_constraints);
                         self.refinement_steps = triangulation.input_len.saturating_sub(self.input_count);
                         self.triangulation = Some(triangulation);
-                        self.stage = MeshJobStage::ReserveEdgeAuthorities;
+                        self.stage = MeshJobStage::InsertBoundary;
                         return StepOutcome::Yield;
                     }
                     let triangulation = match OwnedTriangulation::begin_mounted(prepared_points, self.maximum_triangles) {
@@ -2119,26 +2099,21 @@ impl InteractiveJob for MeshJob {
                     Err(error) => return Self::fail(error.to_string().into_bytes()),
                 };
                 if initialized {
-                    self.stage = MeshJobStage::ReserveEdgeAuthorities;
+                    self.stage = MeshJobStage::InsertBoundary;
                 }
                 StepOutcome::Yield
             }
             MeshJobStage::ReserveEdgeAuthorities => {
-                if self.maximum_triangles == usize::MAX {
-                    self.stage = MeshJobStage::InsertBoundary;
-                    return StepOutcome::Yield;
-                }
-                let edge_capacity = self.maximum_triangles.saturating_mul(12).saturating_add(3);
-                if self.fixed_constraints.try_reserve_exact(self.maximum_triangles.saturating_mul(3)).is_err()
-                    || self.indexed_edges.try_reserve_exact(edge_capacity).is_err()
+                let Some(edge_capacity) = self.triangulation.as_ref().and_then(|triangulation| triangulation.triangles.len().checked_mul(3)) else {
+                    return Self::fail(b"mesh-edge-authority-face-capacity".to_vec());
+                };
+                if self.maximum_triangles != usize::MAX && edge_capacity.checked_mul(size_of::<IndexedConstraintEdge>()).is_none_or(|bytes| bytes > 16_384)
                     || self.indexed_constraint_edges.try_reserve_exact(edge_capacity).is_err()
-                    || self.fixed_constraints.capacity().checked_mul(size_of::<Edge>()).is_none_or(|bytes| bytes > 4_096)
-                    || self.indexed_edges.capacity().checked_mul(size_of::<Edge>()).is_none_or(|bytes| bytes > 4_096)
-                    || self.indexed_constraint_edges.capacity().checked_mul(size_of::<IndexedConstraintEdge>()).is_none_or(|bytes| bytes > 16_384)
+                    || self.maximum_triangles != usize::MAX && self.indexed_constraint_edges.capacity().checked_mul(size_of::<IndexedConstraintEdge>()).is_none_or(|bytes| bytes > 16_384)
                 {
                     return Self::fail(b"mesh-fixed-edge-authority-backing".to_vec());
                 }
-                self.stage = MeshJobStage::InsertBoundary;
+                self.stage = MeshJobStage::IndexEdges;
                 StepOutcome::Yield
             }
             MeshJobStage::InsertBoundary => {
@@ -2146,7 +2121,7 @@ impl InteractiveJob for MeshJob {
                 if triangulation.insert_cursor < triangulation.input_len {
                     triangulation.insert_next();
                 } else if triangulation.advance_finish_insertion() {
-                    self.stage = MeshJobStage::IndexEdges;
+                    self.stage = MeshJobStage::ReserveEdgeAuthorities;
                 }
                 if triangulation.allocation_fault {
                     return Self::fail(b"mesh-fixed-triangulation-workspace-backing".to_vec());
@@ -2286,7 +2261,7 @@ impl InteractiveJob for MeshJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.publication_writer.is_none() && self.close_lane > 11
+        self.publication_writer.is_none() && self.close_lane > 9
     }
 }
 // #endregion 🧵️IncrementalMeshJob

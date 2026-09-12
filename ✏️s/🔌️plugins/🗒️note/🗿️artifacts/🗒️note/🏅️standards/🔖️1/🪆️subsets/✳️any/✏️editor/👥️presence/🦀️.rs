@@ -69,8 +69,8 @@ impl ArtifactPack for NotePresence {
             return Ok(Self::default());
         }
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
@@ -84,6 +84,58 @@ impl ArtifactPack for NotePresence {
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;
+
+//#region 🧹️Retirement
+const _: () = assert!(!std::mem::needs_drop::<NotePresence>());
+
+fn note_presence_is_terminal_empty(presence: &NotePresence) -> bool {
+    presence == &NotePresence::default()
+}
+
+/// 👥️ Returns the exact local or peer Note presence root in one bounded item.
+pub struct NotePresenceRetirementFactory;
+
+impl store::SnapshotRetirementFactory<NotePresence> for NotePresenceRetirementFactory {
+    fn retire(&self, root: std::sync::Arc<NotePresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
+        Box::new(NotePresenceRetirement(std::mem::ManuallyDrop::new(Some(root))))
+    }
+}
+
+struct NotePresenceRetirement(std::mem::ManuallyDrop<Option<std::sync::Arc<NotePresence>>>);
+
+impl store::ErasedSnapshotRetirement for NotePresenceRetirement {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if self.0.is_none() {
+            return Ok(store::SnapshotRetirementStep::Complete);
+        }
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
+        drop(self.0.take());
+        Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.0.is_none()
+    }
+}
+
+impl Drop for NotePresenceRetirement {
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            assert!(self.0.is_none(), "Note presence must return its exact root before drop");
+        }
+    }
+}
+
+/// 🧹️ Replaces the live local root with Note's exact empty presence and retires its peer roster.
+pub fn note_presence_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<NotePresence, NotePresenceMutation>>> {
+    Box::new(
+        semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(NotePresence::default()), note_presence_is_terminal_empty)
+            .expect("default Note presence is terminal-empty"),
+    )
+}
+//#endregion 🧹️Retirement
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]

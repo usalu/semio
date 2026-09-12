@@ -1,0 +1,65 @@
+{
+  "cases": [
+    {
+      "id": "first-diagonal",
+      "maximumTriangles": 42,
+      "triangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          2,
+          3
+        ]
+      ],
+      "expected": {
+        "slots": 6,
+        "edges": 5,
+        "boundary": 4,
+        "interior": 1
+      }
+    },
+    {
+      "id": "second-diagonal",
+      "maximumTriangles": 42,
+      "triangles": [
+        [
+          0,
+          1,
+          3
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "expected": {
+        "slots": 6,
+        "edges": 5,
+        "boundary": 4,
+        "interior": 1
+      }
+    },
+    {
+      "id": "single-face-large-admission",
+      "maximumTriangles": 42,
+      "triangles": [
+        [
+          0,
+          1,
+          2
+        ]
+      ],
+      "expected": {
+        "slots": 3,
+        "edges": 3,
+        "boundary": 3,
+        "interior": 0
+      }
+    }
+  ]
+}

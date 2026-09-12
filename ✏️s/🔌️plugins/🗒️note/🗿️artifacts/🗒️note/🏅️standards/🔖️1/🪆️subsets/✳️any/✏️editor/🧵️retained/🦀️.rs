@@ -1,7 +1,6 @@
 //! 🧵️ Note-owned retained command microstate and exact publication contracts.
 
 use crate::editor::note::commands::{ink_apply_events, patch_blocks};
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::editor::note::{NoteCommand, NoteDispatchCtx, NotePlayApp, NOTE_INTERACTION_BLOCKS};
 use crate::schema::NoteIdOwner;
 use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
@@ -187,7 +186,7 @@ struct NoteCommandWork {
     cursor: usize,
     replay_target: Option<usize>,
     projection: Option<NoteSnapshot>,
-    accumulated: Emit<crate::op::NoteMutation, NoteConfigMutation>,
+    accumulated: Emit<crate::op::NoteMutation, semio_framework_plugin::NoConfigMutation>,
     ephemeral: EphemeralEmit<EditorApp<NotePlayApp>>,
     id_owner: Option<NoteIdOwner>,
     workspace_identity: u64,
@@ -206,7 +205,7 @@ impl NoteCommandWork {
         Ok(Self { tool_id, units, cursor: 0, replay_target: None, projection: None, accumulated: Emit::default(), ephemeral: EphemeralEmit::default(), id_owner: Some(NoteIdOwner::new(scope, 0)), workspace_identity, complete: false, closing: false })
     }
 
-    fn append(&mut self, mut emit: Emit<crate::op::NoteMutation, NoteConfigMutation>) -> Result<(), Fault> {
+    fn append(&mut self, mut emit: Emit<crate::op::NoteMutation, semio_framework_plugin::NoConfigMutation>) -> Result<(), Fault> {
         if self.accumulated.description.is_some() && emit.description.is_some() && self.accumulated.description != emit.description {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.description"), "Note semantic units produced incompatible edit descriptions"));
         }
@@ -1932,36 +1931,6 @@ impl NoteSnapshotMaterializationCursor {
 //#endregion 🕸️TextChildMaterialization
 
 //#region 📬️StorePreparation
-const NOTE_STORE_PREPARATION_ITEMS: usize = 4;
-const NOTE_STORE_PREPARATION_BYTES: usize = 262_144;
-
-type NoteStorePrepare<P, M> = fn(&P, M) -> Result<(P, Vec<M>, M), String>;
-
-pub struct NoteStoreOneItemPreparationFactory<P, M> {
-    lane: store::HistoryLane,
-    prepare: NoteStorePrepare<P, M>,
-}
-
-impl<P, M> NoteStoreOneItemPreparationFactory<P, M> {
-    fn new(lane: store::HistoryLane, prepare: NoteStorePrepare<P, M>) -> Self {
-        Self { lane, prepare }
-    }
-}
-
-struct NoteStoreOneItemPreparation<P, M> {
-    base: Option<store::SnapshotRead<P>>,
-    mutation: Option<M>,
-    description: Option<String>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepare: NoteStorePrepare<P, M>,
-    candidate: Option<(P, Vec<M>, M)>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
-    phase: u8,
-    cancelled: bool,
-    closing: bool,
-}
-
 fn note_semantic_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
     let id = format!("note-{}-{}", authority.operation().0, authority.next_sequence_number());
     protocol::Edit {
@@ -1987,126 +1956,6 @@ fn note_semantic_edit<M>(forward: M, inverse: Vec<M>, description: Option<String
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
         finished_at: None,
-    }
-}
-
-impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for NoteStoreOneItemPreparationFactory<P, M>
-where
-    P: Clone + Send + Sync + 'static,
-    M: Clone + dsl::ToValue + Send + Sync + 'static,
-{
-    fn preflight(&self, _mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != self.lane || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Note one-item preparation rejected its lane or description envelope".into());
-        }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: NOTE_STORE_PREPARATION_ITEMS, retained_bytes: NOTE_STORE_PREPARATION_BYTES })
-    }
-
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
-        if request.lane != self.lane
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-        {
-            return Err(request);
-        }
-        Ok(Box::new(NoteStoreOneItemPreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            description: request.description,
-            authority: Some(request.authority),
-            prepare: self.prepare,
-            candidate: None,
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            phase: 0,
-            cancelled: false,
-            closing: false,
-        }))
-    }
-}
-
-impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for NoteStoreOneItemPreparation<P, M>
-where
-    P: Clone + Send + Sync + 'static,
-    M: Clone + dsl::ToValue + Send + Sync + 'static,
-{
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        match self.phase {
-            0 => {
-                let base = self.base.as_ref().ok_or_else(|| "Note preparation lost its exact base root".to_string())?;
-                let mutation = self.mutation.take().ok_or_else(|| "Note preparation lost its mutation owner".to_string())?;
-                self.candidate = Some((self.prepare)(base.get(), mutation)?);
-                self.phase = 1;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 0, digest: [0; 32] };
-                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
-            }
-            1 => {
-                let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Note preparation lost its semantic candidate".to_string())?;
-                let authority = self.authority.as_ref().ok_or_else(|| "Note preparation lost its Store authority".to_string())?;
-                let edit = note_semantic_edit(forward, inverse, self.description.take(), authority);
-                let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 0, digest: prepared.edit_digest() };
-                self.prepared = Some(prepared);
-                self.phase = 2;
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-            }
-            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)),
-        }
-    }
-
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
-        self.prepared.as_ref()
-    }
-
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
-        self.prepared.take()
-    }
-
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err("Note preparation could not return its exact base root".into());
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 
@@ -2384,9 +2233,6 @@ pub fn artifact_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStore
     std::sync::Arc::new(NoteRootScalarPreparationFactory)
 }
 
-pub fn config_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<NoteConfig, NoteConfigMutation>> {
-    std::sync::Arc::new(NoteStoreOneItemPreparationFactory::new(store::HistoryLane::Document, |base: &NoteConfig, mutation: NoteConfigMutation| Ok((mutation.diff(base).into_parts().0, mutation.inverse(base), mutation))))
-}
 //#endregion 📬️StorePreparation
 
 //#region 🧪️MaterializationTests
@@ -2394,5 +2240,3 @@ pub fn config_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOn
 #[path = "🧪️tests/🔬️materialization/🦀️.rs"]
 mod materialization_tests;
 //#endregion 🧪️MaterializationTests
-
-use protocol::Mutation;

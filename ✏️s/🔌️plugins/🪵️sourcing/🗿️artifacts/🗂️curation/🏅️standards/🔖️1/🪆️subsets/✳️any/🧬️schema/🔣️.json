@@ -11,9 +11,9 @@
   ],
   "properties": {
     "catalog": {
-      "type": "object",
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/kit",
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio.kit"
+      "x-semio-child": "s.stdio.semio"
     },
     "stockExtra": {
       "type": "array",
@@ -188,7 +188,9 @@
         },
         "availability": {
           "type": "integer",
-          "format": "uint32"
+          "format": "uint32",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "geometry": {
           "$ref": "#/$defs/GeometryRecipe"
@@ -225,7 +227,9 @@
         },
         "availability": {
           "type": "integer",
-          "format": "uint32"
+          "format": "uint32",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "geometry": {
           "$ref": "#/$defs/GeometryRecipe"
@@ -246,67 +250,9 @@
         },
         "count": {
           "type": "integer",
-          "format": "uint32"
-        }
-      }
-    },
-    "SortDirection": {
-      "title": "SortDirection",
-      "type": "string",
-      "enum": [
-        "asc",
-        "desc"
-      ]
-    },
-    "TableSort": {
-      "title": "TableSort",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "columnId",
-        "direction"
-      ],
-      "properties": {
-        "columnId": {
-          "type": "string"
-        },
-        "direction": {
-          "$ref": "#/$defs/SortDirection"
-        }
-      }
-    },
-    "Filters": {
-      "title": "Filters",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "query",
-        "moduleIds",
-        "typologyPath",
-        "minAvailability"
-      ],
-      "properties": {
-        "query": {
-          "type": "string"
-        },
-        "moduleIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "typologyPath": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "minAvailability": {
-          "type": "integer",
-          "format": "uint32"
-        },
-        "sort": {
-          "$ref": "#/$defs/TableSort"
+          "format": "uint32",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     }

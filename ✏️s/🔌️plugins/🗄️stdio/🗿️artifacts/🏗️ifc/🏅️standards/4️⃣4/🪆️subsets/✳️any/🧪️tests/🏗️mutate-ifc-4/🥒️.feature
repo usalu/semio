@@ -19,7 +19,7 @@ Feature: Apply every typed IFC4 mutation to a real-world exchange structure
   reader; that registration is repeated here for this subset (own catalog entry, own capability,
   `ifc-4-any-mutate`), and it applies unchanged because `ruststep`'s `ast` module parses the Part-21
   GRAMMAR only -- it compiles no generated IFC4 EXPRESS schema module at all, so it is genuinely
-  schema-agnostic. This subset's own oracle test (`../../🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracle/
+  schema-agnostic. This subset's own oracle test (`../../🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracles/
   🦀️component.rs`'s `parses_the_real_fixture_and_projects_it`) feeds it this real 24792-entity
   fixture and it parses with zero errors.
 

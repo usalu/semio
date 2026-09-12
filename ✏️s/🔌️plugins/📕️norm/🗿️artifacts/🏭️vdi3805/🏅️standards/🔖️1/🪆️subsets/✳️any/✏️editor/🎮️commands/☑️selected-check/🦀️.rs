@@ -1,10 +1,11 @@
 //! ☑️ VDI 3805 play app command — point the inspection panel at a different computed check.
 //!
-//! 📌️ Config-only: it emits `config_mutations`, never document operations — the selected row is view
+//! 📌️ The editor router emits one exact Results `window_config_mutation`; this payload handler keeps the application lanes empty — the selected row is view
 //! state, not compliance content. Declared as a `view_action`, so the registry's kind discipline
 //! actively rejects it if it ever starts emitting document operations.
 
-use crate::config::{NormConfig, NormConfigMutation};
+use crate::results_window_config::{ChangeSelectedCheckIndex, NormResultsWindowConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::Vdi3805Mutation;
 use crate::Vdi3805Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -20,8 +21,12 @@ pub struct SetSelectedCheckIndex {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &SetSelectedCheckIndex, _doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_selected_check_index::<Vdi3805Mutation>(payload.index)
+pub fn window_mutation(payload: &SetSelectedCheckIndex) -> NormResultsWindowConfigMutation {
+    ChangeSelectedCheckIndex { index: payload.index }.into()
+}
+
+pub fn handle(_payload: &SetSelectedCheckIndex, _doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Vdi3805Mutation, NoConfigMutation>, Fault> {
+    Ok(Emit::default())
 }
 //#endregion 🔖️Handler
 

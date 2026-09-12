@@ -272,21 +272,21 @@ async fn out_of_range_payloads_are_refused_before_they_reach_the_vocabulary() {
 }
 
 //#region 🧵️DispatchLaw
-/// 🧬️ `testkit::new_app_with_registry` needs the `App { definition, examples }` shape, which is
+/// 🧬️ `artifact_app_laws::new_app_with_registry` needs the `App { definition, examples }` shape, which is
 /// also the exact shape the plugin root registers — so a drift between the two would be caught
 /// here rather than at boot.
-pub(crate) fn energy_model_manifest_for_testkit() -> semio_framework_plugin::App {
+pub(crate) fn energy_model_manifest_for_tests() -> semio_framework_plugin::App {
     semio_framework_plugin::App { definition: create_energy_model_editor(), examples: examples().into_iter().map(Into::into).collect() }
 }
 
 /// 🧵️ A registry-backed app bound to the live runtime instance `meta("local")` addresses. The
-/// registry-LESS `testkit::new_app` cannot be used here: it builds an app with no
+/// registry-LESS `artifact_app_laws::new_app` cannot be used here: it builds an app with no
 /// `AppActionRegistry`, so `migrated_tool_ids()` is empty and `validate_tool_job_rows` fails
 /// closed with `interactive-job.catalog-authority` the moment any proof is declared.
 async fn dispatchable_app() -> semio_framework_plugin::VcsArtifactApp<EditorApp<EnergyModelEditor>> {
     use semio_framework_plugin::PluginApp as _;
-    let mut app = semio_framework_plugin::testkit::new_app_with_registry::<EditorApp<EnergyModelEditor>>(energy_model_manifest_for_testkit).await;
-    app.bind_instance_id(semio_framework_plugin::testkit::meta("local").instance_id).await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<EnergyModelEditor>>(energy_model_manifest_for_tests).await;
+    app.bind_instance_id(semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
     app
 }
 
@@ -307,7 +307,7 @@ async fn every_declared_verb_dispatches_without_an_interactive_job_fault() {
     for tool_id in ENERGY_MODEL_RETAINED_TOOL_IDS {
         let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is declared on no window kind"));
         let staged = effective_action_args(&action.args, &DslValue::Object(Vec::new()), None);
-        match app.handle_action(tool_id, Some(&staged), &semio_framework_plugin::testkit::meta("local")).await {
+        match app.handle_action(tool_id, Some(&staged), &semio_framework_plugin::artifact_app_laws::meta("local")).await {
             Ok(_) => reached += 1,
             Err(fault) => {
                 assert!(!fault.code.0.as_str().starts_with("interactive-job."), "action {tool_id} never reached the app: {} — {}", fault.code.0.as_str(), fault.message);
@@ -327,7 +327,7 @@ async fn renaming_the_model_dispatches_cleanly_through_the_real_action_route() {
     use semio_framework_plugin::PluginApp as _;
     let mut app = dispatchable_app().await;
     let args = DslValue::Object(vec![("id".to_string(), DslValue::String("name".to_string())), ("value".to_string(), DslValue::String("BESTEST 600".to_string()))]);
-    let result = app.handle_action(SET_NODE_ACTION_ID, Some(&args), &semio_framework_plugin::testkit::meta("local")).await.expect("set-node dispatches without a fault");
+    let result = app.handle_action(SET_NODE_ACTION_ID, Some(&args), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("set-node dispatches without a fault");
     assert!(!result.mutations.is_empty() || app.has_pending_typed_operations(), "the rename neither published nor retained an operation");
 }
 //#endregion 🧵️DispatchLaw

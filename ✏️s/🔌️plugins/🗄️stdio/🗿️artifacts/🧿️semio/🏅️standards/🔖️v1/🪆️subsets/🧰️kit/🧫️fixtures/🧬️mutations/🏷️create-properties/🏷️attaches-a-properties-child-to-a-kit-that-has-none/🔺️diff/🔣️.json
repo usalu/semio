@@ -2,7 +2,7 @@
   "properties": {
     "childId": "props-1",
     "target": {
-      "artifactId": "kit-properties",
+      "artifactId": "props-1",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

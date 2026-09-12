@@ -204,6 +204,41 @@
         "forwardAllArgs": true
       }
     },
+    "generate-playground-session": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": [
+        "@semio-tech/plugin-registry:generate"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate playground-session"
+      }
+    },
+    "preview-playground-session": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate playground-session preview"
+      }
+    },
+    "check-playground-session": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": [
+        "@semio-tech/plugin-registry:check-generated"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate playground-session check"
+      }
+    },
     "generate-scale-fixture": {
       "executor": "nx:run-commands",
       "options": {

@@ -302,7 +302,7 @@ async fn change_area_m2_non_finite_is_fatal() {
     let base = En1991Snapshot::default();
     let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: f64::INFINITY });
     let outcome = mutation.diff(&base);
-    protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
     assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
 }
 
@@ -319,6 +319,6 @@ async fn change_category_same_value_is_no_op() {
 async fn change_area_m2_is_deterministic() {
     let base = En1991Snapshot::default();
     let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: 77.0 });
-    protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_deterministic(&base, &mutation).await;
 }
 //#endregion 🔖️OutcomeLaws

@@ -12,11 +12,11 @@ role = "tool"
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [[bin]]
 name = "semio"
-path = "📦️main.rs"
+path = "../../🚪️entrypoint/🦀️.rs"
 
 [dependencies]
 ui_tui = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["tui-terminal"], package = "semio-framework-ui" }

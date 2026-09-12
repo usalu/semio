@@ -1,6 +1,6 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-mesh-params`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::update_mesh_params;
 use crate::op::RemodelingMutation;
 use crate::{MeshParams, RemodelingSnapshot};
@@ -21,7 +21,7 @@ pub struct SetMeshParams {
     pub self_intersection_check: bool,
 }
 
-pub fn handle(payload: &SetMeshParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetMeshParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_mesh_params(MeshParams {
         tsdf_voxel_size_mm: payload.tsdf_voxel_size_mm,
         tsdf_truncation_mm: payload.tsdf_truncation_mm,

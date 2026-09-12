@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::fem3d::commands::{add_frame, add_material, add_section, add_solid};
-use crate::editor::fem3d::testkit::{dispatch, fem3d_empty_app, Fem3dApp};
+use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_empty_app, Fem3dApp};
 use crate::editor::fem3d::Fem3dCommand;
 
 #[semio_framework_async_macros::async_test]

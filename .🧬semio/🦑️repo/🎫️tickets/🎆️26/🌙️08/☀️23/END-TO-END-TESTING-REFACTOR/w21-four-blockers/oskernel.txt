@@ -1,2 +1,0 @@
-[oskernel] attempt 1 rc=0 19:27:11
-OSKERNEL-GREEN 19:27:11

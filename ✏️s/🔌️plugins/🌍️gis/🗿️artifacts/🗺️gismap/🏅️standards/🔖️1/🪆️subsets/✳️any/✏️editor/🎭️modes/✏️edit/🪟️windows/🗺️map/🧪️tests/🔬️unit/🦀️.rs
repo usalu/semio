@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::gis2d::terminology::gis2d_labels;
-use crate::editor::gis2d::testkit::{app, close, main_window_measures, render as render_body};
+use crate::editor::gis2d::unit_tests::context::{app, close, main_window_measures, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_gis_map_scene() {
@@ -23,7 +23,7 @@ async fn render_canvas_uses_absolute_tile_urls_when_env_set() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_window_collects_every_option_node_exactly_once() {
-    let config = Gis2dConfig::default();
+    let config = MapWindowConfig::default();
     let measures = window_measures(&config, gis2d_labels(&semio_framework_plugin::ViewModel::default()));
     assert_eq!(measures.len(), 5, "3 selects + the layers and layer-weights groups");
     let mut app = app().await;

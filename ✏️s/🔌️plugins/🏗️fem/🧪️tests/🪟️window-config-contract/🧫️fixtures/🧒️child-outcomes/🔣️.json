@@ -1,0 +1,72 @@
+{
+  "cases": [
+    {
+      "kind": "preview",
+      "pages": 1,
+      "before": {
+        "retained": 1
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": 0
+        }
+      ],
+      "expected": {
+        "retained": 0
+      }
+    },
+    {
+      "kind": "checkpoint",
+      "pages": 1,
+      "before": {
+        "retained": 1
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": 0
+        }
+      ],
+      "expected": {
+        "retained": 0
+      }
+    },
+    {
+      "kind": "complete",
+      "pages": 2,
+      "before": {
+        "retained": 2
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": 0
+        }
+      ],
+      "expected": {
+        "retained": 0
+      }
+    },
+    {
+      "kind": "fault",
+      "pages": 1,
+      "before": {
+        "retained": 1
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": 0
+        }
+      ],
+      "expected": {
+        "retained": 0
+      }
+    }
+  ]
+}

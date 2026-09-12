@@ -1,9 +1,9 @@
 use super::*;
 use crate::editor::wires::commands::add_node;
-use crate::editor::wires::testkit::{app_with_registry, dispatch, new_app};
+use crate::editor::wires::unit_tests::context::{app_with_registry, dispatch, new_app};
 use crate::editor::wires::WiresCommand;
 use crate::schema::fixture_nodes;
-use semio_framework_plugin::{testkit::meta, InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
+use semio_framework_plugin::{artifact_app_laws::meta, InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
 use serde_json::json;
 
 /// 🕹️ `handle`'s macro-only path treats the selection as empty (no `InteractionView` reachable) —

@@ -1,6 +1,6 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-ingest-params`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::update_ingest_params;
 use crate::op::RemodelingMutation;
 use crate::{IngestParams, RemodelingSnapshot};
@@ -16,7 +16,7 @@ pub struct SetIngestParams {
     pub min_sharpness: f32,
 }
 
-pub fn handle(payload: &SetIngestParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetIngestParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_ingest_params(IngestParams { frame_sample_stride: payload.frame_sample_stride, max_frames: payload.max_frames, downscale_long_edge_px: payload.downscale_long_edge_px, min_sharpness: payload.min_sharpness })]))
 }
 

@@ -1,7 +1,7 @@
 //! 🏃️ Sequence play app commands — run the compiled path and clear the last run result.
 
-use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
-use crate::editor::sequence::host_from_snapshot;
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use crate::editor::sequence::{host_from_fixture, retire_run_result_cold, sequence_fixture_from_children};
 use crate::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -19,10 +19,11 @@ pub mod run_command {
     #[dsl(keyword = "run")]
     pub struct Run {}
 
-    pub fn handle(_payload: &Run, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        let result = host_from_snapshot(doc.snapshot).run();
-        let json = dsl::os_pack::to_json_string(&result);
-        Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun(crate::editor::sequence::config::SetLastRun { json })]))
+    pub fn handle(_payload: &Run, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
+        let fixture = sequence_fixture_from_children(doc.snapshot, &doc.children)?;
+        let host = neural_engine::ColdOwner::new(host_from_fixture(&fixture));
+        retire_run_result_cold(host.run());
+        Ok(Emit::default())
     }
 }
 //#endregion 🔖️Run
@@ -35,8 +36,8 @@ pub mod stop_command {
     #[dsl(keyword = "stop")]
     pub struct Stop {}
 
-    pub fn handle(_payload: &Stop, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun(crate::editor::sequence::config::SetLastRun { json: String::new() })]))
+    pub fn handle(_payload: &Stop, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
+        Ok(Emit::default())
     }
 }
 //#endregion 🔖️Stop

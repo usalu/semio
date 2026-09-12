@@ -4,140 +4,16 @@
   "title": "EditDesign",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "id",
-    "pieces",
-    "connections"
-  ],
+  "required": ["id", "pieces", "connections"],
   "properties": {
-    "id": {
-      "type": "string"
-    },
+    "id": { "type": "string" },
     "pieces": {
       "type": "array",
-      "items": {
-        "$ref": "#/$defs/SemioKitPiece"
-      }
+      "items": { "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitPiece" }
     },
     "connections": {
       "type": "array",
-      "items": {
-        "$ref": "#/$defs/SemioKitConnection"
-      }
-    }
-  },
-  "$defs": {
-    "SemioKitPiece": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "typeId",
-        "transform"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "typeId": {
-          "type": "string"
-        },
-        "transform": {
-          "$ref": "#/$defs/SemioTransform"
-        }
-      }
-    },
-    "SemioTransform": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "translation",
-        "rotation",
-        "scale"
-      ],
-      "properties": {
-        "translation": {
-          "$ref": "#/$defs/SemioPoint3"
-        },
-        "rotation": {
-          "$ref": "#/$defs/SemioQuaternion"
-        },
-        "scale": {
-          "$ref": "#/$defs/SemioPoint3"
-        }
-      }
-    },
-    "SemioPoint3": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "z"
-      ],
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        },
-        "z": {
-          "type": "number"
-        }
-      }
-    },
-    "SemioQuaternion": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "z",
-        "w"
-      ],
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        },
-        "z": {
-          "type": "number"
-        },
-        "w": {
-          "type": "number"
-        }
-      }
-    },
-    "SemioKitConnection": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "connectingPieceId",
-        "connectingPort",
-        "connectedPieceId",
-        "connectedPort"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "connectingPieceId": {
-          "type": "string"
-        },
-        "connectingPort": {
-          "type": "string"
-        },
-        "connectedPieceId": {
-          "type": "string"
-        },
-        "connectedPort": {
-          "type": "string"
-        }
-      }
+      "items": { "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitConnection" }
     }
   }
 }

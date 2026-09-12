@@ -15,7 +15,7 @@ async fn dump_example_dsl_when_requested() {
 
 #[test]
 fn demo_graph_matches_the_language_neutral_json_oracle() {
-    let snapshot = parse_dsl(DAG_EXAMPLE_TEXT).expect("demo DSL");
+    let snapshot = parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("demo DSL");
     let graph = semio_framework_artifact_infinite_dag::DagSnapshot::from(&snapshot);
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../📚️examples/🎬️demo/🧫️fixtures/🧾️scene.json")).expect("demo JSON oracle");
     let observed = serde_json::json!({
@@ -29,7 +29,7 @@ fn demo_graph_matches_the_language_neutral_json_oracle() {
 
 #[semio_framework_async_macros::async_test]
 async fn example_fixture_dsl_round_trips() {
-    let document = parse_dsl(DAG_EXAMPLE_TEXT).expect("parse default fixture");
+    let document = parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("parse default fixture");
     store::os_store::test_support::assert_dsl_round_trip(&document);
 }
 

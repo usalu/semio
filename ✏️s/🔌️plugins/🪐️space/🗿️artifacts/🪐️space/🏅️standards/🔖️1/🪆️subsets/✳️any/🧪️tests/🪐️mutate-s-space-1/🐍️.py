@@ -2,7 +2,7 @@
 
 No third party reads `.sspace.dsl.semio` — generic table readers and content-addressed store crates
 were surveyed and DECLINED, not merely absent (the recorded survey is kept verbatim in this subset's
-`🔮️oracle/🔣️.json` history). The reference is therefore a second IMPLEMENTATION, written from this
+`🔮️oracles/🔣️.json` history). The reference is therefore a second IMPLEMENTATION, written from this
 subset's own committed `../../🧬️schema/📸️snapshot/🔣️.json` and each mutation's
 `🧬️schema/🔣️.json`, and from
 `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s

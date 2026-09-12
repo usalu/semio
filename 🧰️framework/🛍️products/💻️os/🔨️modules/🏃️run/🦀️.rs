@@ -382,6 +382,8 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         // 🏁️ A terminal typed operation's completion correlates by its own operation id — the command
         // that started it resolved on an earlier turn, so there is no `AppCommand::seq` awaiting it.
         AppFrame::OperationCompleted { .. } => None,
+        AppFrame::DocumentArchive { in_reply_to, .. } => Some(*in_reply_to),
+        AppFrame::DocumentArchiveLoad { in_reply_to, .. } => Some(*in_reply_to),
     }
 }
 
@@ -1360,7 +1362,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
 /// (`descriptor_is_fresh`) already byte-compares each plugin's OWN native `describe()` build against
 /// its committed `🛂️.descriptor.semio`, and this ticket's whole premise (2550 installed records, zero
 /// runtime resources) forbids re-instantiating a component just to read its manifest — so
-/// `descriptor_path_for_plugin` (populated from the registry's `cratePath`, see `🚀️bin.rs`) is tried
+/// `descriptor_path_for_plugin` (populated from the registry's `cratePath`, see `🏗️bootstrap/🦀️.rs`) is tried
 /// FIRST: zero instantiations. Only a plugin with no committed descriptor yet (most of the 33 today
 /// — packet D0 is still landing the emission plumbing) falls through to a hard, honest error; a live
 /// `describe()` fallback is DESIGNED (this struct's own doc, `📓️terra-R1-report.md` §1) but not
@@ -1392,7 +1394,7 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
     kernel: NativeKernelRuntime,
     plugin_path_for_plugin: HashMap<String, PathBuf>,
     /// 📦️ `plugin_id -> its committed 🛂️.descriptor.semio path` (registry `cratePath`-derived, see
-    /// `🚀️bin.rs`'s `resolve_descriptor_paths`) — `load_runtime_recursive`'s FIRST, zero-instantiation
+    /// `🏗️bootstrap/🦀️.rs`'s `resolve_descriptor_paths`) — `load_runtime_recursive`'s FIRST, zero-instantiation
     /// manifest source (this struct's own doc). A plugin absent from this map, or whose file does not
     /// exist on disk yet, has no committed descriptor — `load_runtime_recursive` fails loudly for it
     /// rather than falling back to a live `describe()` call (not wired here — see this struct's doc).
@@ -1483,7 +1485,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// `PLUGIN_WASM_ARTIFACTS`' first tuple element names) to the compiled `.wasm` component path the
     /// dev shell build already produces under `framework/os/dev/plugin-modules/<plugin id>/`.
     /// `descriptor_path_for_plugin` maps the SAME plugin id to its committed `🛂️.descriptor.semio`
-    /// (registry `cratePath`-derived — see `🚀️bin.rs`'s `resolve_descriptor_paths`); absent entries
+    /// (registry `cratePath`-derived — see `🏗️bootstrap/🦀️.rs`'s `resolve_descriptor_paths`); absent entries
     /// simply have no committed descriptor yet (this struct's own doc).
     /// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): `async` now — it
     /// builds `kernel` (`NativeKernelRuntime::new`, itself `async` since `Kernel::new`/`Kernel::
@@ -2167,6 +2169,11 @@ fn app_command_seq(command: &AppCommand) -> u64 {
         | AppCommand::ApplyEnvelopes { seq, .. }
         | AppCommand::LoadDocument { seq, .. }
         | AppCommand::ReadDocument { seq }
+        | AppCommand::LoadDocumentArchive { seq, .. }
+        | AppCommand::ReadDocumentArchive { seq }
+        | AppCommand::PollDocumentArchiveLoad { seq, .. }
+        | AppCommand::CancelDocumentArchiveLoad { seq, .. }
+        | AppCommand::AcknowledgeDocumentArchiveLoad { seq, .. }
         | AppCommand::LoadConfig { seq, .. }
         | AppCommand::ReadConfig { seq }
         | AppCommand::LoadWindowConfig { seq, .. }

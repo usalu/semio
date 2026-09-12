@@ -1,0 +1,74 @@
+{
+  "document": { "id": "drawing-window-neutral", "layers": [], "assets": {} },
+  "presence": {
+    "engagementInput": "Peer layer",
+    "camera": { "x": 2, "y": 3, "zoom": 1.25 }
+  },
+  "windowInstances": [
+    { "id": "drawing-left", "windowKindId": "drawing-composite" },
+    { "id": "drawing-right", "windowKindId": "drawing-composite" },
+    { "id": "drawing-properties", "windowKindId": "drawing-properties" }
+  ],
+  "baseConfig": {
+    "viewport": { "x": 512, "y": 512, "zoom": 0.75 }
+  },
+  "nextConfig": {
+    "viewport": { "x": 18, "y": -9, "zoom": 2.5 }
+  },
+  "baseTransient": {
+    "engagementInput": "",
+    "tracePointerGeneration": 0,
+    "tracePointerCompletedWork": 0,
+    "tracePointerPendingWork": 0
+  },
+  "nextTransient": {
+    "engagementInput": "Layer A",
+    "tracePointerGeneration": 17,
+    "tracePointerCompletedWork": 8,
+    "tracePointerPendingWork": 3
+  },
+  "configMutation": {
+    "kind": "snapshot",
+    "config": { "viewport": { "x": 18, "y": -9, "zoom": 2.5 } }
+  },
+  "transientMutation": {
+    "kind": "snapshot",
+    "transient": {
+      "engagementInput": "Layer A",
+      "tracePointerGeneration": 17,
+      "tracePointerCompletedWork": 8,
+      "tracePointerPendingWork": 3
+    }
+  },
+  "configMutations": [
+    {
+      "windowId": "drawing-left",
+      "windowKindId": "drawing-composite",
+      "mutation": { "kind": "snapshot", "config": { "viewport": { "x": 18, "y": -9, "zoom": 2.5 } } }
+    },
+    {
+      "windowId": "drawing-right",
+      "windowKindId": "drawing-composite",
+      "mutation": { "kind": "snapshot", "config": { "viewport": { "x": -7, "y": 31, "zoom": 0.5 } } }
+    }
+  ],
+  "transientMutations": [
+    {
+      "windowId": "drawing-left",
+      "windowKindId": "drawing-composite",
+      "mutation": {
+        "kind": "snapshot",
+        "transient": {
+          "engagementInput": "Layer A",
+          "tracePointerGeneration": 17,
+          "tracePointerCompletedWork": 8,
+          "tracePointerPendingWork": 3
+        }
+      }
+    }
+  ],
+  "rejections": [
+    { "windowId": "missing-drawing", "claimedWindowKindId": "drawing-composite", "code": "drawing-window-stale" },
+    { "windowId": "drawing-properties", "claimedWindowKindId": "drawing-composite", "code": "drawing-window-kind-mismatch" }
+  ]
+}

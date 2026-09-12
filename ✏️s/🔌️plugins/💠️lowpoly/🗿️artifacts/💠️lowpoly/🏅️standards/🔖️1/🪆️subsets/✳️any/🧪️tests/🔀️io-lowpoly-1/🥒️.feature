@@ -16,7 +16,7 @@ Feature: Round-trip the lowpoly document through every non-PNG stdio format the 
   there is nothing to import back.
 
   📌️ WHY NO ORACLE (`@no-oracle-lowpoly-io-native-round-trip`, recorded in this subset's own
-  `🧪️oracle/🔣️.json`). `LowpolyObject.mesh` is a content-addressed HANDLE
+  `🔮️oracles/🔣️.json`). `LowpolyObject.mesh` is a content-addressed HANDLE
   (`store::ArtifactChild<SemioMeshSnapshot>`), never embedded geometry — see that field's own doc
   comment in `🗿️artifacts/💠️lowpoly/🦀️.rs`. Because of that, four of these eight exporters
   (`dwg`, `gltf`, `las`, `stl`) are committed, HONEST stubs that unconditionally return an error —
@@ -24,10 +24,10 @@ Feature: Round-trip the lowpoly document through every non-PNG stdio format the 
   `unimplemented_geometry_formats_error_honestly_instead_of_lying` unit test
   (`../../🚪️io/🦀️.rs`) already asserts `serialize_bytes` returns `Err` for all four. A genuinely
   independent THIRD-PARTY reader (`tobj`/`ply-rs`/`stl_io`, already vendored behind the sibling
-  `🗄️stdio` plugin's `🧪️oracle/📦️packages/🦀️rust` crate) could still validate that the four working
+  `🗄️stdio` plugin's `🔮️oracles/📦️packages/🦀️rust` crate) could still validate that the four working
   exporters (`obj`, `ply`, `json`, `txt`) emit well-formed bytes in their target grammar, but reaching
   that crate from here needs an `oracleHostPackages` contribution registered at an ANCESTOR path of
-  this artifact (this subset's own `🧪️oracle/🔣️.json` is a DESCENDANT of this case's owner, the wrong
+  this artifact (this subset's own `🔮️oracles/🔣️.json` is a DESCENDANT of this case's owner, the wrong
   direction for `oracleHostPackagesFor`'s prefix match) — outside the file ownership this pass was
   granted, so it is recorded as a handoff item rather than added unilaterally. `metamorphic-laws` is
   therefore the substitute this decision actually rests on: export-then-import against our own codec

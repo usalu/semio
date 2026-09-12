@@ -4,7 +4,7 @@
 //! This scenario carries no mutation kind and no vector, so it stays with `✳️any`, the owner of the
 //! committed example document, rather than joining any of the three mutation subsets.
 //!
-//! Recorded no-oracle decision `equation-mutation-semantics` (`../../🔮️oracle/🔣️.json`)
+//! Recorded no-oracle decision `equation-mutation-semantics` (`../../🔮️oracles/🔣️.json`)
 //! covers this scenario too.
 
 use semio_repo_test_host::Adapter;

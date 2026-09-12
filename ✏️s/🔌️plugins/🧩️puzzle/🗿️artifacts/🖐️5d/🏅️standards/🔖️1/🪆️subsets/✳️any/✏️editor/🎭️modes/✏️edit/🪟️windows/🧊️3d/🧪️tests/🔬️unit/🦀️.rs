@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::editor::puzzle5d::testkit::*;
+use crate::editor::puzzle5d::unit_tests::context::*;
 
 #[test]
 fn renders_the_world_scene() {

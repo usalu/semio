@@ -23,7 +23,7 @@
 // it is committed.
 //
 //   bun 📜️script.ts generate [--out <dir>] [--only <fixture-id>]
-//   bun 📜️script.ts manifests                      # emit the fixtureManifests block for 🔮️oracle
+//   bun 📜️script.ts manifests                      # emit the fixtureManifests block for 🔮️oracles
 //
 // @see ../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts
 //      — the pilot this file mirrors in CLI shape, bundle layout and manifest fields.
@@ -256,7 +256,7 @@ async function contentDigest(bytes: Uint8Array | string): Promise<string> {
   return `sha256:${[...new Uint8Array(hash)].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 
-/** 📎️ Fixture file paths are resolved against the OWNER'S ORACLE directory (`🔮️oracle/`), not this
+/** 📎️ Fixture file paths are resolved against the OWNER'S ORACLE directory (`🔮️oracles/`), not this
  *  generator's directory — the exact prefix bug the mesh pilot's playbook records finding. */
 const FIXTURE_PATH_PREFIX = "../../🕸️mesh/🧫️fixtures/";
 
@@ -439,7 +439,7 @@ async function main(argv: readonly string[]): Promise<number> {
   // single blob — is the real structured tree. `🦀️json-engine` writes and reads it through `serde_json`
   // and nothing of ours.
   if (command === "carrier" || command === "carrier-manifests") {
-    const engineDir = join(import.meta.dir, "🦀️json-engine");
+    const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
     const cargoTargetDir = cargoTargetDirectory(getWorkspaceRoot());
     // 🏭️`--offline`: the engine is its own standalone workspace; the shared build-dir/target-dir
     // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any override here.

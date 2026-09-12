@@ -8,7 +8,7 @@
 use super::text;
 use serde_json::Value;
 
-const LABEL_FIT_FIXTURE: &str = include_str!("🔣️.json");
+const LABEL_FIT_FIXTURE: &str = include_str!("../../🧫️fixtures/🏷️label-fit/🔣️.json");
 
 /// 📏️ The fixture's own synthetic advance — the ONE measure both implementations are driven with,
 /// so a row pins the clipping algorithm rather than a font file.

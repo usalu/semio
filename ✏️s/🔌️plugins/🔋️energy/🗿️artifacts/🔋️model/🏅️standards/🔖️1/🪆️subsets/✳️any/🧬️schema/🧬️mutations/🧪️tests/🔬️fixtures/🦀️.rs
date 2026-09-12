@@ -161,7 +161,7 @@ pub fn write_when_requested(case: &Case) {
     let (before, mutation) = (case.scenario)();
     let outcome = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&mutation, &before);
     let after = MutationDiff::apply(outcome.diff(), &before).expect("the scenario's forward diff applies");
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations").join(case.directory);
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations").join(case.directory);
     let json = |value: pack::json::Value| pack::json::to_string_pretty(&value);
     write_file(root.join("📸️snapshot/⬅️before/🔣️.json"), &json(pack::json::from_dsl_value(&before.to_value())));
     write_file(root.join("📸️snapshot/➡️after/🔣️.json"), &json(pack::json::from_dsl_value(&after.to_value())));
@@ -250,10 +250,10 @@ pub async fn assert_semantics(case: &Case) {
 pub async fn assert_laws(case: &Case) {
     let base = decode(case, "before-snapshot", case.before);
     let mutation: EnergyModelMutation = pack::json::from_json_str(case.mutation).expect("committed mutation payload decodes");
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let first = built(case).diff().clone();
     let second = built(case).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, first, second).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, first, second).await;
 }
 
 /// 📝️ Every declared kind survives the text and binary op codecs the `dsl::DslEnum` derive

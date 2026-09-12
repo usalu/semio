@@ -46,7 +46,7 @@ Feature: Apply the one typed s.space.home mutation against an independent Python
   `inverse-change-catalog-generation` now dispatch BOTH an oracle role (the Python implementation,
   reached through this plugin's `oracleHostPackages` entry) and a subject role (this repository's own
   `s_home_mutation_report_json`), each independently asserting the forward/inverse laws in role
-  through the shared law module `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` that the stdio
+  through the shared law module `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️component.rs` that the stdio
   subsets use, before the two are compared byte for byte. `identity-round-trip` stays
   Rust-subject-only, unaffected: this subset's committed snapshot text grammar is the repository-wide
   placeholder `payload = OCTET+`, whose header production declares `"schema" SP "stdio.json"` against

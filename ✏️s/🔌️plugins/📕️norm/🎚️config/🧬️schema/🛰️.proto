@@ -1,6 +1,0 @@
-syntax = "proto3";
-package semio.app.norm.norm;
-message NormConfig {
-  // @state config
-  optional uint32 selected_check_index = 1;
-}

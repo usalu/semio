@@ -110,6 +110,6 @@ pub fn render(
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "../../🧪️tests/👁️preview/🔬️unit/🦀️.rs"]
+#[path = "./🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

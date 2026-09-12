@@ -1,4 +1,64 @@
 use super::*;
+
+#[test]
+fn mesh_edge_authority_uses_completed_faces_and_closes_exact_backing() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🕸️edge-authority/🔣️.json")).expect("neutral edge authority cases");
+    for row in corpus["cases"].as_array().expect("cases") {
+        let operation = mesh_operation();
+        let points = square(1.0);
+        let triangles: Vec<[usize; 3]> = serde_json::from_value(row["triangles"].clone()).expect("neutral triangles");
+        let count = triangles.len();
+        let mut job = MeshJob::new_bounded(PlanarDomain { outer: points.clone(), holes: Vec::new() }, no_refine(), operation, 62, row["maximumTriangles"].as_u64().expect("triangle limit") as usize);
+        job.triangulation = Some(OwnedTriangulation {
+            points, triangles, input_len: 4, insert_cursor: 4, insertion_order: Vec::new(), insertion: None,
+            maximum_triangles: job.maximum_triangles, allocation_fault: false,
+            mounted_initialization: MountedTriangulationInitialization { stage: MountedTriangulationStage::Complete, cursor: 0, sort_outer: 4, sort_inner: 4, bounds: [0.0, 1.0, 0.0, 1.0], center: [0.5, 0.5], span: 1.0 },
+            finish: TriangulationFinishCursor { stage: TriangulationFinishStage::Complete, read: count, write: count, sort_outer: count, sort_inner: count },
+        });
+        job.stage = MeshJobStage::ReserveEdgeAuthorities;
+        let mut sequence = 0;
+        for _ in 0..256 {
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
+            assert!(matches!(job.step(&mut context), StepOutcome::Yield), "{}", row["id"]);
+            if job.stage == MeshJobStage::ConstrainBoundary { break; }
+        }
+        assert_eq!(job.stage, MeshJobStage::ConstrainBoundary);
+        assert_eq!(job.indexed_constraint_edges.capacity(), row["expected"]["slots"].as_u64().expect("slots") as usize);
+        assert_eq!(job.indexed_constraint_edges.len(), row["expected"]["edges"].as_u64().expect("edges") as usize);
+        assert_eq!(job.indexed_constraint_edges.iter().filter(|edge| edge.adjacent[1].is_none()).count(), row["expected"]["boundary"].as_u64().expect("boundary") as usize);
+        assert_eq!(job.indexed_constraint_edges.iter().filter(|edge| edge.adjacent[1].is_some()).count(), row["expected"]["interior"].as_u64().expect("interior") as usize);
+        while job.indexed_constraint_edges.len() < job.indexed_constraint_edges.capacity() {
+            let index = job.indexed_constraint_edges.len() + 10;
+            job.indexed_constraint_edges.push(IndexedConstraintEdge { edge: Edge::new(index, index + 1), adjacent: [Some(index), None], active: true, fixed: false });
+        }
+        let before = (job.indexed_constraint_edges.as_ptr(), job.indexed_constraint_edges.len(), job.indexed_constraint_edges.capacity());
+        job.edge_index_candidate = Some((Edge::new(100, 101), 100));
+        job.edge_index_lookup_cursor = 0;
+        job.edge_index_vacancy = None;
+        while job.edge_index_lookup_cursor < job.indexed_constraint_edges.len() {
+            assert_eq!(job.advance_edge_index_candidate(), Ok(false));
+        }
+        assert_eq!(job.advance_edge_index_candidate(), Err(()));
+        assert_eq!((job.indexed_constraint_edges.as_ptr(), job.indexed_constraint_edges.len(), job.indexed_constraint_edges.capacity()), before);
+        job.close_lane = 9;
+        for _ in 0..before.1 {
+            assert_eq!(job.close_step(0), (false, 1, 0));
+        }
+        let bytes = before.2 * size_of::<IndexedConstraintEdge>();
+        assert_eq!(job.close_step(bytes - 1), (false, 0, 0));
+        assert_eq!(job.indexed_constraint_edges.as_ptr(), before.0);
+        assert_eq!(job.close_step(bytes), (false, 1, bytes));
+        assert!(job.close_step(0).0);
+        job.close_lane = 0;
+        let mut closed = false;
+        for _ in 0..256 {
+            if job.close_step(16_384).0 { closed = true; break; }
+        }
+        assert!(closed, "all remaining mesh owners retire");
+        assert!(InteractiveJob::terminal_is_empty(&job));
+    }
+    eprintln!("[DEBUG] Mesh edge authority matched all three neutral adjacency cases and exact bounded close");
+}
 use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
 use std::collections::HashSet;
 use std::time::{Duration, Instant};
@@ -447,23 +507,6 @@ fn bounded_mesh_plus_one_fault_retains_the_exact_domain_for_cursor_close() {
 }
 
 #[test]
-fn mesh_mounted_classification_indexes_admit_maximum_reject_plus_one_and_close_exactly() {
-    let operation = Operation::new(OperationId(41), RevisionId(43), Generation(47), 53);
-    let mut job = MeshJob::new_bounded(PlanarDomain { outer: square(1.0), holes: Vec::new() }, MeshOpts { max_edge: 0.0, min_angle_deg: 0.0 }, operation, 8, 2);
-    let edge_capacity = job.maximum_triangles * 12 + 3;
-    job.indexed_edges.try_reserve_exact(edge_capacity).expect("fixed edge index backing");
-    assert!(job.indexed_edges.capacity() * size_of::<Edge>() <= 4_096);
-    job.indexed_edges.extend((0..edge_capacity).map(|index| Edge(index, index + 1)));
-    let before = (job.indexed_edges.as_ptr(), job.indexed_edges.len(), job.indexed_edges.capacity());
-    assert_eq!(job.indexed_edges.binary_search(&Edge(edge_capacity + 1, edge_capacity + 2)), Err(edge_capacity));
-    assert_eq!((job.indexed_edges.as_ptr(), job.indexed_edges.len(), job.indexed_edges.capacity()), before, "plus-one preflight returns the exact index authority without insertion");
-    job.stage = MeshJobStage::Complete;
-    job.close_lane = 7;
-    assert!(!job.close_step(4_096).0, "one grant retires one exact indexed edge");
-    assert_eq!(job.indexed_edges.len(), edge_capacity - 1);
-}
-
-#[test]
 fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affected_adjacencies() {
     let operation = mesh_operation();
     let points = vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -549,7 +592,7 @@ fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affect
         }
         assert!(close_turns < 20_000);
     }
-    assert!(job.close_lane > 11);
+    assert!(InteractiveJob::terminal_is_empty(&job));
 }
 
 /// 📦️ Mounted preparation, construction, finish, and payload cursors interrupt and replay exactly.

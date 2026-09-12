@@ -1,6 +1,6 @@
 //! 📥️ 📥️ Remodeling play app commands command — `import-video-bytes-payload`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::remodeling::engine::{describe_video_probe, images as remodeling_image, video as remodeling_video, video_codec_to_artifact};
 use crate::editor::remodeling::payload_from_data_url;
 use crate::mutations::{create_asset, create_stream};
@@ -93,7 +93,7 @@ pub struct ImportVideoBytesPayload {
 /// demux/MJPEG/baseline-AVC decoder extracts frames fully in-process. The whole batch materializes
 /// inside this ONE pure call, so it needs no coalesce key (already exactly one `Emit`, hence one
 /// undo step). An undecodable codec surfaces as a `Notify` naming it, with provenance from the probe.
-pub fn handle(payload: &ImportVideoBytesPayload, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &ImportVideoBytesPayload, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     let Some((_mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
     let probe = match remodeling_video::probe(&bytes) {
         Ok(probe) => probe,

@@ -16,7 +16,7 @@ async fn trace_pointer_step_consumes_at_most_the_fixed_work_budget() {
 #[semio_framework_async_macros::async_test]
 async fn continuation_work_helpers_have_synchronous_compile_shape() {
     let _: fn(&mut TracePointerJob, &DrawingSnapshot) -> bool = TracePointerJob::advance;
-    let _: fn(Vec<DrawingMutation>, &str) -> Emit<DrawingMutation, DrawingConfigMutation> = commit_with_utility_reset;
+    let _: fn(Vec<DrawingMutation>, &str) -> Emit<DrawingMutation, NoConfigMutation> = commit_with_utility_reset;
     let _: fn(&DrawingLayerNode) -> (f64, f64, f64, f64) = trace_layer_world_bounds;
 }
 

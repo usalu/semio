@@ -34,6 +34,7 @@ use crate::standards::v1::subsets::any::schema::{
 use crate::Puzzle3dError;
 use semio_framework_job::{default_now_us, root_cancel_token, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, Operation, RevisionId, StepOutcome};
 use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
+use semio_framework_plugin::PluginCloseStep;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
@@ -485,31 +486,20 @@ pub(crate) fn drain_fill_envelope_registry_for_test() {
     }
 }
 
-/// 🧾️ Teardown units spent INSIDE a synchronous drop, totalled and worst-single-drop, since the last
-/// reset. This is the turn census a slice law reads instead of a wall clock: a cancel that tears its
-/// whole plan down in one `Drop` shows up as thousands of units charged to a single turn, while an
-/// incremental teardown shows up as zero here and as one unit per
-/// [`fill_envelope_maintenance_step`] turn instead.
-static FILL_DROP_DRAIN_UNITS: AtomicU64 = AtomicU64::new(0);
-static FILL_DROP_DRAIN_WORST: AtomicU64 = AtomicU64::new(0);
+/// 🧾️ Every fill-envelope close unit anyone has spent since the last reset. One unit is one
+/// `FillEnvelopeTerminalHandle::close_step`: one retired owner, or one close-cursor stage. This is the
+/// allocator- and clock-independent turn census a slice law reads — reset it, run ONE turn, read it, and
+/// the number IS what that turn charged to the guest's single thread.
+static FILL_CLOSE_UNITS: AtomicU64 = AtomicU64::new(0);
 
-/// 🧾️ Reads `(total, worst)` of [`FILL_DROP_DRAIN_UNITS`]/[`FILL_DROP_DRAIN_WORST`].
-pub fn fill_drop_drain_census() -> (u64, u64) {
-    (FILL_DROP_DRAIN_UNITS.load(Ordering::Acquire), FILL_DROP_DRAIN_WORST.load(Ordering::Acquire))
+/// 🧾️ Reads the close-unit census.
+pub fn fill_close_unit_census() -> u64 {
+    FILL_CLOSE_UNITS.load(Ordering::Acquire)
 }
 
-/// 🧾️ Zeroes the drop-drain census so one law measures only its own turns.
-pub fn reset_fill_drop_drain_census() {
-    FILL_DROP_DRAIN_UNITS.store(0, Ordering::Release);
-    FILL_DROP_DRAIN_WORST.store(0, Ordering::Release);
-}
-
-fn record_fill_drop_drain(units: u64) {
-    if units == 0 {
-        return;
-    }
-    FILL_DROP_DRAIN_UNITS.fetch_add(units, Ordering::AcqRel);
-    FILL_DROP_DRAIN_WORST.fetch_max(units, Ordering::AcqRel);
+/// 🧾️ Zeroes the close-unit census so one law measures exactly one turn.
+pub fn reset_fill_close_unit_census() {
+    FILL_CLOSE_UNITS.store(0, Ordering::Release);
 }
 
 /// 🧮️ How many of [`FILL_ENVELOPE_MAX_OPERATIONS`] envelope slots are occupied right now, and how
@@ -690,6 +680,165 @@ impl FillEnvelopeRegistry {
         })?;
         Some(FillEnvelopeTerminalHandle { request: authority.request.clone(), checked_out: authority.checked_out.clone(), returned: false })
     }
+
+    /// 🧹️ The reaper's claim: ANY envelope whose run is over and that nobody holds, whether or not a
+    /// session is still around to retire it. `Complete` is deliberately absent — a finished plan is what
+    /// the fill-count slider reads and the user applies, so only [`take_terminal_fill_job`]'s owning
+    /// session may end it. A `Fault` latches the user-visible notice process-wide on the way out,
+    /// because the session that would otherwise have reported it may already be gone.
+    fn take_finished(&mut self) -> Option<FillEnvelopeTerminalHandle> {
+        for authority in self.slots.iter_mut().flatten() {
+            apply_fill_envelope_terminal_intent(authority);
+        }
+        let authority = self
+            .slots
+            .iter_mut()
+            .flatten()
+            .find(|authority| fill_envelope_run_is_over(authority) && authority.checked_out.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_ok())?;
+        if matches!(authority.phase, FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Fault)) {
+            FILL_FAULT_NOTICE.store(true, Ordering::Release);
+        }
+        Some(FillEnvelopeTerminalHandle { request: authority.request.clone(), checked_out: authority.checked_out.clone(), returned: false })
+    }
+}
+
+/// 🏁️ Whether an envelope's run is over and its owners are nothing but garbage — the ONE predicate
+/// [`Puzzle3dPrecomputeSession::take_terminal_fill_job`] and [`FillEnvelopeRegistry::take_finished`]
+/// both decide by, so the owning session and the process-wide reaper can never disagree about what is
+/// still readable.
+fn fill_envelope_run_is_over(authority: &FillEnvelopeAuthority) -> bool {
+    matches!(
+        authority.phase,
+        FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Cancelled | FillEnvelopeTerminalReason::Fault | FillEnvelopeTerminalReason::Closed) | FillEnvelopePhase::Closing
+    )
+}
+
+/// 🧯️ One pending fill-fault notice nobody's session is left to carry. Set when the reaper ends a
+/// faulted envelope, taken by the next [`Puzzle3dPrecomputeSession::take_fill_fault_notice`], so a plan
+/// that failed after its session went away still tells the user.
+static FILL_FAULT_NOTICE: AtomicBool = AtomicBool::new(false);
+
+/// 🧹️ Process-wide close cursor of the envelope the reaper is currently retiring. It has to outlive a
+/// turn: one call spends ONE `close_step`, and a Nakagin-scale plan needs one per retained owner.
+fn fill_envelope_reaper() -> &'static Mutex<Option<FillEnvelopeTerminalHandle>> {
+    static REAPER: OnceLock<Mutex<Option<FillEnvelopeTerminalHandle>>> = OnceLock::new();
+    REAPER.get_or_init(|| Mutex::new(None))
+}
+
+/// 🧹️ One bounded unit of teardown for an envelope whose run is over, driven every turn by the
+/// framework's own maintenance ladder through [`ArtifactEditor::mounted_job_maintenance_step`].
+///
+/// 🧊️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42. The session that admitted a plan only retires it
+/// while `fillBuildTick` keeps arriving, and the host stops ticking the moment the Fill tool is
+/// disarmed — which is exactly what `engagement_abort` does in the very turn it cancels the plan. With
+/// no always-on driver a cancelled Nakagin-scale plan kept every retained owner and one of the four
+/// process slots until some `Drop` drained the whole ladder inline; the law
+/// `engagement_abort_tears_the_fill_plan_down_across_turns_and_never_inside_one` measured 65 545
+/// maintenance turns with the envelope still occupied before this existed.
+///
+/// 📏️ ONE `FillEnvelopeTerminalHandle::close_step` per call — one retired owner, or one close-cursor
+/// stage — so no turn can exceed the reactor's slice however large the plan is.
+pub fn fill_envelope_maintenance_step(maximum_items: usize) -> PluginCloseStep {
+    if maximum_items == 0 {
+        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    }
+    let Ok(mut cursor) = fill_envelope_reaper().try_lock() else {
+        return PluginCloseStep::Blocked { reason: "puzzle3d fill envelope reaper is contended" };
+    };
+    if cursor.is_none() {
+        let Ok(mut registry) = fill_envelope_registry().try_lock() else {
+            return PluginCloseStep::Blocked { reason: "puzzle3d fill envelope registry is contended" };
+        };
+        let Some(handle) = registry.take_finished() else {
+            return PluginCloseStep::Complete;
+        };
+        drop(registry);
+        *cursor = Some(handle);
+        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+    }
+    match cursor.as_mut().map(FillEnvelopeTerminalHandle::close_step) {
+        Some(FillEnvelopeCloseStep::Complete | FillEnvelopeCloseStep::Stale) => {
+            cursor.take();
+            PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        }
+        Some(FillEnvelopeCloseStep::Blocked) => PluginCloseStep::Blocked { reason: "puzzle3d fill plan owner is held elsewhere" },
+        _ => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
+    }
+}
+
+/// ♻️ Drives the process-wide reaper exactly as the framework's maintenance ladder drives it in
+/// production — one granted [`fill_envelope_maintenance_step`] at a time — until it reports `Complete`,
+/// and answers the grants it spent. Laws that used to rely on `Drop` doing the whole teardown inline
+/// call this instead.
+#[cfg(test)]
+pub(crate) fn reap_fill_envelopes_for_test() -> usize {
+    for grant in 1..=FILL_ENVELOPE_SESSION_CLOSE_TURNS {
+        if matches!(fill_envelope_maintenance_step(1), PluginCloseStep::Complete) {
+            return grant;
+        }
+    }
+    panic!("the fill envelope reaper did not finish within its own declared close budget");
+}
+
+/// 🧹️ Exact terminal witness paired with [`fill_envelope_maintenance_step`]: nothing half-retired and
+/// nothing finished — or ASKED to finish — still standing in the registry.
+///
+/// 🧊️ The pending-intent half is not an optimisation, it is what breaks a deadlock. A cancel only
+/// REQUESTS the terminal (`request_fill_envelope_terminal` sets an atomic intent); the phase flips in
+/// `apply_fill_envelope_terminal_intent`, which only the reaper's own `take_finished` calls. A witness
+/// that looked at phases alone therefore answered "empty" for a freshly cancelled plan, the framework's
+/// `maintenance_step` took its idle fast path, stage 15 never ran, and the intent was never applied —
+/// measured as 65 545 turns with `worst_turn=0` (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42).
+pub fn fill_envelope_terminal_is_empty() -> bool {
+    let Ok(cursor) = fill_envelope_reaper().try_lock() else {
+        return false;
+    };
+    if cursor.is_some() {
+        return false;
+    }
+    let Ok(registry) = fill_envelope_registry().try_lock() else {
+        return false;
+    };
+    !registry.slots.iter().flatten().any(|authority| fill_envelope_run_is_over(authority) || fill_envelope_terminal_intent_is_pending(authority))
+}
+
+/// 🔎️ Close-ladder position of every standing envelope: `(slot, close_cursor, worker_outcome, worker,
+/// fill, retirement)`. What a teardown law reads to say WHICH stage stopped advancing, instead of only
+/// that the registry never went quiet.
+pub fn fill_envelope_close_diagnostics() -> Vec<(u8, usize, bool, bool, bool, bool)> {
+    let Ok(registry) = fill_envelope_registry().try_lock() else {
+        return Vec::new();
+    };
+    registry
+        .slots
+        .iter()
+        .flatten()
+        .map(|authority| {
+            (
+                authority.request.slot,
+                authority.close_cursor,
+                authority.worker_outcome.is_some(),
+                authority.worker.is_some(),
+                authority.fill.is_some(),
+                authority.fill_retirement.is_some(),
+            )
+        })
+        .collect()
+}
+
+/// 🔎️ What each standing envelope's plan still owes its close ladder, by name — the `(slot, owner)`
+/// pairs that say WHICH retained owner a wedged teardown cannot drain.
+pub fn fill_envelope_close_debt() -> Vec<(u8, &'static str)> {
+    let Ok(registry) = fill_envelope_registry().try_lock() else {
+        return Vec::new();
+    };
+    registry.slots.iter().flatten().filter_map(|authority| authority.fill_retirement.as_ref()?.owner_debt().map(|owner| (authority.request.slot, owner))).collect()
+}
+
+/// 🏁️ Whether a terminal has been ASKED for on this envelope and not yet applied to its phase.
+fn fill_envelope_terminal_intent_is_pending(authority: &FillEnvelopeAuthority) -> bool {
+    let intent = &fill_envelope_terminal_intents()[usize::from(authority.request.slot)];
+    intent.job.load(Ordering::Acquire) == authority.request.job && intent.registry_generation.load(Ordering::Acquire) == authority.request.registry_generation && intent.reason.load(Ordering::Acquire) != 0
 }
 
 enum FillEnvelopeDrive {
@@ -927,6 +1076,7 @@ impl FillEnvelopeTerminalHandle {
     }
 
     pub fn close_step(&mut self) -> FillEnvelopeCloseStep {
+        FILL_CLOSE_UNITS.fetch_add(1, Ordering::AcqRel);
         let Ok(mut registry) = fill_envelope_registry().try_lock() else {
             return FillEnvelopeCloseStep::Blocked;
         };
@@ -1835,6 +1985,7 @@ impl Puzzle3dCollision {
     /// takes instead of re-uploading buffers.
     pub(crate) fn adopt_shared_mesh(&mut self, url: &str, digest: Option<&str>) -> bool {
         if self.mesh_is_fallback.get(url) == Some(&false) && digest.is_none_or(|digest| self.mesh_sources.get(url).is_some_and(|mesh| brush_mesh_digest(&mesh.positions, &mesh.indices) == digest)) {
+            self.retire_mesh_reupload(url);
             return true;
         }
         let resident = shared_brush_mesh(url).filter(|(positions, indices)| digest.is_none_or(|digest| brush_mesh_digest(positions, indices) == digest));
@@ -1842,7 +1993,27 @@ impl Puzzle3dCollision {
             return false;
         };
         self.install_collision_mesh(url.to_string(), &positions, &indices, false);
+        self.retire_mesh_reupload(url);
         true
+    }
+
+    /// 🚚️ Retires one identity's standing re-upload request, because that identity is now — or was
+    /// already — servable from this session.
+    ///
+    /// 🐛️ RESIDENCY is the authority and the request set is only a cache of "announced by id alone and
+    /// could not be served", so EVERY path that answers an announcement has to prune it. Until this
+    /// existed the single prune sat inside [`Puzzle3dCollision::place_collision_mesh`], behind that
+    /// function's own already-resident bail — so the three paths that satisfy an announcement WITHOUT
+    /// writing geometry (this function's resident fast return, `stage_mesh_page`'s page-0 short circuit,
+    /// and that bail itself) all left the request standing. The world body then published the id in
+    /// `interactionJson.meshReuploadUrls` forever
+    /// (`✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs`), the client re-claimed it on every residency
+    /// climb and paged the whole 72-command run again, and every page after the first was refused as a
+    /// `Gap`. Measured on the live `:6013` shell at wasm #58: 123 of 285 console lines in one 150-second
+    /// window were `registerBrushMesh`, seq 22 → 124 over 306 s, still arriving 8 minutes after the
+    /// example switch (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B46 §5, wave B48 §1.2).
+    fn retire_mesh_reupload(&mut self, url: &str) {
+        self.mesh_reupload_requests.retain(|pending| pending != url);
     }
 
     /// 🚚️ Records that one mesh id was announced by identity alone and could not be served, so the
@@ -1884,12 +2055,13 @@ impl Puzzle3dCollision {
             return false;
         };
         if self.mesh_is_fallback.get(&url) == Some(&false) {
+            self.retire_mesh_reupload(&url);
             return false;
         }
         Arc::make_mut(&mut self.meshes).insert(url.clone(), body);
         self.mesh_is_fallback.insert(url.clone(), is_fallback);
         if !is_fallback {
-            self.mesh_reupload_requests.retain(|pending| *pending != url);
+            self.retire_mesh_reupload(&url);
         }
         self.mesh_sources.insert(url.clone(), FillWorkerMesh { url, positions: positions.to_vec(), indices: indices.to_vec(), fallback: is_fallback });
         true
@@ -2478,12 +2650,27 @@ impl Puzzle3dFillSession {
 }
 
 impl Drop for Puzzle3dFillSession {
+    /// ♻️ Three constant-time statements, never a teardown: trip the cancel token, ask the envelope for
+    /// its `Closed` terminal, and let `fill_terminal`'s own `Drop` hand the checkout back. The retirement
+    /// the request starts is then spent one unit per turn by [`fill_envelope_maintenance_step`].
+    ///
+    /// 🧊️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42: this used to install itself into a throwaway
+    /// `Puzzle3dPrecomputeSession` purely to borrow that type's `Drop`, which drained the whole close
+    /// ladder inline — up to `FILL_ENVELOPE_MAX_OPERATIONS * (FILL_ENVELOPE_MAX_ITEMS + 9)` units in one
+    /// unyielding turn, plus a fresh `Puzzle3dCollision` allocated just to be dropped again.
     fn drop(&mut self) {
         if !self.involved() {
             return;
         }
-        let mut session = Puzzle3dPrecomputeSession::new();
-        session.install_fill_session(std::mem::take(self));
+        if let Some(cancel) = &self.fill_cancel {
+            cancel.cancel_now();
+        }
+        if let Some(request) = &self.fill_job {
+            request_fill_envelope_terminal(request, FillEnvelopeTerminalReason::Closed);
+        }
+        if let Some(admission) = &self.fill_admission {
+            request_fill_envelope_terminal(&admission.request, FillEnvelopeTerminalReason::Closed);
+        }
     }
 }
 
@@ -2876,7 +3063,7 @@ impl Puzzle3dPrecomputeSession {
     /// 🧯️ Takes the one pending fill-fault notice, if any — `fillBuildTick`'s hook for telling the
     /// user a background plan died instead of leaving the planned count frozen at zero.
     pub fn take_fill_fault_notice(&mut self) -> bool {
-        std::mem::take(&mut self.fill_fault_notice)
+        std::mem::take(&mut self.fill_fault_notice) || FILL_FAULT_NOTICE.swap(false, Ordering::AcqRel)
     }
 
     /// 🧯️ Whether this session has latched a faulted fill envelope and will refuse further
@@ -3054,11 +3241,7 @@ impl Puzzle3dPrecomputeSession {
         };
         let authority = registry.authority_mut(&request)?;
         apply_fill_envelope_terminal_intent(authority);
-        let discard = matches!(
-            authority.phase,
-            FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Cancelled | FillEnvelopeTerminalReason::Fault | FillEnvelopeTerminalReason::Closed) | FillEnvelopePhase::Closing
-        );
-        if !discard || authority.checked_out.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+        if !fill_envelope_run_is_over(authority) || authority.checked_out.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return None;
         }
         Some(FillEnvelopeTerminalHandle { request, checked_out: authority.checked_out.clone(), returned: false })
@@ -3197,20 +3380,24 @@ impl Puzzle3dPrecomputeSession {
 }
 //#endregion 🔖️Session
 
-/// 📏️ The turns one session's Drop may spend returning the process-global fill envelope slots. Derived,
-/// not chosen: `FILL_ENVELOPE_MAX_OPERATIONS` envelopes, each at most `FILL_ENVELOPE_MAX_ITEMS` retained
-/// owners — the very census ceiling `finish_measurement` admitted them against — plus the eight
-/// `FillEnvelopeTerminalHandle::close_step` cursor stages and its checkout turn.
-const FILL_ENVELOPE_SESSION_CLOSE_TURNS: usize = FILL_ENVELOPE_MAX_OPERATIONS * (FILL_ENVELOPE_MAX_ITEMS + 9);
+/// 📏️ The units a teardown that runs to completion may spend, one per turn. Derived, not chosen:
+/// `FILL_ENVELOPE_MAX_OPERATIONS` envelopes, each at most `FILL_ENVELOPE_MAX_ITEMS` retained owners —
+/// the very census ceiling `finish_measurement` admitted them against — plus the eight
+/// `FillEnvelopeTerminalHandle::close_step` cursor stages and its checkout turn. It is a TURN budget for
+/// [`fill_envelope_maintenance_step`], never a loop bound for a `Drop`.
+pub(crate) const FILL_ENVELOPE_SESSION_CLOSE_TURNS: usize = FILL_ENVELOPE_MAX_OPERATIONS * (FILL_ENVELOPE_MAX_ITEMS + 9);
 
 impl Drop for Puzzle3dPrecomputeSession {
-    /// ♻️ Returns this session's fill envelope slot to the process-global registry. Requesting the
-    /// `Closed` terminal is NOT enough: only `FillEnvelopeTerminalHandle::close_step` takes the slot
-    /// back, so a session that merely asked and died left one of the four slots occupied forever —
-    /// after four such sessions `begin_measurement` finds no candidate and every later
-    /// `enqueue_fill_job` returns `None`, which is how a fill test that passes alone fails in a shared
-    /// process. `pump_fill_terminal_step` also collects envelopes earlier sessions abandoned, so this
-    /// drains until the registry is quiet rather than only until this session's own slot is back.
+    /// ♻️ Asks this session's fill envelope for its `Closed` terminal and stops there. Taking the slot
+    /// back is [`fill_envelope_maintenance_step`]'s job, one `close_step` per turn, and `take_finished`
+    /// collects an envelope whatever session abandoned it — so a session that merely asks no longer
+    /// strands a slot, and no drop spends a plan-sized teardown inside whatever turn happens to own it.
+    ///
+    /// 🧊️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42: this used to drain the whole close ladder here,
+    /// up to [`FILL_ENVELOPE_SESSION_CLOSE_TURNS`] units without a single yield. `with_puzzle3d_app_for`
+    /// drops a session on every refused check-in and `Puzzle3dSessionRegistry::retire` drops one while
+    /// holding the registry mutex, so that drain landed in an arbitrary guest turn — the unyielding turn
+    /// the host watchdog killed shard 0 over.
     fn drop(&mut self) {
         let involved = self.fill_job.is_some() || self.fill_admission.is_some() || self.fill_terminal.is_some();
         if !involved {
@@ -3220,14 +3407,9 @@ impl Drop for Puzzle3dPrecomputeSession {
         if let Some(request) = &self.fill_job {
             terminalize_fill_envelope(request, FillEnvelopeTerminalReason::Closed);
         }
-        let mut units = 0_u64;
-        for _ in 0..FILL_ENVELOPE_SESSION_CLOSE_TURNS {
-            if !self.pump_fill_terminal_step() {
-                break;
-            }
-            units += 1;
+        if let Some(admission) = &self.fill_admission {
+            terminalize_fill_envelope(&admission.request, FillEnvelopeTerminalReason::Closed);
         }
-        record_fill_drop_drain(units);
     }
 }
 

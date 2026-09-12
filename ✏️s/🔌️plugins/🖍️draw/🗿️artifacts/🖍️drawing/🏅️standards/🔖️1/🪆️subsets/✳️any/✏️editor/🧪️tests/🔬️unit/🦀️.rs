@@ -1,16 +1,41 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::{ActionMeta, App, EditorApp, VcsArtifactApp, ViewModel};
+
+    pub type DrawingApp = VcsArtifactApp<EditorApp<DrawingPlayApp>>;
+
+    /// ✏️ `DrawingPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
+    /// `ArtifactApp` — `EditorApp<DrawingPlayApp>` (SDK adapter, contract §2.1) is the real
+    /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
+    /// `PluginBuilder::editor::<DrawingPlayApp>` builds it.
+
+    /// 🧪️ Draw fixtures carry the production manifest and its exact registered factories.
+    pub async fn drawing_app() -> DrawingApp {
+        new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }).await
+    }
+
+    /// 🧰️ Captures the host-owned active utility in one operation's invocation context.
+    pub fn meta_with_utility(utility: &str) -> ActionMeta {
+        let mut action_meta = meta("local");
+        action_meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..Default::default() });
+        action_meta
+    }
+}
+
 use super::*;
 use crate::schema::{default_drawing_document, layer_id, semio_drawing_example_json};
 use crate::DrawingLayerNode;
 use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::{testkit as fw_testkit, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
-use testkit::{drawing_app, meta_with_utility, DrawingApp};
+use semio_framework_plugin::{artifact_app_laws as artifact_laws, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
+use context::{drawing_app, meta_with_utility, DrawingApp};
 
 fn canvas_scene(tree: semio_framework_plugin::ComponentTree) -> semio_framework_plugin::Canvas2dScene {
     let decoded = match &tree.root.component {
         semio_framework_plugin::Component::Surface(surface) => semio_framework_ui_scene::decode(surface).map_err(|_| "canvas payload"),
         _ => Err("canvas surface"),
     };
-    fw_testkit::project_and_retire_fixture_tree(tree).expect("retire canvas tree");
+    artifact_laws::project_and_retire_fixture_tree(tree).expect("retire canvas tree");
     decoded.expect("typed canvas")
 }
 
@@ -214,7 +239,7 @@ async fn default_document_exposes_artboard_dimensions_on_canvas() {
 async fn layers_panel_lists_default_layer() {
     let mut app = drawing_app().await;
     let node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::default()).await.expect("render");
-    let json = fw_testkit::project_and_retire_fixture_tree(node).expect("retire semantic tree");
+    let json = artifact_laws::project_and_retire_fixture_tree(node).expect("retire semantic tree");
     assert!(json.contains("drawing-play-layers.add.path"));
     assert!(json.contains("Layer 1"));
 }
@@ -223,7 +248,7 @@ async fn layers_panel_lists_default_layer() {
 async fn catalogue_panel_lists_boolean_operations() {
     let mut app = drawing_app().await;
     let node = app.render(DRAWING_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).await.expect("render");
-    let json = fw_testkit::project_and_retire_fixture_tree(node).expect("retire semantic tree");
+    let json = artifact_laws::project_and_retire_fixture_tree(node).expect("retire semantic tree");
     assert!(json.contains("drawing-play-catalogue.path"));
     assert!(json.contains("Boolean union"));
 }
@@ -232,7 +257,7 @@ async fn catalogue_panel_lists_boolean_operations() {
 async fn add_layer_action_emits_op_and_appends_path() {
     let mut app = drawing_app().await;
     let before = app.snapshot().unwrap().layers.len();
-    let result = app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).await.expect("add layer");
+    let result = app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &artifact_laws::meta("local")).await.expect("add layer");
     assert_eq!(result.mutations.len(), 1);
     let projection = app.snapshot().unwrap();
     assert_eq!(projection.layers.len(), before + 1);
@@ -243,7 +268,7 @@ async fn add_layer_action_emits_op_and_appends_path() {
 async fn patch_layers_opacity_emits_granular_operation() {
     let mut app = drawing_app().await;
     let id = first_layer_id(&app);
-    let result = app.dispatch_typed(DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }), &fw_testkit::meta("local")).await.expect("patch");
+    let result = app.dispatch_typed(DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }), &artifact_laws::meta("local")).await.expect("patch");
     assert_eq!(result.mutations.len(), 1);
     let projection = app.snapshot().unwrap();
     assert!((crate::schema::layer_base(&projection.layers[0]).opacity - 0.5).abs() < f64::EPSILON);
@@ -253,7 +278,7 @@ async fn patch_layers_opacity_emits_granular_operation() {
 async fn patch_layer_name_emits_op_and_changes_projection() {
     let mut app = drawing_app().await;
     let id = first_layer_id(&app);
-    let result = app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }), &fw_testkit::meta("local")).await.expect("patch");
+    let result = app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }), &artifact_laws::meta("local")).await.expect("patch");
     assert_eq!(result.mutations.len(), 1);
     assert_eq!(crate::schema::layer_base(&app.snapshot().unwrap().layers[0]).name, "Renamed");
 }
@@ -284,7 +309,7 @@ async fn host_utility_change_clears_scratch_and_emits_no_history_entry() {
     let pen_meta = meta_with_utility("pen");
     let pen_view = pen_meta.view_state.as_ref().expect("host view");
     let tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, pen_view).await.expect("render after utility change");
-    fw_testkit::project_and_retire_fixture_tree(tree).expect("retire render tree");
+    artifact_laws::project_and_retire_fixture_tree(tree).expect("retire render tree");
     assert_eq!(app.snapshot().unwrap(), before, "utility switching does not mutate the document");
     let up = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &pen_meta).await.expect("up");
     assert!(up.mutations.is_empty(), "the in-progress shape draft was cleared on utility switch");
@@ -294,16 +319,16 @@ async fn host_utility_change_clears_scratch_and_emits_no_history_entry() {
 async fn combine_boolean_creates_boolean_layer() {
     let mut app = drawing_app().await;
     let first_id = first_layer_id(&app);
-    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).await.expect("add rect");
+    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &artifact_laws::meta("local")).await.expect("add rect");
     let second_id = last_layer_id(&app);
-    let result = app.dispatch_typed(DrawingCommand::CombineBoolean(combine_boolean::CombineBoolean { operation: "union".into(), ids: vec![first_id, second_id] }), &fw_testkit::meta("local")).await.expect("combine");
+    let result = app.dispatch_typed(DrawingCommand::CombineBoolean(combine_boolean::CombineBoolean { operation: "union".into(), ids: vec![first_id, second_id] }), &artifact_laws::meta("local")).await.expect("combine");
     assert_eq!(result.mutations.len(), 1);
     assert!(app.snapshot().unwrap().layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Boolean(_))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_point_to_world_matches_host_formula() {
-    let camera = crate::DrawingCamera { x: 100.0, y: 50.0, zoom: 2.0 };
+    let camera = store::Viewport2d { x: 100.0, y: 50.0, zoom: 2.0 };
     let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&camera, 420.0, 310.0, 800.0, 600.0);
     assert!((world_x - 110.0).abs() < 1e-9);
     assert!((world_y - 55.0).abs() < 1e-9);
@@ -429,21 +454,21 @@ async fn marquee_select_covers_contained_layer_only() {
     let mut app = drawing_app().await;
     let utility_meta = meta_with_utility("selectMarquee");
     let initial_id = layer_id(&app.snapshot().unwrap().layers[0]).to_string();
-    app.dispatch_typed(DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &fw_testkit::meta("local")).await.expect("clear default layer");
+    app.dispatch_typed(DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &artifact_laws::meta("local")).await.expect("clear default layer");
 
-    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).await.expect("add rect");
+    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &artifact_laws::meta("local")).await.expect("add rect");
     let rect_a_id = layer_id(app.snapshot().unwrap().layers.last().unwrap()).to_string();
     for (field, value) in [("transformX", "10"), ("transformY", "10"), ("transformScaleX", "0.15625"), ("transformScaleY", "0.208333")] {
-        app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: rect_a_id.clone(), field: field.into(), value: value.into() }), &fw_testkit::meta("local")).await.expect("position rect a");
+        app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: rect_a_id.clone(), field: field.into(), value: value.into() }), &artifact_laws::meta("local")).await.expect("position rect a");
     }
 
-    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:ellipse".into() }), &fw_testkit::meta("local")).await.expect("add ellipse");
+    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:ellipse".into() }), &artifact_laws::meta("local")).await.expect("add ellipse");
     let ellipse_b_id = layer_id(app.snapshot().unwrap().layers.last().unwrap()).to_string();
     for (field, value) in [("transformX", "200"), ("transformY", "200")] {
-        app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: ellipse_b_id.clone(), field: field.into(), value: value.into() }), &fw_testkit::meta("local")).await.expect("position ellipse b");
+        app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: ellipse_b_id.clone(), field: field.into(), value: value.into() }), &artifact_laws::meta("local")).await.expect("position ellipse b");
     }
 
-    app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::DrawingCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("camera");
+    app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &artifact_laws::meta("local")).await.expect("camera");
     app.dispatch_typed(
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             x: 400.0,
@@ -466,7 +491,7 @@ async fn marquee_select_covers_contained_layer_only() {
     let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &utility_meta).await.expect("up");
     // 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
     // the marquee hit-test requests `interactionSelect` for exactly the contained rect via a
-    // `Effect::ReplayShellCommand`, instead of writing a `DrawingConfigMutation::SetSelection`.
+    // `Effect::ReplayShellCommand`, instead of writing a `NoConfigMutation::SetSelection`.
     assert!(result.mutations.is_empty(), "a pure marquee-select gesture is not a document operation");
     assert_eq!(result.requested_effects, vec![canvas_pointer_down::interaction_select_effect(&[rect_a_id.clone()], "replace")], "only the contained rect is requested, not the outside ellipse");
 }
@@ -475,7 +500,7 @@ async fn marquee_select_covers_contained_layer_only() {
 async fn set_camera_writes_runtime_and_emits_no_operations() {
     let mut app = drawing_app().await;
     let before = app.snapshot().expect("projection");
-    let result = app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::DrawingCamera { x: 5.0, y: 5.0, zoom: 2.0 } }), &fw_testkit::meta("local")).await.expect("camera");
+    let result = app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 5.0, y: 5.0, zoom: 2.0 } }), &artifact_laws::meta("local")).await.expect("camera");
     assert!(result.mutations.is_empty(), "camera is a view action and emits no operations");
     assert_eq!(app.snapshot().expect("projection"), before, "camera never mutates the document");
     let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).await.expect("render"));
@@ -485,8 +510,8 @@ async fn set_camera_writes_runtime_and_emits_no_operations() {
 #[semio_framework_async_macros::async_test]
 async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
     let mut app = drawing_app().await;
-    app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::DrawingCamera { x: 4.0, y: 5.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("set camera");
-    let result = app.dispatch_typed(DrawingCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }), &fw_testkit::meta("local")).await.expect("set camera zoom");
+    app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 4.0, y: 5.0, zoom: 1.0 } }), &artifact_laws::meta("local")).await.expect("set camera");
+    let result = app.dispatch_typed(DrawingCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }), &artifact_laws::meta("local")).await.expect("set camera zoom");
     assert!(result.mutations.is_empty(), "camera zoom is a view action and emits no operations");
     let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).await.expect("render"));
     assert_eq!([scene.camera_x, scene.camera_y, scene.zoom], [4.0, 5.0, 3.0]);
@@ -496,7 +521,7 @@ async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
 async fn add_layer_undo_round_trip_through_wrapper() {
     let mut app = drawing_app().await;
     let before = app.snapshot().unwrap().layers.len();
-    fw_testkit::assert_undo_redo_round_trip(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.snapshot().unwrap().layers.len(), before, before + 1).await;
+    artifact_laws::assert_undo_redo_round_trip(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.snapshot().unwrap().layers.len(), before, before + 1).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -529,13 +554,13 @@ async fn canvas_pointer_up_direct_pick_requests_interaction_select() {
     // — see `default_drawing_document`), so a real shape is added first, mirroring
     // `marquee_select_covers_contained_layer_only`'s own setup.
     let initial_id = first_layer_id(&app);
-    app.dispatch_typed(DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &fw_testkit::meta("local")).await.expect("clear default layer");
-    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).await.expect("add rect");
+    app.dispatch_typed(DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &artifact_laws::meta("local")).await.expect("clear default layer");
+    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &artifact_laws::meta("local")).await.expect("add rect");
     let rect_id = last_layer_id(&app);
-    app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::DrawingCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("camera");
+    app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &artifact_laws::meta("local")).await.expect("camera");
     // 🎯️ Default `shape:rect` geometry is world (0,0)-(128,96); screen (110,110) on a 200x200
     // viewport with the identity camera above maps to world (10,10) — inside the rect.
-    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).await.expect("pick");
+    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false }), &artifact_laws::meta("local")).await.expect("pick");
     assert!(result.mutations.is_empty(), "a direct pick is not a document operation");
     assert_eq!(result.requested_effects, vec![canvas_pointer_down::interaction_select_effect(&[rect_id], "replace")]);
 }
@@ -545,8 +570,8 @@ async fn set_selected_opacity_reads_the_framework_interaction_selection() {
     let mut app = drawing_app().await;
     let id = first_layer_id(&app);
     let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAWING_INTERACTION_GRANULARITY, "id": id })]).unwrap();
-    app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&dsl::json::to_dsl_value(&dsl::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" }))), &fw_testkit::meta("local")).await.expect("select");
-    let result = app.dispatch_typed(DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.25 }), &fw_testkit::meta("local")).await.expect("opacity");
+    app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&dsl::json::to_dsl_value(&dsl::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" }))), &artifact_laws::meta("local")).await.expect("select");
+    let result = app.dispatch_typed(DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.25 }), &artifact_laws::meta("local")).await.expect("opacity");
     assert_eq!(result.mutations.len(), 1);
     assert!((crate::schema::layer_base(&app.snapshot().unwrap().layers[0]).opacity - 0.25).abs() < f64::EPSILON);
 }
@@ -555,7 +580,7 @@ async fn set_selected_opacity_reads_the_framework_interaction_selection() {
 async fn drawing_labels_resolve_native_by_default() {
     let mut app = drawing_app().await;
     let node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::default()).await.expect("render");
-    let json = fw_testkit::project_and_retire_fixture_tree(node).expect("retire semantic tree");
+    let json = artifact_laws::project_and_retire_fixture_tree(node).expect("retire semantic tree");
     assert!(json.contains("Add Path"));
     assert!(json.contains("Add Rectangle"));
     assert!(!json.contains("Pfad hinzufügen"));
@@ -566,12 +591,12 @@ async fn drawing_labels_translate_panels_in_german() {
     let mut app = drawing_app().await;
     let view_state = ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
     let layers_node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &view_state).await.expect("render");
-    let layers_json = fw_testkit::project_and_retire_fixture_tree(layers_node).expect("retire layers tree");
+    let layers_json = artifact_laws::project_and_retire_fixture_tree(layers_node).expect("retire layers tree");
     assert!(layers_json.contains("Pfad hinzufügen"));
     assert!(layers_json.contains("Rechteck hinzufügen"));
     assert!(!layers_json.contains("Add Path"));
     let catalogue_node = app.render(DRAWING_PLAY_BODY_CATALOGUE, None, &view_state).await.expect("render");
-    let catalogue_json = fw_testkit::project_and_retire_fixture_tree(catalogue_node).expect("retire catalogue tree");
+    let catalogue_json = artifact_laws::project_and_retire_fixture_tree(catalogue_node).expect("retire catalogue tree");
     assert!(catalogue_json.contains("\"Ellipse\""));
     assert!(catalogue_json.contains("Nachzeichnung"));
 }
@@ -579,7 +604,7 @@ async fn drawing_labels_translate_panels_in_german() {
 #[semio_framework_async_macros::async_test]
 async fn drawing_io_declares_vector_out_and_export_media_covers_both_ports() {
     let mut app = drawing_app().await;
-    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).await.expect("add");
+    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &artifact_laws::meta("local")).await.expect("add");
     let projection = app.snapshot().expect("projection");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
@@ -602,7 +627,7 @@ async fn gesture_preview_is_none_while_idle() {
 async fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
     let mut session = DrawingSession::default();
     let document = default_drawing_document("empty", None);
-    let config = DrawingConfig::default();
+    let config = NoConfig::default();
 
     let down = session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [10.0, 10.0], shift: false, ctrl: false, meta: false }, &document, &config);
     assert!(down.artifact_mutations.is_empty(), "pointer-down starts a scratch drag, not a document operation");
@@ -626,7 +651,7 @@ async fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
 async fn gesture_preview_is_a_pure_read_never_mutating_gesture_context() {
     let mut session = DrawingSession::default();
     let document = default_drawing_document("empty", None);
-    let config = DrawingConfig::default();
+    let config = NoConfig::default();
     session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [1.0, 2.0], shift: false, ctrl: false, meta: false }, &document, &config);
     let context_before = session.gesture.context.clone();
     let _ = session.preview();
@@ -656,7 +681,7 @@ fn every_command() -> Vec<DrawingCommand> {
         DrawingCommand::CombineBoolean(combine_boolean::CombineBoolean { operation: "union".into(), ids: vec!["a".into(), "b".into()] }),
         DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: "layer-1".into(), field: "opacity".into(), value: "0.4".into() }),
         DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec!["a".into(), "b".into()], field: "blendMode".into(), value: "\"multiply\"".into() }),
-        DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::DrawingCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
+        DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
         DrawingCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 2.0 }),
         DrawingCommand::EngagementInput(engagement_input::EngagementInput { value: "typing".into() }),
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
@@ -802,7 +827,7 @@ async fn set_active_example_resolves_the_registered_catalogue() {
     assert!(examples.iter().any(|source| source.id() == "demo"), "the subset registers its demo example");
     let doc = default_drawing_document("example-probe", None);
     let history = semio_framework_plugin::HistoryView::empty();
-    let config = DrawingConfig::default();
+    let config = NoConfig::default();
     let view = ArtifactView::new(&doc, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let mut session = DrawingSession::default();

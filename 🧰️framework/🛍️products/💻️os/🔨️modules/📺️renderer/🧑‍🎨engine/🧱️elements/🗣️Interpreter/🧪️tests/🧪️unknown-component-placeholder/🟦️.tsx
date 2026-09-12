@@ -89,7 +89,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   //#region CorpusConformance
-  /** 🧪️ Consumes the shared conformance corpus (`🧬️contract/📚️examples/🧪️conformance/`, 62 cases) —
+  /** 🧪️ Consumes the shared conformance corpus (`🧬️contract/🧫️fixtures/🧪️conformance/`, 62 cases) —
    * the load-bearing proof that this React store agrees with the Rust `apply_patch`/`validate_snapshot`
    * the GPU renderer also builds on. For each accept case: loads the snapshot (+ patch, if present)
    * into a real `📃️UiDocumentStore` and asserts the retained tree shape, every node's accessibility
@@ -106,7 +106,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { fileURLToPath } = await import("node:url");
 
     const here = dirname(fileURLToPath(source.url));
-    const corpusRoot = join(here, "../../../../../../../🔨️modules/🖱️ui/🧬️contract/📚️examples/🧪️conformance");
+    const corpusRoot = join(here, "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🧪️conformance");
 
     type CorpusExpectation = {
       readonly case: string;

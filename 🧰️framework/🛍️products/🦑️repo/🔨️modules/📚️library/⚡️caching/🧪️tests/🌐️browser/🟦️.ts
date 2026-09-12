@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 
 /** 📦️ Verifies portable browser distribution ownership and byte-preserving copies. */
 export async function testBrowserDistribution(workspace: string, outputDirectory: string): Promise<void> {
-  const moduleRoot = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📦️distribution");
+  const moduleRoot = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution");
   const { copyBrowserArtifacts } = await import(join(moduleRoot, "🟦️.ts"));
   const fixture = JSON.parse(readFileSync(join(moduleRoot, "🧫️cases.json"), "utf8"));
   const temporary = mkdtempSync(join(outputDirectory, "browser-distribution-")), source = join(temporary, "source");
@@ -13,7 +13,7 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
   for (const [name, value] of Object.entries({ ...fixture.files, ...fixture.ambient })) put(join(source, name), String(value));
   const marker = { version: 1, owner: fixture.owner, files: Object.keys(fixture.files) }, manifest = join(source, ".nx-artifact.json");
   put(manifest, JSON.stringify(marker));
-  const require = createRequire(import.meta.url), schema = JSON.parse(readFileSync(join(moduleRoot, "../../../🌐️browser-bundle/🧬️schema/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), schema = JSON.parse(readFileSync(join(moduleRoot, "../🧬️schema/🔣️.json"), "utf8"));
   const validator = new (require("ajv").default)(); validator.addSchema(schema);
   const viteRoot = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite");
   const lifecycle = JSON.parse(readFileSync(join(viteRoot, "🧫️cases.json"), "utf8"));

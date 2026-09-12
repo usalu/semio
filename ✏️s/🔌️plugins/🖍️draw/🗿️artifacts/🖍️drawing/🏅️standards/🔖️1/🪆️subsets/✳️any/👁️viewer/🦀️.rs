@@ -16,7 +16,7 @@ use store::EngineHandles;
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant — real per-command payload modules the way `✏️editor/🎮️commands/*`
 /// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
-/// `Default` is required by `testkit::assert_viewer_never_mutates::<DrawingViewer>()`'s `V::Command:
+/// `Default` is required by `artifact_app_laws::assert_viewer_never_mutates::<DrawingViewer>()`'s `V::Command:
 /// Default` bound (contract §2.5) — the single variant is trivially its own default.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum DrawingViewCommand {

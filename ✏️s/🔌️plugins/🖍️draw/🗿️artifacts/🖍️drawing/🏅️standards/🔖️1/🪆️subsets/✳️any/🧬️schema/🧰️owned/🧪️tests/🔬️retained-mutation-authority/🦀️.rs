@@ -193,7 +193,7 @@ fn digest(mutation: &DrawingMutation) -> Result<[u8; 32], &'static str> {
             Ok(false) => {}
             Err(error) => {
                 while !authority.terminal_is_empty() {
-                    authority.close_step(DRAWING_OWNED_FIELD_BYTES).expect("Drawing digest rejection closes exactly");
+                    let _ = authority.close_step(DRAWING_OWNED_FIELD_BYTES);
                 }
                 drop(authority);
                 return Err(error);

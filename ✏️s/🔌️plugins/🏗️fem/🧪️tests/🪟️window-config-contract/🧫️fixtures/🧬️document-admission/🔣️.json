@@ -1,0 +1,324 @@
+{
+  "cases": [
+    {
+      "dimension": "2d",
+      "document": {
+        "nodes": [
+          {
+            "id": "n1",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "n2",
+            "x": 1,
+            "y": 0
+          }
+        ],
+        "elements": [
+          {
+            "kind": "bar",
+            "id": "e1",
+            "start": "n1",
+            "end": "n2",
+            "materialId": "m1",
+            "sectionId": "s1"
+          },
+          {
+            "kind": "beam",
+            "id": "e2",
+            "start": "n1",
+            "end": "n2",
+            "materialId": "m1",
+            "sectionId": "s1"
+          }
+        ],
+        "materials": [
+          {
+            "id": "m1",
+            "name": "Material",
+            "e": 200000,
+            "nu": 0.3,
+            "rho": 7850
+          }
+        ],
+        "sections": [
+          {
+            "id": "s1",
+            "name": "Section",
+            "area": 1,
+            "iy": 1
+          }
+        ],
+        "supports": [
+          {
+            "id": "support1",
+            "nodeId": "n1",
+            "fixed": [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ]
+          }
+        ],
+        "loadCases": [
+          {
+            "id": "case1",
+            "name": "Case",
+            "selfWeight": true,
+            "loads": [
+              {
+                "kind": "nodal",
+                "id": "load1",
+                "nodeId": "n2",
+                "dof": "Ty",
+                "value": -10
+              },
+              {
+                "kind": "memberUdl",
+                "id": "load2",
+                "elementId": "e1",
+                "wx": 0,
+                "wy": -2
+              },
+              {
+                "kind": "area",
+                "id": "load3",
+                "regionId": "r1",
+                "pressure": -3
+              }
+            ]
+          }
+        ],
+        "combinations": [
+          {
+            "id": "combination1",
+            "name": "Combination",
+            "terms": [
+              {
+                "caseId": "case1",
+                "factor": 1.5
+              }
+            ]
+          }
+        ],
+        "regions": [
+          {
+            "id": "r1",
+            "name": "Region",
+            "outline": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "holes": [],
+            "materialId": "m1",
+            "meshSize": 1,
+            "thickness": 1
+          }
+        ],
+        "analysis": {
+          "modalCount": 3,
+          "bucklingCount": 3,
+          "deformationScale": 50
+        }
+      },
+      "foreignFields": [
+        {
+          "key": "camera",
+          "value": {
+            "x": 1,
+            "y": 2,
+            "zoom": 3
+          }
+        },
+        {
+          "key": "locale",
+          "value": "de"
+        },
+        {
+          "key": "resultMode",
+          "value": "modal"
+        }
+      ]
+    },
+    {
+      "dimension": "3d",
+      "document": {
+        "nodes": [
+          {
+            "id": "n1",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          {
+            "id": "n2",
+            "x": 1,
+            "y": 0,
+            "z": 0
+          }
+        ],
+        "elements": [
+          {
+            "kind": "bar",
+            "id": "e1",
+            "start": "n1",
+            "end": "n2",
+            "materialId": "m1",
+            "sectionId": "s1"
+          },
+          {
+            "kind": "frame",
+            "id": "e2",
+            "start": "n1",
+            "end": "n2",
+            "materialId": "m1",
+            "sectionId": "s1",
+            "roll": 0
+          }
+        ],
+        "materials": [
+          {
+            "id": "m1",
+            "name": "Material",
+            "e": 200000,
+            "nu": 0.3,
+            "rho": 7850,
+            "g": 80000
+          }
+        ],
+        "sections": [
+          {
+            "id": "s1",
+            "name": "Section",
+            "area": 1,
+            "iy": 1,
+            "iz": 1,
+            "j": 1
+          }
+        ],
+        "supports": [
+          {
+            "id": "support1",
+            "nodeId": "n1",
+            "fixed": [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ]
+          }
+        ],
+        "loadCases": [
+          {
+            "id": "case1",
+            "name": "Case",
+            "selfWeight": true,
+            "loads": [
+              {
+                "kind": "nodal",
+                "id": "load1",
+                "nodeId": "n2",
+                "dof": "Ty",
+                "value": -10
+              },
+              {
+                "kind": "memberUdl",
+                "id": "load2",
+                "elementId": "e1",
+                "wx": 0,
+                "wy": -2,
+                "wz": 0
+              },
+              {
+                "kind": "area",
+                "id": "load3",
+                "solidId": "r1",
+                "pressure": -3
+              }
+            ]
+          }
+        ],
+        "combinations": [
+          {
+            "id": "combination1",
+            "name": "Combination",
+            "terms": {
+              "case1": 1.5
+            }
+          }
+        ],
+        "solids": [
+          {
+            "id": "r1",
+            "name": "Region",
+            "outline": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "holes": [],
+            "materialId": "m1",
+            "meshSize": 1,
+            "baseZ": 0,
+            "height": 1,
+            "layers": 1
+          }
+        ],
+        "analysis": {
+          "modalCount": 3,
+          "bucklingCount": 3,
+          "deformationScale": 50
+        }
+      },
+      "foreignFields": [
+        {
+          "key": "camera",
+          "value": {
+            "json": "{\"position\":[1,2,3]}"
+          }
+        },
+        {
+          "key": "locale",
+          "value": "de"
+        },
+        {
+          "key": "resultMode",
+          "value": "modal"
+        }
+      ]
+    }
+  ]
+}

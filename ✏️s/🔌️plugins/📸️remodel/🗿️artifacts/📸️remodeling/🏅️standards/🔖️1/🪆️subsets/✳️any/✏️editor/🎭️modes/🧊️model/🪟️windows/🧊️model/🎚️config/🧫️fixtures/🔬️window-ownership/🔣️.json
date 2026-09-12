@@ -1,0 +1,76 @@
+{
+  "schema": "semio.remodel.window-ownership/v1",
+  "document": { "id": "remodel-document-stable", "streams": [], "tracks": [] },
+  "windowInstances": [
+    { "id": "remodel-model-left", "windowKindId": "remodeling-main" },
+    { "id": "remodel-model-right", "windowKindId": "remodeling-main" },
+    { "id": "remodel-frames-left", "windowKindId": "remodeling-frames" },
+    { "id": "remodel-frames-right", "windowKindId": "remodeling-frames" },
+    { "id": "remodel-report-left", "windowKindId": "remodeling-report" },
+    { "id": "remodel-report-right", "windowKindId": "remodeling-report" },
+    { "id": "remodel-other", "windowKindId": "other-window" }
+  ],
+  "base": {
+    "model": {
+      "camera": { "position": [0, 0, 5], "target": [0, 0, 0], "zoom": 1 },
+      "layers": { "mesh": true, "dense": true, "sparse": true, "cameras": true, "gcps": true }
+    },
+    "frames": { "frameCursor": { "streamId": null, "frameIndex": 0 } },
+    "report": { "reportTable": "frames" }
+  },
+  "mutations": [
+    {
+      "owner": "model",
+      "windowId": "remodel-model-left",
+      "windowKindId": "remodeling-main",
+      "mutation": {
+        "kind": "snapshot",
+        "config": {
+          "camera": { "position": [12, -8, 4], "target": [1, 2, 3], "zoom": 1.25 },
+          "layers": { "mesh": true, "dense": false, "sparse": true, "cameras": false, "gcps": true }
+        }
+      }
+    },
+    {
+      "owner": "model",
+      "windowId": "remodel-model-right",
+      "windowKindId": "remodeling-main",
+      "mutation": {
+        "kind": "snapshot",
+        "config": {
+          "camera": { "position": [-4, 6, 18], "target": [-1, 0, 2], "zoom": 0.75, "up": [0, 0, 1] },
+          "layers": { "mesh": false, "dense": true, "sparse": false, "cameras": true, "gcps": false }
+        }
+      }
+    },
+    {
+      "owner": "frames",
+      "windowId": "remodel-frames-left",
+      "windowKindId": "remodeling-frames",
+      "mutation": { "kind": "snapshot", "config": { "frameCursor": { "streamId": "stream-left", "frameIndex": 3 } } }
+    },
+    {
+      "owner": "frames",
+      "windowId": "remodel-frames-right",
+      "windowKindId": "remodeling-frames",
+      "mutation": { "kind": "snapshot", "config": { "frameCursor": { "streamId": "stream-right", "frameIndex": 9 } } }
+    },
+    {
+      "owner": "report",
+      "windowId": "remodel-report-left",
+      "windowKindId": "remodeling-report",
+      "mutation": { "kind": "snapshot", "config": { "reportTable": "cameras" } }
+    },
+    {
+      "owner": "report",
+      "windowId": "remodel-report-right",
+      "windowKindId": "remodeling-report",
+      "mutation": { "kind": "snapshot", "config": { "reportTable": "quality" } }
+    }
+  ],
+  "rejections": [
+    { "windowId": "remodel-missing", "claimedWindowKindId": "remodeling-main", "code": "remodel-window-stale" },
+    { "windowId": "remodel-other", "claimedWindowKindId": "remodeling-main", "code": "remodel-window-kind" },
+    { "windowId": "remodel-report-left", "claimedWindowKindId": "remodeling-frames", "code": "remodel-window-kind" }
+  ]
+}

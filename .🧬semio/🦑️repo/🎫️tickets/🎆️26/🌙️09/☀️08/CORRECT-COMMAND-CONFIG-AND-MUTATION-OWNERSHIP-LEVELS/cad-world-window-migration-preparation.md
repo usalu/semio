@@ -1,0 +1,9 @@
+# CAD World Window Migration Preparation
+
+The resumed read confirms that actual runtime CadConfig and its separate schema both persist four cameras, four dislocate option records and one shared sun. Camera, projection, sun and utility commands call runtime_of then snapshot_of, so two instances of the same world kind share changes. The pure renderer also builds every world view from app config. No CAD source was changed during this preparation.
+
+The correction must register exact WindowConfigOwner instances for Shape, Building, Energy and Structure Classic, with a common CAD world preference record containing camera, sun and dislocate options. Each concrete window retains its own record. The common type and codecs belong next to the shared world-window implementation; kind-specific owners belong at their existing concrete window roots. Dispatch must use ctx.view_state.window_id and verify its declared kind. Payload pane selects a surface semantics only and cannot select the storage owner.
+
+Update world rendering and measures to consume the exact supplied WindowConfigSnapshot. Remove all nine world fields from both app config representations and their mutations, constructors, snapshot conversion, size accounting, five schema facets and fixtures. Preserve the existing preview operation/generation authority and mesh interaction ownership. Engagement and reference drafts remain an explicitly separate follow-up.
+
+Meaningful tests must instantiate two same-kind windows, dispatch camera, projection, sun and utility edits to one, verify the sibling and document stay unchanged, then close and reopen to prove the persisted local owner. Neutral vectors and independent Ajv/JSON Patch expectations must precede implementation. Native runtime is required; no source-only working claim is made.

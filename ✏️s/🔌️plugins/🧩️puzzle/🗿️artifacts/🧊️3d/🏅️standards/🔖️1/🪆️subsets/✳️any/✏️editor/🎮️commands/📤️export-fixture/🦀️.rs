@@ -53,10 +53,11 @@ pub fn puzzle3d_export_inline_effect(filename: String, data: String) -> Effect {
 /// ([`PUZZLE_COMMAND_OUTPUT_BYTES`]) — a fixture larger than what the tool declared it may produce must
 /// fault here, in the producer, rather than be silently truncated on the wire.
 pub fn puzzle3d_export_segmented(filename: String, data: &str) -> Result<ArtifactDownloadOutput, Fault> {
-    if data.len() > PUZZLE_COMMAND_OUTPUT_BYTES {
+    let budget = puzzle3d_export_segmented_budget_bytes()?;
+    if data.len() > budget {
         return Err(Fault::from("puzzle3d-export-exceeds-declared-output-budget"));
     }
-    let chunks = ArtifactOutputChunks::new(PUZZLE_COMMAND_OUTPUT_BYTES);
+    let chunks = ArtifactOutputChunks::new(budget);
     for page in data.as_bytes().chunks(ArtifactOutputChunks::CHUNK_BYTES) {
         chunks.push(page.to_vec())?;
     }
@@ -64,11 +65,31 @@ pub fn puzzle3d_export_segmented(filename: String, data: &str) -> Result<Artifac
     ArtifactDownloadOutput::new(filename, "application/json", Some("identity".into()), chunks)
 }
 
+/// 📏️ Largest export ONE segmented download may carry: this command's declared contract output budget
+/// ([`PUZZLE_COMMAND_OUTPUT_BYTES`]), itself admitted against the framework's end-to-end segmented cap
+/// ([`ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES`]) — so the budget a payload is measured against is the
+/// SAME number the shard worker and the host drain enforce, and an app can never declare a download
+/// larger than the wire admits.
+pub fn puzzle3d_export_segmented_budget_bytes() -> Result<usize, Fault> {
+    ArtifactOutputChunks::admit_maximum(PUZZLE_COMMAND_OUTPUT_BYTES)
+}
+
+/// 📤 The one refusal both arms give for an export above [`puzzle3d_export_segmented_budget_bytes`].
+///
+/// 🧾️ A NOTICE, never a fault: a download that cannot be carried is an answer the user must read, and a
+/// producer fault on this path surfaces as a dead job (or, before wave B43, as a shard-worker fault that
+/// took the whole actor with it).
+pub fn puzzle3d_export_refusal(filename: &str, bytes: usize, budget: usize) -> String {
+    format!("{filename} is {bytes} B, over the {budget} B one export may stream — export fewer objects")
+}
+
 /// 📤 What one `exportFixture` publishes: the inline effect for a payload that fits one wire page, the
-/// segmented output for anything larger.
+/// segmented output for anything larger, and a NOTICE for a payload above what one segmented download
+/// may carry.
 pub enum Puzzle3dExportPublication {
     Inline(Effect),
     Segmented(ArtifactDownloadOutput),
+    Refused(String),
 }
 
 /// 📤 Resolves the publication for one fixture without touching any emission lane — the one place the
@@ -78,6 +99,10 @@ pub fn puzzle3d_export_publication(fixture: &Puzzle3dFixture, active_example_id:
     let data = puzzle3d_export_json(fixture);
     if data.len() <= puzzle3d_export_inline_budget_bytes() {
         return Ok(Puzzle3dExportPublication::Inline(puzzle3d_export_inline_effect(filename, data)));
+    }
+    let budget = puzzle3d_export_segmented_budget_bytes()?;
+    if data.len() > budget {
+        return Ok(Puzzle3dExportPublication::Refused(puzzle3d_export_refusal(&filename, data.len(), budget)));
     }
     puzzle3d_export_segmented(filename, &data).map(Puzzle3dExportPublication::Segmented)
 }
@@ -92,7 +117,11 @@ pub fn export_fixture(ctx: &mut Puzzle3dActionCtx<'_>) {
     let filename = puzzle3d_export_filename(&ctx.scene.runtime.active_example_id);
     let data = puzzle3d_export_json(&ctx.scene.fixture);
     if data.len() > puzzle3d_export_inline_budget_bytes() {
-        ctx.effects.push(Effect::Notify { message: format!("{filename} is {} B, over the inline download budget of {} B — export it through the window action, which streams it", data.len(), puzzle3d_export_inline_budget_bytes()) });
+        let message = match puzzle3d_export_segmented_budget_bytes() {
+            Ok(budget) if data.len() > budget => puzzle3d_export_refusal(&filename, data.len(), budget),
+            _ => format!("{filename} is {} B, over the inline download budget of {} B — export it through the window action, which streams it", data.len(), puzzle3d_export_inline_budget_bytes()),
+        };
+        ctx.effects.push(Effect::Notify { message });
         return;
     }
     ctx.effects.push(puzzle3d_export_inline_effect(filename, data));

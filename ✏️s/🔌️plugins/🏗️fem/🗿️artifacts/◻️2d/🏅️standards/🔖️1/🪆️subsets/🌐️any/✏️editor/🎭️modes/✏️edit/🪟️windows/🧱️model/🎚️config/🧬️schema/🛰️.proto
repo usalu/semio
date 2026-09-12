@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.app.fem.fem2d.model_window_config;
+import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🛰️.proto";
+message Fem2dModelWindowConfig {
+  semio.framework.ui.viewport.Viewport2d camera = 1;
+}

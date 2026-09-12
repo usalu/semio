@@ -1,11 +1,11 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: import("../../🟦️.ts").ShardClientTestDependenciesV1, testSource: TestSource): Promise<void> {
-  const { ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID, NO_RESIDENT_FAULT, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope } = dependencies;
+  const { ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, NO_RESIDENT_FAULT, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL, admitSegmentedDownloadChunk, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope } = dependencies;
   type ActorInstanceLifecycleReceipt = import("../../../🚪️lifetime/🟦️.ts").ActorInstanceLifecycleReceipt;
   type ActorInstanceLifetime = import("../../../🚪️lifetime/🟦️.ts").ActorInstanceLifetime;
   type InboundMessage = import("../../🟦️.ts").InboundMessage;
-  type Lane = import("../../../🤖️generated/🟦️actor.ts").Lane;
+  type Lane = import("../../../🤖️generated/🎭️actor/🟦️.ts").Lane;
   type OutboundMessage = import("../../🟦️.ts").OutboundMessage;
   type OwnedResidentAdmission = import("../../../../🌱️value/💾️resident/🟦️.ts").OwnedResidentAdmission;
   type OwnedResidentRecord = import("../../../../🌱️value/💾️resident/🟦️.ts").OwnedResidentRecord;
@@ -2422,7 +2422,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const read = client.takeSegmentedDownloadChunk("actor-download", 17, 91n);
         const message = workers[0]!.sent.at(-1) as { readonly requestId: string };
         workers[0]!.deliver({ kind: "result", requestId: message.requestId, ok: true, value: invalid });
-        await expect(read).rejects.toThrow("segmented-download-transport-limit");
+        await expect(read).rejects.toThrow(/segmented-download-chunk-(empty|over-cap)/);
       }
     });
 
@@ -2435,7 +2435,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("preserves the complete u64 operation authority through structured clone", async () => {
       const { client, workers } = await activatedHarness();
-      for (const operationId of [(1n << 53n) + 1n, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID]) {
+      for (const operationId of [(1n << 53n) + 1n, SEGMENTED_DOWNLOAD_CONTRACT.maximumOperationId]) {
         const read = client.takeSegmentedDownloadChunk("actor-download", 17, operationId);
         const message = structuredClone(workers[0]!.sent.at(-1)) as { readonly requestId: string; readonly operationId: bigint };
         expect(message.operationId).toBe(operationId);
@@ -2448,6 +2448,118 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { client } = await activatedHarness();
       await expect(client.takeSegmentedDownloadChunk("actor-download", 17, 0n)).rejects.toThrow("segmented-download-authority-invalid");
       await expect(client.takeSegmentedDownloadChunk("actor-download", 17, 1n << 64n)).rejects.toThrow("segmented-download-authority-invalid");
+    });
+
+    /** 📤️ THE 2026-09-12 segmented-export fault (ticket 26/09/02, battery `probe-2026-09-12T08-28-10.md`
+     * on wasm #56): jco lifts `option<t>` as the TAGGED `{ tag, val }` variant — the generated bridge's
+     * own `unwrapOption` docstring says exactly that — and `takeSegmentedDownloadChunk` was the ONE guest
+     * export handed on raw, so the shard worker received `[object Object]`, refused chunk 0, and the
+     * terminal `{ tag: "none" }` was not `undefined` either. Every host-side law of this lane stubbed the
+     * worker's REPLY with an already-unwrapped `Uint8Array`, so the guest's real shape appeared in none of
+     * them. Driven here through the REAL generated bridge bytes, against a stub guest module returning
+     * exactly what jco's `_liftFlatVariant` builds. */
+    it("unwraps the guest's tagged option in the generated bridge bytes, so no hop ever sees [object Object]", async () => {
+      const { PLUGIN_HOST_SHIM_FILE, pluginComponentBridgeSource } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts");
+      const { mkdtempSync, writeFileSync } = await import("node:fs");
+      const { tmpdir } = await import("node:os");
+      const { join } = await import("node:path");
+      const { pathToFileURL } = await import("node:url");
+      const directory = mkdtempSync(join(tmpdir(), "semio-segmented-bridge-"));
+      const chunk = new Uint8Array(SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes).fill(7);
+      (globalThis as Record<string, unknown>).__segmentedLifted = [{ tag: "some", val: chunk }, { tag: "none" }];
+      writeFileSync(join(directory, "guest.js"), 'export const reactor = {};\nexport const jobs = { takeSegmentedDownloadChunk: async () => globalThis.__segmentedLifted.shift() };\nexport const checkpoint = {};\nexport const describe = {};\n');
+      writeFileSync(join(directory, PLUGIN_HOST_SHIM_FILE), "export function __resolveEffect() {}\nexport function __rejectEffect() {}\n");
+      writeFileSync(join(directory, "bridge.mjs"), pluginComponentBridgeSource("guest", "guest.wasm"));
+      const { createActorApi } = (await import(pathToFileURL(join(directory, "bridge.mjs")).href)) as { createActorApi: (actorId: string, generation: bigint) => Promise<{ takeSegmentedDownloadChunk: (instanceId: number, operationId: bigint) => Promise<unknown> }> };
+      const api = await createActorApi("segmented-actor", 1n);
+      const first = await api.takeSegmentedDownloadChunk(1, 91n);
+      expect(Object.prototype.toString.call(first)).toBe("[object Uint8Array]");
+      expect(admitSegmentedDownloadChunk(first)).toBe(first);
+      await expect(api.takeSegmentedDownloadChunk(1, 91n)).resolves.toBeUndefined();
+      // 🔮️ Independent oracle for the same bytes: handed on RAW, that is precisely what every hop refuses —
+      // which is why the fault read as an exceeded byte cap while nothing was over any cap at all.
+      expect(() => admitSegmentedDownloadChunk({ tag: "some", val: chunk })).toThrow(SEGMENTED_DOWNLOAD_REFUSAL.chunkType);
+      expect(() => admitSegmentedDownloadChunk({ tag: "none" })).toThrow(SEGMENTED_DOWNLOAD_REFUSAL.chunkType);
+    });
+
+    /** 📤️ The WORKER half of the one chunk contract, driven through the generated worker's own dispatcher:
+     * a 145 714 B export (Nakagin) and a full `maximumTotalBytes - 1` payload both stream chunk by chunk,
+     * and each violated bound is refused by ITS OWN name — never one "limit" standing for four different
+     * violations, which is what made the live battery unreadable. */
+    it("streams a 145 KB and a maximumTotalBytes-1 download through the generated worker and names each violated bound", async () => {
+      const vm = await import("node:vm");
+      const { SEGMENTED_DOWNLOAD_CHUNK_BYTES, shardWorkerSource } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts");
+      expect(SEGMENTED_DOWNLOAD_CHUNK_BYTES).toBe(SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes);
+      const source = shardWorkerSource().replace("await import(/* @vite-ignore */ moduleUrl)", "await __import(moduleUrl)");
+      let remaining = 0;
+      let poisoned: unknown;
+      const results: { readonly ok: boolean; readonly value?: unknown; readonly error?: string }[] = [];
+      let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
+      const api = {
+        poll: async () => undefined,
+        takeSegmentedDownloadChunk: async () => {
+          if (poisoned !== undefined) {
+            const value = poisoned;
+            poisoned = undefined;
+            return value;
+          }
+          if (remaining === 0) return undefined;
+          const bytes = Math.min(remaining, SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes);
+          remaining -= bytes;
+          return new Uint8Array(bytes).fill(3);
+        },
+      };
+      const context = vm.createContext({
+        WebAssembly: { Suspending: class {}, promising: (value: unknown) => value },
+        URL,
+        __import: async () => ({ createActorApi: async () => api }),
+        setInterval: () => 1,
+        clearInterval: () => undefined,
+        console,
+        self: {
+          location: { href: "https://fixture.invalid/plugin-modules/_shard/shard-worker.js" },
+          postMessage: (message: { kind: string; ok?: boolean; value?: unknown; error?: string }) => {
+            if (message.kind === "result") results.push({ ok: message.ok === true, value: message.value, error: message.error });
+          },
+          addEventListener: (_kind: string, handler: typeof dispatch) => { dispatch = handler; },
+        },
+      });
+      new vm.Script(source).runInContext(context);
+      if (!dispatch) throw new Error("Missing generated worker dispatcher");
+      const send = dispatch as (event: { data: Record<string, unknown> }) => Promise<void>;
+      await send({ data: { kind: "activate", requestId: "a1", actorId: "a", activationGeneration: 1n, moduleUrl: "https://fixture.invalid/a.js", assets: [] } });
+      const take = async (): Promise<{ readonly ok: boolean; readonly value?: unknown; readonly error?: string }> => {
+        await send({ data: { kind: "takeSegmentedDownloadChunk", requestId: `t${results.length}`, actorId: "a", instanceId: 1, operationId: 91n } });
+        return results.at(-1)!;
+      };
+      for (const total of [145_714, SEGMENTED_DOWNLOAD_CONTRACT.maximumTotalBytes - 1]) {
+        remaining = total;
+        let drained = 0;
+        let taken = 0;
+        for (;;) {
+          const settled = await take();
+          expect(settled.ok, `${total} B download must stream without a worker fault, got ${settled.error}`).toBe(true);
+          if (settled.value === undefined) break;
+          taken += 1;
+          const page = settled.value as Uint8Array;
+          expect(Object.prototype.toString.call(page)).toBe("[object Uint8Array]");
+          expect(page.byteLength).toBeLessThanOrEqual(SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes);
+          drained += page.byteLength;
+        }
+        expect(drained).toBe(total);
+        expect(taken).toBe(Math.ceil(total / SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes));
+        expect(taken).toBeLessThanOrEqual(SEGMENTED_DOWNLOAD_CONTRACT.maximumOutstandingChunks);
+      }
+      for (const [value, code] of [
+        [{ tag: "some", val: new Uint8Array(4) }, SEGMENTED_DOWNLOAD_REFUSAL.chunkType],
+        [new Uint8Array(0), SEGMENTED_DOWNLOAD_REFUSAL.chunkEmpty],
+        [new Uint8Array(SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes + 1), SEGMENTED_DOWNLOAD_REFUSAL.chunkOverCap],
+      ] as const) {
+        poisoned = value;
+        const settled = await take();
+        expect(settled.ok).toBe(false);
+        expect(settled.error).toContain(code);
+      }
     });
   });
 
@@ -2597,20 +2709,32 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("mirrors the schema-owned policy record in every consumer of it", async () => {
       const fixture = await livenessFixture();
       expect({ ...SHARD_LIVENESS_POLICY }).toEqual(fixture.policy);
-      const { SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
+      const { SEGMENTED_DOWNLOAD_CHUNK_BYTES, SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts");
       expect(SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS).toBe(fixture.policy.progressIntervalMs);
+      // 📤️ The segmented-download chunk contract, same rule: one schema-owned record, four enforcing hops
+      // (guest producer, generated worker, host transport, host drain) and no literal of anyone's own.
+      const { default: schema } = await import("../../📤️segmented-download/🧬️schema/🔣️.json");
+      const { default: contractFixture } = await import("../../📤️segmented-download/🧫️fixtures/🔣️.json");
+      const { default: Ajv } = await import("ajv");
+      expect(new Ajv({ strict: true }).validate(schema, contractFixture)).toBe(true);
+      expect({ ...SEGMENTED_DOWNLOAD_CONTRACT, maximumOperationId: SEGMENTED_DOWNLOAD_CONTRACT.maximumOperationId.toString() }).toEqual(contractFixture.contract);
+      expect(SEGMENTED_DOWNLOAD_CHUNK_BYTES).toBe(contractFixture.contract.chunkBytes);
+      expect(contractFixture.contract.chunkBytes * contractFixture.contract.maximumOutstandingChunks).toBe(contractFixture.contract.maximumTotalBytes);
+      expect(Object.values(SEGMENTED_DOWNLOAD_REFUSAL).sort()).toEqual(contractFixture.refusals.map((refusal) => refusal.code).sort());
+      const { shardWorkerSource } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts");
+      expect(shardWorkerSource()).toContain(`const SEGMENTED_DOWNLOAD_CHUNK_BYTES = ${contractFixture.contract.chunkBytes};`);
     });
 
     it("serves the shard worker from the schema-owned distribution route, not a transliteration of it", async () => {
       const { SHARD_WORKER_URL } = await import("../../../🧵️shard-runtime/🟦️.ts");
       const { MODULE_PLUGIN_ROUTE, MODULE_SHARD_DIRECTORY } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts");
-      const { SHARD_WORKER_FILE } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
+      const { SHARD_WORKER_FILE } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts");
       expect(SHARD_WORKER_URL).toBe(`${MODULE_PLUGIN_ROUTE}/${MODULE_SHARD_DIRECTORY}/${SHARD_WORKER_FILE}`);
       // 🩺️ Every browser-side spawner must use THAT url. A private ASCII transliteration
       // (`/plugin-modules/_shard/…`) is answered by Vite's SPA fallback with `text/html`, which a
       // module Worker rejects as a message-less `error` event — the 2026-09-05 four-dead-shard boot.
       const { readFileSync } = await import("node:fs");
-      for (const spawner of ["../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx", "../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts"]) {
+      for (const spawner of ["../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx", "../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts"]) {
         const source = readFileSync(new URL(spawner, testSource.url), "utf8");
         expect(source, spawner).not.toContain("/plugin-modules/_shard/");
         if (source.includes("new Worker(")) expect(source, spawner).toContain("SHARD_WORKER_URL");
@@ -2794,12 +2918,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: ts } = await import("typescript");
       const { readFileSync } = await import("node:fs");
       const vm = await import("node:vm");
-      const path = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", testSource.url);
+      const path = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts", testSource.url);
       const parsed = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
       const declaration = parsed.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "shardWorkerSource");
       const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;
       if (!returned || !ts.isTemplateExpression(returned)) throw new Error("Changed generated shard worker source");
-      const { shardWorkerSource } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
+      const { shardWorkerSource } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts");
       // 🧪️ `await import(url)` has no meaning inside a bare `vm` context; the ONE call is redirected to
       // an injected loader so the same generated bytes can be driven with that boundary held open.
       const source = shardWorkerSource().replace("await import(/* @vite-ignore */ moduleUrl)", "await __import(moduleUrl)");

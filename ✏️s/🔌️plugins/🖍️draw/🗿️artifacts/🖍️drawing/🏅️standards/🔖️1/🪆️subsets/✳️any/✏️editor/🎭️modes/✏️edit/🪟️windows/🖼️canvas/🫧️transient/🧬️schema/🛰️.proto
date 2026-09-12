@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.app.drawing.drawing.canvas_window_transient;
+message DrawingCanvasWindowTransient {
+  string engagement_input = 1;
+  uint64 trace_pointer_generation = 2;
+  uint64 trace_pointer_completed_work = 3;
+  uint64 trace_pointer_pending_work = 4;
+}

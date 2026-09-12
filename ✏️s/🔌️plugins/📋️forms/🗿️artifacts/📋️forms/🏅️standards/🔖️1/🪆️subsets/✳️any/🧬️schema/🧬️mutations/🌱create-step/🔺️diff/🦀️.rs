@@ -1,7 +1,7 @@
 //! 🔺️ `create-step` — sparse diff construction.
 
 use super::mutation::CreateStep;
-use crate::diff::text::forms_diff_from_delta;
+use crate::schema::diff::forms_diff_from_delta;
 use crate::schema::diff::FormsStepsDelta;
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
 

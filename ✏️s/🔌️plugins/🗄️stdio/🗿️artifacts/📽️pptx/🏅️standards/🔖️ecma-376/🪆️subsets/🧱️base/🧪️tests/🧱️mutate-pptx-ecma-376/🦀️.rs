@@ -14,7 +14,7 @@
 //! links `semio-s-plugin-stdio` -- §5.3's own role separation, NOT a workaround for anything: the
 //! Rust subject phase runs, and wave 14 ran the full differential comparison against the oracle.
 //!
-//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracle/⚖️law`
+//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
 //! module, so a scenario cannot pass merely because `zip`+`quick-xml` declined to error:
 //! `mutate-<kind>` must MOVE the compared projection, `inverse-<kind>` must land back on the
 //! untouched deck's projection, and `identity-round-trip` must both preserve the projection and

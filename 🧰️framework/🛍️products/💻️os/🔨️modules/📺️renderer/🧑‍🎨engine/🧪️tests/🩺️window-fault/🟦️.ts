@@ -9,7 +9,7 @@ import { classifyWindowFault, WINDOW_FAULT_ATTRIBUTE, windowFaultFromError } fro
 import pluginLifetimeSchema from "../../../../🔌️plugin/🚪️lifetime/🧬️schema/🔣️.json";
 import faultVectors from "../../../../🔌️plugin/🩺️runtime-fault-vectors.json";
 import shellSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw";
-import uiBundleSource from "../../../../../../../🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx?raw";
+import uiBundleSource from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx?raw";
 
 type FaultVector = { readonly variant: string; readonly code: string; readonly class: string; readonly detail: string };
 type ClassificationCase = { readonly id: string; readonly code?: string; readonly supervisor?: string; readonly class: string };

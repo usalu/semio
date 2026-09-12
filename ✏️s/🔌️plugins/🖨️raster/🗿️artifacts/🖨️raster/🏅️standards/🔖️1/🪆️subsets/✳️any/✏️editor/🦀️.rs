@@ -721,7 +721,7 @@ impl ArtifactEditor for RasterPlayApp {
         Some(crate::spr::raster_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::spr::raster_document_store_owners())
     }
 
@@ -1036,10 +1036,7 @@ pub fn create_raster_app() -> AppDefinition {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-
-#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub(crate) mod unit_tests;
+
 //#endregion 🧪️Tests

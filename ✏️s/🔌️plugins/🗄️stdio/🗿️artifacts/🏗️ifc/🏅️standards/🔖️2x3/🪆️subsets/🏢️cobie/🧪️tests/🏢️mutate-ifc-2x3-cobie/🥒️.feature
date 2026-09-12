@@ -36,9 +36,9 @@ Feature: Apply every typed Basic FM Handover mutation to a real IFC2X3 building 
   `ruststep` 0.4 parses IFC2X3 exactly as it parses STEP AP214 but has NO writer at all. Per the
   fleet brief's §6 that rules out `@mode-differential`: ruststep cannot be a second PRODUCER of
   mutated bytes to diff the subject against. It is the INDEPENDENT READER instead — every mutation
-  the oracle dispatcher performs (`../../🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🔮️oracle/🦀️.rs`,
+  the oracle dispatcher performs (`../../🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🔮️oracles/🦀️.rs`,
   re-serializing through the standard-level from-scratch Part-21 writer at
-  `../../🏅️standards/🔖️2x3/🔮️oracle/🦀️.rs` rather than this repository's own production
+  `../../🏅️standards/🔖️2x3/🔮️oracles/🦀️.rs` rather than this repository's own production
   `step::engine::part21` writer, which would compare the implementation against itself) is read back
   through a FRESH `ruststep::ast::Exchange::from_str` call before `semantic-ifc-v1` compares it.
 

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::note::testkit::{dispatch, note_app};
+use crate::editor::note::unit_tests::context::{dispatch, note_app};
 use crate::editor::note::NoteCommand;
 use crate::schema::{block_id, find_block};
 use crate::NoteBlockNode;
@@ -16,9 +16,9 @@ async fn add_block_action_emits_one_op_and_grows_projection() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_block_then_undo_round_trip() {
-    use semio_framework_plugin::testkit;
+    use semio_framework_plugin::artifact_app_laws;
     let mut app = note_app().await;
-    testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1).await;
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -45,7 +45,7 @@ async fn patch_blocks_table_row_and_column_ops_clamp_at_one() {
 /// requires `note_app_with_registry()` (see that helper's own doc comment).
 #[semio_framework_async_macros::async_test]
 async fn duplicate_selection_clones_with_offset() {
-    use crate::editor::note::testkit::{note_app_with_registry, select_blocks};
+    use crate::editor::note::unit_tests::context::{note_app_with_registry, select_blocks};
     let mut app = note_app_with_registry().await;
     dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 10.0, y: 10.0 })).await;
     let source_id = block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "module", "dependency", "source", "tests", "cancellation", "expectedBundle", "expectedDefinition"],
+  "properties": {
+    "contract": { "const": "canonical-go-test-dispatch-v1" },
+    "module": { "type": "string", "minLength": 1 },
+    "dependency": { "$ref": "#/definitions/source" },
+    "source": { "$ref": "#/definitions/source" },
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directory", "package", "content", "file"],
+      "properties": {
+        "directory": { "type": "string", "minLength": 1 },
+        "package": { "type": "string", "minLength": 1 },
+        "content": { "type": "string", "minLength": 1 },
+        "file": { "type": "string", "minLength": 1 }
+      }
+    },
+    "cancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["testName", "ready", "marker", "content"],
+      "properties": {
+        "testName": { "type": "string", "minLength": 1 },
+        "ready": { "type": "string", "minLength": 1 },
+        "marker": { "type": "string", "minLength": 1 },
+        "content": { "type": "string", "minLength": 1 }
+      }
+    },
+    "expectedBundle": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "expectedDefinition": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+  },
+  "definitions": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directory", "module", "package", "content"],
+      "properties": {
+        "directory": { "type": "string", "minLength": 1 },
+        "module": { "type": "string", "minLength": 1 },
+        "package": { "type": "string", "minLength": 1 },
+        "content": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

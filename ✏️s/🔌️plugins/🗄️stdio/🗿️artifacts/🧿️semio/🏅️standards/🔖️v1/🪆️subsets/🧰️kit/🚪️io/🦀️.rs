@@ -49,21 +49,19 @@ pub mod derived_composition {
     //#endregion 🔖️Composer
 
     //#region 🔖️SubsetValidator
-    /// 🛡️ Decode PLUS a real referential-invariant check on the owned CHILD slots: every
-    /// `objects`/`models`/`properties` handle's `target` dialect must name the kind the slot
-    /// declares — same convention `📦️object`'s own validator (this ticket's first composite subset)
-    /// established. The LINK pool (`representations`) is intentionally NOT kind-checked here — a
+    /// 🛡️ Decodes and verifies exact child identity plus the complete Semio dialect tuple. The LINK
+    /// pool (`representations`) is intentionally not kind-checked here — a
     /// link may legitimately point at any independent artifact kind (image/mesh/whatever a
     /// catalog's representation happens to be), so there is no single expected kind to assert.
     pub struct SemioKitValidator;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn wrong_kind(field: &str, expected_subset: &str, target: &store::os_io::ArtifactRef) -> Option<dsl::Diagnostic> {
-        if target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.subset != expected_subset {
+    fn wrong_child<S>(field: &str, expected_subset: &str, child: &store::ArtifactChild<S>) -> Option<dsl::Diagnostic> {
+        if let Err(message) = crate::standards::v1::subsets::base::schema::child::validate_semio_child_identity(&child.child_id, &child.target, expected_subset) {
             Some(dsl::Diagnostic::error(
-                "stdio.semio_kit.validate-child-kind-mismatch",
+                "stdio.semio_kit.validate-child-identity-mismatch",
                 dsl::TextSpan::at(1, 1),
-                format!("SemioKitValidator: `{field}` handle targets {}@{}/{}, expected kind s.stdio.semio subset {expected_subset}", target.dialect.artifact_kind, target.dialect.standard, target.dialect.subset),
+                format!("SemioKitValidator: `{field}` {message}"),
             ))
         } else {
             None
@@ -82,13 +80,13 @@ pub mod derived_composition {
             };
             let mut diagnostics = Vec::new();
             for object in &snapshot.objects {
-                diagnostics.extend(wrong_kind("objects", "object", &object.target));
+                diagnostics.extend(wrong_child("objects", "object", object));
             }
             for model in &snapshot.models {
-                diagnostics.extend(wrong_kind("models", "model", &model.target));
+                diagnostics.extend(wrong_child("models", "model", model));
             }
             if let Some(properties) = &snapshot.properties {
-                diagnostics.extend(wrong_kind("properties", "value", &properties.target));
+                diagnostics.extend(wrong_child("properties", "value", properties));
             }
             diagnostics
         }

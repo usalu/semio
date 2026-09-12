@@ -22,7 +22,7 @@ class PreparationScript extends BundleScript {
       if (!Array.isArray(marker.files) || !marker.files.includes("🌉️bridge.js") || !marker.files.includes("🔣️.json") || marker.files.some((file: string) => !existsSync(join(directory, file)))) throw new Error(`Incomplete Demonstrator runtime component: ${name}`);
     }
     for (const target of DEMONSTRATOR_RUNTIME_TARGETS) {
-      const file = join(plugin, "📇️registry/dist/sessions", target.variant, "🟦️session.ts");
+      const file = join(plugin, "📇️registry/dist/sessions", target.variant, "🎮️playground-session", "🟦️.ts");
       const session = (await import(pathToFileURL(file).href)).PLAYGROUND_SESSION;
       if (session.variant !== target.variant || session.registryPluginId !== target.pluginId) throw new Error(`Mismatched Demonstrator session: ${target.variant}`);
     }

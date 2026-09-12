@@ -58,7 +58,7 @@ use serde_json::Value;
 
 // #region 🔖️Fixture
 
-const FIXTURE: &str = include_str!("🔣️.json");
+const FIXTURE: &str = include_str!("../../🧫️fixtures/🐚️shell-orientation/🔣️.json");
 const FIXTURE_SCHEMA: &str = "s.stdio.semio.brep.shell-orientation/v1";
 
 /// 🧫 The fixture's own root, schema-checked so a renamed contract fails loudly instead of

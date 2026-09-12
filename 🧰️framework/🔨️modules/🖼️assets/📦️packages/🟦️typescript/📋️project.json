@@ -18,12 +18,10 @@
       "outputs": [
         "{projectRoot}/../../README.md",
         "{projectRoot}/../../🌱️metabolism/🔣️icons/🤖️generated",
-        "{projectRoot}/../../🔣️icons/🤖️generated/🐍️icons.py",
+        "{projectRoot}/../../🔣️icons/🤖️generated/🖼️icons",
         "{projectRoot}/../../🔣️icons/🤖️generated/🖼️icon_svgs",
-        "{projectRoot}/../../🔣️icons/🤖️generated/🔷️Icons.cs",
-        "{projectRoot}/../../🔣️icons/🤖️generated/🟦️icons.ts",
-        "{projectRoot}/../../🔣️icons/🤖️generated/🔤️shortcodes.ts",
-        "{projectRoot}/../../🔣️icons/🤖️generated/🦀️icon_name.rs"
+        "{projectRoot}/../../🔣️icons/🤖️generated/🔤️shortcodes",
+        "{projectRoot}/../../🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs"
       ]
     },
     "preview-generated": {

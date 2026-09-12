@@ -1,0 +1,23 @@
+{
+  "schema": "semio.layout.window-ownership/v1",
+  "document": { "pages": [{ "id": "page-1" }] },
+  "windowInstances": [
+    { "id": "layout-left", "windowKindId": "layout-blueprint" },
+    { "id": "layout-right", "windowKindId": "layout-blueprint" },
+    { "id": "layout-preview", "windowKindId": "layout-preview" }
+  ],
+  "baseConfig": { "activePageId": "page-1", "camera": { "x": 0, "y": 0, "zoom": 1 } },
+  "baseTransient": { "dropPreview": { "kind": "", "x": 0, "y": 0 }, "engagementInput": "" },
+  "configMutations": [
+    { "windowId": "layout-left", "windowKindId": "layout-blueprint", "mutation": { "kind": "snapshot", "config": { "activePageId": "page-left", "camera": { "x": 12, "y": -8, "zoom": 2 } } } },
+    { "windowId": "layout-right", "windowKindId": "layout-blueprint", "mutation": { "kind": "snapshot", "config": { "activePageId": "page-right", "camera": { "x": -21, "y": 5, "zoom": 0.75 } } } }
+  ],
+  "transientMutations": [
+    { "windowId": "layout-left", "windowKindId": "layout-blueprint", "mutation": { "kind": "snapshot", "transient": { "dropPreview": { "kind": "text", "x": 4, "y": 9 }, "engagementInput": "export png" } } },
+    { "windowId": "layout-right", "windowKindId": "layout-blueprint", "mutation": { "kind": "snapshot", "transient": { "dropPreview": { "kind": "image", "x": 18, "y": 3 }, "engagementInput": "undo" } } }
+  ],
+  "rejections": [
+    { "windowId": "missing-layout", "claimedWindowKindId": "layout-blueprint", "code": "layout-window-stale" },
+    { "windowId": "layout-preview", "claimedWindowKindId": "layout-blueprint", "code": "layout-window-kind-mismatch" }
+  ]
+}

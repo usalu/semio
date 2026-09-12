@@ -1,0 +1,28 @@
+{
+  "owner": "fixture:browser:dev",
+  "files": {
+    "🌉️bridge.js": "import { io } from '../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js';\n",
+    "nested/component.core.wasm": "fixture wasm bytes",
+    "🔣️.json": "{\"manifest\":{\"pluginId\":\"fixture\"}}"
+  },
+  "ambient": {
+    "📥️install.json": "{\"installedAt\":123}",
+    "other.txt": "unowned"
+  },
+  "destination": "🧩️extension-modules/fixture",
+  "shimDirectory": "🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
+  "rewrittenBridge": "import { io } from '../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js';\n",
+  "invalidFiles": [
+    "../escape",
+    "/absolute",
+    "C:\\absolute",
+    "nested/../escape",
+    "nested//empty",
+    "./relative",
+    ".nx-artifact.json"
+  ],
+  "invalidOwners": [
+    "",
+    "development-extension:fixture"
+  ]
+}

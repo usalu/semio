@@ -18,8 +18,7 @@ use std::collections::BTreeMap;
 /// KEPT unread by the new declaration tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM,
 /// debt D1 — deleted repo-wide only once every plugin has migrated, not this pass): the real en/de
 /// localized names (`"Note"`/`"Notiz"`) still live only on these `ArtifactCapability` rows, and
-/// `crate::editor::note::config::schema::register_app_schema()` (still called from this file's own
-/// `.setup()`) registers the `NotePlayApp` CONFIG/PRESENCE schema, an app-scope concern neither the
+/// `NotePlayApp::app_schema()` owns the app CONFIG/PRESENCE schema, an app-scope concern neither the
 /// old nor the new declaration type has a field for. The `io_registry::entries()`/`NoteComposer`
 /// machinery this comment block's own `"composer"` rows once cross-checked against is deleted
 /// (`🚪️io/🦀️.rs`'s `io()` replaces it); the capability rows themselves are inert now, kept
@@ -1252,16 +1251,6 @@ pub mod editor {
 
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs"]
         pub mod retained;
-
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
 
         #[path = "."]
         pub mod window {

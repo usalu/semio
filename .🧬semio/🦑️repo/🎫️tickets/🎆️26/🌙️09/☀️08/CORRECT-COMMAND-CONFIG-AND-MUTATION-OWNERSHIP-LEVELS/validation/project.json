@@ -1,128 +1,397 @@
 {
   "name": "abstraction-ownership-validation",
   "targets": {
-  "stdio-document-contract": {
-    "executor": "nx:run-commands",
-    "cache": false,
-    "options": {
-      "command": "bun ./📜️script.ts stdio-document-contract"
-    }
-  },
-  "stdio-document-contract-native": {
-    "executor": "nx:run-commands",
-    "cache": false,
-    "options": {
-      "command": "bun ./📜️script.ts stdio-document-contract native"
-    }
-  },
-    "owned-document-closure": {"executor": "nx:run-commands", "cache": false, "options": {"command": "bun ./📜️script.ts owned-document-closure"}},
-    "owned-document-closure-native": {"executor": "nx:run-commands", "cache": false, "options": {"command": "bun ./📜️script.ts owned-document-closure native"}},
+    "verify-abstraction-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify-abstraction-ownership"
+      }
+    },
+    "framework-viewport-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-viewport-ownership"
+      }
+    },
+    "framework-viewport-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-viewport-ownership native"
+      }
+    },
+    "framework-ui-protocol-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-ui-protocol-ownership"
+      }
+    },
+    "forms-document-laws-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts forms-document-contract native all"
+      }
+    },
+    "dag-document-laws-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts dag-document-contract native all"
+      }
+    },
+    "semio-envelope-identity": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts semio-envelope-identity"
+      }
+    },
+    "semio-envelope-identity-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts semio-envelope-identity native"
+      }
+    },
+    "dag-document-contract-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts dag-document-contract native"
+      }
+    },
+    "forms-document-contract-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts forms-document-contract native"
+      }
+    },
+    "stdio-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts stdio-document-contract"
+      }
+    },
+    "stdio-document-contract-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts stdio-document-contract native"
+      }
+    },
+    "owned-document-closure": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts owned-document-closure"
+      }
+    },
+    "owned-document-closure-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts owned-document-closure native"
+      }
+    },
     "map-document-contract": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts map-document-contract" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts map-document-contract"
+      }
     },
     "map-document-contract-native": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts map-document-contract native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts map-document-contract native"
+      }
     },
     "terrain-document-contract": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts terrain-document-contract" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts terrain-document-contract"
+      }
     },
     "terrain-document-contract-native": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts terrain-document-contract native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts terrain-document-contract native"
+      }
     },
     "program-document-contract": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts program-document-contract" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts program-document-contract"
+      }
     },
     "program-document-contract-native": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts program-document-contract native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts program-document-contract native"
+      }
     },
     "layout-document-contract": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts layout-document-contract" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts layout-document-contract"
+      }
     },
     "layout-document-contract-native": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts layout-document-contract native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts layout-document-contract native"
+      }
     },
     "cad-document-contract": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts cad-document-contract" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cad-document-contract"
+      }
     },
     "cad-document-contract-native": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts cad-document-contract native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cad-document-contract native"
+      }
     },
     "generation3d-preview-window-transient": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts generation3d-preview-window-transient" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generation3d-preview-window-transient"
+      }
     },
     "generation3d-preview-window-transient-native": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts generation3d-preview-window-transient native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generation3d-preview-window-transient native"
+      }
     },
     "gis-terrain-window-config": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts gis-terrain-window-config" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts gis-terrain-window-config"
+      }
     },
     "gis-terrain-window-config-native": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts gis-terrain-window-config native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts gis-terrain-window-config native"
+      }
     },
     "flow-window-ownership-oracle": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts flow-window-ownership oracle" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts flow-window-ownership oracle"
+      }
     },
     "flow-window-ownership-check": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts flow-window-ownership check" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts flow-window-ownership check"
+      }
     },
     "flow-window-ownership-native": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts flow-window-ownership native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts flow-window-ownership native"
+      }
+    },
+    "forms-try-window-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts forms-try-window-ownership oracle"
+      }
+    },
+    "forms-try-window-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts forms-try-window-ownership native"
+      }
+    },
+    "note-empty-config-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts note-empty-config-ownership oracle"
+      }
+    },
+    "note-empty-config-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts note-empty-config-ownership native"
+      }
+    },
+    "layout-window-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts layout-window-ownership oracle"
+      }
+    },
+    "layout-window-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts layout-window-ownership native"
+      }
+    },
+    "sequence-window-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts sequence-window-ownership oracle"
+      }
+    },
+    "sequence-window-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts sequence-window-ownership native"
+      }
+    },
+    "gis-map-window-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts gis-map-window-ownership oracle"
+      }
+    },
+    "gis-map-window-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts gis-map-window-ownership native"
+      }
+    },
+    "remodel-window-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts remodel-window-ownership oracle"
+      }
+    },
+    "remodel-window-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts remodel-window-ownership native"
+      }
+    },
+    "norm-results-window-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts norm-results-window-ownership oracle"
+      }
+    },
+    "norm-results-window-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts norm-results-window-ownership native"
+      }
+    },
+    "drawing-canvas-window-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts drawing-canvas-window-ownership oracle"
+      }
+    },
+    "drawing-canvas-window-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts drawing-canvas-window-ownership native"
+      }
     },
     "store-reload-publication-native": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts store-reload-publication native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts store-reload-publication native"
+      }
     },
     "ephemeral-transfer-preparation-native": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts ephemeral-transfer-preparation native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts ephemeral-transfer-preparation native"
+      }
     },
     "presentation-document-contract": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts presentation-document-contract" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts presentation-document-contract"
+      }
     },
     "presentation-document-contract-native": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts presentation-document-contract native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts presentation-document-contract native"
+      }
     },
     "procedure-document-contract": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts procedure-document-contract" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts procedure-document-contract"
+      }
     },
     "procedure-document-contract-native": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "command": "bun ./📜️script.ts procedure-document-contract native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts procedure-document-contract native"
+      }
     },
     "dag-demo-ownership": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "bun ./📜️script.ts dag-demo-ownership" }
+      "options": {
+        "command": "bun ./📜️script.ts dag-demo-ownership"
+      }
     },
     "note-document-contract-native": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "bun ./📜️script.ts note-document-contract native" }
+      "options": {
+        "command": "bun ./📜️script.ts note-document-contract native"
+      }
     },
     "note-document-contract": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "bun ./📜️script.ts note-document-contract" }
+      "options": {
+        "command": "bun ./📜️script.ts note-document-contract"
+      }
     },
     "norm-document-contract": {
       "executor": "nx:run-commands",
@@ -390,6 +659,27 @@
         "command": "bun ./📜️script.ts window-config-channel typescript"
       }
     },
+    "recursive-document-archive-typescript": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts recursive-document-archive typescript"
+      }
+    },
+    "recursive-document-archive-storage": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts recursive-document-archive storage"
+      }
+    },
+    "recursive-document-archive-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts recursive-document-archive native"
+      }
+    },
     "jack-window-config-oracle": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -430,6 +720,20 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts retained-window-input oracle"
+      }
+    },
+    "recursive-replacement-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts retained-window-input native retained_window_input_recursive_replacement_publishes_the_complete_nested_bundle_atomically"
+      }
+    },
+    "recursive-replacement-suite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts retained-window-input native retained_window_input_recursive_"
       }
     },
     "wires-window-transient": {
@@ -598,6 +902,125 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts wires-pointer-move"
+      }
+    },
+    "snapshot-read-retirement": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts snapshot-read-retirement"
+      }
+    },
+    "snapshot-read-retirement-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts snapshot-read-retirement native"
+      }
+    },
+    "curation-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts curation-document-contract"
+      }
+    },
+    "curation-document-contract-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts curation-document-contract native"
+      }
+    },
+    "process3d-diff-laws": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts process3d-diff-laws"
+      }
+    },
+    "fem2d-window-config-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts fem2d-window-config-contract"
+      }
+    },
+    "fem2d-window-config-contract-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts fem2d-window-config-contract native"
+      }
+    },
+    "fem3d-window-config-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts fem3d-window-config-contract"
+      }
+    },
+    "fem3d-window-config-contract-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts fem3d-window-config-contract native"
+      }
+    },
+    "composition-policy": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts composition-policy"
+      }
+    },
+    "framework-job-physical-close": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-job-physical-close"
+      }
+    },
+    "framework-paged-list-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-paged-list-ownership"
+      }
+    },
+    "framework-variant-field-casing": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-variant-field-casing"
+      }
+    },
+    "framework-empty-state-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-empty-state-contract"
+      }
+    },
+    "framework-empty-state-contract-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-empty-state-contract native"
+      }
+    },
+    "recursive-archive-history-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts recursive-archive-history native"
+      }
+    },
+    "fem3d-numerical-child-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts fem3d-numerical-child-native"
       }
     }
   }

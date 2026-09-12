@@ -1,3 +1,15 @@
+pub(crate) mod context {
+    //! 🧪️ `context::assert_declared_actions_bridge_to_commands`'s signature is still
+    //! `fn(manifest: fn() -> App)` (framework test context gap, `📓️w0-f-report.md` Gap 3) — `App { definition,
+    //! examples }` shape kept alive here purely to satisfy that call.
+    use super::super::create_playground_editor;
+    use semio_framework_plugin::App;
+    
+    pub fn playground_editor_manifest_for_tests() -> App {
+        App { definition: create_playground_editor(), examples: Vec::new() }
+    }
+}
+
 use super::*;
 use semio_framework_plugin::{EditorApp, HistoryView};
 
@@ -55,11 +67,11 @@ async fn change_schema_command_mutates_the_schema_field() {
 
 #[semio_framework_async_macros::async_test]
 async fn registry_backed_editor_installs_its_exact_bounded_command_proof() {
-    let _app = semio_framework_plugin::testkit::new_app_with_registry::<EditorApp<PlaygroundEditor>>(testkit::playground_editor_manifest_for_testkit).await;
+    let _app = semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_the_declared_action_and_rejects_unknown_ones() {
-    semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<PlaygroundEditor>>(testkit::playground_editor_manifest_for_testkit).await;
+    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests).await;
     assert!(PlaygroundEditor::command_from_action("noSuchAction", None).is_err());
 }

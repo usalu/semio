@@ -7,27 +7,11 @@
     "config": {
       "type": "object",
       "properties": {
-        "currentStepIndex": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "tryValues": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
         "contributionsJson": {
           "type": "string"
         }
       },
       "required": [
-        "currentStepIndex",
-        "tryValues",
         "contributionsJson"
       ],
       "additionalProperties": false

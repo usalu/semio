@@ -1,6 +1,6 @@
 //! 📥️ 📥️ Remodeling play app commands command — `import-video-done`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::replace_stream_source;
 use crate::op::RemodelingMutation;
 use crate::schema::video_codec_from_label;
@@ -23,7 +23,7 @@ pub struct ImportVideoDone {
 /// stream (`scene.streams.last()` — the stream this batch's ticks just built). Uses the SAME
 /// coalesce key as every preceding `ImportVideoFramePayload` tick, so the whole import (every
 /// accepted frame plus this final metadata write) collapses into one undo step.
-pub fn handle(payload: &ImportVideoDone, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &ImportVideoDone, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     let scene = doc.snapshot;
     let Some(stream_id) = scene.streams.last().map(|stream| stream.id.clone()) else { return Ok(Emit::default()) };
     let codec_value = video_codec_from_label(&payload.codec);

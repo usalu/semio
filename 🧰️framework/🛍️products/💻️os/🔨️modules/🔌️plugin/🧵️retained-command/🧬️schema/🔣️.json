@@ -664,26 +664,24 @@
           "minLength": 1
         },
         "disposition": {
-          "enum": [
-            "Migrated",
-            "BatchOnlyPendingRewrite",
-            "ForbiddenFromUi"
+          "allOf": [
+            {
+              "$ref": "#/$defs/InteractiveJobClassification"
+            },
+            {
+              "enum": [
+                "Migrated",
+                "BatchOnlyPendingRewrite",
+                "ForbiddenFromUi"
+              ]
+            }
           ]
         },
         "lanes": {
           "type": "array",
           "uniqueItems": true,
           "items": {
-            "enum": [
-              "HostOnly",
-              "Artifact",
-              "Config",
-              "Draft",
-              "Presence",
-              "Transient",
-              "Child",
-              "Interaction"
-            ]
+            "$ref": "#/$defs/ArtifactToolPublicationLane"
           }
         },
         "blocker": {
@@ -1138,6 +1136,657 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 128
+    },
+    "ArtifactToolPublicationLane": {
+      "$comment": "Canonical retained-command publication lanes, one PascalCase member per ArtifactToolPublicationLane runtime variant. Owners narrow this closed vocabulary with const or enum.",
+      "enum": [
+        "HostOnly",
+        "Artifact",
+        "Config",
+        "Draft",
+        "Presence",
+        "Transient",
+        "WindowConfig",
+        "WindowTransient",
+        "Child",
+        "Interaction"
+      ]
+    },
+    "InteractiveJobClassification": {
+      "$comment": "Canonical retained-command proof classifications, one PascalCase member per InteractiveJobClassification runtime variant.",
+      "enum": [
+        "Unclassified",
+        "Migrated",
+        "BatchOnlyPendingRewrite",
+        "ForbiddenFromUi",
+        "Deleted"
+      ]
+    },
+    "RetainedCommandAdmissionOutcome": {
+      "$comment": "Admission outcomes that are decisions rather than InteractiveJobClassification variants.",
+      "enum": [
+        "FailClosed"
+      ]
+    },
+    "RetainedCommandAdmission": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/InteractiveJobClassification"
+        },
+        {
+          "$ref": "#/$defs/RetainedCommandAdmissionOutcome"
+        }
+      ]
+    },
+    "RetainedCommandExecution": {
+      "enum": [
+        "bounded-first-step",
+        "bounded",
+        "batch",
+        "resumable"
+      ]
+    },
+    "RetainedCommandByteBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rawBytes",
+        "checkpointBytes",
+        "configValueBytes",
+        "configBaseBytes",
+        "commandStepBytes",
+        "storeStepBytes",
+        "workItems",
+        "preparationPhases"
+      ],
+      "properties": {
+        "rawBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "checkpointBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "configValueBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "configBaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "commandStepBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "storeStepBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "workItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "preparationPhases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "artifactStoreBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "decodedItems": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "RetainedCommandStepBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxRawBytes",
+        "maxDecodedItems",
+        "maxWorkUnitsPerStep",
+        "maxOutputBytes",
+        "maxStepMicros"
+      ],
+      "properties": {
+        "maxRawBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxDecodedItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxWorkUnitsPerStep": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxOutputBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxStepMicros": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxCheckpointBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxInFlightPages": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "RetainedCommandClassBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bounded"
+      ],
+      "properties": {
+        "bounded": {
+          "$ref": "#/$defs/RetainedCommandStepBudget"
+        },
+        "resumable": {
+          "$ref": "#/$defs/RetainedCommandStepBudget"
+        }
+      }
+    },
+    "RetainedCommandPublicationContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "toolId",
+        "lanes"
+      ],
+      "properties": {
+        "toolId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lanes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ArtifactToolPublicationLane"
+          }
+        }
+      }
+    },
+    "RetainedCommandBoundaryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "bytes",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RetainedCommandOracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "library",
+        "scope",
+        "runtimeDependency"
+      ],
+      "properties": {
+        "library": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runtimeDependency": {
+          "type": "boolean"
+        },
+        "ownedInterface": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "RetainedCommandRouteDisposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "disposition",
+        "lanes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "disposition": {
+          "$ref": "#/$defs/InteractiveJobClassification"
+        },
+        "lanes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ArtifactToolPublicationLane"
+          }
+        },
+        "blocker": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "RetainedCommandRouteExecutionLane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "execution",
+        "lanes",
+        "reason"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "execution": {
+          "$ref": "#/$defs/RetainedCommandExecution"
+        },
+        "lanes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ArtifactToolPublicationLane"
+          }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "RetainedCommandRouteExecutionFeature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "execution",
+        "feature"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "execution": {
+          "$ref": "#/$defs/RetainedCommandExecution"
+        },
+        "admission": {
+          "$ref": "#/$defs/RetainedCommandAdmission"
+        },
+        "status": {
+          "$ref": "#/$defs/InteractiveJobClassification"
+        },
+        "feature": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "RetainedCommandRouteVariant": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/RetainedCommandRouteDisposition"
+        },
+        {
+          "$ref": "#/$defs/RetainedCommandRouteExecutionLane"
+        },
+        {
+          "$ref": "#/$defs/RetainedCommandRouteExecutionFeature"
+        }
+      ]
+    },
+    "RetainedCommandCorpusLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rejectedAdditionalBytes",
+        "expectedWorkItems"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumTextBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumSchemaBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumRawBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumWorkItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rejectedAdditionalBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedWorkItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "toolIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "RetainedCommandDeclaredLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "controller",
+        "documentSchema",
+        "factory",
+        "limits"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "controller": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "factory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limits": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/RetainedCommandByteBudget"
+            },
+            {
+              "$ref": "#/$defs/RetainedCommandClassBudget"
+            }
+          ]
+        },
+        "publicationContracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RetainedCommandPublicationContract"
+          }
+        },
+        "routes": {
+          "$ref": "#/$defs/RetainedCommandRoutes"
+        },
+        "boundaryCases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RetainedCommandBoundaryCase"
+          }
+        },
+        "oracle": {
+          "$ref": "#/$defs/RetainedCommandOracle"
+        }
+      }
+    },
+    "RetainedCommandCohortFactory": {
+      "$comment": "The one shared command-job factory a cohort of sibling apps publishes through — an object, unlike RetainedCommandDeclaredLimits' single factory string.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "payloadSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumRawBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shared": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RetainedCommandCohortRoute": {
+      "$comment": "A cohort route separates the lanes a route EMITS from the lanes its publication contract declares; the three RetainedCommandRoute dialects collapse both into one `lanes` array.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "emittedLanes",
+        "publicationLanes",
+        "execution"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "emittedLanes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/ArtifactToolPublicationLane"
+          }
+        },
+        "publicationLanes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/ArtifactToolPublicationLane"
+          }
+        },
+        "execution": {
+          "$ref": "#/$defs/RetainedCommandExecution"
+        },
+        "admission": {
+          "$ref": "#/$defs/RetainedCommandAdmission"
+        },
+        "reducer": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "RetainedCommandCohortApp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "variant",
+        "controller",
+        "documentSchema"
+      ],
+      "properties": {
+        "variant": {
+          "type": "string",
+          "minLength": 1
+        },
+        "controller": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentSchema": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "RetainedCommandCensus": {
+      "$comment": "Census counts a cohort law asserts about itself (apps, routesPerApp, identities, retained, batchOnlyPendingRewrite, …); every owner narrows the members it declares with const.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "RetainedCommandLimits": {
+      "$comment": "Shared shape for every artifact-subset 🧫️retained-command-limits fixture; owners narrow it with const values.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/RetainedCommandDeclaredLimits"
+        },
+        {
+          "$ref": "#/$defs/RetainedCommandCorpusLimits"
+        }
+      ]
+    },
+    "RetainedCommandRoute": {
+      "$comment": "One route row, published so an owner can narrow a single route positionally without reaching into definitions.",
+      "$ref": "#/$defs/RetainedCommandRouteVariant"
+    },
+    "RetainedCommandRoutes": {
+      "$comment": "Shared shape for retained-command route tables, standalone or nested in RetainedCommandLimits.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RetainedCommandRoute"
+      }
+    },
+    "RetainedCommandCohort": {
+      "$comment": "The cohort law form: one shared factory and route table published by N sibling apps, plus the census that count implies. RetainedCommandDeclaredLimits cannot describe it — its factory is a string and its controller/documentSchema are single-valued, where a cohort carries them per app.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "factory",
+        "publicationContracts",
+        "routes",
+        "apps",
+        "expected",
+        "oracle"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "factory": {
+          "$ref": "#/$defs/RetainedCommandCohortFactory"
+        },
+        "publicationContracts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/RetainedCommandPublicationContract"
+          }
+        },
+        "routes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/RetainedCommandCohortRoute"
+          }
+        },
+        "apps": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/RetainedCommandCohortApp"
+          }
+        },
+        "expected": {
+          "$ref": "#/$defs/RetainedCommandCensus"
+        },
+        "oracle": {
+          "$ref": "#/$defs/RetainedCommandOracle"
+        }
+      }
+    },
+    "RetainedCommandRoutesDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "routes"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "routes": {
+          "$ref": "#/$defs/RetainedCommandRoutes"
+        },
+        "maximumRawBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumWorkItems": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
   }
 }

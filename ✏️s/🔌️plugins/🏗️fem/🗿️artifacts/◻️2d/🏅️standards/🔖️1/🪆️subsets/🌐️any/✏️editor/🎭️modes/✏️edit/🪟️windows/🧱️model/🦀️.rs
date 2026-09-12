@@ -4,11 +4,14 @@
 //! `⚙️engine` because they take/return app-facing `semio_framework_plugin` scene types and their only
 //! two consumers are these two sibling windows, both at app level.
 
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+
 /// 🔺️ Region mesh element identity, screen coordinates and node identities.
 pub(crate) type Fem2dRegionMeshTriangle = (String, [(f64, f64); 3], [String; 3]);
 
 use crate::model::Dof;
-use crate::{element_id, Fem2dSnapshot, FemCamera, FemDof, FemElement, FemLoad};
+use crate::{element_id, Fem2dSnapshot, Viewport2d, FemDof, FemElement, FemLoad};
 use semio_framework_plugin::{BuiltNode, Canvas2dScene};
 #[cfg(test)]
 use semio_framework_ui_scene::canvas2d_snapshot_with_page;
@@ -1133,7 +1136,7 @@ pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMa
 //#endregion 🔖️SharedDrawHelpers
 
 //#region 🔖️Render
-pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(doc: &Fem2dSnapshot, camera: &Viewport2d) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
         let [(x0, y0), (x1, y1), (x2, y2)] = *tri;
@@ -1149,7 +1152,7 @@ pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> semio_framework_plugin
 }
 
 /// 👁️ Renders the model plus an optional replaceable worker-job progress snapshot.
-pub fn render_with_progress(_doc: &Fem2dSnapshot, camera: &FemCamera, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_with_progress(_doc: &Fem2dSnapshot, camera: &Viewport2d, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: String::new(), snapshot: progress.map(Fem2dMountedVisualLease::snapshot) })
 }
 //#endregion 🔖️Render

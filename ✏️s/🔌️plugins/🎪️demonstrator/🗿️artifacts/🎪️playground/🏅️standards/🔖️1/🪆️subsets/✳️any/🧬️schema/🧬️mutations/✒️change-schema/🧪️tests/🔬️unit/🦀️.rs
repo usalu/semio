@@ -32,7 +32,7 @@ async fn descriptor_inverse_and_outcome_are_complete() {
         restored = back.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
     }
     assert_eq!(restored, base);
-    protocol::os_spr::testkit::assert_outcome_deterministic(&base, &operation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_deterministic(&base, &operation).await;
     let no_op = mutation("playground.base").diff(&base);
     assert_eq!(no_op.worst_level(), Some(protocol::os_dsl::Severity::Warning));
     assert!(no_op.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
@@ -42,18 +42,18 @@ async fn descriptor_inverse_and_outcome_are_complete() {
 async fn inverse_and_absorb_laws_hold() {
     let base = PlaygroundSnapshot { schema: "playground.base".into() };
     let operation = mutation("playground.changed");
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &operation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &operation).await;
     let first = operation.diff(&base).into_parts().0;
     let after = first.apply(&base).expect("valid mutation diff");
     let second = mutation("playground.changed-again").diff(&after).into_parts().0;
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, first, second).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, first, second).await;
 }
 
 #[test]
 fn kinds_match_the_language_neutral_catalog() {
     let descriptors = PlaygroundMutation::kinds();
     assert_eq!(KINDS.len(), descriptors.len());
-    let manifest = include_str!("../../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../../🔮️oracles/🔣️.json");
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind);
         assert!(manifest.contains(&format!("\"{kind}\"")));

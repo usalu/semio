@@ -1,15 +1,16 @@
-# 🧬️ SemioKitSnapshot schema — real facet mirror of the Rust `🦀️.rs` sibling.
+# import SemioTransform from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactLink from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql"
 type SemioKitType { id: String! name: String! category: String! }
-type SemioKitPiece { id: String! typeId: String! transformWire: String! }
+type SemioKitPiece { id: String! typeId: String! transform: SemioTransform! }
 type SemioKitConnection { id: String! connectingPieceId: String! connectingPort: String! connectedPieceId: String! connectedPort: String! }
 type SemioKitDesign { id: String! name: String! pieces: [SemioKitPiece!]! connections: [SemioKitConnection!]! }
-
 type SemioKitSnapshot {
   schema: String! @state(class: ARTIFACT)
   types: [SemioKitType!]! @state(class: ARTIFACT)
   designs: [SemioKitDesign!]! @state(class: ARTIFACT)
-  objects: [ArtifactLink!]! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.object")
-  models: [ArtifactLink!]! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.model")
-  properties: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.value")
+  objects: [ArtifactChild!]! @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
+  models: [ArtifactChild!]! @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
+  properties: ArtifactChild @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
   representations: [ArtifactLink!]! @state(class: ARTIFACT) @link(roles: ["representation"])
 }

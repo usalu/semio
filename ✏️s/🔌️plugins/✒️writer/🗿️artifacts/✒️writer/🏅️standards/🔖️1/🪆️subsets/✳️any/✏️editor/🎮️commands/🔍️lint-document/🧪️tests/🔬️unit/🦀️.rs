@@ -1,6 +1,6 @@
 use super::LintDocument;
 use crate::editor::writer::commands::set_active_example;
-use crate::editor::writer::testkit::{dispatch, new_app_with_registry};
+use crate::editor::writer::unit_tests::context::{dispatch, new_app_with_registry};
 use crate::editor::writer::WriterCommand;
 use crate::{writer_text, WriterSnapshot};
 use semio_framework::kernel::Effect;
@@ -14,7 +14,7 @@ async fn lint_is_a_view_action_and_example_default_materializes() {
     // setActiveExample fired with the declared default example ("jack") — whole-document replace
     // is not an in-history mutation (`SetSnapshot` is banned outright), so this surfaces as a
     // `Effect::LoadDocument`, not a live `app.snapshot()` change (see `reset_document_effect`).
-    let result = app.dispatch_typed(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("example");
+    let result = app.dispatch_typed(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("example");
     let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("expected a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };

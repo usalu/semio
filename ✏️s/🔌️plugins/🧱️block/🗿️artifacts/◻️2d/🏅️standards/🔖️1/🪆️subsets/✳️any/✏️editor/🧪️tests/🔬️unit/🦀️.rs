@@ -1,6 +1,40 @@
+pub(crate) mod context {
+    
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    pub type Block2dApp = VcsArtifactApp<EditorApp<Block2dPlayApp>>;
+    
+    pub async fn new_app() -> Block2dApp {
+        app_with_registry().await
+    }
+    
+    /// ✏️ Adapts `create_block2d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
+    /// examples }` shape `new_app_with_registry`/`assert_declared_actions_bridge_to_commands` still
+    /// expect — framework test context gap, not modifiable here (`🧰️framework/**` is outside this
+    /// packet's lease).
+    pub fn block2d_app_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_block2d_app(), examples: Vec::new() }
+    }
+    
+    /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
+    pub async fn app_with_registry() -> Block2dApp {
+        new_app_with_registry::<EditorApp<Block2dPlayApp>>(block2d_app_manifest_for_tests).await
+    }
+    
+    pub async fn dispatch(app: &mut Block2dApp, command: Block2dCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut Block2dApp, body_key: &str) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+    }
+}
+
 
 use super::*;
-use crate::editor::block2d::testkit::{Block2dApp, new_app};
+use crate::editor::block2d::unit_tests::context::{Block2dApp, new_app};
 use semio_framework_plugin::PluginApp;
 
 //#region 🔖️CommandSurface
@@ -77,7 +111,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 /// `command_id`.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-    semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Block2dPlayApp>>(testkit::block2d_app_manifest_for_testkit).await;
+    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Block2dPlayApp>>(context::block2d_app_manifest_for_tests).await;
     assert!(Block2dPlayApp::command_from_action("noSuchAction", None).is_err());
 }
 //#endregion 🔖️CommandSurface
@@ -111,8 +145,8 @@ async fn declares_the_handle_interaction_domain_scoped_to_the_board_window() {
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_nests_handles_under_their_handle_kind() {
     let mut app: Block2dApp = new_app().await;
-    testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
-    testkit::dispatch(&mut app, Block2dCommand::AddHandle(add_handle::AddHandle {})).await;
+    context::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
+    context::dispatch(&mut app, Block2dCommand::AddHandle(add_handle::AddHandle {})).await;
     let snapshot = app.snapshot().expect("snapshot");
     let kind_id = snapshot.handles[0].handle_kind.clone();
     let handle_id = snapshot.handles[0].id.clone();
@@ -145,7 +179,7 @@ async fn block2d_io_declares_the_catalog_out_port() {
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
     let mut app = new_app().await;
-    assert!(testkit::render(&mut app, "block2d.play.nope").await.contains("Unknown body"));
+    assert!(context::render(&mut app, "block2d.play.nope").await.contains("Unknown body"));
 }
 //#endregion 🔖️Manifest
 
@@ -156,20 +190,20 @@ async fn add_handle_kind_then_add_handle_then_remove_round_trips() {
     let booted = app.snapshot().expect("snapshot");
     let (kinds, handles) = (booted.handle_kinds.len(), booted.handles.len());
     let booted_ids: Vec<String> = booted.handles.iter().map(|handle| handle.id.clone()).collect();
-    testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
+    context::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
     assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds + 1);
-    testkit::dispatch(&mut app, Block2dCommand::AddHandle(add_handle::AddHandle {})).await;
+    context::dispatch(&mut app, Block2dCommand::AddHandle(add_handle::AddHandle {})).await;
     let projection = app.snapshot().expect("snapshot");
     assert_eq!(projection.handles.len(), handles + 1);
     let handle_id = projection.handles.iter().map(|handle| handle.id.clone()).find(|id| !booted_ids.contains(id)).expect("the added handle");
-    testkit::dispatch(&mut app, Block2dCommand::RemoveHandle(remove_handle::RemoveHandle { id: handle_id })).await;
+    context::dispatch(&mut app, Block2dCommand::RemoveHandle(remove_handle::RemoveHandle { id: handle_id })).await;
     assert_eq!(app.snapshot().expect("snapshot").handles.len(), handles);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn patch_node_kind_updates_name() {
     let mut app = new_app().await;
-    testkit::dispatch(&mut app, Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: "name".into(), value: "Renamed".into() })).await;
+    context::dispatch(&mut app, Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: "name".into(), value: "Renamed".into() })).await;
     assert_eq!(app.snapshot().expect("snapshot").node_kind.name, "Renamed");
 }
 
@@ -182,13 +216,13 @@ async fn boots_on_the_forest_left_example_document() {
     assert_eq!(booted.handles.len(), 11);
     assert!(!booted.handle_kinds.is_empty());
     assert_ne!(booted, crate::standards::v1::subsets::any::schema::empty_block2d_snapshot());
-    assert!(testkit::render(&mut app, board::BLOCK2D_BODY_BOARD).await.contains("Hexagonal Cut Concrete Forest Left"));
+    assert!(context::render(&mut app, board::BLOCK2D_BODY_BOARD).await.contains("Hexagonal Cut Concrete Forest Left"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_left_fixture() {
     let mut app = new_app().await;
-    testkit::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK2D_EXAMPLE_LEFT.into() })).await;
+    context::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK2D_EXAMPLE_LEFT.into() })).await;
     let projection = app.snapshot().expect("snapshot");
     assert_eq!(projection.node_kind.id, "Hexagonal Cut Concrete Forest Left");
     assert_eq!(projection.handles.len(), 11);
@@ -198,11 +232,11 @@ async fn set_active_example_loads_left_fixture() {
 async fn undo_redo_round_trips_through_the_wrapper() {
     let mut app = new_app().await;
     let kinds = app.snapshot().expect("snapshot").handle_kinds.len();
-    testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
+    context::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
     assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds + 1);
-    app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds);
-    app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("redo");
+    app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
     assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds + 1);
 }
 
@@ -210,7 +244,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_catalog_out_wraps_the_puzzle2d_fragment() {
     let mut app = new_app().await;
-    testkit::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK2D_EXAMPLE_LEFT.into() })).await;
+    context::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK2D_EXAMPLE_LEFT.into() })).await;
     let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
     assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
     match media.payload {
@@ -238,8 +272,8 @@ async fn command_from_action_bridges_set_active_example() {
 /// emit document operations under the real, kind-discipline-enforcing registry.
 #[semio_framework_async_macros::async_test]
 async fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry() {
-    let mut app = testkit::app_with_registry().await;
-    let result = testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
+    let mut app = context::app_with_registry().await;
+    let result = context::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
     assert!(!result.mutations.is_empty(), "addHandleKind is a mutation and must reach document operations under kind discipline");
 }
 //#endregion 🔖️Behavior

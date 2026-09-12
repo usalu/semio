@@ -299,7 +299,7 @@ async fn wal_recovery_abort_faults_retry_without_duplicate_abort() {
             }
             let document = ArtifactId::from("abort-fault");
             let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(committed_fixture_storage(row, &document).await));
-            let storage = crate::db_testkit::FaultStorage::new(inner.clone()).await;
+            let storage = crate::db_fault_testing::FaultStorage::new(inner.clone()).await;
             let baseline = segment_bytes(&storage, &document, 0).await;
             if tail {
                 let writer = storage.acquire_writer(&document).await.unwrap();
@@ -308,7 +308,7 @@ async fn wal_recovery_abort_faults_retry_without_duplicate_abort() {
             }
             let append_boundary = storage.append_calls().await + 1;
             let sync_boundary = storage.sync_calls().await + if tail && !fail_tail_sync { 2 } else { 1 };
-            let mut script = crate::db_testkit::FaultScript::default();
+            let mut script = crate::db_fault_testing::FaultScript::default();
             match case["fault"].as_str().unwrap() {
                 "shortAppend" => script.torn_write_at = Some((append_boundary, case["keepBytes"].as_u64().unwrap())),
                 "appendError" => script.fail_nth_write = Some(append_boundary),
@@ -1501,9 +1501,9 @@ async fn empty_document_open_creates_a_fresh_wal() {
 #[semio_framework_async_macros::async_test]
 async fn artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owner_retry() {
     let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
-    let storage = crate::db_testkit::FaultStorage::new(inner).await;
+    let storage = crate::db_fault_testing::FaultStorage::new(inner).await;
     let document = ArtifactId::from("wal-open-retained-owner");
-    storage.set_script(crate::db_testkit::FaultScript { fail_nth_write: Some(1), ..crate::db_testkit::FaultScript::default() }).await;
+    storage.set_script(crate::db_fault_testing::FaultScript { fail_nth_write: Some(1), ..crate::db_fault_testing::FaultScript::default() }).await;
     let rejected = match ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await {
         Err(rejected) => rejected,
         Ok(mut wal) => {
@@ -1517,7 +1517,7 @@ async fn artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owne
     assert!(matches!(rejected_open_error(rejected).await, DbError::Io(_)));
 
     let writer = storage.acquire_writer(&document).await.unwrap();
-    storage.set_script(crate::db_testkit::FaultScript { fail_nth_write: Some(storage.append_calls().await + 1), ..crate::db_testkit::FaultScript::default() }).await;
+    storage.set_script(crate::db_fault_testing::FaultScript { fail_nth_write: Some(storage.append_calls().await + 1), ..crate::db_fault_testing::FaultScript::default() }).await;
     let mut open_control = control();
     let rejected = match ArtifactWal::open_acquired(&storage, writer, GroupCommitPolicy::default(), 1, &mut open_control).await {
         Err(rejected) => rejected,
@@ -1528,7 +1528,7 @@ async fn artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owne
     };
     assert!(matches!(rejected.error(), DbError::Io(_)));
     assert!(matches!(storage.acquire_writer(&document).await, Err(DbError::Conflict(_))));
-    storage.set_script(crate::db_testkit::FaultScript::default()).await;
+    storage.set_script(crate::db_fault_testing::FaultScript::default()).await;
     let mut retry_control = control();
     let (mut wal, report) = rejected.retry_open(&storage, GroupCommitPolicy::default(), 2, &mut retry_control).await.unwrap();
     assert_eq!(report.segments_seen, 1);

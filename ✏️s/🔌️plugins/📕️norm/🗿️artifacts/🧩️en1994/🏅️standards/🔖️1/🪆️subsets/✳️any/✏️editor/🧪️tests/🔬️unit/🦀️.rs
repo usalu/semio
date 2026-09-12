@@ -1,3 +1,40 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    
+    /// ✏️ Adapts `create_en1994_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
+    /// examples }` shape `context::new_app_with_registry` still expects (framework test context gap,
+    /// see w0-f-report.md gap 3 — swap for the canonical helper once it lands).
+    pub fn en1994_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_en1994_app(), examples: Vec::new() }
+    }
+    
+    pub type NormApp = VcsArtifactApp<EditorApp<En1994PlayApp>>;
+    
+    /// ð§¬ï¸ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
+    pub async fn app_with_registry() -> NormApp {
+        new_app_with_registry::<EditorApp<En1994PlayApp>>(en1994_manifest_for_tests).await
+    }
+    
+    pub async fn dispatch(app: &mut NormApp, command: En1994Command) -> InvocationResult {
+        let mut action_meta = meta("local");
+        if command.command_id() == "setSelectedCheckIndex" {
+            action_meta.view_state = Some(ViewModel {
+                window_id: Some(results::WINDOW_RESULTS.into()),
+                focused_window_id: Some(results::WINDOW_RESULTS.into()),
+                window_instances: vec![ViewWindowInstance { id: results::WINDOW_RESULTS.into(), window_kind_id: results::WINDOW_RESULTS.into() }],
+                ..Default::default()
+            });
+        }
+        app.dispatch_typed(command, &action_meta).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut NormApp, body_key: &str) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render projection")
+    }
+}
+
 use super::*;
 use semio_framework_plugin::PluginApp;
 
@@ -88,15 +125,15 @@ async fn declares_model_in_and_report_out_ports() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
-    let mut app = testkit::app_with_registry().await;
-    assert!(testkit::render(&mut app, "norm.en1994.play.nope").await.contains("Unknown body"));
+    let mut app = context::app_with_registry().await;
+    assert!(context::render(&mut app, "norm.en1994.play.nope").await.contains("Unknown body"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn every_declared_body_key_renders() {
-    let mut app = testkit::app_with_registry().await;
+    let mut app = context::app_with_registry().await;
     for body_key in [inputs::BODY_INPUTS, results::BODY_RESULTS, document_panel::BODY_DOCUMENT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
-        assert!(!testkit::render(&mut app, body_key).await.contains("Unknown body"), "{body_key} must render its own node");
+        assert!(!context::render(&mut app, body_key).await.contains("Unknown body"), "{body_key} must render its own node");
     }
 }
 //#endregion ðï¸Manifest
@@ -104,52 +141,52 @@ async fn every_declared_body_key_renders() {
 //#region ðï¸Behavior
 #[semio_framework_async_macros::async_test]
 async fn set_snapshot_commits_a_host_backed_report() {
-    let mut app = testkit::app_with_registry().await;
-    testkit::dispatch(&mut app, En1994Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1994Snapshot::default() })).await;
+    let mut app = context::app_with_registry().await;
+    context::dispatch(&mut app, En1994Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1994Snapshot::default() })).await;
     let host = NormHost::<En1994Family>::from_document(app.snapshot().expect("projection"));
     assert!(!host.report().checks.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn evaluate_recommits_the_current_projection_without_changing_it() {
-    let mut app = testkit::app_with_registry().await;
+    let mut app = context::app_with_registry().await;
     let before = app.snapshot().expect("projection");
-    testkit::dispatch(&mut app, En1994Command::Evaluate(evaluate::Evaluate {})).await;
+    context::dispatch(&mut app, En1994Command::Evaluate(evaluate::Evaluate {})).await;
     assert_eq!(before, app.snapshot().expect("projection"));
 }
 
-/// ð§®ï¸ `setSelectedCheckIndex` is config-only â it must dispatch cleanly and never touch the document.
+/// ð§®ï¸ `setSelectedCheckIndex` is Results-window-config-only â it must dispatch cleanly and never touch the document.
 #[semio_framework_async_macros::async_test]
 async fn selected_check_index_is_a_config_only_edit() {
-    let mut app = testkit::app_with_registry().await;
+    let mut app = context::app_with_registry().await;
     let before = app.snapshot().expect("projection");
-    let result = testkit::dispatch(&mut app, En1994Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })).await;
-    assert!(result.mutations.is_empty(), "a config-only command must emit no document operations");
-    assert_eq!(before, app.snapshot().expect("projection"), "a config-only command must never mutate the document");
+    let result = context::dispatch(&mut app, En1994Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })).await;
+    assert!(result.mutations.is_empty(), "a Results-window-config-only command must emit no document operations");
+    assert_eq!(before, app.snapshot().expect("projection"), "a Results-window-config-only command must never mutate the document");
 }
 
 /// ð§¬ï¸ Kind-discipline wrapper: the real registry enforces that View actions never emit document
 /// operations.
 #[semio_framework_async_macros::async_test]
 async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
-    let mut app = testkit::app_with_registry().await;
-    let result = testkit::dispatch(&mut app, En1994Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(1) })).await;
+    let mut app = context::app_with_registry().await;
+    let result = context::dispatch(&mut app, En1994Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(1) })).await;
     assert!(result.mutations.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_through_the_wrapper() {
-    let mut app = testkit::app_with_registry().await;
-    testkit::dispatch(&mut app, En1994Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1994Snapshot::default() })).await;
-    app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
-    app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("redo");
+    let mut app = context::app_with_registry().await;
+    context::dispatch(&mut app, En1994Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1994Snapshot::default() })).await;
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
     assert_eq!(app.snapshot().expect("projection"), En1994Snapshot::default());
 }
 
 /// ðï¸ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
 #[semio_framework_async_macros::async_test]
 async fn report_out_exports_the_computed_check_report() {
-    let mut app = testkit::app_with_registry().await;
+    let mut app = context::app_with_registry().await;
     let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));

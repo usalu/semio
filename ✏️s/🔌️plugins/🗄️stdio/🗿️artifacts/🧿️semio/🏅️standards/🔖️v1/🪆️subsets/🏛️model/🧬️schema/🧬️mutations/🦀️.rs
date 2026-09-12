@@ -79,7 +79,7 @@ pub enum SemioModelMutation {
 
 /// 🏷️ This subset's DECLARED mutation vocabulary, kebab-case, in enum declaration order — the one
 /// list the repository test platform's completeness gate measures `🏛️mutate-semio-model` against
-/// (catalog `semio-v1-model` in `../../🔮️oracle/🔣️.json`). It aliases [`OP_KEYWORDS`],
+/// (catalog `semio-v1-model` in `../../🔮️oracles/🔣️.json`). It aliases [`OP_KEYWORDS`],
 /// which the binary op frame's `tag` byte already indexes by [`variant_ordinal`], so the vocabulary
 /// is declared exactly once and `kinds_match_the_enum_and_the_catalog` keeps that declaration
 /// honest against both the enum and the manifest.

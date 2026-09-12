@@ -8,7 +8,7 @@
 use super::camera;
 use serde_json::Value;
 
-const CAMERA_FIT_FIXTURE: &str = include_str!("🔣️.json");
+const CAMERA_FIT_FIXTURE: &str = include_str!("../../🧫️fixtures/📷️camera-fit/🔣️.json");
 
 fn fixture() -> Value {
     serde_json::from_str(CAMERA_FIT_FIXTURE).expect("camera fit fixture")

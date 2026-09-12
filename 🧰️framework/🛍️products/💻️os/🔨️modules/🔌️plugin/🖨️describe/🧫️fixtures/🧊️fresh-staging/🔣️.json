@@ -1,5 +1,6 @@
 {
   "schema": "semio.os.fresh-component-staging.v1",
+  "appChannelVersion": 17,
   "componentHex": "616263",
   "componentSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
   "componentBlake3": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85",

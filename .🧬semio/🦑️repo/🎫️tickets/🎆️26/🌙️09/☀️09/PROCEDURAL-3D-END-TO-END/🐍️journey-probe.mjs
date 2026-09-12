@@ -101,9 +101,9 @@ for (const text of options) {
 await page.keyboard.press("Meta+Alt+ArrowRight");
 await waitMeshes("generate-mode", 10);
 {
-  const add = page.locator('[data-action-id="addGeneration"], button:has-text("Add generation"), button:has-text("Generation hinzufügen"), [role="button"]:has-text("Add generation")').first();
-  if (await add.count()) { await add.click({ timeout: 4000 }); console.log("[DEBUG] clicked addGeneration"); }
-  else console.log("[DEBUG] addGeneration control not found; buttons=", JSON.stringify((await page.locator("button").allInnerTexts()).slice(0, 40)));
+  const add = page.locator(':text-is("Add Generation"), :text-is("Generation hinzufügen"), [data-action-id="addGeneration"]').first();
+  if (await add.count()) { await add.click({ timeout: 4000 }); console.log("[DEBUG] clicked Add Generation"); }
+  else console.log("[DEBUG] Add Generation row not found");
   await waitMeshes("generate-added", meshWait);
 }
 await page.keyboard.press("Meta+Alt+ArrowLeft");

@@ -21,10 +21,7 @@ pub fn puzzle_board_host_normal() -> BoardHost {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-
-#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub(crate) mod unit_tests;
+
 //#endregion 🧪️Tests

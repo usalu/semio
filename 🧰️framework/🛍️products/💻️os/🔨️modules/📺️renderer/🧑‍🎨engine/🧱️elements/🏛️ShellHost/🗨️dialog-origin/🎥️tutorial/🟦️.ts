@@ -89,17 +89,17 @@ export async function runPausedTutorialSeekV1(
 }
 
 export type TutorialSnapshotV1 = Readonly<{ pack: Uint8Array; spr: Uint8Array }>;
-export type TutorialDocumentPortV1 = Readonly<{
-  read: () => Promise<TutorialSnapshotV1 | null>;
+export type TutorialDocumentPortV1<S = TutorialSnapshotV1> = Readonly<{
+  read: () => Promise<S | null>;
   drain: () => Promise<void>;
-  restore: (snapshot: TutorialSnapshotV1) => Promise<void>;
+  restore: (snapshot: S) => Promise<void>;
 }>;
 
 /** 🎬️ Ephemeral run ownership keeps delayed snapshots and restores on their original document port. */
-export class OwnedTutorialRunV1 {
+export class OwnedTutorialRunV1<S = TutorialSnapshotV1> {
   #closed = false;
   #ready = false;
-  #snapshot: TutorialSnapshotV1 | null = null;
+  #snapshot: S | null = null;
   #starting: Promise<boolean> | null = null;
   #stopping: Promise<void> | null = null;
 
@@ -107,7 +107,7 @@ export class OwnedTutorialRunV1 {
     readonly tutorialId: string,
     readonly origin: ShellDialogOriginV1,
     private readonly owns: () => boolean,
-    private readonly port: TutorialDocumentPortV1,
+    private readonly port: TutorialDocumentPortV1<S>,
   ) {}
 
   get ready(): boolean { return this.#ready && this.isCurrent(); }

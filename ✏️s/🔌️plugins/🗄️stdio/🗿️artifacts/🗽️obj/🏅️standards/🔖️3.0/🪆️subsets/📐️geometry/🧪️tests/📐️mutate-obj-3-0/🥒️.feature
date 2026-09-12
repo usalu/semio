@@ -67,7 +67,7 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
   document in which `o pattern-sphere` still ran to end-of-file. Re-reading it handed back the
   original membership over all 16,128 faces: the mutation was unobservable and the row measured
   nothing. `decode_obj` already read an argument-less `o` as "no object from here on", and this
-  case's reference writes exactly that (`../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔮️oracle/
+  case's reference writes exactly that (`../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔮️oracles/
   🦀️component.rs` renders `o\n` when the object run ends), so only our encoder was short of the
   grammar. It now emits the bare `o` terminator, mirroring the bare `g` it already wrote when a
   group run ends, pinned by `🚪️io/🦀️component.rs`'s own

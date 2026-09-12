@@ -1,4 +1,4 @@
-#[path = "../../🧪️testkit/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/🦀️.rs"]
+#[path = "../../🧫️fixtures/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{SetTransactionCount, SetTransactionCountAndNotify, SetTransactionCountWithoutPreflight, TxnMutation};
 
@@ -6,9 +6,9 @@ pub(crate) use mutations::{SetTransactionCount, SetTransactionCountAndNotify, Se
 #[path = "../🧬️mutation-fixtures-transaction-unit-command-close/🦀️.rs"]
 mod command_close_tests;
 
-// 🧪️ Proves the `🧪️testkit` transaction helpers and the underlying transaction machinery
+// 🧪️ Proves the `🧫️fixtures` transaction helpers and the underlying transaction machinery
 // against a minimal `ArtifactApp` fixture whose notify mutation carries a real foreign step.
-use crate::app::testkit::{assert_proposes_transaction, assert_transaction_commits_as_one_edit, assert_transaction_rollback_leaves_state_untouched, meta, new_registered_app};
+use crate::app::artifact_app_laws::{assert_proposes_transaction, assert_transaction_commits_as_one_edit, assert_transaction_rollback_leaves_state_untouched, meta, new_registered_app};
 use crate::app::{
     built_text_to_component_tree, ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
     DraftView, Emit, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, UiAssemblyResult, VcsArtifactApp,
@@ -299,15 +299,15 @@ impl ArtifactApp for TxnApp {
         built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
     }
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
         Some(crate::app::bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
     }
     fn build_document_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {

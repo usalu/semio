@@ -1,12 +1,12 @@
 use super::*;
 use crate::editor::remodeling::commands::{add_stream, import_video_bytes_payload, import_video_done, remove_stream, set_stream_sync};
-use crate::editor::remodeling::testkit::{app, dispatch};
+use crate::editor::remodeling::unit_tests::context::{app, dispatch};
 use crate::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn import_frame_payload_creates_a_stream_and_asset() {
     let mut app = app().await;
-    testkit_import_checker_stream(&mut app, 3).await;
+    verify_import_checker_stream(&mut app, 3).await;
     let scene = app.snapshot().expect("projection");
     assert_eq!(scene.streams.len(), 1, "one importFrames batch creates exactly one stream");
     assert_eq!(scene.streams[0].frames.len(), 3);

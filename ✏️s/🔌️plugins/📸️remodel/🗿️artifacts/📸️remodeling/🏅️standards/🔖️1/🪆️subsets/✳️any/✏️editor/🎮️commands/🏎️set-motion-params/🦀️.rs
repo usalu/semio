@@ -1,6 +1,6 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-motion-params`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::update_motion_params;
 use crate::op::RemodelingMutation;
 use crate::{MotionParams, RemodelingSnapshot};
@@ -17,7 +17,7 @@ pub struct SetMotionParams {
     pub min_track_length_frames: u32,
 }
 
-pub fn handle(payload: &SetMotionParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetMotionParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_motion_params(MotionParams {
         enabled: payload.enabled,
         max_tracks: payload.max_tracks,

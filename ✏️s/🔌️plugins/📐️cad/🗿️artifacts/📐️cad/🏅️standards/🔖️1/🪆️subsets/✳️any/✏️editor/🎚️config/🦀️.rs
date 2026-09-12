@@ -1,9 +1,6 @@
-//! 🧮️ CAD app — `ArtifactApp::Config`: every field that used to live in the app struct's ephemeral
-//! `CadPlayRuntime` (selection, hover, engagement session, per-pane cameras, sun, dislocate handles)
-//! Session view state round-trips through the config `ArtifactStore` exactly like document content,
-//! with a real `backwards` via `CadConfigMutation` at the bottom of this file.
+//! 🧮️ CAD application preferences shared by the artifact instance. Camera, sun, and Dislocate
+//! preferences belong to exact concrete window owners beside the world windows.
 
-use crate::CadCamera;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️PreviewGeneration
@@ -26,11 +23,7 @@ pub fn deserialize_cad_preview_generation(value: protocol::DslValue) -> Result<i
 //#endregion 🔖️PreviewGeneration
 
 //#region 🔖️Config
-/// 🎛️ Per-pane handle groups exposed by the Dislocate gumball utility — was keyed by an arbitrary
-/// host-pushed `ViewModel.window_id` (`cad_ui::CadPlayRuntime::dislocate_options_by_window_id`); the
-/// pure `ArtifactApp::render`/`window_measures` surface has no per-window-instance parameter anymore
-/// (only `body_key`, which already resolves 1:1 to one of the 4 fixed CAD panes), so `CadConfig` keys
-/// this by PANE instead — one named field per pane, mirroring `camera`/`camera_building`/…
+/// 🎛️ Handle preferences persisted by one exact CAD world-window configuration owner.
 #[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct CadDislocateOptions {
@@ -116,31 +109,6 @@ pub struct CadConfig {
     pub engagement_preview_generation: i32,
     /// 👁️ Was `CadPlayRuntime::last_finalized_interaction_id`.
     pub last_finalized_interaction_id: Option<String>,
-    /// 👁️ Was `CadPlayRuntime::sun` (`WorldSunConfig`).
-    #[dsl(block)]
-    pub sun: CadSunConfig,
-    /// 🎥️ Per-pane camera pose — was `CadPlayRuntime::camera`.
-    #[dsl(block)]
-    pub camera: CadCamera,
-    /// 🎥️ Was `CadPlayRuntime::camera_building`.
-    #[dsl(block)]
-    pub camera_building: CadCamera,
-    /// 🎥️ Was `CadPlayRuntime::camera_energy`.
-    #[dsl(block)]
-    pub camera_energy: CadCamera,
-    /// 🎥️ Was `CadPlayRuntime::camera_structure_classic`.
-    #[dsl(block)]
-    pub camera_structure_classic: CadCamera,
-    /// 🎛️ Was `CadPlayRuntime::dislocate_options_by_window_id.get(CAD_PLAY_WINDOW_SHAPE)` — see
-    /// `CadDislocateOptions`'s doc comment for the per-window-id → per-pane simplification.
-    #[dsl(block)]
-    pub dislocate_shape: CadDislocateOptions,
-    #[dsl(block)]
-    pub dislocate_building: CadDislocateOptions,
-    #[dsl(block)]
-    pub dislocate_energy: CadDislocateOptions,
-    #[dsl(block)]
-    pub dislocate_structure_classic: CadDislocateOptions,
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `cad.computer` hot-swap installs.
     #[value(default = "default_contributions_json")]
     pub contributions_json: String,
@@ -177,8 +145,8 @@ impl store::ArtifactPack for CadConfig {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
@@ -209,15 +177,6 @@ impl Default for CadConfig {
             engagement_preview_operation_json: None,
             engagement_preview_generation: 0,
             last_finalized_interaction_id: None,
-            sun: CadSunConfig::default(),
-            camera: CadCamera::default(),
-            camera_building: CadCamera::default(),
-            camera_energy: CadCamera::default(),
-            camera_structure_classic: CadCamera::default(),
-            dislocate_shape: CadDislocateOptions::default(),
-            dislocate_building: CadDislocateOptions::default(),
-            dislocate_energy: CadDislocateOptions::default(),
-            dislocate_structure_classic: CadDislocateOptions::default(),
             contributions_json: default_contributions_json(),
         }
     }
@@ -229,12 +188,11 @@ store::impl_whole_record_config!(CadConfig);
 //#region 🔖️ConfigOperations
 /// @emoji 🧮️ WORKFLOWS-END-TO-END-TYPED-PORTS config recipe: `CadConfig`'s
 /// operation enum. Unlike `CadMutation` (many narrow document-mutating variants), this is a single
-/// whole-record `Snapshot`: `cad_ui`'s pure `handle()` converts its (former `RefCell`-backed)
-/// `CadPlayRuntime` scratch struct into the next `CadConfig` once per dispatch and diffs it against the
-/// pre-command config, the same "whole-record replace" shape `reset_document_effect` now uses for
+/// whole-record `Snapshot`: application commands convert their scratch state into the next
+/// `CadConfig` and diff it against the pre-command config, the same shape `reset_document_effect` uses for
 /// a whole-DOCUMENT replace (SEMANTIC-MUTATIONS-OVERHAUL retired `CadMutation::SetSnapshot`
 /// entirely; document-level whole-content replace is no longer an in-history mutation at all) —
-/// session state (selection/hover/camera/engagement/…) mutates in tight clusters (e.g.
+/// application state (selection/hover/engagement) mutates in tight clusters (e.g.
 /// `worldSelect` touches 5+ fields together), so per-field variants would just be wide-argument
 /// snapshots in miniature with none of a real granular diff's benefit. `backwards()` restores the
 /// exact pre-command `CadConfig`, giving real, exact undo without any per-field reverse-patch

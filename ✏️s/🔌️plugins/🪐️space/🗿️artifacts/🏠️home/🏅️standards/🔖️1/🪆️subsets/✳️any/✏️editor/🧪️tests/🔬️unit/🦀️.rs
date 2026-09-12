@@ -122,7 +122,7 @@ async fn home_labels_resolve_native_english_by_default() {
     let config = config_with_one_folded_space().await;
     let cfg = ConfigView { snapshot: &config, window: None };
     let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg, &semio_framework_plugin::ViewModel::default()).expect("English Home assembly");
-    let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(home_node).expect("English Home tree projection");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(home_node).expect("English Home tree projection");
     assert!(json.contains("Updated"), "English column header must resolve: {json}");
     assert!(json.contains("Fixture"), "the folded space's name must render: {json}");
 }
@@ -136,7 +136,7 @@ async fn home_labels_resolve_native_german_locale() {
     let cfg = ConfigView { snapshot: &config, window: None };
     let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
     let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg, &view_state).expect("German Home assembly");
-    let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(home_node).expect("German Home tree projection");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(home_node).expect("German Home tree projection");
     assert!(json.contains("Aktualisiert"), "German column header must resolve: {json}");
     assert!(json.contains("Fixture"), "the folded space's name must render: {json}");
 }

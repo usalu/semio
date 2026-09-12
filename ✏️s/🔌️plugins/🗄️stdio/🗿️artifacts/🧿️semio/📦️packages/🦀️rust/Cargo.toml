@@ -80,6 +80,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 # 🔮 Test-only geometry ORACLE (never a `[dependencies]` entry, never reachable from a
 # production target) — same crate and version `semio-framework-3d` already uses as its collision
 # oracle. `🧲️procedural-example-booleans` measures the tessellated boolean result with parry3d's

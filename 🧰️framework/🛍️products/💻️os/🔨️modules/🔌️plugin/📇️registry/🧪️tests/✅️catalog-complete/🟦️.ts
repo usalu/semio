@@ -4,29 +4,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Ajv from "ajv";
 import { parseModuleDirectories, moduleDirectoryName, moduleIdForDirectoryName } from "../../📦️deployment/🟦️.ts";
-import { pluginModuleUrl, extensionModuleUrl } from "../../🤖️generated/🧩️plugins.ts";
+import { pluginModuleUrl, extensionModuleUrl } from "../../🤖️generated/🧩️plugins/🟦️.ts";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { encodePackValue } from "../../../../../🟦️.ts";
-import { emitOwnerDescriptorPairV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/📦️packages/🦀️rust/📜️script.ts";
-import {
-  CATALOG_ARTIFACT_MAX_BYTES,
-  CATALOG_COMMIT_MARKER_FILENAME,
-  CATALOG_DEPENDENCY_MAX,
-  CATALOG_NODE_MAX,
-  auditInteractiveJobClassificationDrift,
-  auditPluginCatalogSources,
-  createFreshCatalogCommitMarker,
-  createFreshCatalogBuildVerifier,
-  executeCatalogVerificationPlan,
-  orderCatalogNodes,
-  parseComponentPackageId,
-  rejectPlaceholderCatalogIdentity,
-  sha256CatalogArtifact,
-  validateCatalogDescriptorPair,
-  verifyDescriptorPairBytesV1,
-  type CatalogVerificationNode,
-  type PluginRegistryEntry,
-} from "../../📜️script.ts";
+import { APP_CHANNEL_VERSION, encodePackValue } from "../../../../../🟦️.ts";
+import { emitOwnerDescriptorPairV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
+import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, auditPluginCatalogSources, createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier, executeCatalogVerificationPlan, orderCatalogNodes, rejectPlaceholderCatalogIdentity, sha256CatalogArtifact, validateCatalogDescriptorPair, verifyDescriptorPairBytesV1, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
+import { auditInteractiveJobClassificationDrift } from "../../🛂️descriptor-verification/🟦️.ts";
+import { parseComponentPackageId, type PluginRegistryEntry } from "../../🔎️discovery/🟦️.ts";
 
 const fixtureRoot = join(import.meta.dirname, "../../🧫️fixtures/🧬️catalog-complete");
 const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
@@ -133,7 +117,7 @@ async function syntheticDescriptor(pluginId: string, raw: Uint8Array, core: Uint
     role: "plugin",
     manifest: { pluginId, label: pluginId, version: "1.0.0", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [] },
     execution: "isolated",
-    executionProtocol: { appChannelVersion: 15 },
+    executionProtocol: { appChannelVersion: APP_CHANNEL_VERSION },
     quotas: {},
     contributions: {},
     hashes: { wasmSha256: await sha256(raw), coreWasmSha256: await sha256(core), descriptorSha256: "" },
@@ -160,7 +144,7 @@ afterEach(() => {
 
 describe("strict plugin catalog completion", () => {
   it("validates the neutral contract and withholds every publication after a parent failure", async () => {
-    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️schema", "🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧬️schema/🧬️catalog-complete/🔣️.json"), "utf8"));
     expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     expect(orderCatalogNodes(fixture.nodes).map(({ pluginId }) => pluginId)).toEqual(fixture.expectedOrder);
     const verified: string[] = [];
@@ -477,7 +461,7 @@ describe("strict plugin catalog completion", () => {
     expect(auditInteractiveJobClassificationDrift("owner", join(ownerRoot, "absent"), descriptor)).toEqual([]);
   });
 
-  it("independently enumerates the 59 real manifests and the known 19 missing source pairs", () => {
+  it("independently enumerates the 59 real manifests and the known 17 missing source pairs", () => {
     const audit = auditPluginCatalogSources();
     const missing = audit.issues.filter(({ code }) => code === "descriptor-pair-missing").map(({ pluginId }) => pluginId).sort();
     expect(audit.manifestCount).toBe(59);
@@ -491,7 +475,7 @@ describe("strict plugin catalog completion", () => {
     expect(audit.entries.find(({ pluginId }) => pluginId === "cad-extension-aec-building")?.dependsOn).toEqual(["cad"]);
     expect(audit.issues.filter(({ code }) => code === "dependency-invalid")).toEqual([]);
     expect(missing).toEqual([
-      "block", "flow-extension-bim", "flow-extension-draw", "imperative-extension-control", "imperative-extension-effect", "imperative-extension-logic", "imperative-extension-math", "imperative-extension-text", "playbook", "playbook-module-procedural", "process-extension-concrete", "process-extension-metal", "process-extension-robotic", "process-extension-wood", "sourcing-module-beams", "sourcing-module-slabs", "sourcing-module-windows", "stdio", "trinity",
+      "block", "imperative-extension-control", "imperative-extension-effect", "imperative-extension-logic", "imperative-extension-math", "imperative-extension-text", "playbook", "playbook-module-procedural", "process-extension-concrete", "process-extension-metal", "process-extension-robotic", "process-extension-wood", "sourcing-module-beams", "sourcing-module-slabs", "sourcing-module-windows", "stdio", "trinity",
     ]);
   }, 120_000);
 });

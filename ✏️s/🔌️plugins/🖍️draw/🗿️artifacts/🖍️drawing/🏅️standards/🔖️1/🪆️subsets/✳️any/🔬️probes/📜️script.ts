@@ -29,7 +29,7 @@
 //   bun 📜️script.ts gate-inputs   --out <dir>
 //   bun 📜️script.ts fixtures      --out <dir>
 //
-// @see 🦀️oracle-probe/🦀️.rs — the reader itself
+// @see 🔮️oracle/🦀️.rs — the reader itself
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/📜️script.ts
 //      — the spawn/offline/agent-scoped-target pattern this file mirrors
@@ -93,14 +93,14 @@ function main(argv: readonly string[]): number {
   // `…✳️document/🏭️generator/📜️script.ts`'s own `SEMIO_FIXTURE_OUT ?? --out ?? join(import.meta.dir, "..", "🧫️fixtures")` order).
   const args = [...rest];
   if ((probe === "fixtures" || probe === "gate-inputs") && !args.includes("--out")) {
-    const fallback = probe === "fixtures" ? join(import.meta.dir, "..", "🧫️fixtures") : join(import.meta.dir, "🦀️oracle-probe", "target", "gate-inputs");
+    const fallback = probe === "fixtures" ? join(import.meta.dir, "..", "🧫️fixtures") : join(import.meta.dir, "🔮️oracle", "📦️packages", "🦀️rust", "target", "gate-inputs");
     args.push("--out", process.env.SEMIO_FIXTURE_OUT ?? fallback);
   }
 
   // 🏭️`--offline`: probes run inside a test sweep alongside peer sessions; the shared build-dir
   // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any per-probe override here.
   const run = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", CRATE_BIN, "--", probe, ...args], {
-    cwd: join(import.meta.dir, "🦀️oracle-probe"),
+    cwd: join(import.meta.dir, "🔮️oracle", "📦️packages", "🦀️rust"),
     encoding: "utf8",
   });
   if (run.status !== 0) {

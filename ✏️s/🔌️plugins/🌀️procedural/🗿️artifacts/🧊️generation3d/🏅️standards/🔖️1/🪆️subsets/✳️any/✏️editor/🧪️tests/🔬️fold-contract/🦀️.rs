@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::{
     default_snapshot, example_snapshot, PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_BOX_SHELL, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, PROCEDURAL_EXAMPLE_HEX_COLUMN, PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, PROCEDURAL_EXAMPLE_RECT_EXTRUDE,
     PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, PROCEDURAL_EXAMPLE_SPHERE_TORUS,
 };
-use crate::editor::generation3d::testkit::{self, app_with_registry};
+use crate::editor::generation3d::unit_tests::context::{self, app_with_registry};
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::PluginApp;
 
@@ -32,8 +32,8 @@ fn bundled_widget_ids(example_id: &str) -> std::collections::BTreeSet<String> {
 }
 
 /// 🪪️ The same signature for the app's LIVE document — synchronous for the same reason.
-fn live_widget_ids(app: &testkit::Generation3dApp) -> std::collections::BTreeSet<String> {
-    testkit::snapshot(app).fixture.widgets.iter().map(crate::widget_id).map(str::to_string).collect()
+fn live_widget_ids(app: &context::Generation3dApp) -> std::collections::BTreeSet<String> {
+    context::snapshot(app).fixture.widgets.iter().map(crate::widget_id).map(str::to_string).collect()
 }
 
 /// 🧺️ Replays the store's OWN fold arithmetic over one lane's authored gesture: every item costs its
@@ -149,17 +149,17 @@ macro_rules! set_active_example_publishes {
         $(
             #[semio_framework_async_macros::async_test]
             async fn $name() {
-                let _serial = test_support::lock();
+                let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
                 let mut app = app_with_registry().await;
                 let before = live_widget_ids(&app);
-                app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": $example }).into()), &semio_framework_plugin::testkit::meta("local")).await.expect("setActiveExample dispatches");
-                let receipt = testkit::settle(&mut app).await;
+                app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": $example }).into()), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("setActiveExample dispatches");
+                let receipt = context::settle(&mut app).await;
                 assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "{} published a fault lane", $example);
                 let after = live_widget_ids(&app);
                 assert_eq!(after, bundled_widget_ids($example), "{} did not reach the store: the published document is not the example's fixture", $example);
                 assert!(after != before || $example == PROCEDURAL_EXAMPLE_HEX_COLUMN, "{} left the document untouched", $example);
                 eprintln!("[DEBUG] setActiveExample {} published: lanes={:?} effects={} widgets={}", $example, receipt.lanes, receipt.effects.len(), after.len());
-                semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
             }
         )+
     };
@@ -182,15 +182,15 @@ set_active_example_publishes! {
 /// typed-operation lane of the instance was fail-closed behind the app's rejected candidate.
 #[semio_framework_async_macros::async_test]
 async fn interaction_select_publishes_through_the_retained_typed_path() {
-    let _serial = test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let node_id = testkit::snapshot(&app).fixture.widgets.first().map(crate::widget_id).expect("default fixture node").to_string();
+    let node_id = context::snapshot(&app).fixture.widgets.first().map(crate::widget_id).expect("default fixture node").to_string();
     // 🧯️ `interactionSelect` is a framework-reserved TOOL JOB (`FrameworkInteractionSelectJob`), so
     // `handle_action` alone only admits its `Effect::SpawnJob` — the selection lands when the host
     // drives that job, which is what `select_graph` does. A `settle_registered_typed_operation`
     // cannot: it settles a typed operation, and the reserved spawn is not one.
-    let settled = testkit::select_graph(&mut app, "node", &[node_id.as_str()]).await;
+    let settled = context::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
     eprintln!("[DEBUG] interactionSelect published: effects={}", settled.requested_effects.len());
-    semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }

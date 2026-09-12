@@ -15,7 +15,7 @@ fn kinds_match_the_enum_and_the_catalog() {
         seen[ordinal] = true;
     }
     assert!(seen.iter().all(|hit| *hit), "every declared variant must be represented in demo_mutation_cases");
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

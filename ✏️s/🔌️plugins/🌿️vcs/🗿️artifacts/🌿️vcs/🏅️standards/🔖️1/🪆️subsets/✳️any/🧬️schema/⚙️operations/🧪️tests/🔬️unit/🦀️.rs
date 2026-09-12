@@ -2,7 +2,7 @@ use super::*;
 use crate::mutations::{add_tag, change_counter, change_notes, register_vcs_demo_mutation_descriptors, remove_tag, rename_vcs, AddTag, RemoveTag};
 use crate::standards::v1::subsets::any::schema::empty_vcs_snapshot;
 use protocol::{Mutation, MutationDiff, MutationKind, SemanticMutation};
-use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
 #[semio_framework_async_macros::async_test]
 async fn vcs_demo_mutation_round_trips_store() {
@@ -64,7 +64,7 @@ async fn add_tag_is_a_noop_when_base_already_has_the_tag() {
 async fn remove_tag_missing_target_is_error() {
     let base = empty_vcs_snapshot();
     let mutation = VcsDemoMutation::RemoveTag(RemoveTag { tag: "gone".into() });
-    semio_framework_os_kernel::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    semio_framework_os_kernel::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed
@@ -78,7 +78,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

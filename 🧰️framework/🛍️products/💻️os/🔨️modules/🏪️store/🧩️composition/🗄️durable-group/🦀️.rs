@@ -2195,7 +2195,7 @@ impl DurableUnboundOneItemOutcomeV1 {
             },
         };
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
             return Err(DurableOwnedGroupDecisionError::InvalidSchema);
         }
         let file = crate::os_io::resolve_ready(crate::os_pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
@@ -2568,7 +2568,7 @@ impl DurableBoundOneItemOutcomeV1 {
             },
         };
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
             return Err(DurableOwnedGroupDecisionError::InvalidSchema);
         }
         let file = crate::os_io::resolve_ready(crate::os_pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
@@ -2931,7 +2931,7 @@ impl ArtifactPack for DurableUnboundOneItemOutcomeV1 {
 
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| PackError::Schema(error.to_string()))?;
-        if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
             return Err(PackError::Schema("unbound outcome pack envelope mismatch".into()));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
@@ -2972,7 +2972,7 @@ impl ArtifactPack for DurableBoundOneItemOutcomeV1 {
 
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| PackError::Schema(error.to_string()))?;
-        if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
             return Err(PackError::Schema("bound outcome pack envelope mismatch".into()));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
@@ -3041,7 +3041,7 @@ fn member_matches(member: &DurableOwnedGroupMemberV1, role: &str, recovery_schem
 }
 
 impl DurableOwnedThreeMemberDecisionV1 {
-    #[cfg(any(test, feature = "testkit"))]
+    #[cfg(any(test, feature = "durable-group-testing"))]
     fn seal_fixture(
         anchor: DurableOwnedGroupAnchorV1,
         mut parent: DurableOwnedGroupMemberV1,
@@ -3126,7 +3126,7 @@ impl DurableOwnedThreeMemberDecisionV1 {
             return Err(DurableOwnedGroupDecisionError::EventTooLarge);
         }
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
             return Err(DurableOwnedGroupDecisionError::InvalidSchema);
         }
         let options = PackDecodeOptions {
@@ -3245,7 +3245,7 @@ impl ArtifactPack for DurableOwnedThreeMemberDecisionV1 {
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| PackError::Schema(error.to_string()))?;
-        if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
             return Err(PackError::Schema("durable group pack envelope mismatch".into()));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
@@ -3258,7 +3258,7 @@ impl ArtifactPack for DurableOwnedThreeMemberDecisionV1 {
 
 /// 🧪️ Builds the independently specified canonical journal record only for downstream
 /// package law suites; production callers must obtain records through Store-owned assembly.
-#[cfg(feature = "testkit")]
+#[cfg(feature = "durable-group-testing")]
 pub fn durable_owned_group_journal_test_record(fixture_json: &str) -> DurableOwnedGroupJournalRecordV1 {
     let fixture: serde_json::Value = serde_json::from_str(fixture_json).expect("durable group fixture");
     let hex = |value: &str| value.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("fixture hex"), 16).expect("fixture byte")).collect::<Vec<_>>();
@@ -3295,13 +3295,13 @@ pub fn durable_owned_group_journal_test_record(fixture_json: &str) -> DurableOwn
     DurableOwnedGroupJournalRecordV1::admit(decision.encode_pack(), &decision.decision_sha256).expect("fixture journal record")
 }
 
-#[cfg(feature = "testkit")]
+#[cfg(feature = "durable-group-testing")]
 fn durable_group_test_revision(bytes: &[u8]) -> [u8; 32] {
     let digest = semio_framework_hash::sha256_hex(bytes);
     std::array::from_fn(|index| u8::from_str_radix(&digest[index * 2..index * 2 + 2], 16).expect("SHA-256 hexadecimal byte"))
 }
 
-#[cfg(feature = "testkit")]
+#[cfg(feature = "durable-group-testing")]
 fn durable_group_test_outcome<P, Mutation>(recovery_schema: &str, ordinal: u64, edit: Edit<Mutation>, post_snapshot: P) -> Result<DurableStorePreparedOutcomeV1, DurableOwnedGroupDecisionError>
 where
     P: ArtifactPack,
@@ -3323,7 +3323,7 @@ where
     DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, &prepared)
 }
 
-#[cfg(feature = "testkit")]
+#[cfg(feature = "durable-group-testing")]
 fn durable_group_test_member(role: &str, reference: crate::os_io::ArtifactRef, owner: Option<OwnerRef>, outcome: &DurableStorePreparedOutcomeV1) -> Result<DurableOwnedGroupMemberV1, DurableOwnedGroupDecisionError> {
     let unbound = DurableUnboundOneItemOutcomeV1::decode_canonical_pack(&outcome.pack)?;
     let post_revision = durable_group_test_revision(format!("{}:{}:{}", role, reference.to_uri(), outcome.sha256).as_bytes());
@@ -3342,7 +3342,7 @@ fn durable_group_test_member(role: &str, reference: crate::os_io::ArtifactRef, o
     })
 }
 
-#[cfg(feature = "testkit")]
+#[cfg(feature = "durable-group-testing")]
 fn durable_group_test_bind_member<Mutation>(member: &mut DurableOwnedGroupMemberV1, outcome: &DurableStorePreparedOutcomeV1, decision_sha256: &str) -> Result<(), DurableOwnedGroupDecisionError>
 where
     Mutation: ValueToValue + ValueFromValue,
@@ -3380,7 +3380,7 @@ where
 
 /// 🧪️ Builds a typed fixed-three decision Event for downstream WAL laws; production code cannot
 /// fabricate this record and must obtain it from the retained Store-owned assembly.
-#[cfg(feature = "testkit")]
+#[cfg(feature = "durable-group-testing")]
 pub fn durable_owned_group_journal_test_record_from_edits<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
     document: crate::os_io::ArtifactRef,
     parent_edit: Edit<ParentMutation>,

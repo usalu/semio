@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "owners",
+    "contexts",
+    "consumers",
+    "route"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "owners": {
+      "type": "array",
+      "minItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "directoryName",
+          "parentKindId",
+          "kindId",
+          "exports"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "/🟦️\\.ts$"
+          },
+          "directoryName": {
+            "type": "string"
+          },
+          "parentKindId": {
+            "type": "string"
+          },
+          "kindId": {
+            "type": "string"
+          },
+          "exports": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "contexts": {
+      "type": "array",
+      "minItems": 14,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "directoryName",
+          "parentKindId",
+          "kindId"
+        ],
+        "properties": {
+          "directoryName": {
+            "type": "string"
+          },
+          "parentKindId": {
+            "type": "string"
+          },
+          "kindId": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "consumers": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "owners"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "owners": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "command",
+        "launchName",
+        "launchCommand"
+      ],
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        },
+        "launchName": {
+          "type": "string"
+        },
+        "launchCommand": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

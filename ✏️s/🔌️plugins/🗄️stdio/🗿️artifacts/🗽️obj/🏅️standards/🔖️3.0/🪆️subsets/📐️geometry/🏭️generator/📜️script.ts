@@ -44,16 +44,16 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 const HERE = import.meta.dir;
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 
-const LEGACY_ENGINE_DIR = join(HERE, "🦀️engine");
+const LEGACY_ENGINE_DIR = join(HERE, "🧫️fixtures", "📦️packages", "🦀️rust");
 const LEGACY_ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
 const LEGACY_RECIPE = "pattern-shell";
 const LEGACY_DIRECTORY = "🐚️pattern-shell";
 const LEGACY_FIXTURE_FILE = "🐚️pattern-shell.obj";
 
-const READER_MANIFEST = join(HERE, "📖️tobj-obj-reader", "Cargo.toml");
+const READER_MANIFEST = join(HERE, "📖️reader", "📦️packages", "🦀️rust", "Cargo.toml");
 const READER_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "tobj-obj-reader.exe" : "tobj-obj-reader");
 
-/** 🍳️ One entry per reader-oracle corpus recipe — mirrors `📖️tobj-obj-reader/src/main.rs`'s own
+/** 🍳️ One entry per reader-oracle corpus recipe — mirrors `📖️reader/🦀️.rs`'s own
  *  `RECIPES` table (id + whether it has an `after.obj`), kept in sync by hand since this file never
  *  parses Rust. */
 type ReaderRecipe = Readonly<{ id: string; directoryName: string; hasAfter: boolean }>;

@@ -2746,25 +2746,17 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "defaultDirectory",
-        "overrides",
+        "directoryName",
         "cases"
       ],
-      "description": "🧭️ The neutral owner-override vector every contribution-directory implementation is measured against. It lives in the owning schema module; examples live under owner fixtures and test cases contain only their feature and implementations.",
+      "description": "🔮️ The neutral vector every canonical oracle-directory ownership implementation is measured against. It lives in the owning schema module; examples live under owner fixtures and test cases contain only their feature and implementations.",
       "properties": {
         "$schema": {
           "type": "string"
         },
-        "defaultDirectory": {
+        "directoryName": {
           "type": "string",
           "minLength": 1
-        },
-        "overrides": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string",
-            "minLength": 1
-          }
         },
         "cases": {
           "type": "array",
@@ -2774,16 +2766,11 @@
             "additionalProperties": false,
             "required": [
               "owner",
-              "directory",
               "path",
               "owned"
             ],
             "properties": {
               "owner": {
-                "type": "string",
-                "minLength": 1
-              },
-              "directory": {
                 "type": "string",
                 "minLength": 1
               },
@@ -3276,6 +3263,26 @@
         }
       }
     },
+    "TestLayoutFindingCode": {
+      "description": "🚨️ Closed language-neutral vocabulary emitted by every test-layout implementation.",
+      "enum": [
+        "legacy-test-directory",
+        "legacy-test-filename",
+        "test-implementation-depth",
+        "test-implementation-filename",
+        "test-case-name",
+        "test-owner-delivery-scope",
+        "inline-test-body",
+        "inline-self-test-declaration",
+        "invalid-test-module-wiring",
+        "fixture-in-test-case",
+        "fixture-owner-delivery-scope",
+        "test-data-in-case",
+        "production-fixture-dependency",
+        "legacy-fixture-directory",
+        "obsolete-testing-category"
+      ]
+    },
     "TestLayoutCases": {
       "type": "object",
       "additionalProperties": false,
@@ -3284,7 +3291,7 @@
         "cases",
         "filenameOracle"
       ],
-      "description": "📐️ The neutral test-layout vector every layout-scan implementation is measured against: each case names the sources it plants and the findings they must produce, and `filenameOracle` pins the canonical implementation filenames the scan recognises. It lives in the owning schema module; examples live under owner fixtures and test cases contain only their feature and implementations.",
+      "description": "📐️ The neutral test-layout vector every layout-scan implementation is measured against: each case names the source files and empty directories it plants and the findings they must produce, and `filenameOracle` pins the canonical implementation filenames the scan recognises. It lives in the owning schema module; examples live under owner fixtures and test cases contain only their feature and implementations.",
       "properties": {
         "$schema": {
           "type": "string"
@@ -3329,6 +3336,14 @@
                   }
                 }
               },
+              "directories": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
               "expected": {
                 "type": "array",
                 "items": {
@@ -3341,8 +3356,7 @@
                   ],
                   "properties": {
                     "code": {
-                      "type": "string",
-                      "minLength": 1
+                      "$ref": "#/$defs/TestLayoutFindingCode"
                     },
                     "path": {
                       "type": "string",

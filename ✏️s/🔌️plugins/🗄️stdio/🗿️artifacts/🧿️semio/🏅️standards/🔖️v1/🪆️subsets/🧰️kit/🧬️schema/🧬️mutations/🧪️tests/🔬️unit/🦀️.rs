@@ -12,6 +12,19 @@ fn ref_of(subset: &str, id: &str) -> store::os_io::ArtifactRef {
     store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } }
 }
 
+// 🚫️async: E1 pure test-fixture helper — see R9
+fn ref_with(kind: &str, standard: &str, subset: &str, id: &str) -> store::os_io::ArtifactRef {
+    store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: kind.into(), standard: standard.into(), subset: subset.into() } }
+}
+
+// 🚫️async: E1 pure assertion helper — see R9
+fn assert_create_rejected(base: &SemioKitSnapshot, mutation: &SemioKitMutation) {
+    let outcome = mutation.diff(base);
+    assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
+    assert!(outcome.diff().is_empty_diff(), "a rejected create must carry no applicable diff");
+    assert!(mutation.inverse(base).is_empty(), "a rejected create must carry no inverse");
+}
+
 /// 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
 /// stale pre-operation `base` — same fix `🔤️text`'s corrected `round_trip` helper established
 /// (📌️important.md Trap #1).
@@ -53,7 +66,7 @@ fn round_trip(base: &SemioKitSnapshot, operation: &SemioKitMutation) -> SemioKit
 #[semio_framework_async_macros::async_test]
 async fn create_delete_object_round_trips() {
     let base = fixture();
-    let create = SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "obj-99".into(), target: ref_of("object", "new-obj") });
+    let create = SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "obj-99".into(), target: ref_of("object", "obj-99") });
     let after = round_trip(&base, &create);
     assert!(after.objects.iter().any(|c| c.child_id == "obj-99"));
 
@@ -73,7 +86,7 @@ async fn delete_object_of_an_absent_id_has_an_empty_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn create_delete_model_round_trips() {
     let base = fixture();
-    let create = SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-99".into(), target: ref_of("model", "new-model") });
+    let create = SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-99".into(), target: ref_of("model", "model-99") });
     let after = round_trip(&base, &create);
     assert!(after.models.iter().any(|c| c.child_id == "model-99"));
 
@@ -85,13 +98,34 @@ async fn create_delete_model_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn create_delete_properties_round_trips() {
     let base = fixture();
-    let create = SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "props-99".into(), target: ref_of("value", "new-props") });
+    let create = SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "props-99".into(), target: ref_of("value", "props-99") });
     let after = round_trip(&base, &create);
     assert_eq!(after.properties.as_ref().unwrap().child_id, "props-99");
 
     let delete = SemioKitMutation::DeleteProperties(delete_properties::DeleteProperties {});
     let after = round_trip(&base, &delete);
     assert!(after.properties.is_none());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn child_creates_reject_every_identity_and_dialect_mismatch_without_an_inverse() {
+    let base = SemioKitSnapshot::default();
+    for mutation in [
+        SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_of("object", "other") }),
+        SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_with("other", "v1", "object", "object-1") }),
+        SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_with("s.stdio.semio", "v2", "object", "object-1") }),
+        SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_of("model", "object-1") }),
+        SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_of("model", "other") }),
+        SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_with("other", "v1", "model", "model-1") }),
+        SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_with("s.stdio.semio", "v2", "model", "model-1") }),
+        SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_of("object", "model-1") }),
+        SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "value-1".into(), target: ref_of("value", "other") }),
+        SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "value-1".into(), target: ref_with("other", "v1", "value", "value-1") }),
+        SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "value-1".into(), target: ref_with("s.stdio.semio", "v2", "value", "value-1") }),
+        SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "value-1".into(), target: ref_of("object", "value-1") }),
+    ] {
+        assert_create_rejected(&base, &mutation);
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -174,7 +208,7 @@ async fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

@@ -626,9 +626,9 @@
     },
     {
       "id": "jcoprobe-guest",
-      "sourceRoot": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest",
-      "destinationRoot": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust",
-      "semanticOwnerRoot": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest",
+      "sourceRoot": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest",
+      "destinationRoot": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust",
+      "semanticOwnerRoot": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest",
       "workspaceKind": "standalone",
       "identity": {
         "cargoPackageName": "semio-jcoprobe-guest"
@@ -663,32 +663,32 @@
       "ignoredSourcePatterns": [],
       "mappings": [
         {
-          "sourcePath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/Cargo.lock",
-          "destinationPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
+          "sourcePath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/Cargo.lock",
+          "destinationPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
           "sourceHash": "15f877b56093fdbcc4a9aa06512583a989684068e944202f46885c4eca0986c8",
           "sourceSize": 11211,
           "disposition": "metadata",
           "sourceRole": null
         },
         {
-          "sourcePath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/Cargo.toml",
-          "destinationPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
+          "sourcePath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/Cargo.toml",
+          "destinationPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
           "sourceHash": "09c106555573c3381ba248ca5dfa2f63d05e71fbb21793544bb7a58095f5bef3",
           "sourceSize": 575,
           "disposition": "metadata",
           "sourceRole": null
         },
         {
-          "sourcePath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/🦀️.rs",
-          "destinationPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
+          "sourcePath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🦀️.rs",
+          "destinationPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
           "sourceHash": "4181cae50df16ea732298a1fdfa8e37889d05f8721cf67af9605d3a94738f571",
           "sourceSize": 2383,
           "disposition": "implementation",
           "sourceRole": "implementation"
         },
         {
-          "sourcePath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/🧬️schema/🧪️world/📜️.wit",
-          "destinationPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
+          "sourcePath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🧬️schema/🧪️world/📜️.wit",
+          "destinationPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
           "sourceHash": "6f51deddddd46b999edf52bb32c88a6318637a83f61143e804853faae2a7752a",
           "sourceSize": 2416,
           "disposition": "metadata",
@@ -698,11 +698,11 @@
       "adapters": [
         {
           "id": "jco-library",
-          "path": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs",
+          "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs",
           "language": "rust",
           "expectedRole": "declaration",
           "targetPaths": [
-            "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs"
+            "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs"
           ],
           "content": "//! 🧩️ JCO probe guest package adapter.\n\n#[path = \"../../../🧩️component/🦀️.rs\"]\nmod component;\npub use component::*;\n"
         }
@@ -717,7 +717,7 @@
   "referenceConsumers": [
     {
       "packageId": "wgpu-renderer",
-      "path": ".storybook/scopes.ts",
+      "path": ".storybook/📖️stories/🧭️coordination/🟦️.ts",
       "transformId": "wgpu-root",
       "occurrenceCount": 2,
       "ownership": "authored"
@@ -872,8 +872,8 @@
     },
     {
       "packageId": "jcoprobe-guest",
-      "path": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/🦀️.rs",
-      "destinationPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🦀️component.rs",
+      "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🦀️.rs",
+      "destinationPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🦀️component.rs",
       "transformId": "jco-prose",
       "occurrenceCount": 1,
       "ownership": "authored"
@@ -901,8 +901,8 @@
       "destinationToken": "🎯️targets/🧊️wgpu/📦️packages/🦀️rust/\n        /// 🎠️runtime.rs"
     },
     "jco-root": {
-      "sourceToken": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest",
-      "destinationToken": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust"
+      "sourceToken": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest",
+      "destinationToken": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust"
     },
     "jco-prose": {
       "sourceToken": "👽️guest/🧬️schema/📜️world.wit",

@@ -1375,8 +1375,8 @@ impl Drop for JackSnapshotCloneAuthority {
     }
 }
 
-pub fn jack_document_store_owners() -> store::MemberStoreOwners<JackSnapshot, TrinityGraphMutation> {
-    store::MemberStoreOwners::new(
+pub fn jack_document_store_owners() -> store::DocumentStoreOwners<JackSnapshot, TrinityGraphMutation> {
+    store::DocumentStoreOwners::new(
         std::sync::Arc::new(JackSnapshotRetirementFactory),
         std::sync::Arc::new(JackSnapshotRetirementFactory),
         std::sync::Arc::new(JackMutationRetirementFactory),

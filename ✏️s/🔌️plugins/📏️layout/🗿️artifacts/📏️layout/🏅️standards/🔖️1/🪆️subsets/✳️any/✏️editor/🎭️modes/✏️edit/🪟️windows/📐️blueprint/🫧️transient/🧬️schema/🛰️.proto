@@ -1,0 +1,13 @@
+syntax = "proto3";
+package semio.layout.windowtransient.v1;
+
+message LayoutDropPreview {
+  string kind = 1;
+  double x = 2;
+  double y = 3;
+}
+
+message LayoutWindowTransient {
+  LayoutDropPreview drop_preview = 1;
+  string engagement_input = 2;
+}

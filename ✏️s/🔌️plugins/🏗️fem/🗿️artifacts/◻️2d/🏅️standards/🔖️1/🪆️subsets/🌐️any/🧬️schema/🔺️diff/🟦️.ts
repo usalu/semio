@@ -96,13 +96,6 @@ export interface FemAnalysisSettings {
   deformationScale: number;
 }
 
-/** 🎥️ The canvas camera (pan/zoom) for the plugin viewport. Mirrors Rust `FemCamera`
- * (`🗿️artifacts/◻️2d/🦀️.rs`). */
-export interface FemCamera {
-  x: number;
-  y: number;
-  zoom: number;
-}
 
 /** 🧬️ The full `Fem2dArtifact` shape, duplicated here for the sparse diff's `artifact` replacement
  * field. Mirrors `../🟦️.ts`'s `Fem2dArtifact`. */

@@ -8,7 +8,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const repoRoot = resolve(fileURLToPath(new URL(".", source.url)), "../../../../../..");
 
   describe("playgroundFlowWasmDevStubPlugin", () => {
-    const importer = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx");
+    const importer = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx");
     const plugin = playgroundFlowWasmDevStubPlugin(repoRoot);
     const resolveId = plugin.resolveId as (id: string, importer: string) => string | undefined;
 

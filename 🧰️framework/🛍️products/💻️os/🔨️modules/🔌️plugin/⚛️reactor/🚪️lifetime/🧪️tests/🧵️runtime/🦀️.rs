@@ -122,7 +122,7 @@ async fn reactor_native_lifecycle_output_failure_preserves_ack_and_owner() {
     let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(7, 8, "native-fixture".into())]).await.lifecycle_receipt.unwrap();
     let Receipt::Captured { lifetime, .. } = captured else { panic!("real captured owner") };
     let ack = Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: captured });
-    let failed = crate::reactor::test_support::poll_with_output_failure(&runtime, vec![ack], reactor_native_lifecycle_budget()).await;
+    let failed = crate::reactor::reactor_driver::poll_with_output_failure(&runtime, vec![ack], reactor_native_lifecycle_budget()).await;
     assert!(failed.is_err());
     {
         let lifetimes = runtime.guest_lifetimes.borrow();
@@ -146,18 +146,18 @@ async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_a
         reactor_native_lifecycle_ack(&runtime, captured_a).await;
         let captured_b = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(8, 8, "native-fixture".into())]).await.lifecycle_receipt.unwrap();
         let Receipt::Captured { lifetime: b, .. } = captured_b else { unreachable!() };
-        crate::reactor::test_support::queue_external_patch(UiPatch {
+        crate::reactor::reactor_driver::queue_external_patch(UiPatch {
             surface: semio_framework_ui_contract::SurfaceId::try_from("7:window").unwrap(),
             base_revision: semio_framework_ui_contract::UiRevision(0), revision: semio_framework_ui_contract::UiRevision(2), ops: Default::default(),
         });
         let preparation = reactor_native_lifecycle_poll(&runtime, Vec::new()).await;
         assert!(preparation.ui_patches.is_empty());
         let event = Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: captured_b });
-        let (failed, provisional) = crate::reactor::test_support::poll_with_patch_output_fault(&runtime, vec![event.clone()], reactor_native_lifecycle_budget(), late_clock).await;
+        let (failed, provisional) = crate::reactor::reactor_driver::poll_with_patch_output_fault(&runtime, vec![event.clone()], reactor_native_lifecycle_budget(), late_clock).await;
         let failure = failed.expect_err("injected real output failure");
         if late_clock { assert_eq!(failure.code.0, "plugin.reactor-turn-deadline"); assert!(failure.retryable); }
         let provisional = provisional.expect("the real pending patch was staged");
-        assert!(!crate::reactor::test_support::patch_receipt_is_issued(provisional));
+        assert!(!crate::reactor::reactor_driver::patch_receipt_is_issued(provisional));
         assert_eq!(runtime.guest_lifetimes.borrow().get(8).unwrap().cell.retained_receipt(), Some(captured_b));
         assert!(!runtime.guest_lifetimes.borrow().get(8).unwrap().cell.is_live());
         let emitted = reactor_native_lifecycle_poll(&runtime, vec![event]).await;
@@ -171,10 +171,10 @@ async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_a
         let foreign = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { guest_lifetime: a.guest_lifetime + 1, ..a }, ..issued };
         for receipt in [provisional, foreign] {
             reactor_native_lifecycle_poll(&runtime, vec![Event::PatchAck { receipt, surface: "7:window".into(), revision: 2 }]).await;
-            assert!(crate::reactor::test_support::patch_receipt_is_issued(issued));
+            assert!(crate::reactor::reactor_driver::patch_receipt_is_issued(issued));
         }
         reactor_native_lifecycle_poll(&runtime, vec![Event::PatchAck { receipt: issued, surface: "7:window".into(), revision: 2 }]).await;
-        assert!(!crate::reactor::test_support::patch_receipt_is_issued(issued));
+        assert!(!crate::reactor::reactor_driver::patch_receipt_is_issued(issued));
         drop(emitted);
         reactor_native_lifecycle_finish(&runtime, b, 9).await;
         reactor_native_lifecycle_finish(&runtime, a, 9).await;

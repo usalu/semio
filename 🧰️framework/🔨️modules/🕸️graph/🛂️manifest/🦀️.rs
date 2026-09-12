@@ -4,7 +4,7 @@ use neural_engine::Value;
 pub use neural_engine::ValueType;
 
 pub mod generated {
-    include!("../🤖️generated/🦀️registry.rs");
+    include!("../🤖️generated/📇️registry/🦀️.rs");
 }
 
 pub use generated::*;

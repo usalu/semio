@@ -109,7 +109,7 @@ import {
 const DOMAIN_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test";
 const RUST_PACKAGE_REL = `${DOMAIN_REL}/📦️packages/🦀️rust`;
 const GO_PACKAGE_REL = `${DOMAIN_REL}/📦️packages/🐹️go`;
-const PYTHON_PACKAGE_REL = `${DOMAIN_REL}/📦️packages/🐍️python`;
+const PYTHON_HOST_REL = `${DOMAIN_REL}/🖥️host`;
 const DOTNET_PACKAGE_REL = `${DOMAIN_REL}/📦️packages/🔷️dotnet`;
 
 /** 📊️ Where the latest run's reports land — a marked directory, so `clean test` can remove them. */
@@ -590,7 +590,7 @@ function materializePythonHost(repoRoot: string, discovered: DiscoveredCase, rol
   const localPaths = declared.filter((entry) => entry.path !== undefined).map((entry) => join(repoRoot, entry.path!));
   return {
     command: interpreter,
-    args: [join(repoRoot, PYTHON_PACKAGE_REL, "🐍️.py"), "--plan", planPath, "--out", outPath, "--adapter", join(repoRoot, discovered.adapters.python!)],
+    args: [join(repoRoot, PYTHON_HOST_REL, "🐍️.py"), "--plan", planPath, "--out", outPath, "--adapter", join(repoRoot, discovered.adapters.python!)],
     cwd: repoRoot,
     env: {
       ...process.env,
@@ -1073,7 +1073,7 @@ class InventoryScript extends Script {
     const selectors = readSelectors(segments);
     const manifests = registry.contributions.flatMap((contribution) => contribution.mutationManifests.map((manifest) => ({ contribution, manifest }))).filter(({ manifest }) => matchesTarget(manifest, selectors));
     if (manifests.length === 0) {
-      console.error("[inventory] no mutation manifest matches the selection — declare one in the owner's 🧪️oracle contribution");
+      console.error("[inventory] no mutation manifest matches the selection — declare one in the owner's 🔮️oracles collection");
       process.exit(1);
     }
     let failed = 0;
@@ -1620,7 +1620,7 @@ export function policy(): BreachRecord[] {
   const repoRoot = join(import.meta.dir, "..", "..", "..", "..", "..");
   const breaches: BreachRecord[] = [];
   for (const name of readdirSync(import.meta.dir)) {
-    if (!["🧬️schema", "📇️registry", "📦️packages", "🧫️fixtures", "🧪️tests", "📡️protocol", "🏃️runner", "🔮️oracle", "📜️script.ts", "📋️project.json", "🟨️.mjs", "AGENTS.md", "README.md", "node_modules"].includes(name)) {
+    if (!["🧬️schema", "📇️registry", "📦️packages", "🧫️fixtures", "🧪️tests", "📡️protocol", "🏃️runner", "🔮️oracles", "📜️script.ts", "📋️project.json", "🟨️.mjs", "AGENTS.md", "README.md", "node_modules"].includes(name)) {
       breaches.push({ id: "unknown-domain-child", kind: "testing/taxonomy", scope: `${DOMAIN_REL}/${name}`, summary: `Unexpected child ${name} in the testing domain root`, priority: "medium", reason: "The testing domain root holds its schema, registry, packages, fixtures, self-tests and routers — nothing else.", solution: "Move it into the owning child directory, or delete it." });
     }
   }

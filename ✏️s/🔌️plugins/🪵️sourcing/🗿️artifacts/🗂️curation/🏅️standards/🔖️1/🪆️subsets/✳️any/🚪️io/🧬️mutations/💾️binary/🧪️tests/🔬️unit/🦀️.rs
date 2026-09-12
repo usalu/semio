@@ -15,7 +15,7 @@ async fn curation_document_text_round_trips_through_a_vcs_store() {
     let document = crate::curation_snapshot_from_stock(&crate::schema::demo_stock(), Vec::new());
     let envelope = store::create_document_envelope(crate::SOURCING_CURATION_SCHEMA, "sourcing-curation-test", document, None);
     let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
-    doc_store.install_member_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<CurationSnapshot, SourcingMutation>());
+    doc_store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<CurationSnapshot, SourcingMutation>());
     let object_id = crate::stock_of(&doc_store.snapshot().expect("snapshot"))[0].id.clone();
     let mutation = crate::schema::mutations::create_curated_item(crate::CuratedItem { object_id, count: 3 });
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], description: None }).await.expect("apply");

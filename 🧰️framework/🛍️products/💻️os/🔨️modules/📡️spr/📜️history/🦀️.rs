@@ -1431,6 +1431,384 @@ pub struct DecodeOptions {
     pub limits: ProtocolLimits,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetainedHistoryDecodeStep {
+    Pending { completed_bytes: u64, total_bytes: u64, decoded_records: u64 },
+    Ready,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RetainedHistoryDecodePhase {
+    Verify,
+    Decode,
+    Validate,
+    Ready,
+    Fault,
+}
+
+pub struct RetainedHistoryDecode {
+    verifier: Option<crate::os_spr::format::retained::RetainedSprVerification>,
+    log: Option<HistoryLog>,
+    dict: DictReader,
+    edit_ids: Vec<String>,
+    trusted_end: u64,
+    offset: u64,
+    decoded_records: u64,
+    validation_stage: u8,
+    validation_index: usize,
+    saw_conflicts: bool,
+    limits: crate::os_spr::format::retained::RetainedSprLimits,
+    require_persisted_document: bool,
+    phase: RetainedHistoryDecodePhase,
+}
+
+impl RetainedHistoryDecode {
+    pub fn new(total_bytes: usize, limits: crate::os_spr::format::retained::RetainedSprLimits) -> Result<Self, String> {
+        let verifier = crate::os_spr::format::retained::RetainedSprVerification::new(total_bytes as u64, limits).map_err(|error| format!("SPR history admission failed: {error:?}"))?;
+        Ok(Self {
+            verifier: Some(verifier),
+            log: Some(HistoryLog::default()),
+            dict: DictReader::new(),
+            edit_ids: Vec::new(),
+            trusted_end: 0,
+            offset: HEADER_SIZE as u64,
+            decoded_records: 0,
+            validation_stage: 0,
+            validation_index: 0,
+            saw_conflicts: false,
+            limits,
+            require_persisted_document: false,
+            phase: RetainedHistoryDecodePhase::Verify,
+        })
+    }
+
+    pub fn new_persisted_document(total_bytes: usize, limits: crate::os_spr::format::retained::RetainedSprLimits) -> Result<Self, String> {
+        let mut decoder = Self::new(total_bytes, limits)?;
+        decoder.require_persisted_document = true;
+        Ok(decoder)
+    }
+
+    pub fn step(&mut self, bytes: &[u8], maximum_bytes: usize, maximum_records: usize) -> Result<RetainedHistoryDecodeStep, String> {
+        if self.phase == RetainedHistoryDecodePhase::Fault {
+            return Err("SPR history decoder is faulted".into());
+        }
+        if self.phase == RetainedHistoryDecodePhase::Ready {
+            return Ok(RetainedHistoryDecodeStep::Ready);
+        }
+        if bytes.len() as u64 > self.limits.file_bytes {
+            self.phase = RetainedHistoryDecodePhase::Fault;
+            return Err("SPR history exceeds retained file byte authority".into());
+        }
+        if self.phase == RetainedHistoryDecodePhase::Verify {
+            let verifier = self.verifier.as_mut().ok_or_else(|| "SPR history verifier owner is absent".to_string())?;
+            if verifier.consumed() > bytes.len() as u64 {
+                self.phase = RetainedHistoryDecodePhase::Fault;
+                return Err("SPR history input changed during retained verification".into());
+            }
+            let start = verifier.consumed() as usize;
+            let end = start.saturating_add(maximum_bytes).min(bytes.len());
+            let mut fuel = end - start;
+            if fuel != 0 {
+                if let Err(error) = verifier.push(&bytes[start..end], &mut fuel) {
+                    self.phase = RetainedHistoryDecodePhase::Fault;
+                    return Err(format!("SPR history verification failed: {error:?}"));
+                }
+            }
+            if verifier.consumed() != bytes.len() as u64 {
+                return Ok(self.progress(bytes.len()));
+            }
+            let span = match verifier.finish() {
+                Ok(span) => span,
+                Err(error) => {
+                    self.phase = RetainedHistoryDecodePhase::Fault;
+                    return Err(format!("SPR history verification failed: {error:?}"));
+                }
+            };
+            if span.sequence() == 0 || span.end() != bytes.len() as u64 || span.tail() != 0 {
+                self.phase = RetainedHistoryDecodePhase::Fault;
+                return Err("SPR history requires one exact committed span without a torn or uncommitted tail".into());
+            }
+            self.trusted_end = span.end();
+            self.verifier = None;
+            self.phase = RetainedHistoryDecodePhase::Decode;
+            if maximum_records == 0 {
+                return Ok(self.progress(bytes.len()));
+            }
+        }
+
+        if self.phase == RetainedHistoryDecodePhase::Validate {
+            for _ in 0..maximum_records {
+                match self.validate_one() {
+                    Ok(true) => {
+                        self.phase = RetainedHistoryDecodePhase::Ready;
+                        return Ok(RetainedHistoryDecodeStep::Ready);
+                    }
+                    Ok(false) => {}
+                    Err(error) => {
+                        self.phase = RetainedHistoryDecodePhase::Fault;
+                        return Err(error);
+                    }
+                }
+            }
+            return Ok(self.progress(bytes.len()));
+        }
+
+        let trusted_end = usize::try_from(self.trusted_end).map_err(|_| "SPR history trusted span exceeds this platform".to_string())?;
+        if trusted_end > bytes.len() {
+            self.phase = RetainedHistoryDecodePhase::Fault;
+            return Err("SPR history input shortened after retained verification".into());
+        }
+        for _ in 0..maximum_records {
+            if self.offset == self.trusted_end {
+                self.phase = RetainedHistoryDecodePhase::Validate;
+                return Ok(self.progress(bytes.len()));
+            }
+            if self.offset < HEADER_SIZE as u64 || self.offset > self.trusted_end {
+                self.phase = RetainedHistoryDecodePhase::Fault;
+                return Err("SPR history semantic cursor escaped its verified span".into());
+            }
+            let mut cursor = crate::os_io::resolve_ready(FrameCursor::new(&bytes[..trusted_end], self.offset));
+            let frame = crate::os_io::resolve_ready(cursor.next_frame())
+                .map_err(|error| {
+                    self.phase = RetainedHistoryDecodePhase::Fault;
+                    format!("SPR history record framing failed: {error}")
+                })?
+                .ok_or_else(|| {
+                    self.phase = RetainedHistoryDecodePhase::Fault;
+                    "SPR history ended before its verified span".to_string()
+                })?;
+            let frame_len = crate::os_io::resolve_ready(frame.frame_len());
+            if frame_len > self.limits.frame_body_bytes.saturating_add(18) {
+                self.phase = RetainedHistoryDecodePhase::Fault;
+                return Err("SPR history record exceeds retained frame byte authority".into());
+            }
+            let next = frame.offset.checked_add(frame_len).ok_or_else(|| "SPR history record offset overflowed".to_string())?;
+            if next > self.trusted_end {
+                self.phase = RetainedHistoryDecodePhase::Fault;
+                return Err("SPR history record crossed its verified span".into());
+            }
+            self.decode_frame(frame).map_err(|error| {
+                self.phase = RetainedHistoryDecodePhase::Fault;
+                error
+            })?;
+            self.offset = next;
+            self.decoded_records = self.decoded_records.checked_add(1).ok_or_else(|| "SPR history decoded record count overflowed".to_string())?;
+            if self.decoded_records > self.limits.records {
+                self.phase = RetainedHistoryDecodePhase::Fault;
+                return Err("SPR history exceeds retained record authority".into());
+            }
+        }
+        Ok(self.progress(bytes.len()))
+    }
+
+    fn validate_one(&mut self) -> Result<bool, String> {
+        let log = self.log.as_ref().ok_or_else(|| "SPR history log owner is absent".to_string())?;
+        match self.validation_stage {
+            0 if self.validation_index < log.edits.len() => {
+                let index = self.validation_index;
+                let edit = &log.edits[index];
+                if edit.id.trim().is_empty() || log.edits[..index].iter().any(|prior| prior.id == edit.id) {
+                    return Err(format!("SPR history repeats or omits authoritative edit {}", edit.id));
+                }
+                if self.require_persisted_document && edit.meta.is_none() {
+                    return Err(format!("SPR history edit {} has no authoritative operation metadata", edit.id));
+                }
+                if edit.meta.as_ref().is_some_and(|meta| meta.len() != edit.ops.len()) || edit.ops.iter().chain(&edit.inverse).any(|payload| payload.binary.is_none() && payload.text.is_none()) {
+                    return Err(format!("SPR history edit {} has malformed operations or metadata", edit.id));
+                }
+                self.validation_index += 1;
+                Ok(false)
+            }
+            0 => {
+                self.validation_stage = 1;
+                self.validation_index = 0;
+                Ok(false)
+            }
+            1 if self.validation_index < log.changes.len() => {
+                let index = self.validation_index;
+                let change = &log.changes[index];
+                if change.id.trim().is_empty() || log.changes[..index].iter().any(|prior| prior.id == change.id) {
+                    return Err(format!("SPR history repeats or omits authoritative change {}", change.id));
+                }
+                for (reference_index, edit_id) in change.edit_ids.iter().enumerate() {
+                    if change.edit_ids[..reference_index].contains(edit_id) || !log.edits.iter().any(|edit| edit.id == *edit_id) {
+                        return Err(format!("SPR history change {} has an invalid edit reference {edit_id}", change.id));
+                    }
+                }
+                self.validation_index += 1;
+                Ok(false)
+            }
+            1 => {
+                self.validation_stage = 2;
+                self.validation_index = 0;
+                Ok(false)
+            }
+            2 if self.validation_index < log.checkpoints.len() => {
+                let index = self.validation_index;
+                let checkpoint = &log.checkpoints[index];
+                if checkpoint.id.trim().is_empty() || log.checkpoints[..index].iter().any(|prior| prior.id == checkpoint.id) {
+                    return Err(format!("SPR history repeats or omits authoritative checkpoint {}", checkpoint.id));
+                }
+                self.validation_index += 1;
+                Ok(false)
+            }
+            2 => {
+                self.validation_stage = 3;
+                self.validation_index = 0;
+                Ok(false)
+            }
+            3 if self.validation_index < log.checkpoints.len() => {
+                let checkpoint = &log.checkpoints[self.validation_index];
+                for (reference_index, change_id) in checkpoint.change_ids.iter().enumerate() {
+                    if checkpoint.change_ids[..reference_index].contains(change_id) || !log.changes.iter().any(|change| change.id == *change_id) {
+                        return Err(format!("SPR history checkpoint {} has an invalid change reference {change_id}", checkpoint.id));
+                    }
+                }
+                if checkpoint.parent_id.as_ref().is_some_and(|parent| parent == &checkpoint.id || !log.checkpoints.iter().any(|candidate| candidate.id == *parent)) {
+                    return Err(format!("SPR history checkpoint {} has an invalid parent", checkpoint.id));
+                }
+                self.validation_index += 1;
+                Ok(false)
+            }
+            3 => {
+                self.validation_stage = 4;
+                self.validation_index = 0;
+                Ok(false)
+            }
+            4 if self.validation_index < log.alternatives.len() => {
+                let index = self.validation_index;
+                let alternative = &log.alternatives[index];
+                if alternative.id.trim().is_empty() || log.alternatives[..index].iter().any(|prior| prior.id == alternative.id) {
+                    return Err(format!("SPR history repeats or omits authoritative alternative {}", alternative.id));
+                }
+                for (reference_index, checkpoint_id) in alternative.checkpoint_ids.iter().enumerate() {
+                    if alternative.checkpoint_ids[..reference_index].contains(checkpoint_id) || !log.checkpoints.iter().any(|checkpoint| checkpoint.id == *checkpoint_id) {
+                        return Err(format!("SPR history alternative {} has an invalid checkpoint reference {checkpoint_id}", alternative.id));
+                    }
+                }
+                self.validation_index += 1;
+                Ok(false)
+            }
+            4 => {
+                self.validation_stage = 5;
+                self.validation_index = 0;
+                Ok(false)
+            }
+            5 => {
+                if log.active_alternative_id.as_ref().is_some_and(|id| !log.alternatives.iter().any(|alternative| alternative.id == *id)) {
+                    return Err("SPR history names an unknown active alternative".into());
+                }
+                if self.require_persisted_document && log.cursor.is_none() {
+                    return Err("SPR history has no explicit cursor".into());
+                }
+                if let Some(cursor) = &log.cursor {
+                    for (index, edit_id) in cursor.applied_edit_ids.iter().enumerate() {
+                        if cursor.applied_edit_ids[..index].contains(edit_id) || !log.edits.iter().any(|edit| edit.id == *edit_id) {
+                            return Err(format!("SPR history cursor has an invalid applied edit {edit_id}"));
+                        }
+                    }
+                    for (index, edit_id) in cursor.redo_edit_ids.iter().enumerate() {
+                        if cursor.redo_edit_ids[..index].contains(edit_id) || cursor.applied_edit_ids.contains(edit_id) || !log.edits.iter().any(|edit| edit.id == *edit_id) {
+                            return Err(format!("SPR history cursor has an invalid redo edit {edit_id}"));
+                        }
+                    }
+                    if cursor.checkpoint_id.as_ref().is_some_and(|id| !log.checkpoints.iter().any(|checkpoint| checkpoint.id == *id)) {
+                        return Err("SPR history cursor names an unknown checkpoint".into());
+                    }
+                }
+                if let Some(composition) = &log.composition {
+                    for (checkpoint_id, pins) in &composition.checkpoint_pins {
+                        if !log.checkpoints.iter().any(|checkpoint| checkpoint.id == *checkpoint_id)
+                            || pins.iter().any(|(child, checkpoint)| child.trim().is_empty() || checkpoint.trim().is_empty())
+                        {
+                            return Err(format!("SPR history composition has an invalid checkpoint pin owner {checkpoint_id}"));
+                        }
+                    }
+                }
+                self.validation_stage = 6;
+                Ok(false)
+            }
+            _ => Ok(true),
+        }
+    }
+
+    fn decode_frame(&mut self, frame: crate::os_spr::RecordFrame<'_>) -> Result<(), String> {
+        let payload = crate::os_io::resolve_ready(frame.payload());
+        let log = self.log.as_mut().ok_or_else(|| "SPR history log owner is absent".to_string())?;
+        match frame.kind {
+            crate::os_spr::REC_STR_DICT => crate::os_io::resolve_ready(apply_dict_record(&mut self.dict, payload)).map_err(|error| error.to_string())?,
+            crate::os_spr::REC_ACTOR_DICT => {}
+            crate::os_spr::REC_DOC => {
+                let (doc_id, schema) = crate::os_io::resolve_ready(decode_doc(payload, &self.dict)).map_err(|error| error.to_string())?;
+                log.doc_id = doc_id;
+                log.schema = schema;
+            }
+            crate::os_spr::REC_EDIT => {
+                let edit_ids = &self.edit_ids;
+                let edit = crate::os_io::resolve_ready(decode_edit(payload, &self.dict, |ordinal| edit_ids.get(ordinal as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ordinal as u32))))
+                    .map_err(|error| error.to_string())?;
+                self.edit_ids.push(edit.id.clone());
+                log.edits.push(edit);
+            }
+            crate::os_spr::REC_CHANGE => {
+                let edit_ids = &self.edit_ids;
+                log.changes.push(crate::os_io::resolve_ready(decode_change(payload, &self.dict, |ordinal| edit_ids.get(ordinal as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ordinal as u32)))).map_err(|error| error.to_string())?);
+            }
+            crate::os_spr::REC_CHECKPOINT => log.checkpoints.push(crate::os_io::resolve_ready(decode_checkpoint(payload, &self.dict)).map_err(|error| error.to_string())?),
+            crate::os_spr::REC_ALTERNATIVE => log.alternatives.push(crate::os_io::resolve_ready(decode_alternative(payload, &self.dict)).map_err(|error| error.to_string())?),
+            crate::os_spr::REC_ACTIVE => log.active_alternative_id = crate::os_io::resolve_ready(decode_active(payload, &self.dict)).map_err(|error| error.to_string())?,
+            REC_CURSOR => {
+                let edit_ids = &self.edit_ids;
+                log.cursor = Some(crate::os_io::resolve_ready(decode_cursor(payload, &self.dict, |ordinal| edit_ids.get(ordinal as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ordinal as u32)))).map_err(|error| error.to_string())?);
+            }
+            REC_COMPOSITION => log.composition = Some(crate::os_io::resolve_ready(decode_composition(payload, &self.dict)).map_err(|error| error.to_string())?),
+            REC_CONFLICT => {
+                if self.saw_conflicts {
+                    return Err("SPR history repeats its conflict record".into());
+                }
+                let edit_ids = &self.edit_ids;
+                log.conflicts = crate::os_io::resolve_ready(decode_conflicts(payload, &self.dict, |ordinal| edit_ids.get(ordinal as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ordinal as u32))))
+                    .map_err(|error| error.to_string())?;
+                self.saw_conflicts = true;
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn progress(&self, total_bytes: usize) -> RetainedHistoryDecodeStep {
+        let completed_bytes = self.verifier.as_ref().map_or(self.offset, crate::os_spr::format::retained::RetainedSprVerification::consumed);
+        RetainedHistoryDecodeStep::Pending { completed_bytes, total_bytes: total_bytes as u64, decoded_records: self.decoded_records }
+    }
+
+    pub fn take_ready(&mut self) -> Option<HistoryLog> {
+        if self.phase != RetainedHistoryDecodePhase::Ready {
+            return None;
+        }
+        self.log.take()
+    }
+
+    pub fn take_partial(&mut self) -> Option<HistoryLog> {
+        self.phase = RetainedHistoryDecodePhase::Fault;
+        self.verifier = None;
+        self.log.take()
+    }
+
+    pub fn take_auxiliary_owners(&mut self) -> (Vec<String>, Vec<String>) {
+        (self.dict.take_entries(), std::mem::take(&mut self.edit_ids))
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.verifier.is_none() && self.log.is_none() && self.dict.is_empty() && self.edit_ids.is_empty()
+    }
+}
+
+impl Drop for RetainedHistoryDecode {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "retained history decoder reached Drop before every parsed and auxiliary owner was transferred");
+    }
+}
+
 async fn flush_dict_delta<S: PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) -> Result<(), ProtocolError> {
     let len = dict.len();
     if len > *base {

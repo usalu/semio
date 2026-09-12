@@ -1,5 +1,91 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry as framework_new_app_with_registry};
+    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    
+    pub const WRITER_TEST_WINDOW_ID: &str = "writer-main-test";
+    
+    pub fn main_window_view() -> ViewModel {
+        ViewModel { window_id: Some(WRITER_TEST_WINDOW_ID.into()), window_instances: vec![ViewWindowInstance { id: WRITER_TEST_WINDOW_ID.into(), window_kind_id: WRITER_PLAY_WINDOW_KIND.into() }], ..Default::default() }
+    }
+    
+    /// WriterPlayApp implements the AUTHORING trait ArtifactEditor, not the runtime ArtifactApp --
+    /// EditorApp<WriterPlayApp> (SDK adapter, contract 2.1) is the real ArtifactApp implementor
+    /// VcsArtifactApp wraps, the same way PluginBuilder::editor::<WriterPlayApp> builds it.
+    pub type WriterApp = VcsArtifactApp<EditorApp<WriterPlayApp>>;
+    
+    /// 🧪️ Constructs the Writer app with its declared command registry.
+    pub async fn new_app() -> WriterApp {
+        framework_new_app_with_registry::<EditorApp<WriterPlayApp>>(writer_app_manifest_for_tests).await
+    }
+    
+    /// Adapts create_writer_app's AppDefinition (contract 2.4) into the App { definition, examples }
+    /// shape artifact_app_laws::new_app_with_registry/assert_declared_actions_bridge_to_commands still expect --
+    /// framework test context gap (framework crate outside this packet's lease), not modifiable here.
+    fn writer_app_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_writer_app(), examples: Vec::new() }
+    }
+    
+    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
+    pub async fn new_app_with_registry() -> WriterApp {
+        framework_new_app_with_registry::<EditorApp<WriterPlayApp>>(writer_app_manifest_for_tests).await
+    }
+    
+    /// ✍️ Loads the canonical jack fixture into the store, returning the app ready to exercise.
+    /// 🌱️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright —
+    /// see `reset_document_effect`'s doc comment), so `setActiveExample` no longer lands via
+    /// `dispatch_typed` alone; this loads the same document pack a real host would apply from that
+    /// command's `Effect::LoadDocument`, via `PluginApp::load_document_pack` directly — the same
+    /// technique `📐️cad`'s own `two_instances_converge_disjoint_edits_via_backbone` test uses.
+    pub async fn app_with_jack() -> WriterApp {
+        let mut app = new_app().await;
+        let document = crate::document_dsl::jack_example_document();
+        let (schema, id) = (document.schema.clone(), document.id.clone());
+        let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None);
+        let files = store::print_document_pack(&envelope).await.expect("print jack document pack");
+        app.load_document_pack(&files).await.expect("load jack");
+        app
+    }
+    
+    pub async fn dispatch(app: &mut WriterApp, command: WriterCommand) -> InvocationResult {
+        let mut meta = meta("local");
+        meta.view_state = Some(main_window_view());
+        let result = app.dispatch_typed(command, &meta).await.expect("dispatch");
+        drain_typed_operations(app).await;
+        result
+    }
+    
+    /// 🚰️ Completes every admitted retained operation and acknowledges its bounded output pages.
+    pub async fn drain_typed_operations(app: &mut WriterApp) {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+        while app.has_pending_typed_operations() {
+            assert!(std::time::Instant::now() < deadline, "Writer retained operations did not finish");
+            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Writer retained maintenance");
+            app.advance_typed_operation_publication().await.expect("Writer retained publication");
+            if let Some(page) = app.take_typed_operation_result_page(1) {
+                let lane = page.lane;
+                let bytes = page.bytes().to_vec();
+                app.acknowledge_typed_operation_result(page.token).expect("Writer retained output acknowledgement");
+                assert_ne!(lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "Writer retained publication fault: {bytes:?}");
+            }
+            app.take_typed_operation_effect();
+            app.take_typed_operation_event();
+            app.take_typed_operation_ui_scope();
+            std::thread::yield_now();
+        }
+    }
+    
+    pub async fn render(app: &mut WriterApp, body_key: &str) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &main_window_view()).await.expect("render")).expect("render json")
+    }
+    
+    pub async fn main_window_measures(app: &mut WriterApp) -> Vec<WindowMeasure> {
+        app.window_measures(&main_window_view()).await.get(WRITER_TEST_WINDOW_ID).cloned().expect("main window measures")
+    }
+}
+
 use super::*;
-use crate::editor::writer::testkit::{new_app_with_registry, WriterApp};
+use crate::editor::writer::unit_tests::context::{new_app_with_registry, WriterApp};
 use semio_framework_plugin::PluginApp;
 
 async fn context_menu_items(app: &mut WriterApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
@@ -99,7 +185,7 @@ fn writer_command_job(command: WriterCommand, text: Arc<str>) -> WriterCommandTo
         command: Some(command),
         snapshot: Some(Arc::new(crate::schema::empty_writer_snapshot())),
         text: Some(text),
-        view_state: Some(testkit::main_window_view()),
+        view_state: Some(context::main_window_view()),
         window_config: Some(WriterMainWindowConfig::default()),
         window_transient: Some(WriterMainWindowTransient::default()),
         completion: None,
@@ -281,7 +367,7 @@ fn drive_writer_live_load(app: &mut WriterApp, handle: semio_framework_plugin::A
 
 #[semio_framework_async_macros::async_test]
 async fn writer_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed() {
-    let mut app = testkit::new_app().await;
+    let mut app = artifact_app_laws::new_app().await;
     let base_generation = app.artifact_generation_now();
     let handle = admit_writer_envelope(&mut app, &writer_envelope_wire());
     assert_eq!(handle.generation, base_generation);
@@ -293,7 +379,7 @@ async fn writer_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_suc
 
 #[semio_framework_async_macros::async_test]
 async fn writer_live_envelope_cancel_closes_retained_pages_without_publication() {
-    let mut app = testkit::new_app().await;
+    let mut app = artifact_app_laws::new_app().await;
     let base_generation = app.artifact_generation_now();
     let wire = writer_envelope_wire();
     let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
@@ -554,7 +640,7 @@ async fn context_menu_via_the_registry_still_starts_with_select_token() {
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-    use crate::editor::writer::testkit::{new_app, render};
+    use crate::editor::writer::unit_tests::context::{new_app, render};
     let mut app = new_app().await;
     assert!(render(&mut app, "writer.play.nope").await.contains("Unknown body"));
 }
@@ -571,9 +657,9 @@ async fn whole_document_operation_stays_the_trait_default_none() {
 
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_expose_format_lint_placeholder() {
-    let mut app = testkit::new_app().await;
-    let engagements = app.window_engagements(&testkit::main_window_view()).await;
-    let main = engagements.get(testkit::WRITER_TEST_WINDOW_ID).expect("main engagement");
+    let mut app = artifact_app_laws::new_app().await;
+    let engagements = app.window_engagements(&context::main_window_view()).await;
+    let main = engagements.get(context::WRITER_TEST_WINDOW_ID).expect("main engagement");
     let placeholder = main.input.as_ref().and_then(|i| i.placeholder.as_ref()).expect("placeholder");
     assert!(placeholder.contains("Format"));
     assert_eq!(main.possible_engagements.as_ref().map(|v| v.len()), Some(3));
@@ -581,9 +667,9 @@ async fn window_engagements_expose_format_lint_placeholder() {
 
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_include_format_and_lint_possible_engagements() {
-    let mut app = testkit::new_app().await;
-    let engagements = app.window_engagements(&testkit::main_window_view()).await;
-    let engagement = engagements.get(testkit::WRITER_TEST_WINDOW_ID).expect("writer window engagement");
+    let mut app = artifact_app_laws::new_app().await;
+    let engagements = app.window_engagements(&context::main_window_view()).await;
+    let engagement = engagements.get(context::WRITER_TEST_WINDOW_ID).expect("writer window engagement");
     let ids: Vec<&str> = engagement.possible_engagements.as_ref().expect("possible engagements").iter().map(|possible| possible.id.as_str()).collect();
     assert!(ids.contains(&"writer-format"));
     assert!(ids.contains(&"writer-lint"));
@@ -594,20 +680,20 @@ async fn window_engagements_include_format_and_lint_possible_engagements() {
 /// is the integration-level guarantee that locale threads through the whole app consistently.
 #[semio_framework_async_macros::async_test]
 async fn writer_labels_resolve_native_english_by_default_across_every_surface() {
-    let mut app = testkit::new_app().await;
+    let mut app = artifact_app_laws::new_app().await;
     let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
-    let inspection_json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(inspection).expect("render JSON");
+    let inspection_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(inspection).expect("render JSON");
     assert!(inspection_json.contains("\"Document\""));
     assert!(inspection_json.contains("\"Camera\""));
     let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
-    let catalogue_json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(catalogue).expect("render JSON");
+    let catalogue_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(catalogue).expect("render JSON");
     assert!(catalogue_json.contains("\"Language\""));
     assert!(catalogue_json.contains("Cypher-inspired"));
-    let engagements = app.window_engagements(&testkit::main_window_view()).await;
+    let engagements = app.window_engagements(&context::main_window_view()).await;
     let engagements_json = serde_json::to_string(&engagements).unwrap();
     assert!(engagements_json.contains("\"Format\""));
     assert!(engagements_json.contains("\"Lint\""));
-    let measures = app.window_measures(&testkit::main_window_view()).await;
+    let measures = app.window_measures(&context::main_window_view()).await;
     let measures_json = serde_json::to_string(&measures).unwrap();
     assert!(measures_json.contains("Font size"));
     assert!(measures_json.contains("Line numbers"));

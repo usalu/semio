@@ -1,3 +1,32 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::new_app_with_registry as framework_new_app_with_registry;
+    use semio_framework_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel};
+    
+    pub type DagApp = VcsArtifactApp<EditorApp<DagPlayApp>>;
+    
+    /// 🧪️ An app instance using its declared tool catalog and concrete factories.
+    pub async fn new_app() -> DagApp {
+        new_app_with_registry().await
+    }
+    
+    /// ✏️ Adapts `create_dag_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
+    /// examples }` shape `new_app_with_registry`'s framework test context signature (contract §2.5 gap 3,
+    /// not yet updated for the `AppDefinition`-returning convention) still expects.
+    pub fn dag_app_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_dag_app(), examples: Vec::new() }
+    }
+    
+    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
+    pub async fn new_app_with_registry() -> DagApp {
+        framework_new_app_with_registry::<EditorApp<DagPlayApp>>(dag_app_manifest_for_tests).await
+    }
+    
+    pub async fn render(app: &mut DagApp, body_key: &str) -> String {
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render").root).expect("render json")
+    }
+}
+
 use super::*;
 
 //#region 🧪️RetainedConfigOracle
@@ -15,7 +44,7 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_snapshot_inpu
     assert_eq!(DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024, 4_096);
 }
 //#endregion 🧪️RetainedConfigOracle
-use crate::editor::dag::testkit::{new_app_with_registry, DagApp};
+use crate::editor::dag::unit_tests::context::{new_app_with_registry, DagApp};
 use semio_framework_plugin::PluginApp;
 
 //#region 🔖️CommandSurface
@@ -38,7 +67,7 @@ pub(super) fn every_command() -> Vec<DagCommand> {
         DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: "n1".into(), value: "renamed".into() }),
         DagCommand::Reorganize(reorganize::Reorganize {}),
         DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids: vec!["n1".into(), "n2".into()], field: "value".into(), value: "5".into() }),
-        DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { x: 1.0, y: 2.0, zoom: 1.5 }),
+        DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
         DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}),
     ]
 }
@@ -79,7 +108,7 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         ("rename-dag-node", DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: "n1".into(), value: "renamed".into() })),
         ("reorganize", DagCommand::Reorganize(reorganize::Reorganize {})),
         ("patch-dag-nodes", DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids: vec!["n1".into()], field: "value".into(), value: "5".into() })),
-        ("node-graph-viewport", DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { x: 1.0, y: 2.0, zoom: 1.0 })),
+        ("node-graph-viewport", DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 1.0, y: 2.0, zoom: 1.0 } })),
         ("graph-pointer-down", DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {})),
     ];
     for (expected_keyword, command) in expectations {
@@ -202,7 +231,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-    use crate::editor::dag::testkit::{new_app, render};
+    use crate::editor::dag::unit_tests::context::{new_app, render};
     let mut app = new_app().await;
     assert!(render(&mut app, "dag.play.nope").await.contains("Unknown body"));
 }
@@ -217,7 +246,7 @@ async fn whole_document_operation_is_not_supported_as_an_in_history_mutation() {
 /// contain BOTH via a `MemoryBackbone` — impossible with whole-document snapshots.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    semio_framework_plugin::testkit::assert_two_instances_converge::<EditorApp<DagPlayApp>, (bool, bool)>(
+    semio_framework_plugin::artifact_app_laws::assert_two_instances_converge::<EditorApp<DagPlayApp>, (bool, bool)>(
         "mem://dag-convergence",
         DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }),
         DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }),
@@ -232,6 +261,6 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent_for_dag() {
-    semio_framework_plugin::testkit::assert_ingest_idempotent::<EditorApp<DagPlayApp>, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.snapshot().expect("projection").nodes().len()).await;
+    semio_framework_plugin::artifact_app_laws::assert_ingest_idempotent::<EditorApp<DagPlayApp>, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.snapshot().expect("projection").nodes().len()).await;
 }
 //#endregion 🔖️CrossCutting

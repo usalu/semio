@@ -1,6 +1,6 @@
 //! 🧱️ 🧱️ Fem2d play app commands command — `add-region`.
 
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::FemRegion;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -41,7 +41,7 @@ pub struct AddRegion {
     pub mesh_size: Option<f64>,
 }
 
-pub fn handle(payload: &AddRegion, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub fn handle(payload: &AddRegion, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.regions.iter().map(|r| r.id.clone()), "r");
     let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.height], [payload.x, payload.y + payload.height]];

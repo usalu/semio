@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.fem.result_mode;
+enum ResultMode {
+  RESULT_MODE_STATIC = 0;
+  RESULT_MODE_MODAL = 1;
+  RESULT_MODE_BUCKLING = 2;
+}

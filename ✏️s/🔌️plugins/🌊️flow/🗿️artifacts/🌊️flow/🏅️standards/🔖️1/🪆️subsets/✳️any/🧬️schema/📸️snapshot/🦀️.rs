@@ -112,8 +112,8 @@ impl store::ArtifactPack for FlowSnapshot {
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
         let our_id = <Self as store::ArtifactDsl>::envelope_id();
-        if envelope.envelope_id() != our_id {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {our_id}, got {}", envelope.envelope_id())));
+        if !envelope.matches_identity(our_id, store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {our_id}.pack v1, got {}", envelope.binary_token())));
         }
         let json: serde_json::Value = serde_json::from_slice(&body).map_err(|error| store::PackError::Schema(error.to_string()))?;
         let value: dsl::DslValue = json.into();

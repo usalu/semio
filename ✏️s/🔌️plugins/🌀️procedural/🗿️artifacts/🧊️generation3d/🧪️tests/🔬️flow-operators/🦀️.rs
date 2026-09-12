@@ -149,7 +149,7 @@ impl Drop for UnlinkedFlowExtensions {
 }
 
 /// 🧹️ Walks a bare [`semio_framework_os_flow::FlowEvalSession`] down its explicit close ladder.
-/// Surface-neutral on purpose: BOTH testkits need it, and a viewer test may not reach through
+/// Surface-neutral on purpose: BOTH test contexts need it, and a viewer test may not reach through
 /// `::editor::` (`policyViewerPurityBreaches`), so the one implementation lives here beside the
 /// other shared test guards (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn retire_flow_eval_session(mut session: semio_framework_os_flow::FlowEvalSession) {

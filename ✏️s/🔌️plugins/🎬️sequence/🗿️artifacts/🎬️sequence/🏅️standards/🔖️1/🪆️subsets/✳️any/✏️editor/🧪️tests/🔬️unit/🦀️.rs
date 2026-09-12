@@ -1,6 +1,74 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::meta;
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers};
+    use store::ArtifactPack;
+
+    pub type SequenceApp = VcsArtifactApp<EditorApp<SequencePlayApp>, SemioMembers>;
+
+    pub async fn register_content_child(app: &mut SequenceApp) {
+        let snapshot = app.snapshot().expect("Sequence parent snapshot");
+        let materialized = neural_engine::ColdOwner::new(default_snapshot());
+        let fixture = materialized.to_fixture();
+        let content = crate::sequence_content_snapshot_from_working(&fixture.steps, &fixture.edges);
+        neural_engine::ColdRetire::retire_cold(fixture);
+        let child_id = snapshot.content.child_id.clone();
+        let dialect = snapshot.content.target.dialect.clone();
+        assert_eq!(child_id, materialized.content.child_id, "Sequence concrete app and canonical child identities diverged");
+        let member = create_semio_member(&child_id, &dialect, &content.encode_pack()).await.expect("Sequence child member");
+        app.register_child("content", child_id, dialect, member).await.expect("register Sequence content child");
+    }
+
+    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    pub async fn new_app() -> SequenceApp {
+        let mut app = VcsArtifactApp::<EditorApp<SequencePlayApp>, SemioMembers>::new(EditorApp::default()).await;
+        register_content_child(&mut app).await;
+        app
+    }
+
+    /// 🧩️ `create_sequence_app` now returns `AppDefinition` (contract §2.4), not the runtime-shaped
+    /// `App { definition, examples }` `new_app_with_registry` still expects (SDK gap, unchanged by
+    /// this ticket — `context::assert_declared_actions_bridge_to_commands` carries the identical gap
+    /// per `📓️w0-f-report.md` Gap 3) — wraps it with an empty `examples` list rather than porting one.
+    fn sequence_manifest_for_tests() -> App {
+        App { definition: create_sequence_app(), examples: Vec::new() }
+    }
+
+    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
+    pub async fn new_app_with_registry_wired() -> SequenceApp {
+        let mut app = VcsArtifactApp::<EditorApp<SequencePlayApp>, SemioMembers>::with_registry(EditorApp::default(), AppActionRegistry::from_definition(&sequence_manifest_for_tests().definition)).await;
+        register_content_child(&mut app).await;
+        app
+    }
+
+    pub async fn dispatch(app: &mut SequenceApp, command: SequenceCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+
+    pub async fn render(app: &mut SequenceApp, body_key: &str) -> String {
+        let tree = app.render(body_key, None, &ViewModel::default()).await.expect("render");
+        let tree = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire rendered tree");
+        tree
+    }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
+    /// injected `interactionSelect` verb, dispatched against the "steps" domain declared on this app —
+    /// requires `new_app_with_registry_wired().await` (a bare `new_app().await` has no declared interaction
+    /// domains to select against). `ids` are the steps' own raw document ids — the SAME ids the
+    /// "steps" domain's topology/the document panel tree/the main node-graph canvas all use.
+    pub async fn select_steps(app: &mut SequenceApp, ids: &[&str]) {
+        let target_list: Vec<Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "step", "id": id })).collect();
+        let targets = serde_json::to_string(&target_list).expect("targets json");
+        app.handle_action("interactionSelect", semio_framework_plugin::optional_json_to_dsl(Some(serde_json::json!({ "domainId": SEQUENCE_INTERACTION_STEPS, "targets": targets, "merge": "replace" }))).as_ref(), &meta("test"))
+            .await
+            .expect("interactionSelect");
+    }
+}
+
 use super::*;
-use crate::editor::sequence::testkit::{new_app, new_app_with_registry_wired};
-use semio_framework_plugin::{testkit::assert_undo_redo_round_trip, Locale, PluginApp, Terminology};
+use crate::editor::sequence::unit_tests::context::{new_app, new_app_with_registry_wired};
+use semio_framework_plugin::{artifact_app_laws::assert_undo_redo_round_trip, Locale, PluginApp, Terminology};
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_has_steps() {
@@ -18,7 +86,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 /// `MemoryBackbone` converges both sides onto an identical projection.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<SequencePlayApp>, _>(
+    semio_framework_plugin::artifact_app_laws::assert_two_instances_converge::<semio_framework_plugin::EditorApp<SequencePlayApp>, _>(
         "mem://sequence-convergence",
         SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-1".into(), x: 111.0, y: 0.0 }),
         SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-2".into(), x: 222.0, y: 0.0 }),
@@ -43,7 +111,7 @@ async fn sequence_action_ids_resolve_to_labels_in_native_english_and_german() {
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     let mut app = new_app().await;
-    assert!(testkit::render(&mut app, "sequence.play.nope").await.contains("Unknown body"));
+    assert!(context::render(&mut app, "sequence.play.nope").await.contains("Unknown body"));
 }
 
 //#region 🔖️ManifestSanity
@@ -94,7 +162,7 @@ async fn import_media_steps_in_inserts_a_new_step_from_an_object_payload() {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
         payload: MediaPayload::Structured { schema: "computation.value".into(), json: json!({ "message": "from upstream" }).to_string() },
     };
-    app.import_media("steps:in", media, &semio_framework_plugin::testkit::meta("local")).await.expect("import steps:in");
+    app.import_media("steps:in", media, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("import steps:in");
     let after = app.snapshot().expect("projection").to_fixture();
     assert_eq!(after.steps.len(), before + 1);
     let imported = after.steps.last().expect("imported step");
@@ -109,7 +177,7 @@ async fn import_media_steps_in_wraps_a_bare_scalar_payload() {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
         payload: MediaPayload::Structured { schema: "computation.value".into(), json: "42".into() },
     };
-    app.import_media("steps:in", media, &semio_framework_plugin::testkit::meta("local")).await.expect("import steps:in");
+    app.import_media("steps:in", media, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("import steps:in");
     let after = app.snapshot().expect("projection").to_fixture();
     let imported = after.steps.last().expect("imported step");
     assert_eq!(imported.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(42.0));
@@ -122,7 +190,7 @@ async fn import_media_rejects_unknown_port() {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
         payload: MediaPayload::Structured { schema: "computation.value".into(), json: "{}".into() },
     };
-    assert!(app.import_media("not-a-port", media, &semio_framework_plugin::testkit::meta("local")).await.is_err());
+    assert!(app.import_media("not-a-port", media, &semio_framework_plugin::artifact_app_laws::meta("local")).await.is_err());
 }
 //#endregion 🔖️PortTests
 

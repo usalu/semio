@@ -1,6 +1,18 @@
 {
   "capability": "evaluate",
-  "requestFields": ["operatorId", "inputJson"],
+  "note": "The `evaluate` capability's WIRE, for every flow extension at once: what a request carries and what one round trip answers. Since 2026-09-12 the answer is a BUDGET ENVELOPE rather than a bare out dictionary — an operator that cannot finish inside the requester's wall allowance answers `done:false` with its progress and is resumed by the next identical request. Language-agnostic: an implementation in any language must answer these rows identically.",
+  "requestFields": [
+    "operatorId",
+    "inputJson"
+  ],
+  "envelopeFields": [
+    "done",
+    "cancellable",
+    "phase",
+    "unitsDone",
+    "unitsTotal",
+    "outputJson"
+  ],
   "operatorId": "test.echo",
   "outputChannel": "x",
   "rows": [
@@ -8,21 +20,33 @@
       "name": "ok",
       "requestJson": "{\"operatorId\":\"test.echo\",\"inputJson\":\"{\\\"number\\\":2}\"}",
       "outcome": "ok",
-      "outputKeys": ["x"],
+      "done": true,
+      "phase": "complete",
+      "outputKeys": [
+        "x"
+      ],
       "outputEmpty": false
     },
     {
       "name": "empty-output",
       "requestJson": "{\"operatorId\":\"test.echo\",\"inputJson\":\"{}\"}",
       "outcome": "ok",
-      "outputKeys": ["x"],
+      "done": true,
+      "phase": "complete",
+      "outputKeys": [
+        "x"
+      ],
       "outputEmpty": true
     },
     {
       "name": "operator-fault",
       "requestJson": "{\"operatorId\":\"test.missing\",\"inputJson\":\"{}\"}",
       "outcome": "ok",
-      "outputKeys": ["error"],
+      "done": true,
+      "phase": "complete",
+      "outputKeys": [
+        "error"
+      ],
       "outputEmpty": false
     },
     {
@@ -31,5 +55,10 @@
       "outcome": "fault",
       "fault": "missing field `operatorId`"
     }
+  ],
+  "optionalRequestFields": [
+    "nodeHash",
+    "budget",
+    "wallMicros"
   ]
 }

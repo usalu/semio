@@ -1,6 +1,7 @@
 {
   "name": "@semio-tech/repo-vscode",
   "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode",
   "targets": {
     "dev": {
       "executor": "nx:run-commands",

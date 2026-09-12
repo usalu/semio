@@ -1,7 +1,7 @@
 //! 🦀️ TIFF 6.0 🧱️baseline conformance-class mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR. Recorded no-oracle decision
 //! `tiff-6-0-baseline-conformance-class-semantics`
-//! (`../../🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🔮️oracle/🔣️.json`).
+//! (`../../🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🔮️oracles/🔣️.json`).
 //!
 //! **Why there is no oracle here when the sibling subset has one.** `image` 0.25 is registered by
 //! `✳️any` and is the right reference for a TIFF raster, but its TIFF surface decodes pixels and
@@ -225,7 +225,7 @@ mod subject {
     /// 2. `reparsed_not_copied` asserted the output DIFFERS from the input. It no longer does: this
     ///    encoder now reproduces the committed scan byte for byte. That is the reference's own
     ///    layout, not ours to disagree with — `🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.tiff`
-    ///    was authored by `✳️any/🔮️oracle`'s INDEPENDENT `write_tiff` over IFDs the registered
+    ///    was authored by `✳️any/🔮️oracles`'s INDEPENDENT `write_tiff` over IFDs the registered
     ///    `image` encoder produced (`derive_real_world_fixture`), so this repository's writer
     ///    converging on those exact bytes is the third of the three cases `law::carrier_is_exact`
     ///    exists for, and is a stronger statement than "the bytes differ" ever was. It is asserted as

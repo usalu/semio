@@ -1,6 +1,6 @@
 //! 🧱️ 🧱️ Fem2d play app commands command — `add-node`.
 
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::FemNode;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -36,7 +36,7 @@ pub struct AddNode {
     pub y: f64,
 }
 
-pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.nodes.iter().map(|n| n.id.clone()), "n");
     Ok(Emit::mutations(vec![Fem2dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: FemNode { id, x: payload.x, y: payload.y } })]))

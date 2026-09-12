@@ -1,4 +1,4 @@
-use crate::editor::lowpoly::testkit::render;
+use crate::editor::lowpoly::unit_tests::context::render;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_document_tab_to_this_body_key() {
@@ -10,6 +10,6 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_tree_lists_active_object() {
-    let mut a = crate::editor::lowpoly::testkit::app().await;
+    let mut a = crate::editor::lowpoly::unit_tests::context::app().await;
     assert!(render(&mut a, super::LOWPOLY_PLAY_BODY_DOCUMENT).await.contains("lowpoly-document."));
 }

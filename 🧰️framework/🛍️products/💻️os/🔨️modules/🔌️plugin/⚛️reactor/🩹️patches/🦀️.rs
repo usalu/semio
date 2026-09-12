@@ -179,22 +179,21 @@ impl MountedReconcileGrant {
 
     #[cfg(test)]
     pub fn commit(mut self, tree: ComponentTree) {
-        let mut state = self.state.borrow_mut();
+        let owned = std::rc::Rc::clone(&self.state);
+        let mut state = owned.borrow_mut();
         let owner = std::mem::replace(&mut self.owner, MountedReconcileOwner::Transferred);
         let MountedReconcileOwner::Live { reconciler, reservation } = owner else { return };
         let admission = SurfaceReconcileJob::try_new_reserved(reconciler, tree, reservation);
         let marker = state.unadmitted[self.index].take().filter(|slot| slot.generation == self.generation);
         let Some(marker) = marker else {
-            drop(state);
             drop(admission);
-            self.active = false;
+            self.release(&mut state);
             return;
         };
         let surface = {
             let Some(slot) = state.slots[self.surface_index].as_mut().filter(|slot| slot.key == self.key && slot.output_index == Some(self.output_index) && slot.reconciler.is_none() && slot.producer.is_none() && slot.job.is_none()) else {
-                drop(state);
                 drop(admission);
-                self.active = false;
+                self.release(&mut state);
                 return;
             };
             slot.generation = marker.generation;
@@ -220,8 +219,30 @@ impl MountedReconcileGrant {
         self.active = false;
     }
 
-    pub fn cancel(mut self) {
-        let mut state = self.state.borrow_mut();
+    /// 🧹️ Releases EVERY slot this reservation holds — the unadmitted marker, the rejected-slot
+    /// reservation, the reserved output, the surface slot's `output_index` and the checked-out
+    /// reconciler — and disarms the [`Drop`] that would otherwise run it a second time. The ONE
+    /// release, shared by [`MountedReconcileGrant::cancel`] and `Drop`.
+    ///
+    /// 🐛️ `Drop` used to release only the reconciler and the reservation, so a reservation that ended
+    /// WITHOUT `cancel` — which is exactly what `commit_source`'s seven `Err(root)` exits do — left
+    /// `slot.output_index` set and its `state.ready` output open. `reserve_mounted_owned` refuses any
+    /// slot whose `output_index.is_some()`, so that surface became **permanently un-reservable**: every
+    /// later dirty render was refused and only `defer`red, `deferred_surface_ready` answered `true` (no
+    /// producer, no job, reconciler restored, revision acknowledged), the turn re-dirtied it, and the
+    /// refusal repeated forever — a surface frozen at its last published revision while the actor
+    /// answers `more-work` and publishes nothing. Each such exit also leaked one of
+    /// [`READY_PATCH_CAPACITY`] output slots, so after 64 of them `reserve_mounted` refuses EVERY
+    /// surface and the whole shell stops re-rendering.
+    ///
+    /// Measured live on `:6013` at wasm #58: after a pick on the 1-object document the host asked for
+    /// all three world bodies, dropped none, and the guest answered `changed:[]` with every retained
+    /// surface still at revision 1, so `data-guest-selection-json` kept `selectedIds:[]` — while
+    /// `PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT`'s own doc records the same actor spinning with
+    /// `acks=0` for over a thousand consecutive continuations (ticket
+    /// 26/09/02/PUZZLE-3D-END-TO-END wave B46 §5 and §8.1, wave B48 §3).
+    fn release(&mut self, state: &mut PatchTrackerState) {
+        self.active = false;
         if state.unadmitted[self.index].as_ref().is_some_and(|slot| slot.generation == self.generation) {
             state.unadmitted[self.index] = None;
         }
@@ -234,18 +255,17 @@ impl MountedReconcileGrant {
         if let Some(slot) = state.slots[self.surface_index].as_mut().filter(|slot| slot.key == self.key && slot.output_index == Some(self.output_index)) {
             slot.output_index = None;
         }
-        if let Some(output) = state.ready[self.output_index].as_mut().filter(|output| output.key == self.key && output.generation == self.generation) {
-            output.closing = true;
-        }
-        if let Some(slot) = state.slots[self.surface_index].as_mut().filter(|slot| slot.key == self.key && slot.output_index == Some(self.output_index)) {
-            slot.output_index = None;
-        }
         let owner = std::mem::replace(&mut self.owner, MountedReconcileOwner::Transferred);
         if let (MountedReconcileOwner::Live { reconciler, reservation }, Some(slot)) = (owner, state.slots[self.surface_index].as_mut()) {
             slot.reconciler = Some(reconciler);
             drop(reservation);
         }
-        self.active = false;
+    }
+
+    pub fn cancel(mut self) {
+        let state = std::rc::Rc::clone(&self.state);
+        let mut state = state.borrow_mut();
+        self.release(&mut state);
     }
 }
 
@@ -254,18 +274,9 @@ impl Drop for MountedReconcileGrant {
         if !self.active {
             return;
         }
-        let mut state = self.state.borrow_mut();
-        if state.unadmitted[self.index].as_ref().is_some_and(|slot| slot.generation == self.generation) {
-            state.unadmitted[self.index] = None;
-        }
-        if state.rejected_reserved[self.rejected_index] == Some(self.generation) {
-            state.rejected_reserved[self.rejected_index] = None;
-        }
-        let owner = std::mem::replace(&mut self.owner, MountedReconcileOwner::Transferred);
-        if let (MountedReconcileOwner::Live { reconciler, reservation }, Some(slot)) = (owner, state.slots[self.surface_index].as_mut()) {
-            slot.reconciler = Some(reconciler);
-            drop(reservation);
-        }
+        let state = std::rc::Rc::clone(&self.state);
+        let mut state = state.borrow_mut();
+        self.release(&mut state);
     }
 }
 
@@ -292,6 +303,18 @@ struct PatchTrackerState {
     drive_cursor: usize,
     close_cursor: usize,
     output_fault: Option<(NativeCloseKey, &'static str, bool)>,
+    /// 🩺️ Why the LAST mounted render reservation was refused, and for which surface. A refusal is not a
+    /// fault — the turn defers that render and retries — but eight of the eleven refusal predicates in
+    /// [`PatchTracker::reserve_mounted_owned`] produced no evidence at all, so a guest stuck in a
+    /// refuse/defer cycle was indistinguishable from a guest with nothing to do. Read back through
+    /// [`PatchTracker::debug_state`], which the reactor's own more-work streak trace prints.
+    ///
+    /// 🐛️ Measured live on `:6013` at wasm #58 on the Nakagin switch: `streak=57451` consecutive
+    /// more-work turns, `effects=0`, ALL THIRTEEN surfaces of instance 1 in `deferred`, twelve of them
+    /// with a clean slot (`--R:ack1/rev1:outNone`) that `reserve_mounted` nonetheless refused, and no
+    /// record anywhere of which predicate refused them (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B48
+    /// §6.4).
+    reserve_refusal: Option<(u8, &'static str)>,
 }
 
 impl Default for PatchTrackerState {
@@ -311,8 +334,16 @@ impl Default for PatchTrackerState {
             drive_cursor: 0,
             close_cursor: 0,
             output_fault: None,
+            reserve_refusal: None,
         }
     }
+}
+
+/// 🩺️ Which mounted slot a refused reservation named, as a `u8` so the fixed tracker state keeps its
+/// 256-byte stack budget (`tracker_initialization_fits_the_component_stack_budget`). `u8::MAX` means the
+/// surface holds no slot yet, which is itself part of the refusal's reading.
+fn refused_slot_index(state: &PatchTrackerState, surface: &ui_contract::SurfaceId) -> u8 {
+    state.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| &slot.surface == surface)).and_then(|index| u8::try_from(index).ok()).unwrap_or(u8::MAX)
 }
 
 fn fixed_slots<T>(capacity: usize) -> Box<[Option<T>]> {
@@ -388,37 +419,71 @@ impl PatchTracker {
     #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity or tree owner without allocation.")]
     pub(crate) fn reserve_mounted(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
         if surface_instance(surface.as_ref()) != Some(key.instance()) {
-            return Err(surface);
+            return Err(self.refuse_reserve(surface, "instance-mismatch"));
         }
         self.reserve_mounted_owned(surface, key)
+    }
+
+    /// 🩺️ Records WHY one mounted render reservation was refused and hands the surface identity back
+    /// unchanged — see [`PatchTrackerState::reserve_refusal`]. Every refusal predicate goes through
+    /// here, so a guest stuck in a refuse/defer cycle names the predicate holding it instead of looking
+    /// identical to a guest with nothing to do.
+    #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity without allocation.")]
+    fn refuse_reserve(&self, surface: ui_contract::SurfaceId, reason: &'static str) -> ui_contract::SurfaceId {
+        let mut state = self.state.borrow_mut();
+        let index = refused_slot_index(&state, &surface);
+        state.reserve_refusal = Some((index, reason));
+        surface
     }
 
     #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity or tree owner without allocation.")]
     fn reserve_mounted_owned(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
         let mut state = self.state.borrow_mut();
-        if state.closing_instances.iter().flatten().any(|closing| surface_instance(surface.as_ref()) == Some(closing.instance)) {
-            return Err(surface);
-        }
-        let Some(index) = state.unadmitted.iter().position(Option::is_none) else { return Err(surface) };
-        let Some(surface_index) = state.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.surface == surface)).or_else(|| state.slots.iter().position(Option::is_none)) else { return Err(surface) };
-        if state.slots[surface_index].as_ref().is_some_and(|slot| slot.key != key || slot.output_index.is_some() || slot.producer.is_some() || slot.job.is_some() || slot.reconciler.is_none()) {
-            return Err(surface);
-        }
-        let Some(generation) = next_generation(&state) else { return Err(surface) };
-        let Some(rejected_index) = state.rejected.iter().enumerate().find_map(|(index, slot)| (slot.is_none() && state.rejected_reserved[index].is_none()).then_some(index)) else {
-            return Err(surface);
+        let refuse = |state: &mut PatchTrackerState, surface: ui_contract::SurfaceId, reason: &'static str| -> ui_contract::SurfaceId {
+            let index = refused_slot_index(state, &surface);
+            state.reserve_refusal = Some((index, reason));
+            surface
         };
-        let Some(reservation) = SurfaceReconcileReservation::try_new(generation) else { return Err(surface) };
-        let Some(output_index) = state.ready.iter().position(Option::is_none) else { return Err(surface) };
+        if state.closing_instances.iter().flatten().any(|closing| surface_instance(surface.as_ref()) == Some(closing.instance)) {
+            return Err(refuse(&mut state, surface, "instance-closing"));
+        }
+        let Some(index) = state.unadmitted.iter().position(Option::is_none) else { return Err(refuse(&mut state, surface, "unadmitted-full")) };
+        let Some(surface_index) = state.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.surface == surface)).or_else(|| state.slots.iter().position(Option::is_none)) else {
+            return Err(refuse(&mut state, surface, "slots-full"));
+        };
+        if let Some(reason) = state.slots[surface_index].as_ref().and_then(|slot| {
+            if slot.key != key {
+                Some("slot-key-stale")
+            } else if slot.output_index.is_some() {
+                Some("slot-output-held")
+            } else if slot.producer.is_some() {
+                Some("slot-producer-live")
+            } else if slot.job.is_some() {
+                Some("slot-job-live")
+            } else if slot.reconciler.is_none() {
+                Some("slot-reconciler-checked-out")
+            } else {
+                None
+            }
+        }) {
+            return Err(refuse(&mut state, surface, reason));
+        }
+        let Some(generation) = next_generation(&state) else { return Err(refuse(&mut state, surface, "generations-exhausted")) };
+        let Some(rejected_index) = state.rejected.iter().enumerate().find_map(|(index, slot)| (slot.is_none() && state.rejected_reserved[index].is_none()).then_some(index)) else {
+            return Err(refuse(&mut state, surface, "rejected-full"));
+        };
+        let Some(reservation) = SurfaceReconcileReservation::try_new(generation) else { return Err(refuse(&mut state, surface, "registry-reservation-unavailable")) };
+        let Some(output_index) = state.ready.iter().position(Option::is_none) else { return Err(refuse(&mut state, surface, "ready-full")) };
         let mut outputs = SurfaceReconcileOutputs::default();
         let output_reservation = match outputs.try_reserve(generation, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES) {
             Ok(Some(owner)) => owner,
-            Ok(None) => return Err(surface),
+            Ok(None) => return Err(refuse(&mut state, surface, "output-reservation-unavailable")),
             Err(fault) => {
                 state.output_fault = Some((key, fault, false));
-                return Err(surface);
+                return Err(refuse(&mut state, surface, "output-reservation-fault"));
             }
         };
+        state.reserve_refusal = None;
         state.ready[output_index] = Some(ReadySlot { generation, key, outputs, reservation: Some(output_reservation), published: false, closing: false });
         let reconciler = if let Some(slot) = state.slots[surface_index].as_mut() {
             slot.output_index = Some(output_index);
@@ -574,7 +639,7 @@ impl PatchTracker {
         let producer_terminals: Vec<String> = state.producer_terminals.iter().flatten().map(|terminal| format!("{}:{}{}{}{}", terminal.surface.as_ref(), if terminal.close { "c" } else { "-" }, if terminal.authority.is_some() { "A" } else { "-" }, if terminal.reconciler.is_some() { "R" } else { "-" }, if terminal.reservation.is_some() { "V" } else { "-" })).collect();
         let deferred: Vec<String> = state.deferred.iter().flatten().map(|surface| surface.as_ref().to_owned()).collect();
         format!(
-            "slots=[{}] ready=[{}] terminals=[{}] producer_terminals=[{}] deferred=[{}] rejected={} unadmitted={} closing={} output_fault={} generation_exhausted={} close_cursor={}",
+            "slots=[{}] ready=[{}] terminals=[{}] producer_terminals=[{}] deferred=[{}] rejected={} unadmitted={} closing={} output_fault={} reserve_refusal={} generation_exhausted={} close_cursor={}",
             slots.join(","),
             ready.join(","),
             terminals.join(","),
@@ -584,6 +649,10 @@ impl PatchTracker {
             state.unadmitted.iter().flatten().count(),
             state.closing_instances.iter().flatten().count(),
             state.output_fault.as_ref().map_or("none", |fault| fault.1),
+            state.reserve_refusal.as_ref().map_or_else(
+                || "none".to_string(),
+                |(index, reason)| format!("{}:{reason}", state.slots.get(usize::from(*index)).and_then(Option::as_ref).map_or("unmounted", |slot| slot.surface.as_ref())),
+            ),
             state.generation_exhausted,
             state.close_cursor
         )

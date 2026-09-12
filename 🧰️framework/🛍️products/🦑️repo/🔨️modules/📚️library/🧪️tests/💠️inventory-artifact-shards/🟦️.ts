@@ -7,9 +7,13 @@ import stringify from "fast-json-stable-stringify";
 import fastGlob from "fast-glob";
 import { parse as parseJsonc } from "jsonc-parser";
 import { inventoryTaxonomy } from "../../🧹️normalization/🟦️.ts";
+import { publishTaxonomyInventoryArtifactShards } from "../../🧹️normalization/📇️inventory/📦️publication/🟦️.ts";
+import { buildTaxonomyInventoryArtifactShards, validateTaxonomyInventoryArtifactShards } from "../../🧹️normalization/📇️inventory/🧩️shards/🟦️.ts";
+import { taxonomyInventoryCanonicalChunks, taxonomyInventoryIncrementalCanonicalDigest } from "../../🧹️normalization/📇️inventory/🧾️serialization/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
-const ticketRoot = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
+const ticketRoot = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/sol-root-taxonomy-workflow-extraction/inventory-artifact-shards");
+mkdirSync(ticketRoot, { recursive: true });
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/💠️inventory-artifact-shards/🔣️.json"), "utf8"));
 type Violation = { path: string; code: string; severity: "error" | "warning"; message: string };
@@ -35,7 +39,6 @@ function inventory(rows: Violation[], topLevel = rows) {
 }
 
 test("canonical shard violation closure accepts every language-neutral order without losing metadata or entries", async () => {
-  const { buildTaxonomyInventoryArtifactShards, taxonomyInventoryCanonicalChunks, taxonomyInventoryIncrementalCanonicalDigest, validateTaxonomyInventoryArtifactShards } = await import("../../../../../../../📜️script.ts");
   const validate = new Ajv().compile(vector.violationSchema);
   for (const row of vector.cases) {
     const expected = row.publishedOrder.map((index: number) => row.rows[index]);
@@ -62,7 +65,6 @@ test("canonical shard violation closure accepts every language-neutral order wit
 });
 
 test("canonical shard closure rejects changed missing extra and duplicate top-level records", async () => {
-  const { buildTaxonomyInventoryArtifactShards, validateTaxonomyInventoryArtifactShards } = await import("../../../../../../../📜️script.ts");
   const rows = vector.cases[0].publishedOrder.map((index: number) => vector.cases[0].rows[index]);
   for (const kind of vector.rejections) {
     const source = inventory(rows), changed = structuredClone(source.violations);
@@ -80,7 +82,6 @@ test("canonical shard closure rejects changed missing extra and duplicate top-le
 });
 
 test("shard descriptor order is explicit and cannot be hidden by co-reordering payloads", async () => {
-  const { buildTaxonomyInventoryArtifactShards, validateTaxonomyInventoryArtifactShards } = await import("../../../../../../../📜️script.ts");
   const source = inventory(vector.cases[0].rows);
   source.entries.forEach((entry, index) => { entry.ownerId = vector.orderedOwners[index]; });
   const built = buildTaxonomyInventoryArtifactShards(source);
@@ -95,7 +96,6 @@ test("shard descriptor order is explicit and cannot be hidden by co-reordering p
 });
 
 test("serialized shard reconstruction preserves nested metadata and entry array order", async () => {
-  const { buildTaxonomyInventoryArtifactShards, taxonomyInventoryCanonicalChunks, validateTaxonomyInventoryArtifactShards } = await import("../../../../../../../📜️script.ts");
   const source = { ...inventory(vector.cases[0].rows), coordinateHistory: structuredClone(vector.orderedCoordinateHistory) };
   const entries = source.entries.map((entry) => ({ ...entry, coordinateHistory: structuredClone(vector.orderedCoordinateHistory) }));
   const input = { ...source, entries }, before = JSON.stringify(input);
@@ -109,7 +109,6 @@ test("serialized shard reconstruction preserves nested metadata and entry array 
 });
 
 test("canonical artifact validation rejects every language-neutral preimage corruption", async () => {
-  const { buildTaxonomyInventoryArtifactShards, validateTaxonomyInventoryArtifactShards } = await import("../../../../../../../📜️script.ts");
   const source = inventory(vector.cases[0].rows), built = buildTaxonomyInventoryArtifactShards(source);
   for (const kind of vector.artifactRejections) {
     if (kind === "duplicate-source") {
@@ -131,7 +130,6 @@ test("canonical artifact validation rejects every language-neutral preimage corr
 });
 
 test("the real inventory producer publishes locale-different violation order losslessly", async () => {
-  const { buildTaxonomyInventoryArtifactShards, validateTaxonomyInventoryArtifactShards } = await import("../../../../../../../📜️script.ts");
   const root = mkdtempSync(join(ticketRoot, "🧪️inventory-producer-order-"));
   const put = (path: string, bytes: string | Buffer) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), bytes); };
   put(`${library}/🔣️taxonomy.json`, readFileSync(join(repoRoot, library, "🔣️taxonomy.json")));
@@ -154,9 +152,9 @@ test("the real inventory producer publishes locale-different violation order los
 });
 
 test("publication verifies canonical violations and rejects inconsistent replacement before writing", async () => {
-  const { publishTaxonomyInventoryArtifactShards, validateTaxonomyInventoryArtifactShards } = await import("../../../../../../../📜️script.ts");
   const root = mkdtempSync(join(ticketRoot, "🧪️inventory-order-publication-")), dataRoot = join(root, "📊️inventory");
-  const source = inventory(vector.cases[0].rows), inputPath = join(root, "../../🧫️fixtures/💠️inventory-artifact-shards/🔣️.json");
+  const source = inventory(vector.cases[0].rows), inputPath = join(root, "🧫️fixtures/💠️inventory-artifact-shards/🔣️.json");
+  mkdirSync(dirname(inputPath), { recursive: true });
   writeFileSync(inputPath, JSON.stringify(source));
   const manifest = publishTaxonomyInventoryArtifactShards(dataRoot, source);
   const path = join(dataRoot, "📊️shards/🔣️.json"), before = readFileSync(path);

@@ -1,4 +1,4 @@
-import { type DependencyJsLockMismatchKind, dependencyJsLockWorkspaceMismatches } from "../../../../../../../../📜️script.ts";
+import { type DependencyJsLockMismatchKind, dependencyJsLockWorkspaceMismatches } from "../../📇️inventory/🟦️.ts";
 
 /** 🧪️ Executes synthetic fixtures for stale, missing, drifted, and absent workspace snapshots. */
 export function dependencyJsLockParitySelfTests(): number {

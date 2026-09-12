@@ -3,7 +3,7 @@
 use crate::app::{bounded_config_store_disposer, bounded_config_store_owners, ArtifactOwnedDisposer, NoConfig, NoConfigMutation};
 use crate::store;
 
-pub fn no_config_store_owners() -> store::MemberStoreOwners<NoConfig, NoConfigMutation> {
+pub fn no_config_store_owners() -> store::DocumentStoreOwners<NoConfig, NoConfigMutation> {
     bounded_config_store_owners::<NoConfig, NoConfigMutation>()
 }
 

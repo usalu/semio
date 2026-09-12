@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.local/dsl-fixture-sweep-report-v1",
+  "type": "object",
+  "required": ["schemaVersion", "valid", "hostile"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "valid": { "$ref": "#/$defs/caseWithExpected" },
+    "hostile": {
+      "type": "array",
+      "minItems": 6,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "required": ["id", "assertions", "output"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "assertions": { "type": "integer", "minimum": 0 },
+        "output": { "type": "string" }
+      }
+    },
+    "caseWithExpected": {
+      "type": "object",
+      "required": ["id", "assertions", "output", "expected"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "assertions": { "type": "integer", "minimum": 0 },
+        "output": { "type": "string" },
+        "expected": {
+          "type": "object",
+          "required": ["summary", "coverage"],
+          "additionalProperties": false,
+          "properties": {
+            "summary": { "type": "string", "minLength": 1 },
+            "coverage": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::testkit::{app, dispatch};
+use crate::editor::lowpoly::unit_tests::context::{app, dispatch};
 use crate::editor::lowpoly::LowpolyCommand;
 use crate::schema::default_snapshot;
 

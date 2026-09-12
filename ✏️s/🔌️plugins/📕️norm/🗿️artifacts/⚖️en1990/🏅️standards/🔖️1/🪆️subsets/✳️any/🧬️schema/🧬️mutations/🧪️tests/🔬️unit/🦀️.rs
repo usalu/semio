@@ -76,7 +76,7 @@ async fn remove_variable_action_of_an_out_of_range_index_is_rejected() {
     let base = En1990Snapshot::default();
     let remove = En1990Mutation::RemoveVariableAction(remove_variable_action::RemoveVariableAction { index: 99 });
     assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &remove).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &remove).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -109,35 +109,35 @@ async fn change_variable_action_category_and_value_round_trip() {
 
 //#region 🧪️MutationLaws
 /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-/// (reachable here as `protocol::testkit`), exercised against the three most structurally
+/// (reachable here as `protocol::os_spr::protocol_laws`), exercised against the three most structurally
 /// distinct variants: the repurposed enum-typed slot (`change-annex`), a plain `f64` scalar
 /// (`change-resistance`), and an index-addressed table field (`change-variable-action-value`).
 #[semio_framework_async_macros::async_test]
 async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
     let base = En1990Snapshot::default();
     let mutation = En1990Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = En1990Mutation::ChangeResistance(change_resistance::ChangeResistance { new_resistance_kn: 400.0 }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 #[semio_framework_async_macros::async_test]
 async fn change_resistance_satisfies_the_inverse_and_absorb_laws() {
     let base = En1990Snapshot::default();
     let mutation = En1990Mutation::ChangeResistance(change_resistance::ChangeResistance { new_resistance_kn: 400.0 });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = En1990Mutation::ChangePermanentAction(change_permanent_action::ChangePermanentAction { new_g_k: 130.0 }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 #[semio_framework_async_macros::async_test]
 async fn change_variable_action_value_satisfies_the_inverse_and_absorb_laws() {
     let base = En1990Snapshot::default();
     let mutation = En1990Mutation::ChangeVariableActionValue(change_variable_action_value::ChangeVariableActionValue { index: 0, new_value: 65.0 });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::ChangeVariableActionCategory { index: 1, new_category: "storage".into() }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws
 
@@ -151,25 +151,25 @@ async fn change_variable_action_value_satisfies_the_inverse_and_absorb_laws() {
 #[semio_framework_async_macros::async_test]
 async fn remove_variable_action_missing_target_is_error() {
     let base = En1990Snapshot::default();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &En1990Mutation::RemoveVariableAction(remove_variable_action::RemoveVariableAction { index: 99 })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &En1990Mutation::RemoveVariableAction(remove_variable_action::RemoveVariableAction { index: 99 })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn reorder_variable_actions_missing_target_is_error() {
     let base = En1990Snapshot::default();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ReorderVariableActions(reorder_variable_actions::ReorderVariableActions { from: 99, to: 0 })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &En1990Mutation::ReorderVariableActions(reorder_variable_actions::ReorderVariableActions { from: 99, to: 0 })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn change_variable_action_category_missing_target_is_error() {
     let base = En1990Snapshot::default();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::ChangeVariableActionCategory { index: 99, new_category: "x".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::ChangeVariableActionCategory { index: 99, new_category: "x".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn change_variable_action_value_missing_target_is_error() {
     let base = En1990Snapshot::default();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionValue(change_variable_action_value::ChangeVariableActionValue { index: 99, new_value: 1.0 })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionValue(change_variable_action_value::ChangeVariableActionValue { index: 99, new_value: 1.0 })).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -186,7 +186,7 @@ async fn change_seismic_action_non_finite_is_fatal() {
     let base = En1990Snapshot::default();
     let mutation = En1990Mutation::ChangeSeismicAction(change_seismic_action::ChangeSeismicAction { new_seismic_a_ed_kn: f64::NAN });
     let outcome = mutation.diff(&base);
-    protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
     assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
 }
 
@@ -195,7 +195,7 @@ async fn change_consequence_class_out_of_domain_is_fatal() {
     let base = En1990Snapshot::default();
     let mutation = En1990Mutation::ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass { new_consequence_class: 9 });
     let outcome = mutation.diff(&base);
-    protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
     assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
 }
 
@@ -203,6 +203,6 @@ async fn change_consequence_class_out_of_domain_is_fatal() {
 async fn change_resistance_is_deterministic() {
     let base = En1990Snapshot::default();
     let mutation = En1990Mutation::ChangeResistance(change_resistance::ChangeResistance { new_resistance_kn: 400.0 });
-    protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_deterministic(&base, &mutation).await;
 }
 //#endregion 🔖️OutcomeLaws

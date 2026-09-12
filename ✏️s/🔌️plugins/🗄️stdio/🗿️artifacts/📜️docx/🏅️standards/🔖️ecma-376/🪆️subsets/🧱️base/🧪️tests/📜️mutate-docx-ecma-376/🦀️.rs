@@ -15,7 +15,7 @@
 //! the Rust subject phase runs (`subject exhaustive --owner 🗄️stdio --case mutate-docx-ecma-376`
 //! executes all 25 scenarios), and wave 14 ran the full differential comparison against the oracle.
 //!
-//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law`
+//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
 //! module, so a scenario cannot pass merely because `zip`+`quick-xml` declined to error:
 //! `mutate-<kind>` must MOVE the compared projection, `inverse-<kind>` must land back on the
 //! untouched package's projection, and `identity-round-trip` must both preserve the projection and

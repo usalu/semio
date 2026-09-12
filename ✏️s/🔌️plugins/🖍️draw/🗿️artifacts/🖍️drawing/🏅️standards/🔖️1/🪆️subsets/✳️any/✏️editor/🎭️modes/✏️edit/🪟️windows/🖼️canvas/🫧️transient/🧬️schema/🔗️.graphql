@@ -1,0 +1,6 @@
+type DrawingCanvasWindowTransient {
+  engagementInput: String!
+  tracePointerGeneration: Int!
+  tracePointerCompletedWork: Int!
+  tracePointerPendingWork: Int!
+}

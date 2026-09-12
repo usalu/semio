@@ -1,9 +1,9 @@
-#[path = "../../🧪️testkit/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"]
+#[path = "../../🧫️fixtures/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
 
 // 🧪️ Proves the viewer helpers against a minimal editor/viewer pair sharing one dialect.
-use crate::app::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, meta, new_app, new_viewer};
+use crate::app::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, meta, new_app, new_viewer};
 use crate::app::{
     built_text_to_component_tree, ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, EditorApp, Emit, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence,
     NoPresenceMutation, PluginApp, PluginCloseStep, UiAssemblyResult, ViewEmit, ViewModel, REVERT_TO_COMMAND_ACTION_ID,
@@ -235,7 +235,7 @@ async fn viewer_never_mutates_the_document_or_draft_store() {
 
 #[semio_framework_async_macros::async_test]
 async fn bounded_viewer_fixture_preserves_declared_lifecycle_hooks() {
-    type Fixture = crate::app::testkit::BoundedViewerFixture<SurfaceViewerFixture>;
+    type Fixture = crate::app::artifact_app_laws::BoundedViewerFixture<SurfaceViewerFixture>;
     assert!(matches!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX, 3, 11).expect("maintenance hook"), PluginCloseStep::Pending { released_items: 1, released_bytes: 7 }));
     assert!(matches!(<Fixture as ArtifactViewer>::mounted_job_close_step(u32::MAX, 3, 11).expect("close hook"), PluginCloseStep::Blocked { reason: "surface viewer lifecycle witness" }));
     assert!(!<Fixture as ArtifactViewer>::mounted_jobs_terminal_is_empty(u32::MAX));

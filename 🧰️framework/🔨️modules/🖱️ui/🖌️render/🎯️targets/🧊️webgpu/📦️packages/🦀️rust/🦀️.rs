@@ -24,38 +24,38 @@
 
 #[path = "../../../../../../🌉️abi/🦀️.rs"]
 pub mod abi;
-#[path = "🧊️surface_adapter.rs"]
+#[path = "../../🧊️surface-adapter/🦀️.rs"]
 mod surface_adapter;
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[path = "🌐️backend.rs"]
+#[path = "../../🌐️backend/🦀️.rs"]
 mod backend;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[path = "📈️buffers.rs"]
+#[path = "../../📈️buffers/🦀️.rs"]
 mod buffers;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[path = "🎞️frame.rs"]
+#[path = "../../🎞️frame/🦀️.rs"]
 mod frame;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[path = "🔌️gpu_context.rs"]
+#[path = "../../🔌️gpu-context/🦀️.rs"]
 mod gpu_context;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[path = "🔤️gpu_types.rs"]
+#[path = "../../🔤️gpu-types/🦀️.rs"]
 mod gpu_types;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[path = "🧮️gpu_uniforms.rs"]
+#[path = "../../🧮️gpu-uniforms/🦀️.rs"]
 mod gpu_uniforms;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[path = "🧵️pipelines.rs"]
+#[path = "../../🧵️pipelines/🦀️.rs"]
 mod pipelines;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[path = "🗃️resources.rs"]
+#[path = "../../🗃️resources/🦀️.rs"]
 mod resources;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[path = "🌆️scene_target.rs"]
+#[path = "../../🌆️scene-target/🦀️.rs"]
 mod scene_target;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[path = "🚦️surface_state.rs"]
+#[path = "../../🚦️surface-state/🦀️.rs"]
 mod surface_state;
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]

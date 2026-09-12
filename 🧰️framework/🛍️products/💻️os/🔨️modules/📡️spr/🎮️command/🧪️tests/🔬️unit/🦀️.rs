@@ -373,7 +373,7 @@ fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
     let descriptor = mutation_descriptor("mini.doc#rename-mini").unwrap();
     assert_eq!(descriptor.semantics(), mutation.semantics());
     assert_eq!(descriptor.leaf(), mutation.descriptor());
-    let declared: serde_json::Value = serde_json::from_str(include_str!("../../🧪️testkit/📔️registry/🧬️mutations/📛️rename-mini/🔣️.json")).unwrap();
+    let declared: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📔️registry/🧬️mutations/📛️rename-mini/🔣️.json")).unwrap();
     assert_eq!(json_oracle(descriptor.leaf()), declared);
     assert!(register_mini_mutation_descriptors(crate::os_spr::StateClass::Config).is_err());
     assert_eq!(mutation_descriptor("mini.doc#rename-mini"), Some(descriptor));

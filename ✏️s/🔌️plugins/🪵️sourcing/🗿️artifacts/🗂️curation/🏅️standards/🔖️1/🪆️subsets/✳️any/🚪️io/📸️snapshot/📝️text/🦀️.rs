@@ -35,3 +35,28 @@ pub fn print_dsl(document: &CurationSnapshot) -> String {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+impl store::ArtifactDsl for CurationSnapshot {
+    const EXTENSION: &'static str = "curation";
+    fn envelope_id() -> &'static str { "curation.curation" }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = if text.trim_start().starts_with("semio ") {
+            let (envelope, body) = store::semio_format::split_text_preamble(text).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))?;
+            if !envelope.matches_identity(Self::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(store::TextError::new("Curation text envelope mismatch", dsl::TextSpan::at(1, 1))); }
+            body
+        } else { text };
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let result = Self::__dsl_from_record(&record)?;
+        result.validate().map_err(|message| store::TextError::new(message, dsl::TextSpan::at(1, 1)))?;
+        Ok(result)
+    }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(), store::semio_format::Component::Dsl, 1).expect("Curation envelope");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+/// 📥 Parses the document's native text representation.
+pub fn parse_curation_dsl(text: &str) -> Result<CurationSnapshot, String> { parse_dsl(text).map_err(|error| format!("{error:?}")) }
+/// 📤 Emits the document's native text representation.
+pub fn print_curation_dsl(snapshot: &CurationSnapshot) -> String { print_dsl(snapshot) }

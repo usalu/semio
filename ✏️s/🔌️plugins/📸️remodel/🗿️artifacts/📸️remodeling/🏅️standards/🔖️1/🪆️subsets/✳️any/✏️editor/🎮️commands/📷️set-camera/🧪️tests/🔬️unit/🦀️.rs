@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::remodeling::commands::{set_frame_cursor, set_layer_visibility, set_report_table};
-use crate::editor::remodeling::testkit::{app, dispatch};
+use crate::editor::remodeling::unit_tests::context::{app, dispatch};
 use crate::editor::remodeling::RemodelingCommand;
 
 /// 🕹️ Relocated from the deleted `set-selection` command file (ticket
@@ -10,7 +10,7 @@ use crate::editor::remodeling::RemodelingCommand;
 #[semio_framework_async_macros::async_test]
 async fn view_actions_emit_config_mutations_not_artifact_mutations() {
     let mut app = app().await;
-    let result = dispatch(&mut app, RemodelingCommand::SetCamera(SetCamera { camera: RemodelingWorldCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 60.0 } })).await;
+    let result = dispatch(&mut app, RemodelingCommand::SetCamera(SetCamera { camera: store::Viewport3dOrbit { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], zoom: 1.25, up: None } })).await;
     assert!(result.mutations.is_empty());
     let result = dispatch(&mut app, RemodelingCommand::SetLayerVisibility(set_layer_visibility::SetLayerVisibility { layer: "dense".into(), visible: false })).await;
     assert!(result.mutations.is_empty());

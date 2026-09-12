@@ -5,7 +5,7 @@
 //! (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 
 use super::*;
-use crate::editor::flow::testkit::flow_app_closing;
+use crate::editor::flow::unit_tests::context::flow_app_closing;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -156,7 +156,7 @@ async fn flow_play_app_boots_through_the_real_registry_without_a_catalog_authori
 /// pre-existing path this lane does not own (`📓️flow-catalog-authority-2026-09-10.md` §7).
 #[semio_framework_async_macros::async_test]
 async fn every_graph_operation_route_is_admitted_by_its_own_retained_factory() {
-    use crate::editor::flow::testkit::dispatch;
+    use crate::editor::flow::unit_tests::context::dispatch;
     let mut app = flow_app_closing().await;
     let widget_id = "graph-operation-probe".to_string();
     let commands = [

@@ -1,6 +1,6 @@
 //! 🎯️ 🎯️ Remodeling play app commands command — `remove-gcp`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::delete_gcp;
 use crate::op::RemodelingMutation;
 use crate::RemodelingSnapshot;
@@ -13,6 +13,6 @@ pub struct RemoveGcp {
     pub gcp_id: String,
 }
 
-pub fn handle(payload: &RemoveGcp, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &RemoveGcp, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![delete_gcp(payload.gcp_id.clone())]))
 }

@@ -1,7 +1,7 @@
 //! 📄️ 📄️ Sourcing curation app commands command — `set-artifact-json`.
 
 use crate::op::SourcingMutation;
-use crate::schema::snapshot::decode_curation_snapshot_json;
+use crate::standards::v1::subsets::any::io::snapshot::json::decode_curation_snapshot_json;
 use crate::schema::sourcing_json_envelope_is_bounded;
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};

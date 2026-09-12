@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::forms::testkit::{building_component_contributions, dispatch, forms_app, render};
+use crate::editor::forms::unit_tests::context::{building_component_contributions, dispatch, forms_app, render};
 use crate::editor::forms::{FormsCommand, FORMS_PLAY_BODY_CATALOGUE};
 
 #[semio_framework_async_macros::async_test]

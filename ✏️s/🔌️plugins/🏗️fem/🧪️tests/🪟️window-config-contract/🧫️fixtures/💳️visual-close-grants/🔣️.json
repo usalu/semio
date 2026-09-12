@@ -1,0 +1,88 @@
+{
+  "cases": [
+    {
+      "id": "region-zero",
+      "owner": "region",
+      "maximumBytes": 0,
+      "before": {
+        "retained": true
+      },
+      "patch": [],
+      "expected": {
+        "retained": true
+      }
+    },
+    {
+      "id": "region-one-byte",
+      "owner": "region",
+      "maximumBytes": 1,
+      "before": {
+        "retained": true
+      },
+      "patch": [],
+      "expected": {
+        "retained": true
+      }
+    },
+    {
+      "id": "region-full-page",
+      "owner": "region",
+      "maximumBytes": 16384,
+      "before": {
+        "retained": true
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": false
+        }
+      ],
+      "expected": {
+        "retained": false
+      }
+    },
+    {
+      "id": "element-zero",
+      "owner": "element",
+      "maximumBytes": 0,
+      "before": {
+        "retained": true
+      },
+      "patch": [],
+      "expected": {
+        "retained": true
+      }
+    },
+    {
+      "id": "element-one-byte",
+      "owner": "element",
+      "maximumBytes": 1,
+      "before": {
+        "retained": true
+      },
+      "patch": [],
+      "expected": {
+        "retained": true
+      }
+    },
+    {
+      "id": "element-full-page",
+      "owner": "element",
+      "maximumBytes": 16384,
+      "before": {
+        "retained": true
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": false
+        }
+      ],
+      "expected": {
+        "retained": false
+      }
+    }
+  ]
+}

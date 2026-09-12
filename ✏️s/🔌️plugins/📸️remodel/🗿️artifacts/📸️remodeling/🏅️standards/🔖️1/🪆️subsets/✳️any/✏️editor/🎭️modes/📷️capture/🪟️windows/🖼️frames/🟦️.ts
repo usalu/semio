@@ -1,5 +1,5 @@
 /** 🖼️ Remodeling editor — Frames window: typed twin of `🦀️.rs`'s view-model. Mirrors the
- * pane's `render(scene: &RemodelingSnapshot, config: &RemodelingConfig)` boundary — the cursored frame
+ * pane's `render(scene: &RemodelingSnapshot, config: &RemodelingFramesWindowConfig)` boundary — the cursored frame
  * image (as a data URL) plus every ground-control-point observation planted on it, as point
  * markers (`frames_layers_json`'s own layer union). The read-only viewer has no mutation-capable
  * twin for this window (the model window is the only one the viewer ports today). */

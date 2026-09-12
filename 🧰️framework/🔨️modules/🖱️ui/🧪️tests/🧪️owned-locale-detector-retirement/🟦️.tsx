@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, testSource: TestSource): Promise<void> {
-  const { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef } = dependencies;
+  const { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellDockRightColumnLeftPx, dockColumnInlineReservePx, anchorInlineEdgeReserveStyle, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef } = dependencies;
   type Anchor = any;
   type Camera = any;
   type CanvasPickTarget = any;
@@ -24,7 +24,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   const { describe, expect, it, vi } = vitest;
   const { render, screen, fireEvent, waitFor, act } = await import("@testing-library/react");
-  const { calculateDiagramLayoutForBatchTest } = await import("../../🧱️elements/🕸️Diagram/📐️layout.ts");
+  const { calculateDiagramLayoutForBatchTest } = await import("../../🧱️elements/🕸️Diagram/📐️layout/🟦️.ts");
 
   describe("owned locale detector retirement", () => {
     it("normalizes the closed shell locale domain", () => {
@@ -381,7 +381,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
       expect(css).toMatch(/@property --celebrate-border-angle[\s\S]*?inherits:\s*false/);
       expect(css).toMatch(/\[data-celebrated="true"\][\s\S]*?--celebrate-conic:/);
       expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?background:\s*var\(--celebrate-conic\)/);
@@ -412,7 +412,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
       // 🩺️ An animated registered custom property declared `inherits: true` and started on `:root`
       // re-resolves EVERY element's computed style on EVERY frame — measured at 112.3 s of style
       // recalculation out of 129.0 s of main-thread task time on the generation3d example, which paced
@@ -883,6 +883,50 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       });
     });
 
+    it("ends the tour when its blocking veil is pressed, so a screen step can never leave the app inert", () => {
+      const onDismiss = vi.fn();
+      const { container } = render(
+        <div>
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [{ id: "welcome", title: "Willkommen", body: "A quick tour.", show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }],
+            }}
+            stepIndex={0}
+            onStepIndexChange={vi.fn()}
+            onDismiss={onDismiss}
+          />
+        </div>,
+      );
+      const veil = container.querySelector('[data-slot="introduction-veil"]')!;
+      // 🧯️ A screen step (no `introduce`) blocks every pointer in the application — B47 §5.1 measured the
+      // whole app inert behind it, with `elementFromPoint` returning the veil for every control, so the
+      // scrim itself MUST be the way out. `aria-hidden` keeps the bare div out of the accessibility tree;
+      // the keyboard route is the `ui.introduction.skip` ("escape") keybinding bound by this component.
+      expect(veil.className).toContain("pointer-events-auto");
+      expect(veil.getAttribute("aria-hidden")).toBe("true");
+      fireEvent.pointerDown(veil);
+      expect(onDismiss).toHaveBeenCalledWith(false);
+    });
+
+    it("never captures pointer events with no step to show", () => {
+      const { container } = render(
+        <div>
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [{ id: "welcome", title: "Willkommen", body: "A quick tour.", show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }],
+            }}
+            stepIndex={1}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      expect(container.querySelectorAll(".ui-veil")).toHaveLength(0);
+      expect(container.querySelectorAll('[data-slot="introduction-veil"]')).toHaveLength(0);
+    });
+
     it("clears elevation on step change and on unmount", async () => {
       const { container, rerender, unmount } = render(
         <div>
@@ -1207,7 +1251,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
       expect(css).toContain('[data-slot="introduction-info-box"]');
       expect(css).toContain('[data-slot="dialog-box"]');
       expect(css).toContain("data-window-silhouette-border");
@@ -1353,7 +1397,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
       expect(css).toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="introduction-body-paragraph"\]:hover\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
       expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="window-chrome-body"\]:hover/);
       expect(css).toMatch(
@@ -1725,6 +1769,21 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("centers when there is no anchor rect, or placement is center", () => {
       expect(resolveIntroductionPlacement("auto", null, boxSize, viewport)).toEqual({ top: 275, left: 350 });
       expect(resolveIntroductionPlacement("center", { top: 10, left: 10, width: 20, height: 20 }, boxSize, viewport)).toEqual({ top: 275, left: 350 });
+    });
+
+    it("keeps a centered box inside the viewport, so its Skip and Next controls stay clickable", () => {
+      // 🧲️ Measured on a 1440×900 boot of the puzzle3d welcome step (`introduce == null`, so the step's
+      // veil holds `pointer-events: auto` over the whole application): the info box landed at
+      // `[-80, -78, 422, 108]` with its `ui.introduction.skip` control at `[287, -78, 55, 31]` — centre
+      // above the top edge, `elementFromPoint` `null`, hence unclickable by a user and by every
+      // actionability-checked click, leaving the app inert (B49 §1). Centering a box measured LARGER than
+      // its viewport is exactly that case, and it must clamp like every anchored branch does.
+      const oversized = resolveIntroductionPlacement("center", null, { width: 1585, height: 1041 }, { width: 1425, height: 885 });
+      expect(oversized.top).toBeGreaterThanOrEqual(0);
+      expect(oversized.left).toBeGreaterThanOrEqual(0);
+      const tiny = resolveIntroductionPlacement("auto", null, boxSize, { width: 0, height: 0 });
+      expect(tiny.top).toBeGreaterThanOrEqual(0);
+      expect(tiny.left).toBeGreaterThanOrEqual(0);
     });
 
     it("auto picks the side with the most free space", () => {
@@ -2690,7 +2749,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      return readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      return readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
     }
 
     it("gives every vendored icon id and non-catalog kind a hover keyframes block and animation assignment", async () => {
@@ -3118,7 +3177,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
       expect(css).toContain("[data-window-silhouette-gap]");
       expect(css).toMatch(/\[data-window-silhouette-gap\][\s\S]*backdrop-filter:\s*none/);
       render(
@@ -7015,6 +7074,49 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(engagement.style.top).toBe("var(--spacing-single)");
     });
 
+    it("yields a window's right-edge chrome to an open right-hand dock column instead of sharing it", () => {
+      // ↔️ B47 §1.3 measured the Inspection panel body at x 1137‑1437 over the perspective window's
+      // measures rail at x 1130‑1430: the same 300 px column, the panel painting above it, so every press
+      // in the Projection group landed on an Inspection tree row. The reserve is the overlap and nothing
+      // more — a window that stops short of the column keeps its rail flush.
+      expect(dockColumnInlineReservePx(1440, null, 800)).toBe(0);
+      expect(dockColumnInlineReservePx(470, 1137, 800)).toBe(0);
+      expect(dockColumnInlineReservePx(1440, 1137, 800)).toBe(303);
+      expect(dockColumnInlineReservePx(1440, 1137, 120)).toBe(120);
+      expect(dockColumnInlineReservePx(1440, 1137, -50)).toBe(0);
+      expect(anchorInlineEdgeReserveStyle("top-right", 303)).toEqual({ right: "calc(var(--spacing-single) + 303px)" });
+      expect(anchorInlineEdgeReserveStyle("top-left", 303)).toEqual({ left: "calc(var(--spacing-single) + 303px)" });
+      expect(anchorInlineEdgeReserveStyle("top-middle", 303)).toBeUndefined();
+      expect(anchorInlineEdgeReserveStyle("top-right", 0)).toBeUndefined();
+
+      const originalRect = Element.prototype.getBoundingClientRect;
+      Element.prototype.getBoundingClientRect = function stubbedRect(this: Element): DOMRect {
+        if (this.getAttribute("data-slot") !== "window-body") return originalRect.call(this);
+        return { x: 493, y: 26, width: 947, height: 814, top: 26, right: 1440, bottom: 840, left: 493, toJSON: () => ({}) } as DOMRect;
+      };
+      try {
+        const { container } = render(
+          <Window id="dock-reserve-window" measures={<div>LOD</div>}>
+            <div>Body</div>
+          </Window>,
+        );
+        const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
+        expect(overlay.style.right).toBe("var(--spacing-single)");
+        act(() => {
+          publishShellDockRightColumnLeftPx(undefined, "panel:top-right", 1137);
+        });
+        expect(overlay.style.right).toBe(`calc(var(--spacing-single) + ${1440 - 1137}px)`);
+        act(() => {
+          publishShellDockRightColumnLeftPx(undefined, "panel:top-right", null);
+        });
+        expect(overlay.style.right).toBe("var(--spacing-single)");
+        expect(windowMeasuresMinWidthPx).toBeGreaterThan(0);
+      } finally {
+        Element.prototype.getBoundingClientRect = originalRect;
+        publishShellDockRightColumnLeftPx(undefined, "panel:top-right", null);
+      }
+    });
+
     it("Window measures overlay uses a fixed right rail without clipping overflow", () => {
       const { container } = render(
         <Window id="measures-window" measures={<div data-testid="measure-slot">LOD</div>}>
@@ -10275,7 +10377,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         const { readFileSync } = await import("node:fs");
         const { fileURLToPath } = await import("node:url");
         const { dirname, resolve } = await import("node:path");
-        const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+        const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
         expect(css).toContain('[data-slot="navbar"]::after');
         expect(css).toContain('[data-slot="footer"]::before');
         expect(css).toMatch(/\[data-slot="navbar"\]:hover::after/);
@@ -10399,7 +10501,13 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(active.className).toContain("border-e");
         expect(active.className).toContain("!border-normal");
         expect(active.className).toContain("border-0");
-        expect(body.className).toContain("z-[1]");
+        // 🪜️ The payload plane sits BELOW every chip row, and it must say so in a way the browser
+        // actually honours: the `z-[1]`/`z-[2]` arbitrary Tailwind utilities this chrome used to carry are
+        // not emitted by the design system's stylesheet (measured `z-index: auto` on cap, plane and footer
+        // in a served boot), which let the plane — negative-margined UP over the cap row by design —
+        // swallow every cap-row press, the introduction tour's own Skip included (B49 §1).
+        expect(body.style.zIndex).toBe("1");
+        expect((container.querySelector('[data-slot="window-chrome-cap"]') as HTMLElement).style.zIndex).toBe("2");
       });
   
       it("measureWindowSilhouetteMetrics reads RTL top caps from painted chip spans instead of assuming LTR gap order", () => {
@@ -10976,6 +11084,23 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(sides.sort()).toEqual(["left", "right"]);
       });
   
+      it("a panel's resize handle lives inside the body stack, never over the tab strip that carries every panel's tab", async () => {
+        const { render } = await import("@testing-library/react");
+        const StubIcon = (): null => null;
+        const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+        const { container } = render(<Panel anchor="bottom-right" visible tabs={tabs} onSizeChange={() => {}} />);
+        const handle = container.querySelector('[data-slot="panel-resize-handle"]') as HTMLElement;
+        const bodyStack = container.querySelector('[data-slot="panel-body-stack"]') as HTMLElement;
+        expect(handle).toBeTruthy();
+        expect(bodyStack).toBeTruthy();
+        expect(bodyStack.contains(handle)).toBe(true);
+        expect(bodyStack.className).toContain("relative");
+        const tabBar = container.querySelector('[data-slot="panel-tab-button"], [data-slot="panel-tab-bar"]');
+        if (tabBar) expect(handle.contains(tabBar)).toBe(false);
+        const panelRoot = container.querySelector('[data-slot="panel"]') as HTMLElement;
+        expect([...panelRoot.children].some((child) => child.getAttribute("data-slot") === "panel-resize-handle")).toBe(false);
+      });
+
       it("dragging a middle panel's resize handles changes size by 2x the pointer delta (both edges move to keep it centered); a corner panel changes 1x on its single inner handle", async () => {
         const { render, fireEvent } = await import("@testing-library/react");
         const StubIcon = (): null => null;

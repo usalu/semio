@@ -9,7 +9,7 @@ fn set_active_example_loads_the_demo_fixture_2d() {
     let snapshot = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
-    let cfg_snapshot = Fem2dConfig::default();
+    let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = handle(&SetActiveExample { example_id: crate::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
     assert!(emit.artifact_mutations.is_empty());
@@ -25,7 +25,7 @@ fn set_active_example_unknown_id_resets_to_empty_document_2d() {
     let snapshot = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
-    let cfg_snapshot = Fem2dConfig::default();
+    let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = handle(&SetActiveExample { example_id: "nonsense".into() }, &doc, &cfg).expect("handle");
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {

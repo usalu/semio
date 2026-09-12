@@ -99,13 +99,13 @@ async fn a_free_float_case_writes_no_hvac_at_all() {
 
 //#region 🧫️Fixtures
 /// 🧫️ The cases whose exported document is COMMITTED, so `oracle-epjson` and the
-/// `🔮️oracle🔋️energy⚡️epjson` launch entry have a real file to hand EnergyPlus without first
+/// `🔮️oracles🔋️energy⚡️epjson` launch entry have a real file to hand EnergyPlus without first
 /// running a Rust test, and so a reviewer can read the document the codec actually writes.
 /// Exactly the four the `🏛️export-epjson-runs-in-energyplus` case simulates.
 const COMMITTED_EPJSON_CASES: [&str; 4] = ["600", "600FF", "900", "900FF"];
 
 fn epjson_fixture_path(case: &str) -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures").join(format!("🏛️bestest-{case}")).join("⚡️model.epJSON")
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures").join(format!("🏛️bestest-{case}")).join("⚡️model.epJSON")
 }
 
 fn exported(name: &str) -> String {

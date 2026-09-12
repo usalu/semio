@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::editor::puzzle5d::testkit::*;
+use crate::editor::puzzle5d::unit_tests::context::*;
 
 #[test]
 fn catalogue_tree_lists_all_four_kind_sections() {

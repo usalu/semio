@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🟦️.ts",
+      "directoryName": "🎮️command-contract",
+      "parentKindId": "repo-normalization",
+      "kindId": "repo-normalization-command-contract",
+      "exports": [
+        "taxonomyCliOptions",
+        "taxonomyCliValidateOperationOptions",
+        "taxonomyCliGuardedPath",
+        "taxonomyCliTicket",
+        "taxonomyCliArtifactPath",
+        "taxonomyCliWriteJson",
+        "taxonomyCliWriteSummary",
+        "taxonomyCliProgress",
+        "taxonomyCliInventoryOptions",
+        "taxonomyCliPlanOperationCounts",
+        "taxonomyCliPlanOperationSummaryRows",
+        "taxonomyCliPlanOperationConsoleFields",
+        "taxonomyCliRequireCommittedApply",
+        "taxonomyCliPrintJson"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/📇️inventory/🧾️serialization/🟦️.ts",
+      "directoryName": "🧾️serialization",
+      "parentKindId": "repo-normalization-inventory",
+      "kindId": "repo-inventory-serialization",
+      "exports": [
+        "taxonomyCliRecord",
+        "taxonomyCliExactKeys",
+        "taxonomyCliSha256",
+        "taxonomyCliCanonicalJson",
+        "taxonomyCliCanonicalArrayDigest",
+        "taxonomyInventoryCanonicalChunks",
+        "taxonomyInventoryIncrementalCanonicalDigest",
+        "taxonomyCliByteCompare",
+        "taxonomyCliEntryViolations",
+        "taxonomyCliStableViolations",
+        "taxonomyCliInventoryEntries",
+        "taxonomyCliInventoryMetadata"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/📇️inventory/🧩️shards/🟦️.ts",
+      "directoryName": "🧩️shards",
+      "parentKindId": "repo-normalization-inventory",
+      "kindId": "repo-inventory-shards",
+      "exports": [
+        "TAXONOMY_INVENTORY_SHARD_MAX_BYTES",
+        "buildTaxonomyInventoryArtifactShards",
+        "validateTaxonomyInventoryArtifactShards"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/📇️inventory/📦️publication/🟦️.ts",
+      "directoryName": "📦️publication",
+      "parentKindId": "repo-normalization-inventory",
+      "kindId": "repo-inventory-publication",
+      "exports": [
+        "publishTaxonomyInventoryArtifactShards"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts",
+      "directoryName": "🪪️identity",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "repo-mutation-identity",
+      "exports": [
+        "policyStripEmoji",
+        "policyLeadingEmojiPrefix",
+        "POLICY_MUTATIONS_FACET",
+        "POLICY_TS_COMPONENT_LEAF",
+        "POLICY_RS_COMPONENT_LEAF_NAME",
+        "policyStructuralRelativeLocator",
+        "policyArtifactRootOfMutationsDir"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts",
+      "directoryName": "📸️captured-source",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "repo-mutation-captured-source",
+      "exports": [
+        "mutationTaxonomyCapturedSchema",
+        "mutationTaxonomyStructuralDirectories",
+        "mutationTaxonomyStructuralView",
+        "mutationTaxonomyCancelled",
+        "mutationTaxonomyInputPath",
+        "mutationTaxonomyScope",
+        "mutationTaxonomySourceAdmission",
+        "mutationTaxonomySourceFiles",
+        "mutationTaxonomySourceFileFacts",
+        "policyFindAllMutationsDirs"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📇️index/🟦️.ts",
+      "directoryName": "📇️index",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "repo-mutation-source-index",
+      "exports": [
+        "mutationTaxonomyAssignmentLedger",
+        "mutationTaxonomySourceIndex",
+        "mutationTaxonomySourceSnapshot"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts",
+      "directoryName": "🧾️evidence",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "evidence",
+      "exports": [
+        "inventoryMutationTaxonomy"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts",
+      "directoryName": "🔁️workflow",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "repo-mutation-workflow",
+      "exports": [
+        "planMutationTaxonomy",
+        "runMutationTaxonomyCli"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts",
+      "directoryName": "📐️structural-reachability",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "repo-mutation-structural-reachability",
+      "exports": [
+        "MUTATION_STRUCTURAL_POLICY_KINDS",
+        "inspectMutationRootReachability",
+        "policyMutationStructuralBreaches"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/✅️validation/🟦️.ts",
+      "directoryName": "✅️validation",
+      "parentKindId": "schema",
+      "kindId": "repo-schema-subset-validation",
+      "exports": [
+        "validateJsonSchemaSubset"
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "directoryName": "🧹️normalization",
+      "parentKindId": "members-of-modules",
+      "kindId": "repo-normalization"
+    },
+    {
+      "directoryName": "📇️inventory",
+      "parentKindId": "repo-normalization",
+      "kindId": "repo-normalization-inventory"
+    },
+    {
+      "directoryName": "🧬️mutation",
+      "parentKindId": "repo-normalization",
+      "kindId": "repo-normalization-mutation"
+    },
+    {
+      "directoryName": "🎮️command-contract",
+      "parentKindId": "repo-normalization",
+      "kindId": "repo-normalization-command-contract"
+    },
+    {
+      "directoryName": "🧾️serialization",
+      "parentKindId": "repo-normalization-inventory",
+      "kindId": "repo-inventory-serialization"
+    },
+    {
+      "directoryName": "🧩️shards",
+      "parentKindId": "repo-normalization-inventory",
+      "kindId": "repo-inventory-shards"
+    },
+    {
+      "directoryName": "📦️publication",
+      "parentKindId": "repo-normalization-inventory",
+      "kindId": "repo-inventory-publication"
+    },
+    {
+      "directoryName": "🪪️identity",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "repo-mutation-identity"
+    },
+    {
+      "directoryName": "📸️captured-source",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "repo-mutation-captured-source"
+    },
+    {
+      "directoryName": "📇️index",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "repo-mutation-source-index"
+    },
+    {
+      "directoryName": "🧾️evidence",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "evidence"
+    },
+    {
+      "directoryName": "🔁️workflow",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "repo-mutation-workflow"
+    },
+    {
+      "directoryName": "📐️structural-reachability",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "repo-mutation-structural-reachability"
+    },
+    {
+      "directoryName": "✅️validation",
+      "parentKindId": "schema",
+      "kindId": "repo-schema-subset-validation"
+    }
+  ],
+  "consumers": [
+    {
+      "path": "📜️script.ts",
+      "owners": [
+        "🧹️normalization/🎮️command-contract/🟦️.ts",
+        "🧹️normalization/📇️inventory/📦️publication/🟦️.ts",
+        "🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts",
+        "🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts",
+        "🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts",
+        "🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/💠️inventory-artifact-shards/🟦️.ts",
+      "owners": [
+        "🧹️normalization/📇️inventory/🧾️serialization/🟦️.ts",
+        "🧹️normalization/📇️inventory/🧩️shards/🟦️.ts",
+        "🧹️normalization/📇️inventory/📦️publication/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📸️source-index-capture/🟦️.ts",
+      "owners": [
+        "🧹️normalization/🧬️mutation/📇️index/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+      "owners": [
+        "🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts",
+        "🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts",
+        "🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts",
+        "🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts",
+        "🧬️schema/✅️validation/🟦️.ts"
+      ]
+    }
+  ],
+  "route": {
+    "target": "test-root-taxonomy-workflow-source",
+    "command": "bun ./📜️script.ts test root-taxonomy-workflow-source",
+    "launchName": "🧹clean🧩️taxonomy🧪️root-taxonomy-workflow-source",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-taxonomy-workflow-source"
+  }
+}

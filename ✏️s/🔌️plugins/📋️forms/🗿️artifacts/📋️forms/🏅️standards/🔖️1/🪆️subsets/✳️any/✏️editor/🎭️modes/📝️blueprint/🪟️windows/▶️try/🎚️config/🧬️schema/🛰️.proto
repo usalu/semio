@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.app.forms.forms.try_window;
+
+message FormsTryWindowConfig {
+  // @state window_config
+  uint32 current_step_index = 1;
+}

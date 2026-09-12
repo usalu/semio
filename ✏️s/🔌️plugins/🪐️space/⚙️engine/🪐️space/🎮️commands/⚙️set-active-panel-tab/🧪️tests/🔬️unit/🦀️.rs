@@ -16,7 +16,7 @@ async fn space_command_op_text_round_trips_every_variant() {
 #[semio_framework_async_macros::async_test]
 async fn set_app_registrations_command_registers_app_and_surfaces_empty_document_apps_in_catalogue() {
     use crate::engine::space::SpaceCommand;
-    use crate::engine::space::testkit::studio_emit;
+    use crate::engine::space::unit_tests::context::studio_emit;
     use semio_framework_os::{ArtifactPresentation, MediaClass, MediaForm, MediaType, empty_workflow_snapshot, os_app_registration, workflow_palette};
     use semio_framework_plugin::{App, AppIo, LocalizedLabel};
     // 🌉️ `AppBuilder::build_definition` itself hard-asserts a non-empty `document` — so the
@@ -24,10 +24,10 @@ async fn set_app_registrations_command_registers_app_and_surfaces_empty_document
     // that bypassed the builder entirely. Simulate that faithfully: build a normal, valid
     // definition, then blank `document` out at the JSON level before it's pushed.
     // 🪪️ `App::builder`'s id must parse via `semio_framework::parse_surface_app_id` (ticket
-    // 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET §1) — mirror `testkit::test_surface_id`'s
+    // 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET §1) — mirror `context::test_surface_id`'s
     // synthetic-dialect convention here since this test builds its `AppDefinition` by hand instead
     // of through `seed_app`.
-    let root_tool_id = crate::engine::space::testkit::test_surface_id("root-tool").await;
+    let root_tool_id = crate::engine::space::unit_tests::context::test_surface_id("root-tool").await;
     let definition = App::builder(root_tool_id.clone(), LocalizedLabel::data("Root Tool"))
         .await
         .document(["root-tool".to_string()])
@@ -61,6 +61,6 @@ async fn set_app_registrations_command_registers_app_and_surfaces_empty_document
     assert!(workflow_palette().iter().any(|entry| entry.plugin_id == "root" && entry.app_id == root_tool_id), "workflow_palette must surface the pushed app");
     let labels = semio_framework_plugin::resolve_labels::<crate::engine::space::terminology::SStudioLabels>(&semio_framework_plugin::ViewModel::default());
     let tree = crate::engine::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_plugin::Locale::En).await.expect("catalogue tree");
-    let json_tree = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("catalogue projection");
+    let json_tree = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("catalogue projection");
     assert!(json_tree.contains(&format!("s-play-catalogue.document.{root_tool_id}")), "an empty-document app must still surface as a top-level catalogue leaf, json={json_tree}");
 }

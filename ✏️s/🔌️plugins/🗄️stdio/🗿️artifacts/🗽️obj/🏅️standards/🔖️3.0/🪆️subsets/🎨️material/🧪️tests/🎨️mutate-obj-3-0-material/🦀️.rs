@@ -1,7 +1,7 @@
 //! 🦀️ OBJ 3.0 material-subset mutation case — Rust adapter. Exhaustive for THIS subset's own
-//! 2-kind vocabulary (`set-mtllib`, `set-usemtl` — `../../🔮️oracle/🔣️.json`'s `obj-3.0-material` catalog): every declared kind gets a `mutate-<kind>` and
+//! 2-kind vocabulary (`set-mtllib`, `set-usemtl` — `../../🔮️oracles/🔣️.json`'s `obj-3.0-material` catalog): every declared kind gets a `mutate-<kind>` and
 //! an `inverse-<kind>` scenario, plus one identity round trip. The oracle performs each kind by
-//! direct OBJ-grammar manipulation (`../../../📐️geometry/🔮️oracle/🦀️.rs`,
+//! direct OBJ-grammar manipulation (`../../../📐️geometry/🔮️oracles/🦀️.rs`,
 //! independent of this subset's own decode/encode/mutation code); the subject fully parses into
 //! `ObjSnapshot` and re-serializes from it alone (no byte pass-through). Both results are read back
 //! by the INDEPENDENT `tobj` reader before the `semantic-obj-document-v1` profile compares them.
@@ -25,7 +25,7 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is
 use semio_s_plugin_stdio_test_oracle::mesh::project_obj;
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors this subset's own `obj-3.0-material` catalog `kinds` (`../../🔮️oracle/🔣️.json`). Kept as a plain literal here rather than imported since
+/// 🏷️ Mirrors this subset's own `obj-3.0-material` catalog `kinds` (`../../🔮️oracles/🔣️.json`). Kept as a plain literal here rather than imported since
 /// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
 /// coverage against that catalog) is what keeps the two lists honest against each other.
 const KINDS: &[&str] = &["set-mtllib", "set-usemtl"];
@@ -55,7 +55,7 @@ fn json_spec(kind: &str, params: Json) -> Json {
 //#endregion 🔖️JsonBuild
 
 //#region 🔖️Profile
-/// 📏️ `semantic-obj-document-v1`'s own declared tolerances (`../../🔮️oracle/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as
+/// 📏️ `semantic-obj-document-v1`'s own declared tolerances (`../../🔮️oracles/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as
 /// the profile the case is measured by — never stricter, which would invent a failure the
 /// comparison itself would forgive.
 const OBJ_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "precision"];

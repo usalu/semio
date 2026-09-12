@@ -1,0 +1,11 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+@import "../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎨️.css";
+@source "../";
+@source "../../🧰️framework/🔨️modules/🖱️ui";
+@source "../../🧰️framework/🛍️products/💻️os";
+@source "../../✏️s/🔌️plugins/🎞️animate";
+@source "../../✏️s/🔌️plugins/🧱️block";
+@source "../../✏️s/🔌️plugins/📐️cad";
+@source "../../✏️s/🔌️plugins/🏗️fem";
+@source "../../✏️s/🔌️plugins/🧩️puzzle";
+@source "../../✏️s/🔌️plugins/📸️remodel";

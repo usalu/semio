@@ -25,7 +25,7 @@
 //
 // @see ../../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🏭️generator/📜️script.ts — the
 //      sibling generator this file's CLI/recipe shape is mirrored from.
-// @see ./🦀️tiff-ifd-codec/src/main.rs — the actual codec; `build <recipe-id> <out-dir>` and
+// @see ./🔁️codec/🦀️.rs — the actual codec; `build <recipe-id> <out-dir>` and
 //      `project <path>` are its only two commands.
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/
 
@@ -41,14 +41,14 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-const CODEC_MANIFEST = join(import.meta.dir, "🦀️tiff-ifd-codec", "Cargo.toml");
+const CODEC_MANIFEST = join(import.meta.dir, "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 const ORACLE_ID = "image-tiff-6-0-mutate-reader";
 const ENGINE_FAMILY = "tiff";
 const ENGINE_VERSION = "0.11.3";
 
 type Recipe = Readonly<{ id: string; mutation: string; notes: string }>;
 
-/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🦀️tiff-ifd-codec/src/main.rs` verbatim, minus
+/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🔁️codec/🦀️.rs` verbatim, minus
  *  `change-byte-order-applied` (the codec refuses to build it — see this file's own header). One
  *  entry per witnessable declared `TiffMutation` kind; every outcome is `applied` per this
  *  subset's own catalog (`../🔣️oracle.json` — all 6 kinds declare `outcomes: ["applied"]` only). */
@@ -169,7 +169,7 @@ open(os.path.join(d, 'after.tif'), 'wb').write(build('MM'))
 print(kind + ': written')
 `;
       const KINDS = ["change-byte-order"];
-      const readerDir = join(import.meta.dir, "..", "🔬️probes", "🦀️byte-order-reader");
+      const readerDir = join(import.meta.dir, "..", "🔬️probes", "📖️reader", "📦️packages", "🦀️rust");
       const built = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(readerDir, "Cargo.toml")], { stdio: "inherit" });
       if (built.status !== 0) throw new Error(`cargo build failed with status ${built.status}`);
       const readerBin = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "reader");

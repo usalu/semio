@@ -13,7 +13,7 @@ async fn definition_declares_the_text_editor_surface_and_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn no_events_renders_the_empty_placeholder_row() {
-    let json = crate::editor::architect::testkit::project_render(render(&sample_plugin()));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin()));
     assert!(json.contains("architect-trace.audit"));
     assert!(json.contains("architect-trace.audit.empty"));
 }
@@ -45,7 +45,7 @@ async fn renders_every_document_wide_audit_event() {
         compliance_tags: Vec::new(),
         retention_until: None,
     });
-    let json = crate::editor::architect::testkit::project_render(render(&program));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&program));
     assert!(json.contains("architect-trace.audit.0"));
     assert!(!json.contains("architect-trace.audit.empty"));
 }

@@ -194,20 +194,10 @@ pub struct FemSolid {
     pub material_id: String,
 }
 
-/// 🎥️ Opaque camera state string; the plugin layer owns and interprets its shape. No
-/// `#[dsl(keyword = ...)]`: every field embedding this type is itself `#[dsl(block)]` (see
-/// `FemAnalysisSettings`'s doc comment above for why that means the keyword stays off here).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
-#[value(rename_all = "camelCase")]
-pub struct FemCamera {
-    pub json: String,
-}
+pub use semio_framework_os_kernel::Viewport3dOrbit;
 
-impl Default for FemCamera {
-    fn default() -> Self {
-        Self { json: "{}".to_string() }
-    }
-}
+#[path = "🪟️viewport/🦀️.rs"]
+pub mod viewport;
 
 /// 📸️ `Fem3dSnapshot` lives in `📸️snapshot/🧬️schema` — re-exported here for crate consumers.
 pub use crate::standards::v1::subsets::any::schema::Fem3dArtifact;
@@ -239,15 +229,7 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 // #endregion 🔖️ArtifactKind
 
 // #region 🔖️Register
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
-/// the old side-effecting `register()`, which called five different global registries directly from a
-/// plugin `.setup()` callback. `crate::editor::fem3d::config::schema::register_app_schema()` is the one
-/// pre-existing exception referenced here (module path only updated for ticket
-/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET's `apps::fem3d` → `editor::fem3d` rename); it
-/// registers
-/// `Fem3dPlayApp`'s CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
-/// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
-/// artifact-scoped function set.
+/// 🧩️ Application wrappers supported by this artifact declaration.
 #[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
@@ -1192,25 +1174,9 @@ pub mod editor {
             }
         }
 
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
 
-            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
 
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
 
-            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
 
         #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🌉️wasm/🦀️.rs"]
         pub mod wasm;

@@ -8,7 +8,7 @@
  * is the actor module's own vocabulary twin and its main consumer (T-P4's turn scheduler) lives in
  * this same `@semio-tech/framework-actor` package — "if code is repeated, it MUST be close to each
  * other" (CLAUDE.md) argues for living beside `🧵️shard-client.ts`, not in the generic base package,
- * which also cannot reach this module's `🤖️generated/🟦️actor.ts` without inverting the layering.
+ * which also cannot reach this module's `🤖️generated/🎭️actor/🟦️.ts` without inverting the layering.
  */
 
 //#region 🔌️WireTypes
@@ -18,7 +18,7 @@
  * side changes. `Backpressure` is declared fresh below instead: the generated mirror's `Backpressure`
  * is `{ "kind": "dropped" } & Lane`, an object-intersected-with-a-string-literal-union type that no
  * value can ever satisfy. The owned schema fixes that historical tuple-variant projection. */
-import type { Lane, CoalesceKey } from "../🤖️generated/🟦️actor.ts";
+import type { Lane, CoalesceKey } from "../🤖️generated/🎭️actor/🟦️.ts";
 export type { Lane, CoalesceKey };
 //#endregion 🔌️WireTypes
 

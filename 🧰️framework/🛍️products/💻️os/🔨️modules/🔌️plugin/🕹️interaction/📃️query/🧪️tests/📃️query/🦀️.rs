@@ -16,7 +16,7 @@ async fn fixture(source_case: &str) -> (InteractionStore, LocalInteractionQuery,
     let state: InteractionState = serde_json::from_value(state).unwrap();
     let envelope = store::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "local-query-test", state, None);
     let mut store = InteractionStore::new(envelope).await.unwrap();
-    store.install_member_store_owners_exact(interaction_store_owners());
+    store.install_document_store_owners_exact(interaction_store_owners());
     let identity = LocalInteractionIdentity { app_instance_id: 7, generation: store.generation_now(), revision: store.content_revision_now(), document_revision: [2; 32], topology_revision: [3; 32] };
     let hex = |bytes: &[u8; 32]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let expected = serde_json::to_vec(&serde_json::json!({"identity": {

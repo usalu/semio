@@ -367,51 +367,51 @@ fn assert_example(dsl: &str, fixture_json: &str) {
 //#region 🔖️Examples
 #[test]
 fn rectangle_wire_preview_evaluates_to_an_open_wire() {
-    assert_example(include_str!("../../🪢️rectangle-wire-preview/🖼️assets/🪢️rectangle-wire-preview/🗣️.dsl.semio"), include_str!("../../🪢️rectangle-wire-preview/🧪️tests/🧩️example/🔣️.json"));
+    assert_example(include_str!("../../🪢️rectangle-wire-preview/🖼️assets/🪢️rectangle-wire-preview/🗣️.dsl.semio"), include_str!("../../🪢️rectangle-wire-preview/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn rectangle_extrude_volume_evaluates_to_the_analytic_box() {
-    assert_example(include_str!("../../📦️rectangle-extrude-volume/🖼️assets/📦️rectangle-extrude-volume/🗣️.dsl.semio"), include_str!("../../📦️rectangle-extrude-volume/🧪️tests/🧩️example/🔣️.json"));
+    assert_example(include_str!("../../📦️rectangle-extrude-volume/🖼️assets/📦️rectangle-extrude-volume/🗣️.dsl.semio"), include_str!("../../📦️rectangle-extrude-volume/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn face_sweep_extrude_evaluates_to_a_closed_solid() {
-    assert_example(include_str!("../../🧹️face-sweep-extrude/🖼️assets/🧹️face-sweep-extrude/🗣️.dsl.semio"), include_str!("../../🧹️face-sweep-extrude/🧪️tests/🧩️example/🔣️.json"));
+    assert_example(include_str!("../../🧹️face-sweep-extrude/🖼️assets/🧹️face-sweep-extrude/🗣️.dsl.semio"), include_str!("../../🧹️face-sweep-extrude/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn hexagonal_mushroom_column_evaluates_to_the_analytic_prism() {
-    assert_example(include_str!("../../🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom-column/🗣️.dsl.semio"), include_str!("../../🍄️hexagonal-mushroom-column/🧪️tests/🧩️example/🔣️.json"));
+    assert_example(include_str!("../../🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom-column/🗣️.dsl.semio"), include_str!("../../🍄️hexagonal-mushroom-column/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn box_shell_preview_evaluates_to_a_hollow_solid() {
-    assert_example(include_str!("../../🐚️box-shell-preview/🖼️assets/🐚️box-shell-preview/🗣️.dsl.semio"), include_str!("../../🐚️box-shell-preview/🧪️tests/🧩️example/🔣️.json"));
+    assert_example(include_str!("../../🐚️box-shell-preview/🖼️assets/🐚️box-shell-preview/🗣️.dsl.semio"), include_str!("../../🐚️box-shell-preview/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn box_fillet_preview_evaluates_to_a_rounded_solid() {
-    assert_example(include_str!("../../📐️box-fillet-preview/🖼️assets/📐️box-fillet-preview/🗣️.dsl.semio"), include_str!("../../📐️box-fillet-preview/🧪️tests/🧩️example/🔣️.json"));
+    assert_example(include_str!("../../📐️box-fillet-preview/🖼️assets/📐️box-fillet-preview/🗣️.dsl.semio"), include_str!("../../📐️box-fillet-preview/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn sphere_box_fuse_evaluates_to_the_union_volume() {
-    assert_example(include_str!("../../🧲️sphere-box-fuse/🖼️assets/🧲️sphere-box-fuse/🗣️.dsl.semio"), include_str!("../../🧲️sphere-box-fuse/🧪️tests/🧩️example/🔣️.json"));
+    assert_example(include_str!("../../🧲️sphere-box-fuse/🖼️assets/🧲️sphere-box-fuse/🗣️.dsl.semio"), include_str!("../../🧲️sphere-box-fuse/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn sphere_cut_with_torus_evaluates_to_the_difference_volume() {
-    assert_example(include_str!("../../🍩️sphere-cut-with-torus/🖼️assets/🍩️sphere-cut-with-torus/🗣️.dsl.semio"), include_str!("../../🍩️sphere-cut-with-torus/🧪️tests/🧩️example/🔣️.json"));
+    assert_example(include_str!("../../🍩️sphere-cut-with-torus/🖼️assets/🍩️sphere-cut-with-torus/🗣️.dsl.semio"), include_str!("../../🍩️sphere-cut-with-torus/🧫️fixtures/🧩️example/🔣️.json"));
 }
 //#endregion 🔖️Examples
 
 //#region 🌉️SceneBridgeProvenance
 /// 🌉️ The framework-side World3d scene-bridge fixture this example's preview payload PRODUCED. It
-/// lives beside the bridge it exercises (`♾️infinite/🌍️world/🧪️tests/🌉️scene-bridge/🔣️.json`, read by
+/// lives beside the bridge it exercises (`♾️infinite/🌍️world/🧫️fixtures/🌉️scene-bridge/🔣️.json`, read by
 /// `scene_bridge_renders_the_generation3d_preview_payload_into_a_snapshot`) so the framework never
 /// depends on this plugin — and is pinned back to the live pipeline here so it cannot rot.
-const SCENE_BRIDGE_FIXTURE: &str = include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🌉️scene-bridge/🔣️.json");
+const SCENE_BRIDGE_FIXTURE: &str = include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🌉️scene-bridge/🔣️.json");
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -618,41 +618,41 @@ fn assert_delivery(dsl: &str, fixture_json: &str) {
 
 #[test]
 fn delivery_rectangle_wire_preview() {
-    assert_delivery(include_str!("../../🪢️rectangle-wire-preview/🖼️assets/🪢️rectangle-wire-preview/🗣️.dsl.semio"), include_str!("../../🪢️rectangle-wire-preview/🧪️tests/🧩️example/🔣️.json"));
+    assert_delivery(include_str!("../../🪢️rectangle-wire-preview/🖼️assets/🪢️rectangle-wire-preview/🗣️.dsl.semio"), include_str!("../../🪢️rectangle-wire-preview/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn delivery_rectangle_extrude_volume() {
-    assert_delivery(include_str!("../../📦️rectangle-extrude-volume/🖼️assets/📦️rectangle-extrude-volume/🗣️.dsl.semio"), include_str!("../../📦️rectangle-extrude-volume/🧪️tests/🧩️example/🔣️.json"));
+    assert_delivery(include_str!("../../📦️rectangle-extrude-volume/🖼️assets/📦️rectangle-extrude-volume/🗣️.dsl.semio"), include_str!("../../📦️rectangle-extrude-volume/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn delivery_face_sweep_extrude() {
-    assert_delivery(include_str!("../../🧹️face-sweep-extrude/🖼️assets/🧹️face-sweep-extrude/🗣️.dsl.semio"), include_str!("../../🧹️face-sweep-extrude/🧪️tests/🧩️example/🔣️.json"));
+    assert_delivery(include_str!("../../🧹️face-sweep-extrude/🖼️assets/🧹️face-sweep-extrude/🗣️.dsl.semio"), include_str!("../../🧹️face-sweep-extrude/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn delivery_hexagonal_mushroom_column() {
-    assert_delivery(include_str!("../../🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom-column/🗣️.dsl.semio"), include_str!("../../🍄️hexagonal-mushroom-column/🧪️tests/🧩️example/🔣️.json"));
+    assert_delivery(include_str!("../../🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom-column/🗣️.dsl.semio"), include_str!("../../🍄️hexagonal-mushroom-column/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn delivery_box_shell_preview() {
-    assert_delivery(include_str!("../../🐚️box-shell-preview/🖼️assets/🐚️box-shell-preview/🗣️.dsl.semio"), include_str!("../../🐚️box-shell-preview/🧪️tests/🧩️example/🔣️.json"));
+    assert_delivery(include_str!("../../🐚️box-shell-preview/🖼️assets/🐚️box-shell-preview/🗣️.dsl.semio"), include_str!("../../🐚️box-shell-preview/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn delivery_box_fillet_preview() {
-    assert_delivery(include_str!("../../📐️box-fillet-preview/🖼️assets/📐️box-fillet-preview/🗣️.dsl.semio"), include_str!("../../📐️box-fillet-preview/🧪️tests/🧩️example/🔣️.json"));
+    assert_delivery(include_str!("../../📐️box-fillet-preview/🖼️assets/📐️box-fillet-preview/🗣️.dsl.semio"), include_str!("../../📐️box-fillet-preview/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn delivery_sphere_box_fuse() {
-    assert_delivery(include_str!("../../🧲️sphere-box-fuse/🖼️assets/🧲️sphere-box-fuse/🗣️.dsl.semio"), include_str!("../../🧲️sphere-box-fuse/🧪️tests/🧩️example/🔣️.json"));
+    assert_delivery(include_str!("../../🧲️sphere-box-fuse/🖼️assets/🧲️sphere-box-fuse/🗣️.dsl.semio"), include_str!("../../🧲️sphere-box-fuse/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
 fn delivery_sphere_cut_with_torus() {
-    assert_delivery(include_str!("../../🍩️sphere-cut-with-torus/🖼️assets/🍩️sphere-cut-with-torus/🗣️.dsl.semio"), include_str!("../../🍩️sphere-cut-with-torus/🧪️tests/🧩️example/🔣️.json"));
+    assert_delivery(include_str!("../../🍩️sphere-cut-with-torus/🖼️assets/🍩️sphere-cut-with-torus/🗣️.dsl.semio"), include_str!("../../🍩️sphere-cut-with-torus/🧫️fixtures/🧩️example/🔣️.json"));
 }
 //#endregion 🔖️MeshDelivery

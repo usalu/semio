@@ -54,34 +54,34 @@ async fn delete_and_replace_of_a_missing_id_invert_to_nothing() {
 async fn create_position_obeys_the_inverse_and_diff_absorb_laws() {
     let base = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
     let mutation = GisMapMutation::CreatePosition(create_position::CreatePosition { index: 1, item: feature("p2") });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = GisMapMutation::CreatePosition(create_position::CreatePosition { index: 2, item: feature("p3") }).diff(&base).into_parts().0;
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_route_obeys_the_inverse_law() {
     let base = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() });
     let mutation = GisMapMutation::DeleteRoute(delete_route::DeleteRoute { id: "r1".into() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn replace_region_data_obeys_the_inverse_and_diff_absorb_laws() {
     let base = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { regions: vec![feature("g1")], ..Default::default() });
     let mutation = GisMapMutation::ReplaceRegionData(replace_region_data::ReplaceRegionData { id: "g1".into(), new_data: dsl_of(&json!({ "kind": "boundary" })) });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = GisMapMutation::ReplaceRegionData(replace_region_data::ReplaceRegionData { id: "g1".into(), new_data: dsl_of(&json!({ "kind": "district" })) }).diff(&base).into_parts().0;
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn reorder_routes_obeys_the_inverse_law() {
     let base = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1"), feature("r2")], ..Default::default() });
     let mutation = GisMapMutation::ReorderRoutes(reorder_routes::ReorderRoutes { id: "r1".into(), to_index: 1 });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -97,7 +97,7 @@ async fn descriptor_round_trips_through_document() {
 #[semio_framework_async_macros::async_test]
 async fn gis_map_document_vcs_replays_operations() {
     let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None)).await.expect("map store");
-    store.install_member_store_owners_exact(crate::spr::gis_map_document_store_owners());
+    store.install_document_store_owners_exact(crate::spr::gis_map_document_store_owners());
     store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") })], description: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
     use semio_framework_plugin::ArtifactOwnedDisposer;
@@ -114,7 +114,7 @@ async fn gis_map_document_vcs_replays_operations() {
 
 //#region 🔖️OutcomeLaws
 /// 🪧 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS Pass 3 — one test per
-/// verb family, calling the testkit laws landed under their frozen names
+/// verb family, calling the test context laws landed under their frozen names
 /// (`assert_missing_target_is_error`/`assert_fatal_never_applies`,
 /// `📡️spr/🧪️test/🦀️kit.rs`). `assert_outcome_policy_matrix` is not landed under that
 /// name (only the differently-shaped `assert_policy_matrix`) — see this lane's report.
@@ -122,27 +122,27 @@ async fn gis_map_document_vcs_replays_operations() {
 async fn delete_position_missing_target_is_error() {
     let base = GisMapSnapshot::default();
     let mutation = GisMapMutation::DeletePosition(delete_position::DeletePosition { id: "gone".into() });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn reorder_positions_missing_target_is_error() {
     let base = GisMapSnapshot::default();
     let mutation = GisMapMutation::ReorderPositions(reorder_positions::ReorderPositions { id: "gone".into(), to_index: 0 });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn replace_route_data_missing_target_is_error() {
     let base = GisMapSnapshot::default();
     let mutation = GisMapMutation::ReplaceRouteData(replace_route_data::ReplaceRouteData { id: "gone".into(), new_data: dsl::DslValue::Null });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_position_duplicate_id_fatal_never_applies() {
     let base = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
     let mutation = GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") });
-    protocol::os_spr::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
 }
 //#endregion 🔖️OutcomeLaws

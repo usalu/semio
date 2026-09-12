@@ -1,9 +1,9 @@
 //! 👁️ 👁️ Drawing play app commands command — `set-camera`.
 
 use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
-use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::DrawingMutation;
-use crate::{DrawingCamera, DrawingSnapshot};
+use crate::DrawingSnapshot;
 use dsl::{FromValue, ToValue};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
@@ -11,10 +11,10 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[dsl(keyword = "camera")]
 pub struct SetCamera {
     #[dsl(block)]
-    pub camera: DrawingCamera,
+    pub camera: store::Viewport2d,
 }
 
 /// 📷️ Camera — session-only runtime pose, never a document operation.
-pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, DrawingConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, DrawingConfigMutation>, Fault> {
-    Ok(Emit::config(vec![DrawingConfigMutation::SetCamera { camera: payload.camera.clone() }]))
+pub fn handle(_payload: &SetCamera, _doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
+    Ok(Emit::default())
 }

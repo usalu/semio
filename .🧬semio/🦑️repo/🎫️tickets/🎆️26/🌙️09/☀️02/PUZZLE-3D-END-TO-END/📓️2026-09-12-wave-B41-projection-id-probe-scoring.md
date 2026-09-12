@@ -115,13 +115,16 @@ instance-qualified; noted in §5.
 |---|---|
 | `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx` | new exported `world3dProjectionPaneElementId`; `WorldOrbitProjectionSwitchPane` exported and takes `windowElementSegment`; pane + switch share the qualified id; render site passes `windowInstanceId ?? node.surfaceId` |
 | `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️.tsx` | `worldProjectionSwitchTreeItems(id, …)`; required `id` on `WorldProjectionKindSwitchProps` / `WorldOrbitProjectionSwitchProps`; section id and `selectedIds` qualified |
-| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx` | new `windowMeasureDomId` / `qualifyWindowMeasureIds`; `windowMeasuresChrome` qualifies both partitions |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx` | new `windowMeasureDomId` / `qualifyWindowMeasureIds`; `windowMeasuresChrome` qualifies both partitions; `WindowMeasureSlider` stamps `data-published-value` (§2.5) |
 | `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx` | re-exports the four new symbols |
 | `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️.tsx` | `CAD_ORBIT_PROJECTION_PANE_ID` |
 | `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts` | new `per-window element ids` region — 4 laws |
 | `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🧪️tests/🧪️chunkkey/🟦️.tsx` | signature update + in-source disjointness law (see §4.2 — this project's vitest config does not load) |
 | `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/vitest.config.ts` | one `../` too many on both tooling imports (§4.2) |
-| `.🧬semio/…/PUZZLE-3D-END-TO-END/🔍️browser-probe.ts` | authored-tail measure locators + §2's two scoring fixes + one scoping repair |
+| `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx` | `TreeCheckbox` takes `publishedValue` → `data-published-value` (§2.5) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🎚️measure-controls/🟦️.tsx` | select + toggle stamp the program's published value (§2.5) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎚️window-measure-controls/🟦️.tsx` | new published-value law (§2.5) |
+| `.🧬semio/…/PUZZLE-3D-END-TO-END/🔍️browser-probe.ts` | authored-tail measure locators, `published` reading, §2's two scoring fixes, one scoping repair |
 
 ### 1.4 The laws, run in the FOREGROUND
 
@@ -169,8 +172,9 @@ reading, whose `text` field is the trigger's rendered text — and the rail hold
 (`🛠️ShellHelpers/🎚️measure-controls/🟦️.tsx:28` `useWindowMeasureDraft`, whose docstring measures the
 round trip at 0.7 s idle and seconds on a busy app) that moves the text FIRST. B38's own run is the
 proof: `after={"value":"","text":"Plan"}` — the verdict passed on the draft while the program had
-answered nothing. It now scores `before.value !== after.value`, the published value the program owns,
-and reports both values in the note.
+answered nothing. It now scores the PROGRAM's published value with a settle of its own. (B40's literal
+advice was "score on `value`"; run 1 then showed that a select trigger has no value of its own at all,
+which is what §2.5 is about — read it as the continuation of this paragraph, not as a separate item.)
 
 `projection-repaints-camera` read `cameraOf(...)` ~100 ms after the click with no settle (B38
 `[22.4s]`→`[22.5s]`), i.e. it sampled the pre-dispatch pose; the `camera-gestures` lane in the same
@@ -224,11 +228,132 @@ is NOT claimed as live-verified.
 
 ---
 
-## 3 Live verdicts on `:6013` — pending the coordinator's battery
+## 2.5 What run 1 then measured: a select trigger has NO value, so the rail now publishes one
 
-`bun 🔍️browser-probe.ts --only=projection-options,locale-switch,window-content --port=6013` is queued
-behind the coordinator's own full battery (`--battery --reload-between-groups --port=6013`, started
-10:28:09, still running at the time of writing). Section filled in below once the port is free.
+Scoring on the reading's `value` (B40's literal advice) turned `projection-control-flips` red, and the
+red was the PROBE again — for a reason worth writing down. `readMeasure`'s `value` falls back to
+`(el as HTMLInputElement).value`, and the target is a `<button data-slot="select-trigger">`:
+`HTMLButtonElement.value` is the button's own `value` attribute, which the trigger never sets. So the
+field is **structurally `""` for every select**, before and after any flip:
+
+```
+[18.0s] verdict projection-control-flips FAIL … beforeValue="" afterValue=""
+        before={…,"value":"","text":""} after={…,"value":"","text":"Plan"}
+```
+
+Reading the trigger's DOM settles it: `🔽️Select/🟦️.tsx:360`–`:375` stamps `role`, `aria-expanded`,
+`data-state`, `data-placeholder` — and no value. The chosen option's `data-value` exists only on a
+`select-item`, which is mounted only while the popup is open. And the trigger's rendered text is the
+DRAFT's (it is `<Select value={draftOrPublished}>` that decides what `SelectValue` renders). **The
+published value of a draft-bearing rail control was not observable from outside React at all.**
+
+That is a product gap, not a probe gap, so the product now closes it. Every draft-bearing rail control
+stamps the AUTHORITY's value beside the value it renders:
+
+| control | where | attribute |
+|---|---|---|
+| `WindowMeasureSelect` | `🛠️ShellHelpers/🎚️measure-controls/🟦️.tsx` | `data-published-value={measure.value}` on the trigger |
+| `WindowMeasureToggle` | same file, through a new `publishedValue` prop on `TreeCheckbox` (`🌳️Tree/🟦️.tsx:608`, which destructures explicitly and spreads nothing) | `data-published-value={String(measure.pressed)}` |
+| `WindowMeasureSlider` | `🛠️ShellHelpers/🟦️.tsx` | `data-published-value={String(measure.value)}` |
+
+Without it nothing outside React — assistive technology, a tutorial, an end-to-end probe — can tell a
+pending optimistic draft from a landed change, for the whole 0.7 s-to-seconds round trip the draft
+exists to cover. `readMeasure` now reports it as `published`, and that is what
+`projection-control-flips` scores, with its own settle.
+
+New law in `🧪️tests/🎚️window-measure-controls/🟦️.tsx` — the file whose whole subject is the draft:
+
+```
+$ SEMIO_TEST_LEVEL=long bun x vitest run --config …/⚛️react/vitest.config.ts -t "exposes the value the program published"
+ ✓ …/🎚️window-measure-controls/🟦️.tsx > 🎚️ window measure controls while their dispatch is in flight > exposes the value the program published beside the draft it renders 71ms
+ Test Files  1 passed | 29 skipped (30)
+      Tests  1 passed | 1004 skipped (1005)
+```
+
+It pins both halves for both control kinds: mid-flight the select SHOWS "Always" while
+`data-published-value` still reads `"selected"`, and the checkbox shows unchecked while
+`data-published-value` still reads `"true"`; once the program publishes, each attribute follows.
+
+---
+
+## 3 Live verdicts on `:6013`
+
+Run after the coordinator's full battery finished (`🗑️generated/battery-2026-09-12-56-full-6013.txt`,
+`[1147.5s] done`), with `pgrep -f 'bun .*browser-pro[b]e'` empty. Smoke first:
+
+```
+$ bun 🔍️browser-probe.ts --only=boot --port=6013
+[5.2s] boot booted: windows=[{"id":"puzzle3d-main-top",…},{"id":"puzzle3d-main-perspective",…}] canvases=2 treeItems=0
+[10.6s] done booted=true faults=0 hard=0 collateral=0 first-hard-fault-at=none guest-death-faults=0 verdicts=6
+```
+
+Then the three lanes (`🗑️generated/b41-three-lanes-3.txt`):
+
+```
+$ bun 🔍️browser-probe.ts --only=projection-options,locale-switch,window-content --port=6013
+[67.3s] battery verdict boot                            PASS
+[67.3s] battery verdict window-both-present             PASS
+[67.3s] battery verdict window-one-canvas-each          PASS
+[67.3s] battery verdict window-same-document-both-views PASS
+[67.3s] battery verdict window-distinct-camera          PASS
+[67.3s] battery verdict projection-measures-present     PASS
+[67.3s] battery verdict projection-control-flips        PASS
+[67.3s] battery verdict projection-repaints-camera      PASS
+[67.3s] battery verdict locale-control-present          PASS
+[67.3s] battery verdict locale-flips-document-labels    PASS
+[67.3s] battery verdict locale-de-document-section-label PASS
+[67.3s] battery verdict locale-no-english-leak          PASS
+[67.3s] battery verdict locale-switch-back-en           PASS
+[67.3s] battery verdict guest-alive-read                PASS
+[67.3s] battery verdict battery-hard-faults             PASS
+[67.3s] battery verdict battery-faults                  PASS
+[67.3s] done booted=true faults=0 hard=0 collateral=0 first-hard-fault-at=none guest-death-faults=0 verdicts=32
+```
+
+**16 of 16 verdicts PASS, zero faults, zero guest-death faults.** Against B40's run of the same two
+lanes that is `projection-repaints-camera` FAIL → **PASS** and `locale-de-document-section-label`
+FAIL → **PASS**, with the third lane (`window-content`) green throughout — the proof that qualifying
+the world-surface ids broke neither surface.
+
+### 3.1 The id fix, read off the live shell
+
+`projection-options`' own candidate dump, which used to show two elements sharing
+`framework.worldOrbit.projection`, now shows four DISTINCT pane ids and the measure ids carrying their
+window instance:
+
+```
+[17.0s] projection measure candidates=[
+  {"id":"framework.worldOrbit.projection.puzzle3dMainTop","slot":"pane","inPerspective":false,…},
+  {"id":"framework.worldOrbit.projection.puzzle3dMainTop.pane.fold","slot":"window-pane-chrome-toggle","inPerspective":false,…},
+  {"id":"framework.worldOrbit.projection.puzzle3dMainPerspective","slot":"pane","inPerspective":true,…},
+  {"id":"framework.worldOrbit.projection.puzzle3dMainPerspective.pane.fold","slot":"window-pane-chrome-toggle","inPerspective":true,…},
+  {"id":"puzzle3d-main-perspective/puzzle3d-measure-projection-orthographic-view","slot":"select-trigger","role":"combobox","isControl":true,"inPerspective":true,…},
+  {"id":"puzzle3d-main-perspective/puzzle3d-measure-projection-perspective-kind","slot":"select-trigger","role":"combobox","isControl":true,"inPerspective":true,"text":"3-Point"},
+  {"id":"puzzle3d-main-perspective/puzzle3d-measure-projection-fov","slot":"slider","isControl":true,"inPerspective":true,…}]
+```
+
+### 3.2 The projection hop, in three timestamps
+
+```
+[43.4s] projection nudge puzzle3d-main-perspective/puzzle3d-measure-projection-orthographic-view … {"before":{…,"value":"","published":"","text":""},"after":{…,"text":"Plan"},"waitedMs":35}
+[44.7s] projection published="plan" moved=true waitedMs=1217
+[44.7s] camera settle puzzle3d-main-perspective moved=true waitedMs=11
+```
+
+`nudgeMeasure` returns after **35 ms** — the draft — while the program's own answer lands after
+**1 217 ms** and the camera follows. That 35 ms is exactly the window B38 and B40 were reading in, and
+it is why the old `projection-control-flips` PASSed on nothing and `projection-repaints-camera` FAILed
+on a pose that had not been published yet. Both verdicts now measure the program.
+
+### 3.3 The terminology, read from the page
+
+```
+[30.3s] locale active terminology={"terminology":"native","stored":null,"controlText":"Terminologie Nativ"} expectedSectionLabel=Objekte
+[30.3s] verdict locale-de-document-section-label PASS
+```
+
+`framework.settings.terminology` renders "Terminologie Nativ" and nothing is persisted, so the shell is
+on `native` and the DE cell owed is "Objekte" — which the outliner publishes. B40 §5 called this exactly.
 
 ---
 
@@ -237,10 +362,28 @@ behind the coordinator's own full battery (`--battery --reload-between-groups --
 | command | result |
 |---|---|
 | `SEMIO_TEST_LEVEL=long bun x vitest run --config …/⚛️react/vitest.config.ts -t "per-window element ids"` | `Test Files 1 passed \| 29 skipped (30)` / `Tests 4 passed \| 1000 skipped (1004)` — §1.4 |
-| `SEMIO_TEST_LEVEL=long bun x vitest run --config …/⚛️react/vitest.config.ts` (full lane) | `Test Files 3 failed \| 27 passed (30)` / `Tests 15 failed \| 989 passed (1004)`. **No NEW failures** — byte-identical failure set to B40's (6 in `extension invocation completion ownership` + `noteShellCommand`, 6 in `🧩️package-integration` wgpu generated-worker bytes, 2 in `🔌️PluginRuntime`), all peer-owned. Passed moved `985 → 989`: exactly this wave's four laws, and total cases `1000 → 1004`. |
+| `SEMIO_TEST_LEVEL=long bun x vitest run --config …/⚛️react/vitest.config.ts` (full lane, before §2.5) | `Test Files 3 failed \| 27 passed (30)` / `Tests 15 failed \| 989 passed (1004)`. **No NEW failures** — byte-identical failure set to B40's (6 in `extension invocation completion ownership` + `noteShellCommand`, 6 in `🧩️package-integration` wgpu generated-worker bytes, 2 in `🔌️PluginRuntime`), all peer-owned. Passed moved `985 → 989`: exactly this wave's four laws, and total cases `1000 → 1004`. |
+| the same full lane again, after §2.5 | `Tests 16 failed \| 989 passed (1005)` — the 15 peer-owned reds plus **one load-induced timeout**, `leftover brush guest hover retain > keeps the leftover vortex id on an armed brush window`, whose whole body is three `expect`s over a pure function behind `await import("…/🌐️World3dHost/🟦️.tsx")`. It is a cold dynamic import of the three.js/r3f graph against `load averages: 51.79 46.90 33.88` (peers' builds), and the same run reports `transform 152.44s / import 221.57s` against the earlier run's `32.05s / 55.94s`. Proven to be the clock and not the logic: |
+
+```
+$ … vitest run --config …/⚛️react/vitest.config.ts --testTimeout=30000 -t "keeps the leftover vortex id on an armed brush window"
+ ✓ …/🔌️PluginRuntime/🟦️.tsx > leftover brush guest hover retain > keeps the leftover vortex id on an armed brush window 21705ms
+ Test Files  1 passed | 29 skipped (30)
+      Tests  1 passed | 1004 skipped (1005)
+```
+
+21.7 s of a 5 s budget spent inside that one import. Nothing in §2.5 touches `World3dHost`, `PluginRuntime`
+or `leftoverBrushRetainGuestHoverV1`; what it does touch is `🌳️Tree/🟦️.tsx`, which invalidates the whole
+`ui-react` transform graph and so makes every downstream cold import slower while the box is saturated.
+
+| command | result |
+|---|---|
+| `SEMIO_TEST_LEVEL=long … -t "exposes the value the program published"` | `Tests 1 passed \| 1004 skipped (1005)` — §2.5 |
 | `bun x tsc --noEmit -p …/⚛️react/tsconfig.json` | **861 errors — the identical count B40 measured**, and **zero** of them fall in any line this wave touched (checked per region: `🛠️ShellHelpers` 34xx–35xx, `🌐️World3dHost` 455x, `🎨️r3f` 196x–202x, `🧪️chunkkey` 28x–29x, `🔬️engine-contract` 96xx–97xx, the CAD renderer — no hits). This package's typecheck is deeply red independently of this wave (`🧪️docklayoutstore` fast-check generics, `ImportMeta.dir`). |
 | `bun x tsc --noEmit --skipLibCheck --strict 🔍️browser-probe.ts` | **2 errors, both pre-existing and neither in this wave's edits**: `ImportMeta.dir` (bun-only) and a Playwright `modifiers` option typing at `:1698`. The third, `:1523 Cannot find name 'c'`, was a real scoping bug and is fixed (§2.4). |
 | `cargo check -p semio-s-artifact-puzzle-3d --features component-app-assembly` | `Finished dev profile [unoptimized] target(s) in 15.45s` — **0 errors**, 88 warnings (B40's baseline exactly). No guest Rust was touched, so no cargo test was owed. |
+| `bun 🔍️browser-probe.ts --only=boot --port=6013` | `verdicts=6`, all PASS, `faults=0` — §3 |
+| `bun 🔍️browser-probe.ts --only=projection-options,locale-switch,window-content --port=6013` | **16/16 PASS**, `faults=0 hard=0 collateral=0 guest-death-faults=0` — §3 |
 
 ### 4.1 The one law this wave could NOT run, and why
 

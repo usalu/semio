@@ -1,19 +1,18 @@
 //! 🗺️ GIS 2D play app commands — the document-mutating feature patches (positions and routes).
 
-use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::mutations::replace_route_data;
 use crate::op::GisMapMutation;
 use crate::schema::{gis_map_document_from_descriptor_json, positions_operations};
 use crate::GisMapSnapshot;
 use dsl::DslValue;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde_json::{json, Value};
 
 //#region 🔖️RouteHelpers
 /// 🌉️ Shared `patchRoutes`/`patchRoute` implementation — a single route id (`patchRoute`) is just a
 /// one-element slice of the many-route form (`patchRoutes`).
-pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], field: &str, value: &str) -> Emit<GisMapMutation, Gis2dConfigMutation> {
+pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], field: &str, value: &str) -> Emit<GisMapMutation, NoConfigMutation> {
     if route_ids.is_empty() {
         return Emit::default();
     }
@@ -49,7 +48,7 @@ pub mod patch_positions {
         pub positions_json: String,
     }
 
-    pub fn handle(payload: &PatchPositions, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchPositions, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<GisMapMutation, NoConfigMutation>, Fault> {
         let Ok(positions) = serde_json::from_str::<Value>(&payload.positions_json) else {
             return Ok(Emit::default());
         };
@@ -71,7 +70,7 @@ pub mod patch_routes {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchRoutes, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchRoutes, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<GisMapMutation, NoConfigMutation>, Fault> {
         Ok(patch_routes_operations(doc.snapshot, &payload.route_ids, &payload.field, &payload.value))
     }
 }
@@ -89,7 +88,7 @@ pub mod patch_route {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchRoute, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchRoute, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<GisMapMutation, NoConfigMutation>, Fault> {
         Ok(patch_routes_operations(doc.snapshot, std::slice::from_ref(&payload.route_id), &payload.field, &payload.value))
     }
 }

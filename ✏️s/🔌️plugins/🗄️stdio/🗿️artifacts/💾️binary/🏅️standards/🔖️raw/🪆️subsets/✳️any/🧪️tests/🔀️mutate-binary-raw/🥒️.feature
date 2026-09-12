@@ -10,7 +10,7 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
   vocabulary and its documented offset/remove_len contract (`🏅️standards/🔖️raw/🪆️subsets/✳️any/
   🧬️schema/🧬️mutations/🦀️component.rs`), and the evidence is the specification vectors below plus
   the inverse law as a metamorphic property — both discharged by this subset's own independently
-  written oracle (`🏅️standards/🔖️raw/🪆️subsets/✳️any/🔮️oracle/🦀️.rs`), which never touches
+  written oracle (`🏅️standards/🔖️raw/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`), which never touches
   the subject's `BinaryDiff`/`apply_binary_mutation`. No scenario here is typed `@mode-differential`.
 
   The input is a real 483,496-byte JFIF/XMP photograph — a floor-plan scan already committed at

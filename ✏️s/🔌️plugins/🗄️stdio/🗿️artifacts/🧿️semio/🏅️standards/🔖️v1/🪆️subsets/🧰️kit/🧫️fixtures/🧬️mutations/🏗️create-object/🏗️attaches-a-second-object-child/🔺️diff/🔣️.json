@@ -4,7 +4,7 @@
       {
         "childId": "obj-1",
         "target": {
-          "artifactId": "frame-beam-object",
+          "artifactId": "obj-1",
           "dialect": {
             "artifactKind": "s.stdio.semio",
             "standard": "v1",
@@ -15,7 +15,7 @@
       {
         "childId": "obj-2",
         "target": {
-          "artifactId": "frame-column-object",
+          "artifactId": "obj-2",
           "dialect": {
             "artifactKind": "s.stdio.semio",
             "standard": "v1",

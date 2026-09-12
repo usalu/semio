@@ -22,7 +22,7 @@
   "consumesSubtree": {
     "surface": {
       "rule": "A surface's children are NOT rendered chrome — a renderer draws props and nothing else; its children are the out-of-doc payload lane carriers, folded back into the scene.",
-      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🏗️builder.rs SurfaceBuilder"
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/🦀️.rs SurfaceBuilder"
     },
     "tree": {
       "rule": "A tree carries its sections and items inline in the one retained spec the renderer paints, so the section/item records never become nodes of their own.",

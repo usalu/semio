@@ -10,7 +10,7 @@
 //! declares (`✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️.rs`'s `bundle()`), so this serves the real
 //! kernel, not a stub (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 
-use semio_framework_plugin::testkit::{settle_extension_invocations, PendingExtensionInvocation, SettledExtensionInvocations};
+use semio_framework_plugin::artifact_app_laws::{settle_extension_invocations, PendingExtensionInvocation, SettledExtensionInvocations};
 use semio_framework_plugin::{ActionMeta, Fault, FaultCode, FaultOrigin, PluginApp};
 
 fn bad_request(capability: &str, detail: impl Into<String>) -> Fault {
@@ -53,7 +53,7 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
 
 /// 🔁️ Answers every invocation this app has queued, redispatching each response action back into it.
 pub async fn settle<P: PluginApp>(app: &mut P, receiver: u32) -> usize {
-    settle_with_meta(app, receiver, &semio_framework_plugin::testkit::meta("local")).await.answered
+    settle_with_meta(app, receiver, &semio_framework_plugin::artifact_app_laws::meta("local")).await.answered
 }
 
 /// 🔁️ The same round trip under an explicit `ActionMeta` — the shell answers a continuation with its

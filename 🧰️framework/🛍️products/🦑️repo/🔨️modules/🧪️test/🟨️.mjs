@@ -102,7 +102,7 @@ function oracleContributionPaths(workspaceRoot, vocabulary, ownerRel) {
   const paths = [];
   let dir = ownerRel;
   for (;;) {
-    const manifestAbs = join(workspaceRoot, dir, vocabulary.testContributionDirName, manifestFilename);
+    const manifestAbs = join(workspaceRoot, dir, vocabulary.testOraclesDirName, manifestFilename);
     if (existsSync(manifestAbs)) {
       try {
         const parsed = JSON.parse(readFileSync(manifestAbs, "utf8"));
@@ -135,7 +135,7 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
     // 🧩️Whatever the platform itself is made of, wherever the taxonomy says it lives.
     `{workspaceRoot}/${domain}/**/*`,
     // 🧩️And every owner contribution, so adding or changing an oracle invalidates the cases that use it.
-    `{workspaceRoot}/**/${vocabulary.testContributionDirName}/**/*`,
+    `{workspaceRoot}/**/${vocabulary.testOraclesDirName}/**/*`,
     // 🦀️The rust adapter's own crate root, wherever it actually sits — often an ancestor of the owner.
     ...(rustSutCrate === null ? [] : [`{workspaceRoot}/${rustSutCrate}/**/*`]),
     // 🔮️Every path-based oracle host package an ancestor (or the owner itself) contributes: the crate

@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.local/package-boundary-classification-v1",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "glueRoleCases",
+    "fixedScriptCases",
+    "fixedScriptReadFailureCases",
+    "manifestPresenceCases",
+    "scopeSpecificityOrder"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "glueRoleCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "analyzer",
+          "maxDelegationStatements",
+          "content",
+          "expectedRole",
+          "expectedEvidence",
+          "oracle"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "analyzer": {
+            "enum": [
+              "rust",
+              "typescript",
+              "javascript",
+              "go",
+              "python",
+              "c-cpp"
+            ]
+          },
+          "maxDelegationStatements": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "content": {
+            "type": "string"
+          },
+          "expectedRole": {
+            "enum": [
+              "declaration",
+              "registration",
+              "bootstrap",
+              "thin-delegation",
+              "implementation",
+              "unresolved"
+            ]
+          },
+          "expectedEvidence": {
+            "type": "string",
+            "minLength": 1
+          },
+          "oracle": {
+            "enum": [
+              "typescript-compiler",
+              "rust-syn",
+              "go-parser",
+              "python-parser",
+              "c-compiler"
+            ]
+          },
+          "dispositionValidator": {
+            "enum": [
+              "tool-config-vitest",
+              "tool-config-postcss",
+              "command-router",
+              "package-glue"
+            ]
+          },
+          "expectedDispositionRole": {
+            "enum": [
+              "tool-metadata",
+              "declaration",
+              "registration",
+              "bootstrap",
+              "thin-delegation",
+              "implementation",
+              "unresolved"
+            ]
+          },
+          "expectedSemanticDiagnostics": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "uniqueItems": true
+          },
+          "expectedExecuteBinding": {
+            "enum": [
+              "import",
+              "local"
+            ]
+          }
+        },
+        "dependentRequired": {
+          "dispositionValidator": [
+            "expectedDispositionRole"
+          ],
+          "expectedDispositionRole": [
+            "dispositionValidator"
+          ]
+        }
+      }
+    },
+    "fixedScriptCases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["id", "placement", "manifest", "path", "content", "expectedDispositionRole", "expectedFinding"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "placement": { "enum": ["root", "domain", "package"] },
+          "manifest": { "enum": ["present", "absent", "not-applicable"] },
+          "path": { "type": "string", "pattern": "(?:^|/)📜️script\\.ts$" },
+          "content": { "type": "string", "minLength": 1 },
+          "expectedDispositionRole": { "enum": ["tool-metadata", "unresolved"] },
+          "expectedFinding": { "enum": ["fixed-source-disposition-unresolved", null] },
+          "expectedSemanticDiagnostics": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0 },
+            "uniqueItems": true
+          }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "placement": { "const": "package" } } },
+            "then": { "properties": { "manifest": { "enum": ["present", "absent"] } } },
+            "else": { "properties": { "manifest": { "const": "not-applicable" } } }
+          }
+        ]
+      }
+    },
+    "fixedScriptReadFailureCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "path", "content", "expectedFixedContractId", "expectedFileKind", "expectedPackageRole", "expectedViolations"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "pattern": "(?:^|/)📜️script\\.ts$" },
+          "content": { "type": "string", "minLength": 1 },
+          "expectedFixedContractId": { "const": "root-script" },
+          "expectedFileKind": { "type": "null" },
+          "expectedPackageRole": { "enum": ["configuration", "not-package"] },
+          "expectedViolations": {
+            "const": ["fixed-source-content-unreadable", "path-read-failed"]
+          }
+        }
+      }
+    },
+    "manifestPresenceCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "manifest",
+          "content",
+          "expectedProblem"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "manifest": {
+            "enum": [
+              "present",
+              "absent"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expectedProblem": {
+            "enum": [
+              "package-implementation",
+              null
+            ]
+          }
+        }
+      }
+    },
+    "scopeSpecificityOrder": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "enum": [
+          "exact-path",
+          "repository-root",
+          "package-root",
+          "directory-kind",
+          "fixed-directory-contract",
+          "sibling-fixed-filename-contract",
+          "path-pattern"
+        ]
+      }
+    }
+  }
+}

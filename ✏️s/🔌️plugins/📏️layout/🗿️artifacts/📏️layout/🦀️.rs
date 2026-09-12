@@ -98,8 +98,7 @@ pub struct LayoutDropPreviewState {
 //#endregion 🔖️DropPreview
 
 //#region 🔖️Types
-/// 📷️ Ephemeral per-surface camera pose (blueprint/preview). Never part of `LayoutSnapshot` — lives
-/// in the layout app's `LayoutConfig` instead, so it stays out of undo history and off the wire.
+/// 📷️ Per-window camera pose shared by the exact Blueprint and Preview config owner records.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
 pub struct LayoutCamera {
     pub x: f64,
@@ -553,14 +552,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// the old side-effecting `register()`, which called five different global registries directly from
 /// a plugin `.setup()` callback, including `crate::io_registry::register()` — a
 /// DUPLICATE registration of the exact `standards::v1::subsets::any::io::io_registry::entries()` slice the
-/// `.composers(…)` call below now registers once (that top-level `artifacts::layout::io_registry`
-/// module has no other caller in the repo — deleting its call here rather than keeping it, per the
-/// W1b duplicate-IO-registration finding; the module itself is left in place as inert dead code,
-/// matching `🗒️note`'s own unreferenced sibling module). `crate::editor::layout::config::schema::
-/// register_app_schema()` is the one exception, still called from `📏️layout/🦀️.rs`'s own
-/// `.setup()`: it registers the `LayoutPlayApp` CONFIG/PRESENCE schema, an app-scope concern
-/// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
-/// `register_app_schema_descriptor` is not in §6's artifact-scoped function set.
+/// `.composers(…)` call below now registers once.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
@@ -1394,25 +1386,6 @@ pub mod editor {
             pub mod scene;
         }
 
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖼️canvas/🦀️.rs"]
         pub mod canvas;
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
@@ -1472,8 +1445,16 @@ pub mod editor {
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️blueprint/🦀️.rs"]
-                    pub mod blueprint;
+                    #[path = "."]
+                    pub mod blueprint {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️blueprint/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️blueprint/🎚️config/🦀️.rs"]
+                        pub mod config;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️blueprint/🫧️transient/🦀️.rs"]
+                        pub mod transient;
+                    }
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs"]
                     pub mod preview;
                 }

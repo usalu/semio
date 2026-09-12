@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::process3d::testkit;
+use crate::editor::process3d::unit_tests::context;
 
 /// 🪵️ Both wood machines' capabilities render as tree items (labels present) whether the current
 /// stock satisfies their rules or not — `stock_validation_context` now checks real dimensions, so
@@ -8,8 +8,8 @@ use crate::editor::process3d::testkit;
 /// doesn't have to depend on the shared example document's own stock for.
 #[semio_framework_async_macros::async_test]
 async fn catalogue_lists_workshop_wood_machines() {
-    let mut app = testkit::app();
-    let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_CATALOGUE);
+    let mut app = context::app();
+    let rendered = context::render(&mut app, PROCESS_3D_PLAY_BODY_CATALOGUE);
     assert!(rendered.contains("Circular Saw"), "expected wood's circular saw in the catalogue: {rendered}");
     assert!(rendered.contains("Table Saw"), "expected wood's table saw in the catalogue: {rendered}");
 }

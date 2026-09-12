@@ -8,9 +8,9 @@
 // 🏭️ Third-party fixture generator for `s.stdio.dxf@r12/📰️header`.
 //
 // Every recipe's bytes are written entirely by the real `dxf` 0.6 crate's own typed `Drawing`
-// model (`🦀️engine/src/main.rs`) — the SAME crate registered as `dxf-crate-r12-mutate`
+// model (`🧫️fixtures/🦀️.rs`) — the SAME crate registered as `dxf-crate-r12-mutate`
 // (`cross-semio-implementation`, untouched) and now also as `dxf-crate-r12-mutate-reader`
-// (`third-party-library`) in `../🔮️oracle/🔣️.json` — never by this repository's own DXF codec.
+// (`third-party-library`) in `../🔮️oracles/🔣️.json` — never by this repository's own DXF codec.
 // This script only marshals: it builds and invokes the Rust binary and reports what it wrote; it
 // computes no DXF bytes itself.
 //
@@ -31,7 +31,7 @@
 //   bun 📜️script.ts generate  [--only <recipe-id>]     # (re)builds the engine, writes fixture(s)
 //   bun 📜️script.ts manifests [--only <recipe-id>]     # prints the fixtureManifests block (JSON array)
 //
-// @see ./🦀️engine/src/main.rs — the actual codec; `build <recipe-id> <out-dir>` and
+// @see ./🧫️fixtures/🦀️.rs — the actual codec; `build <recipe-id> <out-dir>` and
 //      `project <path>` are its only two data-producing commands (plus `list-recipes`).
 // @see ../../../../💬️avi/🏅️standards/🔖️1.0/🪆️subsets/📰️header/🏭️generator/📜️script.ts — the sibling
 //      generator this file's `--only`/RECIPES/generate/manifests shape is mirrored from.
@@ -49,7 +49,7 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const ENGINE_DIR = join(HERE, "🦀️engine");
+const ENGINE_DIR = join(HERE, "🧫️fixtures", "📦️packages", "🦀️rust");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
 const FIXTURE_PATH_PREFIX = "../🧫️fixtures/";
 const READER_ORACLE_ID = "dxf-crate-r12-mutate-reader";
@@ -101,7 +101,7 @@ const FIXTURE_COORDINATES: Readonly<Record<string, readonly [string, string]>> =
 type Outcome = "applied" | "no-op" | "rejected";
 type Recipe = Readonly<{ id: string; kind: "single" | "pair"; mutation: string | null; outcome: Outcome | null; notes: string }>;
 
-/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🦀️engine/src/main.rs` verbatim — `drafting-plate` (the
+/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🧫️fixtures/🦀️.rs` verbatim — `drafting-plate` (the
  *  pre-existing single-document fixture, untouched) plus one entry per witnessable `(mutation,
  *  outcome)` coordinate this retrofit adds. `set-header-var` carries `-applied` only — see that
  *  file's own comment for the reachability proof (no fixture-less claim: verified from the real

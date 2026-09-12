@@ -1,0 +1,248 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/🦀️.rs",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🦀️.rs",
+      "kind": "rust",
+      "boundary": "cargo-lib",
+      "anchor": "pub fn run(argv",
+      "glue": "../../🦀️.rs"
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️main.rs",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🚪️entrypoint/🦀️.rs",
+      "kind": "rust",
+      "boundary": "cargo-bin",
+      "anchor": "semio_framework_repo_cli::run(",
+      "glue": "../../🚪️entrypoint/🦀️.rs"
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/⚙️build/🟦️.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "none",
+      "anchor": "extensionBuildConfig"
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "package-reexport",
+      "anchor": "export function activate(",
+      "glue": "../../🟦️.ts"
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "package-reexport",
+      "anchor": "export function getLibRoot",
+      "glue": "../../🟦️.ts"
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.d.mts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟦️.d.mts",
+      "kind": "typescript-declaration",
+      "boundary": "declaration",
+      "anchor": "RuntimeComponentClosureRowV1"
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🖥️server-implementations.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔌️ports/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "none",
+      "anchor": "createOwnedDatabasePool"
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/auth/route.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔐️authentication/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "next-route",
+      "anchor": "parseCreateDeveloperRequest",
+      "glue": "../../../../../../🔐️authentication/🟦️.ts",
+      "exports": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/breach/route.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🚨️breaches/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "next-route",
+      "anchor": "listBreaches",
+      "glue": "../../../../../../🚨️breaches/🟦️.ts",
+      "exports": [
+        "GET"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/diff/route.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "next-route",
+      "anchor": "parseUnifiedDiff",
+      "glue": "../../../../../../🧾️diff/🟦️.ts",
+      "exports": [
+        "POST"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/event/route.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📡️event/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "next-route",
+      "anchor": "parseEventPublishRequest",
+      "glue": "../../../../../../📡️event/🟦️.ts",
+      "exports": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/repo/route.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📚️repository/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "next-route",
+      "anchor": "parseIndexFileRequest",
+      "glue": "../../../../../../📚️repository/🟦️.ts",
+      "exports": [
+        "POST"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/scope/route.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎯️scope/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "next-route",
+      "anchor": "listScopesByFile",
+      "glue": "../../../../../../🎯️scope/🟦️.ts",
+      "exports": [
+        "GET"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/ticket/[id]/route.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🔎️detail/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "next-route",
+      "anchor": "listClaimsByTicket",
+      "glue": "../../../../../../../🎫️ticket/🔎️detail/🟦️.ts",
+      "exports": [
+        "GET"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/ticket/route.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "next-route",
+      "anchor": "parseTicketOpenRequest",
+      "glue": "../../../../../../🎫️ticket/🟦️.ts",
+      "exports": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/warning/route.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚠️warnings/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "next-route",
+      "anchor": "listWarnings",
+      "glue": "../../../../../../⚠️warnings/🟦️.ts",
+      "exports": [
+        "GET"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/webhooks/github/route.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🪝️webhook/🐙️github/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "next-route",
+      "anchor": "GitHubIssueEventReceived",
+      "glue": "../../../../../../🪝️webhook/🐙️github/🟦️.ts",
+      "exports": [
+        "POST"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/layout.tsx",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🖼️shell/🟦️.tsx",
+      "kind": "typescript-jsx",
+      "boundary": "next-layout",
+      "anchor": "RootLayout",
+      "glue": "../../../🖼️shell/🟦️.tsx",
+      "exports": [
+        "default",
+        "metadata"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/page.tsx",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📊️dashboard/🟦️.tsx",
+      "kind": "typescript-jsx",
+      "boundary": "next-page",
+      "anchor": "DashboardPage",
+      "glue": "../../../📊️dashboard/🟦️.tsx",
+      "exports": [
+        "default"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet/🔷️.cs",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🔷️.cs",
+      "kind": "dotnet",
+      "boundary": "dotnet-compile",
+      "anchor": "namespace Semio.Repo.Test",
+      "glue": "../../🖥️host/🔷️.cs"
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts",
+      "kind": "typescript",
+      "boundary": "package-reexport",
+      "anchor": "export const TAXONOMY_REL_PATH",
+      "glue": "../../🟦️.ts"
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/📦️lib.rs",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🦀️.rs",
+      "kind": "rust",
+      "boundary": "cargo-lib",
+      "anchor": "pub mod protocol",
+      "glue": "../../🦀️.rs"
+    }
+  ],
+  "ownerDirectoryChains": [
+    {
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+      "parentKind": "modules",
+      "members": [
+        {
+          "name": "📚️library",
+          "kind": "members-of-modules"
+        }
+      ]
+    },
+    {
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟦️.d.mts",
+      "parentKind": "modules",
+      "members": [
+        {
+          "name": "📚️library",
+          "kind": "members-of-modules"
+        },
+        {
+          "name": "🕸️dependencies",
+          "kind": "members-of-members-of-modules"
+        },
+        {
+          "name": "🧩️runtime",
+          "kind": "members-of-members-of-members-of-modules"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+# Small Mandatory Script Disposition Review
+
+Root read all twelve short unresolved sources in the current-script snapshot and all six earlier retained forms on 2026-09-12. The two sets overlap at Jack shell and Puzzle3D, giving sixteen distinct sources. No product file was changed. These are reasoned source dispositions, not a new parser acceptance run.
+
+## Routing And Constant Configuration
+
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/📜️script.ts` delegates font staging to its existing neutral owner and formats the returned count. Its terminal is `router.run(process.argv.slice(2))`, reached only under import.meta.main. Review this native router form through exact lexical receiver binding; do not extract another font implementation or admit arbitrary object.run.
+- `♻️mit-bestand/🧺️demonstrator/📜️script.ts` delegates Vitest and imports an existing test registration under import.meta.vitest. Registration is the remaining grammar question. Dynamic imports and injected native context must retain exact binding/call evidence.
+- `✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts` only invokes imported runStdioCompositionPackageMain with import.meta coordinates. The invocation is routing; the imported parent command still owns its implementation and belongs in the Stdio extraction lane. Do not confuse call-site routing with acceptance of its current implementation owner.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts` is already accepted by the completed lexical-prebinding correction: its nested imported dirname/fileURLToPath constructor conversion and imported command classes are routing.
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts` declares a fixed minimum native test stack and component-app-assembly test feature. The expression String(128 * 1024 * 1024) computes a constant; this does not justify a new semantic helper. Expressing the exact string 134217728 would preserve the existing configuration while avoiding arithmetic in routing syntax. Its current artifact-router import will separately follow the caching owner extraction.
+
+The retained `🧪️task-constant-equivalence/🔣️.json` is a language-neutral four-case control for the Puzzle environment default. Root executed installed TypeScript transpilation and native JavaScript VM evaluation of both forms: absent, empty-but-present, user override and zero-string cases all agreed. No actual process environment or Puzzle source was modified. Raw output is disposable generated/coordinator/task-constant-equivalence.json. This verifies expression equivalence only, not the full native Puzzle suite.
+
+## Actual Behavior To Extract
+
+| Current script | Actual responsibility and existing lane |
+| --- | --- |
+| UI runtime Rust package | Aggregates exact native law receipts with reduce. Move the receipt/report concern beside runtime tree-retirement verification while retaining the package's command selections, oracle-only branch and exact native law names. The imported forwarding check closure itself is not evidence of a new domain. |
+| UI render Rust package | Owns forbidden dependency identities/reasons, native cargo-tree traversal decisions and breach construction. Move actual dependency-boundary verification to render's neutral verification domain; preserve native absent-package versus reachable-dependent interpretation. |
+| OS scale fixture Rust package | Validates component Wasm magic bytes in a nested build callback. Use an owned component-output verifier and preserve actual staged file mapping/build contract, with native component parsing as oracle. Its shared Cargo API import must follow the repo cache lane. |
+| Repo test .NET package | Reads/filter/maps native output files into artifact publication. Move deliverable selection/staging to the repo-test support/build domain, preserving locked restore, private cache path, Release/path-map and exact publication ownership. |
+| Trinity Jack shell Rust package | Selects the staged native binary and calls raw Bun.spawnSync, then propagates failure. Use the owned staged-process runner with argument/stdio/exit semantics and cancellation; preserve Windows executable suffix without inventing an extra shell layer. |
+| Demonstrator site module | Owns controller lifecycle, signal subscriptions/removal and browser publication composition. Move actual site build orchestration beside the site domain and retain only imported command routing. Preserve Nx-prepared inputs and native output isolation. |
+| WGPU browser-build module | Reads generation input contract and writes the rendered boot artifact with directory creation. Reuse the existing WGPU publication/projection concerns; inspect its separate browser-boot contract before consolidation. Its direct router.run form is a distinct grammar question. |
+| Print design-token-paints module | Constructs preview node bytes/mode/path and writes persistent LaTeX output. Move publication/preview behavior beside the existing token renderer. Coordinate the actual .sty producer/output binding with the LaTeX lane. |
+| Repo root and repo client module | Each exports an inline policy function with actual bundle or manifest validation. Move policy behavior to the exact neutral law concern while retaining required imported policy binding for existing dispatch. The current runPolicyOnlyMain delegates to dispatchPolicyArgv using the script URL; do not break that discovery protocol or leave a copied compatibility body. |
+| Repo caching inputs module | Discovers catalog members, rejects symlinks, captures exact bytes and length, streams canonical hashes and publishes an input receipt. Move this existing receipt production domain beside caching/inputs; preserve byte protocol, cancellation/read failures and source authority. |
+
+Exact paths for the six older package forms remain in 📓️sol-script-router-policy-2026-09-12.md. Exact paths for the twelve short forms remain in 📓️current-mandatory-script-dispositions-2026-09-12.md. Use these maps for re-reading live source rather than line-count rules.
+
+## Acceptance Boundary
+
+The fixed-script gate must expose unresolved body decisions without labelling every unresolved file implementation. Proven imported routing remains legitimate. Fix real source ownership and close precise grammar gaps separately; do not add per-path exceptions, arbitrary imported terminal bypasses or a helper for a literal configuration value. This review was sent to the active Sol enforcement worker; existing source packets own the execution lanes.

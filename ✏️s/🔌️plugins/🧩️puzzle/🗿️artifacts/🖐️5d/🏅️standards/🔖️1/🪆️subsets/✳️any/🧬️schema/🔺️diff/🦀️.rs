@@ -21,7 +21,7 @@ pub struct Puzzle5dDiff {
     pub label: Option<Option<String>>,
     #[state(artifact)]
     pub meta: Option<Puzzle5dMeta>,
-    #[child(kind = "s.stdio.semio.kit")]
+    #[child(kind = "s.stdio.semio")]
     #[state(artifact)]
     pub kind_catalogs: Option<Option<store::ArtifactChild<SemioKitSnapshot>>>,
     #[state(artifact)]

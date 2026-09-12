@@ -351,9 +351,9 @@ fn production_bridge_installs_vcs_authority_page_ack_retry_and_incremental_close
 
 #[test]
 fn production_reachability_fixture_and_hostile_source_census_reject_the_old_route() {
-    let component = include_str!("../../🦀️component.rs");
+    let component = include_str!("../../🦀️.rs");
     let production = component.split_once("//#region 🧪️DomainLaws").expect("Flow production/test boundary").0;
-    let bridge_protocol = include_str!("../../📡️protocol.rs");
+    let bridge_protocol = include_str!("../../📡️protocol/🦀️.rs");
     let protocol_production = bridge_protocol.split_once("//#region 🧪️Laws").expect("Flow protocol production/test boundary").0;
     let schema = protocol::FLOW_ABI_SCHEMA;
     let host = include_str!("../../📦️packages/🟨️javascript/🖥️flow-host.js");

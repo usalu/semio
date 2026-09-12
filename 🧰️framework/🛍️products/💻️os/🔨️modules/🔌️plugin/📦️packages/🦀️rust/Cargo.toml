@@ -23,6 +23,7 @@ component-extension-guest = []
 # so the code inside is never type-checked by any build (the standing `cfg`-gated-code trap). `JobCtx::host()`
 # lives behind exactly this gate.
 component-guest-async = []
+artifact-app-testing = []
 
 [dependencies]
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }

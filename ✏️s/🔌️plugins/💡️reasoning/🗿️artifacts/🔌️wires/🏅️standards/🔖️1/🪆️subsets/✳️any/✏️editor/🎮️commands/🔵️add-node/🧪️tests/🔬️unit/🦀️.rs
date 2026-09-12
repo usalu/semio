@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::wires::testkit::{dispatch, new_app};
+use crate::editor::wires::unit_tests::context::{dispatch, new_app};
 use crate::editor::wires::WiresCommand;
 use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
 

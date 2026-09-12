@@ -33,7 +33,7 @@
 //   bun 📜️script.ts dxf-compare  --input <expected.dxf>  --input <actual.dxf>
 //   bun 📜️script.ts step-compare --input <expected.step> --input <actual.step>
 //
-// @see 🦀️oracle-probe/src/main.rs — the binary that does the reading
+// @see 🔮️oracle/🦀️.rs — the binary that does the reading
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 
 //#endregion 🧲️Header
@@ -57,7 +57,7 @@ type ProbeReport = {
 };
 
 const PROBES = ["dxf-read", "dxf-witness", "dxf-compare", "step-read", "step-witness", "step-compare"] as const;
-const CRATE_DIR = join(import.meta.dir, "🦀️oracle-probe");
+const CRATE_DIR = join(import.meta.dir, "🔮️oracle", "📦️packages", "🦀️rust");
 //#endregion 🧬️Contract
 
 //#region 🚪️Entry

@@ -23,7 +23,7 @@
 //
 // @see ../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts — the sibling
 //      generator this file's CLI/recipe shape is mirrored from.
-// @see ./🦀️jpeg-jfif-codec/src/main.rs — the actual codec; `build <recipe-id> <out-dir>` and
+// @see ./🔁️codec/🦀️.rs — the actual codec; `build <recipe-id> <out-dir>` and
 //      `project <path>` are its only two commands. Its own module docstring records exactly which
 //      of `image` 0.25.10's public API surface each recipe below relies on.
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/
@@ -38,14 +38,14 @@ import { spawnSync } from "node:child_process";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-const CODEC_MANIFEST = join(import.meta.dir, "🦀️jpeg-jfif-codec", "Cargo.toml");
+const CODEC_MANIFEST = join(import.meta.dir, "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 const ORACLE_ID = "image-jpeg-jfif-1-01-mutate-reader";
 const ENGINE_FAMILY = "image-rs";
 const ENGINE_VERSION = "0.25.10";
 
 type Recipe = Readonly<{ id: string; directoryName: string; mutation: string; witnessable: boolean; notes: string }>;
 
-/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🦀️jpeg-jfif-codec/src/main.rs` verbatim — one `-applied`
+/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🔁️codec/🦀️.rs` verbatim — one `-applied`
  *  entry per declared `JpgMutation` kind in `../🔣️oracle.json`'s `jpg-jfif-1-01-document`
  *  catalog. `witnessable` records whether THIS reader (checked against the real `image` 0.25.10 /
  *  zune-jpeg 0.5.15 source, not assumed) can see the recipe's own effect — it drives which

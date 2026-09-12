@@ -196,10 +196,10 @@
     ]
   },
   "projectionOracleDirectories": [
-    { "owner": "owner-a", "override": "⚖️oracle", "candidate": "owner-a/⚖️oracle/🔣️.json", "expected": true },
-    { "owner": "owner-a", "override": "⚖️oracle", "candidate": "owner-a/🔮️oracle/🔣️.json", "expected": false },
-    { "owner": "owner-a", "override": "⚖️oracle", "candidate": "owner-b/⚖️oracle/🔣️.json", "expected": false },
-    { "owner": "owner-b", "override": null, "candidate": "owner-b/🔮️oracle/🔣️.json", "expected": true }
+    { "owner": "owner-a", "candidate": "owner-a/🔮️oracles/🔣️.json", "expected": true },
+    { "owner": "owner-a", "candidate": "owner-a/🔮️oracle/🔣️.json", "expected": false },
+    { "owner": "owner-a", "candidate": "owner-b/🔮️oracles/🔣️.json", "expected": false },
+    { "owner": "owner-b", "candidate": "owner-b/⚖️oracle/🔣️.json", "expected": false }
   ],
   "subsetDirectoryOverrides": {
     "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets",
@@ -259,9 +259,9 @@
     { "name": "package.json", "expected": false }
   ],
   "storyNames": [
-    { "name": "🪗️.story.tsx", "expected": true },
-    { "name": "✅️.story.tsx", "expected": true },
-    { "name": "📨️.story.tsx", "expected": true },
+    { "name": "🪗️.story.tsx", "expected": false },
+    { "name": "✅️.story.tsx", "expected": false },
+    { "name": "📨️.story.tsx", "expected": false },
     { "name": "🧪️.story.tsx", "expected": true },
     { "name": "🧪️.test.tsx", "expected": false },
     { "name": "🟦️.tsx", "expected": false }

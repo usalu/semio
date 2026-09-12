@@ -433,14 +433,9 @@ pub fn create_playground_editor() -> semio_framework_plugin::AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
-#[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
+//#region 🧪️UnitTests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests
+

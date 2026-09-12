@@ -16,11 +16,11 @@ path = "../../🦀️.rs"
 
 [[test]]
 name = "config_mutation"
-path = "../../../../🎚️config/🧪️tests/🎚️config/🦀️.rs"
+path = "../../../../🪟️results/🎚️config/🧪️tests/🎚️config/🦀️.rs"
 
 [features]
 default = []
-test-support = ["dep:serde", "dep:serde_json"]
+compliance-testing = ["dep:serde", "dep:serde_json"]
 
 [dependencies]
 serde = { workspace = true, optional = true }

@@ -1,5 +1,5 @@
 //! 🦀️ GIS Terrain window-config mutation case for the `set-camera` kind declared by
-//! `../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/⚙️config/🔮️oracle/🔣️.json`. No third-party implementation
+//! `../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/⚙️config/🔮️oracles/🔣️.json`. No third-party implementation
 //! could adjudicate it (`gis-gisterrain-config-mutation-semantics` no-oracle decision, same file),
 //! so this case registers the SUBJECT role only — no `.oracle(...)` handler, matching
 //! `os.config.opening`'s own precedent (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/

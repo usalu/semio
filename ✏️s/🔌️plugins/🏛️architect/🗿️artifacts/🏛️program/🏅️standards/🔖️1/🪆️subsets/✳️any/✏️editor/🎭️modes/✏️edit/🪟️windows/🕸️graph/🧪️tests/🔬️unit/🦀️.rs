@@ -16,7 +16,7 @@ async fn the_graph_body_emits_a_node_graph_scene() {
     let scene: NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed graph");
     assert_eq!(scene.nodes.len(), program.elements.len());
     assert_eq!(scene.edges.len(), undirected_edges(&program).len());
-    crate::editor::architect::testkit::project_render(Ok(node));
+    crate::editor::architect::unit_tests::context::project_render(Ok(node));
 }
 
 #[semio_framework_async_macros::async_test]

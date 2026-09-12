@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::cad::config::CadConfig;
-use crate::editor::cad::testkit::*;
+use crate::editor::cad::unit_tests::context::*;
 use crate::editor::cad::CadPlayApp;
 use crate::standards::v1::subsets::any::schema::inferences::default_document;
 use semio_framework_plugin::{ArtifactView, Locale, ViewModel};

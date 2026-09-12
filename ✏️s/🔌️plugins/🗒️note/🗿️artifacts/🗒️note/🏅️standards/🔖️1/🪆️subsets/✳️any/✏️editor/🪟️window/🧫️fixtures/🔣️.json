@@ -1,4 +1,11 @@
 {
+  "appConfig": {},
+  "foreignAppConfig": { "legacy": true },
+  "document": {
+    "bytes": "note-document-owner-sentinel",
+    "gridVisible": true,
+    "gridSpacing": 32.0
+  },
   "windows": [
     {
       "id": "note-composite-a",

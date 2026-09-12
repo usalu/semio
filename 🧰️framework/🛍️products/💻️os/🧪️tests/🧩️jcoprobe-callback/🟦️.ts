@@ -1,11 +1,11 @@
 /** 🧪️ terra-jco-spike bun/node harness — drives the jco-transpiled `jcoprobe` component through
  * S1-S4 and prints PASS/FAIL verdict lines the report can quote verbatim. */
-import { probe } from "../../🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/jcoprobe.js";
+import { probe } from "../../🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js";
 
 const verdicts = [];
 function record(id, ok, detail) {
   verdicts.push({ id, ok, detail });
-  console.log(`[harness] ${id}: ${ok ? "PASS" : "FAIL"} — ${detail}`);
+  console.log(`[jcoprobe-callback] ${id}: ${ok ? "PASS" : "FAIL"} — ${detail}`);
 }
 
 // #region S1 — trivial callable async export
@@ -37,7 +37,7 @@ async function runS2() {
 // #region S3 — spawn-detached: export resolves before the spawned background import completes
 async function runS3() {
   const events = [];
-  const origSlowEcho = (await import("../../🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🖥️host-shim.js")).slowEcho;
+  const origSlowEcho = (await import("../../🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🟨️.js")).slowEcho;
   const start = performance.now();
   const result = await probe.spawnDetached(80);
   const exportDoneAt = performance.now() - start;
@@ -65,10 +65,10 @@ await runS2();
 await runS3();
 await runS4();
 
-console.log("[harness] ==== VERDICTS ====");
+console.log("[jcoprobe-callback] ==== VERDICTS ====");
 for (const v of verdicts) {
-  console.log(`[harness] ${v.id}: ${v.ok ? "PASS" : "FAIL"} — ${v.detail}`);
+  console.log(`[jcoprobe-callback] ${v.id}: ${v.ok ? "PASS" : "FAIL"} — ${v.detail}`);
 }
 const allPass = verdicts.every((v) => v.ok);
-console.log(`[harness] overall: ${allPass ? "ALL PASS" : "SOME FAILED"}`);
+console.log(`[jcoprobe-callback] overall: ${allPass ? "ALL PASS" : "SOME FAILED"}`);
 process.exit(allPass ? 0 : 1);

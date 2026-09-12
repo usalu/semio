@@ -1,5 +1,6 @@
 use super::*;
 use crate::wfc_engine::model::ModelBuilder;
+use crate::wfc_engine::model_vectors;
 use crate::wfc_engine::oracle;
 use crate::wfc_engine::topology::GraphTopologyBuilder;
 
@@ -363,14 +364,14 @@ mod quick {
         for trial in 0..100 {
             let pattern_count = 1 + rng.next_range(0, 4) as usize;
             let node_count = 1 + rng.next_range(0, 7) as usize;
-            let (model, r) = oracle::testgen::random_model(&mut rng, pattern_count, 0.5);
-            let arcs = oracle::testgen::random_arcs(&mut rng, node_count, r);
+            let (model, r) = model_vectors::random_model(&mut rng, pattern_count, 0.5);
+            let arcs = model_vectors::random_arcs(&mut rng, node_count, r);
             let mut tb = GraphTopologyBuilder::new(node_count);
             for a in &arcs {
                 tb.arc(a.from, a.to, a.relation);
             }
             let topo = tb.build().unwrap();
-            let init_domains = oracle::testgen::full_domains(&model, node_count);
+            let init_domains = model_vectors::full_domains(&model, node_count);
 
             let oracle_result = oracle::enumerate(&model, node_count, &arcs, &init_domains, 1);
             let config = SearchConfig { mode: SearchMode::Backtrack, ..Default::default() };
@@ -402,14 +403,14 @@ mod quick {
         for trial in 0..100 {
             let pattern_count = 1 + rng.next_range(0, 4) as usize;
             let node_count = 1 + rng.next_range(0, 7) as usize;
-            let (model, r) = oracle::testgen::random_model(&mut rng, pattern_count, 0.5);
-            let arcs = oracle::testgen::random_arcs(&mut rng, node_count, r);
+            let (model, r) = model_vectors::random_model(&mut rng, pattern_count, 0.5);
+            let arcs = model_vectors::random_arcs(&mut rng, node_count, r);
             let mut tb = GraphTopologyBuilder::new(node_count);
             for a in &arcs {
                 tb.arc(a.from, a.to, a.relation);
             }
             let topo = tb.build().unwrap();
-            let init_domains = oracle::testgen::full_domains(&model, node_count);
+            let init_domains = model_vectors::full_domains(&model, node_count);
 
             let oracle_result = oracle::enumerate(&model, node_count, &arcs, &init_domains, 1);
             let config = SearchConfig { mode: SearchMode::Backtrack, nogood: NogoodConfig { enabled: true, max_len: 8, max_count: 64 }, ..Default::default() };
@@ -435,14 +436,14 @@ mod quick {
         for trial in 0..40 {
             let pattern_count = 1 + rng.next_range(0, 4) as usize;
             let node_count = 1 + rng.next_range(0, 6) as usize;
-            let (model, r) = oracle::testgen::random_model(&mut rng, pattern_count, 0.6);
-            let arcs = oracle::testgen::random_arcs(&mut rng, node_count, r);
+            let (model, r) = model_vectors::random_model(&mut rng, pattern_count, 0.6);
+            let arcs = model_vectors::random_arcs(&mut rng, node_count, r);
             let mut tb = GraphTopologyBuilder::new(node_count);
             for a in &arcs {
                 tb.arc(a.from, a.to, a.relation);
             }
             let topo = tb.build().unwrap();
-            let init_domains = oracle::testgen::full_domains(&model, node_count);
+            let init_domains = model_vectors::full_domains(&model, node_count);
 
             let oracle_result = oracle::enumerate(&model, node_count, &arcs, &init_domains, 10_000);
             let config = SearchConfig::default();

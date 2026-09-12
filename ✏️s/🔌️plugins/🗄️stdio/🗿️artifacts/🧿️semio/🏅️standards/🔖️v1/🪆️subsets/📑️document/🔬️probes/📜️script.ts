@@ -13,7 +13,7 @@
 // parses the CommonMark. The pipeline compares the emitted `measurements`; this file states facts about
 // files and nothing else.
 //
-// The readers are deliberately DIFFERENT LIBRARIES from the writers in `../🏗️generator/📜️script.ts`
+// The readers are deliberately DIFFERENT LIBRARIES from the writers in `../🏭️generator/📜️script.ts`
 // (`jszip` + `@xmldom/xmldom` write docx, `mdast-util-to-markdown` writes md). A reading produced by the
 // library that did the writing would confirm its own serializer instead of checking the bytes.
 //

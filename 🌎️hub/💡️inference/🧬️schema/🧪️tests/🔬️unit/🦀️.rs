@@ -168,7 +168,7 @@ fn hub_inference_exports_agree_with_the_rust_decoders_field_for_field() {
     let request = InferenceJobReconcileRequestV1::decode(&serde_json::to_vec(&reconcile["request"]).expect("bytes")).expect("reconcile request decodes");
     assert_eq!(encoded(&request), declared(&module, "InferenceJobReconcileRequestV1", "required"));
 
-    #[cfg(feature = "test-support")]
+    #[cfg(feature = "integration-fixtures")]
     {
         let checkpoint: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⏸️gis-inference-checkpoint-control-v1/🔣️.json")).expect("checkpoint fixture");
         let frame: GisInferenceCheckpointControlFrameV1 = serde_json::from_value(checkpoint["frames"][0]["frame"].clone()).expect("checkpoint frame decodes");

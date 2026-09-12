@@ -660,3 +660,9 @@ const testBrowserActorCodegenManifest = createBrowserBundleTestsInstance.testBro
 const testClosedBrowserActorBundle = createBrowserBundleTestsInstance.testClosedBrowserActorBundle;
 const testBrowserHostActivation = createBrowserBundleTestsInstance.testBrowserHostActivation;
 
+if (import.meta.main) {
+  const command = process.argv[2] ?? "runtime-check";
+  assert(["runtime-check", "pending-host-close-check"].includes(command), `actor import test: unknown command ${command}`);
+  const { testCanonicalActorAsyncImport } = await import("./🧪️tests/🌊️actor-import/🟦️.ts");
+  await testCanonicalActorAsyncImport(browserActorRepoRoot, join(import.meta.dir, "dist", command), undefined, closedBrowserActorBundle, true);
+}

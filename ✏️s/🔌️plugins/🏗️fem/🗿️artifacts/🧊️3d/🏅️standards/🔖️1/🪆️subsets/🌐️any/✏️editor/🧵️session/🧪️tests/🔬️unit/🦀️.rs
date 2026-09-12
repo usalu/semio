@@ -1,5 +1,70 @@
 use super::*;
 
+#[test]
+fn fem3d_numerical_child_retains_every_outcome_until_bounded_retirement() {
+    use semio_framework_job::{Checkpoint, CommitCandidate, JobFault, JobPayloadStream, JOB_PAYLOAD_PAGE_BYTES};
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧪️tests/🪟️window-config-contract/🧫️fixtures/🧒️child-outcomes/🔣️.json")).expect("neutral child outcomes");
+    let operation = semio_framework_job::Operation::new(OperationId(991), RevisionId(997), Generation(1009), 0);
+    let payload = |stream| {
+        let mut sequence = 0;
+        StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence)
+            .payload_from_bytes(stream, b"retained-child-state").expect("admitted child payload")
+    };
+    for row in corpus["cases"].as_array().expect("cases") {
+        let kind = row["kind"].as_str().expect("kind");
+        let outcome = match kind {
+            "preview" => StepOutcome::PreviewReady(payload(JobPayloadStream::Preview)),
+            "checkpoint" => StepOutcome::CheckpointReady(Checkpoint { applied_progress: 1, state: payload(JobPayloadStream::CheckpointState) }),
+            "complete" => StepOutcome::Complete(CommitCandidate { state: payload(JobPayloadStream::CommitState), output: payload(JobPayloadStream::CommitOutput) }),
+            "fault" => StepOutcome::Fault(JobFault { detail: payload(JobPayloadStream::Fault) }),
+            _ => unreachable!(),
+        };
+        let mut child = Box::new(Fem3dNumericalChild::new());
+        let result = child.observe_child_outcome(outcome);
+        assert_eq!(result.is_err(), kind == "fault");
+        if let Ok(complete) = result { assert_eq!(complete, kind == "complete"); }
+        let pointer = child.child_outcome.as_ref().expect("exact retained outcome") as *const StepOutcome;
+        let doc = Fem3dSnapshot::default();
+        let mut solver = Fem3dSolverView::new(freshness(19), 0);
+        let mut backing = Fem3dBackingCredit::new();
+        let mut sequence = 0;
+        for budget in [StepBudget::new(0, u64::MAX), StepBudget::new(1, 0)] {
+            let mut context = StepContext::new(operation.operation, operation.generation, budget, semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            assert_eq!(child.step(&doc, &mut solver, &mut backing, freshness(19), operation, &mut context), Ok(false));
+            assert_eq!(child.child_outcome.as_ref().expect("yield retains outcome") as *const StepOutcome, pointer);
+            assert!(!child.child_outcome.as_ref().expect("payload still live").terminal_is_empty());
+        }
+        let cancelled = semio_framework_job::root_cancel_token();
+        cancelled.cancel_now();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), cancelled, || Some(0), &mut sequence);
+        assert!(child.step(&doc, &mut solver, &mut backing, freshness(19), operation, &mut context).is_err());
+        assert_eq!(child.child_outcome.as_ref().expect("cancellation retains outcome") as *const StepOutcome, pointer);
+        assert_eq!(child.close_child_outcome(0), Some((false, 0, 0)));
+        assert_eq!(child.close_child_outcome(JOB_PAYLOAD_PAGE_BYTES - 1), Some((false, 0, 0)));
+        assert_eq!(child.child_outcome.as_ref().expect("retained without grant") as *const StepOutcome, pointer);
+        let mut released = 0;
+        for _ in 0..8 {
+            match child.close_child_outcome(JOB_PAYLOAD_PAGE_BYTES) {
+                Some((false, items, bytes)) => {
+                    assert!(items <= 1);
+                    assert!(bytes <= JOB_PAYLOAD_PAGE_BYTES);
+                    released += bytes / JOB_PAYLOAD_PAGE_BYTES;
+                }
+                None => break,
+                other => panic!("unexpected child close {other:?}"),
+            }
+        }
+        assert_eq!(released, row["pages"].as_u64().expect("pages") as usize);
+        assert!(child.child_outcome.is_none());
+        let mut complete = false;
+        for _ in 0..256 {
+            if child.close_step(JOB_PAYLOAD_PAGE_BYTES).0 { complete = true; break; }
+        }
+        assert!(complete, "all numerical owners close");
+    }
+    eprintln!("[DEBUG] FEM3D retained preview, checkpoint, commit state/output and fault pages through exact bounded close");
+}
+
 fn freshness(generation: u64) -> Fem3dVisualFreshness {
     Fem3dVisualFreshness { app_instance_id: 7, model_revision: 11, document_generation: generation, operation: 13, numerical_preview_sequence: 17, surface_generation: generation, renderer_scene_generation: generation }
 }
@@ -213,18 +278,22 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview = 0;
     let mut terminal = false;
+    let mut last_stage = String::new();
     for _ in 0..200_000 {
         let deadline = semio_framework_job::default_now_us().unwrap().checked_add(8_000).unwrap();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, deadline), cancel.clone(), semio_framework_job::default_now_us, &mut preview);
         let started = std::time::Instant::now();
-        terminal = child.step(&doc, &mut fields, &mut backing, freshness(19), operation, &mut context).expect("production numerical child");
-        assert_eq!(context.fuel_remaining(), 0);
+        terminal = child.step(&doc, &mut fields, &mut backing, freshness(19), operation, &mut context).unwrap_or_else(|fault| {
+            panic!("[DEBUG] production numerical child at {:?}/{}: {}", child.stage, context.stage(), String::from_utf8_lossy(&fault))
+        });
+        assert_eq!(context.fuel_remaining(), 0, "numerical stage {:?}, context {}, terminal={terminal}", child.stage, context.stage());
+        if last_stage != context.stage() { last_stage.clear(); last_stage.push_str(context.stage()); }
         assert!(started.elapsed().as_micros() < 8_000);
         if terminal {
             break;
         }
     }
-    assert!(terminal);
+    assert!(terminal, "[DEBUG] numerical stopped at {:?}/{last_stage}, PCG={:?}, subspace={:?}, pending outcome={}", child.stage, child.pcg.as_ref().map(PcgJob::visual_progress), child.subspace.as_ref().map(SubspaceIterationJob::visual_progress), child.child_outcome.is_some());
     assert!(fields.ready());
     assert!((0..fields.len).filter_map(|index| fields.scalar(index)).any(|scalar| scalar.displacement != [0.0; 3] || scalar.reaction != [0.0; 3]));
     assert!((0..fields.len).filter_map(|index| fields.scalar(index)).any(|scalar| scalar.eigen_estimate > 0.0 && scalar.mode_shape != [0.0; 3]));
@@ -392,4 +461,72 @@ fn fem3d_queued_running_and_state_drop_publish_exact_identity_and_drain_one_owne
     assert_eq!(state_recovery.publication.get(), Some((state_identity, MountedRecoveryPublication::Recover)));
     assert_eq!(state_recovery.owner.lock().unwrap().as_ref().map(|state| state.identity), Some(state_identity));
     drain_recovery_state(&mut registry, state_identity, state_shell);
+}
+
+#[test]
+fn fem3d_window_config_mounted_close_preserves_foreign_instance_in_same_slot() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧪️tests/🪟️window-config-contract/🧫️fixtures/🧹️mounted-close/🔣️.json")).expect("mounted close neutral fixture");
+    for row in fixture["cases"].as_array().expect("close cases") {
+        let closing = row["closingInstanceId"].as_u64().expect("closing instance") as u32;
+        let pending = row["before"]["pendingInstanceId"].as_u64().map(|id| id as u32);
+        let slot = closing as usize % ACTIVE_CAPACITY;
+        if let Some(pending) = pending {
+            assert_eq!(pending as usize % ACTIVE_CAPACITY, slot);
+        }
+        MOUNTED.with(|registry| {
+            let mut registry = registry.borrow_mut();
+            assert!(registry.pending[slot].is_none());
+            registry.pending[slot] = pending.map(|app_instance_id| PendingSnapshot {
+                render: AppRenderOperationContext { app_instance_id, base_revision: RevisionId(1), generation: Generation(1), canonical_base_revision: [1; 32] },
+                preflight: SnapshotPreflight::new(),
+            });
+        });
+        let first = close_step(closing, 1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY);
+        if pending == Some(closing) {
+            assert_eq!(first, PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            assert_eq!(close_step(closing, 1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY), PluginCloseStep::Complete);
+        } else {
+            assert_eq!(first, PluginCloseStep::Complete);
+        }
+        assert!(terminal_is_empty(closing));
+        let remaining = MOUNTED.with(|registry| registry.borrow().pending[slot].as_ref().map(|pending| pending.render.app_instance_id));
+        assert_eq!(serde_json::json!({ "pendingInstanceId": remaining }), row["expected"], "{}", row["id"]);
+        if let Some(remaining) = remaining {
+            assert!(!terminal_is_empty(remaining));
+            assert_eq!(close_step(remaining, 1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            assert_eq!(close_step(remaining, 1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY), PluginCloseStep::Complete);
+        }
+    }
+    eprintln!("[DEBUG] FEM 3D mounted close preserved exact app ownership for three neutral cases");
+}
+
+#[test]
+fn fem3d_visual_close_grants_retain_exact_backing_until_admitted() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧪️tests/🪟️window-config-contract/🧫️fixtures/💳️visual-close-grants/🔣️.json")).expect("neutral close grants");
+    for row in corpus["cases"].as_array().expect("cases") {
+        let doc = Fem3dSnapshot::default();
+        let mut candidate = Fem3dPageVisualJob::new(freshness(19), credit(&doc));
+        let mut backing = Fem3dBackingCredit::new();
+        match row["owner"].as_str().expect("owner") {
+            "region" => candidate.region_order = Some(FixedOrder::new(&mut backing).expect("region credit")),
+            "element" => candidate.element_order = Some(FixedOrder::new(&mut backing).expect("element credit")),
+            owner => panic!("unknown owner {owner}"),
+        }
+        let pointer = |job: &Fem3dPageVisualJob| job.region_order.as_ref().map(|order| order.slots.as_ptr()).or_else(|| job.element_order.as_ref().map(|order| order.slots.as_ptr()));
+        let before_pointer = pointer(&candidate);
+        let owner_bytes = candidate.backing_usage().1;
+        let maximum_bytes = usize::try_from(row["maximumBytes"].as_u64().expect("grant")).expect("native grant");
+        let retained = row["expected"]["retained"].as_bool().expect("retained state");
+        let step = candidate.close_step(maximum_bytes);
+        assert_eq!(step, (false, usize::from(!retained), if retained { 0 } else { owner_bytes }), "{}", row["id"]);
+        assert!(step.2 <= maximum_bytes);
+        assert!(backing.release(step.1, step.2));
+        assert_eq!(candidate.backing_usage().0, usize::from(retained));
+        assert_eq!(pointer(&candidate), if retained { before_pointer } else { None });
+        let cleanup = candidate.close_step(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY);
+        assert!(backing.release(cleanup.1, cleanup.2));
+        assert!(candidate.close_step(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY).0);
+        assert!(candidate.terminal_is_empty() && backing.terminal_is_empty());
+    }
+    eprintln!("[DEBUG] FEM visual close grants preserve exact backing for all six neutral cases");
 }

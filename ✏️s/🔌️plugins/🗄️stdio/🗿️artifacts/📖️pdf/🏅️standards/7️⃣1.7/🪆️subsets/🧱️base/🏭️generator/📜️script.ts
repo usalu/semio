@@ -39,15 +39,15 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 //#region 🧬️Contract
 const HERE = import.meta.dir;
 const SUBSET = "base";
-const ASSET_ENGINE = join(HERE, "🦀️engine");
-const MUTATION_ENGINE = join(HERE, "⚖️lopdf-engine");
+const ASSET_ENGINE = join(HERE, "🧫️fixtures", "📦️packages", "🦀️rust");
+const MUTATION_ENGINE = join(HERE, "🔁️codec", "📦️packages", "🦀️rust");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 const ORACLE_ID = "lopdf-pdf-1-7-base-mutate-reader";
 const COMPARISON_PROFILE = "semantic-pdf-structural-base-v1";
 const ASSET_RECIPE = "report-strip";
 const ASSET_DIRECTORY = "📊️report-strip";
 const ASSET_FILE = "📊️report-strip.pdf";
-/** 🧾️ Kept in step with `⚖️lopdf-engine/src/lib.rs::KINDS`. */
+/** 🧾️ Kept in step with `🔁️codec/🦀️.rs::KINDS`. */
 const KINDS: readonly string[] = ["insert-page", "remove-page", "move-page", "set-page-media-box", "set-page-crop-box", "set-page-rotation", "set-page-content", "append-page-content", "set-info", "insert-object", "remove-object", "set-object-value", "set-dict-entry", "remove-dict-entry", "set-trailer-entry", "remove-trailer-entry"];
 const FIXTURE_DIRECTORY_BY_KIND: Readonly<Record<string, string>> = {
   "insert-page": "📥️insert-page",
@@ -136,7 +136,7 @@ async function manifests(): Promise<void> {
       comparisonProfile: COMPARISON_PROFILE,
       reproducible: true,
       family: "mechanical",
-      notes: `A two-page lopdf-built seed with the ${kind} mutation applied through lopdf's own public COS API (⚖️lopdf-engine/src/lib.rs::apply). ${BEFORE_FILENAME} is the arranged seed and ${AFTER_FILENAME} is the result lopdf wrote. Observability is checked before a pair is written.`,
+      notes: `A two-page lopdf-built seed with the ${kind} mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ${BEFORE_FILENAME} is the arranged seed and ${AFTER_FILENAME} is the result lopdf wrote. Observability is checked before a pair is written.`,
     });
   }
   console.log(JSON.stringify(entries, null, 2));

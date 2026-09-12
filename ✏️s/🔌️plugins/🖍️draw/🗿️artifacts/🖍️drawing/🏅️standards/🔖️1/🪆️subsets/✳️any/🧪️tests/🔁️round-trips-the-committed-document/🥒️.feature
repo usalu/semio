@@ -11,7 +11,7 @@ Feature: Parse and reprint the real committed example without passing bytes thro
   `identity-round-trip` would still be refused by a second implementation: this subset's committed
   snapshot text grammar is the generic `family-scene` canvas grammar, and the committed artifact
   carries no `layers` block at all. Because this case records the same
-  `drawing-mutation-semantics` no-oracle decision (in `../../🔮️oracle/🔣️.json`), the runner executes
+  `drawing-mutation-semantics` no-oracle decision (in `../../🔮️oracles/🔣️.json`), the runner executes
   NO oracle role, so every assertion below lives in the subject handler.
 
   @id-identity-round-trip

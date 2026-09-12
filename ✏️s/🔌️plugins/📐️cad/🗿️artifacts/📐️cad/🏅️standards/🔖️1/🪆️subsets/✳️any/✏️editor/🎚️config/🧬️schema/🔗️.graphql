@@ -1,71 +1,17 @@
-type CadHoverTarget {
-  objectId: String
-  mode: String
-  id: Int
-}
-type CadSelectionTargets {
-  mesh: Boolean!
-  vertex: Boolean!
-  edge: Boolean!
-  face: Boolean!
-}
-type CadComponentSelection {
-  targets: CadSelectionTargets!
-  mode: String!
-  ids: [Int!]!
-}
-type CadSunConfig {
-  enabled: Boolean!
-  azimuth: Float!
-  elevation: Float!
-  intensity: Float!
-  color: String!
-}
-type CadProjectionDsl {
-  kind: String!
-}
-type CadCamera {
-  position: [Float!]!
-  target: [Float!]!
-  zoom: Float!
-  fov: Float!
-  projection: CadProjectionDsl!
-}
-type CadDislocateOptions {
-  moveEnabled: Boolean!
-  rotateEnabled: Boolean!
-}
-
-
 type CadConfig {
-  selectedObjectIds: [String!]! @state(class: CONFIG)
   selectedNodeIds: [String!]! @state(class: CONFIG)
-  selectionMethod: String! @state(class: CONFIG)
-  hoveredObjectId: String @state(class: CONFIG)
-  hoveredTarget: CadHoverTarget @state(class: CONFIG)
-  activeObjectId: String @state(class: CONFIG)
-  componentSelection: CadComponentSelection! @state(class: CONFIG)
+  hoveredReferenceId: String @state(class: CONFIG)
   engagementInput: String! @state(class: CONFIG)
   engagementStep: String! @state(class: CONFIG)
   activeExampleId: String @state(class: CONFIG)
   selectedReferenceModelDefinitionId: String @state(class: CONFIG)
   selectedReferenceId: String @state(class: CONFIG)
-  selectedPrimitiveId: String @state(class: CONFIG)
-  selectedPrimitiveKind: String @state(class: CONFIG)
   engagementPane: String @state(class: CONFIG)
   engagementSessionJson: String @state(class: CONFIG)
   engagementPreviewOperationJson: String @state(class: CONFIG)
   """Lossless nonnegative signed-32 generation; maximum 2147483647."""
   engagementPreviewGeneration: Int! @state(class: CONFIG)
   lastFinalizedInteractionId: String @state(class: CONFIG)
-  sun: CadSunConfig! @state(class: CONFIG)
-  camera: CadCamera! @state(class: CONFIG)
-  cameraBuilding: CadCamera! @state(class: CONFIG)
-  cameraEnergy: CadCamera! @state(class: CONFIG)
-  cameraStructureClassic: CadCamera! @state(class: CONFIG)
-  dislocateShape: CadDislocateOptions! @state(class: CONFIG)
-  dislocateBuilding: CadDislocateOptions! @state(class: CONFIG)
-  dislocateEnergy: CadDislocateOptions! @state(class: CONFIG)
-  dislocateStructureClassic: CadDislocateOptions! @state(class: CONFIG)
   contributionsJson: String! @state(class: CONFIG)
 }
+

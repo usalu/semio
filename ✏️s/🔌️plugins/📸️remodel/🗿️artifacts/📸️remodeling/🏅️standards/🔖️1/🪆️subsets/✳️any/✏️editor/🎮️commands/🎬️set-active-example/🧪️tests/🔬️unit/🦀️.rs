@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::remodeling::examples::REMODELING_EXAMPLES;
-use crate::editor::remodeling::testkit::{app, dispatch};
+use crate::editor::remodeling::unit_tests::context::{app, dispatch};
 use crate::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config/🧬️schema/🧬️mutations/☑️change-selected-check-index",
+  "semanticKind": "change-selected-check-index",
+  "displayName": "Change Selected Check Index",
+  "emoji": "☑️",
+  "aggregateVariant": "ChangeSelectedCheckIndex",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-selected-check-index",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "text",
+    "binary"
+  ]
+}

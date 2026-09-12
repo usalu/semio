@@ -31,7 +31,7 @@ Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
   says nothing about arrays and nothing about member insertion or deletion beyond uniqueness. That is
   the honest finding for them and it is recorded here rather than dressed up as a difference.
 
-  The reference runs in PYTHON: `simplejson`, registered by this subset's own 🧪️oracle contribution.
+  The reference runs in PYTHON: `simplejson`, registered by this subset's own 🔮️oracles contribution.
   RFC 7493 restricts the JSON value space, so the reference has to surface the three facts the
   profile turns on — every object's ORDERED member list including any duplicate names, the exact
   number LEXEME, and the decoded string. `simplejson`'s `object_pairs_hook` reports duplicates that a

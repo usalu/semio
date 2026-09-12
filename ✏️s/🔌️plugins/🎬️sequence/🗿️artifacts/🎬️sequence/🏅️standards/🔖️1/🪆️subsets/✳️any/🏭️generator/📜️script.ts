@@ -43,8 +43,8 @@ const step = join(subsets, "🪜️step");
 const dependency = join(subsets, "🔗️dependency");
 const stepFixtures = join(step, "🧫️fixtures");
 const dependencyFixtures = join(dependency, "🧫️fixtures");
-const csvEngine = join(here, "📊️csv-engine");
-const jsonEngine = join(here, "🧾️json-engine");
+const csvEngine = join(here, "📊️csv", "📦️packages", "🦀️rust");
+const jsonEngine = join(here, "🧩️json", "📦️packages", "🦀️rust");
 const CSV_KINDS = ["create-step", "delete-step", "duplicate-step", "edit-step-params"] as const;
 const JSON_KINDS = ["change-step-collapsed", "connect-steps", "disconnect-steps", "move-step"] as const;
 const CSV_DIRECTORIES = {
@@ -167,7 +167,7 @@ const manifests = (): void => {
     const ownerSubset = owner === step ? "step" : "dependency";
     const ownedEntries = entries.filter((entry) => entry.target.subset === ownerSubset);
     writeFileSync(join(owner, "🧫️fixtures", "🔣️.json"), `${JSON.stringify(ownedEntries, null, 2)}\n`);
-    const catalogPath = join(owner, "🔮️oracle", "🔣️.json");
+    const catalogPath = join(owner, "🔮️oracles", "🔣️.json");
     const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
     const keep = (catalog.fixtureManifests ?? []).filter((entry: { family?: string }) => entry.family !== "sequence-csv-carrier" && entry.family !== "sequence-json-carrier");
     catalog.fixtureManifests = [...keep, ...ownedEntries];

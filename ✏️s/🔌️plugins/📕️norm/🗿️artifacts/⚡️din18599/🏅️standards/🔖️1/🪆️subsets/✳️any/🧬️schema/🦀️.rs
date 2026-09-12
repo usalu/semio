@@ -709,8 +709,8 @@ pub fn check_primary_energy(inputs: &BalancingInputs) -> Result<CheckResult, Nor
 
 //#endregion 🔖️ComplianceHelpers
 
-//#region 🧪️ComplianceHelpersTests
+//#region 🧪️ComplianceTests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️compliance-helpers/🦀️.rs"]
-mod compliance_helpers_tests;
-//#endregion 🧪️ComplianceHelpersTests
+#[path = "🧪️tests/⚖️compliance/🦀️.rs"]
+mod compliance_tests;
+//#endregion 🧪️ComplianceTests

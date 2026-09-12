@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/plugin/empty-state-contract.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "json",
+    "text",
+    "pack"
+  ],
+  "properties": {
+    "json": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "accepted"
+        ],
+        "properties": {
+          "value": true,
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "text": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "accepted"
+        ],
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "pack": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "accepted"
+        ],
+        "properties": {
+          "value": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "record": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "text": {
+      "type": "string",
+      "pattern": "^\\s*$"
+    },
+    "pack": {
+      "type": "array",
+      "maxItems": 0
+    }
+  }
+}

@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::editor::block3d::testkit::{new_app, render as render_body};
+use crate::editor::block3d::unit_tests::context::{new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_inspector_fields() {

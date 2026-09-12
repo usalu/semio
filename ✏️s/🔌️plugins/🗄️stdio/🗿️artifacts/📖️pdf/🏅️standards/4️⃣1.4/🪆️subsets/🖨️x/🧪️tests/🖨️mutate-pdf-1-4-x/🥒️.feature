@@ -5,7 +5,7 @@
 Feature: Apply every concrete PDF 1.4 X mutation to a real document
   Every scenario copies this subset's own committed lopdf-generated seed document (the same
   one this catalog's oracle already registers as third-party-generated evidence for its
-  per-mutation fixture pairs, in this subset's own 🔮️oracle/🔣️.json, built by this subset's
+  per-mutation fixture pairs, in this subset's own 🔮️oracles/🔣️.json, built by this subset's
   own 🏭️generator) before changing it.
   Forward operations must change the independently read projection. Inverse scenarios call
   the subject's real concrete inverse planner, restore the full snapshot, and compare with lopdf.

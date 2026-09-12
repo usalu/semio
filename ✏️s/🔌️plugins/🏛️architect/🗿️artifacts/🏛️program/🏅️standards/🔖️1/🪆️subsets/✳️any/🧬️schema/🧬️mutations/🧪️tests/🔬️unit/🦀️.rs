@@ -210,7 +210,7 @@ async fn program_mutation_op_text_round_trips_a_sample_of_variants() {
 
 //#region ⚖️SemanticLaws
 /// ⚖️ `assert_mutation_inverse_law`/`assert_mutation_diff_absorb_law`
-/// (`protocol::os_spr::testkit`, added by the Wave 0 mechanism pass) against the three most
+/// (`protocol::os_spr::protocol_laws`, added by the Wave 0 mechanism pass) against the three most
 /// structurally distinct new kinds: an id-keyed collection create/delete pair, a document-level
 /// scalar facet rename, and an edge upsert.
 #[semio_framework_async_macros::async_test]
@@ -219,18 +219,18 @@ async fn create_stakeholder_obeys_the_inverse_and_absorb_laws() {
     let mut new_stakeholder = base.stakeholders[0].clone();
     new_stakeholder.header.id = EntityId::new_serial("stakeholder", "stakeholder");
     let create = ProgramMutation::CreateStakeholder(super::super::create_stakeholder::CreateStakeholder { stakeholder: new_stakeholder.clone() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &create).await;
     let d1 = create.diff(&base).into_parts().0;
     let after = d1.apply(&base).expect("valid mutation diff");
     let d2 = ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::RenameStakeholder { id: new_stakeholder.header.id, new_name: "Renamed".into() }).diff(&after).into_parts().0;
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_meta_obeys_the_inverse_law() {
     let base = sample_plugin();
     let rename = ProgramMutation::RenameMeta(super::super::rename_meta::RenameMeta { new_title: "Renamed Program".into() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &rename).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &rename).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -239,7 +239,7 @@ async fn connect_adjacency_obeys_the_inverse_law() {
     let mut updated = base.adjacencies[0].clone();
     updated.weight = 9.0;
     let connect = ProgramMutation::ConnectAdjacency(super::super::connect_adjacency::ConnectAdjacency { adjacency: updated });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &connect).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &connect).await;
 }
 //#endregion ⚖️SemanticLaws
 

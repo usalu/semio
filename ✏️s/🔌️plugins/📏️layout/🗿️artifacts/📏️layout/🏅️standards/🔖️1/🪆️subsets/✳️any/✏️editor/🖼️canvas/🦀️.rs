@@ -1,10 +1,11 @@
 //! 🖼️ Layout play app — shared canvas-scene chrome. Config-typed helpers with more than one taxonomy
 //! consumer (both windows' `render()` call `canvas_layers`; `active_page` is also reached by the pointer
 //! commands' hit-testing) live here rather than in the artifact engine, per the rule: a helper that takes
-//! an app-only view-state type (`LayoutConfig`) as a parameter stays at app level no matter how many
+//! an exact window-state type (`LayoutWindowConfig`) as a parameter stays at this shared renderer no matter how many
 //! consumers it has, because artifacts must never depend on apps.
 
-use crate::editor::layout::config::LayoutConfig;
+use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig;
+use crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
 use crate::editor::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
 use crate::{LayoutSnapshot, Page};
 use serde_json::{json, Value};
@@ -12,7 +13,7 @@ use serde_json::{json, Value};
 //#region 🔖️ActivePage
 /// 👁️ The page shown/edited on the Blueprint surface — the config's `active_page_id`, falling back to
 /// the document's first page when that id no longer resolves.
-pub fn active_page<'a>(doc: &'a LayoutSnapshot, config: &LayoutConfig) -> Option<&'a Page> {
+pub fn active_page<'a>(doc: &'a LayoutSnapshot, config: &LayoutWindowConfig) -> Option<&'a Page> {
     doc.pages.iter().find(|page| page.id == config.active_page_id).or_else(|| doc.pages.first())
 }
 //#endregion 🔖️ActivePage
@@ -152,13 +153,13 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
 /// selected/hovered chrome strokes `display_list_to_host_layers` can still draw are simply never lit
 /// server-side; flagged, not fixed here (framework file, out of this crate's remit — ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn canvas_layers(engine: &mut LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig, blueprint: bool) -> String {
+pub fn canvas_layers(engine: &mut LayoutEngine, doc: &LayoutSnapshot, config: &LayoutWindowConfig, transient: &LayoutWindowTransient, blueprint: bool) -> String {
     let page = match active_page(doc, config) {
         Some(page) => page,
         None => return "[]".into(),
     };
     let list = build_display_list_for_page(engine, doc, page, &page.id, &[], None, blueprint);
-    let layers = display_list_to_host_layers(&list, blueprint, &config.drop_preview);
+    let layers = display_list_to_host_layers(&list, blueprint, &transient.drop_preview);
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 //#endregion 🔖️CanvasScene

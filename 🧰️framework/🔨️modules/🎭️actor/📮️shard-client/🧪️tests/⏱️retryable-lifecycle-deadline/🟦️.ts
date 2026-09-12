@@ -32,7 +32,7 @@ export async function registerRetryableLifecycleDeadlineTests(
     it("classifies every host-fixture case identically in the generated worker and never traps an eligible one", async () => {
       const { default: fixture } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️lifecycle/🧫️fixtures/🔣️.json");
       const vm = await import("node:vm");
-      const { shardWorkerSource } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
+      const { shardWorkerSource } = await import("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts");
       const posted: Record<string, unknown>[] = [];
       let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
       let fault: unknown = null;

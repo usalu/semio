@@ -1,6 +1,6 @@
 //#region 🔌️Adapters
 import { loadConfigFromFile } from "vite";
-import type { OwnedTestProjectConfig } from "../../../../../../🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏗️build-tooling.ts";
+import type { OwnedTestProjectConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🗄️Configuration

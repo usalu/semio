@@ -9,12 +9,12 @@ import { tmpdir } from "node:os";
 import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import ts from "typescript";
-import { inspectTestLayoutSources, repoRootFromHere, testTaxonomy, validateCaseContract, type DiscoveredCase, type OracleRegistry, type TestLayoutFinding, type TestLayoutSource } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { inspectTestLayoutSources, repoRootFromHere, scanTestLayout, TEST_LAYOUT_FINDING_CODES, testTaxonomy, validateCaseContract, type DiscoveredCase, type OracleRegistry, type TestLayoutFinding, type TestLayoutSource } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import protocol from "../../🧬️schema/🔣️.json";
 import vectors from "../../🧫️fixtures/📐️test-layout/🔣️.json";
 
 type Expected = Readonly<{ code: string; path: string; line: number | null }>;
-type VectorCase = Readonly<{ id: string; sources: readonly TestLayoutSource[]; expected: readonly Expected[] }>;
+type VectorCase = Readonly<{ id: string; sources: readonly TestLayoutSource[]; directories?: readonly string[]; expected: readonly Expected[] }>;
 
 const identity = (finding: Expected | TestLayoutFinding): Expected => ({ code: finding.code, path: finding.path, line: finding.line });
 const sort = (findings: readonly Expected[]): Expected[] => [...findings].sort((left, right) => left.path.localeCompare(right.path) || left.code.localeCompare(right.code) || (left.line ?? 0) - (right.line ?? 0));
@@ -22,13 +22,29 @@ const taxonomy = testTaxonomy(repoRootFromHere());
 
 describe("📐️ canonical test layout", () => {
   test("language-neutral vectors satisfy their schema", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(protocol.$defs.TestLayoutCases);
+    const compiler = new Ajv({ allErrors: true, strict: false });
+    compiler.addSchema(protocol);
+    const validate = compiler.getSchema(`${protocol.$id}#/$defs/TestLayoutCases`)!;
     expect(validate(vectors)).toBe(true);
     expect(validate.errors).toBeNull();
+    expect(protocol.$defs.TestLayoutFindingCode.enum).toEqual([...TEST_LAYOUT_FINDING_CODES]);
   });
 
   for (const vector of vectors.cases as readonly VectorCase[]) test(vector.id, () => {
-    expect(sort(inspectTestLayoutSources(taxonomy, vector.sources).map(identity))).toEqual(sort(vector.expected));
+    expect(sort(inspectTestLayoutSources(taxonomy, vector.sources, vector.directories).map(identity))).toEqual(sort(vector.expected));
+  });
+
+  test("negative Vitest boot gates agree with TypeScript unary-expression polarity", () => {
+    const source = (vectors.cases as readonly VectorCase[]).find(({ id }) => id === "production-negative-vitest-gate")!.sources[0]!;
+    const root = ts.createSourceFile(source.path, source.source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    let negativeGate = false;
+    const visit = (node: ts.Node): void => {
+      if (ts.isPropertyAccessExpression(node) && node.name.text === "vitest" && ts.isMetaProperty(node.expression)) negativeGate = ts.isPrefixUnaryExpression(node.parent) && node.parent.operator === ts.SyntaxKind.ExclamationToken;
+      ts.forEachChild(node, visit);
+    };
+    visit(root);
+    expect(negativeGate).toBe(true);
+    expect(inspectTestLayoutSources(taxonomy, [source]).some(({ code }) => code === "inline-test-body")).toBe(false);
   });
 
   test("legacy JavaScript suffix classification matches minimatch", () => {
@@ -47,6 +63,52 @@ describe("📐️ canonical test layout", () => {
     }
   });
 
+  test("obsolete testing categories agree with independent segment matching", () => {
+    const stemPattern = `{${taxonomy.testObsoleteCategoryStems.join(",")}}`, testEmojiStemPattern = `{${taxonomy.testObsoleteTestEmojiCategoryStems.join(",")}}`;
+    const testEmoji = taxonomy.testsDirName.slice(0, taxonomy.testsDirName.length - "tests".length), canonical = new Map([["tests", taxonomy.testsDirName], ["fixtures", taxonomy.testFixturesDirName], ["examples", taxonomy.testExamplesDirName], ["oracles", taxonomy.testOraclesDirName]]);
+    const segmenter = new Intl.Segmenter("und", { granularity: "grapheme" });
+    const withoutEmoji = (segment: string): string => {
+      const first = segmenter.segment(segment)[Symbol.iterator]().next().value?.segment ?? "";
+      return /\p{Extended_Pictographic}|\p{Emoji_Presentation}/u.test(first) ? segment.slice(first.length) : segment;
+    };
+    for (const vector of (vectors.cases as readonly VectorCase[]).filter(row => row.id.includes("testing-categor"))) for (const candidate of [...vector.sources.map(({ path }) => ({ path, directory: false })), ...(vector.directories ?? []).map((path) => ({ path, directory: true }))]) {
+      const pathDirectories = candidate.directory ? candidate.path.split("/") : candidate.path.split("/").slice(0, -1), opaque = pathDirectories.includes(taxonomy.testFixturesDirName) || pathDirectories.includes(taxonomy.exampleAssetsDirName);
+      const observed = !opaque && pathDirectories.some((segment, index) => {
+        if (index > 0 && pathDirectories[index - 1] === taxonomy.testsDirName) return false;
+        if (taxonomy.testLegacyDirectoryNames.includes(segment) || taxonomy.testFixtureLegacyDirectoryNames.includes(segment)) return false;
+        const stem = withoutEmoji(segment), expected = canonical.get(stem);
+        return minimatch(stem, stemPattern) || (segment.startsWith(testEmoji) && minimatch(stem, testEmojiStemPattern)) || (expected !== undefined && segment !== expected);
+      });
+      const findings = inspectTestLayoutSources(taxonomy, candidate.directory ? [] : [{ path: candidate.path, source: "" }], candidate.directory ? [candidate.path] : []);
+      expect(findings.some(finding => finding.code === "obsolete-testing-category"), candidate.path).toBe(observed);
+    }
+  });
+
+  test("empty legacy test and fixture directories agree with minimatch", () => {
+    const vector = (vectors.cases as readonly VectorCase[]).find(({ id }) => id === "empty-obsolete-testing-category-directories")!;
+    const testPatterns = taxonomy.testLegacyDirectoryNames.map((name) => `**/${name}`), fixturePatterns = taxonomy.testFixtureLegacyDirectoryNames.map((name) => `**/${name}`);
+    for (const path of vector.directories ?? []) {
+      const findings = inspectTestLayoutSources(taxonomy, [], [path]);
+      expect(findings.some(({ code }) => code === "legacy-test-directory"), path).toBe(testPatterns.some((pattern) => minimatch(path, pattern, { dot: true })));
+      const opaque = minimatch(path, `**/${taxonomy.testFixturesDirName}/**`, { dot: true });
+      expect(findings.some(({ code }) => code === "legacy-fixture-directory"), path).toBe(!opaque && fixturePatterns.some((pattern) => minimatch(path, pattern, { dot: true })));
+    }
+  });
+
+  test("the filesystem scan reports empty obsolete testing directories", async () => {
+    const vector = (vectors.cases as readonly VectorCase[]).find(({ id }) => id === "empty-obsolete-testing-category-directories")!;
+    const root = mkdtempSync(join(tmpdir(), "test-layout-empty-directories-")), taxonomyPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
+    try {
+      mkdirSync(join(root, dirname(taxonomyPath)), { recursive: true });
+      writeFileSync(join(root, taxonomyPath), JSON.stringify(taxonomy));
+      for (const path of vector.directories ?? []) mkdirSync(join(root, path), { recursive: true });
+      const paths = new Set(vector.directories), observed = (await scanTestLayout(root)).filter(({ path }) => paths.has(path)).map(identity);
+      expect(sort(observed)).toEqual(sort(vector.expected));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("fixture manifests agree with independent TOML parsing and Cargo package discovery", () => {
     for (const vector of vectors.cases.filter(row => row.id.startsWith("fixture-manifest-") && row.sources[0]!.path.endsWith("Cargo.toml"))) expect(Bun.TOML.parse(vector.sources[0]!.source)).toEqual(parseToml(vector.sources[0]!.source));
     const vector = vectors.cases.find(row => row.id === "fixture-manifest-workspace-fixture")!;
@@ -62,7 +124,7 @@ describe("📐️ canonical test layout", () => {
       const packages = JSON.parse(observed.stdout).packages as { manifest_path: string }[];
       expect(packages).toHaveLength(1);
       expect(packages[0]!.manifest_path.replaceAll("\\", "/").split("/")).toContain(taxonomy.testFixturesDirName);
-      expect(inspectTestLayoutSources(taxonomy, vector.sources).some(finding => finding.code === "production-fixture-dependency")).toBe(true);
+      expect(inspectTestLayoutSources(taxonomy, vector.sources).some(finding => finding.code === "production-fixture-dependency")).toBe(false);
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
 

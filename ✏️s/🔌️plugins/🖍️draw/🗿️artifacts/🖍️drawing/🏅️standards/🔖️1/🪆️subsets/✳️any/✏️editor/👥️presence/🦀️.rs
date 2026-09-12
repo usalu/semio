@@ -1,6 +1,5 @@
 //! 👥️ Drawing presence — shareable live ephemeral state + mutations.
 
-use crate::DrawingCamera;
 use protocol::Mutation;
 use store::ArtifactPack;
 
@@ -13,13 +12,17 @@ use store::ArtifactPack;
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "drawing.presence")]
 #[dsl(layout = "lines")]
-#[derive(Default)]
 pub struct DrawingPresence {
     pub engagement_input: String,
     #[dsl(block)]
-    pub camera: DrawingCamera,
+    pub camera: store::Viewport2d,
 }
 
+impl Default for DrawingPresence {
+    fn default() -> Self {
+        Self { engagement_input: String::new(), camera: store::Viewport2d { x: 512.0, y: 512.0, zoom: 0.75 } }
+    }
+}
 
 
 impl protocol::MutationDiff<DrawingPresence> for DrawingPresence {
@@ -28,6 +31,18 @@ impl protocol::MutationDiff<DrawingPresence> for DrawingPresence {
     }
     fn absorb(&mut self, other: Self) {
         *self = other;
+    }
+}
+
+impl store::retirement::RetireOwned for DrawingPresence {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        let store::Viewport2d { x, y, zoom } = self.camera;
+        store::retirement::sequence(vec![
+            store::retirement::RetireOwned::retirement(self.engagement_input),
+            store::retirement::leaf(x),
+            store::retirement::leaf(y),
+            store::retirement::leaf(zoom),
+        ])
     }
 }
 
@@ -65,8 +80,8 @@ impl ArtifactPack for DrawingPresence {
             return Ok(Self::default());
         }
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
@@ -86,6 +101,14 @@ pub enum DrawingPresenceMutation {
         #[dsl(block)]
         presence: DrawingPresence,
     },
+}
+
+impl store::retirement::RetireOwned for DrawingPresenceMutation {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        match self {
+            Self::Snapshot { presence } => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(presence)]),
+        }
+    }
 }
 
 impl Mutation<DrawingPresence> for DrawingPresenceMutation {

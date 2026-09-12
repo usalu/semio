@@ -8,8 +8,8 @@
 // 🏭️ Third-party fixture generator for `s.stdio.gif@89a/🧱️base`.
 //
 // The bytes this file produces are written entirely by the real `gif` 0.13 encoder
-// (`🦀️engine/src/main.rs`) — the SAME crate registered as `gif-89a-any-mutate` in
-// `../🔮️oracle/🔣️.json` — never by this repository's own `encode_gif`. This script only marshals:
+// (`🧫️fixtures/🦀️.rs`) — the SAME crate registered as `gif-89a-any-mutate` in
+// `../🔮️oracles/🔣️.json` — never by this repository's own `encode_gif`. This script only marshals:
 // it builds and invokes the Rust binary and reports what it wrote; it computes no GIF bytes itself.
 //
 // Generation and execution are SEPARATE operations, per the shared framework's own rule (a normal
@@ -25,14 +25,14 @@
 //                                   (cross-semio-implementation).
 //   build/build-manifests        — the per-kind before/after recipe corpus, backs the NEW
 //                                   `gif-89a-any-mutate-reader` (third-party-library), via
-//                                   `🦀️engine/src/📖️reader_main.rs` (its own independent codec, never
+//                                   `🧫️fixtures/📖️reader/🦀️.rs` (its own independent codec, never
 //                                   sharing code with `main.rs` or `🦀️oracle.rs`).
 //
 //   bun 📜️script.ts build          [--only <recipe-id>] [--out <dir>]   # writes <out>/<id>/{before,after}.gif
 //   bun 📜️script.ts build-manifests [--only <recipe-id>]                 # prints the fixtureManifests block (JSON)
 //
 // @see ../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️gif-las-pdf17-findings.md
-// @see ./🦀️engine/src/📖️reader_main.rs — the `build`/`project` codec this file's `build`/`build-manifests` commands shell out to
+// @see ./🧫️fixtures/📖️reader/🦀️.rs — the `build`/`project` codec this file's `build`/`build-manifests` commands shell out to
 
 //#endregion 🧲️Header
 
@@ -47,7 +47,7 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const ENGINE_DIR = join(HERE, "🦀️engine");
+const ENGINE_DIR = join(HERE, "🧫️fixtures", "📦️packages", "🦀️rust");
 const ENGINE_MANIFEST = join(ENGINE_DIR, "Cargo.toml");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
@@ -102,8 +102,8 @@ function committedFixtureRoot(id: string): string {
   return FIXTURES_DIR;
 }
 
-/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🦀️engine/src/📖️reader_main.rs` verbatim — one entry per
- *  WITNESSABLE `GifMutation` (89a) kind (16 of 21 — see `../🔮️oracle/🔣️.json`'s `-uncarried`
+/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🧫️fixtures/📖️reader/🦀️.rs` verbatim — one entry per
+ *  WITNESSABLE `GifMutation` (89a) kind (16 of 21 — see `../🔮️oracles/🔣️.json`'s `-uncarried`
  *  entries for the other 5, and `reader.rs`'s own header docstring for why). Every kind here
  *  applies `["applied"]` per the real dispatch (`../🧬️schema/🧬️mutations/🦀️.rs:288`,
  *  `MutationOutcome::new(...)` uniform for all 21 kinds, no per-kind rejection branch) EXCEPT
@@ -225,7 +225,7 @@ function readerManifestEntry(recipe: ReaderRecipe, outDir: string): Record<strin
       command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only ${recipe.id}`,
       platform: platformId(),
     },
-    provenance: { source: "generated", license: "MIT OR Apache-2.0 (gif)", attribution: "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🦀️engine/src/📖️reader_main.rs", security: "scanned-clean", privacy: "no-personal-data" },
+    provenance: { source: "generated", license: "MIT OR Apache-2.0 (gif)", attribution: "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🧫️fixtures/📖️reader/🦀️.rs", security: "scanned-clean", privacy: "no-personal-data" },
     comparisonProfile: "semantic-gif-89a-reader-v1",
     reproducible: true,
     family: "structural",
@@ -357,7 +357,7 @@ else:
 print(kind + ': written')
 `;
     const KINDS = ["insert-comment", "remove-comment", "add-app-extension", "remove-app-extension"];
-    const readerDir = join(HERE, "..", "🔬️probes", "🦀️extension-reader");
+    const readerDir = join(HERE, "..", "🔬️probes", "📖️reader", "📦️packages", "🦀️rust");
     const built = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(readerDir, "Cargo.toml")], { stdio: "inherit" });
     if (built.status !== 0) throw new Error(`cargo build failed with status ${built.status}`);
     const readerBin = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "reader");

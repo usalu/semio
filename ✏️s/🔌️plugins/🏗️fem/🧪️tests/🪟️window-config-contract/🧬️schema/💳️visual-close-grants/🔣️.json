@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "owner",
+          "maximumBytes",
+          "before",
+          "patch",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "owner": {
+            "enum": [
+              "region",
+              "element"
+            ]
+          },
+          "maximumBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "before": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "retained"
+            ],
+            "properties": {
+              "retained": {
+                "type": "boolean"
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "retained"
+            ],
+            "properties": {
+              "retained": {
+                "type": "boolean"
+              }
+            }
+          },
+          "patch": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "op",
+                "path",
+                "value"
+              ],
+              "properties": {
+                "op": {
+                  "const": "replace"
+                },
+                "path": {
+                  "const": "/retained"
+                },
+                "value": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,12 +1,17 @@
 use super::*;
 use semio_framework::{AppRole, ArtifactDialect, ModeDefinition, Modes, PluginManifest, WindowKindDefinition, WindowKinds};
 
-/// 🧪️ The smallest app a boot selection can name — only `id` and the mandatory window kind matter here.
+/// 🧪️ The smallest app a boot selection can name — `id`, the `(dialect, role)` its id encodes, and
+/// the mandatory window kind. The identity is PARSED out of the id rather than stamped, because
+/// `select_boot_program`'s role projection resolves a sibling by `(dialect, role)` and a table of
+/// apps that all claimed one synthetic dialect could never exercise it.
 fn boot_app(app_id: &str) -> AppDefinition {
+    let (dialect, role) = semio_framework::parse_surface_app_id(app_id)
+        .unwrap_or_else(|_| (ArtifactDialect { artifact_kind: "s.test.boot".into(), standard: "1".into(), subset: "*".into() }, AppRole::Editor));
     AppDefinition {
         id: app_id.into(),
-        role: AppRole::Editor,
-        dialect: ArtifactDialect { artifact_kind: "s.test.boot".into(), standard: "1".into(), subset: "*".into() },
+        role,
+        dialect,
         label: LocalizedLabel::data(app_id),
         breadcrumb: vec!["semio".into()],
         icon_id: None,
@@ -87,7 +92,8 @@ fn boot_selection_opens_the_requested_variant_across_the_fixture_table() {
             })
             .collect();
         let programs: Vec<(&str, &PluginManifest)> = manifests.iter().map(|(plugin_id, manifest)| (plugin_id.as_str(), manifest)).collect();
-        let selected = select_boot_program(&programs, variant);
+        let requested_role = case["role"].as_str().map_or(semio_framework::manifest::AppRole::Editor, |role| if role == "viewer" { semio_framework::manifest::AppRole::Viewer } else { semio_framework::manifest::AppRole::Editor });
+        let selected = select_boot_program(&programs, variant, requested_role);
         match case["expected"].as_object() {
             None => assert!(selected.is_none(), "case {} must not open a foreign plugin's app", case["id"]),
             Some(expected) => {

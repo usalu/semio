@@ -1,6 +1,6 @@
 use super::*;
 use crate::default_remodeling_scene;
-use crate::editor::remodeling::testkit::{app, render as render_body};
+use crate::editor::remodeling::unit_tests::context::{app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn an_unset_frame_cursor_renders_no_layers() {

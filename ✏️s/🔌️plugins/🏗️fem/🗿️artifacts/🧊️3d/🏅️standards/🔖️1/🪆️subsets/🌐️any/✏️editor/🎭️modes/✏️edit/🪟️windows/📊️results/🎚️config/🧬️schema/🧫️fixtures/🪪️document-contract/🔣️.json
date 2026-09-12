@@ -1,0 +1,100 @@
+{
+  "valid": [
+    {
+      "camera": {
+        "position": [
+          4,
+          -4,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 1
+      },
+      "resultSourceId": null,
+      "resultMode": "static",
+      "resultModeIndex": 0
+    },
+    {
+      "camera": {
+        "position": [
+          4,
+          -4,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 1
+      },
+      "resultSourceId": null,
+      "resultMode": "modal",
+      "resultModeIndex": 1
+    },
+    {
+      "camera": {
+        "position": [
+          4,
+          -4,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 1
+      },
+      "resultSourceId": null,
+      "resultMode": "buckling",
+      "resultModeIndex": 2
+    }
+  ],
+  "invalid": [
+    {
+      "kind": "unknown"
+    },
+    {
+      "kind": "camera-null"
+    },
+    {
+      "kind": "camera-unknown"
+    },
+    {
+      "kind": "bad-mode"
+    },
+    {
+      "kind": "camera-opaque"
+    },
+    {
+      "kind": "camera-short"
+    },
+    {
+      "kind": "camera-zero"
+    }
+  ],
+  "patch": [
+    {
+      "op": "replace",
+      "path": "/camera",
+      "value": {
+        "position": [
+          8,
+          -3,
+          5
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 1.25
+      }
+    }
+  ]
+}

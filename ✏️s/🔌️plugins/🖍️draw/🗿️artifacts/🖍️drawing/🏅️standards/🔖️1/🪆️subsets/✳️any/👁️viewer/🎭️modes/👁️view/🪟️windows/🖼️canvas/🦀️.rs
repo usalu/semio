@@ -6,7 +6,7 @@
 //! mutations by construction (`ViewEmit`).
 
 use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard};
-use crate::{DrawingArtboard, DrawingCamera, DrawingSnapshot, PathSegment};
+use crate::{DrawingArtboard, DrawingSnapshot, PathSegment};
 use dsl::DslValue;
 use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
@@ -45,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 /// per-session camera — `Config = NoConfig`), no selection/gesture overlay, real artboard frame +
 /// document content read straight off the document.
 pub fn render(document: &DrawingSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let camera = DrawingCamera::default();
+    let camera = store::Viewport2d { x: 512.0, y: 512.0, zoom: 0.75 };
     let artboard_records = artboard_scene_records(document);
     let scene_nodes = flatten_drawing_document_to_scene_nodes(document);
     let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len());

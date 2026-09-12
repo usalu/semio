@@ -1,6 +1,84 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app as sdk_new_app, new_app_with_registry};
+    use semio_framework_plugin::{App, EditorApp, HistoryView, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    /// ✏️ `ArchitectPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
+    /// `ArtifactApp` — `EditorApp<ArchitectPlayApp>` (SDK adapter, contract §2.1) is the real
+    /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
+    /// `PluginBuilder::editor::<ArchitectPlayApp>` builds it.
+    pub type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>>;
+    
+    pub async fn new_app() -> ArchitectApp {
+        sdk_new_app::<EditorApp<ArchitectPlayApp>>().await
+    }
+    
+    /// 🚧️ SDK GAP (w0-f-report Gap 3): `new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
+    /// still take `fn() -> App` (the pre-migration manifest wrapper), unchanged for this ticket —
+    /// `create_architect_app` now returns `AppDefinition`, so wrap it in a throwaway `App` (empty
+    /// examples) rather than widen the framework test context signature.
+    pub fn architect_app_manifest_for_tests() -> App {
+        App { definition: create_architect_app(), examples: Vec::new() }
+    }
+    
+    /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
+    pub async fn app_with_registry() -> ArchitectApp {
+        new_app_with_registry::<EditorApp<ArchitectPlayApp>>(architect_app_manifest_for_tests).await
+    }
+    
+    pub async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut ArchitectApp, body_key: &str) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("retire app render")
+    }
+    
+    /// 🔀️ Drives a typed `ArchitectCommand` straight through `ArchitectCommand::dispatch` — mirrors
+    /// `cad`'s `drive`/`drive_with_config` harness.
+    ///
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches through
+    /// `ArchitectCommand::dispatch` directly instead of `ArtifactEditor::handle` — `handle`'s
+    /// `interaction: &semio_framework_plugin::app::InteractionView<'_>` parameter has `pub(crate)`
+    /// fields in that crate, so this crate's own tests cannot construct one; no `ArchitectCommand`
+    /// row reads the "program" domain's live selection (see `handle`'s own doc comment), so
+    /// `dispatch`'s plain 2-arg shape (no `ctx`) already carries everything every handler needs.
+    pub fn drive(command: &ArchitectCommand, program: &ProgramSnapshot) -> Emit<ProgramMutation, ArchitectConfigMutation> {
+        drive_with_config(command, program, &ArchitectPlayApp::initial_config())
+    }
+    
+    pub fn drive_with_config(command: &ArchitectCommand, program: &ProgramSnapshot, config: &ArchitectConfig) -> Emit<ProgramMutation, ArchitectConfigMutation> {
+        let history = HistoryView::empty();
+        let doc = ArtifactView::new(program, &history);
+        let cfg = ConfigView { snapshot: config, window: None };
+        command.dispatch(&doc, &cfg).expect("dispatch")
+    }
+    
+    /// 🧮️ Folds an `Emit`'s `config_mutations` onto a base `ArchitectConfig` — mirrors what
+    /// `VcsArtifactApp`'s config store does when it dispatches them.
+    pub fn config_after(emit: &Emit<ProgramMutation, ArchitectConfigMutation>, base: &ArchitectConfig) -> ArchitectConfig {
+        use protocol::Mutation;
+        let mut next = base.clone();
+        for operation in &emit.config_mutations {
+            next = operation.diff(&next).into_parts().0;
+        }
+        next
+    }
+    
+    pub fn project_render(node: semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("render"))).expect("retire semantic tree")
+    }
+    
+    pub fn render_direct(body_key: &str, program: &ProgramSnapshot, config: &ArchitectConfig) -> String {
+        let history = HistoryView::empty();
+        let tree = ArchitectPlayApp::render(body_key, &ArtifactView::new(program, &history), &ConfigView { snapshot: config, window: None }, &ViewModel::default()).expect("editor render");
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire editor tree")
+    }
+}
+
 use super::*;
 use crate::editor::architect::catalog::{analysis_kind_from_str, register_entities};
-use crate::editor::architect::testkit;
+use crate::editor::architect::unit_tests::context;
 use crate::registers::{AdjacencyKind, AnalysisKind};
 use crate::standards::v1::subsets::any::schema::inferences::export_registers_csv;
 use semio_framework_plugin::PluginApp;
@@ -27,7 +105,7 @@ fn every_command() -> Vec<ArchitectCommand> {
         ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {}),
         ArchitectCommand::ImportProgram(import_program::ImportProgram { payload: "text".into() }),
         ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
-        ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: "{}".into() }),
+        ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d::default() }),
         ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: "a".into(), element_b_id: "b".into(), kind: None, cycle: true }),
         ArchitectCommand::Search(query::Search { query: "hall".into() }),
         ArchitectCommand::SetAdjacencyFilter(set_adjacency_filter::SetAdjacencyFilter { kind: None }),
@@ -80,7 +158,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 /// `command_id`.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-    semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<ArchitectPlayApp>>(testkit::architect_app_manifest_for_testkit).await;
+    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<ArchitectPlayApp>>(context::architect_app_manifest_for_tests).await;
     assert!(ArchitectPlayApp::command_from_action("notARealAction", None).is_err());
 }
 
@@ -113,8 +191,8 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
-    let mut app = testkit::new_app().await;
-    assert!(testkit::render(&mut app, "architect.nope").await.contains("Unknown body"));
+    let mut app = artifact_app_laws::new_app().await;
+    assert!(context::render(&mut app, "architect.nope").await.contains("Unknown body"));
 }
 //#endregion 🔖️Manifest
 
@@ -122,7 +200,7 @@ async fn an_unknown_body_key_falls_back_to_a_text_node() {
 #[semio_framework_async_macros::async_test]
 async fn adjacency_matrix_renders_triangle_strip() {
     let program = sample_plugin();
-    let json = testkit::render_direct(adjacency_window::ARCHITECT_BODY_ADJACENCY, &program, &ArchitectPlayApp::initial_config());
+    let json = context::render_direct(adjacency_window::ARCHITECT_BODY_ADJACENCY, &program, &ArchitectPlayApp::initial_config());
     assert!(json.contains('▲'));
     assert!(json.contains("Reception"));
 }
@@ -136,14 +214,14 @@ async fn graph_body_emits_node_graph_scene() {
     let semio_framework_plugin::Component::Surface(props) = &tree.root.component else { panic!("graph surface") };
     let scene: semio_framework_plugin::NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed graph");
     assert_eq!(scene.nodes.len(), program.elements.len());
-    semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("retire graph tree");
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire graph tree");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_adjacency_kind_cycles_required_to_preferred() {
     let program = sample_plugin();
     let adjacency = program.adjacencies.first().expect("adjacency");
-    let emit = testkit::drive(&ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: adjacency.element_a_id.0.clone(), element_b_id: adjacency.element_b_id.0.clone(), kind: None, cycle: true }), &program);
+    let emit = context::drive(&ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: adjacency.element_a_id.0.clone(), element_b_id: adjacency.element_b_id.0.clone(), kind: None, cycle: true }), &program);
     assert!(matches!(
         emit.artifact_mutations.first(),
         Some(ProgramMutation::ConnectAdjacency(payload)) if payload.adjacency.kind == AdjacencyKind::Preferred
@@ -154,8 +232,8 @@ async fn set_adjacency_kind_cycles_required_to_preferred() {
 async fn run_validation_populates_last_result_json() {
     let program = sample_plugin();
     let initial = ArchitectPlayApp::initial_config();
-    let emit = testkit::drive_with_config(&ArchitectCommand::RunValidation(run_validation::RunValidation {}), &program, &initial);
-    assert!(!testkit::config_after(&emit, &initial).last_result_json.is_empty());
+    let emit = context::drive_with_config(&ArchitectCommand::RunValidation(run_validation::RunValidation {}), &program, &initial);
+    assert!(!context::config_after(&emit, &initial).last_result_json.is_empty());
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: search no longer auto-selects
@@ -167,8 +245,8 @@ async fn run_validation_populates_last_result_json() {
 async fn search_finds_sample_elements() {
     let program = sample_plugin();
     let initial = ArchitectPlayApp::initial_config();
-    let emit = testkit::drive_with_config(&ArchitectCommand::Search(query::Search { query: "Reception".into() }), &program, &initial);
-    let config = testkit::config_after(&emit, &initial);
+    let emit = context::drive_with_config(&ArchitectCommand::Search(query::Search { query: "Reception".into() }), &program, &initial);
+    let config = context::config_after(&emit, &initial);
     assert!(!config.last_result_json.is_empty());
     assert!(!config.search_history_json.is_empty());
 }
@@ -177,8 +255,8 @@ async fn search_finds_sample_elements() {
 async fn select_register_switches_active_register() {
     let program = sample_plugin();
     let initial = ArchitectPlayApp::initial_config();
-    let emit = testkit::drive_with_config(&ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "stakeholders".into() }), &program, &initial);
-    assert_eq!(testkit::config_after(&emit, &initial).active_register, "stakeholders");
+    let emit = context::drive_with_config(&ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "stakeholders".into() }), &program, &initial);
+    assert_eq!(context::config_after(&emit, &initial).active_register, "stakeholders");
     assert!(!register_entities(&program, "stakeholders").is_empty());
 }
 
@@ -186,7 +264,7 @@ async fn select_register_switches_active_register() {
 async fn patch_register_item_updates_element_name() {
     let program = sample_plugin();
     let element_id = program.elements[0].header.id.clone();
-    let emit = testkit::drive(&ArchitectCommand::PatchRegisterItem(patch_register_item::PatchRegisterItem { register_id: "elements".into(), entity_id: element_id.0, patch_json: json!({ "name": "Updated Reception" }).to_string() }), &program);
+    let emit = context::drive(&ArchitectCommand::PatchRegisterItem(patch_register_item::PatchRegisterItem { register_id: "elements".into(), entity_id: element_id.0, patch_json: json!({ "name": "Updated Reception" }).to_string() }), &program);
     assert!(matches!(
         emit.artifact_mutations.first(),
         Some(ProgramMutation::ReplaceProgramElement(payload)) if payload.program_element.header.name == "Updated Reception"
@@ -197,9 +275,9 @@ async fn patch_register_item_updates_element_name() {
 async fn formatted_report_renders_section_headings() {
     let program = sample_plugin();
     let initial = ArchitectPlayApp::initial_config();
-    let emit = testkit::drive_with_config(&ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }), &program, &initial);
-    let config = testkit::config_after(&emit, &initial);
-    let json = testkit::render_direct(report_window::ARCHITECT_BODY_REPORT, &program, &config);
+    let emit = context::drive_with_config(&ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }), &program, &initial);
+    let config = context::config_after(&emit, &initial);
+    let json = context::render_direct(report_window::ARCHITECT_BODY_REPORT, &program, &config);
     assert!(json.contains("Overview"));
     assert!(json.contains("architect-report.section"));
 }
@@ -219,26 +297,26 @@ async fn analysis_kind_picker_maps_all_variants() {
 async fn import_registers_csv_action_sets_plugin() {
     let program = sample_plugin();
     let csv = export_registers_csv(&program).expect("export csv");
-    let emit = testkit::drive(&ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { csv, strategy: "upsert".into() }), &program);
+    let emit = context::drive(&ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { csv, strategy: "upsert".into() }), &program);
     assert!(emit.artifact_mutations.is_empty(), "whole-document load must not go through the Mutation enum");
     assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::Effect::LoadDocument { .. })), "importRegistersCsv must emit a LoadDocument effect");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_through_the_wrapper() {
-    let mut app = testkit::new_app().await;
+    let mut app = artifact_app_laws::new_app().await;
     let before = app.snapshot().expect("projection").elements.len();
-    testkit::dispatch(&mut app, ArchitectCommand::AddElement(add_element::AddElement { name: "Ward".into() })).await;
+    context::dispatch(&mut app, ArchitectCommand::AddElement(add_element::AddElement { name: "Ward".into() })).await;
     assert_eq!(app.snapshot().expect("projection").elements.len(), before + 1);
-    app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     assert_eq!(app.snapshot().expect("projection").elements.len(), before);
-    app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("redo");
+    app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
     assert_eq!(app.snapshot().expect("projection").elements.len(), before + 1);
 }
 
 /// 🧬️ Kind-discipline wrapper: the real registry enforces View actions never emit document
 /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
-/// `testkit::app_with_registry` exists.
+/// `context::app_with_registry` exists.
 ///
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `setSelection` (the old
 /// app-declared View action this test used to dispatch) is deleted — selection is the
@@ -246,25 +324,25 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 /// is the remaining view action closest in shape (config-only, no document mutation).
 #[semio_framework_async_macros::async_test]
 async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
-    let mut app = testkit::app_with_registry().await;
-    let result = testkit::dispatch(&mut app, ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() })).await;
+    let mut app = context::app_with_registry().await;
+    let result = context::dispatch(&mut app, ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() })).await;
     assert!(result.mutations.is_empty(), "selectRegister is a view action and must never reach document operations under kind discipline");
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: end-to-end proof the "program"
 /// domain's real pick surface (the document panel's element rows) actually drives the framework's
 /// injected `interactionSelect` — dispatches it directly (the only way a downstream crate can
-/// populate a genuine `InteractionView`, see `testkit::drive`'s own doc comment), then confirms
+/// populate a genuine `InteractionView`, see `context::drive`'s own doc comment), then confirms
 /// the SAME element row renders `"selected":true` (mirrors `note`'s `select_blocks` proof).
 #[semio_framework_async_macros::async_test]
 async fn interaction_select_stamps_the_picked_element_as_selected_in_the_document_panel() {
-    let mut app = testkit::app_with_registry().await;
+    let mut app = context::app_with_registry().await;
     let element_id = app.snapshot().expect("snapshot").elements[0].header.id.to_string();
     let targets = serde_json::to_string(&[serde_json::json!({ "granularity": ARCHITECT_INTERACTION_GRANULARITY_ENTITY, "id": element_id })]).expect("targets json");
-    app.handle_action("interactionSelect", Some(&dsl::json::to_dsl_value(&dsl::json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" }))), &semio_framework_plugin::testkit::meta("test"))
+    app.handle_action("interactionSelect", Some(&dsl::json::to_dsl_value(&dsl::json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" }))), &semio_framework_plugin::artifact_app_laws::meta("test"))
         .await
         .expect("interactionSelect");
-    let rendered = testkit::render(&mut app, document_panel::ARCHITECT_BODY_DOCUMENT).await;
+    let rendered = context::render(&mut app, document_panel::ARCHITECT_BODY_DOCUMENT).await;
     assert!(rendered.contains(&element_id), "the rendered tree must still list the picked element");
     assert!(rendered.contains("\"selected\":true"), "the picked element must be stamped selected by the framework wrapper");
 }

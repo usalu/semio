@@ -17,14 +17,14 @@ fn scene_field(value: &serde_json::Value, field: &str) -> Option<serde_json::Val
 #[semio_framework_async_macros::async_test]
 async fn rewriting_window_config_retained_publication_renders_and_reloads_two_concrete_windows() {
     use crate::editor::rewriting::{create_rewriting_app, TrinityRewritingCommand, TrinityRewritingPlayApp, TRINITY_REWRITING_PLAY_BODY_BEFORE};
-    use semio_framework_plugin::{testkit, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     fn manifest() -> App {
         App { definition: create_rewriting_app(), examples: Vec::new() }
     }
     async fn render(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>>, view: &ViewModel) -> Result<serde_json::Value, String> {
         let tree = app.render(TRINITY_REWRITING_PLAY_BODY_BEFORE, None, view).await.map_err(|error| format!("{error:?}"))?;
-        let text = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
-        let scene = testkit::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&text).map_err(str::to_string)?;
+        let text = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+        let scene = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&text).map_err(str::to_string)?;
         serde_json::to_value(scene).map_err(|error| error.to_string())
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
@@ -34,8 +34,8 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
     };
     let left = view.for_window_instance(fixture["leftWindowId"].as_str().unwrap()).unwrap();
     let right = view.for_window_instance(fixture["rightWindowId"].as_str().unwrap()).unwrap();
-    let mut app = testkit::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest).await;
-    let mut reopened = testkit::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest).await;
+    let mut app = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest).await;
+    let mut reopened = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest).await;
     app.bind_instance_id(1).await;
     reopened.bind_instance_id(2).await;
     let outcome: Result<(), String> = async {
@@ -49,7 +49,7 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
                 "set-lod-mode" => TrinityRewritingCommand::SetLodMode { value: row["mutation"]["value"].as_str().unwrap().into() },
                 other => return Err(format!("unexpected neutral command {other}")),
             };
-            app.dispatch_typed(command, &ActionMeta { view_state: Some(context), ..testkit::meta("window-config") }).await.map_err(|error| format!("{error:?}"))?;
+            app.dispatch_typed(command, &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("window-config") }).await.map_err(|error| format!("{error:?}"))?;
         }
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         let mut receipts = 0;
@@ -130,8 +130,8 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
     if let Err(error) = &outcome {
         eprintln!("[DEBUG] Rewriting window configuration runtime failure before close: {error}");
     }
-    testkit::close_registered_fixture_app(&mut reopened);
-    testkit::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut reopened);
+    artifact_app_laws::close_registered_fixture_app(&mut app);
     outcome.expect("retained Rewriting window configuration isolation and persistence");
     eprintln!("[DEBUG] two Rewriting windows published camera/LOD independently, preserved document and app envelopes, rendered separate state, and reloaded exact persisted partitions");
 }

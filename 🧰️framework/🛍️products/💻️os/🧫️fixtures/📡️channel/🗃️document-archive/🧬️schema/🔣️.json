@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/document-archive/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["parent_pack", "parent_spr", "members"],
+  "properties": {
+    "parent_pack": { "$ref": "#/$defs/bytes" },
+    "parent_spr": { "$ref": "#/$defs/bytes" },
+    "members": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": { "$ref": "#/$defs/member" }
+    }
+  },
+  "$defs": {
+    "bytes": {
+      "type": "array",
+      "maxItems": 4194304,
+      "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+    },
+    "identity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "artifact_kind", "standard", "subset"],
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/identity" },
+        "artifact_kind": { "$ref": "#/$defs/identity" },
+        "standard": { "$ref": "#/$defs/identity" },
+        "subset": { "$ref": "#/$defs/identity" }
+      }
+    },
+    "ownerRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parent", "slot", "child_id"],
+      "properties": {
+        "parent": { "$ref": "#/$defs/artifactRef" },
+        "slot": { "$ref": "#/$defs/identity" },
+        "child_id": { "$ref": "#/$defs/identity" }
+      }
+    },
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ordinal", "reference", "owner", "envelope_pack"],
+      "properties": {
+        "ordinal": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "reference": { "$ref": "#/$defs/artifactRef" },
+        "owner": { "$ref": "#/$defs/ownerRef" },
+        "envelope_pack": { "type": "array", "allOf": [{ "$ref": "#/$defs/bytes" }], "minItems": 1 }
+      }
+    }
+  }
+}

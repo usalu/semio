@@ -1424,12 +1424,12 @@ mod testing {
 
     //#endregion 🔖️Conformance
 
-    //#region 🔖️Support
+    //#region 🔖️ToggleModel
 
     #[cfg(test)]
-    include!("🧪️tests/🔬️testing-support/🦀️.rs");
+    include!("🧪️tests/🔀️toggle-machine/🦀️.rs");
 
-    //#endregion 🔖️Support
+    //#endregion 🔖️ToggleModel
 
     //#region 🧪️Tests
 

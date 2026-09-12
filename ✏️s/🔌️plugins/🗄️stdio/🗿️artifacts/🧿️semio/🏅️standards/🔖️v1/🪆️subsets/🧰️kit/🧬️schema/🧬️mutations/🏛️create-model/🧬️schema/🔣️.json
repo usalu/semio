@@ -4,54 +4,26 @@
   "title": "CreateModel",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "child_id",
-    "target"
-  ],
+  "required": ["child_id", "target"],
   "properties": {
-    "child_id": {
-      "type": "string"
-    },
+    "child_id": { "type": "string" },
     "target": {
-      "$ref": "#/$defs/ArtifactRef"
-    }
-  },
-  "$defs": {
-    "ArtifactRef": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "artifactId",
-        "dialect"
-      ],
-      "properties": {
-        "artifactId": {
-          "type": "string"
-        },
-        "dialect": {
-          "$ref": "#/$defs/ArtifactDialect"
+      "allOf": [
+        { "$ref": "https://semio.tech/schema/framework/io/schema.json#/$defs/ArtifactRef" },
+        {
+          "type": "object",
+          "properties": {
+            "dialect": {
+              "type": "object",
+              "properties": {
+                "artifactKind": { "const": "s.stdio.semio" },
+                "standard": { "const": "v1" },
+                "subset": { "const": "model" }
+              }
+            }
+          }
         }
-      }
-    },
-    "ArtifactDialect": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "artifactKind",
-        "standard",
-        "subset"
-      ],
-      "properties": {
-        "artifactKind": {
-          "type": "string"
-        },
-        "standard": {
-          "type": "string"
-        },
-        "subset": {
-          "type": "string"
-        }
-      }
+      ]
     }
   }
 }

@@ -1,9 +1,86 @@
 
 use super::*;
+use std::mem::size_of;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
 
 fn params(operation: OperationId, generation: Generation, cancel: CancelToken) -> BatchJobParams {
     BatchJobParams { operation, generation, cancel, config: BatchDriveConfig { site: "test.retained-job", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 1_000 }, now_us: default_now_us }
+}
+
+#[test]
+fn retained_payload_physical_close_preserves_short_pages_until_the_exact_backing_grant() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../📦️physical-close/🧫️fixtures/🔣️.json")).unwrap();
+    assert_eq!(fixture["pageBytes"], JOB_PAYLOAD_PAGE_BYTES);
+    let streams = [JobPayloadStream::CheckpointState, JobPayloadStream::Preview, JobPayloadStream::CommitState, JobPayloadStream::CommitOutput, JobPayloadStream::Fault];
+    for stream in streams {
+        for row in fixture["cases"].as_array().unwrap() {
+            let operation = OperationId(90_010 + stream as u64);
+            let generation = Generation(21);
+            let ledger = Arc::new(JobPayloadOperationLedger::new(operation, generation));
+            let mut sequence = 0;
+            let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
+            let bytes = vec![42; row["logicalBytes"].as_u64().unwrap() as usize];
+            let mut writer = RetainedJobPayloadWriter::new(stream);
+            let mut page = writer.admit_page(&mut context).unwrap();
+            page.write(&bytes).unwrap();
+            page.commit();
+            let mut payload = writer.finish().unwrap();
+            let pointer = payload.page(0).unwrap().as_ptr();
+            let refused = payload.close_step(1, row["insufficientGrant"].as_u64().unwrap() as usize);
+            let retained_pointer = payload.page(0).map(|page| page.as_ptr()) == Some(pointer);
+            let released = payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+            let remaining_logical_bytes = payload.len();
+            let remaining_pages = payload.page_count();
+            while !payload.terminal_is_empty() { payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
+            let (refused_items, refused_bytes) = match refused { JobPayloadCloseStep::Pending { released_items, released_bytes } => (released_items, released_bytes), JobPayloadCloseStep::Complete => (0, 0) };
+            let (released_items, released_bytes) = match released { JobPayloadCloseStep::Pending { released_items, released_bytes } => (released_items, released_bytes), JobPayloadCloseStep::Complete => (0, 0) };
+            assert!(ledger.terminal_is_empty());
+            let actual = serde_json::json!({
+                "refusedItems": refused_items, "refusedBytes": refused_bytes, "retainedPointer": retained_pointer,
+                "releasedItems": released_items, "releasedBytes": released_bytes,
+                "remainingLogicalBytes": remaining_logical_bytes, "remainingPages": remaining_pages,
+            });
+            assert_eq!(actual, fixture["expected"], "{stream:?}/{}", row["name"]);
+        }
+    }
+    eprintln!("[DEBUG] Job payload five-stream physical grants preserve exact short-page pointers and release each 16KiB backing exactly");
+}
+
+#[test]
+fn retained_writer_physical_close_preserves_staged_and_rejected_backing() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../📦️physical-close/🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let operation = OperationId(90_020);
+        let generation = Generation(21);
+        let ledger = Arc::new(JobPayloadOperationLedger::new(operation, generation));
+        let mut sequence = 0;
+        let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
+        let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::Preview);
+        writer.begin_staged_page(&mut context).unwrap();
+        writer.write_staged(&vec![42; row["logicalBytes"].as_u64().unwrap() as usize]).unwrap();
+        assert!(matches!(writer.admit_page(&mut context), Err(JobPayloadAdmissionFault::OpportunityExhausted)));
+        let staged_pointer = writer.staged.as_ref().unwrap().1.backing_identity();
+        let rejected_pointer = writer.rejected.as_ref().unwrap().backing_identity();
+        let mut observations = Vec::new();
+        for (staged, pointer) in [(true, staged_pointer), (false, rejected_pointer)] {
+            let refused = writer.close_step(1, row["insufficientGrant"].as_u64().unwrap() as usize);
+            let retained_pointer = if staged {
+                writer.staged.as_ref().map(|(_, source, _)| source.backing_identity()) == Some(pointer)
+            } else {
+                writer.rejected.as_ref().map(JobPayloadPageSource::backing_identity) == Some(pointer)
+            };
+            let released = writer.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+            observations.push((staged, refused, retained_pointer, released));
+        }
+        while !writer.terminal_is_empty() { writer.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
+        assert!(ledger.terminal_is_empty());
+        for (staged, refused, retained_pointer, released) in observations {
+            assert_eq!(refused, JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 }, "staged={staged} {}", row["name"]);
+            assert!(retained_pointer, "staged={staged} {}", row["name"]);
+            assert_eq!(released, JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES }, "staged={staged} {}", row["name"]);
+        }
+    }
+    eprintln!("[DEBUG] Job writer staged and rejected pages retain their backing until an exact physical page grant");
 }
 
 fn wait_for(session: &WorkerJobSession<HostileJob>, expected: WorkerJobPoll) {
@@ -90,9 +167,9 @@ fn retained_state_and_output_have_separate_credits_and_close_one_page_per_grant(
     output_page.write(b"output").expect("output bytes");
     output_page.commit();
     let mut terminal = StepOutcome::Complete(CommitCandidate { state: state_writer.finish().expect("state"), output: output_writer.finish().expect("output") });
-    assert_eq!(terminal.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: 5 });
+    assert_eq!(terminal.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES });
     assert!(!terminal.terminal_is_empty());
-    assert_eq!(terminal.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: 6 });
+    assert_eq!(terminal.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES });
     assert!(terminal.terminal_is_empty());
 }
 
@@ -120,7 +197,7 @@ fn retained_writer_and_reader_advance_exactly_one_page_per_opportunity() {
     assert_eq!(reader.read_page(1, JOB_PAYLOAD_PAGE_BYTES).map(|page| page.len()), Some(1));
     assert!(reader.terminal_is_empty());
     assert_eq!(payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES });
-    assert_eq!(payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: 1 });
+    assert_eq!(payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES });
     assert_eq!(payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Complete);
     assert!(payload.terminal_is_empty());
 }
@@ -253,6 +330,36 @@ impl InteractiveJob for HostileJob {
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.backing.is_none() && self.steps.is_none()
     }
+}
+
+#[test]
+fn worker_authority_keeps_one_heap_identity_through_mounted_submit_and_checkout() {
+    let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+    let mut mounted = MountedWorkerJobSession::try_new(
+        HostileJob { backing: Some(Box::new(73)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false },
+        params(OperationId(90_011), Generation(17), root_cancel_token()),
+    )
+    .unwrap_or_else(|_| panic!("heap authority fixture admission"));
+    assert!(size_of::<WorkerJobAuthorityOwner<HostileJob>>() < size_of::<WorkerJobAuthority<HostileJob>>());
+    let admitted_identity = unsafe { (&*mounted.session.inner.authority.get()).as_ref().expect("idle session owns its authority").0.as_ptr() };
+    assert!(matches!(mounted.pump_one(&pool, Lane::Interactive), Ok(WorkerJobPoll::Submitted)));
+    for _ in 0..4_096 {
+        if mounted.poll() == WorkerJobPoll::Outcome {
+            break;
+        }
+        std::thread::yield_now();
+    }
+    assert!(matches!(mounted.pump_one(&pool, Lane::Interactive), Ok(WorkerJobPoll::Outcome)));
+    let checked_out_identity = mounted.checked_out.as_ref().and_then(|outcome| outcome.authority.as_ref()).expect("mounted outcome owns exact authority").0.as_ptr();
+    assert_eq!(checked_out_identity, admitted_identity);
+    assert!(matches!(mounted.take_checked_out_outcome(), Some(StepOutcome::Yield)));
+    mounted.resume().expect("empty yielded outcome returns the same authority");
+    mounted.begin_close();
+    while !mounted.terminal_is_empty() {
+        let _ = mounted.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+    }
+    let _ = pool.shutdown();
+    eprintln!("[DEBUG] worker authority retained one heap identity across mounted submit and checkout");
 }
 
 #[test]

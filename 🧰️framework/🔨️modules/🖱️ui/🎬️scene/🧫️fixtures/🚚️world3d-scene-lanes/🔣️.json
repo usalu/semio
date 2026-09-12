@@ -1,5 +1,5 @@
 {
-  "$comment": "🚚️ The one language-neutral declaration of the world-3d scene lane carrier. Rust pins World3dSceneLane / WORLD3D_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🎬️scenes.rs) against it; TypeScript pins WORLD3D_SCENE_LANES / world3dSceneFromLanes (🧰️framework/🔨️modules/🔺️mesh/🟦️.ts) against it. Neither side may drift.",
+  "$comment": "🚚️ The one language-neutral declaration of the world-3d scene lane carrier. Rust pins World3dSceneLane / WORLD3D_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs) against it; TypeScript pins WORLD3D_SCENE_LANES / world3dSceneFromLanes (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts) against it. Neither side may drift.",
   "schema": "world-3d@1",
   "laneKeyPrefix": "framework.scene.world3d.",
   "spineFields": [
@@ -31,6 +31,12 @@
       "field": "instancesJson",
       "bodyKey": "framework.scene.world3d.instances",
       "optional": false
+    },
+    {
+      "lane": "instancesDelta",
+      "field": "instancesDeltaJson",
+      "bodyKey": "framework.scene.world3d.instancesDelta",
+      "optional": true
     },
     {
       "lane": "selection",

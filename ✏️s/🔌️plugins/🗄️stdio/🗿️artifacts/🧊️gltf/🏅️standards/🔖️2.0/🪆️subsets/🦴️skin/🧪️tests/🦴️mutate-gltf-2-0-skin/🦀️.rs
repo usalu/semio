@@ -1,11 +1,11 @@
-//! 🦀️ glTF 2.0 `🦴️skin` subset mutation case — Rust adapter. Covers the 4 kinds `../../🔮️oracle/
+//! 🦀️ glTF 2.0 `🦴️skin` subset mutation case — Rust adapter. Covers the 4 kinds `../../🔮️oracles/
 //! 🔣️.json`'s `gltf-2-0-skin` catalog declares: `create-skin`, `delete-skin`, `move-skin`,
 //! `reorder-skins`. Every leaf's own `apply()` (`../../../♾️any/🧬️schema/🧬️mutations/
 //! 🦴️skin/{🌱️create,🗑️delete,🚚️move,🔀️reorder}/🦀️.rs`) stays physically owned by `♾️any` —
 //! `validate_mutation_leaf_source` requires the exact registered domain/operation owner beneath its
 //! aggregate mutation root, so this case reaches it by import. The
 //! oracle performs every kind by independent GLB/JSON-tree manipulation
-//! (`../../../♾️any/🔮️oracle/🦀️.rs`, extended with these 4 kinds by this same change); the subject
+//! (`../../../♾️any/🔮️oracles/🦀️.rs`, extended with these 4 kinds by this same change); the subject
 //! fully parses each kind's own committed fixture into `GltfSnapshot` via `parse_gltf_document` and
 //! re-serializes with `serialize_gltf_document` alone, dispatching through each leaf's own typed
 //! `apply()` function directly. `delete-skin`'s inverse is special-cased on both sides (see the
@@ -150,7 +150,7 @@ mod subject {
     /// reference DIRECTLY from `before` — the exact typed values this snapshot already holds, not a
     /// same-shaped substitute a second `create-skin` call could only approximate (its own payload
     /// carries no field content — see the feature file's own doc comment). Mirrors
-    /// `../../../♾️any/🔮️oracle/🦀️.rs`'s `undo_delete_skin` on the independent-reader side.
+    /// `../../../♾️any/🔮️oracles/🦀️.rs`'s `undo_delete_skin` on the independent-reader side.
     fn undo_delete_skin(before: &GltfSnapshot, mutated: &GltfSnapshot) -> GltfSnapshot {
         let mut restored = mutated.clone();
         restored.document.skins = before.document.skins.clone();

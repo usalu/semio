@@ -9,6 +9,8 @@
 //#region 🗂️OrderedOwnership
 #[path = "🗂️ordered/🦀️.rs"]
 pub mod ordered;
+#[path = "📋️list/🦀️.rs"]
+pub mod list;
 //#endregion 🗂️OrderedOwnership
 
 #[path = "🧬️clone/🦀️.rs"]

@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import { computeAccessibleDescription, computeAccessibleName } from "dom-accessibility-api";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { uiI18n } from "../../../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+import { uiI18n } from "../../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { UiKeybindingsProvider } from "../../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { UIDialog, type UIDialogProps } from "../../🟦️.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../🔽️Select/🟦️.tsx";

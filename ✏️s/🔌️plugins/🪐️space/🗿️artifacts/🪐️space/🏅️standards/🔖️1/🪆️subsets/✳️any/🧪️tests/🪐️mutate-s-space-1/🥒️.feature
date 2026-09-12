@@ -47,7 +47,7 @@ Feature: Apply every typed s.space.space index mutation against an independent P
   oracle role (the Python implementation, reached through this plugin's `oracleHostPackages` entry)
   and a subject role (this repository's own `s_space_mutation_report_json`), each independently
   asserting the forward/inverse laws in role through the shared law module
-  `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` that the stdio subsets use, before the two are
+  `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️component.rs` that the stdio subsets use, before the two are
   compared byte for byte. `identity-round-trip` stays Rust-subject-only, unaffected.
 
   @id-mutate

@@ -35,6 +35,8 @@ semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️
 graph = { path = "../../../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws"] }
 semio-framework-ui-scene = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true

@@ -11,7 +11,8 @@ fn language_neutral_mutations_match_json_oracle_and_restore_base() {
         assert_eq!(mutation, oracle);
         assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
         let next = mutation.diff(&base).diff().apply(&base).unwrap();
-        assert_eq!(serde_json::to_value(&next).unwrap(), vector["after"]);
+        let expected: DagConfig = serde_json::from_value(vector["after"].clone()).unwrap();
+        assert_eq!(next, expected);
         let encoded = mutation.encode_op().unwrap();
         assert_eq!(DagConfigMutation::decode_op(&encoded).unwrap(), mutation);
         assert_eq!(DagConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);

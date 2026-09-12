@@ -1,6 +1,6 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-sfm-params`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::update_sfm_params;
 use crate::op::RemodelingMutation;
 use crate::{RemodelingSnapshot, RobustLossKind, SfmParams};
@@ -18,7 +18,7 @@ pub struct SetSfmParams {
     pub huber_delta_px: f32,
 }
 
-pub fn handle(payload: &SetSfmParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetSfmParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_sfm_params(SfmParams {
         ransac_iterations: payload.ransac_iterations,
         ransac_threshold_px: payload.ransac_threshold_px,

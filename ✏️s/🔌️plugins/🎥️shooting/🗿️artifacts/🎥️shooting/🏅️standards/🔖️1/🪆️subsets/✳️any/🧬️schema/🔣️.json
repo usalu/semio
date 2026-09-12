@@ -417,7 +417,7 @@
         },
         "lanes": {
           "const": [
-            "host-only"
+            "HostOnly"
           ]
         }
       },
@@ -435,7 +435,7 @@
         },
         "lanes": {
           "const": [
-            "host-only"
+            "HostOnly"
           ]
         }
       },
@@ -495,12 +495,12 @@
         "routes": {
           "allOf": [
             {
-              "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes"
+              "$ref": "https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutes"
             },
             {
               "type": "array",
-              "minItems": 39,
-              "maxItems": 39,
+              "minItems": 38,
+              "maxItems": 38,
               "items": {
                 "type": "object",
                 "required": [
@@ -522,8 +522,8 @@
                   },
                   "admission": {
                     "enum": [
-                      "migrated",
-                      "fail-closed"
+                      "Migrated",
+                      "FailClosed"
                     ]
                   },
                   "feature": {
@@ -570,19 +570,19 @@
               ],
               "properties": {
                 "routes": {
-                  "const": 39
+                "const": 38
                 },
                 "bounded": {
                   "const": 2
                 },
                 "resumable": {
-                  "const": 37
+                "const": 36
                 },
                 "migrated": {
                   "const": 2
                 },
                 "failClosed": {
-                  "const": 37
+                "const": 36
                 },
                 "unique": {
                   "const": true

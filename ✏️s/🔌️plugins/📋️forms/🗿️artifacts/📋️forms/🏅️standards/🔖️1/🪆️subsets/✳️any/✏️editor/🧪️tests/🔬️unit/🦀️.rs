@@ -1,7 +1,88 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    pub type FormsApp = VcsArtifactApp<EditorApp<FormsPlayApp>>;
+    
+    /// 🧪️ An app instance with its concrete command registry and retained job proofs.
+    pub async fn forms_app() -> FormsApp {
+        new_app_with_registry::<EditorApp<FormsPlayApp>>(forms_manifest_for_tests).await
+    }
+    
+    /// 🚧️ SDK GAP (w0-f-report Gap 3): `new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
+    /// still take `fn() -> App` (the pre-migration manifest wrapper), unchanged for this ticket —
+    /// `create_forms_app` now returns `AppDefinition`, so wrap it in a throwaway `App` (empty examples)
+    /// rather than widen the framework test context signature.
+    fn forms_manifest_for_tests() -> App {
+        App { definition: create_forms_app(), examples: Vec::new() }
+    }
+    
+    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline, and the
+    /// `kind` default declared on `addQuestion` materializes host-side.
+    pub async fn forms_app_with_registry() -> FormsApp {
+        new_app_with_registry::<EditorApp<FormsPlayApp>>(forms_manifest_for_tests).await
+    }
+    
+    pub async fn config(app: &FormsApp) -> FormsConfig {
+        let files = app.config_pack().await.expect("config pack");
+        store::parse_document_pack::<FormsConfig, FormsConfigMutation>(&files.pack, &files.spr).await.expect("config projection").snapshot
+    }
+    
+    pub fn action_args(value: &serde_json::Value) -> dsl::DslValue {
+        dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(&value.to_string()).expect("fixture JSON"))
+    }
+    
+    pub async fn dispatch(app: &mut FormsApp, command: FormsCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut FormsApp, body_key: &str) -> String {
+        let view = if body_key == FORMS_PLAY_BODY_TRY {
+            ViewModel {
+                window_id: Some("forms-try-test".into()),
+                window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "forms-try-test".into(), window_kind_id: try_window::FORMS_PLAY_WINDOW_TRY.into() }],
+                ..Default::default()
+            }
+        } else {
+            ViewModel::default()
+        };
+        serde_json::to_string(&app.render(body_key, None, &view).await.expect("render").root).expect("rendered component JSON")
+    }
+    
+    /// 🧩️ A host contribution registering `"buildingComponent"` as an extension question kind rendered
+    /// by `forms-module-procedural` — shared by every test exercising the extension-question path.
+    pub fn building_component_contributions() -> Vec<ProgramContributionEntry> {
+        vec![ProgramContributionEntry {
+            plugin_id: "forms-module-procedural".into(),
+            topic_contribution: Some(semio_framework_plugin::TopicContribution::new(
+                "forms.questionKind",
+                semio_framework_os_kernel::DslValue::object([
+                    ("appId".to_string(), semio_framework_os_kernel::DslValue::String("forms-module-procedural".to_string())),
+                    ("questionKind".to_string(), semio_framework_os_kernel::DslValue::String("buildingComponent".to_string())),
+                    ("label".to_string(), semio_framework_os_kernel::DslValue::String("Building Component".to_string())),
+                    ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("building".to_string())),
+                    ("paramsBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("params".to_string())),
+                    ("previewBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("preview".to_string())),
+                ]),
+            )),
+        }]
+    }
+    
+    /// 🧩️ A standalone `buildingComponent` question, for tests that exercise `render_extension_question`
+    /// directly without going through a full document.
+    pub fn building_component_question() -> FormQuestion {
+        let mut question = add_question::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
+        question.fixture_slug = Some("hexagonal-mushroom-column".into());
+        question.params = Some(crate::schema::value_to_dsl(&dsl::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
+        question
+    }
+}
+
 use super::*;
-use crate::editor::forms::testkit::{building_component_contributions, building_component_question, forms_app, forms_app_with_registry};
+use crate::editor::forms::unit_tests::context::{building_component_contributions, building_component_question, forms_app, forms_app_with_registry};
 use crate::forms_steps;
-use semio_framework_plugin::testkit::meta;
+use semio_framework_plugin::artifact_app_laws::meta;
 
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -75,10 +156,10 @@ pub(super) fn every_command() -> Vec<FormsCommand> {
     vec![
         FormsCommand::SetTryValue(set_try_value::SetTryValue { key: "q1".into(), value_json: Some("\"Ada\"".into()), ..Default::default() }),
         FormsCommand::SetTryValues(set_try_values::SetTryValues { values_json: r#"{"name":"Ada"}"#.into(), ..Default::default() }),
-        FormsCommand::ResetTry(reset_try::ResetTry {}),
-        FormsCommand::PreviousStep(previous_step::PreviousStep {}),
-        FormsCommand::NextStep(next_step::NextStep {}),
-        FormsCommand::Submit(submit::Submit {}),
+        FormsCommand::ResetTry(reset_try::ResetTry::default()),
+        FormsCommand::PreviousStep(previous_step::PreviousStep::default()),
+        FormsCommand::NextStep(next_step::NextStep::default()),
+        FormsCommand::Submit(submit::Submit::default()),
         FormsCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
         FormsCommand::AddStep(add_step::AddStep {}),
         FormsCommand::PatchStep(patch_step::PatchStep { step_id: "s1".into(), field: "title".into(), value: "Renamed".into() }),
@@ -99,7 +180,7 @@ pub(super) fn every_command() -> Vec<FormsCommand> {
         FormsCommand::SetSpecJson(set_spec_json::SetSpecJson { json: "{}".into() }),
         FormsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }),
         FormsCommand::ExportFixture(export_fixture::ExportFixture {}),
-        FormsCommand::SetTryValueStep(set_try_value_step::SetTryValueStep { app_id: "1".into(), document_id: "document".into(), operation_id: "1".into(), generation: 1, cursor: 64, target_index: 128, base_revision: "0".repeat(64) }),
+        FormsCommand::SetTryValueStep(set_try_value_step::SetTryValueStep { app_id: "1".into(), document_id: "document".into(), operation_id: "1".into(), generation: 1, cursor: 64, target_index: 128, base_revision: "0".repeat(64), ..Default::default() }),
     ]
 }
 //#endregion 🔖️CommandSurface
@@ -256,14 +337,14 @@ async fn catalogue_kinds_includes_topic_contributed_kinds() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-    use crate::editor::forms::testkit::render;
+    use crate::editor::forms::unit_tests::context::render;
     let mut app = forms_app().await;
     assert!(render(&mut app, "forms.play.nope").await.contains("Unknown body"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits() {
-    semio_framework_plugin::testkit::assert_two_instances_converge::<EditorApp<FormsPlayApp>, (usize, usize)>(
+    semio_framework_plugin::artifact_app_laws::assert_two_instances_converge::<EditorApp<FormsPlayApp>, (usize, usize)>(
         "mem://forms-convergence",
         FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }),
         FormsCommand::AddStep(add_step::AddStep {}),

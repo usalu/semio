@@ -179,7 +179,7 @@ async fn semantic_kinds_cover_every_variant() {
 // 🧪️ NOTE: `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`'s shared
 // `assert_mutation_inverse_law`/`assert_mutation_diff_absorb_law` law helpers were deliberately
 // NOT wired into this facet's tests — `semio-s-plugin-norm`'s `Cargo.toml` has no existing
-// dependency on that testkit crate (grepped: no `testkit` import anywhere in this crate, and
+// dependency on that test context crate (grepped: no `test context` import anywhere in this crate, and
 // sibling facet `iso16757`'s migration made the same call), and step (e) of the fan-out recipe
 // says to skip rather than add a new Cargo dependency. The `round_trip` helper above and its
 // per-variant assertions already exercise the same diff/inverse laws directly.

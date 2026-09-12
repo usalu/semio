@@ -35,7 +35,7 @@ pub const SOURCING_DIALECT: Dialect = Dialect { artifact_kind: "s.sourcing.curat
 //#region 🔖️Geometry
 /// 📦️ A parametric geometry recipe an object kind is composed of — data describing shape, not a subclass.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum GeometryRecipe {
     Box {
         #[dsl(unit = "m")]
@@ -78,7 +78,7 @@ pub enum GeometryRecipe {
 /// `RequiredStatements` shape — the "exactly one required tagged value" slot a `DslEnum` sum type
 /// needs to occupy a plain (non-`Option`, non-`Vec`) field — only recognizes a `Box<T>` inner type.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ObjectKind {
     #[dsl(defines = "object")]
     pub id: String,
@@ -125,7 +125,7 @@ pub struct Filters {
 
 /// 🧺️ One curated object kind and how many units of it have been picked.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CuratedItem {
     #[dsl(refs = "object")]
     pub object_id: String,
@@ -142,7 +142,7 @@ pub struct CuratedItem {
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: replaces the former inline `stock: Vec<ObjectKind>`
 /// field, which duplicated the `kit.catalog`/type-registry vocabulary this ticket composes instead.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ObjectKindExtra {
     #[dsl(defines = "object")]
     pub id: String,
@@ -520,6 +520,8 @@ mod tests;
                             pub use component::*;
                             #[path = "."]
                             pub mod snapshot {
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/🔣️json/🦀️.rs"]
+                                pub mod json;
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
                                 pub mod binary;
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]

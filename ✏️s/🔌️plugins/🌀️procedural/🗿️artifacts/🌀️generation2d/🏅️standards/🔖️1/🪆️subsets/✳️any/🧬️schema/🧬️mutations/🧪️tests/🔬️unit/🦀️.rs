@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff, SemanticMutation};
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, WidgetLayout};
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead;
-use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law_cold, assert_mutation_inverse_law, assert_mutation_inverse_law_cold};
+use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law_cold, assert_mutation_inverse_law, assert_mutation_inverse_law_cold};
 
 /// 🧊️ Every owned projection this suite materialises is CLOSED, never dropped — `fixture.layout`
 /// is an `OrderedMap` root and `generation` carries its own retirement ladder.
@@ -279,7 +279,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

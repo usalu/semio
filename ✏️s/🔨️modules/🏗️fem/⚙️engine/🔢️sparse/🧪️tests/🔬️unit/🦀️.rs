@@ -1,5 +1,5 @@
 use super::*;
-use crate::numerical_testkit::payload_bytes;
+use crate::engine_test_vectors::payload_bytes;
 
 fn graph_laplacian_plus_identity(n: usize, edges: &[(usize, usize)]) -> Coo {
     let mut degree = vec![0usize; n];
@@ -322,15 +322,56 @@ fn test_operation(id: u64) -> Operation {
     Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(7), semio_framework_job::Generation(3), 11)
 }
 
+/// 📣️ PCG publication consumes its own grant and preserves pending control state on refusal.
+#[test]
+fn pcg_job_publication_grants_preserve_pending_state_and_work_cursor() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⛽️publication-grant/🔣️.json")).unwrap();
+    for (index, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
+        let operation = test_operation(980 + index as u64);
+        let mut matrix = Coo::new(1);
+        matrix.add(0, 0, 2.0);
+        let mut job = PcgJob::new(operation, matrix.to_csr(), VecD::from_vec(vec![1.0]), VecD::zeros(1), 1e-12, 20, 1);
+        let kind = case["kind"].as_str().unwrap();
+        job.state.checkpoint_due = kind == "checkpoint";
+        job.state.preview_due = kind == "preview";
+        if kind == "complete" { job.state.stage = PcgStage::Complete; }
+        let mut sequence = 0;
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(case["fuel"].as_u64().unwrap(), case["deadline"].as_u64().unwrap()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let outcome = match job.step(&mut context) {
+            StepOutcome::Yield => "yield",
+            StepOutcome::PreviewReady(payload) => { close_payload(payload); "preview" }
+            StepOutcome::CheckpointReady(checkpoint) => { close_payload(checkpoint.state); "checkpoint" }
+            StepOutcome::Complete(candidate) => { close_payload(candidate.state); close_payload(candidate.output); "complete" }
+            StepOutcome::Fault(fault) => { close_payload(fault.detail); "fault" }
+            StepOutcome::Cancelled => "cancelled",
+        };
+        let pending = match kind { "checkpoint" => job.state.checkpoint_due, "preview" => job.state.preview_due, _ => job.state.stage == PcgStage::Complete };
+        let mut observed = serde_json::json!({ "pending": pending, "cursor": job.state.entry_cursor, "fuelRemaining": context.fuel_remaining(), "outcome": outcome });
+        let mut closed = false;
+        for _ in 0..1_024 {
+            let (terminal, items, bytes) = job.close_step(NUMERICAL_OWNER_PAGE_BYTES);
+            assert!(items <= 1 && bytes <= NUMERICAL_OWNER_PAGE_BYTES);
+            if terminal { closed = true; break; }
+        }
+        assert!(closed, "publication fixture closes its exact matrix and scalar owners");
+        observed["terminalEmpty"] = serde_json::json!(InteractiveJob::terminal_is_empty(&job));
+        assert_eq!(observed, case["expected"], "publication fixture {index}");
+    }
+}
+
 fn drive_pcg_job(mut job: PcgJob, operation: Operation) -> (VecD, PcgStats) {
     let mut sequence = 0;
     loop {
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         match job.step(&mut context) {
-            StepOutcome::Complete(_) => {
+            StepOutcome::Complete(candidate) => {
+                close_payload(candidate.state);
+                close_payload(candidate.output);
                 let (solution, stats) = job.solution();
                 return (solution.clone(), stats);
             }
+            StepOutcome::PreviewReady(payload) => close_payload(payload),
+            StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
             StepOutcome::Fault(fault) => panic!("pcg fault: {}", String::from_utf8_lossy(&payload_bytes(fault.detail))),
             StepOutcome::Cancelled => panic!("pcg unexpectedly cancelled"),
             _ => {}
@@ -411,8 +452,13 @@ fn pcg_job_checkpoint_resume_is_exact() {
     let mut sequence = 0;
     let checkpoint = loop {
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
-            break payload_bytes(checkpoint.state);
+        match job.step(&mut context) {
+            StepOutcome::CheckpointReady(checkpoint) => break payload_bytes(checkpoint.state),
+            StepOutcome::PreviewReady(payload) => close_payload(payload),
+            StepOutcome::Complete(candidate) => { close_payload(candidate.state); close_payload(candidate.output); panic!("PCG completes before the required checkpoint"); }
+            StepOutcome::Fault(fault) => panic!("PCG checkpoint fault: {}", String::from_utf8_lossy(&payload_bytes(fault.detail))),
+            StepOutcome::Cancelled => panic!("PCG checkpoint unexpectedly cancelled"),
+            StepOutcome::Yield => {}
         }
     };
     let resumed = PcgJob::from_checkpoint(operation, &checkpoint).expect("pcg checkpoint restores");
@@ -439,8 +485,11 @@ fn pcg_job_publishes_coarse_preview_before_final_tolerance() {
                 assert!(preview.residual_norm >= 1e-12);
                 break;
             }
-            StepOutcome::Complete(_) => panic!("pcg reached final tolerance before publishing coarse quality"),
-            _ => {}
+            StepOutcome::Complete(candidate) => { close_payload(candidate.state); close_payload(candidate.output); panic!("pcg reached final tolerance before publishing coarse quality"); }
+            StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
+            StepOutcome::Fault(fault) => panic!("PCG preview fault: {}", String::from_utf8_lossy(&payload_bytes(fault.detail))),
+            StepOutcome::Cancelled => panic!("PCG preview unexpectedly cancelled"),
+            StepOutcome::Yield => {}
         }
     }
 }

@@ -16,7 +16,7 @@ path = "🦀️.rs"
 
 [[bin]]
 name = "os-hub"
-path = "🚀️bin.rs"
+path = "../../🏗️bootstrap/🦀️.rs"
 
 [features]
 default = ["sqlite", "native-artifact-execution"]
@@ -29,10 +29,10 @@ postgres = ["dep:sqlx_core", "dep:sqlx_postgres", "db/postgres"]
 neo4j = ["dep:neo4rs", "db/neo4j"]
 native-artifact-execution = ["dep:semio-s-artifact-gis-gismap", "dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-semio", "dep:semio-s-plugin-stdio", "semio-s-plugin-stdio/full-artifact-catalog", "dep:semio-s-plugin-gis", "dep:semio-s-plugin-vcs"]
 # 🏗️ Test-only, cross-target: compiles the real GIS Map profile builder in
-# `🗿️artifact-authority/🔏️trusted-catalog/🏗️test-support/` so the `os-hub` BINARY target's own laws can
+# `🌎️hub/🧪️tests/🔏️trusted-catalog-profile/` so the `os-hub` BINARY target's own laws can
 # construct a verified catalog and frozen Map binding. `#[cfg(test)]` cannot serve another target, so
 # this must be a feature. It never enters a default build.
-test-support = ["native-artifact-execution"]
+integration-fixtures = ["native-artifact-execution"]
 
 [dependencies]
 semio-s-artifact-gis-gismap = { workspace = true, optional = true }
@@ -62,7 +62,7 @@ directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦�
 db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
 
 # 🔌️ Directory backend drivers — optional, enabled only by this crate's same-named feature (see
-# `[features]` above and `connect_db`/`connect_directory` in `🚀️bin.rs`).
+# `[features]` above and `connect_db`/`connect_directory` in `🏗️bootstrap/🦀️.rs`).
 rusqlite = { version = "0.38.0", features = ["bundled"], optional = true }
 sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"], optional = true }
 sqlx_postgres = { package = "sqlx-postgres", version = "0.8", features = ["uuid", "json"], optional = true }
@@ -75,4 +75,4 @@ blake3 = "1"
 semio-framework-schema = { workspace = true }
 tokio = { version = "1", features = ["full", "test-util"] }
 tokio-tungstenite = "0.26"
-directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["testkit"] }
+directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }

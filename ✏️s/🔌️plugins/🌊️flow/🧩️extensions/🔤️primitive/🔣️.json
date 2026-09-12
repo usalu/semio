@@ -26,12 +26,12 @@
   "descriptorVersion": 1,
   "execution": "linked",
   "executionProtocol": {
-    "appChannelVersion": 15
+    "appChannelVersion": 16
   },
   "hashes": {
-    "coreWasmSha256": "35d210fac217cc0a1bc82943bb471e794e87c97c38507f52460a9d98a33f52d9",
-    "descriptorSha256": "ba71fd06c3faf6fae53d34d5a57ee1633cde654a4e67fcfd383099f80d1501ea",
-    "wasmSha256": "6a2c29cb424d35a5a182b6a9795a8efec93a7be38514afefb14d9bdc13c87b6f"
+    "coreWasmSha256": "d56fb6553f5cd44af2efad700301d195233bd2701ff1413b7dd32fc80a7af8a9",
+    "descriptorSha256": "d16107c31786ee584a179d295099066eed0036e32ab30d14d4b0129ed48338ed",
+    "wasmSha256": "0f0807660f2a6ebfe24e2b01b9dc8ec2a7d952ac8bb9f1c83ea6f602606a3e1d"
   },
   "manifest": {
     "apps": [],

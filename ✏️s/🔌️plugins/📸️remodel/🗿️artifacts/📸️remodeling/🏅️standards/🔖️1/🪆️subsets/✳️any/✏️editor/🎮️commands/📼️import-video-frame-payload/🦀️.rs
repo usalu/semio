@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 use crate::editor::remodeling::commands::import_frame_payload;
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::remodeling::engine::images as remodeling_image;
 #[cfg(test)]
 use crate::editor::remodeling::engine::video as remodeling_video;
@@ -122,13 +122,13 @@ fn batch_stream_id(scene: &RemodelingSnapshot, index: u32) -> String {
 //#region 🔖️SetStreamSync
 //#endregion 🔖️SetStreamSync
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 📥️ Imports `n` checker frames as one new image-sequence stream via `ImportFramePayload`, mirroring
 /// exactly what a real `importFrames` → `RequestFileOpen.multiple` re-dispatch loop sends. Shared with
 /// `🎮️commands/🏗️run-reconstruction`'s own tests, which need real decodable frames to run a pipeline on.
 #[cfg(test)]
-pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remodeling::testkit::RemodelingApp, n: u32) {
-    use crate::editor::remodeling::testkit::dispatch;
+pub(crate) async fn verify_import_checker_stream(app: &mut crate::editor::remodeling::unit_tests::context::RemodelingApp, n: u32) {
+    use crate::editor::remodeling::unit_tests::context::dispatch;
     use crate::editor::remodeling::RemodelingCommand;
     for index in 0..n {
         dispatch(app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: checker_data_url(24, 24, 3).await, name: format!("frame-{index}.png"), index })).await;
@@ -174,7 +174,7 @@ fn checker_image(w: u32, h: u32, cell: u32) -> remodeling_image::ImageRgba8 {
     }
     image
 }
-//#endregion 🧪️Testkit
+//#endregion 🧪️UnitTests
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "import-video-frame-payload")]
@@ -189,7 +189,7 @@ pub struct ImportVideoFramePayload {
 /// 🎞️ Host-decoded video frame tick (Tier 1/2 `RequestMediaFrames` frame dispatch): decodes the
 /// sampled JPEG, runs it through the relative blur gate (rebuilt from persisted frames each tick —
 /// see `rebuild_video_import_scratch`), and amends it into the active stream.
-pub fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     let Some((_mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
     let Ok(image) = remodeling_image::decode_jpeg(&bytes) else { return Ok(Emit::default()) };
     let scene = doc.snapshot;

@@ -14,13 +14,14 @@ package = "semio:fem"
 [package.metadata.semio]
 role = "plugin"
 
-# 📚️ Storybook coverage opt-in — read by `.storybook/scopes.ts`'s `buildGeneratedScopes`, which resolves
+# 📚️ Storybook coverage opt-in — read by `.storybook/📖️stories/🧭️coordination/🟦️.ts`'s `buildGeneratedScopes`, which resolves
 # `sourceRoots` against this package's discovered owner root and derives the story glob
-# `./stories/fem/**` from `id`. Stories live in `.storybook/stories/fem/`.
+# the owner-relative `📖️stories/**/🧪️.story.tsx` glob from package metadata.
 [package.metadata.semio.storybook]
 id = "fem"
 titlePrefix = "🏗️fem"
 sourceRoots = ["."]
+storyGlobs = ["📖️stories/**/🧪️.story.tsx"]
 
 [[package.metadata.semio.playground]]
 variant = "fem2d"
@@ -54,4 +55,5 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }

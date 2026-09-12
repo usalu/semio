@@ -1,7 +1,7 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `move-layer`.
 
 use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
-use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::DrawingMutation;
 use crate::schema::{find_drawing_layer, find_drawing_layer_location};
 use crate::DrawingSnapshot;
@@ -38,7 +38,7 @@ pub struct MoveLayer {
     pub drop_position: String,
 }
 
-pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, DrawingConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, DrawingConfigMutation>, Fault> {
+pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     let (parent_id, index) = resolve_reorder_target(document, &payload.target_row_id, &payload.drop_position);
     Ok(Emit::mutations(vec![crate::mutations::reorder_layer(payload.layer_id.clone(), parent_id, index)]))

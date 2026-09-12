@@ -36,6 +36,15 @@ function useWindowMeasureDraft<T>(published: T): readonly [T, (next: T) => void]
   return [live === null ? published : live.value, (next: T) => setDraft(next === published ? null : { value: next, published })];
 }
 
+/** @emoji 🕰️ The value the PROGRAM last published for a rail control, exposed on the DOM beside the possibly
+ * optimistic value the control RENDERS. Nothing outside React could tell the two apart: {@link
+ * useWindowMeasureDraft} moves the rendered state first and holds it for the whole round trip (0.7 s idle,
+ * seconds on a busy app), a combobox trigger carries no value of its own at all, and so
+ * `🔍️browser-probe.ts`'s `projection-control-flips` read the draft as if it were the program's answer
+ * (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B41). This is the authority's own reading, so a reader —
+ * assistive technology, a tutorial, an end-to-end probe — can see whether a gesture has actually landed. */
+const PUBLISHED_VALUE_ATTRIBUTE = "data-published-value";
+
 /** @emoji 🔽️ A measures-rail select. A measure with no `label` renders no visible tree-row label either, so the combobox carries its own accessible name rather than reaching assistive technology as an unnamed control. */
 export function WindowMeasureSelect({ measure, onAction }: { readonly measure: Extract<WindowMeasure, { kind: "select" }>; readonly onAction: (action: ActionDescriptor) => unknown }) {
   const [value, setValue] = useWindowMeasureDraft(measure.value);
@@ -48,7 +57,7 @@ export function WindowMeasureSelect({ measure, onAction }: { readonly measure: E
         onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value: next } });
       }}
     >
-      <SelectTrigger id={measure.id} aria-label={uiDataLabel(measure.label ?? measure.id)} className="h-small w-full min-w-0" size="sm">
+      <SelectTrigger id={measure.id} aria-label={uiDataLabel(measure.label ?? measure.id)} {...{ [PUBLISHED_VALUE_ATTRIBUTE]: measure.value }} className="h-small w-full min-w-0" size="sm">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -69,6 +78,7 @@ export function WindowMeasureToggle({ measure, onAction }: { readonly measure: E
   return (
     <TreeCheckbox
       id={measure.id}
+      publishedValue={String(measure.pressed)}
       checked={pressed}
       title={label}
       ariaLabel={label}

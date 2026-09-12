@@ -71,7 +71,7 @@ semio-s-artifact-trinity-jack = { workspace = true }
 semio-s-artifact-trinity-rewriting = { workspace = true }
 semio-s-artifact-vcs-vcs = { workspace = true }
 semio-s-artifact-writer-writer = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["testkit"] }
+semio-framework-os-kernel = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 flow_app = { path = "../../../../🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
 semio_framework_os = { path = "../../../../../🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }

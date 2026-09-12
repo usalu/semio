@@ -1,6 +1,6 @@
 //! 📄️ GIS 2D play app panel — the document tree: the map's layer stack, selectable.
 
-use crate::editor::gis2d::config::Gis2dConfig;
+use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
 use crate::editor::gis2d::{gis2d_layer_tree_item, ui_label, ui_node_list, GIS_MAP_LAYER_IDS};
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
@@ -27,7 +27,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `.interaction_domain("features")?` below has the framework's renderer translate clicks into
 /// injected `interactionSelect` and stamp presence from `InteractionState`, replacing the deleted
 /// `.selected()?`/`.selection_change()` calls.
-pub fn render(_cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(_cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let builder = PanelTreeBuilder::new("gis2d-play-document")?;
     let layer_items = ui_node_list(GIS_MAP_LAYER_IDS.iter().map(|(id, _, icon)| gis2d_layer_tree_item(builder.item_id("layer", id)?, ui_label(gis2d_layer_label(id, labels))?, Some((*id).into()), icon, None)))?;
     builder.section("gis2d-play-document.layers", Some(ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?), true, layer_items)?.interaction_domain("features")?.build()

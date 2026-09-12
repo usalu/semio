@@ -1,4 +1,4 @@
-use crate::editor::note::testkit::{note_app, render as render_body};
+use crate::editor::note::unit_tests::context::{note_app, render as render_body};
 use crate::editor::note::NOTE_PLAY_BODY_DOCUMENT as BODY_DOCUMENT;
 use semio_framework_plugin::PluginApp;
 

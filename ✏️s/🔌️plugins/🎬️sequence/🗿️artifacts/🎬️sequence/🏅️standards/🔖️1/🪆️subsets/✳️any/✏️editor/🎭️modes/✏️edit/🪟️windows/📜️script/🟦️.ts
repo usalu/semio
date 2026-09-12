@@ -1,5 +1,5 @@
 /** 📜️ Sequence editor — Script window: typed twin of `🦀️.rs`'s view-model. Mirrors the
- * window's `render(fixture: &SequenceSnapshot, config: &SequenceConfig)` boundary — the compiled
+ * window's exact `SequenceScriptWindowTransient` boundary — the compiled
  * imperative path text, with the last `run` result appended when present. Mutation-capable surface;
  * the viewer has no Script window (see `👁️viewer` design notes). */
 
@@ -10,7 +10,7 @@ export interface SequenceScriptViewModel {
   surfaceId: "sequence.play.script";
   /** 📝️ `SequenceHost::compile_text()` — the compiled imperative path source. */
   compiledText: string;
-  /** 🏃️ `SequenceConfig.lastRunJson` — appended under a `# run result` heading when non-empty. */
+  /** 🏃️ Exact script-window run result, appended under a `# run result` heading when non-empty. */
   lastRunJson: string;
   language: "imperative";
 }

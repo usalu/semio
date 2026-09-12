@@ -1,0 +1,68 @@
+// #region 🧲️Header
+
+// 🥼️ 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/📖️stories/🧪️.story.tsx
+
+// 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion 🧲️Header
+
+import { Canvas, DiagramSkeleton, HorizontalWindows, Window } from "@semio-tech/ui-react";
+import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
+
+// 🔷️#region ⚙️Canvas
+const meta = {
+  title: "🖱️ui⚛️react/Canvas",
+  component: Canvas,
+  parameters: {
+    layout: "fullscreen",
+  },
+  tags: ["autodocs"],
+} satisfies Meta<typeof Canvas>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+// A `<Window>` root already fills `ui-surface` at level="window" (WindowChrome contract) — this
+// placeholder content stays bg-transparent so it doesn't double-tint that fill (one ui-surface/
+// ui-glass per level root; interior containers stay transparent).
+const WindowContent = ({ title }: { title: string }) => (
+  <div className="flex items-center justify-center h-full bg-transparent">
+    <h2 className="text-2xl font-bold">{title}</h2>
+  </div>
+);
+
+export const Default: Story = {
+  args: {
+    children: (
+      <HorizontalWindows>
+        <Window id="left" defaultSize={50}>
+          <WindowContent title="Left Window" />
+        </Window>
+        <Window id="right" defaultSize={50}>
+          <WindowContent title="Right Window" />
+        </Window>
+      </HorizontalWindows>
+    ),
+  },
+  render: (args) => (
+    <div className="h-screen">
+      <Canvas {...args} />
+    </div>
+  ),
+};
+
+// #endregion ⚙️Canvas
+
+// 🔷️#region 🧫️DiagramSkeleton
+export const DiagramSkeletonDefault: Story = {
+  args: { children: null },
+  render: () => (
+    <div className="h-[400px] w-full">
+      <DiagramSkeleton nodeCount={5} edgeCount={4} />
+    </div>
+  ),
+};
+// #endregion 🧫️DiagramSkeleton

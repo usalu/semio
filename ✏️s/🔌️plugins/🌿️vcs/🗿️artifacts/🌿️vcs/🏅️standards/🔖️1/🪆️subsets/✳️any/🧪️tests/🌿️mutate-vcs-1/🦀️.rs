@@ -18,7 +18,7 @@
 //! committed before-snapshot exactly. A handler that merely returned `Ok` would report a pass
 //! having checked nothing at all.
 //!
-//! **Why the shared `⚖️law` module is not used here.** `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` is
+//! **Why the shared `⚖️law` module is not used here.** `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` is
 //! reachable only where the stdio oracle crate is linked into the generated host, which happens for
 //! a case whose owner sits under `✏️s/🔌️plugins/🗄️stdio`. This case's owner does not, and declaring
 //! stdio's contribution directory as a host package for the vcs artifact would make one plugin's

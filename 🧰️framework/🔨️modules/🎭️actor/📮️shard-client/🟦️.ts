@@ -5,7 +5,7 @@
  * one-worker-per-plugin capped the browser at ~20 plugins; this pools K = `min(hardwareConcurrency-1,
  * 4)` (design's `ShardTable`) workers and pins actors onto them instead.
  *
- * 🚧 UPDATE (terra-web-shardframe): A1's `🤖️generated/🟦️actor.ts` has now landed clean (no more
+ * 🚧 UPDATE (terra-web-shardframe): A1's `🤖️generated/🎭️actor/🟦️.ts` has now landed clean (no more
  * un-typeable `object & string` intersections — `Lane`/`Envelope`/`Payload`/`Origin` are real types),
  * which is what makes the region below possible. `turn()`/`activate()` stay EXACTLY as they were —
  * opaque-to-this-module `ShardEventEnvelope[]` JSON in, `unknown` out, nothing broken — while
@@ -18,7 +18,7 @@
 //#region 🔌️WireTypes
 /** ⚖️ `Lane`/`CoalesceKey` taken from the owned-schema mirror — real wire types, same reasoning
  * `📬️mailbox.ts`'s own header doc already gives for importing rather than redeclaring them. */
-import type { Lane, CoalesceKey } from "../🤖️generated/🟦️actor.ts";
+import type { Lane, CoalesceKey } from "../🤖️generated/🎭️actor/🟦️.ts";
 import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifecycleReceiptEquals, actorInstanceLifetimeEquals, decodeActorInstanceLifecycle, encodeActorInstanceLifecycle, type ActorInstanceLifecycleReceipt, type ActorInstanceCloseRequest, type ActorInstanceOpenRequest, type ActorInstanceLifetime } from "../🚪️lifetime/🟦️.ts";
 import { actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing, type ActorUiPatchReceipt } from "../🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedActorTurnOutputs, OwnedActorTurnOutput } from "../🪪️activation/🚪️instance/📥️output/🟦️.ts";
@@ -30,6 +30,8 @@ import { OwnedKernelReturnContent } from "../../🎠️kernel/📤️return/📦
 import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "../../🌱️value/💾️resident/🟦️.ts";
 import { OwnedUiResidentPool, OwnedUiResidentPoolRetirement, type OwnedUiResidentInstance, type OwnedUiResidentPayload, type OwnedUiResidentPayloadSourceRelease as UiResidentSourceProof } from "../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts";
 import { uiResidentMetadataEnvelope } from "../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️.ts";
+import { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "./📤️segmented-download/🟦️.ts";
+export { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "./📤️segmented-download/🟦️.ts";
 /** 🧬️ Brand-check accessor for {@link OwnedResidentLedger}, resolved LAZILY on first use.
  * `OwnedResidentLedger` arrives over an import cycle (`📮️shard-client` → `🎠️kernel/📥️input` →
  * `🖱️ui/…/💾️resident` → back here), and reading `.prototype` at module-evaluation time touches the
@@ -160,7 +162,7 @@ export type ShardAsset = readonly [name: string, bytes: ArrayBuffer];
 export type ShardJobStep = { readonly status: "running"; readonly progress?: Uint8Array } | { readonly status: "done"; readonly value: Uint8Array } | { readonly status: "failed"; readonly value: Uint8Array };
 
 /** ⚖️ Stand-in for the generated mirror of Rust `semio_framework_actor::ShardMetrics` (same "not-yet-
- * emitted `🤖️generated/🟦️actor.ts`" reason as `ShardBudget` above) — MICROKERNEL-POOLED-ACTOR-PLUGIN-
+ * emitted `🤖️generated/🎭️actor/🟦️.ts`" reason as `ShardBudget` above) — MICROKERNEL-POOLED-ACTOR-PLUGIN-
  * RUNTIME T1. Field-for-field with the Rust struct, camelCased. */
 export interface ShardMetrics {
   readonly actors: number;
@@ -359,8 +361,6 @@ export interface ShardWorkerLike {
 }
 
 export type CreateShardWorker = (shardIndex: number) => ShardWorkerLike;
-const MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4_096;
-const MAX_SEGMENTED_DOWNLOAD_OPERATION_ID = (1n << 64n) - 1n;
 //#endregion 🌉️WorkerLike
 
 //#region 📨️WireMessages
@@ -407,7 +407,7 @@ type InboundMessage =
 //#region ⏱️Heartbeat
 /** 🫀️ THE shard liveness policy — one record every liveness clock in the system reads, so a value can
  * never drift between the host watchdog here, the generated `🟨️shard-worker.js` progress ticker
- * (`🔌️plugin/📦️packages/🟦️typescript/🟦️.ts`'s `shardWorkerSource`, which interpolates
+ * (`🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts`'s `shardWorkerSource`, which interpolates
  * `progressIntervalMs` straight out of the fixture below) and the shell's per-plugin load deadline
  * (`🛠️ShellHelpers/🟦️.tsx`'s `loadPluginModuleResilient`). Language-agnostic owner:
  * `🧬️schema/🔣️.json` (`https://semio.tech/schema/framework/actor/shard-client/schema.json#/$defs/ShardClient`) + `🧫️fixtures/🔣️.json`'s `policy` block; this
@@ -2085,17 +2085,12 @@ export class ShardClient {
     await this.send<void>(slot, { kind: "cancelJob", requestId, actorId, job }, requestId);
   }
 
-  /** 🧵 Requests exactly one operation-owned item and enforces the transport byte credit. */
+  /** 🧵 Requests exactly one operation-owned item and admits it against {@link SEGMENTED_DOWNLOAD_CONTRACT}. */
   async takeSegmentedDownloadChunk(actorId: string, instanceId: number, operationId: bigint): Promise<Uint8Array | undefined> {
-    if (!Number.isSafeInteger(instanceId) || instanceId < 0 || typeof operationId !== "bigint" || operationId <= 0n || operationId > MAX_SEGMENTED_DOWNLOAD_OPERATION_ID) throw new Error("segmented-download-authority-invalid");
+    admitSegmentedDownloadOperationId(operationId, instanceId);
     const slot = this.requireShard(actorId);
     const requestId = this.nextRequestId();
-    const value = await this.send<unknown>(slot, { kind: "takeSegmentedDownloadChunk", requestId, actorId, instanceId, operationId }, requestId);
-    if (value === undefined || value === null) return undefined;
-    if (Object.prototype.toString.call(value) !== "[object Uint8Array]") throw new Error("segmented-download-transport-type");
-    const chunk = value as Uint8Array;
-    if (chunk.byteLength === 0 || chunk.byteLength > MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES) throw new Error("segmented-download-transport-limit");
-    return chunk;
+    return admitSegmentedDownloadChunk(await this.send<unknown>(slot, { kind: "takeSegmentedDownloadChunk", requestId, actorId, instanceId, operationId }, requestId));
   }
 
   async checkpoint(actorId: string): Promise<Uint8Array> {
@@ -2440,7 +2435,7 @@ export class ShardClient {
 //#region 🧪️Tests
 export type { InboundMessage, OutboundMessage, PendingEntry, ShardInstanceOwner, ShardSlot };
 export type ShardClientTestDependenciesV1 = ReturnType<typeof shardClientTestDependenciesV1>;
-const shardClientTestDependenciesV1 = () => ({ ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID, NO_RESIDENT_FAULT, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope });
+const shardClientTestDependenciesV1 = () => ({ ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, NO_RESIDENT_FAULT, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL, admitSegmentedDownloadChunk, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope });
 
 export type ShardClientRetryableLifecycleTestDependenciesV1 = ReturnType<typeof shardClientRetryableLifecycleTestDependenciesV1>;
 const shardClientRetryableLifecycleTestDependenciesV1 = () => ({ RETRYABLE_LIFECYCLE_TURN, RETRYABLE_LIFECYCLE_TURN_ATTEMPTS, graftWorkerStack, isRetryableLifecycleTurn });
@@ -2451,5 +2446,7 @@ if (import.meta.vitest) {
   await registerTests1(import.meta.vitest, shardClientTestDependenciesV1(), testSource);
   const { registerRetryableLifecycleDeadlineTests } = await import("./🧪️tests/⏱️retryable-lifecycle-deadline/🟦️.ts");
   await registerRetryableLifecycleDeadlineTests(import.meta.vitest, shardClientRetryableLifecycleTestDependenciesV1(), testSource);
+  const { registerCancelJobReplyTests } = await import("./🧪️tests/🛑️cancel-job-reply/🟦️.ts");
+  await registerCancelJobReplyTests(import.meta.vitest, shardClientTestDependenciesV1(), testSource);
 }
 //#endregion 🧪️Tests

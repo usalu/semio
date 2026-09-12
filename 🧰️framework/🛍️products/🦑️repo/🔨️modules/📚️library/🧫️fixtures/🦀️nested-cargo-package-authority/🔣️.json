@@ -179,14 +179,14 @@
     }
   ],
   "referenceConsumers": [
-    { "packageId": "wgpu-renderer", "path": ".storybook/scopes.ts", "transformId": "wgpu-root", "occurrenceCount": 2, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": ".storybook/📖️stories/🧭️coordination/🟦️.ts", "transformId": "wgpu-root", "occurrenceCount": 2, "ownership": "authored" },
     {
       "packageId": "wgpu-renderer",
       "path": ".vscode/launch.json",
       "transformId": "wgpu-root",
       "occurrenceCount": 65,
       "ownership": "generated",
-      "generatorOwnerPaths": [".vscode/🧩️launch.seed.jsonc", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🖥️launch.ts"]
+      "generatorOwnerPaths": [".vscode/🧩️launch.seed.jsonc", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🟦️.ts"]
     },
     { "packageId": "wgpu-renderer", "path": ".vscode/🧩️launch.seed.jsonc", "transformId": "wgpu-root", "occurrenceCount": 42, "ownership": "authored" },
     { "packageId": "wgpu-renderer", "path": "Cargo.toml", "transformId": "wgpu-root", "occurrenceCount": 1, "ownership": "authored" },
@@ -202,7 +202,7 @@
       "occurrenceCount": 16,
       "ownership": "authored"
     },
-    { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🖥️launch.ts", "transformId": "wgpu-root", "occurrenceCount": 1, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🟦️.ts", "transformId": "wgpu-root", "occurrenceCount": 1, "ownership": "authored" },
     { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts", "transformId": "wgpu-root", "occurrenceCount": 1, "ownership": "authored" },
     { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts", "transformId": "wgpu-root", "occurrenceCount": 4, "ownership": "authored" },
     { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", "transformId": "wgpu-root", "occurrenceCount": 5, "ownership": "authored" },

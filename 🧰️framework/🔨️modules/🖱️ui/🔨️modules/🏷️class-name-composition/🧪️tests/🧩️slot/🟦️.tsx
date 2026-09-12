@@ -3,7 +3,7 @@ import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ButtonGroupItem } from "../../../../🧱️elements/🔳️ButtonGroup/🟦️.tsx";
-import { Slot } from "../../🪆️slot.tsx";
+import { Slot } from "../../🪆️slot/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🪆️SingleChildSlotMatrix

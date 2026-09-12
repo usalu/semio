@@ -38,7 +38,7 @@ Feature: Read the real derived frame in both languages, and hold the committed c
   load bound to something that exists, and every combination term naming a real case. `🦀️.rs`
   additionally holds the `.dsl.semio` carrier to its own fixpoint law and crosses it against the
   binary pack codec, through the shared law module
-  `✏️s/🔌️plugins/🗄️stdio/🔮️oracle/⚖️law/🦀️.rs`.
+  `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs`.
 
   @id-identity-round-trip
   @level-long

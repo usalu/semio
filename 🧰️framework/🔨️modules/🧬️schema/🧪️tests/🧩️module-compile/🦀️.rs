@@ -1,5 +1,5 @@
 //! 🧩️ Repo-wide proof that every scope-owned `🧬️schema/🔣️.json` module compiles through the owned
-//! draft-07 validator in `✅️validator.rs`, and a per-path inventory of the keywords that do not.
+//! draft-07 validator in `✅️validator/🦀️.rs`, and a per-path inventory of the keywords that do not.
 //!
 //! Roots walked: `🌎️hub`, `🧰️framework`, `✏️s`. The repo root is derived from `CARGO_MANIFEST_DIR`
 //! by walking up to the directory that carries `.🧬semio`; `SEMIO_SCHEMA_MODULE_ROOT` overrides it.

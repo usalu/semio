@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.window.remodel.remodeling.report;
+
+message RemodelingReportWindowConfig {
+  string report_table = 1;
+}

@@ -1,8 +1,8 @@
 //! 🧪️ `assert_viewer_never_mutates`/`assert_editor_and_viewer_share_dialect` (contract §2.5) —
 //! local stand-ins per the pilot's `📓️w2-cad-report.md` "SDK gaps" #2: as of this packet's W0-F
-//! handoff, the canonical `semio_framework_plugin::testkit` versions exist
-//! (`👁️✏️SurfaceTestkit` region) and are used directly here rather than re-invented.
-use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
+//! handoff, the canonical `semio_framework_plugin::artifact_app_laws` versions exist
+//! (`👁️✏️SurfaceUnitTests` region) and are used directly here rather than re-invented.
+use semio_framework_plugin::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
 macro_rules! surface_law {
     ($name:ident, $editor:ty, $viewer:ty) => {

@@ -20,7 +20,7 @@ fn bundle_keeps_its_plugin_identity() {
 /// built manifest's own app dialects, so adding a borrowed app without its dependency fails here.
 #[test]
 fn every_borrowed_surface_is_backed_by_a_declared_dependency() {
-    testkit::assert_surface_dependencies_declared(&test_bundle().manifest);
+    artifact_app_laws::assert_surface_dependencies_declared(&test_bundle().manifest);
 }
 
 /// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: playground's own two native

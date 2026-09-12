@@ -1472,11 +1472,6 @@ pub fn boxed_fixed_slots<T, const N: usize>(fill: impl FnMut() -> T) -> Box<[T; 
     let slots = boxed_slots(N, fill);
     slots.try_into().ok().expect("🧱️ fixed slot table seals into its own array — allocated with exactly N slots")
 }
-/// 🧱️ The fixed-slot-table budget every crate's `boxed_fixed_slots` guard reads — the one
-/// language-agnostic record of which registries are heap-first, how wide their slot tables are, and
-/// what one slot costs. A TypeScript/Python twin re-checks the same file's `capacity * elementSizeBytes`
-/// arithmetic without linking any Rust.
-pub const BOXED_FIXED_SLOTS_FIXTURE: &str = include_str!("🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json");
 
 /// 🧵️ Runs `build` on a thread that owns exactly `stack_bytes`, propagating its panic.
 ///
@@ -1485,7 +1480,7 @@ pub const BOXED_FIXED_SLOTS_FIXTURE: &str = include_str!("🧫️fixtures/🧱�
 /// caller's frame stays green in every gate until a lane like this one pins the real budget. The
 /// budget to pin is the one [`WorkerPool`]'s workers actually get — Rust's 2 MiB default, since
 /// `native_pool` spawns them with no `stack_size` of its own.
-/// 🧱️ One row of [`BOXED_FIXED_SLOTS_FIXTURE`], measured or declared — see
+/// 🧱️ One row of the [fixed-slot fixture](🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json), measured or declared — see
 /// [`assert_fixed_slot_tables`].
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FixedSlotTableBudget {
@@ -1508,7 +1503,7 @@ impl FixedSlotTableBudget {
 /// structural proof that the slots live on the heap — and `build` (the owners' `Default`/`new`) runs
 /// to completion on a thread holding only `stack_bytes`.
 ///
-/// Callers supply `declared` from [`BOXED_FIXED_SLOTS_FIXTURE`] and `measured` from `size_of` at the
+/// Callers supply `declared` from the [fixed-slot fixture](🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json) and `measured` from `size_of` at the
 /// one site where the private slot types are nameable; this function owns every assertion so the six
 /// crate-side guards stay four lines of JSON extraction each.
 #[cfg(not(target_arch = "wasm32"))]
@@ -2169,7 +2164,7 @@ mod wasm_pool {
     /// this target. Same public surface as the native pool ([`WorkerPool::new`]/`submit`/
     /// `worker_count`/`active_workers`/`occupancy`/`permits`/`timer`/`now_ms`/`shutdown`), PLUS
     /// [`WorkerPool::pump`], which the host (the browser's Web Worker running this WASM module — see
-    /// `🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts`) must call repeatedly to make progress:
+    /// `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts`) must call repeatedly to make progress:
     /// each call runs AT MOST one DRR-selected job and fires due timers, then returns whether more
     /// work remains. Running one job per `pump` call (rather than looping internally until a time
     /// budget expires, which this crate cannot measure on plain `wasm32-unknown-unknown` — no clock,

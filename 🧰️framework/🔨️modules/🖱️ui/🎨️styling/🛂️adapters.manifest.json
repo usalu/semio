@@ -5,25 +5,25 @@
       "id": "js-tailwind",
       "description": "Tailwind v4 @theme fragments + @font-face for @semio-tech/ui-styling",
       "generator": "📦️packages/🦀️rust/📜️script.ts generate",
-      "outputs": ["🤖️generated/🔤️palette-fonts.css", "🤖️generated/🌓️palette-theme.css", "🤖️generated/🚦️palette-presence.css", "🎨️palette.css", "🤖️generated/🟦️tokens.generated.ts"]
+      "outputs": ["🤖️generated/🔤️palette-fonts/🎨️.css", "🤖️generated/🌓️palette-theme/🎨️.css", "🤖️generated/🚦️palette-presence/🎨️.css", "🎨️palette/🎨️.css", "🤖️generated/🔤️tokens/🟦️.ts"]
     },
     {
       "id": "dotnet-elements-styling",
       "description": "C# Palette, Strokes, Radii from 🔣️.json",
       "generator": "📦️packages/🦀️rust/📜️script.ts generate",
-      "outputs": ["🔷️net/🖌️Elements.Styling/🤖️Generated/🎨️Palette.g.cs"]
+      "outputs": ["🎨️palette/🔷️.cs"]
     },
     {
       "id": "rust-ui-styling",
       "description": "ui_styling Rust tokens — linear-sRGB themes, strokes, radii, metrics",
       "generator": "📦️packages/🦀️rust/📜️script.ts generate",
-      "outputs": ["🦀️tokens.generated.rs"]
+      "outputs": ["🔤️tokens/🦀️.rs"]
     },
     {
       "id": "python-ui-styling",
-      "description": "Python styling.generated module",
+      "description": "Python styling token projection",
       "generator": "📦️packages/🦀️rust/📜️script.ts generate",
-      "outputs": ["📦️packages/🐍️python/🎨️styling/🤖️generated.py"]
+      "outputs": ["🔤️tokens/🐍️.py"]
     }
   ]
 }

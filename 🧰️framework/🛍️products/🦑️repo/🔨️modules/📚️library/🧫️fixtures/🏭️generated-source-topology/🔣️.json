@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 1,
+  "kindLeaves": {
+    "css": "🎨️.css",
+    "dotnet-source": "🔷️.cs",
+    "python-source": "🐍️.py",
+    "rust-source": "🦀️.rs",
+    "typescript-source": "🟦️.ts"
+  },
+  "cases": [
+    {
+      "contractId": "assets-build",
+      "previousPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs",
+      "canonicalPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs",
+      "fileKindId": "rust-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "assets-build",
+      "previousPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes.ts",
+      "canonicalPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "assets-build",
+      "previousPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🐍️icons.py",
+      "canonicalPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icons/🐍️.py",
+      "fileKindId": "python-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "assets-build",
+      "previousPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔷️Icons.cs",
+      "canonicalPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icons/🔷️.cs",
+      "fileKindId": "dotnet-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "assets-build",
+      "previousPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🟦️icons.ts",
+      "canonicalPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icons/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "assets-build",
+      "previousPath": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/🟦️metabolism_icons.ts",
+      "canonicalPath": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/🖼️icons/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "assets-build",
+      "previousPath": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/🦀️metabolism_icon_name.rs",
+      "canonicalPath": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs",
+      "fileKindId": "rust-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "actor-typegen",
+      "previousPath": "🧰️framework/🔨️modules/🎭️actor/🤖️generated/🟦️actor.ts",
+      "canonicalPath": "🧰️framework/🔨️modules/🎭️actor/🤖️generated/🎭️actor/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "ui-contract",
+      "previousPath": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract.ts",
+      "canonicalPath": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "framework-manifest",
+      "previousPath": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🪪️manifest.ts",
+      "canonicalPath": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "ui-axes",
+      "previousPath": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes.ts",
+      "canonicalPath": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "graph-catalog",
+      "previousPath": "🧰️framework/🔨️modules/🕸️graph/🤖️generated/🦀️registry.rs",
+      "canonicalPath": "🧰️framework/🔨️modules/🕸️graph/🤖️generated/📇️registry/🦀️.rs",
+      "fileKindId": "rust-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "graph-catalog",
+      "previousPath": "🧰️framework/🔨️modules/🕸️graph/🤖️generated/🔠️types.ts",
+      "canonicalPath": "🧰️framework/🔨️modules/🕸️graph/🤖️generated/🔠️types/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "schema-entity-catalog",
+      "previousPath": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🟦️entity-kinds.ts",
+      "canonicalPath": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "async-typegen",
+      "previousPath": "🧰️framework/🔨️modules/⏳️async/🤖️generated/🟦️async.ts",
+      "canonicalPath": "🧰️framework/🔨️modules/⏳️async/🤖️generated/⏳️async/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "styling-tokens",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated/🚦️palette-presence.css",
+      "canonicalPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated/🚦️palette-presence/🎨️.css",
+      "fileKindId": "css",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "styling-tokens",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated/🔤️palette-fonts.css",
+      "canonicalPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated/🔤️palette-fonts/🎨️.css",
+      "fileKindId": "css",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "styling-tokens",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated/🌓️palette-theme.css",
+      "canonicalPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated/🌓️palette-theme/🎨️.css",
+      "fileKindId": "css",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "styling-tokens",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated/🟦️tokens.generated.ts",
+      "canonicalPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated/🔤️tokens/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "styling-tokens",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette.css",
+      "canonicalPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css",
+      "fileKindId": "css",
+      "semanticOwnerKindId": "styling",
+      "inclusion": "tracked"
+    },
+    {
+      "contractId": "styling-tokens",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🦀️tokens.generated.rs",
+      "canonicalPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs",
+      "fileKindId": "rust-source",
+      "semanticOwnerKindId": "styling",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "styling-tokens",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/🎨️styling/🤖️generated.py",
+      "supersededPaths": [
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/🎨️styling/🔤️tokens/🐍️.py"
+      ],
+      "canonicalPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🐍️.py",
+      "fileKindId": "python-source",
+      "semanticOwnerKindId": "styling",
+      "inclusion": "ignored",
+      "nativePackage": {
+        "root": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
+        "metadataPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/pyproject.toml",
+        "sourceReference": "../../🔤️tokens/🐍️.py"
+      }
+    },
+    {
+      "contractId": "styling-tokens",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔷️net/🖌️Elements.Styling/🤖️Generated/🎨️Palette.g.cs",
+      "supersededPaths": [
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔷️net/🖌️Elements.Styling/🤖️Generated/🎨️palette/🔷️.cs"
+      ],
+      "canonicalPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🔷️.cs",
+      "fileKindId": "dotnet-source",
+      "semanticOwnerKindId": "styling",
+      "inclusion": "ignored",
+      "nativePackage": {
+        "root": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet",
+        "metadataPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet/🔷️.csproj",
+        "sourceReference": "../../🎨️palette/🔷️.cs"
+      }
+    },
+    {
+      "contractId": "plugin-registry",
+      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🏗️framework.ts",
+      "canonicalPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🏗️framework/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "plugin-registry",
+      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🖥️hosts.rs",
+      "canonicalPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🖥️hosts/🦀️.rs",
+      "fileKindId": "rust-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "plugin-registry",
+      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts",
+      "canonicalPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "plugin-registry",
+      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts",
+      "canonicalPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "plugin-registry",
+      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🗿️artifacts.rs",
+      "canonicalPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🗿️artifacts/🦀️.rs",
+      "fileKindId": "rust-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
+      "contractId": "playground-session",
+      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🟦️session.ts",
+      "canonicalPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts",
+      "fileKindId": "typescript-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    }
+  ]
+}

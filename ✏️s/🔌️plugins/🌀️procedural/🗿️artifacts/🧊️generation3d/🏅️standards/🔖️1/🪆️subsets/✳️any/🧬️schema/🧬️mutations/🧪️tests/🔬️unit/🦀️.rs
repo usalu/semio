@@ -229,7 +229,7 @@ fn change_schema_round_trip_updates_schema() {
 
 //#region 🧪️MutationLaws
 /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-/// (reachable here as `protocol::testkit`), exercised against the three most structurally
+/// (reachable here as `protocol::os_spr::protocol_laws`), exercised against the three most structurally
 /// distinct new variants: an id-keyed create/delete pair (`create-widget`), a relationship
 /// connect/disconnect pair (`connect-synapse`), and a document-level facet setter
 /// (`update-camera`).
@@ -237,10 +237,10 @@ fn change_schema_round_trip_updates_schema() {
 async fn create_widget_satisfies_the_inverse_and_absorb_laws() {
     let base = default_generation3d_snapshot();
     let mutation = Generation3dMutation::CreateWidget(CreateWidget { index: 0, widget: Widget::InputNote { id: "note-fresh".into(), text: String::new() } });
-    semio_framework_os_kernel::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v2".into() }).diff(&base).into_parts().0;
-    semio_framework_os_kernel::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -250,20 +250,20 @@ async fn connect_synapse_satisfies_the_inverse_and_absorb_laws() {
     base.fixture.widgets.push(Widget::InputNote { id: "b".into(), text: String::new() });
     let base = base;
     let mutation = Generation3dMutation::ConnectSynapse(ConnectSynapse { index: 0, synapse: SynapseSpec { id: "e-fresh".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() } });
-    semio_framework_os_kernel::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }).diff(&base).into_parts().0;
-    semio_framework_os_kernel::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn update_camera_satisfies_the_inverse_and_absorb_laws() {
     let base = default_generation3d_snapshot();
     let mutation = Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 4.0, y: 5.0, zoom: 6.0 } });
-    semio_framework_os_kernel::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v3".into() }).diff(&base).into_parts().0;
-    semio_framework_os_kernel::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws
 
@@ -279,7 +279,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

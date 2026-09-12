@@ -2,7 +2,7 @@
 use super::*;
 use crate::editor::sourcing::SourcingCurationCommand;
 use crate::editor::sourcing::commands::{set_active_example, stock_from_catalogue};
-use crate::editor::sourcing::testkit::new_app;
+use crate::editor::sourcing::unit_tests::context::new_app;
 use crate::editor::sourcing::{DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID};
 use crate::schema::{SourcingModule, empty_document};
 use semio_framework::kernel::Effect;
@@ -53,16 +53,16 @@ fn load_document_pack(emit: &Emit<SourcingMutation, SourcingCurationConfigMutati
 #[semio_framework_async_macros::async_test]
 async fn curation_and_example_actions_survive_registry_enforcement() {
     let mut app = new_app().await;
-    let result = app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("set example");
+    let result = app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("set example");
     let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
     let loaded = <CurationSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert!(!loaded.stock_extra.is_empty(), "demo-stock default materialized from the registry");
     let object_id = loaded.stock_extra[0].id.clone();
-    let result = app.dispatch_typed(SourcingCurationCommand::CurationAdd(crate::editor::sourcing::commands::curation_add::CurationAdd { object_id }), &semio_framework_plugin::testkit::meta("local")).await.expect("curation");
+    let result = app.dispatch_typed(SourcingCurationCommand::CurationAdd(crate::editor::sourcing::commands::curation_add::CurationAdd { object_id }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("curation");
     assert_eq!(result.mutations.len(), 1, "curationAdd is a document operation");
-    app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
 }
 
 #[semio_framework_async_macros::async_test]

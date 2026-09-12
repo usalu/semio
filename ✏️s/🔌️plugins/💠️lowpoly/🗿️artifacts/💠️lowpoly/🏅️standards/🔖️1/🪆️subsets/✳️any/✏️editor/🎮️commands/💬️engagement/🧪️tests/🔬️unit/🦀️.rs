@@ -1,4 +1,4 @@
-use crate::editor::lowpoly::testkit::{app_with_registry, dispatch, select_face};
+use crate::editor::lowpoly::unit_tests::context::{app_with_registry, dispatch, select_face};
 use crate::editor::lowpoly::LowpolyCommand;
 
 #[semio_framework_async_macros::async_test]

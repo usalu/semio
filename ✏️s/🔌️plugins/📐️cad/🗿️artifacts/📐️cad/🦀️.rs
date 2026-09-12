@@ -488,13 +488,13 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 }
 //#endregion 🔖️ArtifactKind
 
-//#region 🧪️Testkit
+//#region 🧫️Fixtures
 /// 🧪️ Shared sample records for every cad artifact node's tests (diff/op/dsl/pack/spr) — one
 /// definition instead of the four byte-identical copies the old per-module crates each carried.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
+#[path = "🧫️fixtures/🧩️sample-scene/🦀️.rs"]
+pub(crate) mod sample_scene_fixture;
+//#endregion 🧫️Fixtures
 
 #[path = "🎬️interaction-spec/🦀️.rs"]
 mod interaction_spec;
@@ -1177,6 +1177,8 @@ pub mod editor {
 
                 #[path = "."]
                 pub mod windows {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🦀️.rs"]
+                    pub mod config;
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏢️building/🦀️.rs"]
                     pub mod building;
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔥️energy/🦀️.rs"]

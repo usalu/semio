@@ -634,8 +634,8 @@ pub fn check_aluminium_member(n_ed_kn: f64, m_ed_knm: f64, a_mm2: f64, w_el_mm3:
 
 //#endregion 🔖️ComplianceHelpers
 
-//#region 🧪️ComplianceHelpersTests
+//#region 🧪️ComplianceTests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️compliance-helpers/🦀️.rs"]
-mod compliance_helpers_tests;
-//#endregion 🧪️ComplianceHelpersTests
+#[path = "🧪️tests/⚖️compliance/🦀️.rs"]
+mod compliance_tests;
+//#endregion 🧪️ComplianceTests

@@ -4,7 +4,7 @@
 
 use super::*;
 
-const GENERATION_3D_FLOW_FIXTURE: &str = include_str!("🔣️.json");
+const GENERATION_3D_FLOW_FIXTURE: &str = include_str!("../../🧫️fixtures/🎬️draw-list/🔣️.json");
 
 fn generation_3d_flow_host() -> FlowHost {
     let payload: Value = serde_json::from_str(GENERATION_3D_FLOW_FIXTURE).expect("generation3d flow fixture");

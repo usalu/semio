@@ -58,7 +58,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-coincident-face-stack-fuse-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-coincident-face-stack-fuse-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -135,7 +135,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-coincident-face-stack-fuse-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-coincident-face-stack-fuse-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -198,7 +198,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-cut-fully-engulfed-empty",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-cut-fully-engulfed-empty",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -275,7 +275,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-cut-fuse-chain-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-cut-fuse-chain-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -352,7 +352,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-cut-fuse-chain-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-cut-fuse-chain-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -429,7 +429,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-cut-no-overlap-noop",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-cut-no-overlap-noop",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -506,7 +506,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-disjoint-compound-mixed-scale",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-disjoint-compound-mixed-scale",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -583,7 +583,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-fuse-cut-intersect-three-step",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-fuse-cut-intersect-three-step",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -646,7 +646,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-intersect-non-overlap-empty",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-intersect-non-overlap-empty",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -723,7 +723,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-multistep-complex-scaled-1e4",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-multistep-complex-scaled-1e4",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -800,7 +800,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-nested-void-double-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-nested-void-double-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -877,7 +877,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-nested-void-double-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-nested-void-double-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -954,7 +954,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-nested-void-single-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-nested-void-single-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1031,7 +1031,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-nested-void-single-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-nested-void-single-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1108,7 +1108,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-non-manifold-corner-touch-boxes",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-non-manifold-corner-touch-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1185,7 +1185,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-tangent-cylinders-line-contact",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-tangent-cylinders-line-contact",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1262,7 +1262,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-tangent-spheres-point-contact",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-tangent-spheres-point-contact",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1339,7 +1339,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only booleans-tangent-spheres-point-contact-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only booleans-tangent-spheres-point-contact-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1409,7 +1409,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-curve-arc-to-spline-square",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-curve-arc-to-spline-square",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1479,7 +1479,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-curve-line-to-arc-square-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-curve-line-to-arc-square-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1549,7 +1549,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-curve-line-to-arc-square-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-curve-line-to-arc-square-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1619,7 +1619,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-curve-line-to-spline-rectangle",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-curve-line-to-spline-rectangle",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1689,7 +1689,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-curve-prism-line-to-arc-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-curve-prism-line-to-arc-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1759,7 +1759,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-curve-prism-line-to-arc-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-curve-prism-line-to-arc-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1829,7 +1829,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-curve-tangent-arc-fillet-like",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-curve-tangent-arc-fillet-like",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1899,7 +1899,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-surface-cylindrical-strip-to-bspline-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-surface-cylindrical-strip-to-bspline-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1969,7 +1969,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-surface-cylindrical-strip-to-bspline-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-surface-cylindrical-strip-to-bspline-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2039,7 +2039,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-surface-disk-plane-to-general",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-surface-disk-plane-to-general",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2109,7 +2109,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-surface-plane-to-bspline-pentagon",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-surface-plane-to-bspline-pentagon",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2179,7 +2179,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-surface-plane-to-bspline-square-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-surface-plane-to-bspline-square-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2249,7 +2249,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-surface-plane-to-bspline-square-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-surface-plane-to-bspline-square-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2319,7 +2319,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only geometry-replace-surface-plane-to-bspline-triangle",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only geometry-replace-surface-plane-to-bspline-triangle",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2389,7 +2389,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only move-vertex-inplane-shift-prism-solid-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only move-vertex-inplane-shift-prism-solid-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2459,7 +2459,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only move-vertex-inplane-shift-prism-solid-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only move-vertex-inplane-shift-prism-solid-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2529,7 +2529,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only move-vertex-inplane-shift-quad-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only move-vertex-inplane-shift-quad-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2599,7 +2599,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only move-vertex-inplane-shift-quad-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only move-vertex-inplane-shift-quad-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2669,7 +2669,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only move-vertex-lifts-third-corner-off-base-plane",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only move-vertex-lifts-third-corner-off-base-plane",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2739,7 +2739,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only move-vertex-lifts-third-corner-off-base-plane-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only move-vertex-lifts-third-corner-off-base-plane-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2795,7 +2795,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only move-vertex-makes-pentagon-nonplanar-rejected",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only move-vertex-makes-pentagon-nonplanar-rejected",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2851,7 +2851,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only move-vertex-makes-quad-nonplanar-rejected",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only move-vertex-makes-quad-nonplanar-rejected",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2921,7 +2921,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only move-vertex-self-intersect-bowtie-rejected",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only move-vertex-self-intersect-bowtie-rejected",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2991,7 +2991,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only move-vertex-self-intersect-bowtie-rejected-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only move-vertex-self-intersect-bowtie-rejected-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3061,7 +3061,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-edge-chord-across-disk",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-edge-chord-across-disk",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3131,7 +3131,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-edge-diagonal-across-square-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-edge-diagonal-across-square-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3201,7 +3201,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-edge-diagonal-across-square-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-edge-diagonal-across-square-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3271,7 +3271,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-face-caps-open-cylinder",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-face-caps-open-cylinder",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3341,7 +3341,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-face-closes-open-box-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-face-closes-open-box-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3411,7 +3411,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-face-closes-open-box-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-face-closes-open-box-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3481,7 +3481,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-shell-from-cylinder-faces",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-shell-from-cylinder-faces",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3551,7 +3551,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-shell-second-shell-flipped-sense",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-shell-second-shell-flipped-sense",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3621,7 +3621,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-shell-second-shell-flipped-sense-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-shell-second-shell-flipped-sense-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3691,7 +3691,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-solid-second-disjoint-solid-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-solid-second-disjoint-solid-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3761,7 +3761,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-solid-second-disjoint-solid-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-solid-second-disjoint-solid-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3831,7 +3831,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-solid-void-boundary-as-solid",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-solid-void-boundary-as-solid",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3901,7 +3901,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-vertex-apex-above-box-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-vertex-apex-above-box-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3971,7 +3971,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-vertex-apex-above-box-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-vertex-apex-above-box-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4041,7 +4041,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-build-create-vertex-three-loose-points",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-build-create-vertex-three-loose-points",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4097,7 +4097,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-edge-boundary-edge-rejected",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-edge-boundary-edge-rejected",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4167,7 +4167,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-edge-loose-diagonal-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-edge-loose-diagonal-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4237,7 +4237,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-edge-loose-diagonal-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-edge-loose-diagonal-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4307,7 +4307,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-face-from-redundant-shell-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-face-from-redundant-shell-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4377,7 +4377,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-face-from-redundant-shell-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-face-from-redundant-shell-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4447,7 +4447,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-face-still-bounding-closed-shell-rejected",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-face-still-bounding-closed-shell-rejected",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4503,7 +4503,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-shell-only-shell-of-solid-rejected",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-shell-only-shell-of-solid-rejected",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4573,7 +4573,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-shell-redundant-shell-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-shell-redundant-shell-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4643,7 +4643,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-shell-redundant-shell-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-shell-redundant-shell-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4713,7 +4713,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-solid-one-of-three",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-solid-one-of-three",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4783,7 +4783,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-solid-second-disjoint-solid-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-solid-second-disjoint-solid-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4853,7 +4853,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-solid-second-disjoint-solid-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-solid-second-disjoint-solid-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4909,7 +4909,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-vertex-corner-cascade-rejected",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-vertex-corner-cascade-rejected",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4979,7 +4979,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-vertex-loose-apex-large",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-vertex-loose-apex-large",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5049,7 +5049,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "8.0",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/📜️script.ts generate --only topology-remove-delete-vertex-loose-apex-small",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only topology-remove-delete-vertex-loose-apex-small",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },

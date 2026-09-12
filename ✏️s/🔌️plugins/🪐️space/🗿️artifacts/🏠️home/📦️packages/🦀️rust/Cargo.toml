@@ -45,6 +45,8 @@ semio-framework-os = { workspace = true, features = ["space-guest"], optional = 
 semio-framework-os = { workspace = true, features = ["os-host-full"], optional = true }
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
 semio-framework-hash = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }

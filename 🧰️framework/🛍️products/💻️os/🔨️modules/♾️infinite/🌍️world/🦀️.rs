@@ -1399,6 +1399,33 @@ pub struct World3dState {
 }
 
 impl World3dState {
+    /// 🩺️ What this surface's mesh ingest actually holds, for the one `[DEBUG] ` line the browser
+    /// Worker can emit. `draws=0` on a surface whose `meshes_json` carries a solid is ambiguous
+    /// between "the bridge never ran", "the bridge ran and produced nothing" and "the draws exist
+    /// but no frame has painted them since" — this separates the three
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn ingest_census(&self) -> String {
+        format!(
+            "state-draws={} state-instances={} state-meshes={} bridge={} bridge-lease={} apply={} apply-page={}/{} apply-item={} apply-faulted={} rebuild={} retired-draws={} retirement={} blocked={} snapshot-lease={} fault={:?}",
+            self.draws.len,
+            self.draws.iter().map(|draw| draw.instances.len()).sum::<usize>(),
+            self.meshes.len,
+            self.scene_bridge.is_some(),
+            self.scene_bridge_lease.is_some(),
+            self.snapshot_apply.is_some(),
+            self.snapshot_apply.as_ref().map_or(0, |cursor| cursor.page),
+            self.snapshot_apply.as_ref().map_or(0, |cursor| cursor.lease.page_count),
+            self.snapshot_apply.as_ref().map_or(0, |cursor| cursor.item),
+            self.snapshot_apply.as_ref().is_some_and(|cursor| cursor.faulted),
+            self.draw_rebuild.is_some(),
+            self.retired_draws.is_some(),
+            self.dynamic_retirement.is_some(),
+            self.dynamic_blocked_owner.is_some(),
+            self.snapshot_lease.is_some(),
+            self.snapshot_fault,
+        )
+    }
+
     pub fn new(surface_id: String, controller_id: String) -> Self {
         Self {
             surface_id,
@@ -1755,8 +1782,29 @@ pub fn world3d_dynamic_retirement_terminal_is_empty(state: &World3dState) -> boo
         && state.asset_io.terminal_is_empty()
 }
 
+/// ⏰️ Whether this surface still owes its own frame — the one predicate the renderer turns into a
+/// cursor wake, and therefore the only reason a settled, event-driven shell schedules another frame
+/// for a World3d surface at all.
+///
+/// ⚖️ It used to name only the three MESH builders. The two cursors that turn a producer's
+/// `meshes_json`/`instances_json` into `state.draws` — the scene bridge and the typed snapshot apply
+/// — were missing, so a shell that had quiesced never scheduled the frames they needed: measured on
+/// 6118 as `procedural-preview` parked at `bridge=false bridge-lease=true apply=true state-meshes=2
+/// draws=0` for 95 s with the solid `extrude@solid` sitting unconsumed in its mesh lane
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Every bounded cursor the frame transaction's
+/// `World3dSnapshot` phase drives belongs here, or its work only advances while something ELSE keeps
+/// the frames coming.
 pub fn world3d_cursor_work_pending(state: &World3dState) -> bool {
-    state.placeholder_build.is_some() || state.terrain_build.is_some() || state.face_overlay_build.is_some()
+    state.placeholder_build.is_some()
+        || state.terrain_build.is_some()
+        || state.face_overlay_build.is_some()
+        || state.scene_bridge.is_some()
+        || state.snapshot_apply.is_some()
+        || state.draw_rebuild.is_some()
+        || state.retired_draws.is_some()
+        || state.dynamic_retirement.is_some()
+        || state.scene_bridge_retired.is_some()
+        || state.scene_bridge_lease.is_some_and(|lease| state.snapshot_lease != Some(lease))
 }
 
 //#endregion 🧹️World3dDynamicRetirement

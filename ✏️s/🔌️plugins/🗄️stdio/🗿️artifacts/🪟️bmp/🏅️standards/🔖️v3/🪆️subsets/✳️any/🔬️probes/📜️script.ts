@@ -9,7 +9,7 @@
 //
 // Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should
 // produce. The actual BMP decode is performed by the sibling standalone `image-bmp-codec` binary
-// (`../🏭️generator/🦀️image-bmp-codec`, depends on nothing but `image` 0.25's own `bmp` feature)
+// (`../🏭️generator/🔁️codec/📦️packages/🦀️rust`, depends on nothing but `image` 0.25's own `bmp` feature)
 // via its `project` subcommand — this file only shells out to it, hashes the hex payload it
 // returns for the (potentially large) index/pixel buffer into a size+digest pair — the same
 // opaque-binary-payload treatment the AVI probe gives a movi chunk's payload — and performs the
@@ -23,7 +23,7 @@
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔬️probes/📜️script.ts —
 //      the sibling probe suite this file's CLI/dispatch/compare shape is mirrored from.
-// @see ../🏭️generator/🦀️image-bmp-codec/src/🦀️.rs — the `project` subcommand this file calls
+// @see ../🏭️generator/🔁️codec/🦀️.rs — the `project` subcommand this file calls
 
 //#endregion 🧲️Header
 
@@ -48,7 +48,7 @@ type ProbeReport = {
 
 const ENGINE = { family: "image-rs", implementation: "image-bmp-codec (image 0.25's own bmp feature)", version: "image@0.25.10" } as const;
 const PROBE_VERSION = "image@0.25.10";
-const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🦀️image-bmp-codec", "Cargo.toml");
+const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 //#endregion 🧬️Contract
 
 //#region 📥️Model

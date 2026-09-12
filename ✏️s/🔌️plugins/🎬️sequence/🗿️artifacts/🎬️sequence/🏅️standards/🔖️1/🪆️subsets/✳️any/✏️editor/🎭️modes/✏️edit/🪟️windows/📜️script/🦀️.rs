@@ -1,8 +1,8 @@
 //! 📜️ Sequence play app — the script window: the compiled imperative path plus the last `run` result.
 
-use crate::editor::sequence::config::SequenceConfig;
-use crate::editor::sequence::host_from_snapshot;
-use crate::SequenceSnapshot;
+use super::transient::SequenceScriptWindowTransient;
+use crate::editor::sequence::host_from_fixture;
+use crate::SequenceFixture;
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -33,12 +33,12 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiAssemblyResult<BuiltNode> {
-    let host = host_from_snapshot(fixture);
+pub fn render(fixture: &SequenceFixture, transient: &SequenceScriptWindowTransient) -> UiAssemblyResult<BuiltNode> {
+    let host = neural_engine::ColdOwner::new(host_from_fixture(fixture));
     let mut text = host.compile_text();
-    if !config.last_run_json.is_empty() {
+    if !transient.last_run_json.is_empty() {
         text.push_str("\n\n# run result\n");
-        text.push_str(&config.last_run_json);
+        text.push_str(&transient.last_run_json);
     }
     semio_framework_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_SCRIPT, semio_framework_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(text, Some("imperative".into()), None))
 }

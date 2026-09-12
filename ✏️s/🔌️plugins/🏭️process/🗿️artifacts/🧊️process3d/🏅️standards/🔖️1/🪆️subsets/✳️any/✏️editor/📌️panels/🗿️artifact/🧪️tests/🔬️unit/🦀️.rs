@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::process3d::testkit;
+use crate::editor::process3d::unit_tests::context;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_document_tab_to_this_body_key() {
@@ -10,8 +10,8 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_panel_lists_stock_and_steps() {
-    let mut app = testkit::app();
-    let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_DOCUMENT);
+    let mut app = context::app();
+    let rendered = context::render(&mut app, PROCESS_3D_PLAY_BODY_DOCUMENT);
     assert!(rendered.contains("process3d-play-document.stock"));
     assert!(rendered.contains("process3d-play-document.steps"));
 }

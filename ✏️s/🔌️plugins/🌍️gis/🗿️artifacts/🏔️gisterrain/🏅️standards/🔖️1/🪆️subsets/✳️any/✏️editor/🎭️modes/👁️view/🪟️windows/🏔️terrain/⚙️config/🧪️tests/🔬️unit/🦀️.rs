@@ -60,7 +60,7 @@ fn gis_terrain_window_config_isolates_two_registered_windows_and_reloads() {
         .spawn(|| {
             block_on_terrain_window_config(async {
                 use crate::editor::gis3d::commands::view::set_camera;
-                use crate::editor::gis3d::testkit::{app, close, dispatch_at, render_at};
+                use crate::editor::gis3d::unit_tests::context::{app, close, dispatch_at, render_at};
                 use crate::editor::gis3d::Gis3dCommand;
                 use semio_framework_plugin::{PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
@@ -93,8 +93,8 @@ fn gis_terrain_window_config_isolates_two_registered_windows_and_reloads() {
 
                 let left_json = render_at(&mut running, super::super::GIS3D_PLAY_BODY_COMPOSITE, &left).await;
                 let right_json = render_at(&mut running, super::super::GIS3D_PLAY_BODY_COMPOSITE, &right).await;
-                let left_scene = semio_framework_plugin::testkit::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&left_json).expect("left scene");
-                let right_scene = semio_framework_plugin::testkit::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&right_json).expect("right scene");
+                let left_scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&left_json).expect("left scene");
+                let right_scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&right_json).expect("right scene");
                 assert_eq!(left_scene.camera_json, fixture["cases"][0]["cameraJson"].as_str().expect("left expected"));
                 assert_eq!(right_scene.camera_json, fixture["cases"][1]["cameraJson"].as_str().expect("right expected"));
 
@@ -103,8 +103,8 @@ fn gis_terrain_window_config_isolates_two_registered_windows_and_reloads() {
                 for pack in packs {
                     reopened.load_window_config_pack(pack).await.expect("reload window pack");
                 }
-                let reopened_left = semio_framework_plugin::testkit::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&render_at(&mut reopened, super::super::GIS3D_PLAY_BODY_COMPOSITE, &left).await).expect("reopened left");
-                let reopened_right = semio_framework_plugin::testkit::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&render_at(&mut reopened, super::super::GIS3D_PLAY_BODY_COMPOSITE, &right).await).expect("reopened right");
+                let reopened_left = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&render_at(&mut reopened, super::super::GIS3D_PLAY_BODY_COMPOSITE, &left).await).expect("reopened left");
+                let reopened_right = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&render_at(&mut reopened, super::super::GIS3D_PLAY_BODY_COMPOSITE, &right).await).expect("reopened right");
                 assert_eq!(reopened_left.camera_json, left_scene.camera_json);
                 assert_eq!(reopened_right.camera_json, right_scene.camera_json);
 

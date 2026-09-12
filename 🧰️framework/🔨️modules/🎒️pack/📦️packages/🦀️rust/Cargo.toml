@@ -20,6 +20,7 @@ path = "🦀️.rs"
 default = ["deflate"]
 deflate = ["semio-framework-replication/deflate"]
 ureq = ["dep:ureq"]
+corruption-testing = []
 
 [dependencies]
 semio-framework-replication = { workspace = true }

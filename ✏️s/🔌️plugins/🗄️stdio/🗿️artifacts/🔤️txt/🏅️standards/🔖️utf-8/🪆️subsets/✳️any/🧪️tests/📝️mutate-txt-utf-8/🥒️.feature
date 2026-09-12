@@ -11,7 +11,7 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
   directory before touching it; the committed file is never written to.
 
   ⚠️ WHAT THE `oracle` AND `subject` ROWS BELOW ACTUALLY COMPARE, stated plainly. The reference half is
-  `✏️s/🔌️plugins/🗄️stdio/🧪️oracle`'s hand-written `oracle_apply_mutation`/`independent_split`/
+  `✏️s/🔌️plugins/🗄️stdio/🔮️oracles`'s hand-written `oracle_apply_mutation`/`independent_split`/
   `independent_render`, which never calls this subset's production `TxtSnapshot`/`TxtMutation` code.
   That is a genuinely separate implementation — and it is OUR code, in OUR language, in OUR crate, by
   OUR authors. Under the raised bar it is not a second PRODUCER, and the `txt-utf-8-line-structure`

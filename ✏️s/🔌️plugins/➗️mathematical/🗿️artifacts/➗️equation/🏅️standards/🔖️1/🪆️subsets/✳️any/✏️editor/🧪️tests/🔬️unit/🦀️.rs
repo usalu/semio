@@ -1,5 +1,45 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    /// ✏️ `EquationPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
+    /// `ArtifactApp` — `EditorApp<EquationPlayApp>` (SDK adapter, contract §2.1) is the real
+    /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
+    /// `PluginBuilder::editor::<EquationPlayApp>` builds it.
+    pub type MathApp = VcsArtifactApp<EditorApp<EquationPlayApp>>;
+    
+    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    pub async fn math_app() -> MathApp {
+        new_app::<EditorApp<EquationPlayApp>>().await
+    }
+    
+    /// ✏️ Adapts `create_equation_app`'s `AppDefinition` (contract §2.4) into the `App {
+    /// definition, examples }` shape `context::assert_declared_actions_bridge_to_commands` still
+    /// expects — framework test context gap, not modifiable here (`🧰️framework/**` is outside this
+    /// packet's lease).
+    pub fn equation_app_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_equation_app(), examples: Vec::new() }
+    }
+    
+    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
+    pub async fn math_app_with_registry() -> MathApp {
+        new_app_with_registry::<EditorApp<EquationPlayApp>>(equation_app_manifest_for_tests).await
+    }
+    
+    pub async fn dispatch(app: &mut MathApp, command: EquationCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut MathApp, body_key: &str) -> String {
+        // 🌱️ `UiNode` (`semio-framework-plugin`, framework-owned) has not itself gained `ToValue` —
+        // `Debug` gives every test caller here the same "does the render mention X" substring check.
+        format!("{:?}", app.render(body_key, None, &ViewModel::default()).await.expect("render"))
+    }
+}
+
 use super::*;
-use crate::editor::equation::testkit::{math_app, math_app_with_registry};
+use crate::editor::equation::unit_tests::context::{math_app, math_app_with_registry};
 
 //#region 🔖️RetainedCommands
 fn retained_operation(generation: u64) -> AppOperationContext {
@@ -230,7 +270,7 @@ pub(super) fn every_command() -> Vec<EquationCommand> {
         EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
         EquationCommand::SetDirected(set_directed::SetDirected { directed: true }),
         EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"addNode","x":12.0,"y":34.0}]"#.into() }),
-        EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: crate::EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 } }),
+        EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 5.0, y: 6.0, zoom: 2.0 } }),
         EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry::default() }),
     ]
 }
@@ -290,7 +330,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-    use crate::editor::equation::testkit::render;
+    use crate::editor::equation::unit_tests::context::render;
     let mut app = math_app().await;
     assert!(render(&mut app, "equation.play.nope").await.contains("Unknown body"));
 }

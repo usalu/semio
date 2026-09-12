@@ -2,7 +2,7 @@
   "CreateObject": {
     "child_id": "obj-2",
     "target": {
-      "artifactId": "frame-column-object",
+      "artifactId": "obj-2",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

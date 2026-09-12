@@ -1,0 +1,676 @@
+{
+  "owners": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts",
+      "exports": [
+        "captureFreshSourceEpochV1",
+        "freshSourceEpochBytesV1"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts",
+      "exports": [
+        "buildPluginComponent",
+        "extractPluginCore",
+        "pluginWasmArtifactPath"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🟦️.ts",
+      "exports": [
+        "emitOwnerDescriptorPairV1",
+        "remainingDescriptorEmissionBudgetMs"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+      "exports": [
+        "describeExtensionComponent",
+        "describePluginComponent",
+        "produceFreshComponentV1"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+      "exports": [
+        "generatePluginRegistry",
+        "parseComponentPackageId"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts",
+      "exports": [
+        "generatePlaygroundRegistry"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+      "exports": [
+        "buildPlaygroundSession",
+        "stagePlaygroundSession"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧰️framework-catalog/🟦️.ts",
+      "exports": [
+        "generateFrameworkPackageRegistry"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+      "exports": [
+        "emitRustArtifacts",
+        "emitRustHosts",
+        "renderCatalogFiles"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+      "exports": [
+        "filterProjectedPluginRegistry",
+        "readGeneratedCatalogProjection"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts",
+      "exports": [
+        "validateTaxonomyTree"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌳️surface-scaffold/🟦️.ts",
+      "exports": [
+        "scaffoldSurfaceTree"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🟦️.ts",
+      "exports": [
+        "validateDescriptors"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+      "exports": [
+        "verifyDescriptorPairBytesV1",
+        "verifyFreshCatalogPackageV1"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️trusted-stdio-catalog/🟦️.ts",
+      "exports": [
+        "buildTrustedStdioCatalogV1",
+        "publishTrustedStdioCatalogV1"
+      ]
+    }
+  ],
+  "routers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts",
+      "maximumLines": 90
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
+      "maximumLines": 180
+    }
+  ],
+  "directoryContexts": [
+    {
+      "name": "📣️plugin-publication-source-ownership",
+      "parentKind": "schema",
+      "kind": "plugin-publication-source-ownership"
+    },
+    {
+      "name": "📣️plugin-publication-source-ownership",
+      "parentKind": "fixtures",
+      "kind": "plugin-publication-source-ownership"
+    },
+    {
+      "name": "📣️plugin-publication-source-ownership",
+      "parentKind": "tests",
+      "kind": "plugin-publication-source-ownership"
+    },
+    {
+      "name": "🧾️source-epoch",
+      "parentKind": "plugin-descriptor-emitter",
+      "kind": "os-describe-source-epoch"
+    },
+    {
+      "name": "🏗️component-build",
+      "parentKind": "plugin-descriptor-emitter",
+      "kind": "os-describe-component-build"
+    },
+    {
+      "name": "🛂️descriptor-emission",
+      "parentKind": "plugin-descriptor-emitter",
+      "kind": "os-descriptor-emission"
+    },
+    {
+      "name": "🏭️fresh-component",
+      "parentKind": "plugin-descriptor-emitter",
+      "kind": "os-describe-fresh-component"
+    },
+    {
+      "name": "🔎️discovery",
+      "parentKind": "registry",
+      "kind": "os-registry-discovery"
+    },
+    {
+      "name": "🎮️playground",
+      "parentKind": "registry",
+      "kind": "os-registry-playground"
+    },
+    {
+      "name": "🔎️discovery",
+      "parentKind": "os-registry-playground",
+      "kind": "os-registry-playground-discovery"
+    },
+    {
+      "name": "🧭️session",
+      "parentKind": "os-registry-playground",
+      "kind": "os-registry-playground-session"
+    },
+    {
+      "name": "🧰️framework-catalog",
+      "parentKind": "registry",
+      "kind": "os-registry-framework-catalog"
+    },
+    {
+      "name": "📽️projection",
+      "parentKind": "registry",
+      "kind": "os-registry-projection"
+    },
+    {
+      "name": "🗿️taxonomy-validation",
+      "parentKind": "registry",
+      "kind": "os-registry-taxonomy-validation"
+    },
+    {
+      "name": "🌳️surface-scaffold",
+      "parentKind": "registry",
+      "kind": "os-registry-surface-scaffold"
+    },
+    {
+      "name": "🛂️descriptor-verification",
+      "parentKind": "registry",
+      "kind": "os-registry-descriptor-verification"
+    },
+    {
+      "name": "✅️catalog-verification",
+      "parentKind": "registry",
+      "kind": "os-registry-catalog-verification"
+    },
+    {
+      "name": "✅️trusted-stdio-catalog",
+      "parentKind": "registry",
+      "kind": "os-registry-trusted-stdio-catalog"
+    },
+    {
+      "name": "🚀️launch",
+      "parentKind": "registry",
+      "kind": "os-registry-launch"
+    },
+    {
+      "name": "📖️catalog-view",
+      "parentKind": "registry",
+      "kind": "os-registry-catalog-view"
+    }
+  ],
+  "consumers": [
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-complete/🟦️.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🚀️launch/🟦️.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts"
+      ]
+    }
+  ],
+  "dependencyEdges": {
+    "required": [
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts"
+      },
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts"
+      },
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts"
+      },
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts"
+      },
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts"
+      },
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts"
+      },
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts"
+      },
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts"
+      }
+    ],
+    "forbidden": [
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts"
+      },
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts"
+      },
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts"
+      },
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts"
+      },
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🟦️.ts"
+      },
+      {
+        "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+        "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🟦️.ts"
+      }
+    ]
+  },
+  "registration": {
+    "name": "🧹clean🧩️taxonomy🧪️plugin-publication-source-ownership",
+    "command": "bun nx run @semio-tech/repo-lib:test-plugin-publication-source-ownership",
+    "target": "test-plugin-publication-source-ownership"
+  }
+}

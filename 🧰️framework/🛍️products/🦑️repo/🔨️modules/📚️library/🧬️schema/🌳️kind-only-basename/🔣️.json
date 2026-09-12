@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractId",
+    "semantics",
+    "topology",
+    "fileKinds",
+    "externalContracts",
+    "files",
+    "expectedFindings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contractId": {
+      "const": "kind-only-implementation-leaf-v1"
+    },
+    "semantics": {
+      "const": {
+        "implementationLeaf": "file-kind-emoji-and-longest-extension-chain",
+        "semanticConcern": "registered-directory",
+        "targetOwnership": "target-before-package",
+        "fixedAdmission": "exact-scope-only",
+        "unknownKind": "fail-closed"
+      }
+    },
+    "topology": {
+      "const": {
+        "packagesDirectory": "📦️packages",
+        "targetsDirectory": "🎯️targets",
+        "packageLanguageDirectories": [
+          "🦀️rust",
+          "🟦️typescript",
+          "🟨️javascript",
+          "🐹️go",
+          "🐍️python",
+          "🔷️dotnet"
+        ],
+        "semanticExecutionCollections": [
+          "🏭️generator",
+          "🔬️probes",
+          "🔮️oracles"
+        ],
+        "obsoleteExecutionCollections": [
+          "🏗️generator"
+        ]
+      }
+    },
+    "fileKinds": {
+      "type": "array",
+      "minItems": 11,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "emoji", "extensionChains", "role", "implementation"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+          },
+          "emoji": {
+            "type": "string",
+            "minLength": 1
+          },
+          "extensionChains": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^\\.[a-z0-9.]+$"
+            }
+          },
+          "role": {
+            "enum": ["source", "specification", "configuration", "asset"]
+          },
+          "implementation": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "externalContracts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "path", "scope"],
+        "properties": {
+          "id": {
+            "const": "cargo-build-script"
+          },
+          "path": {
+            "$ref": "#/definitions/path"
+          },
+          "scope": {
+            "const": "rust-package-root"
+          }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 37,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "content"],
+        "properties": {
+          "path": {
+            "$ref": "#/definitions/path"
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "expectedFindings": {
+      "type": "array",
+      "minItems": 22,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "breachId", "fileKindId", "expectedBasename"],
+        "properties": {
+          "path": {
+            "$ref": "#/definitions/path"
+          },
+          "breachId": {
+            "enum": [
+              "taxonomy/kind-only-basename",
+              "taxonomy/target-inside-package-boundary"
+            ]
+          },
+          "fileKindId": {
+            "type": ["string", "null"]
+          },
+          "expectedBasename": {
+            "type": ["string", "null"]
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    }
+  }
+}

@@ -91,6 +91,31 @@ export function testWindowMeasureControls(): void {
       view.rerender(createElement(WindowMeasureSelect, { measure: selectMeasure("always"), onAction }));
       expect(trigger().textContent).toContain("Always");
     });
+
+    // 🕰️ Wave B41: the draft is invisible from outside React — a combobox trigger carries no value of its
+    // own, and the rendered text is the DRAFT's — so `🔍️browser-probe.ts` scored a pending draft as the
+    // program's answer. Every draft-bearing control now also exposes the AUTHORITY's value, which is what
+    // lets a reader (assistive technology, a tutorial, a probe) tell a pending gesture from a landed one.
+    it("exposes the value the program published beside the draft it renders", () => {
+      const onAction = () => undefined;
+      const view = render(createElement(WindowMeasureSelect, { measure: selectMeasure("selected"), onAction }));
+      expect(trigger().getAttribute("data-published-value")).toBe("selected");
+      fireEvent.click(trigger());
+      fireEvent.click([...document.querySelectorAll('[data-value="always"]')].at(-1) as HTMLElement);
+      // 🏛️ Draft in flight: the trigger SHOWS "Always" while the program still publishes "selected".
+      expect(trigger().textContent).toContain("Always");
+      expect(trigger().getAttribute("data-published-value")).toBe("selected");
+      view.rerender(createElement(WindowMeasureSelect, { measure: selectMeasure("always"), onAction }));
+      expect(trigger().getAttribute("data-published-value")).toBe("always");
+      cleanup();
+      const toggleView = render(createElement(WindowMeasureToggle, { measure: toggleMeasure(true), onAction }));
+      expect(checkbox().getAttribute("data-published-value")).toBe("true");
+      fireEvent.click(checkbox());
+      expect(checkbox().checked).toBe(false);
+      expect(checkbox().getAttribute("data-published-value")).toBe("true");
+      toggleView.rerender(createElement(WindowMeasureToggle, { measure: toggleMeasure(false), onAction }));
+      expect(checkbox().getAttribute("data-published-value")).toBe("false");
+    });
   });
 }
 

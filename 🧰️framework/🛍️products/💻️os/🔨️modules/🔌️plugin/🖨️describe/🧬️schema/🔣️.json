@@ -173,9 +173,10 @@
     "FreshStagingV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "componentHex", "componentSha256", "componentBlake3", "coreHex", "laws"],
+      "required": ["schema", "appChannelVersion", "componentHex", "componentSha256", "componentBlake3", "coreHex", "laws"],
       "properties": {
         "schema": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*\\.v[0-9]+$" },
+        "appChannelVersion": { "type": "integer", "minimum": 1 },
         "componentHex": { "$ref": "#/$defs/DescribeHex" },
         "componentSha256": { "$ref": "#/$defs/DescribeSha256" },
         "componentBlake3": { "$ref": "#/$defs/DescribeSha256" },

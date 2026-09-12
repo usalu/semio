@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the declaration-owned sequence surfaces.
     pub enum SequenceApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::sequence::SequencePlayApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::sequence::SequenceViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::sequence::SequencePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::sequence::SequenceViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps
@@ -41,7 +41,7 @@ pub fn plugin() -> Result<Plugin<SequenceApps>, PluginAssemblyError> {
 }
 
 //#region 🧪️SurfaceTests
-/// 🧪️ Contract §2.5's canonical surface testkit — landed by the ticket's W0-F SDK-gap-closure lane
+/// 🧪️ Contract §2.5's canonical surface test context — landed by the ticket's W0-F SDK-gap-closure lane
 /// (`📓️w0-f-report.md`), used directly rather than a local stand-in.
 #[cfg(test)]
 #[path = "🧪️tests/🔬️surface/🦀️.rs"]

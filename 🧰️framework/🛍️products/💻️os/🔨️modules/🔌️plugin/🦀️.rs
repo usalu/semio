@@ -20,6 +20,10 @@ mod declaration_fixture_mutations;
 #[cfg(test)]
 #[path = "🧪️tests/🌲️fixture-projection/🦀️.rs"]
 mod fixture_projection_retirement_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🏃️plugin-runtime-runtime-laws/🦀️.rs"]
+mod plugin_runtime_runtime_laws;
 //#endregion 📄️DeclarationFixtureMutationMount
 
 #[doc(hidden)]
@@ -270,8 +274,8 @@ pub(crate) mod local_interaction;
 pub(crate) mod publication_fixture;
 
 #[cfg(test)]
-#[path = "🪟️window/🫧️transient/🧪️testkit/📢️scalar-publication/🦀️.rs"]
-pub(crate) mod window_transient_testkit;
+#[path = "🧪️tests/📢️publication-owners/🦀️.rs"]
+pub(crate) mod window_transient_owners;
 
 #[cfg(test)]
 #[path = "🧪️tests/🖥️test-app-mutations/🦀️.rs"]
@@ -280,6 +284,10 @@ pub(crate) mod test_app_mutation_fixture;
 #[cfg(test)]
 #[path = "🧪️tests/📡️contributed-mutation-wire/🦀️.rs"]
 pub(crate) mod contributed_mutation_wire;
+
+#[cfg(test)]
+#[path = "🧪️tests/📤️segmented-download/🦀️.rs"]
+mod segmented_download_contract;
 
 #[path = "."]
 #[cfg_attr(test, macro_use)]
@@ -6446,16 +6454,21 @@ pub mod app {
     pub(crate) mod mutation_fixture;
 
     #[cfg(test)]
+    #[path = "🧪️tests/🚫️empty-state/🦀️.rs"]
+    mod empty_state_contract;
+
+    #[cfg(test)]
     #[path = "🧪️tests/♻️publication-retirement-authority/🦀️.rs"]
     mod publication_retirement_authority;
 
-    //#region 🔖️Testkit
-    pub mod testkit {
+    //#region 🔖️ArtifactAppLaws
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub mod artifact_app_laws {
         //! 🧪️ Generic test-harness helpers for `ArtifactApp` implementors. Factors out the ~24x duplicated
         //! `meta()`/`new_app()`/`new_app_with_registry()`/`paired_apps()` boilerplate plus the repeated
         //! undo-redo / two-instance-convergence / ingest-idempotency test *bodies* (parameterized by closures
         //! for the app-specific action names/snapshot shape, so only the control flow is shared). Not
-        //! `#[cfg(test)]` — apps' own `#[cfg(test)]` modules call these as a regular dependency; see
+        //! Enabled only by this crate's tests or the explicit `artifact-app-testing` feature; see
         //! `terminology_tests`/`panel_kit_tests` above for the sibling pattern of testing SDK primitives
         //! themselves inline.
 
@@ -6675,6 +6688,11 @@ pub mod app {
             pub completions: usize,
         }
 
+        /// 🎚️ Projects current config from the concrete window registry, including its applied event history.
+        pub async fn capture_fixture_window_config<O: crate::WindowConfigOwner, A: ArtifactApp, M: super::SpaceMember + super::MemberFactory>(app: &mut VcsArtifactApp<A, M>, view: &super::ViewModel) -> Result<Option<O::State>, super::Fault> {
+            Ok(app.window_config_store.capture(Some(view)).await?.and_then(|authority| authority.snapshot.get::<O>().cloned()))
+        }
+
         /// 🔁️ Drives the same bounded continuation and exact ACK protocol as the plugin host.
         pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiver: u32) -> Result<TypedOperationFixtureReceipt, super::Fault> {
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
@@ -6844,9 +6862,10 @@ pub mod app {
         /// the framework-reserved `"undo"` action) and asserts `before`, redoes and asserts `after` again — the
         /// repeated undo/redo round-trip test body. B1: takes a typed `A::Command` value (`dispatch_typed`) —
         /// `ArtifactApp::handle_action`'s stringly-typed dispatch no longer exists.
-        pub async fn assert_undo_redo_round_trip<A, P>(app: &mut VcsArtifactApp<A>, command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, before: P, after: P)
+        pub async fn assert_undo_redo_round_trip<A, M, P>(app: &mut VcsArtifactApp<A, M>, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, before: P, after: P)
         where
             A: ArtifactApp,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
             P: PartialEq + std::fmt::Debug,
         {
             // 🔁️ Every step SETTLES: a retained tool's `dispatch_typed` only returns an admission
@@ -7006,7 +7025,7 @@ pub mod app {
             close_registered_fixture_app(&mut receiver);
         }
 
-        //#region 🧪️testkit
+        //#region 🧫️fixtures
         /// 🔀️ Dispatches `command` and asserts it produced a `TransactionProposalDraft` instead of
         /// applying anything (contract §5.1) — the guest-side half of "propose instead of apply".
         /// Returns the draft so a test can inspect `local_ops`/`foreign`/`description`/`coalesce_key`.
@@ -7059,14 +7078,14 @@ pub mod app {
             assert_eq!(app.store.generation(), generation_before, "rollback must not change the store generation");
             assert_eq!(app.store.envelope().vcs.edits.len(), edits_before, "rollback must not add any edit");
         }
-        //#endregion 🧪️testkit
+        //#endregion 🧫️fixtures
 
-        //#region 🧪️testkit
-        //#endregion 🧪️testkit
+        //#region 🧫️fixtures
+        //#endregion 🧫️fixtures
 
         //#region 👁️✏️SurfaceTestkit
         // 🎫️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.5 — lane 0-F. New
-        // subregion, appended after the peer `🧪️testkit` subregion above without touching it.
+        // subregion, appended after the peer `🧫️fixtures` subregion above without touching it.
         use super::{declarations, ArtifactEditor, ArtifactViewer, ViewerApp};
 
         pub(crate) struct BoundedViewerFixture<V: ArtifactViewer>(std::marker::PhantomData<V>);
@@ -7081,11 +7100,11 @@ pub mod app {
         where
             V: ArtifactViewer<Presence = super::NoPresence, PresenceMutation = super::NoPresenceMutation, Transient = super::NoTransient, TransientMutation = super::NoTransientMutation>,
         {
-            fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+            fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
                 V::build_document_store_owners().or_else(|| Some(super::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>()))
             }
 
-            fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+            fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
                 V::build_config_store_owners().or_else(|| Some(super::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>()))
             }
 
@@ -7441,7 +7460,7 @@ pub mod app {
         }
         //#endregion 🔖️DeclarationTestkit
     }
-    //#endregion 🔖️Testkit
+    //#endregion 🔖️ArtifactAppLaws
 
     #[cfg(test)]
     include!("🧪️tests/🔬️app-app-builder/🦀️.rs");
@@ -9389,7 +9408,7 @@ pub mod app {
     //#region 🔖️NoConfig
     /// @emoji 🧮️ Default `ArtifactApp::Config` for apps with no config artifact yet.
     #[derive(Clone, Debug, PartialEq, Default, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-    #[value(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct NoConfig {}
 
     impl semio_framework_schema::ArtifactCompositionFields for NoConfig {
@@ -9415,8 +9434,12 @@ pub mod app {
         fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             Ok(Vec::new())
         }
-        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-            Ok(Self::default())
+        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+            if bytes.is_empty() {
+                Ok(Self::default())
+            } else {
+                Err(store::PackError::Schema("empty state must not contain bytes".into()))
+            }
         }
     }
 
@@ -9478,7 +9501,7 @@ pub mod app {
     //#region 🔖️NoPresence
     /// @emoji 👥️ Default `ArtifactApp::Presence` for apps with no shareable live state yet.
     #[derive(Clone, Debug, PartialEq, Default, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-    #[value(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct NoPresence {}
 
     impl store::ArtifactDsl for NoPresence {
@@ -9498,8 +9521,12 @@ pub mod app {
         fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             Ok(Vec::new())
         }
-        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-            Ok(Self::default())
+        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+            if bytes.is_empty() {
+                Ok(Self::default())
+            } else {
+                Err(store::PackError::Schema("empty state must not contain bytes".into()))
+            }
         }
     }
 
@@ -9564,7 +9591,7 @@ pub mod app {
     /// content at all (which pane is focused, what is hovered, an in-flight gesture). They differ in
     /// what the state IS, not in how long it lives.
     #[derive(Clone, Debug, PartialEq, Default, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-    #[value(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct NoTransient {}
 
     impl store::ArtifactDsl for NoTransient {
@@ -9584,8 +9611,12 @@ pub mod app {
         fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             Ok(Vec::new())
         }
-        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-            Ok(Self::default())
+        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+            if bytes.is_empty() {
+                Ok(Self::default())
+            } else {
+                Err(store::PackError::Schema("empty state must not contain bytes".into()))
+            }
         }
     }
 
@@ -10993,7 +11024,11 @@ pub mod app {
         fn mounted_job_close_step(_instance_id: u32, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             Ok(PluginCloseStep::Complete)
         }
-        /// 🧹️ Exact terminal witness paired with `mounted_job_close_step`.
+        /// 🧹️ Exact terminal witness paired with `mounted_job_close_step`. It is also what keeps an app
+        /// with owner-local cleanup still owing OUT of `maintenance_step`'s idle fast path: that path
+        /// leaves the round-robin stage cursor untouched, so an app answering `true` here while it still
+        /// held work never reached its own stage 15 again — the incremental teardown would simply never
+        /// run, which is when it is needed most (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42).
         fn mounted_jobs_terminal_is_empty(_instance_id: u32) -> bool {
             true
         }
@@ -11066,17 +11101,17 @@ pub mod app {
 
         /// 🔐️ Supplies the exact snapshot/mutation/store disposal catalog used by document
         /// replacement and close. `None` keeps both routes fail closed.
-        fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
             None
         }
 
         /// 🎛️ Supplies exact config snapshot/mutation/store retirement authority.
-        fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
             None
         }
 
         /// 📝️ Supplies exact draft snapshot/mutation/store retirement authority.
-        fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
             None
         }
 
@@ -11863,6 +11898,26 @@ pub mod app {
         /// 🧸️ Every live owned child's current envelope, for persistence — the `ReadChildren`
         /// handler and the child-side twin of `document_pack`.
         async fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, Fault>;
+        /// 🎟️ Transfers one recursive archive owner into a fixed operation slot before decode.
+        fn begin_document_archive_load(&mut self, _operation: u64, _archive: protocol::DocumentArchivePack) -> Result<(), Fault> {
+            Err(plugin_sdk_fault("recursive document archive loading is unavailable for this app"))
+        }
+        /// 📬️ Advances and observes one exact retained recursive archive operation.
+        async fn poll_document_archive_load(&mut self, operation: u64) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
+            Err(plugin_sdk_fault(format!("recursive document archive operation {operation} is unavailable for this app")))
+        }
+        /// 🛑️ Requests cancellation without releasing the retained archive owner.
+        fn cancel_document_archive_load(&mut self, _operation: u64) -> Result<(), Fault> {
+            Err(plugin_sdk_fault("recursive document archive loading is unavailable for this app"))
+        }
+        /// 📨️ Releases one terminal archive operation after the caller consumed its status.
+        fn acknowledge_document_archive_load(&mut self, _operation: u64) -> Result<(), Fault> {
+            Err(plugin_sdk_fault("recursive document archive loading is unavailable for this app"))
+        }
+        /// 🗃️ Reads a generation-fenced root and complete recursive member closure.
+        async fn document_archive(&self) -> Result<protocol::DocumentArchivePack, Fault> {
+            Err(plugin_sdk_fault("recursive document archive reading is unavailable for this app"))
+        }
         /// 🧮️ Dispatches one binary-encoded `store::ArtifactCommand<Self::ConfigMutation>` against the
         /// config store — the `AppCommand::ConfigCommand` wire frame's real handler (replaces the deleted
         /// `apply_config_bytes` whole-record-replace legacy path).
@@ -12949,7 +13004,20 @@ pub mod app {
         }
     }
 
+    /// 📤️ Per-chunk byte cap of the segmented-download lane. Mirror of the ONE schema-owned chunk
+    /// contract — `🎭️actor/📮️shard-client/📤️segmented-download/🧬️schema/🔣️.json` +
+    /// `🧫️fixtures/🔣️.json`'s `contract.chunkBytes`, mirrored on the host side by
+    /// `SEGMENTED_DOWNLOAD_CONTRACT` and interpolated into the generated shard worker as
+    /// `SEGMENTED_DOWNLOAD_CHUNK_BYTES` — held equal to that fixture by this crate's own law
+    /// [`segmented_download_constants_mirror_the_schema_owned_contract`], so a literal edited in one
+    /// hop alone fails closed instead of turning a correct producer into a runtime fault.
     pub(crate) const ARTIFACT_OUTPUT_CHUNK_BYTES: usize = 4_096;
+    /// 📤️ Largest payload ONE segmented download may carry, end to end. Same contract, same law:
+    /// `contract.maximumTotalBytes`, which the host drain enforces as its own default total cap.
+    /// A producer that declares more than this is refused at construction
+    /// ([`ArtifactOutputChunks::admit_maximum`]) rather than mid-drain, so an over-cap export becomes
+    /// a notice in the app that asked for it and never a shard-worker fault.
+    pub(crate) const ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES: usize = 33_554_432;
     const ARTIFACT_OUTPUT_METADATA_BYTES: usize = 4_096;
     const ARTIFACT_SEGMENTED_HANDLE_ENCODING: &str = "semio-segmented-handle-v1";
 
@@ -13012,6 +13080,22 @@ pub mod app {
         /// literal, and a literal that drifts from `push`'s check turns a correct producer into a
         /// `segmented-output-limit` fault at runtime.
         pub const CHUNK_BYTES: usize = ARTIFACT_OUTPUT_CHUNK_BYTES;
+
+        /// 📏️ Largest payload ONE segmented download may carry — the same
+        /// `contract.maximumTotalBytes` the host drain defaults its total cap to. An app must refuse a
+        /// payload above this with a NOTICE of its own; publishing it would be refused mid-drain, where
+        /// the user sees a dead download instead of an answer.
+        pub const MAXIMUM_TOTAL_BYTES: usize = ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES;
+
+        /// 📏️ The declared output budget one segmented download may be built with, or the bound it
+        /// violated. Checked HERE, at construction, so an over-cap producer is refused before it opens a
+        /// download handle the host would then drain into a fault.
+        pub fn admit_maximum(maximum: usize) -> Result<usize, Fault> {
+            if maximum == 0 || maximum > ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-total-over-cap"), "segmented download declares an empty or over-cap total byte budget"));
+            }
+            Ok(maximum)
+        }
 
         pub fn new(maximum: usize) -> Self {
             let slots = maximum / ARTIFACT_OUTPUT_CHUNK_BYTES + usize::from(!maximum.is_multiple_of(ARTIFACT_OUTPUT_CHUNK_BYTES));
@@ -13701,12 +13785,12 @@ pub mod app {
     }
 
     /// 🎛️ Exact one-page retirement catalog for explicitly bounded app configuration stores.
-    pub fn bounded_config_store_owners<C, M>() -> store::MemberStoreOwners<C, M>
+    pub fn bounded_config_store_owners<C, M>() -> store::DocumentStoreOwners<C, M>
     where
         C: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
         M: Clone + protocol::ToValue + protocol::FromValue + Mutation<C> + OpBinary + OpText + Send + 'static,
     {
-        store::MemberStoreOwners::new(
+        store::DocumentStoreOwners::new(
             std::sync::Arc::new(BoundedConfigRetirementFactory::<C>::new()),
             std::sync::Arc::new(BoundedConfigRetirementFactory::<C>::new()),
             std::sync::Arc::new(BoundedConfigRetirementFactory::<M>::new()),
@@ -13918,7 +14002,7 @@ pub mod app {
     }
 
     /// 🗃️ Exact one-page retirement catalog for an explicitly bounded document store.
-    pub fn bounded_document_store_owners<P, M>() -> store::MemberStoreOwners<P, M>
+    pub fn bounded_document_store_owners<P, M>() -> store::DocumentStoreOwners<P, M>
     where
         P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
         M: Clone + protocol::ToValue + protocol::FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
@@ -13983,6 +14067,10 @@ pub mod app {
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome;
         fn request_cancel(&mut self);
         fn take_candidate(&mut self) -> Option<ArtifactStore<P, Mutation>>;
+        #[inline(never)]
+        fn take_boxed_candidate(&mut self) -> Option<Box<ArtifactStore<P, Mutation>>> {
+            self.take_candidate().map(Box::new)
+        }
         fn begin_close(&mut self);
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
         fn terminal_is_empty(&self) -> bool;
@@ -14015,8 +14103,8 @@ pub mod app {
             self.cancel_requested.store(true, std::sync::atomic::Ordering::Release);
         }
 
-        fn take_candidate(&mut self) -> Option<ArtifactStore<P, Mutation>> {
-            let candidate = self.authority.as_mut()?.take_candidate()?;
+        fn take_candidate(&mut self) -> Option<Box<ArtifactStore<P, Mutation>>> {
+            let candidate = self.authority.as_mut()?.take_boxed_candidate()?;
             self.terminal_handoff = true;
             if self.authority.as_ref().is_some_and(|authority| authority.terminal_is_empty()) {
                 drop(self.authority.take());
@@ -15935,11 +16023,15 @@ pub mod app {
     }
 
     impl<T> ArtifactFixedRegistry<T> {
+        /// 🪹️ Reserves every slot on the heap while leaving the occupied mask as the sole
+        /// initialization witness. A successful exact reservation provides capacity for all slots;
+        /// `MaybeUninit` permits extending their length without values. Insertion writes before setting
+        /// a bit, removal clears the bit before reading, and the zero initial mask prevents every read.
         fn new() -> Self {
-            let mut slots = Vec::new();
+            let mut slots = Vec::<std::mem::MaybeUninit<(u64, T)>>::new();
             let allocation_admitted = slots.try_reserve_exact(ARTIFACT_LIVE_OUTPUT_SLOTS).is_ok();
             if allocation_admitted {
-                slots.resize_with(ARTIFACT_LIVE_OUTPUT_SLOTS, std::mem::MaybeUninit::uninit);
+                unsafe { slots.set_len(ARTIFACT_LIVE_OUTPUT_SLOTS) };
             }
             Self { slots: slots.into_boxed_slice(), occupied: 0, allocation_admitted }
         }
@@ -18171,6 +18263,24 @@ pub mod app {
         Ok(std::mem::replace(live, candidate))
     }
 
+    /// 🔄️ Publishes the replacement owner's heap candidate without moving either complete Store
+    /// through the maintenance stack; the returned box owns the displaced live Store in place.
+    fn publish_boxed_document_store_candidate_if_authoritative<P, Mutation>(
+        live: &mut ArtifactStore<P, Mutation>,
+        mut candidate: Box<ArtifactStore<P, Mutation>>,
+        validate: impl FnOnce() -> Result<(), Fault>,
+    ) -> Result<Box<ArtifactStore<P, Mutation>>, (Fault, Box<ArtifactStore<P, Mutation>>)>
+    where
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        if let Err(fault) = validate() {
+            return Err((fault, candidate));
+        }
+        std::mem::swap(live, candidate.as_mut());
+        Ok(candidate)
+    }
+
     struct CompositionPinsRetirement {
         pins: std::mem::ManuallyDrop<Option<Vec<vcs::CompositionPin>>>,
         active: std::mem::ManuallyDrop<Option<vcs::CompositionPin>>,
@@ -18266,7 +18376,7 @@ pub mod app {
         session_rejected: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ArtifactStoreInitializationJob<P, Mutation>>>>,
         retained_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>>,
         terminal_target: Option<ActiveArtifactStoreReplacementState>,
-        retained_store: std::mem::ManuallyDrop<Option<ArtifactStore<P, Mutation>>>,
+        retained_store: std::mem::ManuallyDrop<Option<Box<ArtifactStore<P, Mutation>>>>,
         retained_disposer: std::mem::ManuallyDrop<ArtifactDisposal<ArtifactStore<P, Mutation>>>,
         member_ingress: std::mem::ManuallyDrop<Option<OwnedDocumentMemberIngressRegistry>>,
         active_member_ingress: std::mem::ManuallyDrop<Option<OwnedDocumentMemberIngress>>,
@@ -18348,6 +18458,8 @@ pub mod app {
         }
 
         fn request_cancel(&self) {
+            #[cfg(test)]
+            eprintln!("[DEBUG] recursive replacement diagnostic: cancellation requested for operation {} generation {} in state {:?}", self.operation.0, self.generation.0, self.state);
             self.cancel.cancel_now();
             self.cancel_signal.store(true, std::sync::atomic::Ordering::Release);
         }
@@ -18413,7 +18525,13 @@ pub mod app {
                 self.member_step_sequence = sequence;
                 return match step {
                     store::MemberOpenStep::Pending(_) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
-                    store::MemberOpenStep::Rejected(_) => {
+                    store::MemberOpenStep::Rejected(diagnostic) => {
+                        #[cfg(test)]
+                        eprintln!(
+                            "[DEBUG] recursive replacement diagnostic: member open rejected {diagnostic:?} at ordinal {} cancel={}",
+                            self.next_member_ordinal,
+                            self.cancel.is_cancelled_now(),
+                        );
                         self.faulted = true;
                         self.state = ActiveArtifactStoreReplacementState::ClosingRejectedMember;
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -18428,6 +18546,8 @@ pub mod app {
                         drop(self.active_member_open.take());
                         let (ordinal, reference, owner) = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).expect("active member identity was verified before its exact open step");
                         if ordinal != self.next_member_ordinal || member.artifact_ref().as_ref() != Some(&reference) || member.owner_ref().as_ref() != Some(&owner) {
+                            #[cfg(test)]
+                            eprintln!("[DEBUG] recursive replacement diagnostic: opened member identity differed at ordinal {ordinal}, expected {}", self.next_member_ordinal);
                             *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
                             self.faulted = true;
                             self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
@@ -18503,6 +18623,8 @@ pub mod app {
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 Err(rejected) => {
+                    #[cfg(test)]
+                    eprintln!("[DEBUG] recursive replacement diagnostic: member factory refused one admitted request");
                     self.active_member_ingress.as_mut().expect("rejected member ingress remains retained").return_request(rejected.request);
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
@@ -18555,7 +18677,17 @@ pub mod app {
                     self.state = ActiveArtifactStoreReplacementState::PreparingCandidateViews;
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::OwnedDocumentClosureStep::Complete { .. } | store::OwnedDocumentClosureStep::Rejected(_) => {
+                store::OwnedDocumentClosureStep::Complete { members } => {
+                    #[cfg(test)]
+                    eprintln!("[DEBUG] recursive replacement diagnostic: closure completed with {members} members while registry owns {}", children.len());
+                    self.closure = None;
+                    self.faulted = true;
+                    self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                store::OwnedDocumentClosureStep::Rejected(diagnostic) => {
+                    #[cfg(test)]
+                    eprintln!("[DEBUG] recursive replacement diagnostic: closure rejected {diagnostic:?}");
                     self.closure = None;
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
@@ -18790,7 +18922,7 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             if let Some(rejected) = self.session_rejected.as_mut() {
-                return match rejected.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                return match rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
                     semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                     semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "store initializer admission rejection is temporarily blocked" }),
                     semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
@@ -18805,7 +18937,7 @@ pub mod app {
                 };
             }
             if let Some(outcome) = self.retained_outcome.as_mut() {
-                return match outcome.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                return match outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
                     semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                     semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => {
                         drop(self.retained_outcome.take());
@@ -18826,7 +18958,7 @@ pub mod app {
             if let Some(target) = self.terminal_target {
                 let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "terminal store initializer lost its retained session"))?;
                 session.begin_close();
-                return match session.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                return match session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
                     semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                     semio_framework_job::WorkerJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "terminal store initializer close is temporarily blocked" }),
                     semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => {
@@ -19009,6 +19141,433 @@ pub mod app {
     /// 🗂️ Generation-keyed immutable document, configuration, and history projections.
     type AppProjectionCache<A> = ((u64, u64, u64, HistoryCommandFilter), std::sync::Arc<<A as ArtifactApp>::Snapshot>, std::sync::Arc<<A as ArtifactApp>::Config>, std::sync::Arc<HistoryView>);
 
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ActiveDocumentArchiveLoadState {
+        Pending,
+        Running,
+        Ready,
+        Cancelled,
+        Fault,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ActiveDocumentArchiveLoadPhase {
+        DecodeParent,
+        RetireParentHistoryAuxiliary,
+        HydrateParent,
+        AwaitingMembers,
+        BeginMember,
+        FillMember,
+        RetireMemberSource,
+        AdmitMember,
+        SealMembers,
+        AwaitReplacement,
+        Terminal,
+    }
+
+    struct PendingDocumentArchiveMember {
+        entry: Option<protocol::OwnedDocumentMemberPackEntry>,
+        pages: Option<store::OwnedSchemaDecodePages>,
+        copied: usize,
+        identity_field: u8,
+    }
+
+    impl PendingDocumentArchiveMember {
+        fn empty_ingress() -> OwnedDocumentMemberIngress {
+            OwnedDocumentMemberIngress {
+                identity: std::mem::ManuallyDrop::new(None),
+                request: std::mem::ManuallyDrop::new(None),
+                identity_field: 0,
+            }
+        }
+
+        fn new(entry: protocol::OwnedDocumentMemberPackEntry) -> Result<Self, (Fault, protocol::OwnedDocumentMemberPackEntry)> {
+            let page_count = entry.envelope_pack.len().div_ceil(store::OWNED_SCHEMA_DECODE_PAGE_BYTES);
+            let pages = match store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages: page_count, maximum_bytes: entry.envelope_pack.len() }) {
+                Ok(pages) => pages,
+                Err(fault) => return Err((plugin_sdk_fault(format!("document archive member page authority was rejected: {fault:?}")), entry)),
+            };
+            Ok(Self { entry: Some(entry), pages: Some(pages), copied: 0, identity_field: 0 })
+        }
+
+        fn fill_one_page(&mut self, maximum_bytes: usize) -> Result<bool, Fault> {
+            let entry = self.entry.as_ref().ok_or_else(|| plugin_sdk_fault("document archive member source owner is absent"))?;
+            if self.copied == entry.envelope_pack.len() {
+                return Ok(true);
+            }
+            let end = self.copied.saturating_add(store::OWNED_SCHEMA_DECODE_PAGE_BYTES).min(entry.envelope_pack.len());
+            let length = end - self.copied;
+            if length > maximum_bytes {
+                return Ok(false);
+            }
+            let page = store::OwnedSchemaDecodePage::try_from_slice(&entry.envelope_pack[self.copied..end]).map_err(|_| plugin_sdk_fault("document archive member page exceeded its fixed extent"))?;
+            self.pages
+                .as_mut()
+                .ok_or_else(|| plugin_sdk_fault("document archive member page owner is absent"))?
+                .admit_page(page)
+                .map_err(|_| plugin_sdk_fault("document archive member page was rejected by its exact authority"))?;
+            self.copied = end;
+            Ok(self.copied == entry.envelope_pack.len())
+        }
+
+        fn retire_source_step(&mut self, maximum_bytes: usize) -> PluginCloseStep {
+            let Some(entry) = self.entry.as_mut() else { return PluginCloseStep::Complete };
+            if entry.envelope_pack.is_empty() {
+                return PluginCloseStep::Complete;
+            }
+            let released_bytes = entry.envelope_pack.len().min(maximum_bytes);
+            if released_bytes == 0 {
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            entry.envelope_pack.truncate(entry.envelope_pack.len() - released_bytes);
+            PluginCloseStep::Pending { released_items: 0, released_bytes }
+        }
+
+        fn take_ingress(
+            &mut self,
+            handle: ArtifactEnvelopeDecodeOperationHandle,
+        ) -> Result<OwnedDocumentMemberIngress, (Fault, OwnedDocumentMemberIngress)> {
+            let mut entry = self.entry.take().ok_or_else(|| {
+                (plugin_sdk_fault("document archive member identity owner is absent"), Self::empty_ingress())
+            })?;
+            if !entry.envelope_pack.is_empty() {
+                self.entry = Some(entry);
+                return Err((
+                    plugin_sdk_fault("document archive member source bytes remain live before identity transfer"),
+                    Self::empty_ingress(),
+                ));
+            }
+            let mut pages = self.pages.take().ok_or_else(|| {
+                (plugin_sdk_fault("document archive member page owner is absent"), Self::empty_ingress())
+            })?;
+            if let Err(fault) = pages.seal() {
+                self.entry = Some(entry);
+                self.pages = Some(pages);
+                return Err((
+                    plugin_sdk_fault(format!("document archive member pages could not seal: {fault:?}")),
+                    Self::empty_ingress(),
+                ));
+            }
+            let reference = ArtifactRef {
+                artifact_id: std::mem::take(&mut entry.reference.artifact_id),
+                dialect: ArtifactDialect {
+                    artifact_kind: std::mem::take(&mut entry.reference.artifact_kind),
+                    standard: std::mem::take(&mut entry.reference.standard),
+                    subset: std::mem::take(&mut entry.reference.subset),
+                },
+            };
+            let owner = store::OwnerRef {
+                parent: ArtifactRef {
+                    artifact_id: std::mem::take(&mut entry.owner.parent.artifact_id),
+                    dialect: ArtifactDialect {
+                        artifact_kind: std::mem::take(&mut entry.owner.parent.artifact_kind),
+                        standard: std::mem::take(&mut entry.owner.parent.standard),
+                        subset: std::mem::take(&mut entry.owner.parent.subset),
+                    },
+                },
+                slot: std::mem::take(&mut entry.owner.slot),
+                child_id: std::mem::take(&mut entry.owner.child_id),
+            };
+            let ordinal = entry.ordinal as usize;
+            drop(entry);
+            let request = match store::MemberOpenRequest::new(handle.operation, handle.generation, u64::MAX, reference.clone(), Some(owner.clone()), pages).admit(1) {
+                Ok(request) => request,
+                Err(rejected) => {
+                    let ingress = OwnedDocumentMemberIngress {
+                        identity: std::mem::ManuallyDrop::new(Some((ordinal, reference, owner))),
+                        request: std::mem::ManuallyDrop::new(Some(rejected.request)),
+                        identity_field: 0,
+                    };
+                    return Err((plugin_sdk_fault(format!("document archive member request was rejected: {:?}", rejected.diagnostic)), ingress));
+                }
+            };
+            OwnedDocumentMemberIngress::try_new(ordinal, reference, owner, request)
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            if maximum_items == 0 {
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if let Some(pages) = self.pages.as_mut() {
+                if let Some(page) = pages.close_take_page() {
+                    let released_bytes = page.len();
+                    if released_bytes > maximum_bytes {
+                        pages.admit_preflighted_page(page);
+                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                    }
+                    let _ = page;
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes };
+                }
+                self.pages = None;
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            let Some(entry) = self.entry.as_mut() else { return PluginCloseStep::Complete };
+            if !entry.envelope_pack.is_empty() {
+                let released_bytes = entry.envelope_pack.len().min(maximum_bytes);
+                if released_bytes == 0 {
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                entry.envelope_pack.truncate(entry.envelope_pack.len() - released_bytes);
+                return PluginCloseStep::Pending { released_items: 0, released_bytes };
+            }
+            while self.identity_field < 10 && document_archive_member_identity_mut(entry, self.identity_field).is_some_and(|field| field.is_empty()) {
+                self.identity_field += 1;
+            }
+            if let Some(field) = document_archive_member_identity_mut(entry, self.identity_field) {
+                let bytes = field.chars().next_back().map_or(0, char::len_utf8);
+                if bytes > maximum_bytes {
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                field.pop();
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: bytes };
+            }
+            drop(self.entry.take());
+            PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.entry.is_none() && self.pages.is_none()
+        }
+    }
+
+    impl Drop for PendingDocumentArchiveMember {
+        fn drop(&mut self) {
+            assert!(std::thread::panicking() || self.terminal_is_empty(), "recursive document archive member reached Drop before its source and page owners were terminal empty");
+        }
+    }
+
+    fn document_archive_member_identity_mut(entry: &mut protocol::OwnedDocumentMemberPackEntry, field: u8) -> Option<&mut String> {
+        match field {
+            0 => Some(&mut entry.reference.artifact_id),
+            1 => Some(&mut entry.reference.artifact_kind),
+            2 => Some(&mut entry.reference.standard),
+            3 => Some(&mut entry.reference.subset),
+            4 => Some(&mut entry.owner.parent.artifact_id),
+            5 => Some(&mut entry.owner.parent.artifact_kind),
+            6 => Some(&mut entry.owner.parent.standard),
+            7 => Some(&mut entry.owner.parent.subset),
+            8 => Some(&mut entry.owner.slot),
+            9 => Some(&mut entry.owner.child_id),
+            _ => None,
+        }
+    }
+
+    struct ActiveDocumentArchiveLoad<P, Mutation>
+    where
+        P: Clone + protocol::ToValue + protocol::FromValue,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P>,
+    {
+        operation: u64,
+        archive: Option<Box<protocol::DocumentArchivePack>>,
+        history: Option<protocol::RetainedHistoryDecode>,
+        decoded_history: Option<protocol::HistoryLog>,
+        member: Option<PendingDocumentArchiveMember>,
+        rejected_ingress: Option<OwnedDocumentMemberIngress>,
+        retained: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+        hydration: Option<store::RetainedPersistedDocumentHydration<P, Mutation>>,
+        hydration_sequence: u64,
+        replacement: Option<ArtifactEnvelopeDecodeOperationHandle>,
+        phase: ActiveDocumentArchiveLoadPhase,
+        terminal_target: Option<ActiveDocumentArchiveLoadState>,
+        close_identity_field: u8,
+        state: ActiveDocumentArchiveLoadState,
+        completed: u64,
+        total: u64,
+        fault: Vec<u8>,
+    }
+
+    impl<P, Mutation> ActiveDocumentArchiveLoad<P, Mutation>
+    where
+        P: Clone + protocol::ToValue + protocol::FromValue + store::ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        fn new(operation: u64, archive: protocol::DocumentArchivePack, history: protocol::RetainedHistoryDecode) -> Self {
+            let total = archive.members.len() as u64 + 1;
+            Self {
+                operation,
+                archive: Some(Box::new(archive)),
+                history: Some(history),
+                decoded_history: None,
+                member: None,
+                rejected_ingress: None,
+                retained: None,
+                hydration: None,
+                hydration_sequence: 0,
+                replacement: None,
+                phase: ActiveDocumentArchiveLoadPhase::DecodeParent,
+                terminal_target: None,
+                close_identity_field: 0,
+                state: ActiveDocumentArchiveLoadState::Pending,
+                completed: 0,
+                total,
+                fault: Vec::new(),
+            }
+        }
+
+        fn status(&self) -> protocol::DocumentArchiveLoadStatus {
+            let state = match self.state {
+                ActiveDocumentArchiveLoadState::Pending => protocol::DocumentArchiveLoadState::Pending,
+                ActiveDocumentArchiveLoadState::Running => protocol::DocumentArchiveLoadState::Running,
+                ActiveDocumentArchiveLoadState::Ready => protocol::DocumentArchiveLoadState::Ready,
+                ActiveDocumentArchiveLoadState::Cancelled => protocol::DocumentArchiveLoadState::Cancelled,
+                ActiveDocumentArchiveLoadState::Fault => protocol::DocumentArchiveLoadState::Fault,
+            };
+            protocol::DocumentArchiveLoadStatus { operation: self.operation, state, completed: self.completed, total: self.total, fault: self.fault.clone() }
+        }
+
+        fn terminal(&self) -> bool {
+            matches!(self.state, ActiveDocumentArchiveLoadState::Ready | ActiveDocumentArchiveLoadState::Cancelled | ActiveDocumentArchiveLoadState::Fault)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.archive.is_none()
+                && self.history.is_none()
+                && self.decoded_history.is_none()
+                && self.member.is_none()
+                && self.rejected_ingress.is_none()
+                && self.retained.is_none()
+                && self.hydration.is_none()
+                && self.replacement.is_none()
+        }
+
+        fn request_terminal(&mut self, target: ActiveDocumentArchiveLoadState) {
+            if self.terminal_target.is_none() {
+                self.terminal_target = Some(target);
+            }
+        }
+
+        fn request_fault(&mut self, fault: &Fault) {
+            if self.terminal_target.is_none() {
+                self.fault = dsl::encode_fault_bytes(fault);
+                self.terminal_target = Some(ActiveDocumentArchiveLoadState::Fault);
+            }
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            if maximum_items == 0 {
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if let Some(retained) = self.retained.as_mut() {
+                return match retained.close_step(maximum_items, maximum_bytes) {
+                    Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes }) => PluginCloseStep::Pending { released_items, released_bytes },
+                    Ok(store::SnapshotRetirementStep::Blocked) => PluginCloseStep::Blocked { reason: "recursive archive partial decoded owner retirement is blocked" },
+                    Ok(store::SnapshotRetirementStep::Complete) if retained.terminal_is_empty() => {
+                        self.retained = None;
+                        PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                    }
+                    _ => PluginCloseStep::Blocked { reason: "recursive archive partial decoded owner returned an invalid retirement step" },
+                };
+            }
+            if let Some(hydration) = self.hydration.as_mut() {
+                return match store::ErasedSnapshotRetirement::close_step(hydration, maximum_items.min(1), maximum_bytes) {
+                    Ok(store::SnapshotRetirementStep::Complete) if store::ErasedSnapshotRetirement::terminal_is_empty(hydration) => {
+                        self.hydration = None;
+                        PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                    }
+                    Ok(store::SnapshotRetirementStep::Complete) => PluginCloseStep::Blocked { reason: "recursive archive parent hydration returned false terminal" },
+                    Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes }) => PluginCloseStep::Pending { released_items, released_bytes },
+                    Ok(store::SnapshotRetirementStep::Blocked) => PluginCloseStep::Blocked { reason: "recursive archive parent hydration retirement is blocked" },
+                    Err(_) => PluginCloseStep::Blocked { reason: "recursive archive parent hydration could not retire" },
+                };
+            }
+            if let Some(ingress) = self.rejected_ingress.as_mut() {
+                return match ingress.close_step(maximum_items, maximum_bytes) {
+                    Ok(PluginCloseStep::Complete) if ingress.terminal_is_empty() => {
+                        self.rejected_ingress = None;
+                        PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                    }
+                    Ok(step) => step,
+                    Err(_) => PluginCloseStep::Blocked { reason: "recursive archive rejected member ingress could not retire" },
+                };
+            }
+            if let Some(member) = self.member.as_mut() {
+                let step = member.close_step(maximum_items, maximum_bytes);
+                if step == PluginCloseStep::Complete && member.terminal_is_empty() {
+                    self.member = None;
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+                return step;
+            }
+            if self.decoded_history.is_some() || self.history.is_some() {
+                let history = self.decoded_history.take().or_else(|| self.history.as_mut().and_then(protocol::RetainedHistoryDecode::take_partial));
+                let auxiliary = self.history.as_mut().map(protocol::RetainedHistoryDecode::take_auxiliary_owners);
+                if let Some(decoder) = self.history.take() {
+                    if !decoder.terminal_is_empty() {
+                        self.history = Some(decoder);
+                        return PluginCloseStep::Blocked { reason: "recursive archive history decoder retained an untransferred owner" };
+                    }
+                    drop(decoder);
+                }
+                self.retained = Some(store::retirement::owned_retirement((history, auxiliary)));
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            let Some(archive) = self.archive.as_mut() else { return PluginCloseStep::Complete };
+            if let Some(member) = archive.members.last_mut() {
+                let released_bytes = member.envelope_pack.len().min(maximum_bytes);
+                if released_bytes != 0 {
+                    member.envelope_pack.truncate(member.envelope_pack.len() - released_bytes);
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes };
+                }
+                if !member.envelope_pack.is_empty() {
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                while self.close_identity_field < 10 && document_archive_member_identity_mut(member, self.close_identity_field).is_some_and(|field| field.is_empty()) {
+                    self.close_identity_field += 1;
+                }
+                if let Some(field) = document_archive_member_identity_mut(member, self.close_identity_field) {
+                    let bytes = field.chars().next_back().map_or(0, char::len_utf8);
+                    if bytes > maximum_bytes {
+                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                    }
+                    field.pop();
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: bytes };
+                }
+                drop(archive.members.pop());
+                self.close_identity_field = 0;
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if !archive.parent_spr.is_empty() {
+                let released_bytes = archive.parent_spr.len().min(maximum_bytes);
+                if released_bytes == 0 {
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                archive.parent_spr.truncate(archive.parent_spr.len() - released_bytes);
+                return PluginCloseStep::Pending { released_items: 0, released_bytes };
+            }
+            if !archive.parent_pack.is_empty() {
+                let released_bytes = archive.parent_pack.len().min(maximum_bytes);
+                if released_bytes == 0 {
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                archive.parent_pack.truncate(archive.parent_pack.len() - released_bytes);
+                return PluginCloseStep::Pending { released_items: 0, released_bytes };
+            }
+            drop(self.archive.take());
+            PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        }
+    }
+
+    impl<P, Mutation> Drop for ActiveDocumentArchiveLoad<P, Mutation>
+    where
+        P: Clone + protocol::ToValue + protocol::FromValue,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P>,
+    {
+        fn drop(&mut self) {
+            assert!(
+                std::thread::panicking()
+                    || (self.archive.is_none()
+                        && self.history.is_none()
+                        && self.decoded_history.is_none()
+                        && self.member.is_none()
+                        && self.rejected_ingress.is_none()
+                        && self.retained.is_none()
+                        && self.hydration.is_none()
+                        && self.replacement.is_none()),
+                "recursive document archive operation reached Drop before its retained input owner was terminal empty",
+            );
+        }
+    }
+
     pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMembers> {
         app: A,
         pub(crate) store: ArtifactStore<A::Snapshot, A::Mutation>,
@@ -19134,6 +19693,10 @@ pub mod app {
         maintenance_store_replacement_cursor: usize,
         close_store_replacement_cursor: usize,
         close_store_replacement_jobs_drained: bool,
+        document_archive_loads: ArtifactFixedRegistry<ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>>,
+        maintenance_document_archive_cursor: usize,
+        close_document_archive_cursor: usize,
+        close_document_archive_loads_drained: bool,
         pub(crate) envelope_field_decoders: std::sync::Arc<store::ArtifactEnvelopeFieldDecoderRegistry<A::Snapshot, A::Mutation>>,
         pub(crate) envelope_field_decoder_retirements: ArtifactFixedRegistry<store::ArtifactEnvelopeReturnedFieldDecoder<A::Snapshot, A::Mutation>>,
         maintenance_envelope_field_decoder_cursor: usize,
@@ -19234,6 +19797,18 @@ pub mod app {
         /// topology for. Empty (safely degrading to Flat-like single-target behavior) until the first
         /// render of that domain's tree.
         pub(crate) interaction_ui_topology: HashMap<String, protocol::DomainTopology>,
+        /// 🗺️ `A::interaction_topology`'s whole answer for one document generation.
+        ///
+        /// The app builds EVERY declared domain in one pass off a fresh decode of the document, and one
+        /// pick asked for it at least twice — once in [`Self::dispatch_interaction_action`]'s own verb arm
+        /// and once more inside [`Self::revalidate_and_persist_interaction_state`]'s
+        /// `build_full_interaction_topology`, with nothing between them that can move the document. On the
+        /// 180-object puzzle3d flagship that is two full fixture decodes plus ~900 `TopologyNode`
+        /// allocations per pick and is the reason `interactionSelect` cost 20× there
+        /// (26/09/02/PUZZLE-3D-END-TO-END wave B44 §2.2). Keyed on `(store.generation(),
+        /// config_store.generation())` — the pair every input of `A::interaction_topology` is derived
+        /// from, `live_render_operation` included — so a mutation invalidates it in the same turn it lands.
+        interaction_topology_memo: Option<((u64, u64), protocol::InteractionTopology)>,
         /// 🔀️ The single in-flight transaction this instance has prepared into, if any (contract
         /// §5.9: "one pending transaction per instance" — a second `TransactionPrepare` while this
         /// is `Some` is rejected `transaction.instance-busy`, and `dispatch_emit` refuses any
@@ -19432,54 +20007,9 @@ pub mod app {
         eprintln!("interaction selection lost reason={reason} dispatched={dispatched} validated={validated} readback={readback} domains={domains}");
     }
 
-    /// 🔬️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B23 — the four verdicts of
-    /// [`interaction_selection_loss_v1`], each stated as the browser shape that produces it. The healthy
-    /// row is the one that matters most: a store that never answered is NOT a loss when the leftover
-    /// overlay puts the same ids back into the snapshot the render reads.
     #[cfg(test)]
-    #[test]
-    fn interaction_selection_loss_names_every_way_a_pick_can_disappear() {
-        let picked = "vortex=object:seed-left-001";
-        let nothing = "vortex=object:";
-        assert_eq!(interaction_selection_loss_v1(picked, picked, picked, true), None, "the render source carries the pick");
-        assert_eq!(interaction_selection_loss_v1(picked, picked, picked, false), None, "an unchanged store is healthy while the render source still names the pick");
-        assert_eq!(interaction_selection_loss_v1("", nothing, nothing, false), None, "a dispatch that carried no id can lose none");
-        assert_eq!(interaction_selection_loss_v1(nothing, nothing, nothing, false), None, "a present-but-empty domain carried no id either");
-        assert_eq!(interaction_selection_loss_v1(picked, nothing, nothing, true), Some("validate-state-pruned"), "validate_state dropped the pick against its topology");
-        assert_eq!(interaction_selection_loss_v1(picked, picked, nothing, false), Some("persist-skipped"), "the validated half compared equal so no edit was minted and the pick never reached the render");
-        assert_eq!(interaction_selection_loss_v1(picked, picked, nothing, true), Some("store-readback-lost"), "the store took the edit and did not answer with it");
-    }
-
-    /// 🔬️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B31 — an app-authored selection write owns the
-    /// leftover overlay for the domains it names, so a deliberate emptying survives the very next read
-    /// while an unrelated domain's in-flight pick keeps its cover.
-    #[cfg(test)]
-    #[test]
-    fn an_app_selection_write_retires_the_leftover_overlay_of_the_domains_it_names() {
-        let selection = |ids: &[&str]| protocol::DomainSelection { granularity: "object".to_string(), ids: ids.iter().map(|id| id.to_string()).collect(), anchor_id: ids.last().map(|id| id.to_string()) };
-        let state = |entries: &[(&str, &[&str])]| protocol::InteractionState {
-            selection: entries.iter().map(|(domain, ids)| (domain.to_string(), selection(ids))).collect(),
-            hover: BTreeMap::new(),
-            active_mode: BTreeMap::new(),
-            active_granularity: BTreeMap::new(),
-        };
-        let overlay = state(&[("vortex", &["object-1"]), ("tree", &["node-7"])]);
-        let leftover_ids = vec!["object-1".to_string(), "node-7".to_string()];
-        let cleared = state(&[("vortex", &[]), ("tree", &["node-7"])]);
-        let (retired, kept) = leftover_after_app_selection_write_v1(Some(&overlay), &leftover_ids, &cleared, &["vortex".to_string()]);
-        let retired = retired.expect("an overlay that existed stays present");
-        assert_eq!(retired.selection.get("vortex").map(|domain| domain.ids.clone()), Some(Vec::new()), "the written domain's overlay entry becomes the freshly computed selection, empty included");
-        assert_eq!(retired.selection.get("tree").map(|domain| domain.ids.clone()), Some(vec!["node-7".to_string()]), "a domain the write never named keeps its cover");
-        assert_eq!(kept, vec!["node-7".to_string()], "the flat leftover ids keep only what is still selected somewhere");
-
-        let reselected = state(&[("vortex", &["clone-2"]), ("tree", &["node-7"])]);
-        let (retired, kept) = leftover_after_app_selection_write_v1(Some(&overlay), &leftover_ids, &reselected, &["vortex".to_string()]);
-        assert_eq!(retired.expect("overlay").selection.get("vortex").map(|domain| domain.ids.clone()), Some(vec!["clone-2".to_string()]), "a re-select publishes the new ids, not the pre-write ones");
-        assert_eq!(kept, vec!["node-7".to_string()], "the replaced id leaves the flat leftover list with it");
-
-        let (retired, kept) = leftover_after_app_selection_write_v1(None, &[], &cleared, &["vortex".to_string()]);
-        assert!(retired.is_none() && kept.is_empty(), "no overlay in flight means nothing to retire");
-    }
+    #[path = "🧪️tests/🕹️interaction-selection-laws/🦀️.rs"]
+    mod interaction_selection_laws;
 
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
         #[cfg(test)]
@@ -19816,18 +20346,18 @@ pub mod app {
             let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None);
             let mut store = ArtifactStore::new(envelope).await.expect("failed to create document store");
             if let Some(owners) = A::build_document_store_owners() {
-                store.install_member_store_owners_exact(owners);
+                store.install_document_store_owners_exact(owners);
             }
             let mut config_store = ConfigStore::new(config_envelope.await).await.expect("failed to create config store");
             if let Some(owners) = A::build_config_store_owners() {
-                config_store.install_member_store_owners_exact(owners);
+                config_store.install_document_store_owners_exact(owners);
             }
             let mut draft_store = store::DraftStore::new(draft_envelope).await.expect("failed to create draft store");
             if let Some(owners) = A::build_draft_store_owners() {
-                draft_store.install_member_store_owners_exact(owners);
+                draft_store.install_document_store_owners_exact(owners);
             }
             let mut interaction_store = ConfigStore::new(interaction_envelope).await.expect("failed to create interaction store");
-            interaction_store.install_member_store_owners_exact(crate::local_interaction::retirement::interaction_store_owners());
+            interaction_store.install_document_store_owners_exact(crate::local_interaction::retirement::interaction_store_owners());
             let genesis_mutations = A::genesis().await;
             if !genesis_mutations.is_empty() {
                 store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()) }).await.expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
@@ -20011,6 +20541,10 @@ pub mod app {
                 maintenance_store_replacement_cursor: 0,
                 close_store_replacement_cursor: 0,
                 close_store_replacement_jobs_drained: false,
+                document_archive_loads: ArtifactFixedRegistry::new(),
+                maintenance_document_archive_cursor: 0,
+                close_document_archive_cursor: 0,
+                close_document_archive_loads_drained: false,
                 envelope_field_decoders: store::ArtifactEnvelopeFieldDecoderRegistry::new(),
                 envelope_field_decoder_retirements: ArtifactFixedRegistry::new(),
                 maintenance_envelope_field_decoder_cursor: 0,
@@ -20062,6 +20596,7 @@ pub mod app {
                 interaction_leftover_selection: None,
                 interaction_leftover_ids: Vec::new(),
                 interaction_ui_topology: HashMap::new(),
+                interaction_topology_memo: None,
                 pending_transaction: None,
                 pending_transaction_proposal: None,
                 pending_presence: Vec::new(),
@@ -20144,6 +20679,61 @@ pub mod app {
             let pages = store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages, maximum_bytes })
                 .map_err(|fault| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-credits"), format!("artifact envelope ingress credits were rejected: {fault:?}")))?;
             self.envelope_ingress.insert_admitted(operation.0, ActiveArtifactEnvelopeIngress::new(pages));
+            Ok(ArtifactEnvelopeDecodeOperationHandle { operation, generation })
+        }
+
+        /// 📦️ Admits one already-decoded authoritative `.pack` + `.spr` envelope directly
+        /// into the app-owned retained initializer. This path preserves the binary document format;
+        /// the fresh JSON envelope decoder remains a separate ingress contract.
+        #[expect(clippy::result_large_err, reason = "Refusal returns the exact decoded envelope so its domain retirement catalog can close every nested owner.")]
+        fn begin_persisted_document_store_replacement(
+            &mut self,
+            envelope: ArtifactEnvelope<A::Snapshot, A::Mutation>,
+        ) -> Result<ArtifactEnvelopeDecodeOperationHandle, (Fault, ArtifactEnvelope<A::Snapshot, A::Mutation>)> {
+            let generation = self.artifact_generation_now();
+            let expected_dialect: ArtifactDialect = A::DIALECT.into();
+            if envelope.schema != A::DOCUMENT_SCHEMA || envelope.dialect.as_ref() != Some(&expected_dialect) {
+                return Err((
+                    Fault::new(
+                        FaultOrigin::Framework,
+                        FaultCode::new("artifact-store.persisted-envelope-identity"),
+                        "persisted document envelope does not match the app's exact schema and dialect",
+                    ),
+                    envelope,
+                ));
+            }
+            let Some(slot) = (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find(|slot| {
+                self.envelope_ingress.slot_is_vacant(*slot)
+                    && self.envelope_decode_jobs.slot_is_vacant(*slot)
+                    && self.store_replacement_jobs.slot_is_vacant(*slot)
+            }) else {
+                return Err((
+                    Fault::new(
+                        FaultOrigin::Framework,
+                        FaultCode::new("artifact-store.persisted-ingress-saturated"),
+                        "every fixed persisted document replacement slot already owns a live operation",
+                    ),
+                    envelope,
+                ));
+            };
+            let operation = semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, slot as u64);
+            let job = match A::build_document_store_initialization_job(envelope, operation, generation) {
+                Ok(job) => job,
+                Err(envelope) => {
+                    return Err((
+                        Fault::new(
+                            FaultOrigin::Framework,
+                            FaultCode::new("artifact-store.persisted-initializer-refused"),
+                            "app refused the persisted document's retained initialization authority",
+                        ),
+                        envelope,
+                    ));
+                }
+            };
+            self.store_replacement_jobs.insert_admitted(
+                operation.0,
+                ActiveArtifactStoreReplacement::new(operation, generation, self.child_content_generation, job),
+            );
             Ok(ArtifactEnvelopeDecodeOperationHandle { operation, generation })
         }
 
@@ -20577,12 +21167,25 @@ pub mod app {
                     || !replacement_content_retirements.allocation_admitted
                     || next_content_generation.is_none()
                 {
+                    #[cfg(test)]
+                    eprintln!(
+                        "[DEBUG] recursive replacement diagnostic: publication guard rejected closing={closing} cancelled={} parent-generation={} live-generation={} child-generation={} base-child-generation={} complete={complete_candidate} retirement-admitted={} next-generation={}",
+                        active.cancel.is_cancelled_now(),
+                        active.generation.0,
+                        live_generation.0,
+                        self.child_content_generation,
+                        active.base_child_content_generation,
+                        replacement_content_retirements.allocation_admitted,
+                        next_content_generation.is_some(),
+                    );
                     *active.retained_disposer = Some(disposer);
                     active.faulted = true;
                     active.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 if A::validate_document_store_publication(active.operation, active.generation, live_generation).is_err() {
+                    #[cfg(test)]
+                    eprintln!("[DEBUG] recursive replacement diagnostic: app publication authority rejected the exact candidate");
                     *active.retained_disposer = Some(disposer);
                     active.faulted = true;
                     active.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
@@ -20594,7 +21197,7 @@ pub mod app {
                 let candidate_children = active.candidate_children.take().expect("complete replacement retains its exact member registry");
                 let candidate_content = active.candidate_content.take().expect("complete replacement retains its exact content view");
                 let candidate_composition = active.candidate_composition.take().expect("complete replacement retains its exact coordinator");
-                let displaced = match publish_document_store_candidate_if_authoritative(&mut self.store, candidate, || Ok(())) {
+                let displaced = match publish_boxed_document_store_candidate_if_authoritative(&mut self.store, candidate, || Ok(())) {
                     Ok(displaced) => displaced,
                     Err(_) => unreachable!("prevalidated publication cannot reject inside its non-suspending commit boundary"),
                 };
@@ -20640,6 +21243,299 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             Ok(PluginCloseStep::Complete)
+        }
+
+        fn drive_document_archive_terminal(
+            &mut self,
+            active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>,
+            maximum_items: usize,
+            maximum_bytes: usize,
+        ) -> Result<PluginCloseStep, Fault> {
+            let target = active.terminal_target.ok_or_else(|| plugin_sdk_fault("recursive document archive terminal cleanup has no target"))?;
+            if let Some(handle) = active.replacement {
+                if self.store_replacement_jobs.get(handle.operation.0).is_some() {
+                    if target != ActiveDocumentArchiveLoadState::Ready {
+                        self.cancel_artifact_store_replacement(handle)?;
+                    }
+                    let poll = self.poll_artifact_store_replacement(handle);
+                    if matches!(poll, ArtifactEnvelopeDecodeOperationPoll::Ready | ArtifactEnvelopeDecodeOperationPoll::Cancelled | ArtifactEnvelopeDecodeOperationPoll::Fault)
+                        && self.acknowledge_artifact_store_replacement(handle)?
+                    {
+                        active.replacement = None;
+                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    }
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                active.replacement = None;
+                if target == ActiveDocumentArchiveLoadState::Ready {
+                    return Err(plugin_sdk_fault("ready recursive document archive lost its replacement acknowledgement authority"));
+                }
+            }
+            let step = active.close_step(maximum_items, maximum_bytes);
+            if step == PluginCloseStep::Complete {
+                if !active.terminal_is_empty() {
+                    return Err(plugin_sdk_fault("recursive document archive cleanup returned Complete with a live owner"));
+                }
+                active.state = target;
+                active.phase = ActiveDocumentArchiveLoadPhase::Terminal;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            Ok(step)
+        }
+
+        fn advance_document_archive_load(
+            &mut self,
+            active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>,
+            maximum_items: usize,
+            maximum_bytes: usize,
+        ) -> Result<PluginCloseStep, Fault> {
+            if active.terminal_target.is_some() {
+                return self.drive_document_archive_terminal(active, maximum_items, maximum_bytes);
+            }
+            if active.state == ActiveDocumentArchiveLoadState::Pending {
+                active.state = ActiveDocumentArchiveLoadState::Running;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            match active.phase {
+                ActiveDocumentArchiveLoadPhase::DecodeParent => {
+                    let archive = active.archive.as_ref().ok_or_else(|| plugin_sdk_fault("recursive document archive parent input owner is absent"))?;
+                    let decoder = active.history.as_mut().ok_or_else(|| plugin_sdk_fault("recursive document archive parent history decoder is absent"))?;
+                    match decoder
+                        .step(&archive.parent_spr, maximum_bytes, maximum_items.min(1))
+                        .map_err(|error| plugin_sdk_fault(format!("document archive parent SPR was rejected: {error}")))?
+                    {
+                        protocol::RetainedHistoryDecodeStep::Pending { .. } => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: maximum_bytes.min(archive.parent_spr.len()) }),
+                        protocol::RetainedHistoryDecodeStep::Ready => {
+                            active.decoded_history = decoder.take_ready();
+                            if active.decoded_history.is_none() {
+                                return Err(plugin_sdk_fault("ready recursive document archive history retained no decoded owner"));
+                            }
+                            active.retained = Some(store::retirement::owned_retirement(decoder.take_auxiliary_owners()));
+                            let decoder = active.history.take().ok_or_else(|| plugin_sdk_fault("ready recursive document archive history decoder changed before terminal transfer"))?;
+                            if !decoder.terminal_is_empty() {
+                                active.history = Some(decoder);
+                                return Err(plugin_sdk_fault("ready recursive document archive history decoder retained an untransferred owner"));
+                            }
+                            drop(decoder);
+                            active.phase = ActiveDocumentArchiveLoadPhase::RetireParentHistoryAuxiliary;
+                            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                        }
+                    }
+                }
+                ActiveDocumentArchiveLoadPhase::RetireParentHistoryAuxiliary => {
+                    let retained = active.retained.as_mut().ok_or_else(|| plugin_sdk_fault("recursive document archive history auxiliary retirement owner is absent"))?;
+                    match retained.close_step(maximum_items.min(1), maximum_bytes) {
+                        Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= maximum_items.min(1) && released_bytes <= maximum_bytes => {
+                            Ok(PluginCloseStep::Pending { released_items, released_bytes })
+                        }
+                        Ok(store::SnapshotRetirementStep::Complete) if retained.terminal_is_empty() => {
+                            active.retained = None;
+                            active.phase = ActiveDocumentArchiveLoadPhase::HydrateParent;
+                            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                        }
+                        Ok(store::SnapshotRetirementStep::Blocked) => Ok(PluginCloseStep::Blocked { reason: "recursive document archive history auxiliary retirement is blocked" }),
+                        _ => Err(plugin_sdk_fault("recursive document archive history auxiliary retirement exceeded its grant or returned false terminal")),
+                    }
+                }
+                ActiveDocumentArchiveLoadPhase::HydrateParent => {
+                    if active.hydration.is_none() {
+                        let owners = A::build_document_store_owners().ok_or_else(|| plugin_sdk_fault("document archive parent requires the app's exact document owner catalog"))?;
+                        let archive = active.archive.as_mut().ok_or_else(|| plugin_sdk_fault("recursive document archive parent input owner is absent"))?;
+                        let pack = std::mem::take(&mut archive.parent_pack);
+                        let history = active.decoded_history.take().ok_or_else(|| plugin_sdk_fault("recursive document archive decoded history owner is absent"))?;
+                        let expected = ArtifactRef { artifact_id: history.doc_id.clone(), dialect: A::DIALECT.into() };
+                        let owner = self.store.envelope().owner.clone();
+                        active.hydration = Some(store::RetainedPersistedDocumentHydration::from_pack(
+                            pack,
+                            history,
+                            expected,
+                            owner,
+                            A::DOCUMENT_SCHEMA.to_string(),
+                            owners,
+                            semio_framework_job::OperationId(active.operation),
+                            semio_framework_job::Generation(self.store.generation_now()),
+                            u64::MAX,
+                            store::PersistedDocumentHydrationTarget::Envelope,
+                        ));
+                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    }
+                    let mut sequence = active.hydration_sequence;
+                    let fuel = maximum_items.max(maximum_bytes.min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)) as u64;
+                    let mut cx = semio_framework_job::StepContext::new(
+                        semio_framework_job::OperationId(active.operation),
+                        semio_framework_job::Generation(self.store.generation_now()),
+                        semio_framework_job::StepBudget::new(fuel, u64::MAX),
+                        semio_framework_job::CancelToken::root_now(),
+                        semio_framework_job::default_now_us,
+                        &mut sequence,
+                    );
+                    let step = active.hydration.as_mut().expect("recursive document parent hydration remains retained").step(&mut cx);
+                    active.hydration_sequence = sequence;
+                    let envelope = match step {
+                        store::PersistedDocumentHydrationStep::Pending(_) => return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
+                        store::PersistedDocumentHydrationStep::Rejected(diagnostic) => {
+                            return Err(plugin_sdk_fault(format!("document archive parent Pack and SPR hydration was rejected: {diagnostic:?}")));
+                        }
+                        store::PersistedDocumentHydrationStep::Ready(store::PersistedDocumentHydrationOutput::Envelope(envelope)) => envelope,
+                        store::PersistedDocumentHydrationStep::Ready(store::PersistedDocumentHydrationOutput::Store(_)) => {
+                            return Err(plugin_sdk_fault("document archive parent hydration returned a store outside its requested envelope boundary"));
+                        }
+                    };
+                    let hydration = active.hydration.take().ok_or_else(|| plugin_sdk_fault("ready recursive document parent hydration owner changed before handoff"))?;
+                    if !store::ErasedSnapshotRetirement::terminal_is_empty(&hydration) {
+                        active.hydration = Some(hydration);
+                        let parent_bundle = A::build_envelope_decode_owner_bundle().ok_or_else(|| plugin_sdk_fault("ready document archive envelope requires its exact retirement owner catalog"))?;
+                        active.retained = Some(parent_bundle.retire_envelope(envelope));
+                        return Err(plugin_sdk_fault("ready recursive document parent hydration retained nonterminal ownership"));
+                    }
+                    drop(hydration);
+                    match self.begin_persisted_document_store_replacement(envelope) {
+                        Ok(handle) => {
+                            active.replacement = Some(handle);
+                            active.completed = 1;
+                            active.phase = ActiveDocumentArchiveLoadPhase::AwaitingMembers;
+                        }
+                        Err((fault, envelope)) => {
+                            let parent_bundle = A::build_envelope_decode_owner_bundle().ok_or_else(|| plugin_sdk_fault("rejected document archive envelope requires its exact retirement owner catalog"))?;
+                            active.retained = Some(parent_bundle.retire_envelope(envelope));
+                            return Err(fault);
+                        }
+                    }
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                ActiveDocumentArchiveLoadPhase::AwaitingMembers => {
+                    let handle = active.replacement.ok_or_else(|| plugin_sdk_fault("recursive document archive replacement handle is absent"))?;
+                    let state = self.store_replacement_jobs.get(handle.operation.0).map(|replacement| replacement.state);
+                    match state {
+                        Some(ActiveArtifactStoreReplacementState::AwaitingMembers) => {
+                            let expected = active.archive.as_ref().ok_or_else(|| plugin_sdk_fault("recursive document archive member roster owner is absent"))?.members.len();
+                            if self.try_begin_owned_document_members(handle, expected, u64::MAX)? {
+                                active.phase = ActiveDocumentArchiveLoadPhase::BeginMember;
+                                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                            } else {
+                                Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
+                            }
+                        }
+                        Some(ActiveArtifactStoreReplacementState::Complete) | None => Err(plugin_sdk_fault("document archive parent initialization failed before retained member admission")),
+                        Some(_) => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    }
+                }
+                ActiveDocumentArchiveLoadPhase::BeginMember => {
+                    let archive = active.archive.as_mut().ok_or_else(|| plugin_sdk_fault("recursive document archive member roster owner is absent"))?;
+                    let Some(entry) = archive.members.pop() else {
+                        active.phase = ActiveDocumentArchiveLoadPhase::SealMembers;
+                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    };
+                    match PendingDocumentArchiveMember::new(entry) {
+                        Ok(member) => {
+                            active.member = Some(member);
+                            active.phase = ActiveDocumentArchiveLoadPhase::FillMember;
+                        }
+                        Err((fault, entry)) => {
+                            archive.members.push(entry);
+                            return Err(fault);
+                        }
+                    }
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                ActiveDocumentArchiveLoadPhase::FillMember => {
+                    let member = active.member.as_mut().ok_or_else(|| plugin_sdk_fault("recursive document archive active member owner is absent"))?;
+                    if member.fill_one_page(maximum_bytes)? {
+                        active.phase = ActiveDocumentArchiveLoadPhase::RetireMemberSource;
+                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    }
+                    Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
+                }
+                ActiveDocumentArchiveLoadPhase::RetireMemberSource => {
+                    let member = active.member.as_mut().ok_or_else(|| plugin_sdk_fault("recursive document archive active member owner is absent"))?;
+                    match member.retire_source_step(maximum_bytes) {
+                        PluginCloseStep::Complete => {
+                            active.phase = ActiveDocumentArchiveLoadPhase::AdmitMember;
+                            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                        }
+                        step => Ok(step),
+                    }
+                }
+                ActiveDocumentArchiveLoadPhase::AdmitMember => {
+                    let handle = active.replacement.ok_or_else(|| plugin_sdk_fault("recursive document archive replacement handle is absent"))?;
+                    let ingress = match active.member.as_mut().ok_or_else(|| plugin_sdk_fault("recursive document archive active member owner is absent"))?.take_ingress(handle) {
+                        Ok(ingress) => ingress,
+                        Err((fault, ingress)) => {
+                            if !ingress.terminal_is_empty() {
+                                active.rejected_ingress = Some(ingress);
+                            }
+                            return Err(fault);
+                        }
+                    };
+                    if let Err((fault, ingress)) = self.admit_owned_document_member(handle, ingress) {
+                        active.rejected_ingress = Some(ingress);
+                        return Err(fault);
+                    }
+                    let member = active.member.take().ok_or_else(|| plugin_sdk_fault("recursive document archive transferred member owner changed before exact removal"))?;
+                    if !member.terminal_is_empty() {
+                        active.member = Some(member);
+                        return Err(plugin_sdk_fault("recursive document archive admitted member retained a local owner"));
+                    }
+                    drop(member);
+                    active.completed = active.completed.saturating_add(1);
+                    active.phase = ActiveDocumentArchiveLoadPhase::BeginMember;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                ActiveDocumentArchiveLoadPhase::SealMembers => {
+                    let handle = active.replacement.ok_or_else(|| plugin_sdk_fault("recursive document archive replacement handle is absent"))?;
+                    self.seal_owned_document_members(handle)?;
+                    active.phase = ActiveDocumentArchiveLoadPhase::AwaitReplacement;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                ActiveDocumentArchiveLoadPhase::AwaitReplacement => {
+                    let handle = active.replacement.ok_or_else(|| plugin_sdk_fault("recursive document archive replacement handle is absent"))?;
+                    let poll = self.poll_artifact_store_replacement(handle);
+                    let target = match poll {
+                        ArtifactEnvelopeDecodeOperationPoll::Pending | ArtifactEnvelopeDecodeOperationPoll::Progress => {
+                            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                        }
+                        ArtifactEnvelopeDecodeOperationPoll::Ready => ActiveDocumentArchiveLoadState::Ready,
+                        ArtifactEnvelopeDecodeOperationPoll::Cancelled => ActiveDocumentArchiveLoadState::Cancelled,
+                        ArtifactEnvelopeDecodeOperationPoll::Fault => ActiveDocumentArchiveLoadState::Fault,
+                    };
+                    if !self.acknowledge_artifact_store_replacement(handle)? {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    active.replacement = None;
+                    if target == ActiveDocumentArchiveLoadState::Fault {
+                        active.fault = dsl::encode_fault_bytes(&plugin_sdk_fault("document archive replacement failed closure, authority, or retained publication validation"));
+                    }
+                    active.request_terminal(target);
+                    self.drive_document_archive_terminal(active, maximum_items, maximum_bytes)
+                }
+                ActiveDocumentArchiveLoadPhase::Terminal => Ok(PluginCloseStep::Complete),
+            }
+        }
+
+        fn drive_document_archive_load_retirements(&mut self, maximum_items: usize, maximum_bytes: usize, closing: bool) -> Result<PluginCloseStep, Fault> {
+            let cursor = if closing { &mut self.close_document_archive_cursor } else { &mut self.maintenance_document_archive_cursor };
+            let Some((index, operation)) = self.document_archive_loads.next_id_from(*cursor) else {
+                return Ok(PluginCloseStep::Complete);
+            };
+            *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+            let mut active = self.document_archive_loads.remove(operation).ok_or_else(|| plugin_sdk_fault("recursive document archive retirement authority changed during one bounded step"))?;
+            if closing && !active.terminal() {
+                active.request_terminal(ActiveDocumentArchiveLoadState::Cancelled);
+            }
+            let mut step = self.advance_document_archive_load(&mut active, maximum_items, maximum_bytes);
+            if step.is_err() {
+                let primary = step.expect_err("checked recursive archive step fault");
+                active.request_fault(&primary);
+                step = self.drive_document_archive_terminal(&mut active, maximum_items, maximum_bytes).map_err(|cleanup| {
+                    plugin_sdk_fault(format!("recursive document archive load failed before retained cleanup: {primary:?}; retained cleanup also failed: {cleanup:?}"))
+                });
+            }
+            if closing && active.terminal() && active.terminal_is_empty() {
+                drop(active);
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            self.document_archive_loads.insert_admitted(operation, active);
+            step
         }
 
         fn drive_envelope_ingress(&mut self, maximum_items: usize, maximum_bytes: usize, closing: bool) -> Result<PluginCloseStep, Fault> {
@@ -22335,18 +23231,26 @@ pub mod app {
         async fn resolve_domain_topology(&mut self, def: &InteractionDefinition, known_ids: impl Iterator<Item = String>) -> Result<protocol::DomainTopology, Fault> {
             match &def.hierarchy {
                 protocol::HierarchyProvider::Flat => Ok(protocol::DomainTopology::default()),
-                protocol::HierarchyProvider::Topology => {
-                    self.refresh_cache().await?;
-                    let render_operation = self.live_render_operation();
-                    let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
-                    let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_content_root), render_operation, None).await;
-                    let cfg = ConfigView { snapshot: config.as_ref(), window: None };
-                    let topology = A::interaction_topology(&doc, &cfg).await;
-                    Ok(topology.domains.get(&def.id).cloned().unwrap_or_default())
-                }
+                protocol::HierarchyProvider::Topology => Ok(self.app_interaction_topology().await?.domains.get(&def.id).cloned().unwrap_or_default()),
                 protocol::HierarchyProvider::UiTree => Ok(self.interaction_ui_topology.get(&def.id).cloned().unwrap_or_default()),
                 protocol::HierarchyProvider::PathDelimited { delimiter } => Ok(derive_path_delimited_topology(def, delimiter, known_ids).await),
             }
+        }
+
+        /// 🗺️ `A::interaction_topology` for the LIVE document generation, built at most once per generation
+        /// — see [`Self::interaction_topology_memo`] for why one pick used to build it twice.
+        async fn app_interaction_topology(&mut self) -> Result<&protocol::InteractionTopology, Fault> {
+            self.refresh_cache().await?;
+            let key = (self.store.generation(), self.config_store.generation());
+            if self.interaction_topology_memo.as_ref().map(|(cached, _)| *cached) != Some(key) {
+                let render_operation = self.live_render_operation();
+                let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
+                let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_content_root), render_operation, None).await;
+                let cfg = ConfigView { snapshot: config.as_ref(), window: None };
+                let topology = A::interaction_topology(&doc, &cfg).await;
+                self.interaction_topology_memo = Some((key, topology));
+            }
+            Ok(&self.interaction_topology_memo.as_ref().expect("memo filled above").1)
         }
 
         /// 🧹 Builds the `InteractionTopology` `validate_state`'s PRUNING (existence-check) use needs —
@@ -25181,11 +26085,355 @@ pub mod app {
     /// 🕰️ Length of [`PluginApp::maintenance_step`]'s fixed cooperative round robin. Every stage
     /// runs at most one bounded unit per call, so a step-budget law needs exactly this many calls
     /// to observe each stage once.
-    pub const MAINTENANCE_STAGES: u8 = 24;
+    pub const MAINTENANCE_STAGES: u8 = 25;
 
     /// 🐞️ `[DEBUG]` last maintenance stage entered — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
     pub(crate) static LAST_MAINTENANCE_STAGE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
+    impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+        #[inline(never)]
+        fn maintenance_early_stage_step(&mut self, stage: u8, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            match stage {
+                0 => {
+                    let mut selected = None;
+                    let mut occupied = false;
+                    let mut every_operation_awaits_presented_ack = true;
+                    for offset in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+                        let index = (self.maintenance_tool_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                        let Some((operation_id, operation)) = self.tool_operations.entry(index) else { continue };
+                        occupied = true;
+                        match operation.stage {
+                            MountedTypedCommandFullOperationStage::Worker | MountedTypedCommandFullOperationStage::Retiring => {
+                                selected = Some((index, *operation_id));
+                                break;
+                            }
+                            MountedTypedCommandFullOperationStage::AwaitingAck if operation.result_page_presented => {}
+                            MountedTypedCommandFullOperationStage::Publishing | MountedTypedCommandFullOperationStage::AwaitingAck => {
+                                every_operation_awaits_presented_ack = false;
+                            }
+                        }
+                    }
+                    let Some((index, operation_id)) = selected else {
+                        return Ok(if occupied && every_operation_awaits_presented_ack {
+                            PluginCloseStep::AwaitingInput { reason: "every typed operation awaits its exact presented host result ACK" }
+                        } else {
+                            PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }
+                        });
+                    };
+                    self.maintenance_tool_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    if self.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
+                        return self.retire_typed_operation_unit(operation_id, maximum_items, maximum_bytes);
+                    }
+                    let pool =
+                        semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
+                    let operation = self
+                        .tool_operations
+                        .get_mut(operation_id)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "typed operation authority changed during one fixed maintenance step"))?;
+                    let step = match operation.stage {
+                        MountedTypedCommandFullOperationStage::Retiring => unreachable!("the retiring stage is released by its one exact retirement site"),
+                        MountedTypedCommandFullOperationStage::Worker => operation.drive_worker_step(&pool)?,
+                        MountedTypedCommandFullOperationStage::Publishing => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                        MountedTypedCommandFullOperationStage::AwaitingAck => PluginCloseStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" },
+                    };
+                    if step == PluginCloseStep::Complete {
+                        if !self.tool_operations.get_mut(operation_id).is_some_and(|operation| operation.terminal_is_empty()) {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-terminal"), "typed operation reported Complete without exact terminal emptiness"));
+                        }
+                        let operation =
+                            self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "terminal typed operation changed before exact removal"))?;
+                        drop(operation);
+                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    }
+                    Ok(step)
+                }
+                1 => {
+                    let Some((index, operation_id)) = self.media_closures.next_id_from(self.maintenance_media_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    self.maintenance_media_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    let step = self
+                        .media_closures
+                        .get_mut(operation_id)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-media-authority"), "live media cleanup authority changed during one fixed step"))?
+                        .close_step(maximum_items, maximum_bytes)?;
+                    match step {
+                        PluginCloseStep::Complete => {
+                            let active =
+                                self.media_closures.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-media-authority"), "completed live media cleanup lost its exact fixed owner"))?;
+                            if !active.terminal_is_empty()? {
+                                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-media-terminal-not-empty"), "live media cleanup reported Complete without an exact terminal-empty witness"));
+                            }
+                            self.quarantine_media_snapshot(operation_id, active).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-snapshot-quarantine"), error.to_string()))?;
+                            let active =
+                                self.media_closures.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-media-authority"), "terminal live media cleanup changed before exact removal"))?;
+                            drop(active);
+                            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                        }
+                        step @ PluginCloseStep::Blocked { .. } => Ok(step),
+                        step => Ok(step),
+                    }
+                }
+                2 => {
+                    let Some((index, operation_id)) = self.segmented_closures.next_id_from(self.maintenance_segment_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    self.maintenance_segment_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    if maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    match self
+                        .segmented_closures
+                        .get(operation_id)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-segment-authority"), "live segmented cleanup authority changed during one fixed step"))?
+                        .chunks
+                        .close_take_chunk()?
+                    {
+                        Some(chunk) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: chunk.len() }),
+                        None => {
+                            let output = self
+                                .segmented_closures
+                                .remove(operation_id)
+                                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-segment-authority"), "terminal live segmented cleanup changed before exact removal"))?;
+                            if !output.terminal_is_empty() {
+                                self.segmented_closures.insert_admitted(operation_id, output);
+                                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-segment-terminal-not-empty"), "live segmented cleanup reached terminal without an empty exact chunk queue"));
+                            }
+                            drop(output);
+                            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                        }
+                    }
+                }
+                3 => {
+                    let Some((index, operation_id)) = self.snapshot_retirements.next_id_from(self.maintenance_snapshot_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    self.maintenance_snapshot_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    if self.media_exports.get(operation_id).is_some() || self.media_closures.get(operation_id).is_some() {
+                        return Ok(PluginCloseStep::Blocked { reason: "snapshot retirement waits for its exact live media owner" });
+                    }
+                    let step = self
+                        .snapshot_retirements
+                        .get_mut(operation_id)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-snapshot-authority"), "live snapshot retirement authority changed during one fixed step"))?
+                        .close_step(maximum_items, maximum_bytes)?;
+                    if step != PluginCloseStep::Complete {
+                        return Ok(match step {
+                            step @ PluginCloseStep::Blocked { .. } => step,
+                            step => step,
+                        });
+                    }
+                    if !self.snapshot_retirements.get(operation_id).is_some_and(ArtifactSnapshotCloseRetention::terminal_is_empty) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-snapshot-terminal-not-empty"), "live snapshot retirement reported Complete without its exact terminal-empty witness"));
+                    }
+                    let retirement = self
+                        .snapshot_retirements
+                        .remove(operation_id)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-snapshot-authority"), "terminal live snapshot retirement changed before exact removal"))?;
+                    drop(retirement);
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                4 => {
+                    let Some((index, generation)) = self.child_content_retirements.next_id_from(self.maintenance_child_root_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    let step = {
+                        let retirements = &mut self.child_content_retirements;
+                        let children = &mut self.children;
+                        let current = &*self.child_content_root;
+                        retirements
+                            .get_mut(generation)
+                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-child-root-authority"), "live child root retirement authority changed during one fixed step"))?
+                            .close_step(children, current, maximum_items, maximum_bytes)?
+                    };
+                    if step != PluginCloseStep::Complete {
+                        self.maintenance_child_root_cursor = index;
+                        return Ok(step);
+                    }
+                    if !self.child_content_retirements.get(generation).is_some_and(ChildContentRetirement::terminal_is_empty) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-child-root-terminal-not-empty"), "live child root retirement reported Complete without its exact terminal-empty witness"));
+                    }
+                    let retirement = self
+                        .child_content_retirements
+                        .remove(generation)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-child-root-authority"), "terminal live child root retirement changed before exact removal"))?;
+                    drop(retirement);
+                    self.maintenance_child_root_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                5 => {
+                    let Some((index, generation)) = self.peer_presence_retirements.next_id_from(self.maintenance_peer_presence_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    let step = self
+                        .peer_presence_retirements
+                        .get_mut(generation)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-presence-authority"), "live peer-presence retirement authority changed during one fixed step"))?
+                        .close_step(maximum_items, maximum_bytes)?;
+                    if step != PluginCloseStep::Complete {
+                        self.maintenance_peer_presence_cursor = index;
+                        return Ok(step);
+                    }
+                    if !self.peer_presence_retirements.get(generation).is_some_and(PeerPresenceRootRetirement::terminal_is_empty) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-presence-terminal-not-empty"), "live peer-presence retirement reported Complete without its exact terminal-empty witness"));
+                    }
+                    let retirement = self
+                        .peer_presence_retirements
+                        .remove(generation)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-presence-authority"), "terminal live peer-presence retirement changed before exact removal"))?;
+                    drop(retirement);
+                    self.maintenance_peer_presence_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                6 => {
+                    let Some((index, generation)) = self.presence_peer_retirements.next_id_from(self.maintenance_presence_peer_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    let step = self
+                        .presence_peer_retirements
+                        .get_mut(generation)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-authority"), "live app-typed presence retirement authority changed during one fixed step"))?
+                        .close_step(maximum_items, maximum_bytes)
+                        .map_err(plugin_sdk_fault)?;
+                    match step {
+                        store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => {
+                            self.maintenance_presence_peer_cursor = index;
+                            return Ok(PluginCloseStep::Pending { released_items, released_bytes });
+                        }
+                        store::SnapshotRetirementStep::Pending { .. } => {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-over-budget"), "live app-typed presence retirement exceeded its exact maintenance grant"));
+                        }
+                        store::SnapshotRetirementStep::Blocked => {
+                            self.maintenance_presence_peer_cursor = index;
+                            return Ok(PluginCloseStep::Blocked { reason: "app-typed presence retirement waits for its exact captured root" });
+                        }
+                        store::SnapshotRetirementStep::Complete => {}
+                    }
+                    if !self.presence_peer_retirements.get(generation).is_some_and(store::PresencePeersRetirement::terminal_is_empty) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-terminal-not-empty"), "live app-typed presence retirement reported Complete without its exact terminal-empty witness"));
+                    }
+                    let retirement = self
+                        .presence_peer_retirements
+                        .remove(generation)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-authority"), "terminal live app-typed presence retirement changed before exact removal"))?;
+                    drop(retirement);
+                    self.maintenance_presence_peer_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                7 => {
+                    let Some(generation) = self.peer_roster_processed_generation.checked_add(1) else {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-generation"), "peer roster maintenance generation exhausted"));
+                    };
+                    let index = Self::peer_roster_slot(generation);
+                    if self.peer_roster_publications.get(generation).is_none() {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    let faulted = self.peer_roster_publications.get(generation).is_some_and(|publication| publication.faulted);
+                    let step = if faulted {
+                        self.peer_roster_publications
+                            .get_mut(generation)
+                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "faulted peer roster publication changed during one fixed cleanup step"))?
+                            .close_step(maximum_items, maximum_bytes)?
+                    } else {
+                        let step = {
+                            let publications = &mut self.peer_roster_publications;
+                            let presence_store = &self.presence_store;
+                            publications.get_mut(generation).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "peer roster publication changed during one fixed decode step"))?.step(
+                                presence_store,
+                                maximum_items,
+                                maximum_bytes,
+                            )
+                        };
+                        match step {
+                            Ok(step) => step,
+                            Err(fault) => {
+                                self.peer_roster_publications
+                                    .get_mut(generation)
+                                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "peer roster publication changed before retained fault transition"))?
+                                    .fail(fault);
+                                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                            }
+                        }
+                    };
+                    if step != PluginCloseStep::Complete {
+                        self.maintenance_peer_roster_cursor = index;
+                        return Ok(step);
+                    }
+                    if faulted {
+                        if !self.peer_roster_publications.get(generation).is_some_and(PeerRosterPublication::terminal_is_empty) {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-terminal-not-empty"), "faulted peer roster publication reported Complete without its exact terminal-empty witness"));
+                        }
+                    } else {
+                        let (seq, cancel) = {
+                            let publication = self
+                                .peer_roster_publications
+                                .get(generation)
+                                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "complete peer roster publication changed before validation"))?;
+                            (publication.seq, publication.cancel.clone())
+                        };
+                        let admission = match self.validate_peer_roster_publication(seq, generation, &cancel) {
+                            Ok(admission) => admission,
+                            Err(fault) => {
+                                let publication = self
+                                    .peer_roster_publications
+                                    .get_mut(generation)
+                                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "stale peer roster publication changed before cleanup handoff"))?;
+                                publication.fail(fault);
+                                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                            }
+                        };
+                        let candidate = match self
+                            .peer_roster_publications
+                            .get_mut(generation)
+                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "complete peer roster publication changed before exact candidate commit"))?
+                            .take_candidate()
+                        {
+                            Ok(candidate) => candidate,
+                            Err(fault) => {
+                                self.peer_roster_publications
+                                    .get_mut(generation)
+                                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "peer roster publication changed before candidate fault transition"))?
+                                    .fail(fault);
+                                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                            }
+                        };
+                        if let Err(candidate) = self.publish_peer_roster_candidate_admitted(admission, candidate) {
+                            self.peer_roster_publications.get_mut(generation).expect("exact peer candidate return owner").retain_rejected_candidate(candidate);
+                            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                        }
+                    }
+                    if !self.peer_roster_publications.get(generation).is_some_and(PeerRosterPublication::terminal_is_empty) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-terminal-not-empty"), "peer roster publication reached outcome handoff without an exact empty terminal witness"));
+                    }
+                    let (seq, fault) = {
+                        let publication = self
+                            .peer_roster_publications
+                            .get_mut(generation)
+                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "terminal peer roster publication changed before outcome handoff"))?;
+                        (publication.seq, publication.fault.take())
+                    };
+                    if !self.peer_roster_outcomes.can_insert(generation) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-outcome"), "pre-admitted peer roster outcome slot changed before exact handoff"));
+                    }
+                    self.peer_roster_outcomes.insert_admitted(generation, PresenceRosterOutcome { seq, fault });
+                    let publication = self
+                        .peer_roster_publications
+                        .remove(generation)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "terminal peer roster publication changed before exact removal"))?;
+                    drop(publication);
+                    let reservation_slot = Self::peer_roster_slot(generation);
+                    if self.peer_roster_reservations[reservation_slot] != Some((generation, seq)) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-reservation"), "terminal peer roster lost its exact ingress reservation"));
+                    }
+                    self.peer_roster_reservations[reservation_slot] = None;
+                    self.peer_roster_processed_generation = generation;
+                    self.maintenance_peer_roster_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                _ => unreachable!("early maintenance stage"),
+            }
+        }
+    }
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M> {
         async fn bind_instance_id(&mut self, instance_id: u32) {
             self.live_runtime_instance_id = Some(instance_id);
@@ -25668,6 +26916,14 @@ pub mod app {
                 self.close_store_replacement_jobs_drained = true;
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
+            if !self.close_document_archive_loads_drained {
+                let step = self.drive_document_archive_load_retirements(maximum_items, maximum_bytes, true)?;
+                if step != PluginCloseStep::Complete {
+                    return Ok(step);
+                }
+                self.close_document_archive_loads_drained = true;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
             let cache_step = self.close_projection_cache_step(maximum_items)?;
             if cache_step != PluginCloseStep::Complete {
                 return Ok(cache_step);
@@ -25744,6 +27000,7 @@ pub mod app {
                 && self.envelope_ingress.is_empty()
                 && self.envelope_decode_jobs.is_empty()
                 && self.store_replacement_jobs.is_empty()
+                && self.document_archive_loads.is_empty()
                 && self.envelope_field_decoder_retirements.is_empty()
                 && self.envelope_completed_record_retirements.is_empty()
                 && self.retained_fields_terminal_is_empty()
@@ -25771,6 +27028,7 @@ pub mod app {
                 && self.envelope_ingress.is_empty()
                 && self.envelope_decode_jobs.is_empty()
                 && self.store_replacement_jobs.is_empty()
+                && self.document_archive_loads.is_empty()
                 && self.envelope_field_decoder_retirements.is_empty()
                 && self.envelope_field_decoders.next_returned_ticket().is_none()
                 && self.envelope_completed_record_retirements.is_empty()
@@ -25779,6 +27037,7 @@ pub mod app {
                 && self.retired_window_transient_stores.is_empty()
                 && self.presence_store.local_read_maintenance_is_idle()
                 && !semio_framework_job::worker_job_retirements_are_parked()
+                && self.live_runtime_instance_id.is_none_or(|instance_id| A::mounted_jobs_terminal_is_empty(instance_id))
             {
                 return self.advance_snapshot_read_returns_one(maximum_bytes);
             }
@@ -25786,342 +27045,7 @@ pub mod app {
             LAST_MAINTENANCE_STAGE.store(stage as u64, std::sync::atomic::Ordering::Relaxed);
             self.maintenance_stage = (self.maintenance_stage + 1) % MAINTENANCE_STAGES;
             match stage {
-                0 => {
-                    let mut selected = None;
-                    let mut occupied = false;
-                    let mut every_operation_awaits_presented_ack = true;
-                    for offset in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
-                        let index = (self.maintenance_tool_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                        let Some((operation_id, operation)) = self.tool_operations.entry(index) else { continue };
-                        occupied = true;
-                        match operation.stage {
-                            MountedTypedCommandFullOperationStage::Worker | MountedTypedCommandFullOperationStage::Retiring => {
-                                selected = Some((index, *operation_id));
-                                break;
-                            }
-                            MountedTypedCommandFullOperationStage::AwaitingAck if operation.result_page_presented => {}
-                            MountedTypedCommandFullOperationStage::Publishing | MountedTypedCommandFullOperationStage::AwaitingAck => {
-                                every_operation_awaits_presented_ack = false;
-                            }
-                        }
-                    }
-                    let Some((index, operation_id)) = selected else {
-                        return Ok(if occupied && every_operation_awaits_presented_ack {
-                            PluginCloseStep::AwaitingInput { reason: "every typed operation awaits its exact presented host result ACK" }
-                        } else {
-                            PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }
-                        });
-                    };
-                    self.maintenance_tool_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                    if self.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
-                        return self.retire_typed_operation_unit(operation_id, maximum_items, maximum_bytes);
-                    }
-                    let pool =
-                        semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
-                    let operation = self
-                        .tool_operations
-                        .get_mut(operation_id)
-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "typed operation authority changed during one fixed maintenance step"))?;
-                    let step = match operation.stage {
-                        MountedTypedCommandFullOperationStage::Retiring => unreachable!("the retiring stage is released by its one exact retirement site"),
-                        MountedTypedCommandFullOperationStage::Worker => operation.drive_worker_step(&pool)?,
-                        MountedTypedCommandFullOperationStage::Publishing => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
-                        MountedTypedCommandFullOperationStage::AwaitingAck => PluginCloseStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" },
-                    };
-                    if step == PluginCloseStep::Complete {
-                        if !self.tool_operations.get_mut(operation_id).is_some_and(|operation| operation.terminal_is_empty()) {
-                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-terminal"), "typed operation reported Complete without exact terminal emptiness"));
-                        }
-                        let operation =
-                            self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "terminal typed operation changed before exact removal"))?;
-                        drop(operation);
-                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-                    }
-                    Ok(step)
-                }
-                1 => {
-                    let Some((index, operation_id)) = self.media_closures.next_id_from(self.maintenance_media_cursor) else {
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                    };
-                    self.maintenance_media_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                    let step = self
-                        .media_closures
-                        .get_mut(operation_id)
-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-media-authority"), "live media cleanup authority changed during one fixed step"))?
-                        .close_step(maximum_items, maximum_bytes)?;
-                    match step {
-                        PluginCloseStep::Complete => {
-                            let active =
-                                self.media_closures.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-media-authority"), "completed live media cleanup lost its exact fixed owner"))?;
-                            if !active.terminal_is_empty()? {
-                                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-media-terminal-not-empty"), "live media cleanup reported Complete without an exact terminal-empty witness"));
-                            }
-                            self.quarantine_media_snapshot(operation_id, active).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-snapshot-quarantine"), error.to_string()))?;
-                            let active =
-                                self.media_closures.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-media-authority"), "terminal live media cleanup changed before exact removal"))?;
-                            drop(active);
-                            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                        }
-                        step @ PluginCloseStep::Blocked { .. } => Ok(step),
-                        step => Ok(step),
-                    }
-                }
-                2 => {
-                    let Some((index, operation_id)) = self.segmented_closures.next_id_from(self.maintenance_segment_cursor) else {
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                    };
-                    self.maintenance_segment_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                    if maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES {
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                    }
-                    match self
-                        .segmented_closures
-                        .get(operation_id)
-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-segment-authority"), "live segmented cleanup authority changed during one fixed step"))?
-                        .chunks
-                        .close_take_chunk()?
-                    {
-                        Some(chunk) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: chunk.len() }),
-                        None => {
-                            let output = self
-                                .segmented_closures
-                                .remove(operation_id)
-                                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-segment-authority"), "terminal live segmented cleanup changed before exact removal"))?;
-                            if !output.terminal_is_empty() {
-                                self.segmented_closures.insert_admitted(operation_id, output);
-                                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-segment-terminal-not-empty"), "live segmented cleanup reached terminal without an empty exact chunk queue"));
-                            }
-                            drop(output);
-                            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                        }
-                    }
-                }
-                3 => {
-                    let Some((index, operation_id)) = self.snapshot_retirements.next_id_from(self.maintenance_snapshot_cursor) else {
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                    };
-                    self.maintenance_snapshot_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                    if self.media_exports.get(operation_id).is_some() || self.media_closures.get(operation_id).is_some() {
-                        return Ok(PluginCloseStep::Blocked { reason: "snapshot retirement waits for its exact live media owner" });
-                    }
-                    let step = self
-                        .snapshot_retirements
-                        .get_mut(operation_id)
-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-snapshot-authority"), "live snapshot retirement authority changed during one fixed step"))?
-                        .close_step(maximum_items, maximum_bytes)?;
-                    if step != PluginCloseStep::Complete {
-                        return Ok(match step {
-                            step @ PluginCloseStep::Blocked { .. } => step,
-                            step => step,
-                        });
-                    }
-                    if !self.snapshot_retirements.get(operation_id).is_some_and(ArtifactSnapshotCloseRetention::terminal_is_empty) {
-                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-snapshot-terminal-not-empty"), "live snapshot retirement reported Complete without its exact terminal-empty witness"));
-                    }
-                    let retirement = self
-                        .snapshot_retirements
-                        .remove(operation_id)
-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-snapshot-authority"), "terminal live snapshot retirement changed before exact removal"))?;
-                    drop(retirement);
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                4 => {
-                    let Some((index, generation)) = self.child_content_retirements.next_id_from(self.maintenance_child_root_cursor) else {
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                    };
-                    let step = {
-                        let retirements = &mut self.child_content_retirements;
-                        let children = &mut self.children;
-                        let current = &*self.child_content_root;
-                        retirements
-                            .get_mut(generation)
-                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-child-root-authority"), "live child root retirement authority changed during one fixed step"))?
-                            .close_step(children, current, maximum_items, maximum_bytes)?
-                    };
-                    if step != PluginCloseStep::Complete {
-                        self.maintenance_child_root_cursor = index;
-                        return Ok(step);
-                    }
-                    if !self.child_content_retirements.get(generation).is_some_and(ChildContentRetirement::terminal_is_empty) {
-                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-child-root-terminal-not-empty"), "live child root retirement reported Complete without its exact terminal-empty witness"));
-                    }
-                    let retirement = self
-                        .child_content_retirements
-                        .remove(generation)
-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-child-root-authority"), "terminal live child root retirement changed before exact removal"))?;
-                    drop(retirement);
-                    self.maintenance_child_root_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                5 => {
-                    let Some((index, generation)) = self.peer_presence_retirements.next_id_from(self.maintenance_peer_presence_cursor) else {
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                    };
-                    let step = self
-                        .peer_presence_retirements
-                        .get_mut(generation)
-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-presence-authority"), "live peer-presence retirement authority changed during one fixed step"))?
-                        .close_step(maximum_items, maximum_bytes)?;
-                    if step != PluginCloseStep::Complete {
-                        self.maintenance_peer_presence_cursor = index;
-                        return Ok(step);
-                    }
-                    if !self.peer_presence_retirements.get(generation).is_some_and(PeerPresenceRootRetirement::terminal_is_empty) {
-                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-presence-terminal-not-empty"), "live peer-presence retirement reported Complete without its exact terminal-empty witness"));
-                    }
-                    let retirement = self
-                        .peer_presence_retirements
-                        .remove(generation)
-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-presence-authority"), "terminal live peer-presence retirement changed before exact removal"))?;
-                    drop(retirement);
-                    self.maintenance_peer_presence_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                6 => {
-                    let Some((index, generation)) = self.presence_peer_retirements.next_id_from(self.maintenance_presence_peer_cursor) else {
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                    };
-                    let step = self
-                        .presence_peer_retirements
-                        .get_mut(generation)
-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-authority"), "live app-typed presence retirement authority changed during one fixed step"))?
-                        .close_step(maximum_items, maximum_bytes)
-                        .map_err(plugin_sdk_fault)?;
-                    match step {
-                        store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => {
-                            self.maintenance_presence_peer_cursor = index;
-                            return Ok(PluginCloseStep::Pending { released_items, released_bytes });
-                        }
-                        store::SnapshotRetirementStep::Pending { .. } => {
-                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-over-budget"), "live app-typed presence retirement exceeded its exact maintenance grant"));
-                        }
-                        store::SnapshotRetirementStep::Blocked => {
-                            self.maintenance_presence_peer_cursor = index;
-                            return Ok(PluginCloseStep::Blocked { reason: "app-typed presence retirement waits for its exact captured root" });
-                        }
-                        store::SnapshotRetirementStep::Complete => {}
-                    }
-                    if !self.presence_peer_retirements.get(generation).is_some_and(store::PresencePeersRetirement::terminal_is_empty) {
-                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-terminal-not-empty"), "live app-typed presence retirement reported Complete without its exact terminal-empty witness"));
-                    }
-                    let retirement = self
-                        .presence_peer_retirements
-                        .remove(generation)
-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-authority"), "terminal live app-typed presence retirement changed before exact removal"))?;
-                    drop(retirement);
-                    self.maintenance_presence_peer_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                7 => {
-                    let Some(generation) = self.peer_roster_processed_generation.checked_add(1) else {
-                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-generation"), "peer roster maintenance generation exhausted"));
-                    };
-                    let index = Self::peer_roster_slot(generation);
-                    if self.peer_roster_publications.get(generation).is_none() {
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                    }
-                    let faulted = self.peer_roster_publications.get(generation).is_some_and(|publication| publication.faulted);
-                    let step = if faulted {
-                        self.peer_roster_publications
-                            .get_mut(generation)
-                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "faulted peer roster publication changed during one fixed cleanup step"))?
-                            .close_step(maximum_items, maximum_bytes)?
-                    } else {
-                        let step = {
-                            let publications = &mut self.peer_roster_publications;
-                            let presence_store = &self.presence_store;
-                            publications.get_mut(generation).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "peer roster publication changed during one fixed decode step"))?.step(
-                                presence_store,
-                                maximum_items,
-                                maximum_bytes,
-                            )
-                        };
-                        match step {
-                            Ok(step) => step,
-                            Err(fault) => {
-                                self.peer_roster_publications
-                                    .get_mut(generation)
-                                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "peer roster publication changed before retained fault transition"))?
-                                    .fail(fault);
-                                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                            }
-                        }
-                    };
-                    if step != PluginCloseStep::Complete {
-                        self.maintenance_peer_roster_cursor = index;
-                        return Ok(step);
-                    }
-                    if faulted {
-                        if !self.peer_roster_publications.get(generation).is_some_and(PeerRosterPublication::terminal_is_empty) {
-                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-terminal-not-empty"), "faulted peer roster publication reported Complete without its exact terminal-empty witness"));
-                        }
-                    } else {
-                        let (seq, cancel) = {
-                            let publication = self
-                                .peer_roster_publications
-                                .get(generation)
-                                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "complete peer roster publication changed before validation"))?;
-                            (publication.seq, publication.cancel.clone())
-                        };
-                        let admission = match self.validate_peer_roster_publication(seq, generation, &cancel) {
-                            Ok(admission) => admission,
-                            Err(fault) => {
-                                let publication = self
-                                    .peer_roster_publications
-                                    .get_mut(generation)
-                                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "stale peer roster publication changed before cleanup handoff"))?;
-                                publication.fail(fault);
-                                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                            }
-                        };
-                        let candidate = match self
-                            .peer_roster_publications
-                            .get_mut(generation)
-                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "complete peer roster publication changed before exact candidate commit"))?
-                            .take_candidate()
-                        {
-                            Ok(candidate) => candidate,
-                            Err(fault) => {
-                                self.peer_roster_publications
-                                    .get_mut(generation)
-                                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "peer roster publication changed before candidate fault transition"))?
-                                    .fail(fault);
-                                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                            }
-                        };
-                        if let Err(candidate) = self.publish_peer_roster_candidate_admitted(admission, candidate) {
-                            self.peer_roster_publications.get_mut(generation).expect("exact peer candidate return owner").retain_rejected_candidate(candidate);
-                            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-                        }
-                    }
-                    if !self.peer_roster_publications.get(generation).is_some_and(PeerRosterPublication::terminal_is_empty) {
-                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-terminal-not-empty"), "peer roster publication reached outcome handoff without an exact empty terminal witness"));
-                    }
-                    let (seq, fault) = {
-                        let publication = self
-                            .peer_roster_publications
-                            .get_mut(generation)
-                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "terminal peer roster publication changed before outcome handoff"))?;
-                        (publication.seq, publication.fault.take())
-                    };
-                    if !self.peer_roster_outcomes.can_insert(generation) {
-                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-outcome"), "pre-admitted peer roster outcome slot changed before exact handoff"));
-                    }
-                    self.peer_roster_outcomes.insert_admitted(generation, PresenceRosterOutcome { seq, fault });
-                    let publication = self
-                        .peer_roster_publications
-                        .remove(generation)
-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "terminal peer roster publication changed before exact removal"))?;
-                    drop(publication);
-                    let reservation_slot = Self::peer_roster_slot(generation);
-                    if self.peer_roster_reservations[reservation_slot] != Some((generation, seq)) {
-                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-reservation"), "terminal peer roster lost its exact ingress reservation"));
-                    }
-                    self.peer_roster_reservations[reservation_slot] = None;
-                    self.peer_roster_processed_generation = generation;
-                    self.maintenance_peer_roster_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
+                0..=7 => self.maintenance_early_stage_step(stage, maximum_items, maximum_bytes),
                 8 => {
                     let pump = &mut self.document_snapshot_read_returns;
                     let store = &mut self.store;
@@ -26190,6 +27114,10 @@ pub mod app {
                     let advanced = semio_framework_job::pump_worker_job_retirements(1, maximum_items.min(1), maximum_bytes.min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES));
                     Ok(PluginCloseStep::Pending { released_items: advanced, released_bytes: 0 })
                 }
+                24 => match self.drive_document_archive_load_retirements(maximum_items, maximum_bytes, false)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
                 _ => unreachable!("fixed maintenance stage"),
             }
         }
@@ -26780,6 +27708,132 @@ pub mod app {
             }
             entries.sort_by(|left, right| (&left.slot, &left.child_id).cmp(&(&right.slot, &right.child_id)));
             Ok(entries)
+        }
+
+        fn begin_document_archive_load(&mut self, operation: u64, mut archive: protocol::DocumentArchivePack) -> Result<(), Fault> {
+            if archive.members.len() > protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
+                return Err(plugin_sdk_fault("document archive exceeds its fixed 1024-member authority"));
+            }
+            let archive_payload_bytes = archive.members.iter().fold(
+                archive.parent_pack.len().checked_add(archive.parent_spr.len()),
+                |total, entry| total.and_then(|total| total.checked_add(entry.envelope_pack.len())),
+            );
+            if archive_payload_bytes.is_none_or(|bytes| bytes > protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES) {
+                return Err(plugin_sdk_fault("document archive typed payload exceeds its fixed byte authority"));
+            }
+            if !self.document_archive_loads.can_insert(operation) {
+                return Err(plugin_sdk_fault("document archive operation identity is already live or its fixed slot is occupied"));
+            }
+            if archive.parent_pack.is_empty() || archive.parent_spr.is_empty() {
+                return Err(plugin_sdk_fault("document archive parent pack and SPR must both be present"));
+            }
+            archive.members.sort_by_key(|entry| entry.ordinal);
+            for (ordinal, entry) in archive.members.iter().enumerate() {
+                let fields = [
+                    entry.reference.artifact_id.as_str(),
+                    entry.reference.artifact_kind.as_str(),
+                    entry.reference.standard.as_str(),
+                    entry.reference.subset.as_str(),
+                    entry.owner.parent.artifact_id.as_str(),
+                    entry.owner.parent.artifact_kind.as_str(),
+                    entry.owner.parent.standard.as_str(),
+                    entry.owner.parent.subset.as_str(),
+                    entry.owner.slot.as_str(),
+                    entry.owner.child_id.as_str(),
+                ];
+                if usize::try_from(entry.ordinal).ok() != Some(ordinal)
+                    || entry.owner.child_id != entry.reference.artifact_id
+                    || entry.envelope_pack.is_empty()
+                    || fields.iter().any(|field| field.is_empty() || field.len() > store::MEMBER_OPEN_IDENTITY_BYTES || field.chars().any(char::is_control))
+                {
+                    return Err(plugin_sdk_fault("document archive member ordinal, identity, owner, or envelope is invalid"));
+                }
+            }
+            archive.members.reverse();
+            let limits = protocol::RetainedSprLimits {
+                file_bytes: protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES as u64,
+                frame_body_bytes: store::OWNED_SCHEMA_DECODE_PAGE_BYTES as u64 * 256,
+                records: protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS as u64 * 8,
+            };
+            let history = protocol::RetainedHistoryDecode::new_persisted_document(archive.parent_spr.len(), limits).map_err(plugin_sdk_fault)?;
+            self.document_archive_loads.insert_admitted(operation, ActiveDocumentArchiveLoad::new(operation, archive, history));
+            Ok(())
+        }
+
+        async fn poll_document_archive_load(&mut self, operation: u64) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
+            self.document_archive_loads
+                .get(operation)
+                .map(ActiveDocumentArchiveLoad::status)
+                .ok_or_else(|| plugin_sdk_fault("recursive document archive authority changed before status publication"))
+        }
+
+        fn cancel_document_archive_load(&mut self, operation: u64) -> Result<(), Fault> {
+            let active = self.document_archive_loads.get_mut(operation).ok_or_else(|| plugin_sdk_fault("unknown recursive document archive operation"))?;
+            match active.state {
+                ActiveDocumentArchiveLoadState::Pending | ActiveDocumentArchiveLoadState::Running => {
+                    active.request_terminal(ActiveDocumentArchiveLoadState::Cancelled);
+                    Ok(())
+                }
+                ActiveDocumentArchiveLoadState::Cancelled => Ok(()),
+                ActiveDocumentArchiveLoadState::Ready | ActiveDocumentArchiveLoadState::Fault => {
+                    Err(plugin_sdk_fault("terminal recursive document archive operation cannot be cancelled"))
+                }
+            }
+        }
+
+        fn acknowledge_document_archive_load(&mut self, operation: u64) -> Result<(), Fault> {
+            let active = self.document_archive_loads.get(operation).ok_or_else(|| plugin_sdk_fault("unknown recursive document archive operation"))?;
+            if !active.terminal() {
+                return Err(plugin_sdk_fault("recursive document archive operation cannot be acknowledged before terminal status"));
+            }
+            if !active.terminal_is_empty() {
+                return Err(plugin_sdk_fault("terminal recursive document archive operation still owns retained input"));
+            }
+            let active = self.document_archive_loads.remove(operation).ok_or_else(|| plugin_sdk_fault("terminal recursive document archive authority changed before acknowledgement"))?;
+            drop(active);
+            Ok(())
+        }
+
+        async fn document_archive(&self) -> Result<protocol::DocumentArchivePack, Fault> {
+            let parent_generation = self.store.generation_now();
+            let child_generation = self.child_content_generation;
+            let parent = store::print_document_pack(self.store.envelope()).await.map_err(|error| error.into_fault())?;
+            let mut members = Vec::new();
+            members.try_reserve_exact(self.children.len()).map_err(|_| plugin_sdk_fault("document archive member roster could not reserve its exact live extent"))?;
+            for entry in self.children.entries() {
+                let envelope_pack = entry.member.envelope_pack_bytes().await.map_err(|error| error.into_fault())?;
+                members.push(protocol::OwnedDocumentMemberPackEntry {
+                    ordinal: 0,
+                    reference: protocol::DocumentArchiveArtifactRef {
+                        artifact_id: entry.reference.artifact_id.clone(),
+                        artifact_kind: entry.reference.dialect.artifact_kind.clone(),
+                        standard: entry.reference.dialect.standard.clone(),
+                        subset: entry.reference.dialect.subset.clone(),
+                    },
+                    owner: protocol::DocumentArchiveOwnerRef {
+                        parent: protocol::DocumentArchiveArtifactRef {
+                            artifact_id: entry.owner.parent.artifact_id.clone(),
+                            artifact_kind: entry.owner.parent.dialect.artifact_kind.clone(),
+                            standard: entry.owner.parent.dialect.standard.clone(),
+                            subset: entry.owner.parent.dialect.subset.clone(),
+                        },
+                        slot: entry.owner.slot.clone(),
+                        child_id: entry.owner.child_id.clone(),
+                    },
+                    envelope_pack,
+                });
+            }
+            members.sort_by(|left, right| {
+                (&left.owner.parent.artifact_id, &left.owner.slot, &left.owner.child_id, &left.reference.artifact_kind, &left.reference.standard, &left.reference.subset)
+                    .cmp(&(&right.owner.parent.artifact_id, &right.owner.slot, &right.owner.child_id, &right.reference.artifact_kind, &right.reference.standard, &right.reference.subset))
+            });
+            for (ordinal, entry) in members.iter_mut().enumerate() {
+                entry.ordinal = u32::try_from(ordinal).map_err(|_| plugin_sdk_fault("document archive member ordinal exceeds u32"))?;
+            }
+            if self.store.generation_now() != parent_generation || self.child_content_generation != child_generation {
+                return Err(plugin_sdk_fault("document archive authority changed during generation-fenced export"));
+            }
+            Ok(protocol::DocumentArchivePack { parent_pack: parent.pack, parent_spr: parent.spr, members })
         }
 
         async fn load_config_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
@@ -28123,16 +29177,16 @@ pub mod app {
             None
         }
 
-        fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
             None
         }
 
-        fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
             None
         }
 
         /// 📝️ Grants exact draft retirement ownership to this editor adapter.
-        fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
             None
         }
 
@@ -28467,11 +29521,11 @@ pub mod app {
     /// carry an artifact or draft mutation. `ViewerApp<V>` below is the sole `ArtifactApp` implementor.
     pub trait ArtifactViewer: Default + Send + 'static {
         /// 🛂️ Viewers explicitly declare every nontrivial store owner; absent authority fails closed.
-        fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
             None
         }
 
-        fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
             None
         }
 
@@ -28860,13 +29914,13 @@ pub mod app {
         fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
             E::build_envelope_decode_owner_bundle()
         }
-        fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
             E::build_document_store_owners()
         }
-        fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
             E::build_config_store_owners()
         }
-        fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
             E::build_draft_store_owners()
         }
         fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -29105,11 +30159,11 @@ pub mod app {
     }
 
     impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
-        fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
             V::build_document_store_owners()
         }
 
-        fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
             V::build_config_store_owners()
         }
 
@@ -29133,7 +30187,7 @@ pub mod app {
             V::build_presence_peer_retirement_factory()
         }
 
-        fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
             Some(bounded_document_store_owners::<NoDraft, NoDraftMutation>())
         }
 
@@ -29625,6 +30679,31 @@ pub mod app {
             SurfaceDeclaration { definition: def, factory: factory::<E, PA>, app_schema: app_schema::<E>, mutation_roster: None, rights: Rights::Write }
         }
 
+        /// 🧩️ Builds an editor declaration whose concrete app retains its typed composed-member fleet.
+        pub fn editor_surface_with_members<E, M, PA>(def: AppDefinition) -> SurfaceDeclaration<PA>
+        where
+            E: ArtifactEditor,
+            M: store::SpaceMember + store::MemberFactory + Send + 'static,
+            PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, M>>,
+        {
+            fn factory<E, M, PA>(def: &AppDefinition) -> PA
+            where
+                E: ArtifactEditor,
+                M: store::SpaceMember + store::MemberFactory + Send + 'static,
+                PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, M>>,
+            {
+                PA::from(resolve_ready(VcsArtifactApp::<EditorApp<E>, M>::with_registry_on_bus(
+                    EditorApp::<E>::default(),
+                    AppActionRegistry::from_definition(def),
+                    semio_framework::ActionBus::production(),
+                )))
+            }
+            fn app_schema<E: ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+                E::app_schema()
+            }
+            SurfaceDeclaration { definition: def, factory: factory::<E, M, PA>, app_schema: app_schema::<E>, mutation_roster: None, rights: Rights::Write }
+        }
+
         /// 👁️ Viewer twin of `editor_surface` — `rights: Rights::Read` (baseline Read only, contract
         /// §2.3 clause 4: a viewer's document store attaches Read onasync ly, never Write).
         pub fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
@@ -29638,13 +30717,38 @@ pub mod app {
             }
             SurfaceDeclaration { definition: def, factory: factory::<V, PA>, app_schema: app_schema::<V>, mutation_roster: None, rights: Rights::Read }
         }
+
+        /// 🧸️ Builds a viewer declaration whose concrete app retains read-only typed composed members.
+        pub fn viewer_surface_with_members<V, M, PA>(def: AppDefinition) -> SurfaceDeclaration<PA>
+        where
+            V: ArtifactViewer,
+            M: store::SpaceMember + store::MemberFactory + Send + 'static,
+            PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, M>>,
+        {
+            fn factory<V, M, PA>(def: &AppDefinition) -> PA
+            where
+                V: ArtifactViewer,
+                M: store::SpaceMember + store::MemberFactory + Send + 'static,
+                PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, M>>,
+            {
+                PA::from(resolve_ready(VcsArtifactApp::<ViewerApp<V>, M>::with_registry_on_bus(
+                    ViewerApp::<V>::default(),
+                    AppActionRegistry::from_definition(def),
+                    semio_framework::ActionBus::production(),
+                )))
+            }
+            fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+                V::app_schema()
+            }
+            SurfaceDeclaration { definition: def, factory: factory::<V, M, PA>, app_schema: app_schema::<V>, mutation_roster: None, rights: Rights::Read }
+        }
         //#endregion 🔖️SurfaceDeclaration
 
         //#region 🔖️SubsetDeclaration
         /// 🪆️ One complete standalone subset — own schema, own io, own viewer, own editor, own
         /// examples (design.md rule 2). `dialect` is the one source of truth `editor.definition.id`/
         /// `viewer.definition.id` must derive from via `surface_app_id` (proven by
-        /// `testkit::assert_subset_declaration_ids_are_derived`).
+        /// `artifact_app_laws::assert_subset_declaration_ids_are_derived`).
         pub struct SubsetDeclaration<PA: PluginApp = NoPluginApp> {
             pub dialect: Dialect,
             pub schema: SchemaDeclaration,
@@ -30530,11 +31634,6 @@ pub mod plugin_runtime {
         }
     }
 
-    #[cfg(test)]
-    #[test]
-    fn debug_runtime_lines_are_silent_when_diagnostics_are_off() {
-        assert!(!semio_framework_trace::runtime_diagnostics_enabled());
-    }
 
     /// 🌉️ Twin of `encode_wire_serialized` above — wire decode over `T: FromValue` directly.
     pub(crate) async fn decode_wire_serialized<T: FromValue>(bytes: &[u8]) -> Result<T, Fault> {
@@ -33661,13 +34760,6 @@ pub mod plugin_runtime {
         panic!("drive_self_waking_ready: exceeded the self-wake bound");
     }
 
-    #[cfg(test)]
-    #[test]
-    fn drive_self_waking_ready_completes_a_plugin_job_yield() {
-        drive_self_waking_ready(async {
-            crate::app::plugin_job_yield_once().await;
-        });
-    }
 
     #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_exchange<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, command: Option<(u64, PluginCommandIngress)>) -> Result<PluginExchangeOutput, Fault> {
@@ -34052,6 +35144,59 @@ pub mod plugin_runtime {
                     });
                     match read.await {
                         Ok(entries) => frames.push(protocol::AppFrame::Children { in_reply_to: seq, entries }),
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+                    }
+                }
+                protocol::AppCommand::LoadDocumentArchive { seq, archive } => {
+                    let admitted = with_instances_mut(runtime, |list| {
+                        let mut instance = find_instance(list, instance_id)?;
+                        instance.app.begin_document_archive_load(seq, archive)
+                    });
+                    match admitted.await {
+                        Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+                    }
+                }
+                protocol::AppCommand::PollDocumentArchiveLoad { seq, operation } => {
+                    let status = with_instances_mut(runtime, |list| {
+                        let mut instance = find_instance(list, instance_id)?;
+                        drive_self_waking_ready(instance.app.poll_document_archive_load(operation))
+                    });
+                    match status.await {
+                        Ok(status) => {
+                            mutated |= status.state == protocol::DocumentArchiveLoadState::Ready;
+                            frames.push(protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status });
+                        }
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+                    }
+                }
+                protocol::AppCommand::CancelDocumentArchiveLoad { seq, operation } => {
+                    let cancelled = with_instances_mut(runtime, |list| {
+                        let mut instance = find_instance(list, instance_id)?;
+                        instance.app.cancel_document_archive_load(operation)
+                    });
+                    match cancelled.await {
+                        Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+                    }
+                }
+                protocol::AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation } => {
+                    let acknowledged = with_instances_mut(runtime, |list| {
+                        let mut instance = find_instance(list, instance_id)?;
+                        instance.app.acknowledge_document_archive_load(operation)
+                    });
+                    match acknowledged.await {
+                        Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+                    }
+                }
+                protocol::AppCommand::ReadDocumentArchive { seq } => {
+                    let read = with_instances_mut(runtime, |list| {
+                        let instance = find_instance(list, instance_id)?;
+                        resolve_ready(instance.app.document_archive())
+                    });
+                    match read.await {
+                        Ok(archive) => frames.push(protocol::AppFrame::DocumentArchive { in_reply_to: seq, archive }),
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
                     }
                 }
@@ -35818,7 +36963,8 @@ pub mod plugin_app_close_prelude {
     pub use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, WindowEngagement, WindowMeasure};
 }
 
-pub use app::testkit;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+pub use app::artifact_app_laws;
 pub use app::ActionFactory;
 pub use app::{
     artifact_inference_service,

@@ -17,12 +17,12 @@ import { Tree, type TreeDataItem, type TreeDataSection, type TreeDragAndDropCont
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️.tsx";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
-import { dropZoneReadyFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
+import { dropZoneReadyFillClass } from "../../🎯️targets/⚛️react/🟦️";
 import { FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surface/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
-import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, flowFromAnchor, readActivePanelTreeUnitDrag, shellNavbarTrailingEndReserveStyle, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
+import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, flowFromAnchor, publishShellDockRightColumnLeftPx, readActivePanelTreeUnitDrag, shellNavbarTrailingEndReserveStyle, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../🎯️targets/⚛️react/🟦️";
 import { PanelTabBar, type PanelTabNode, type PanelTabSelectionOptions, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, resolvePanelBranchBodyLeaf, usePanelTabSelection } from "../🧭️PanelTabBar/🟦️.tsx";
 import { CloseIcon, Icon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
@@ -333,7 +333,10 @@ export function PanelEmptyDockZone({ anchor }: { readonly anchor: Anchor }) {
   );
 }
 
-/** @emoji ↔ Panel resize handle with ghost wiring (inside {@link PanelGhostRoot}) — a corner panel gets one inner (canvas-facing) handle; a middle panel gets one on each edge, `deltaFactor` encoding both which way growth goes and (for a centered middle panel, where the opposite edge moves too) the 2× multiplier. */
+/** @emoji ↔ Panel resize handle with ghost wiring (inside {@link PanelGhostRoot}) — a corner panel gets one inner (canvas-facing) handle; a middle panel gets one on each edge, `deltaFactor` encoding both which way growth goes and (for a centered middle panel, where the opposite edge moves too) the 2× multiplier.
+ *
+ * @remarks A grab strip never covers a button: the handle is rendered inside `panel-body-stack`, so it spans the panel's BODY and stops at the chrome cap row that carries the tab strip. Mounted on the panel root it spanned `top-0 bottom-0` of the whole panel at `z-20`, and the tab strip — which is drawn by whichever panel at this anchor is open and carries EVERY panel's tab, overflowing that panel's own width — ran straight underneath it: an open History panel's 3 px left handle at x 1137‑1140 sat on the centre of the neighbouring `puzzle3d.panel.settings` tab (x 1095‑1178), so `elementFromPoint` answered `panel-resize-handle` and the tab could not be activated by pointer at all. Measured on `:6013`, ticket 26/09/02 wave B45.
+ */
 function PanelResizeHandle({
   side,
   deltaFactor,
@@ -425,6 +428,29 @@ const Panel: React.FC<PanelProps> = ({
 
   const flow = flowFromAnchor(anchor);
   const horizontal = anchorHorizontal(anchor);
+  const panelShellRoot = panelShellScope?.rootRef.current ?? undefined;
+  // ↔️ The dock's right column floats OVER the canvas region, so a window reaching under it cannot derive
+  // where the column starts — this panel is the only party that knows, and publishes its own left edge for
+  // `🪟️Window`'s right-edge chrome to yield to (see `dockColumnInlineReservePx`). Retracted on close and on
+  // unmount so a closed dock leaves every window's rail flush again.
+  reactHostPort.useLayoutEffect(() => {
+    const key = `panel:${anchor}`;
+    const root = panelRootRef.current;
+    if (!root || horizontal !== "right" || !visible) {
+      publishShellDockRightColumnLeftPx(panelShellRoot, key, null);
+      return () => publishShellDockRightColumnLeftPx(panelShellRoot, key, null);
+    }
+    const sync = () => publishShellDockRightColumnLeftPx(panelShellRoot, key, Math.round(root.getBoundingClientRect().left));
+    sync();
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
+    resizeObserver?.observe(root);
+    window.addEventListener("resize", sync);
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", sync);
+      publishShellDockRightColumnLeftPx(panelShellRoot, key, null);
+    };
+  }, [anchor, horizontal, panelShellRoot, size, visible]);
   const isBottom = flow.block === "up";
   const isChromeHosted = tabBarHost === "chrome";
   const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible, onVisibleChange, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, drillOnOpen });
@@ -516,33 +542,33 @@ const Panel: React.FC<PanelProps> = ({
                 close={panelFoldControl}
                 titleChips={<PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} maxRows={1} showActiveColor={visible} />}
                 body={
-                  <div data-slot="panel-body-stack" className={cn("flex min-h-0 min-w-0 w-full flex-1", isBottom ? "flex-col-reverse" : "flex-col")}>
+                  <div data-slot="panel-body-stack" className={cn("relative flex min-h-0 min-w-0 w-full flex-1", isBottom ? "flex-col-reverse" : "flex-col")}>
                     <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} startDepth={1} showActiveColor={visible} />
                     <Scrollable className="relative flex-1 min-h-0" viewportClassName={isBottom ? "flex min-h-full flex-col justify-end" : undefined}>
                       {activeTabTrees && bodyLeaf ? (
                         <PanelTreeUnitsPane anchor={anchor} tabId={bodyLeaf.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} treeContentRevision={treeContentRevision} />
                       ) : null}
                     </Scrollable>
+                    {onSizeChange
+                      ? resizeSides.map((side) => (
+                          <PanelResizeHandle
+                            key={side}
+                            side={side}
+                            deltaFactor={(side === "right" ? 1 : -1) * (horizontal === "middle" ? 2 : 1)}
+                            maxSize={maxSize}
+                            minSize={minSize}
+                            onSizeChange={onSizeChange}
+                            resizeHandleClass={`absolute top-0 bottom-0 z-20 ${side === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`}
+                            resizingSide={resizingSide}
+                            setHoveredSide={setHoveredSide}
+                            setResizingSide={setResizingSide}
+                            sizeRef={sizeRef}
+                          />
+                        ))
+                      : null}
                   </div>
                 }
               />
-              {onSizeChange
-                ? resizeSides.map((side) => (
-                    <PanelResizeHandle
-                      key={side}
-                      side={side}
-                      deltaFactor={(side === "right" ? 1 : -1) * (horizontal === "middle" ? 2 : 1)}
-                      maxSize={maxSize}
-                      minSize={minSize}
-                      onSizeChange={onSizeChange}
-                      resizeHandleClass={`absolute top-0 bottom-0 z-20 ${side === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`}
-                      resizingSide={resizingSide}
-                      setHoveredSide={setHoveredSide}
-                      setResizingSide={setResizingSide}
-                      sizeRef={sizeRef}
-                    />
-                  ))
-                : null}
             </>
           ) : (
             <WindowChrome

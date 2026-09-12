@@ -67,7 +67,10 @@ fn evaluate_round_trips_dictionary() {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct ExtensionInvocationWireFixture {
     capability: String,
+    note: String,
     request_fields: Vec<String>,
+    optional_request_fields: Vec<String>,
+    envelope_fields: Vec<String>,
     operator_id: String,
     output_channel: String,
     rows: Vec<ExtensionInvocationWireRow>,
@@ -79,6 +82,10 @@ struct ExtensionInvocationWireRow {
     name: String,
     request_json: String,
     outcome: String,
+    #[serde(default)]
+    done: bool,
+    #[serde(default)]
+    phase: String,
     #[serde(default)]
     output_keys: Vec<String>,
     #[serde(default)]
@@ -111,14 +118,28 @@ fn echo_registry(operator_id: &str, output_channel: &str) -> Registry {
 fn the_evaluate_wire_answers_every_fixture_row() {
     let fixture: ExtensionInvocationWireFixture = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️extension-invocation-wire/🔣️.json")).expect("the extension-invocation-wire fixture must parse");
     assert_eq!(fixture.capability, "evaluate");
-    assert_eq!(fixture.request_fields, vec!["operatorId".to_string(), "inputJson".to_string()]);
+    assert!(!fixture.note.is_empty(), "the fixture states what the wire is");
+    assert_eq!(fixture.request_fields, vec!["operatorId".to_string(), "inputJson".to_string()], "the REQUIRED request fields");
+    for field in ["nodeHash", "budget", "wallMicros"] {
+        assert!(fixture.optional_request_fields.iter().any(|declared| declared == field), "the request offers the optional budget field {field}");
+    }
+    for field in ["done", "phase", "unitsDone", "unitsTotal", "outputJson"] {
+        assert!(fixture.envelope_fields.iter().any(|declared| declared == field), "the envelope declares {field}");
+    }
     let registry = echo_registry(&fixture.operator_id, &fixture.output_channel);
     for row in &fixture.rows {
         match evaluate_invoke_json(&registry, row.request_json.as_bytes()) {
             Ok(bytes) => {
                 assert_eq!(row.outcome, "ok", "{}", row.name);
                 let text = String::from_utf8(bytes).expect("the answer is UTF-8 JSON");
-                let answer: DslValue = crate::os_pack::json::from_json_str(&text).expect("the answer decodes");
+                // ⏱️ The answer is the BUDGET ENVELOPE; the out dictionary rides inside `outputJson`.
+                // A `test.echo` operator offers no resumable job, so it always finishes in the first
+                // round trip (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+                let envelope = crate::os_pack::json::parse(&text).expect("the envelope decodes");
+                assert_eq!(envelope.get("done").and_then(crate::os_pack::json::Value::as_bool), Some(row.done), "{}: done", row.name);
+                assert_eq!(envelope.get("phase").and_then(crate::os_pack::json::Value::as_str), Some(row.phase.as_str()), "{}: phase", row.name);
+                let output_json = envelope.get("outputJson").and_then(crate::os_pack::json::Value::as_str).expect("outputJson");
+                let answer: DslValue = crate::os_pack::json::from_json_str(output_json).expect("the answer decodes");
                 let DslValue::Object(entries) = &answer else { panic!("{} must answer an object", row.name) };
                 let keys: Vec<String> = entries.iter().map(|(key, _)| key.clone()).collect();
                 assert_eq!(keys, row.output_keys, "{}", row.name);

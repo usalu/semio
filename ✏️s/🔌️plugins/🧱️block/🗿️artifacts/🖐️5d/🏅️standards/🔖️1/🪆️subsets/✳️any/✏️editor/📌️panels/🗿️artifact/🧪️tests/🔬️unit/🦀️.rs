@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::editor::block5d::testkit::{new_app, render as render_body};
+use crate::editor::block5d::unit_tests::context::{new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_document_tree() {

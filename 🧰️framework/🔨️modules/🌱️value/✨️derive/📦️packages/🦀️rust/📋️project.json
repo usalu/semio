@@ -10,5 +10,11 @@
         "forwardAllArgs": true
       }
     }
+  },
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/✨️derive/**/*",
+      "sharedGlobals"
+    ]
   }
 }

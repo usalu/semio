@@ -24,14 +24,14 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
         .spawn(|| {
             block_on_equation_window_config(async {
                 use crate::editor::equation::commands::node_graph_viewport;
-                use crate::editor::equation::testkit::{equation_app_manifest_for_testkit, MathApp};
+                use crate::editor::equation::unit_tests::context::{equation_app_manifest_for_tests, MathApp};
                 use crate::editor::equation::{EquationCommand, EquationPlayApp, MATH_PLAY_BODY_GRAPH};
-                use semio_framework_plugin::{testkit, ActionMeta, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
+                use semio_framework_plugin::{artifact_app_laws, ActionMeta, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
 
                 async fn render(app: &mut MathApp, view: &ViewModel) -> Result<semio_framework_plugin::NodeGraphViewport, String> {
                     let tree = app.render(MATH_PLAY_BODY_GRAPH, None, view).await.map_err(|error| format!("{error:?}"))?;
-                    let json = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
-                    let scene = testkit::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&json).map_err(str::to_string)?;
+                    let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+                    let scene = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&json).map_err(str::to_string)?;
                     scene.viewport.ok_or_else(|| "Equation graph render omitted viewport".into())
                 }
 
@@ -68,8 +68,8 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                 let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: EquationGraphWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..Default::default() };
                 let left = view.for_window_instance(left_id).unwrap();
                 let right = view.for_window_instance(right_id).unwrap();
-                let mut app = Box::new(testkit::new_app_with_registry::<EditorApp<EquationPlayApp>>(equation_app_manifest_for_testkit).await);
-                let mut reopened = Box::new(testkit::new_app_with_registry::<EditorApp<EquationPlayApp>>(equation_app_manifest_for_testkit).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<EquationPlayApp>>(equation_app_manifest_for_tests).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<EquationPlayApp>>(equation_app_manifest_for_tests).await);
                 app.bind_instance_id(1).await;
                 reopened.bind_instance_id(2).await;
                 let outcome: Result<(), String> = async {
@@ -78,7 +78,10 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                     for row in fixture["cases"].as_array().unwrap() {
                         let context = view.for_window_instance(row["windowId"].as_str().unwrap()).unwrap();
                         let camera: EquationCamera = serde_json::from_value(row["mutation"]["camera"].clone()).map_err(|error| error.to_string())?;
-                        app.dispatch_typed(EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera }), &ActionMeta { view_state: Some(context), ..testkit::meta("equation-window-config") })
+                        app.dispatch_typed(
+                            EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }),
+                            &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("equation-window-config") },
+                        )
                             .await
                             .map_err(|error| format!("{error:?}"))?;
                     }
@@ -128,8 +131,8 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                 if let Err(error) = &outcome {
                     eprintln!("[DEBUG] Equation exact-window runtime failure before close: {error}");
                 }
-                testkit::close_registered_fixture_app(&mut reopened);
-                testkit::close_registered_fixture_app(&mut app);
+                artifact_app_laws::close_registered_fixture_app(&mut reopened);
+                artifact_app_laws::close_registered_fixture_app(&mut app);
                 outcome.expect("Equation exact-window config publication and persistence");
                 eprintln!("[DEBUG] two Equation graph windows published, rendered, and reloaded independent persisted camera state");
             })

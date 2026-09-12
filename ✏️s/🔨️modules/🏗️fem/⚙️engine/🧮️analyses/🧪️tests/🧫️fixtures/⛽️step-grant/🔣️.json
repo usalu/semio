@@ -1,0 +1,236 @@
+{
+  "oracle": {
+    "package": "fast-json-patch",
+    "version": "3.1.1"
+  },
+  "cases": [
+    {
+      "transition": "checkpoint",
+      "fuel": 0,
+      "deadline": 1,
+      "before": {
+        "checkpointDue": true,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "after": {
+        "checkpointDue": true,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "outcome": "yield",
+      "fuelRemaining": 0
+    },
+    {
+      "transition": "checkpoint",
+      "fuel": 1,
+      "deadline": 0,
+      "before": {
+        "checkpointDue": true,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "after": {
+        "checkpointDue": true,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "outcome": "yield",
+      "fuelRemaining": 1
+    },
+    {
+      "transition": "checkpoint",
+      "fuel": 1,
+      "deadline": 1,
+      "before": {
+        "checkpointDue": true,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "after": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "outcome": "yield",
+      "fuelRemaining": 0
+    },
+    {
+      "transition": "preview",
+      "fuel": 0,
+      "deadline": 1,
+      "before": {
+        "checkpointDue": false,
+        "previewDue": true,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "after": {
+        "checkpointDue": false,
+        "previewDue": true,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "outcome": "yield",
+      "fuelRemaining": 0
+    },
+    {
+      "transition": "preview",
+      "fuel": 1,
+      "deadline": 0,
+      "before": {
+        "checkpointDue": false,
+        "previewDue": true,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "after": {
+        "checkpointDue": false,
+        "previewDue": true,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "outcome": "yield",
+      "fuelRemaining": 1
+    },
+    {
+      "transition": "preview",
+      "fuel": 1,
+      "deadline": 1,
+      "before": {
+        "checkpointDue": false,
+        "previewDue": true,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "after": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "outcome": "yield",
+      "fuelRemaining": 0
+    },
+    {
+      "transition": "complete",
+      "fuel": 0,
+      "deadline": 1,
+      "before": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": true
+      },
+      "after": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": true
+      },
+      "outcome": "yield",
+      "fuelRemaining": 0
+    },
+    {
+      "transition": "complete",
+      "fuel": 1,
+      "deadline": 0,
+      "before": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": true
+      },
+      "after": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": true
+      },
+      "outcome": "yield",
+      "fuelRemaining": 1
+    },
+    {
+      "transition": "complete",
+      "fuel": 1,
+      "deadline": 1,
+      "before": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": true
+      },
+      "after": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": true
+      },
+      "outcome": "complete",
+      "fuelRemaining": 0
+    },
+    {
+      "transition": "work",
+      "fuel": 0,
+      "deadline": 1,
+      "before": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "after": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "outcome": "yield",
+      "fuelRemaining": 0
+    },
+    {
+      "transition": "work",
+      "fuel": 1,
+      "deadline": 0,
+      "before": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "after": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "outcome": "yield",
+      "fuelRemaining": 1
+    },
+    {
+      "transition": "work",
+      "fuel": 1,
+      "deadline": 1,
+      "before": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": false,
+        "complete": false
+      },
+      "after": {
+        "checkpointDue": false,
+        "previewDue": false,
+        "pendingBuild": true,
+        "complete": false
+      },
+      "outcome": "yield",
+      "fuelRemaining": 0
+    }
+  ]
+}

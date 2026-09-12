@@ -112,10 +112,9 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["owner", "override", "candidate", "expected"],
+        "required": ["owner", "candidate", "expected"],
         "properties": {
           "owner": { "type": "string", "minLength": 1 },
-          "override": { "type": ["string", "null"] },
           "candidate": { "type": "string", "minLength": 1 },
           "expected": { "type": "boolean" }
         }

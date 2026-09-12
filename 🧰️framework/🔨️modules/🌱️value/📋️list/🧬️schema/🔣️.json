@@ -1,0 +1,135 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumPageBytes",
+    "counter",
+    "ordered",
+    "capacity",
+    "oversized"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumPageBytes": {
+      "const": 4096
+    },
+    "counter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allocatorMultiplier",
+        "signedLimits"
+      ],
+      "properties": {
+        "allocatorMultiplier": {
+          "const": 2
+        },
+        "signedLimits": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "bits",
+              "limit",
+              "before",
+              "requested",
+              "actual",
+              "grant",
+              "retained",
+              "result"
+            ],
+            "properties": {
+              "bits": {
+                "enum": [
+                  32,
+                  64
+                ]
+              },
+              "limit": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "before": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "requested": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "actual": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "grant": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "retained": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "result": {
+                "const": "rejected-owner-retained"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ordered": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "sum"
+      ],
+      "properties": {
+        "count": {
+          "const": 600
+        },
+        "sum": {
+          "const": 179700
+        }
+      }
+    },
+    "capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximum",
+        "rejected"
+      ],
+      "properties": {
+        "maximum": {
+          "const": 600
+        },
+        "rejected": {
+          "const": 601
+        }
+      }
+    },
+    "oversized": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "elementBytes",
+        "grantBytes"
+      ],
+      "properties": {
+        "elementBytes": {
+          "const": 32769
+        },
+        "grantBytes": {
+          "const": 32768
+        }
+      }
+    }
+  }
+}

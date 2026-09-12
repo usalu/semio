@@ -60,11 +60,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called five different global registries directly from
-/// a plugin `.setup()` callback. `crate::editor::remodeling::config::schema::register_app_schema()` is the
-/// one exception, still called from `📸️remodeling/🦀️.rs`'s own `.setup()`: it registers the
-/// `RemodelingPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately
-/// has no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
-/// artifact-scoped function set. Relocated from `⚙️engine/🦀️.rs` (ticket
+/// a plugin `.setup()` callback. Concrete window config schemas are registered by the editor's exact
+/// Model, Frames, and Report window owners. Relocated from `⚙️engine/🦀️.rs` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g3): `⚙️engine` was removed from the taxonomy
 /// and `declaration()` describes the artifact, not engine behaviour, so its home is the artifact
 /// root alongside `artifact_kind()`.
@@ -2768,25 +2765,6 @@ pub mod editor {
             pub mod video;
         }
 
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🦀️.rs"]
         pub mod examples;
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
@@ -2892,6 +2870,9 @@ pub mod editor {
                         mod component;
                         pub use component::*;
 
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🪟️windows/🧊️model/🎚️config/🦀️.rs"]
+                        pub mod config;
+
                         #[path = "."]
                         pub mod options {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🪟️windows/🧊️model/☑️options/👁️layers/🦀️.rs"]
@@ -2909,8 +2890,15 @@ pub mod editor {
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📷️capture/🪟️windows/🖼️frames/🦀️.rs"]
-                    pub mod frames;
+                    #[path = "."]
+                    pub mod frames {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📷️capture/🪟️windows/🖼️frames/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📷️capture/🪟️windows/🖼️frames/🎚️config/🦀️.rs"]
+                        pub mod config;
+                    }
                 }
             }
 
@@ -2922,8 +2910,15 @@ pub mod editor {
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔍️analyze/🪟️windows/📊️report/🦀️.rs"]
-                    pub mod report;
+                    #[path = "."]
+                    pub mod report {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔍️analyze/🪟️windows/📊️report/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔍️analyze/🪟️windows/📊️report/🎚️config/🦀️.rs"]
+                        pub mod config;
+                    }
                 }
             }
         }

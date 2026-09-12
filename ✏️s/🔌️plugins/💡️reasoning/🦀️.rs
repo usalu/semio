@@ -35,7 +35,7 @@ pub fn plugin() -> Result<Plugin<ReasoningApps>, PluginAssemblyError> {
 }
 
 //#region 🧪️SurfaceTests
-/// 🧪️ Contract §2.5 surface-pair proofs, using the canonical `semio_framework_plugin::testkit`
+/// 🧪️ Contract §2.5 surface-pair proofs, using the canonical `semio_framework_plugin::artifact_app_laws`
 /// functions (ticket 26/08/16 lane 0-F closed this SDK gap — see `📓️w0-f-report.md`).
 #[cfg(test)]
 #[path = "🧪️tests/🔬️surface/🦀️.rs"]

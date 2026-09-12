@@ -126,7 +126,7 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🔖️DocumentHelpers
-// 🌱️ `seed_vcs_demo_history` (test-only demo history seeding) now lives in the `🔖️Testkit` region
+// 🌱️ `seed_vcs_demo_history` (test-only demo history seeding) now lives in the `🔖️UnitTests` region
 // below — it must dispatch through `VcsArtifactApp`'s public surface (`dispatch_typed`/
 // `handle_action`), not a raw `store::ArtifactStore`, since `ArtifactApp::seed(&mut ArtifactStore)`
 // (this app's old direct-store-touch hook) no longer exists on the trait as of ticket
@@ -134,7 +134,7 @@ semio_framework_plugin::app_commands! {
 // replaced it, but `genesis` can only emit flat document mutations — it has no way to express
 // `CommitCheckpoint`/`CreateAlternative`/`SwitchAlternative`, so it cannot reconstruct branching
 // checkpoint history at construction time). Consequence: this demo's rich seeded history is reachable
-// from tests (`testkit::app`/`app_with_registry` seed it explicitly) but no longer auto-populates a
+// from tests (`context::app`/`app_with_registry` seed it explicitly) but no longer auto-populates a
 // freshly constructed production instance the way `ArtifactApp::seed` used to — restoring that would
 // need a framework-level hook `genesis` doesn't provide, which is out of this plugin's boundary
 // (`🔌️plugin/🦀️.rs` is W1-owned).
@@ -1022,16 +1022,10 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
 /// able to drive the whole app without re-deriving the harness.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
-#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests

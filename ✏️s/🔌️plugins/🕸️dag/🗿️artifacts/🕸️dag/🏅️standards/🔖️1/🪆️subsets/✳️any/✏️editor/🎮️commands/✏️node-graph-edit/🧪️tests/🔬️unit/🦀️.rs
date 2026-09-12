@@ -1,9 +1,9 @@
 use super::DagNodeGraphEditOp;
 use super::*;
 use crate::editor::dag::commands::{connect_media_ports, disconnect, move_media_node};
-use crate::editor::dag::testkit;
+use crate::editor::dag::unit_tests::context;
 use crate::editor::dag::DagCommand;
-use semio_framework_plugin::{testkit::meta, InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
+use semio_framework_plugin::{artifact_app_laws::meta, InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
 use serde_json::json;
 
 /// 🧪️ `nodeGraphEdit` batches multiple sub-edits (connect + delete-selection here) into a single
@@ -13,7 +13,7 @@ use serde_json::json;
 /// delete-selection sub-op — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
 #[semio_framework_async_macros::async_test]
 async fn node_graph_edit_batches_connect_then_delete_selection() {
-    let mut app = testkit::new_app_with_registry().await;
+    let mut app = context::new_app_with_registry().await;
     let (source_id, target_id) = {
         let projection = app.snapshot().expect("projection");
         let nodes = projection.nodes();
@@ -37,7 +37,7 @@ async fn node_graph_edit_batches_connect_then_delete_selection() {
 
 #[semio_framework_async_macros::async_test]
 async fn move_media_node_drag_coalesces_into_one_edit() {
-    let mut app = testkit::new_app().await;
+    let mut app = context::new_app().await;
     let node_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
     for position in [10.0, 20.0, 30.0] {
         app.dispatch_typed(DagCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: node_id.clone(), x: position, y: position }), &meta("local")).await.expect("drag tick");
@@ -51,7 +51,7 @@ async fn move_media_node_drag_coalesces_into_one_edit() {
 
 #[semio_framework_async_macros::async_test]
 async fn disconnect_removes_a_known_edge_and_is_a_no_op_for_an_unknown_one() {
-    let mut app = testkit::new_app().await;
+    let mut app = context::new_app().await;
     let edge_id = app.snapshot().expect("projection").edges().first().map(|edge| edge.id.clone());
     if let Some(edge_id) = edge_id {
         let edges_before = app.snapshot().expect("projection").edges().len();
@@ -64,7 +64,7 @@ async fn disconnect_removes_a_known_edge_and_is_a_no_op_for_an_unknown_one() {
 
 #[semio_framework_async_macros::async_test]
 async fn connect_media_ports_adds_an_edge_between_two_nodes() {
-    let mut app = testkit::new_app().await;
+    let mut app = context::new_app().await;
     let (source_id, target_id) = {
         let projection = app.snapshot().expect("projection");
         let nodes = projection.nodes();

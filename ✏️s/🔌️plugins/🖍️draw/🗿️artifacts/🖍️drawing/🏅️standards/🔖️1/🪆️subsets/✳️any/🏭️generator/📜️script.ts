@@ -34,11 +34,11 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const ENGINE = join(HERE, "🦀️json-engine");
+const ENGINE = join(HERE, "🧩️json", "📦️packages", "🦀️rust");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 const ORACLE_ID = "serde-json-drawing-carrier-reader";
 const COMPARISON_PROFILE = "semantic-drawing-carrier-v1";
-/** 🧾️ Kept in step with `🦀️json-engine/src/📚️lib.rs::KINDS`. */
+/** 🧾️ Kept in step with `🧩️json/🦀️.rs::KINDS`. */
 const KINDS: readonly string[] = ["set-layer-locked", "set-layer-blend-mode", "rename-layer"];
 //#endregion 🧬️Contract
 

@@ -75,7 +75,7 @@ pub enum SemioAnimationMutation {
 
 /// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.animation`, in enum
 /// declaration order — what the `🎞️mutate-semio-animation` case's completeness gate counts against
-/// and what `../../🔮️oracle/🔣️.json`'s catalog repeats. Unlike its audio/video siblings
+/// and what `../../🔮️oracles/🔣️.json`'s catalog repeats. Unlike its audio/video siblings
 /// this subset's wire keywords are the two-letter `OP_KEYWORDS` tags (`IT`, `KV`, …), so the two
 /// tables are related only by position; `kinds_match_the_enum_and_the_catalog` below asserts that
 /// positional agreement rather than string equality.

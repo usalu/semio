@@ -11,14 +11,14 @@
     ".vscode/launch.json",
     "node_modules/vite/dist/node/index.js",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
     "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/target/wasm32-wasip2/release/plugin.wasm"
   ],
   "watchedPaths": [
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
-    "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts",
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
     "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/🟦️.ts",
     "♻️mit-bestand/🧺️demonstrator/🪧️brand.ts"
   ],

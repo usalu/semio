@@ -1,0 +1,44 @@
+type CadWorldProjection {
+  kind: String!
+  orthographicView: String!
+  axonometricVariant: String!
+  axonometricAngleA: Float!
+  axonometricAngleB: Float!
+  axonometricQuadrant: String!
+  obliqueVariant: String!
+  obliqueAngle: Float!
+  obliqueDepth: Float!
+  onePointAxis: String!
+  fov: Float!
+  twoPointShift: Float!
+  curvilinearFov: Float!
+  curvilinearStrength: Float!
+  curvilinearMapping: String!
+}
+
+type CadWorldCamera {
+  position: [Float!]!
+  target: [Float!]!
+  zoom: Float!
+  fov: Float!
+  projection: CadWorldProjection!
+}
+
+type CadWorldSun {
+  enabled: Boolean!
+  azimuth: Float!
+  elevation: Float!
+  intensity: Float!
+  color: String!
+}
+
+type CadWorldDislocateOptions {
+  moveEnabled: Boolean!
+  rotateEnabled: Boolean!
+}
+
+type CadWorldWindowConfig {
+  camera: CadWorldCamera!
+  sun: CadWorldSun!
+  dislocateOptions: CadWorldDislocateOptions!
+}

@@ -3,8 +3,8 @@
 import Ajv from "ajv";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 
 type MutationLeafTaxonomyRow = {
   readonly aggregateVariant: string;
@@ -120,11 +120,30 @@ function configBinaryFixtureOracle(hex: string): number | null | undefined {
   return index !== undefined && index <= 4294967295n && cursor === bytes.length ? Number(index) : undefined;
 }
 
-class ConfigMutationSourceScript extends BundleScript {
+class ResultsWindowConfigSourceScript extends BundleScript {
   run(): void {
-    const configRoot = join(this.root, "..", "..", "🎚️config");
-    const declarations = filesBelow(configRoot).filter((path) => path.endsWith(".rs")).flatMap((path) => [...readFileSync(path, "utf8").matchAll(/pub struct NormConfig\b/g)].map(() => path));
-    if (declarations.length !== 1 || declarations[0] !== join(configRoot, "🧬️schema", "🦀️.rs")) throw new Error("NormConfig must have one schema-owned Rust declaration");
+    const configRoot = join(this.root, "..", "..", "🪟️results", "🎚️config");
+    for (const relativePath of [
+      "🧬️schema/🦀️.rs",
+      "🧬️schema/🟦️.ts",
+      "🧬️schema/🔣️.json",
+      "🧬️schema/🔗️.graphql",
+      "🧬️schema/🛰️.proto",
+      "🧬️schema/🧬️mutations/🦀️.rs",
+      "🧬️schema/🧬️mutations/🟦️.ts",
+      "🧬️schema/🧬️mutations/🔣️.json",
+      "🧬️schema/🧬️mutations/🔗️.graphql",
+      "🧬️schema/🧬️mutations/🛰️.proto",
+    ]) {
+      const path = join(configRoot, relativePath);
+      if (!existsSync(path) || readFileSync(path, "utf8").trim().length === 0) throw new Error(`Norm Results-window contract facet is absent: ${relativePath}`);
+    }
+    const obsoleteConfigRoot = join(this.root, "..", "..", "🎚️config");
+    if (existsSync(obsoleteConfigRoot) && filesBelow(obsoleteConfigRoot).some((path) => /\.(rs|ts|json|graphql|proto)$/.test(path))) {
+      throw new Error("Norm retains an application-owned config facet beside the Results-window owner");
+    }
+    const declarations = filesBelow(configRoot).filter((path) => path.endsWith(".rs")).flatMap((path) => [...readFileSync(path, "utf8").matchAll(/pub struct NormResultsWindowConfig\b/g)].map(() => path));
+    if (declarations.length !== 1 || declarations[0] !== join(configRoot, "🧬️schema", "🦀️.rs")) throw new Error("NormResultsWindowConfig must have one schema-owned Rust declaration");
     const schema = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "☑️change-selected-check-index", "🧬️schema", "🔣️.json"), "utf8"));
     const fixture = JSON.parse(readFileSync(join(configRoot, "🧫️fixtures", "🔣️.json"), "utf8"));
     const aggregate = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "🔣️.json"), "utf8"));
@@ -132,7 +151,7 @@ class ConfigMutationSourceScript extends BundleScript {
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     const module = JSON.parse(readFileSync(join(this.root, "..", "..", "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
     ajv.addSchema(module);
-    const validateFixture = ajv.compile({ $ref: `${module.$id}#/$defs/NormConfigMutationCases` });
+    const validateFixture = ajv.compile({ $ref: `${module.$id}#/$defs/NormResultsWindowConfigMutationCases` });
     if (!validateFixture(fixture)) throw new Error(`config fixture schema failed: ${JSON.stringify(validateFixture.errors)}`);
     if (aggregate.oneOf[0].$ref !== schema.$id) throw new Error("config aggregate schema does not reference its owned payload by $id");
     ajv.addSchema(schema);
@@ -159,11 +178,41 @@ class ConfigMutationSourceScript extends BundleScript {
     const operationRoot = join(configRoot, "🧬️schema", "🧬️mutations");
     if (!readFileSync(join(operationRoot, "📝️text", "🦀️.rs"), "utf8").includes("dsl::parse_exact(")) throw new Error("config text must use the shared exact record boundary");
     if (!readFileSync(join(operationRoot, "💾️binary", "🦀️.rs"), "utf8").includes("dsl::variants_binary::decode_op(bytes)")) throw new Error("config binary must use the shared closed canonical operation boundary");
-    console.log(`Norm config schema oracle passed: ${fixture.cases.length} cases, ${fixture.invalid.length} hostile payloads, 4 undeclared wire forms, ${fixture.text.length} text vectors, ${fixture.binary.length} binary vectors`);
+    const artifactRoot = join(this.root, "..", "..", "🗿️artifacts");
+    const editors = filesBelow(artifactRoot).filter((path) => path.endsWith("/✏️editor/🦀️.rs"));
+    if (editors.length !== 15) throw new Error(`expected 15 norm editors, found ${editors.length}`);
+    for (const editor of editors) {
+      const source = readFileSync(editor, "utf8");
+      for (const required of ["type Config = NoConfig;", "type ConfigMutation = NoConfigMutation;", "register_window_config_owners", "ResultsWindowConfigOwner", "dispatch_norm_command", "results_window_config::current"]) {
+        if (!source.includes(required)) throw new Error(`norm editor lacks ${required}: ${editor}`);
+      }
+    }
+    const viewers = filesBelow(artifactRoot).filter((path) => path.endsWith("/👁️viewer/🦀️.rs"));
+    if (viewers.length !== 15 || viewers.some((path) => {
+      const source = readFileSync(path, "utf8");
+      return !source.includes("type Config = NoConfig;") || !source.includes("type ConfigMutation = NoConfigMutation;");
+    })) throw new Error("all fifteen Norm viewers must use the empty application config facet");
+    const resultsOwners = filesBelow(artifactRoot).filter((path) => path.endsWith("/🪟️windows/📊️results/🦀️.rs"));
+    if (resultsOwners.length !== 15 || resultsOwners.some((path) => !readFileSync(path, "utf8").includes("norm_results_window_config_owner!(ResultsWindowConfigOwner, WINDOW_RESULTS)"))) {
+      throw new Error("every concrete Results kind must bind the shared config through its own exact owner");
+    }
+    const selectedChecks = filesBelow(artifactRoot).filter((path) => path.endsWith("/🎮️commands/☑️selected-check/🦀️.rs"));
+    if (selectedChecks.length !== 15 || selectedChecks.some((path) => {
+      const source = readFileSync(path, "utf8");
+      return !source.includes("pub fn window_mutation") || !source.includes("NormResultsWindowConfigMutation") || !source.includes("Ok(Emit::default())");
+    })) throw new Error("all fifteen selection commands must leave app/document lanes empty and expose the Results-window mutation");
+    const inspections = filesBelow(artifactRoot).filter((path) => path.endsWith("/✏️editor/📌️panels/🔍️inspection/🦀️.rs"));
+    if (inspections.length !== 15 || inspections.some((path) => !readFileSync(path, "utf8").includes("render_inspection(host.report(), selected_check_index)"))) {
+      throw new Error("all fifteen Inspection panels must consume the exact Results-window selection supplied by the editor");
+    }
+    const test = join(configRoot, "🧪️tests", "🔬️window-ownership", "🟦️.ts");
+    runCmd(process.execPath, ["test", test], { cwd: this.repoRoot });
+    runCmd(process.execPath, ["x", "tsc", test, "--noEmit", "--module", "ESNext", "--moduleResolution", "Bundler", "--allowImportingTsExtensions", "--allowSyntheticDefaultImports", "--strict", "--skipLibCheck", "--target", "ES2022"], { cwd: this.repoRoot });
+    console.log(`Norm Results-window config schema oracle passed: ${fixture.cases.length} codec cases, ${fixture.invalid.length} hostile payloads, ${fixture.text.length} text vectors, ${fixture.binary.length} binary vectors, 5 state + 5 mutation facets, 15 exact owners/commands/Inspection consumers, 30 empty app surfaces, strict TypeScript`);
   }
 }
 
-class ConfigMutationTestScript extends BundleScript {
+class ResultsWindowConfigTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await runCargoTestBudgeted(["semio-s-artifact-norm-contract"], this.repoRoot, ["--test", "config_mutation", ...rest]);
@@ -187,6 +236,18 @@ class SurfaceRenderSourceScript extends BundleScript {
     const manifest = Bun.TOML.parse(readFileSync(join(this.root, "Cargo.toml"), "utf8")) as { package: { metadata: { semio: { playground: { variant: string }[] } } } };
     const variants = new Set(manifest.package.metadata.semio.playground.map((entry) => entry.variant));
     const artifactRoot = join(this.root, "..", "..", "🗿️artifacts");
+    const appSurface = readFileSync(join(this.root, "..", "..", "🖥️app-surface", "🦀️.rs"), "utf8");
+    const emptyConfig = 'config: schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }';
+    const emptyPresence = 'presence: schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }';
+    if (!appSurface.includes(emptyConfig) || !appSurface.includes(emptyPresence)) throw new Error("norm app schema descriptor must publish absent app-owned config and presence facets");
+    const presenceRoot = join(this.root, "..", "..", "👥️presence", "🧬️schema");
+    if (existsSync(presenceRoot) && filesBelow(presenceRoot).some((path) => /\.(rs|ts|json|graphql|proto)$/.test(path))) {
+      throw new Error("norm duplicates the framework-owned empty presence schema");
+    }
+    const noPresenceBindings = filesBelow(artifactRoot)
+      .filter((path) => path.endsWith("🦀️.rs"))
+      .reduce((count, path) => count + [...readFileSync(path, "utf8").matchAll(/type Presence = NoPresence;/g)].length, 0);
+    if (noPresenceBindings !== variants.size * 2) throw new Error(`norm app surfaces do not all use framework NoPresence: expected ${variants.size * 2}, found ${noPresenceBindings}`);
     const incompleteIdentity = new RegExp(`\\bs\\.(${[...variants].join("|")})\\b`);
     for (const path of filesBelow(artifactRoot).filter((path) => /\.(rs|ts|json)$/.test(path))) {
       if (incompleteIdentity.test(readFileSync(path, "utf8"))) throw new Error(`norm artifact uses an identity without its plugin namespace: ${path}`);
@@ -273,8 +334,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("surface-render-test", SurfaceRenderTestScript)
   .register("test", TestScript)
   .register("check", CheckScript)
-  .register("config-mutation-source", ConfigMutationSourceScript)
-  .register("config-mutation-test", ConfigMutationTestScript)
+  .register("results-window-config-source", ResultsWindowConfigSourceScript)
+  .register("results-window-config-test", ResultsWindowConfigTestScript)
   .register("describe", DescribeScript)
   .register("mutation-leaf-taxonomy-generate", MutationLeafTaxonomyGenerateScript)
   .register("mutation-leaf-taxonomy-check", MutationLeafTaxonomyCheckScript);

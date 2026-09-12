@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::generation3d::testkit::{empty_history_view, retire_flow_eval_session};
+use crate::editor::generation3d::unit_tests::context::{empty_history_view, retire_flow_eval_session};
 use semio_framework_artifact_flow_flow::neural::ColdRetire;
 use semio_framework_plugin::{ArtifactView, ConfigView};
 
@@ -29,8 +29,8 @@ fn dispatch(pages: &[(&str, u64, u64)]) -> Vec<Result<(), String>> {
 /// and no linked installer anywhere.
 #[test]
 fn a_paged_run_installs_the_contributed_registry() {
-    let _serial = crate::editor::generation3d::test_support::lock();
-    let contributions = crate::editor::generation3d::testkit::staged_flow_extension_contributions_json(&[]);
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let contributions = crate::editor::generation3d::unit_tests::context::staged_flow_extension_contributions_json(&[]);
     let pages = semio_framework::public_invocation_string_pages(&contributions);
     assert!(pages.len() > 1, "the staged closure must exceed one public-invocation string page, else the paging law proves nothing");
     let addressed: Vec<(&str, u64, u64)> = pages.iter().enumerate().map(|(index, page)| (page.as_str(), index as u64, pages.len() as u64)).collect();
@@ -78,7 +78,7 @@ fn the_packaged_brep_manifest_parses_as_a_flow_extension_manifest() {
 /// `pluginId` + extra payload fields), not the ToValue round-trip the paging assembler test uses.
 #[test]
 fn a_one_page_host_shaped_run_indexes_contributed_operators() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let contributions = host_shaped_contributions_json();
     assert!(contributions.contains("brep.curve.polygon") && contributions.contains("manifestJson"), "the host-shaped pack must carry the live operator ids");
     dispatch(&[(contributions.as_str(), 0, 1)]).into_iter().next().unwrap().expect("one-page host-shaped run is admitted");
@@ -124,7 +124,7 @@ fn host_shaped_contributions_json() -> String {
 /// must never reach the registry.
 #[test]
 fn an_out_of_order_run_is_refused_and_discarded() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let outcomes = dispatch(&[("[", 0, 3), ("]", 2, 3)]);
     outcomes[0].as_ref().expect("page 0 opens the run");
     assert_eq!(outcomes[1].as_ref().unwrap_err(), "flow.contributions-page-out-of-order");
@@ -134,7 +134,7 @@ fn an_out_of_order_run_is_refused_and_discarded() {
 /// ⚖️ LAW: an address outside its own run is refused before a byte is buffered.
 #[test]
 fn an_invalid_page_address_is_refused() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let outcomes = dispatch(&[("[]", 0, 0), ("[]", 3, 3)]);
     assert_eq!(outcomes[0].as_ref().unwrap_err(), "flow.contributions-page-address-invalid");
     assert_eq!(outcomes[1].as_ref().unwrap_err(), "flow.contributions-page-address-invalid");

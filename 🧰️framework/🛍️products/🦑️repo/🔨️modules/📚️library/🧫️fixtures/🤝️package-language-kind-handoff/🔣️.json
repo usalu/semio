@@ -6,7 +6,7 @@
     "parentKindId": "packages",
     "variation": "canonical-registered-emoji",
     "ambiguity": "fail-closed",
-    "packagePurity": "unchanged"
+    "packagePurity": "target-before-package"
   },
   "oracleCompilation": {
     "scope": "single-test-invocation",
@@ -21,9 +21,7 @@
       "emoji": "🦀️",
       "slug": "rust",
       "allowedDirectoryKindIds": [
-        "targets",
         "benchmarks",
-        "typescript-language",
         "library",
         "binary",
         "builder",
@@ -36,7 +34,6 @@
       "emoji": "🟦️",
       "slug": "typescript",
       "allowedDirectoryKindIds": [
-        "targets",
         "fixtures",
         "apps"
       ]
@@ -54,7 +51,6 @@
       "emoji": "🐹️",
       "slug": "go",
       "allowedDirectoryKindIds": [
-        "targets",
         "fixtures"
       ]
     },
@@ -74,7 +70,6 @@
       "emoji": "🔷️",
       "slug": "dotnet",
       "allowedDirectoryKindIds": [
-        "targets",
         "fixtures"
       ]
     }

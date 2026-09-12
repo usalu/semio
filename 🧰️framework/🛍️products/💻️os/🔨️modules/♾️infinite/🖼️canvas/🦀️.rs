@@ -2395,10 +2395,10 @@ pub mod gpu_session {
 // #endregion 🔖️GpuSession
 
 // #region 🔖️IconCodec
-#[path = "../../../../../🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/🦀️metabolism_icon_name.rs"]
+#[path = "../../../../../🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs"]
 mod metabolism_icon_name_gen;
 
-#[path = "../../../../../🔨️modules/🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs"]
+#[path = "../../../../../🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs"]
 mod catalog_icon_name_gen;
 
 pub use catalog_icon_name_gen::IconName;
@@ -2407,7 +2407,7 @@ pub use metabolism_icon_name_gen::MetabolismIconName;
 // 🌉️ Hand-written `ToValue`/`FromValue` for `IconName`/`MetabolismIconName` — see that file's own
 // header docstring for why it lives here rather than as `#[derive(...)]` on the machine-generated
 // sources themselves.
-include!("🌉️icon-name-value-bridge.rs");
+include!("🌉️icon-name-value/🦀️.rs");
 
 pub mod icon_codec {
     // #region icon_codec

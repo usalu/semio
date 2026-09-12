@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::wires::commands::reorganize;
-use crate::editor::wires::testkit::{dispatch, metabolism_app};
+use crate::editor::wires::unit_tests::context::{dispatch, metabolism_app};
 use crate::editor::wires::WiresCommand;
 
 #[semio_framework_async_macros::async_test]

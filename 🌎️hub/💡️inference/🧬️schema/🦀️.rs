@@ -498,7 +498,7 @@ pub struct InferenceJobReconcileResultV1 {
 }
 
 /// ⏸️ The exact length-prefixed frame the checkpoint-control pipe carries in both directions.
-#[cfg(feature = "test-support")]
+#[cfg(feature = "integration-fixtures")]
 #[derive(Deserialize, Serialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct GisInferenceCheckpointControlFrameV1 {

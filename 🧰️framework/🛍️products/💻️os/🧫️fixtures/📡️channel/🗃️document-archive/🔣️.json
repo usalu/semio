@@ -1,0 +1,34 @@
+{
+  "rootArtifactId": "root-1",
+  "archive": {
+    "parent_pack": [1, 2],
+    "parent_spr": [3],
+    "members": [
+      {
+        "ordinal": 0,
+        "reference": { "artifact_id": "child-1", "artifact_kind": "s.test.child", "standard": "1", "subset": "native" },
+        "owner": {
+          "parent": { "artifact_id": "root-1", "artifact_kind": "s.test.root", "standard": "1", "subset": "*" },
+          "slot": "children",
+          "child_id": "child-1"
+        },
+        "envelope_pack": [4, 5]
+      },
+      {
+        "ordinal": 1,
+        "reference": { "artifact_id": "grandchild-1", "artifact_kind": "s.test.child", "standard": "1", "subset": "native" },
+        "owner": {
+          "parent": { "artifact_id": "child-1", "artifact_kind": "s.test.child", "standard": "1", "subset": "native" },
+          "slot": "nested",
+          "child_id": "grandchild-1"
+        },
+        "envelope_pack": [6]
+      }
+    ]
+  },
+  "invalid": [
+    { "id": "duplicate-ordinal", "mutation": { "member": 1, "field": "ordinal", "value": 0 } },
+    { "id": "owner-child-mismatch", "mutation": { "member": 1, "field": "owner.child_id", "value": "other" } },
+    { "id": "missing-parent", "mutation": { "member": 1, "field": "owner.parent.artifact_id", "value": "absent" } }
+  ]
+}

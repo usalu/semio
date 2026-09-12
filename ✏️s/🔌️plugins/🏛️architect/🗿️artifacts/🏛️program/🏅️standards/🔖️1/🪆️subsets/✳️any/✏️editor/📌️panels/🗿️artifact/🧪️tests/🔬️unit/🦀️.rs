@@ -11,7 +11,7 @@ async fn the_tab_is_the_framework_document_tab_bound_to_this_apps_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn the_tree_lists_program_meta_and_the_elements() {
     let program = sample_plugin();
-    let json = crate::editor::architect::testkit::project_render(render(&program, &ArchitectConfig::default()));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&program, &ArchitectConfig::default()));
     assert!(json.contains("Sample Clinic"));
     assert!(json.contains(&program.elements[0].header.id.to_string()));
 }
@@ -21,12 +21,12 @@ async fn the_tree_lists_program_meta_and_the_elements() {
 /// element rows (see `render`'s own doc comment).
 #[semio_framework_async_macros::async_test]
 async fn the_tree_binds_the_program_interaction_domain() {
-    let json = crate::editor::architect::testkit::project_render(render(&sample_plugin(), &ArchitectConfig::default()));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &ArchitectConfig::default()));
     assert!(json.contains("\"interactionDomain\":\"program\""));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_empty_program_renders_the_none_placeholder_row() {
-    let json = crate::editor::architect::testkit::project_render(render(&empty_plugin(), &ArchitectConfig::default()));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&empty_plugin(), &ArchitectConfig::default()));
     assert!(json.contains("architect-document.elements.empty"));
 }

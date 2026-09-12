@@ -49,7 +49,7 @@ async fn the_artifact_kind_spec_is_a_data_value_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_report_falls_back_to_a_placeholder_when_nothing_was_computed() {
-    let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_report(&CheckReport::default()).expect("node assembly") }).expect("json");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_report(&CheckReport::default()).expect("node assembly") }).expect("json");
     assert!(json.contains("No checks computed."), "{json}");
 }
 
@@ -65,7 +65,7 @@ async fn render_report_assigns_a_distinct_identity_to_each_check_row() {
             crate::document::AnnexChoice::De,
         ));
     }
-    let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_report(&report).expect("node assembly") }).expect("distinct row identities");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_report(&report).expect("node assembly") }).expect("distinct row identities");
     let projected: serde_json::Value = serde_json::from_str(&json).expect("third-party projection oracle");
     let rows = projected["children"].as_array().expect("report rows");
     assert_eq!(rows.len(), 2);
@@ -76,7 +76,7 @@ async fn render_report_assigns_a_distinct_identity_to_each_check_row() {
 #[semio_framework_async_macros::async_test]
 async fn long_unicode_document_text_is_admitted_in_exact_utf8_chunks() {
     let source = format!("start-{}-end", "ä".repeat(ui::UI_TEXT_MAX_BYTES));
-    let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_text_chunks(&source).expect("chunked node assembly") }).expect("chunked projection");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_text_chunks(&source).expect("chunked node assembly") }).expect("chunked projection");
     let projected: serde_json::Value = serde_json::from_str(&json).expect("third-party projection oracle");
     let reassembled = projected["children"].as_array().expect("chunk children").iter().map(|child| child["component"]["value"].as_str().expect("text chunk")).collect::<String>();
     assert_eq!(reassembled, source);
@@ -92,10 +92,10 @@ async fn render_inspection_falls_back_to_the_first_check_for_an_out_of_range_ind
         "demo check",
         crate::document::AnnexChoice::De,
     ));
-    let inside = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&report, Some(0)).expect("node assembly") }).expect("json");
-    let outside = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&report, Some(99)).expect("node assembly") }).expect("json");
+    let inside = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&report, Some(0)).expect("node assembly") }).expect("json");
+    let outside = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&report, Some(99)).expect("node assembly") }).expect("json");
     assert_eq!(inside, outside, "an out-of-range index must fall back to the first check");
-    assert!(semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&CheckReport::default(), None).expect("node assembly") }).expect("json").contains("No checks"));
+    assert!(semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&CheckReport::default(), None).expect("node assembly") }).expect("json").contains("No checks"));
 }
 
 #[semio_framework_async_macros::async_test]

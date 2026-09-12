@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::shooting::testkit::{dispatch, shooting_app};
+use crate::editor::shooting::unit_tests::context::{dispatch, shooting_app};
 use crate::editor::shooting::ShootingCommand;
 
 #[semio_framework_async_macros::async_test]

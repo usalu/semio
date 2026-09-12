@@ -20,7 +20,7 @@
 //! writeup). `En1990Snapshot`'s own hand-rolled `ArtifactDsl` codec (Rust's own
 //! `f64::to_string`/`str::parse`) round-trips correctly, so it is used here instead.
 
-use crate::config::{NormConfig, NormConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::En1990Mutation;
 use crate::En1990Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -35,7 +35,7 @@ pub struct ReplaceSnapshot {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, En1990Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1990Mutation, NormConfigMutation>, Fault> {
+pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, En1990Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1990Mutation, NoConfigMutation>, Fault> {
     let text = crate::document::unescape_op_text_field(&payload.text);
     let target = <En1990Snapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| Fault::from(format!("set-snapshot: invalid document text: {error}")))?;
     crate::app_surface::commit_snapshot_fields(En1990Mutation::from_snapshot(doc.snapshot, &target), "setSnapshot")

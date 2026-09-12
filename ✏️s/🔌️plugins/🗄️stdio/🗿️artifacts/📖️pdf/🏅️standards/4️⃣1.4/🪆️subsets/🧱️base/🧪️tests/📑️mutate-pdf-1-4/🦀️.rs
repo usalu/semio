@@ -5,7 +5,7 @@
 //! `lopdf` reference implementation — as the independent READER (`lopdf`'s own page-tree walk,
 //! `/MediaBox` inheritance chain and content-stream decoder) and as the independent WRITER (a
 //! fresh `lopdf::Document` assembled object by object) — through
-//! `../../🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🔮️oracle/🦀️.rs`; `subject` drives this
+//! `../../🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`; `subject` drives this
 //! repository's own `decode_pdf`/`encode_pdf`/`apply_pdf_mutation`. Both results are read back by
 //! the SAME independent `project_pdf_1_4` before the `semantic-pdf-v1` profile compares them. The
 //! subject half is gated behind the generated host's `sut` feature so the oracle-only run never
@@ -19,7 +19,7 @@
 //! real page's geometry. Both are gone, and with them the carve-out: the laws are now measured
 //! against the REAL DOCUMENT's own projection, all 65 pages of it.
 //!
-//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law`
+//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
 //! module and under `semantic-pdf-v1`'s own tolerance, so a scenario cannot pass merely because
 //! `lopdf` declined to error: `mutate-<kind>` must MOVE the compared projection, `inverse-<kind>`
 //! must land back on the un-mutated document's projection, and `identity-round-trip` must recover
@@ -41,7 +41,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 
 //#region 🔖️Profile
 /// 📏️ `semantic-pdf-v1`'s own declared freedom list and tolerance
-/// (`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as the profile
+/// (`✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as the profile
 /// the case is measured by — never stricter, never looser.
 const PDF_WRITER_FREEDOM: &[&str] = &["objectNumber", "xrefOffset", "producer", "creationDate", "modificationDate", "documentId", "fileSize", "byteLength", "generation", "streamFilter", "streamLength"];
 const PDF_TOLERANCE: f64 = 0.0001;

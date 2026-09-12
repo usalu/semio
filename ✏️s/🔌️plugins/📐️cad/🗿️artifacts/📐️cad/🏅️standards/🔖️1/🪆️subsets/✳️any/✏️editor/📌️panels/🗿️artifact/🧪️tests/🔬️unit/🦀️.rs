@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::cad::config::CadConfig;
 use crate::editor::cad::terminology::cad_labels;
-use crate::editor::cad::testkit::*;
+use crate::editor::cad::unit_tests::context::*;
 use crate::editor::cad::{make_object_for_typology, CadPlayApp, CadPlayRuntime};
 use crate::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
 use crate::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_SHAPE};

@@ -1,0 +1,30 @@
+{
+  "name": "@semio-tech/browser-actor-import-test",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "runtime-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts runtime-check"
+      },
+      "cache": true,
+      "parallelism": false,
+      "outputs": [
+        "{projectRoot}/dist/runtime-check"
+      ]
+    },
+    "pending-host-close-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts pending-host-close-check"
+      },
+      "cache": true,
+      "parallelism": false,
+      "outputs": [
+        "{projectRoot}/dist/pending-host-close-check"
+      ]
+    }
+  }
+}

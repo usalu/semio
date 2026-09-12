@@ -5,10 +5,10 @@
 Feature: Apply every typed the PDF Healthcare Best Practices Guide (PDF/H) conformance-class mutation to a real document
   The input is this subset's OWN committed seed document — a one-page PDF built and written by the
   SAME lopdf 0.44 reference this catalog's oracle drives, through this subset's own 🏭️generator
-  (../../🏭️generator/🦀️lopdf-engine::build_seed), with two /Type /FontDescriptor objects each
+  (../../🏭️generator/🔁️codec/📦️packages/🦀️rust::build_seed), with two /Type /FontDescriptor objects each
   already carrying a synthetic /FontFile2 embedded program. It is the identical lopdf-verified seed
   already registered as the third-party-generated evidence for this catalog's own per-mutation
-  fixture pairs in this subset's own 🔮️oracle/🔣️.json, reused here as the whole-catalog exhaustive
+  fixture pairs in this subset's own 🔮️oracles/🔣️.json, reused here as the whole-catalog exhaustive
   input. It carries NO /Encrypt, no /S /JavaScript action and no /JS key, no /S /Launch action, no
   /Subtype /Movie or /Sound annotation, no /Type /Filespec, no /OutputIntents, no /MarkInfo, no
   /StructTreeRoot, no /Lang, no /ViewerPreferences, no /AcroForm, no /DPartRoot and no /TrimBox or

@@ -1,7 +1,6 @@
 //! 📃️ 📃️ Forms play app commands command — `remove-step`.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::reset_try_config_mutations;
 use crate::{op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,5 +19,5 @@ pub fn handle(payload: &RemoveStep, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg
     if payload.step_id.is_empty() {
         return Ok(Emit::default());
     }
-    Ok(Emit { artifact_mutations: vec![FormMutation::DeleteStep(crate::mutations::delete_step::mutation::DeleteStep { id: payload.step_id.clone() })], config_mutations: reset_try_config_mutations(), ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![FormMutation::DeleteStep(crate::mutations::delete_step::mutation::DeleteStep { id: payload.step_id.clone() })], ..Default::default() })
 }

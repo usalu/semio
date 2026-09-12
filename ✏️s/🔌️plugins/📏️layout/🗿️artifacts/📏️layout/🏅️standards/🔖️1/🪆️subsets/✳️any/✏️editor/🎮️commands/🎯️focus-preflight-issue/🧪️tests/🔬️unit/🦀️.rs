@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::layout::testkit::{dispatch, layout_app};
+use crate::editor::layout::unit_tests::context::{dispatch, layout_app};
 use crate::editor::layout::LayoutCommand;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;

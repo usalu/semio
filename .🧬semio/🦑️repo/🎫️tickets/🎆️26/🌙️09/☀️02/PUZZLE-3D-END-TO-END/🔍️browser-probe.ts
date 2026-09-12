@@ -118,6 +118,14 @@ page.on("console", (msg) => {
   if (FAULT_RE.test(text)) noteFault(text);
 });
 page.on("pageerror", (err) => noteFault(`pageerror: ${String(err).slice(0, 400)}`));
+// 🌐️ Wave B45: a failed FETCH is a fault with a name. Chrome's console prints "Failed to load resource: the
+// server responded with a status of 500" and hides the URL, so a boot that dies on one broken vite transform
+// left a two-line console tail and nothing to act on — indistinguishable from the stale-module SyntaxError of
+// B33 §8. The status and the URL are recorded instead.
+page.on("response", (response) => {
+  if (response.status() >= 400) noteFault(`http ${response.status()}: ${decodeURIComponent(response.url()).slice(0, 300)}`);
+});
+page.on("requestfailed", (request) => noteFault(`requestfailed ${request.failure()?.errorText ?? "?"}: ${decodeURIComponent(request.url()).slice(0, 300)}`));
 
 /** 🌊️ The Playwright errors a `page.evaluate` raises when the page navigated out from under it —
  * `--reload-between-groups` crashed battery #46b on exactly this, because the reload and the next
@@ -332,7 +340,47 @@ if (booted && interact) {
     log(line);
   };
   verdict("boot", booted, "windows ready");
+  /** 🎭️ Clears a fullscreen INTRODUCTION veil, and reports one that will not clear.
+   *
+   * 🧯️ The introduction overlay paints `div.ui-veil.z-tutorial.inset-0` over the whole viewport at
+   * `z-index: 10000` with `pointer-events: auto` while it blocks
+   * (`🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx:5815`). While it is up NOTHING in the app is
+   * clickable: `document.elementFromPoint` on any control returns the veil, `force: true` does not help
+   * (force skips actionability, never hit-testing), and every press is swallowed in silence. `waitForBoot`
+   * pressed Skip exactly ONCE, so a tour that re-arms afterwards left the whole run clicking into a
+   * scrim — measured on the example picker, which reported `options=[] opened=false waitedMs=8062` with
+   * the veil as the topmost element at its centre (wave B47 §5). Every step's `dismissChrome` clears it
+   * now, and a veil that survives four attempts is logged by name instead of costing the step its
+   * verdict. */
+  const clearIntroductionVeil = async (label: string) => {
+    const veilState = async () =>
+      evalSafe(
+        () => {
+          const veil = Array.from(document.querySelectorAll<HTMLElement>(".ui-veil")).find((el) => getComputedStyle(el).pointerEvents === "auto" && el.getBoundingClientRect().width > 600);
+          if (!veil) return null;
+          const box = veil.getBoundingClientRect();
+          return {
+            rect: [Math.round(box.x), Math.round(box.y), Math.round(box.width), Math.round(box.height)],
+            z: getComputedStyle(veil).zIndex,
+            controls: Array.from(document.querySelectorAll<HTMLElement>("button")).filter((button) => /skip|weiter|next|done|fertig/i.test(button.innerText || "")).map((button) => `${button.id || "-"}=${(button.innerText || "").replace(/\n/g, " ").trim().slice(0, 24)}`).slice(0, 8),
+          };
+        },
+        null as null | Record<string, unknown>,
+      );
+    let state = await veilState();
+    if (!state) return true;
+    for (let attempt = 0; attempt < 4 && state; attempt++) {
+      await page.keyboard.press("Escape").catch(() => {});
+      const skip = page.locator("button", { hasText: /^\s*(x\s*)?skip\s*$/i }).first();
+      if (await countSafe(skip)) await skip.click({ force: true, timeout: 2000 }).catch(() => {});
+      await page.waitForTimeout(700);
+      state = await veilState();
+    }
+    log(`veil ${label} cleared=${!state} state=${JSON.stringify(state)}`);
+    return !state;
+  };
   const dismissChrome = async () => {
+    await clearIntroductionVeil("dismissChrome");
     await page.keyboard.press("Escape").catch(() => {});
     const collapse = page.locator("button", { hasText: /collapse/i }).first();
     if (await collapse.count()) await collapse.click({ timeout: 2000 }).catch(() => {});
@@ -371,16 +419,25 @@ if (booted && interact) {
           const tab = document.getElementById(id);
           if (!tab) return null;
           const button = (tab.closest('[role="tab"], [data-slot="panel-tab-button"]') ?? tab) as HTMLElement;
-          const state = `${button.getAttribute("aria-selected") ?? ""}${button.getAttribute("data-state") ?? ""}${button.getAttribute("data-active") ?? ""}`;
+          // 🪪️ `aria-pressed` is what a `panel-tab-button` actually publishes — the dump of the live
+          // control reads `aria-pressed=false` and carries no `aria-selected`, `data-state` or
+          // `data-active` at all (wave B45). Leaving it out made `tabActive` answer `false` for EVERY
+          // panel tab, which turned the tab's own state into dead weight.
+          const state = `${button.getAttribute("aria-selected") ?? ""}${button.getAttribute("data-state") ?? ""}${button.getAttribute("data-active") ?? ""}${button.getAttribute("aria-pressed") ?? ""}`;
           return /true|active|selected|open/i.test(state);
         },
         null as boolean | null,
         tabId,
       );
-    // 🧾️ The BODY is the authority whenever one is known — a panel that renders its rows IS open, and a
-    // branch tab that mounts its `order: 0` child never carries `aria-selected` itself (`framework.settings`).
-    // The tab's own state is the fallback for a panel whose body selector nobody has measured yet.
-    const isOpen = (state: { active: boolean | null; body: number }) => (body ? state.body > 0 : state.active === true);
+    // 🧾️ EITHER observable proves the panel is open, and neither can veto the other. The body is the
+    // richer signal — a branch tab that mounts its `order: 0` child never marks itself
+    // (`framework.settings`) — but an open panel whose body has not been PUBLISHED yet renders zero rows,
+    // and treating that as "shut" is what made this helper press an open tab and toggle it closed:
+    // `ensurePanel puzzle3d.panel.settings clicked=ok active=false body=0 waitedMs=20166` with the click's
+    // own console reading `history patch applied {"labels":["Toggle Panel"],"upserts":1}` — the shell
+    // received the press and CLOSED the panel. An empty body is a publication question, never an
+    // open/closed one.
+    const isOpen = (state: { active: boolean | null; body: number }) => state.active === true || (body ? state.body > 0 : false);
     const present = await evalSafe((id) => Boolean(document.getElementById(id)), false, tabId);
     const before = { active: await tabActive(), body: await bodyCount() };
     if (isOpen(before)) {
@@ -392,9 +449,85 @@ if (booted && interact) {
       log(`ensurePanel ${tabId} ABSENT tabs=${JSON.stringify(tabs).slice(0, 700)}`);
       return { opened: false, clicked: false, present, body: 0, waitedMs: 0 };
     }
-    await page.locator(`[data-slot="panel-tab-button"][id="${tabId}"], [id="${tabId}"]`).first().click({ force: true, timeout: 4000 }).catch(() => {});
-    const settled = await settleFor(async () => ({ active: await tabActive(), body: await bodyCount() }), isOpen, 8000);
-    log(`ensurePanel ${tabId} clicked=true active=${String(settled.value.active)} body=${settled.value.body} waitedMs=${settled.waitedMs}`);
+    // 🧾️ Wave B45: the tab's OWN attributes as they stand BEFORE the press. A post-click dump cannot say
+    // whether the press opened a shut panel or shut an open one, and that is the whole question when the
+    // shell answers a press with `Toggle Panel`.
+    log(
+      `ensurePanel ${tabId} pre-click attrs=${JSON.stringify(
+        await evalSafe(
+          (id: string) => {
+            const tab = document.getElementById(id);
+            const button = (tab?.closest('[role="tab"], [data-slot="panel-tab-button"]') ?? tab) as HTMLElement | null;
+            return {
+              matches: document.querySelectorAll(`[id="${id}"]`).length,
+              attrs: button ? Array.from(button.attributes).map((attribute) => `${attribute.name}=${attribute.value.slice(0, 30)}`) : null,
+            };
+          },
+          null as unknown,
+          tabId,
+        ),
+      ).slice(0, 500)} active=${String(before.active)} body=${before.body}`,
+    );
+    const clickMark = consoleCursor();
+    const outcome = await page
+      .locator(`[data-slot="panel-tab-button"][id="${tabId}"], [id="${tabId}"]`)
+      .first()
+      .click({ force: true, timeout: 4000 })
+      .then(() => "ok")
+      .catch((error) => `failed ${String(error).split("\n")[0].slice(0, 110)}`);
+    // ⏳️ Wave B45: 20 s, not 8 s. Activating a panel tab is a shell-layout write that round-trips through
+    // the guest, and `settings-panel-opens` failed with the tab PRESENT and `active=false body=0` after
+    // exactly the old 8 s (`ensurePanel puzzle3d.panel.settings clicked=true active=false body=0
+    // waitedMs=8335`, battery #56) in a lane where the same tab opens in 2 ms when idle.
+    const settled = await settleFor(async () => ({ active: await tabActive(), body: await bodyCount() }), isOpen, 20000);
+    log(`ensurePanel ${tabId} clicked=${outcome} active=${String(settled.value.active)} body=${settled.value.body} waitedMs=${settled.waitedMs}`);
+    // 🧾️ Wave B45: a tab that was pressed and stayed shut names its own dock. `settings-panel-opens`
+    // failed with the tab PRESENT in the roster (`puzzle3d.panel.settings`) and `active=false body=0`
+    // after the full 8 s, which the old one-line log could not separate from "the tab is not there".
+    if (!isOpen(settled.value))
+      log(
+        `ensurePanel ${tabId} STAYED-SHUT dock=${JSON.stringify(
+          await evalSafe(
+            (id: string) => {
+              const tab = document.getElementById(id);
+              const button = (tab?.closest('[role="tab"], [data-slot="panel-tab-button"]') ?? tab) as HTMLElement | null;
+              const rect = button?.getBoundingClientRect();
+              const top = rect ? document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) : null;
+              return {
+                attrs: button ? Array.from(button.attributes).map((a) => `${a.name}=${a.value.slice(0, 40)}`) : null,
+                rect: rect ? [Math.round(rect.x), Math.round(rect.y), Math.round(rect.width), Math.round(rect.height)] : null,
+                hit: top ? `${top.tagName}#${top.id || "-"}[${top.getAttribute("data-slot") ?? "-"}]` : null,
+                hitBox: top
+                  ? (() => {
+                      const box = top.getBoundingClientRect();
+                      const style = getComputedStyle(top);
+                      return { rect: [Math.round(box.x), Math.round(box.y), Math.round(box.width), Math.round(box.height)], z: style.zIndex, position: style.position, pointerEvents: style.pointerEvents, cls: top.className.toString().slice(0, 120) };
+                    })()
+                  : null,
+                hitChain: (() => {
+                  const chain: string[] = [];
+                  for (let node = top as Element | null; node && chain.length < 6; node = node.parentElement) chain.push(`${node.tagName}#${node.id || "-"}[${node.getAttribute("data-slot") ?? "-"}]`);
+                  return chain;
+                })(),
+                activeTabs: Array.from(document.querySelectorAll('[data-slot="panel-tab-button"]'))
+                  .filter((el) => /true|active|selected|open/i.test(`${el.getAttribute("aria-selected") ?? ""}${el.getAttribute("data-state") ?? ""}${el.getAttribute("data-active") ?? ""}`))
+                  .map((el) => el.id),
+                bodies: Array.from(document.querySelectorAll('[id^="panel:"]')).map((el) => el.id.split("/")[0]).filter((v, i, all) => all.indexOf(v) === i),
+              };
+            },
+            null as unknown,
+            tabId,
+          ),
+        ).slice(0, 900)}`,
+      );
+    if (!isOpen(settled.value))
+      log(
+        `ensurePanel ${tabId} STAYED-SHUT console=${JSON.stringify(
+          consoleSince(clickMark)
+            .filter((row) => /panel|dock|tab|anchor|refreshUi|surface|Toggle/i.test(row))
+            .slice(-14),
+        ).slice(0, 2000)}`,
+      );
     return { opened: settled.ok, clicked: true, present, body: settled.value.body, waitedMs: settled.waitedMs };
   };
   add("activate-perspective", "§1", "read", true, async () => {
@@ -419,6 +552,7 @@ if (booted && interact) {
     // `page.locator("select").first()` reached THAT: battery #48's lane changed the history filter,
     // never dispatched `setActiveExample`, and still scored `undo-unwind` green on a document that had
     // never moved.
+    await dismissChrome();
     const picker = page.locator('[id="playground.navbar.fixture"]');
     const native = picker.locator("select").or(page.locator('select[id="playground.navbar.fixture"]')).first();
     const wanted = exampleArg ? new RegExp(exampleArg, "i") : /nakagin/i;
@@ -426,10 +560,39 @@ if (booted && interact) {
       await native.selectOption({ label: (await native.locator("option").allTextContents()).find((label) => wanted.test(label)) ?? "" }).catch(() => {});
     } else {
       const combo = (await countSafe(picker)) ? picker.first() : page.locator('[role="combobox"]').first();
-      await combo.click({ timeout: 3000 }).catch(() => {});
-      await page.waitForTimeout(400);
       const options = page.locator('[role="option"]');
-      log(`example options=${JSON.stringify(await options.allTextContents()).slice(0, 300)} pickerPresent=${await countSafe(picker)}`);
+      // 🕰️ Wave B47 §5: `force: true` and a POLL, for the two reasons B44 §1.0 measured on this very
+      // control — a hit-tested click on it times out while nothing covers it, and the listbox portals in
+      // later than the fixed 400 ms sample this used to take. A miss here is silent and expensive: the
+      // step logged `example options=[] pickerPresent=1`, never dispatched `setActiveExample`, left the
+      // document on the 1-object Concrete Forest and still scored `example-switch-instances` green — so
+      // every later step measured the SMALL document while the report said Nakagin.
+      let opened = { ok: false, waitedMs: 0 };
+      for (let attempt = 0; attempt < 2 && !opened.ok; attempt++) {
+        await combo.click({ force: true, timeout: 3000 }).catch(() => {});
+        opened = await settleFor(async () => (await options.count()) > 0, (open) => open, 8000, 250);
+      }
+      log(
+        `example picker shape=${JSON.stringify(
+          await evalSafe(
+            () => {
+              const el = document.getElementById("playground.navbar.fixture");
+              if (!el) return null;
+              const box = el.getBoundingClientRect();
+              const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) as HTMLElement | null;
+              const chain: string[] = [];
+              for (let node = hit; node && chain.length < 6; node = node.parentElement) {
+                const style = getComputedStyle(node);
+                const nodeBox = node.getBoundingClientRect();
+                chain.push(`${node.tagName}#${node.id || "-"}[${node.getAttribute("data-slot") ?? "-"}]{${(node.className || "").toString().slice(0, 70)}}@${Math.round(nodeBox.x)},${Math.round(nodeBox.y)},${Math.round(nodeBox.width)},${Math.round(nodeBox.height)}:${style.position}/${style.zIndex}/pe=${style.pointerEvents}`);
+              }
+              return { rect: [Math.round(box.x), Math.round(box.y), Math.round(box.width), Math.round(box.height)], slot: el.getAttribute("data-slot"), state: el.getAttribute("data-state"), expanded: el.getAttribute("aria-expanded"), disabled: (el as HTMLButtonElement).disabled ?? null, mine: Boolean(hit && (hit === el || el.contains(hit))), chain };
+            },
+            null as null | Record<string, unknown>,
+          ),
+        )}`,
+      );
+      log(`example options=${JSON.stringify(await options.allTextContents()).slice(0, 300)} pickerPresent=${await countSafe(picker)} opened=${opened.ok} waitedMs=${opened.waitedMs}`);
       const target = options.filter({ hasText: wanted }).first();
       await ((await countSafe(target)) ? target : options.nth(1)).click({ timeout: 3000 }).catch(() => {});
     }
@@ -737,22 +900,53 @@ if (booted && interact) {
     if (await inspection.count()) await inspection.click({ timeout: 3000 }).catch(() => {});
     return { box, topBox, spots };
   };
+  /** 🧰️ Brings the perspective pane's utility bar into view WITHOUT ever folding it — B36 §7.1's
+   * ensure-open law, applied to the utility bar instead of a panel tab.
+   *
+   * 🧯️ Wave B45: the old body clicked `utilityBar.unfold` when that id existed and otherwise fell back to
+   * `button` with the text `utilities` — and the bar renders BOTH chips with that same text, `unfold`
+   * while it is folded and `fold` while it is open. So on every call after the first, `unfold` was gone,
+   * the fallback matched `fold`, and the helper FOLDED the bar it was asked to open. `armUtility` then
+   * force-clicked `[id="volumeBrush"]` inside a folded bar, the click reached no control, no
+   * `setActiveTool` was ever dispatched, and the arm reported `activeUtility=select` — measured:
+   * `[157.5s] utilities chips=2 unfoldId=1` (folded, unfold worked) then
+   * `[252.2s] utilities chips=2 unfoldId=0` (already open, the fallback folded it) →
+   * `arm-utility volumeBrush found=1 active=select settled=false waitedMs=20380`.
+   *
+   * 🖱️ The canvas click that used to open every call is a world PICK — it clears or changes the selection
+   * that the calling step has just established — so it is now spent only when NEITHER chip is in the
+   * document, i.e. when the bar belongs to a window that is not focused, and it says so in the log. */
   const unfoldPerspectiveUtilities = async () => {
-    const persp = page.locator("canvas").last();
-    await persp.click({ position: { x: 80, y: 80 }, timeout: 4000 }).catch(() => {});
-    const byId = page.locator('[id="framework.window.puzzle3dMainPerspective.utilityBar.unfold"]').first();
-    const chip = page.locator("button").filter({ hasText: /^utilities$/i }).last();
-    log(`utilities chips=${await page.locator("button").filter({ hasText: /utilities/i }).count()} unfoldId=${await byId.count()}`);
-    if (await byId.count()) await byId.click({ timeout: 4000 }).catch(() => {});
-    else if (await chip.count()) await chip.click({ timeout: 4000 }).catch(() => {});
-    await page.waitForTimeout(800);
-    const ids = await page.evaluate(() =>
-      Array.from(document.querySelectorAll("button, [data-slot='toggle-group-item']"))
-        .map((b) => `${(b as HTMLElement).id || "?"}=${(b as HTMLElement).innerText.replace(/\n/g, " ").slice(0, 40)}`)
-        .filter((s) => /brush|transform|relocate|volume|utilit/i.test(s))
-        .slice(0, 30),
-    );
-    log(`utility ids=${JSON.stringify(ids)}`);
+    const foldId = '[id="framework.window.puzzle3dMainPerspective.utilityBar.fold"]';
+    const unfoldId = '[id="framework.window.puzzle3dMainPerspective.utilityBar.unfold"]';
+    const utilityIds = async () =>
+      evalSafe(
+        () =>
+          Array.from(document.querySelectorAll("button, [data-slot='toggle-group-item']"))
+            .map((b) => `${(b as HTMLElement).id || "?"}=${(b as HTMLElement).innerText.replace(/\n/g, " ").slice(0, 40)}`)
+            .filter((s) => /brush|transform|relocate|volume|utilit/i.test(s))
+            .slice(0, 30),
+        [] as string[],
+      );
+    const open = async () => (await countSafe(page.locator(foldId))) > 0;
+    let focusPick = "none";
+    if (!(await open()) && (await countSafe(page.locator(unfoldId))) === 0) {
+      focusPick = "canvas-80-80";
+      await page.locator("canvas").last().click({ position: { x: 80, y: 80 }, timeout: 4000 }).catch(() => {});
+      await page.waitForTimeout(600);
+    }
+    if (await open()) {
+      const ids = await utilityIds();
+      log(`utilities already-open clicked=false focusPick=${focusPick} ids=${JSON.stringify(ids)}`);
+      return ids;
+    }
+    const present = await countSafe(page.locator(unfoldId));
+    log(`utilities unfoldId=${present} focusPick=${focusPick}`);
+    if (present) await page.locator(unfoldId).first().click({ timeout: 4000 }).catch(() => {});
+    // ⏳️ Wave B45: 30 s, matching {@link unfoldWindowPane} — same window-config write, same latency.
+    const settled = await settleFor(open, (isOpen) => isOpen, 30000);
+    const ids = await utilityIds();
+    log(`utilities unfolded=${settled.ok} waitedMs=${settled.waitedMs} ids=${JSON.stringify(ids)}`);
     return ids;
   };
   const armBrushUtility = async () => {
@@ -1181,11 +1375,25 @@ if (booted && interact) {
   const unfoldWindowPane = async (paneId: string) => {
     const toggleId = `${paneId}.toggle`;
     const folded = async () => (await evalSafe((id: string) => document.getElementById(id)?.getAttribute("data-folded") ?? "absent", "eval-failed", paneId)) === "true";
-    if (!(await folded())) return { unfolded: true, obstruction: await paneToggleObstruction(toggleId), waitedMs: 0 };
+    if (!(await folded())) return { unfolded: true, obstruction: await paneToggleObstruction(toggleId), waitedMs: 0, click: "not-needed" };
     const obstruction = await paneToggleObstruction(toggleId);
-    await page.locator(`[id="${toggleId}"]`).first().click({ timeout: 4000 }).catch(() => {});
-    const settle = await settleFor(async () => !(await folded()), (open) => open, 10000);
-    return { unfolded: settle.value, obstruction, waitedMs: settle.waitedMs };
+    // 🧾️ Wave B45: the click's own outcome is recorded. A swallowed `catch` made an actionability
+    // timeout (the toggle is there, reachable by `elementFromPoint`, and still not clickable) look
+    // exactly like a pane that was clicked and refused to unfold — two different defects, one red.
+    const click = await page
+      .locator(`[id="${toggleId}"]`)
+      .first()
+      .click({ timeout: 4000 })
+      .then(() => "ok")
+      .catch((error) => `failed ${String(error).split("\n")[0].slice(0, 120)}`);
+    // ⏳️ Wave B45: 30 s, not 10 s. A pane's fold state is a window-config write that round-trips through
+    // the guest, and under an in-flight fill that write is measurably slower than 10 s — the sibling
+    // helper's 8 s budget timed out on the utility bar (`utilities unfolded=false waitedMs=8180`,
+    // `probe-2026-09-12T12-18-36`) in a lane where the bar opens in 2 ms when idle. A budget below the
+    // product's real latency cannot tell a dropped write from a slow one, which is the only question
+    // `engagement-input-present` is asking.
+    const settle = await settleFor(async () => !(await folded()), (open) => open, 30000);
+    return { unfolded: settle.value, obstruction, waitedMs: settle.waitedMs, click };
   };
   /** 📤️ Drives one window action through the route a USER has: unfold the window's Actions pane
    * (`framework.window.<window>.engagement.toggle`), then press the action's own row (`action.<id>`,
@@ -1504,7 +1712,25 @@ if (booted && interact) {
       // never fired could not be told apart from an object that was never locked.
       const lock = page.locator("[id$='puzzle3d-play-inspector.object.locked']").first();
       const lockCount = await lock.count();
-      log(`lock controls=${lockCount}`);
+      // 🧾️ Wave B45: WHAT the lock row actually is. `[id$='…object.locked']` matches the inspector's flag
+      // row whether that row is a pressable control or a rendered label, and a click on a label leaves
+      // `locked false` forever — which reads exactly like a lock command the guest dropped.
+      log(
+        `lock controls=${lockCount} shape=${JSON.stringify(
+          await evalSafe(
+            () => {
+              const row = Array.from(document.querySelectorAll("[id]")).find((node) => node.id.endsWith("puzzle3d-play-inspector.object.locked"));
+              if (!row) return null;
+              return {
+                tag: row.tagName.toLowerCase(),
+                slot: row.getAttribute("data-slot"),
+                pressables: Array.from(row.querySelectorAll('button, [role="switch"], [role="checkbox"], input')).map((el) => `${el.tagName.toLowerCase()}|${el.getAttribute("data-slot") ?? "-"}|${el.getAttribute("role") ?? "-"}`),
+              };
+            },
+            null as unknown,
+          ),
+        )}`,
+      );
       const lockedFlag = async () =>
         page.evaluate(() => {
           const row = Array.from(document.querySelectorAll("[id]")).find((node) => node.id.endsWith("puzzle3d-play-inspector.object.locked"));
@@ -1515,7 +1741,12 @@ if (booted && interact) {
         if (await toggle.count()) await toggle.click({ force: true, timeout: 4000 }).catch(() => {});
         else await lock.click({ force: true, timeout: 4000 }).catch(() => {});
       }
-      const lockSettle = await settleFor(lockedFlag, (text) => /\btrue\b/.test(text), 15000);
+      // ⏳️ Wave B45: 45 s, not 15 s. The lock is a `setSelectionFlag` round trip on the document the fill
+      // suite has just grown to ~160 objects, and a 15 s budget scored the machine: the same click flips
+      // the flag in 2 499 ms on an 8-object document (lane `probe-2026-09-12T11-54-56`) and timed out at
+      // 15 423 ms on a 158-object one (`12-03-40`). The refusal this step exists to measure cannot fire
+      // at all while the precondition is unmet, so the precondition gets the budget the product needs.
+      const lockSettle = await settleFor(lockedFlag, (text) => /\btrue\b/.test(text), 45000);
       log(`lock flag row="${lockSettle.value}" locked=${lockSettle.ok} waitedMs=${lockSettle.waitedMs}`);
       await unfoldPerspectiveUtilities();
       const move = page.locator("#move, button").filter({ hasText: /^move$/i }).first();
@@ -1760,10 +1991,28 @@ if (booted && interact) {
           log("import late chooser=yes");
         }
       }
-      const fallback = join(OUT, "probe-2026-09-10T13-52-33-export.json");
       const { existsSync } = await import("node:fs");
-      const feed = existsSync(dest) ? dest : fallback;
+      // 🧨️ Wave B47 §5: NO fallback file. This used to fall back to a hard-coded
+      // `probe-2026-09-10T13-52-33-export.json` — a one-object Concrete Forest export — whenever
+      // `export-only` produced no download. On Nakagin, where that export DOES fail (the segmented
+      // export arm is not in the served wasm, B45 §5), the step therefore imported a fossil INTO the
+      // 180-object document: the guest's own tap reads `puzzle3d.import.parsed objects=1 before=180`
+      // then `puzzle3d.import.apply ops=215 after_objects=1`. Every verdict after that point measured a
+      // document nobody asked for, `import-same-file-idempotent` went green on a document that had just
+      // been replaced, and `import-distinct` compared a stale 180-instance census with itself
+      // (`before=180 after=180`). An import step with no export of ITS OWN document is not reachable,
+      // and says so.
+      const feed = existsSync(dest) ? dest : null;
+      if (!feed) {
+        const note = `not reachable — export-only produced no file for THIS document (dest=${dest}); importing another run's export would replace the document under test`;
+        log(`import feed=none ${note}`);
+        verdict("import-same-file-idempotent", false, note);
+        verdict("import-distinct", false, note, 41);
+        verdict("import-distinct-records-history", false, note);
+        return;
+      }
       const instancesBeforeSameFile = await dumpInstances();
+      const sameFileMark = consoleCursor();
       log(`import feed=${feed} instancesBefore=${JSON.stringify(instancesBeforeSameFile)}`);
       if (chooser) {
         await chooser.setFiles(feed);
@@ -1771,7 +2020,16 @@ if (booted && interact) {
       } else {
         log("import missed the file chooser — `openImportFixture` never reached `requestFileOpen`");
       }
-      await page.waitForTimeout(2000);
+      // 🕰️ Settle on the GUEST's own apply tap, not on a fixed 2 s. `import-same-file-idempotent`
+      // compares two instance censuses, and a census read before the import has landed compares the
+      // pre-import document with itself — which is how it went green while the document was being
+      // replaced (wave B47 §5).
+      const sameFileApplied = await settleFor(
+        async () => consoleSince(sameFileMark).filter((line) => /\[DEBUG\] puzzle3d\.import\.apply/.test(line)),
+        (taps) => taps.length > 0,
+        15000,
+      );
+      log(`import same-file applied=${sameFileApplied.ok} waitedMs=${sameFileApplied.waitedMs} taps=${JSON.stringify(sameFileApplied.value).slice(0, 300)}`);
       await openHistory();
       log(`census after: ${JSON.stringify(await selectionState()).slice(0, 800)}`);
       log(`import hop-census: ${JSON.stringify(hopCensus())}`);
@@ -1813,6 +2071,7 @@ if (booted && interact) {
       }
       const instancesBeforeDistinct = await dumpInstances();
       const historyBeforeDistinct = (await historyState()).entryCount;
+      const distinctMark = consoleCursor();
       if (distinctReady) {
         let [chooser2] = await Promise.all([
           page.waitForEvent("filechooser", { timeout: 25000 }).catch(() => null),
@@ -1837,15 +2096,24 @@ if (booted && interact) {
         for (let attempt = 0; attempt < 10 && (await dumpInstances()).count === instancesBeforeDistinct.count; attempt++) await page.waitForTimeout(1000);
         await openHistory();
       }
-      const distinctIngress = consoleBuf.filter((l) => /\[DEBUG\] puzzle3d\.import\./.test(l)).slice(-8);
-      log(`distinct ingress hops=${JSON.stringify(distinctIngress).slice(0, 1600)}`);
+      // 🧾️ Wave B47 §5: the whole route named hop by hop, from the console MARK taken before the picker
+      // (never `consoleBuf` in full — the ring drops a long run's older lines and a dropped tap is
+      // indistinguishable from a command that never dispatched, B33 §7.1). `hostIngress` is the
+      // renderer's own `performInvocation` tap with the payload length, `hostSettled` is the frame the
+      // guest answered with, `guestTaps` are the guest's `puzzle3d.import.*` eprintlns. A red that shows
+      // host ingress and NO guest tap is a payload that never crossed, not an import that did nothing.
+      const distinctLines = consoleSince(distinctMark);
+      const hostIngress = distinctLines.filter((line) => /\[DEBUG\] importFixture ingress/.test(line)).slice(-2);
+      const hostSettled = distinctLines.filter((line) => /performInvocation settled/.test(line) && /"actionId":"importFixture"/.test(line)).slice(-2);
+      const distinctIngress = distinctLines.filter((line) => /\[DEBUG\] puzzle3d\.import\./.test(line)).slice(-8);
+      log(`distinct ingress hostIngress=${JSON.stringify(hostIngress).slice(0, 700)} hostSettled=${JSON.stringify(hostSettled).slice(0, 700)} guestTaps=${JSON.stringify(distinctIngress).slice(0, 900)}`);
       {
         const afterDistinct = await dumpInstances();
         log(`distinct instances before=${JSON.stringify(instancesBeforeDistinct)} after=${JSON.stringify(afterDistinct)}`);
         verdict(
           "import-distinct",
           afterDistinct.count !== instancesBeforeDistinct.count || JSON.stringify(afterDistinct.ids) !== JSON.stringify(instancesBeforeDistinct.ids),
-          `before=${instancesBeforeDistinct.count} after=${afterDistinct.count} guestTaps=${JSON.stringify(distinctIngress).slice(0, 500)}`,
+          `before=${instancesBeforeDistinct.count} after=${afterDistinct.count} hostIngress=${JSON.stringify(hostIngress).slice(0, 300)} hostSettled=${JSON.stringify(hostSettled).slice(0, 300)} guestTaps=${JSON.stringify(distinctIngress).slice(0, 400)}`,
           41,
         );
         const historyAfterDistinct = await historyState();
@@ -1966,6 +2234,42 @@ if (booted && interact) {
   /** 🕰️ Entry ids present after an action that were not present before — paging-robust, unlike a raw count
    * (the 21:28 coordination entry found the history panel's own row paging faked a 4→106 "regression"). */
   const newHistoryEntries = (before: string[], after: string[]) => after.filter((id) => !before.includes(id));
+  /** 🏷️ Every history entry id WITH the label its row renders. An id alone says a row appeared; only the
+   * label says WHICH verb wrote it, and that is the whole difference between "the camera emitted an
+   * artifact mutation" and "the probe's own panel gesture did" (wave B47 §3). */
+  const readHistoryEntryRows = async (): Promise<Record<string, string>> => {
+    await ensurePanel("framework.panel.history");
+    return page.evaluate(() =>
+      Object.fromEntries(
+        Array.from(document.querySelectorAll<HTMLElement>('[id^="framework.history.entry."]')).map((row) => [row.id, (row.innerText || "").replace(/\n/g, " ").trim().slice(0, 60)]),
+      ),
+    );
+  };
+  /** 🧘️ The history rows once they STOP arriving. `ensurePanel` opening the panel is itself a `Toggle
+   * Panel` command, and its row lands one round trip AFTER the panel body renders — so a `before` read
+   * taken the moment the panel opens misses it and the `after` read reports it as new. Two identical
+   * consecutive reads is the quiesce; the wait is logged so a starved shell is visible. */
+  const settledHistoryEntryRows = async (label: string) => {
+    let previous = "";
+    const settled = await settleFor(
+      () => readHistoryEntryRows(),
+      (rows) => {
+        const shape = JSON.stringify(Object.keys(rows).sort());
+        const same = shape === previous;
+        previous = shape;
+        return same;
+      },
+      12000,
+      600,
+    );
+    log(`history quiesce ${label} rows=${Object.keys(settled.value).length} settled=${settled.ok} waitedMs=${settled.waitedMs}`);
+    return settled.value;
+  };
+  /** 🪟️ Rows the SHELL writes for its own chrome — panel toggles, tab switches, window activation and
+   * resize, tool arming. They are `WindowConfig`/shell commands, never artifact mutations, and the probe
+   * itself produces them on every `ensurePanel`/`dismissChrome`. Named so a camera verdict can report
+   * them instead of being decided by them. */
+  const CHROME_HISTORY_ROW = /^(Toggle Panel|Switch Panel Tab|Activate Window|Resize Window|Set Active Tool|Set Active Utility|Collapse|Expand|Toggle Pane)/i;
   /** 🗂️ Resolves a panel tab by id or visible text and hands it to {@link ensurePanel}, logging the whole tab
    * inventory on a miss so the next reader gets the real id instead of another guess.
    *
@@ -2046,6 +2350,11 @@ if (booted && interact) {
         pressed: el.getAttribute("aria-pressed") ?? el.getAttribute("data-state"),
         checked: typeof input.checked === "boolean" ? input.checked : null,
         value: range?.value ?? thumb?.getAttribute("aria-valuenow") ?? (typeof input.value === "string" ? input.value : null),
+        // 🕰️ The value the PROGRAM published, stamped by the rail beside the possibly-optimistic value the
+        // control renders (`🎚️measure-controls/🟦️.tsx` `data-published-value`). Wave B41: a combobox
+        // trigger carries NO value of its own — `HTMLButtonElement.value` is always `""` — and its rendered
+        // text is the draft's, so this is the ONLY way to read the program's own answer off the DOM.
+        published: el.getAttribute("data-published-value"),
         text: (el.innerText || "").replace(/\n/g, " ").trim().slice(0, 60),
       };
     }, id);
@@ -2054,7 +2363,8 @@ if (booted && interact) {
    * arrows (their thumb has no stable headless hit box), selects get their last option, toggles get a click. */
   const nudgeMeasure = async (authored: string) => {
     const before = await readMeasure(authored);
-    if (!before) return { before: null, after: null, waitedMs: 0 };
+    if (!before) return { before: null, after: null, waitedMs: 0, obstruction: null as string | null };
+    let obstruction: string | null = null;
     const id = (await resolveMeasureId(authored))!;
     const loc = page.locator(`[id="${id}"]`).first();
     if (before.slot === "tree-action-checkbox" || (before.tag === "input" && before.checked !== null)) {
@@ -2085,32 +2395,124 @@ if (booted && interact) {
       await loc.focus().catch(() => {});
       for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowRight").catch(() => {});
     } else if (before.role === "combobox" || before.slot === "select-trigger") {
-      await loc.click({ force: true, timeout: 4000 }).catch(() => {});
-      await page.waitForTimeout(500);
+      // 🕰️ Wave B47 §1: the old body slept a FIXED 500 ms and then counted `[role="option"]` ONCE. A
+      // listbox that portals in later read `options=[]`, the body pressed Escape, nothing was ever
+      // dispatched — and the two projection verdicts then spent 30 s settling on a control nobody had
+      // touched (`nudge … select options=[] current= picking=-1`, battery #58 `[69.6s]`). The popover is
+      // POLLED now, the trigger is pressed again once if it is still shut, and a select that genuinely
+      // cannot open is reported as `opened=false` with the trigger's own state.
       const options = page.locator('[role="option"]');
-      const n = await options.count();
+      // 🔬️ B45 §2.2's dump, on a select trigger: the box, whether anything covers its centre, and the
+      // chain under the pointer. `force: true` skips actionability but NOT hit-testing, so a shut
+      // popover after two presses is either an obstruction or a zero-size box, and only this says which.
+      const shape = await evalSafe(
+        (target: string) => {
+          const el = document.getElementById(target) as HTMLElement | null;
+          if (!el) return null;
+          const box = el.getBoundingClientRect();
+          const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) as HTMLElement | null;
+          const chain: string[] = [];
+          for (let node = hit; node && chain.length < 9; node = node.parentElement) chain.push(`${node.tagName}#${node.id || "-"}[${node.getAttribute("data-slot") ?? "-"}]`);
+          let owner: HTMLElement | null = hit;
+          while (owner && !owner.id) owner = owner.parentElement;
+          const hitBox = hit?.getBoundingClientRect();
+          const hitStyle = hit ? getComputedStyle(hit) : null;
+          return {
+            rect: [Math.round(box.x), Math.round(box.y), Math.round(box.width), Math.round(box.height)],
+            disabled: (el as HTMLButtonElement).disabled ?? null,
+            expanded: el.getAttribute("aria-expanded"),
+            pointerEvents: getComputedStyle(el).pointerEvents,
+            mine: Boolean(hit && (hit === el || el.contains(hit))),
+            owner: owner?.id ?? null,
+            hitRect: hitBox ? [Math.round(hitBox.x), Math.round(hitBox.y), Math.round(hitBox.width), Math.round(hitBox.height)] : null,
+            hitZ: hitStyle ? `${hitStyle.position}/${hitStyle.zIndex}` : null,
+            chain,
+          };
+        },
+        null as null | Record<string, unknown>,
+        id,
+      );
+      log(`nudge ${id} select shape=${JSON.stringify(shape)}`);
+      let opened = { ok: false, waitedMs: 0 };
+      for (let attempt = 0; attempt < 2 && !opened.ok; attempt++) {
+        await loc.click({ force: true, timeout: 4000 }).catch(() => {});
+        opened = await settleFor(async () => (await options.count()) > 0, (open) => open, 8000, 250);
+      }
       const texts = await options.allInnerTexts().catch(() => [] as string[]);
+      const state = await readMeasure(id);
       const different = texts.findIndex((text) => text.replace(/\n/g, " ").trim() !== (before.text ?? "").trim());
-      log(`nudge ${id} select options=${JSON.stringify(texts)} current=${before.text} picking=${different}`);
-      if (n > 0 && different >= 0) await options.nth(different).click({ timeout: 3000 }).catch(() => {});
+      log(`nudge ${id} select opened=${opened.ok} waitedMs=${opened.waitedMs} triggerState=${state?.pressed ?? "?"} options=${JSON.stringify(texts)} current=${before.text} picking=${different}`);
+      if (!opened.ok && shape && shape.mine === false) obstruction = `${String(shape.owner ?? "?")} covers the trigger centre — trigger rect=${JSON.stringify(shape.rect)} covering rect=${JSON.stringify(shape.hitRect)} chain=${JSON.stringify(shape.chain).slice(0, 220)}`;
+      if (opened.ok && different >= 0) await options.nth(different).click({ timeout: 3000 }).catch(() => {});
       else await page.keyboard.press("Escape").catch(() => {});
     } else {
       await loc.click({ force: true, timeout: 4000 }).catch(() => {});
     }
+    // ⛔️ An obstructed control was never asked anything, so there is nothing to settle FOR — waiting the
+    // full budget on it only turns one named obstruction into two anonymous timeouts.
+    if (obstruction) return { before, after: before, waitedMs: 0, obstruction };
     const settle = await settleFor(() => readMeasure(id), (after) => JSON.stringify(after) !== JSON.stringify(before));
-    return { before, after: settle.value, waitedMs: settle.waitedMs };
+    return { before, after: settle.value, waitedMs: settle.waitedMs, obstruction };
   };
   /** 🧰️ Unfolds the utility bar and activates one utility by its literal id (`brush`, `transform`,
-   * `volumeBrush`, `worldRelocate` — the `UTILITY_ID` const each `🪛️utilities` leaf declares). */
+   * `volumeBrush`, `worldRelocate` — the `UTILITY_ID` const each `🪛️utilities` leaf declares).
+   *
+   * 🧯️ Wave B45: the old body slept a FIXED 1800 ms and then sampled once, so an arm whose round trip
+   * (`setActiveUtility` → guest → `data-brush-preview-json`) took longer than that was reported as
+   * `activeUtility=select` — a starved reply read as a dropped one. `volume-brush-arm` and
+   * `relocate-arm` are the two verdicts that lived on that sample. It now POLLS until the published
+   * utility either reaches the requested id or leaves whatever was armed before the click (the second
+   * arm is what `context-menu-rows` uses to DISARM, where the destination is `select`), and reports the
+   * wait so a slow arm is visibly slow instead of invisibly absent. */
   const armUtility = async (utilityId: string) => {
     await unfoldPerspectiveUtilities();
+    const before = (await dumpBrushPreview()).utility ?? "select";
     const loc = page.locator(`[id="${utilityId}"]`).first();
     const found = await loc.count();
-    if (found) await loc.click({ force: true, timeout: 4000 }).catch(() => {});
-    await page.waitForTimeout(1800);
-    const active = (await dumpBrushPreview()).utility;
-    log(`arm-utility ${utilityId} found=${found} active=${active ?? "null"}`);
-    return { found: found > 0, active };
+    // 🧾️ Wave B45: whether the control can be pressed AT ALL, before pressing it. `click({force:true})`
+    // skips the enabled/visible checks, so a disabled or pointer-events:none utility swallows the press
+    // and the arm looks like a dropped round trip. The element under the pointer is recorded too, because
+    // a force click still lands on whatever is topmost at that point.
+    const shape = found
+      ? await evalSafe(
+          (id: string) => {
+            const el = document.getElementById(id);
+            if (!el) return null;
+            const rect = el.getBoundingClientRect();
+            const style = getComputedStyle(el);
+            const top = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+            return {
+              tag: el.tagName.toLowerCase(),
+              slot: el.getAttribute("data-slot"),
+              disabled: (el as HTMLButtonElement).disabled ?? null,
+              aria: el.getAttribute("aria-disabled"),
+              state: el.getAttribute("data-state"),
+              pressed: el.getAttribute("aria-pressed"),
+              pointerEvents: style.pointerEvents,
+              rect: [Math.round(rect.x), Math.round(rect.y), Math.round(rect.width), Math.round(rect.height)],
+              hit: top ? `${top.tagName}#${top.id || "-"}[${top.getAttribute("data-slot") ?? "-"}]` : null,
+              mine: top ? el.contains(top) : null,
+            };
+          },
+          null as unknown,
+          utilityId,
+        )
+      : null;
+    const clickOutcome = found
+      ? await loc
+          .click({ force: true, timeout: 4000 })
+          .then(() => "ok")
+          .catch((error) => `failed ${String(error).split("\n")[0].slice(0, 110)}`)
+      : "absent";
+    log(`arm-utility ${utilityId} click=${clickOutcome} shape=${JSON.stringify(shape)}`);
+    const settle = await settleFor(
+      async () => (await dumpBrushPreview()).utility ?? "select",
+      (utility) => utility === utilityId || utility !== before,
+      20000,
+    );
+    const active = settle.value;
+    log(`arm-utility ${utilityId} found=${found} before=${before} active=${active} settled=${settle.ok} waitedMs=${settle.waitedMs}`);
+    return { found: found > 0, active, waitedMs: settle.waitedMs };
   };
 
   add("window-content", "§1", "read", process.argv.includes("--windows") || battery, async () => {
@@ -2140,7 +2542,7 @@ if (booted && interact) {
     if (!box) throw new Error("no perspective canvas box");
     const cx = box.x + box.width * 0.5;
     const cy = box.y + box.height * 0.35;
-    const historyBefore = await readHistoryEntryIds();
+    const historyBefore = await settledHistoryEntryRows("camera-before");
     await dismissChrome();
     const initial = await windowHostState();
     const start = initial.find((w) => w.id === "puzzle3d-main-perspective")?.camera ?? null;
@@ -2154,7 +2556,11 @@ if (booted && interact) {
       await page.mouse.up({ button });
       if (modifier) await page.keyboard.up(modifier).catch(() => {});
       const settled = (await cameraSettled("puzzle3d-main-perspective", previous)).camera;
-      await dismissChrome();
+      // ⌨️ Escape ONLY. `dismissChrome` also presses whatever button reads "Collapse", which folds a
+      // window pane — a `WindowConfig` command that writes its own history row. Inside the one step
+      // whose verdict counts history rows, that is the measurement writing the thing it measures
+      // (wave B47 §3): three `dismissChrome` calls, three rows, and a red that named the camera.
+      await page.keyboard.press("Escape").catch(() => {});
       return settled;
     };
     const afterOrbit = await drag("right", "Alt", 160, 70, start);
@@ -2167,11 +2573,18 @@ if (booted && interact) {
     verdict("camera-zoom", Boolean(afterZoom) && afterZoom !== afterPan, `before=${String(afterPan).slice(0, 110)} after=${String(afterZoom).slice(0, 110)}`);
     const alive = await snapshot().catch(() => null);
     verdict("camera-lane-responsive", Boolean(alive && alive.windows.length >= 2), `windows=${alive?.windows.length ?? "unreachable"}`);
-    const historyAfter = await readHistoryEntryIds();
+    const historyAfter = await settledHistoryEntryRows("camera-after");
+    // 🏷️ Attributed, not counted. The subject is "`setCamera` emits no ARTIFACT mutation", and the
+    // History panel lists the shell's own `WindowConfig` rows in the same list — so a row is only
+    // evidence against the camera once its LABEL says it is not chrome. Both sets are printed.
+    const cameraRows = newHistoryEntries(Object.keys(historyBefore), Object.keys(historyAfter)).map((id) => `${id}=${historyAfter[id] ?? ""}`);
+    const chromeRows = cameraRows.filter((row) => CHROME_HISTORY_ROW.test(row.slice(row.indexOf("=") + 1)));
+    const artifactRows = cameraRows.filter((row) => !chromeRows.includes(row));
+    log(`camera history rows new=${JSON.stringify(cameraRows)} chrome=${JSON.stringify(chromeRows)} artifact=${JSON.stringify(artifactRows)}`);
     verdict(
       "camera-emits-no-artifact-history",
-      newHistoryEntries(historyBefore, historyAfter).length === 0,
-      `newEntries=${JSON.stringify(newHistoryEntries(historyBefore, historyAfter))} before=${historyBefore.length} after=${historyAfter.length} — checklist §2 declares setCamera emits no artifact mutations, but World3dHost's dispatchWorldCameraDebounced exists so "the shell-side command-history panel has something to show"; a non-zero delta needs the ticket to say which of the two is the contract`,
+      artifactRows.length === 0,
+      `artifactRows=${JSON.stringify(artifactRows)} chromeRows=${JSON.stringify(chromeRows)} before=${Object.keys(historyBefore).length} after=${Object.keys(historyAfter).length} — checklist §2 declares setCamera emits no artifact mutations; a shell chrome row (panel toggle, window activation) is not one and is named separately`,
     );
     const topAfter = await cameraOf("puzzle3d-main-top");
     verdict("camera-per-window", topAfter === topBefore, `top before=${String(topBefore).slice(0, 110)} after=${String(topAfter).slice(0, 110)}`);
@@ -2201,6 +2614,41 @@ if (booted && interact) {
     );
     const ids = candidates.map((entry) => entry.id);
     log(`projection measure candidates=${JSON.stringify(candidates).slice(0, 1200)}`);
+    // 📐️ The measures rail's box beside every floating panel body's box, because they SHARE the window's
+    // top-right corner and both paint at `position: static / z-index: auto` — so DOM order alone decides
+    // which one a press lands on, and the Inspection panel's tree wins (wave B47 §1). Printed every run:
+    // an overlap here is the cause of any `opened=false` on a rail control, and its absence rules the
+    // whole class out.
+    log(
+      `projection chrome geometry=${JSON.stringify(
+        await evalSafe(
+          () => {
+            const boxOf = (el: Element | null) => {
+              if (!el) return null;
+              const box = el.getBoundingClientRect();
+              return [Math.round(box.x), Math.round(box.y), Math.round(box.width), Math.round(box.height)];
+            };
+            // 🧅️ …with the STACK each one paints in: the nearest ancestor that establishes one (a
+            // non-static position with a z-index, or a transform). Two overlapping overlays only need a
+            // z-order fix when they share an ancestor stack; otherwise the layout itself has to move.
+            const stackOf = (el: Element | null) => {
+              for (let node = el as HTMLElement | null; node; node = node.parentElement) {
+                const style = getComputedStyle(node);
+                if (style.zIndex !== "auto" || style.transform !== "none" || style.isolation === "isolate") return `${node.tagName}#${node.id || node.getAttribute("data-slot") || "-"}:${style.position}/${style.zIndex}`;
+              }
+              return "root";
+            };
+            const rail = document.getElementById("framework.window.puzzle3dMainPerspective.measures");
+            return {
+              rail: boxOf(rail),
+              railStack: stackOf(rail),
+              panels: Array.from(document.querySelectorAll<HTMLElement>('[data-slot="tree-property-item"], [data-slot="panel-body-stack"]')).map((el) => `${el.id || el.getAttribute("data-slot")}=${JSON.stringify(boxOf(el))}@${stackOf(el)}`),
+            };
+          },
+          null as null | Record<string, unknown>,
+        ),
+      )}`,
+    );
     verdict("projection-measures-present", ids.length > 0, `ids=${JSON.stringify(ids).slice(0, 260)}`);
     if (!ids.length) return;
     // 🎯️ The orthographic view is what §3 is about, so it leads the preference order; then any other real
@@ -2220,15 +2668,32 @@ if (booted && interact) {
     const cameraBefore = await cameraOf("puzzle3d-main-perspective");
     const moved = await nudgeMeasure(target.id);
     log(`projection nudge ${target.id} (slot=${target.slot} perspective=${target.inPerspective}): ${JSON.stringify(moved)}`);
-    // 🕰️ Wave B41 (B40 §2.2's handover): score the flip on the control's `value`, NEVER on its `text`. The
+    // ⛔️ An OBSTRUCTED control never reached the program, so both verdicts report the obstruction by name
+    // instead of each spending 30 s settling on a value nobody asked to change (wave B47 §1: the
+    // Inspection panel's tree row covers this trigger's centre, `mine=false owner=puzzle3d-play-inspector`).
+    if (moved.obstruction) {
+      const note = `id=${target.id} slot=${target.slot} OBSTRUCTED ${moved.obstruction}`;
+      verdict("projection-control-flips", false, note);
+      verdict("projection-repaints-camera", false, note);
+      return;
+    }
+    // 🕰️ Wave B41 (B40 §2.2's handover): score the flip on the value the PROGRAM published, NEVER on the
+    // control's rendered `text` — and not on a select trigger's `value` either, which is a button's own
+    // always-empty `value` and never the chosen option (measured: `beforeValue="" afterValue=""` across a
+    // flip that DID land). The
     // rail holds an optimistic draft for the whole round trip (`useWindowMeasureDraft`: 0.7 s idle, seconds
     // on a busy app), and that draft moves the trigger's rendered TEXT first — B38's own run shows
     // `after={"value":"","text":"Plan"}`, i.e. `projection-control-flips` passing on the draft alone while
     // the program had answered nothing. `value` is the published value the program owns.
+    // 🕰️ `nudgeMeasure` settles on ANY field of the reading moving, and the draft moves `text` first — it
+    // returned after 39 ms on the live `:6013` shell (wave B41 run 1) while `value` was still the
+    // pre-click one. So the published value gets its OWN settle before it is scored.
+    const published = await settleFor(() => readMeasure(target.id), (latest) => (latest?.published ?? null) !== (moved.before?.published ?? null), 30000, 500);
+    log(`projection published=${JSON.stringify(published.value?.published ?? null)} moved=${published.ok} waitedMs=${published.waitedMs}`);
     verdict(
       "projection-control-flips",
-      Boolean(moved.after) && (moved.before?.value ?? null) !== (moved.after?.value ?? null),
-      `id=${target.id} slot=${target.slot} beforeValue=${JSON.stringify(moved.before?.value ?? null)} afterValue=${JSON.stringify(moved.after?.value ?? null)} before=${JSON.stringify(moved.before)} after=${JSON.stringify(moved.after)}`,
+      published.ok,
+      `id=${target.id} slot=${target.slot} publishedBefore=${JSON.stringify(moved.before?.published ?? null)} publishedAfter=${JSON.stringify(published.value?.published ?? null)} waitedMs=${published.waitedMs} draftText=${JSON.stringify(moved.after?.text ?? null)}`,
     );
     // 📷️ And WAIT for the pose: a projection flip crosses the guest, republishes the window lane and only
     // then reaches `data-camera-json`, exactly like the `camera-gestures` lane's own gestures. The bare
@@ -2255,7 +2720,7 @@ if (booted && interact) {
   add("window-options", "§4", "read", process.argv.includes("--windowoptions") || battery, async () => {
     await dismissChrome();
     await unfoldMeasures();
-    const historyBefore = await readHistoryEntryIds();
+    const historyBefore = await settledHistoryEntryRows("window-options-before");
     await dismissChrome();
     await unfoldMeasures();
     let touched = 0;
@@ -2279,8 +2744,16 @@ if (booted && interact) {
       }
     }
     verdict("window-options-lane-responsive", true, `touched=${touched} windows=${(await snapshot()).windows.length}`);
-    const historyAfter = await readHistoryEntryIds();
-    verdict("window-options-emit-no-history", newHistoryEntries(historyBefore, historyAfter).length === 0, `newEntries=${JSON.stringify(newHistoryEntries(historyBefore, historyAfter))} before=${historyBefore.length} after=${historyAfter.length} (WindowConfig lane, not Artifact)`);
+    // 🏷️ Same attribution as §2's camera verdict: the rows are read once they QUIESCE (the History
+    // panel's own `Toggle Panel` row lands a round trip after its body renders) and a new row only
+    // counts against the WindowConfig lane once its label says it is not shell chrome. `window-options`
+    // arms tools and switches panel tabs on the way, and those are shell commands by construction.
+    const historyAfter = await settledHistoryEntryRows("window-options-after");
+    const optionRows = newHistoryEntries(Object.keys(historyBefore), Object.keys(historyAfter)).map((id) => `${id}=${historyAfter[id] ?? ""}`);
+    const optionChrome = optionRows.filter((row) => CHROME_HISTORY_ROW.test(row.slice(row.indexOf("=") + 1)));
+    const optionArtifact = optionRows.filter((row) => !optionChrome.includes(row));
+    log(`window-options history rows new=${JSON.stringify(optionRows)} chrome=${JSON.stringify(optionChrome)} artifact=${JSON.stringify(optionArtifact)}`);
+    verdict("window-options-emit-no-history", optionArtifact.length === 0, `artifactRows=${JSON.stringify(optionArtifact)} chromeRows=${JSON.stringify(optionChrome)} before=${Object.keys(historyBefore).length} after=${Object.keys(historyAfter).length} (WindowConfig lane, not Artifact)`);
   });
 
   add("settings-panel", "§19", "read", process.argv.includes("--settings") || battery, async () => {
@@ -2296,6 +2769,19 @@ if (booted && interact) {
         .map((el) => ({ id: el.id, slot: el.getAttribute("data-slot"), value: (el as HTMLInputElement).value ?? null })),
     );
     const settingsIds = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>('[id*="puzzle3d-play-settings"]')).map((el) => el.id));
+    // 🪪️ The panel renders `"Settings — {windowId}"` and tags every stepper's dispatch with that SAME
+    // `windowId` (`📌️panels/⚙️settings/🦀️.rs:53-63`), so the title names the window config this panel
+    // is about to write — which is the only way to tell "the write was lost" from "the write landed on
+    // the other pane" when only one pane's measures rail is in the document (wave B47 §2).
+    const settingsOwner = await evalSafe(
+      () => ({
+        title: (document.querySelector('[id$="/puzzle3d-play-settings.title"]') as HTMLElement | null)?.innerText?.replace(/\n/g, " ").trim() ?? null,
+        activeWindow: (document.querySelector('[data-slot="window"][data-active="true"], [data-slot="window-root"][data-active="true"]') as HTMLElement | null)?.id ?? null,
+        modeTabs: Array.from(document.querySelectorAll<HTMLElement>('[id^="mode-dock-tab-"]')).map((el) => `${el.id}=${el.getAttribute("aria-selected") ?? el.getAttribute("data-state") ?? "?"}`),
+      }),
+      null as null | Record<string, unknown>,
+    );
+    log(`settings owner=${JSON.stringify(settingsOwner)}`);
     log(`settings steppers=${JSON.stringify(steppers)} allSettingsIds=${JSON.stringify(settingsIds)}`);
     verdict("settings-steppers-present", steppers.length >= 4, `stepper controls=${JSON.stringify(steppers.map((s) => s.id))} allSettingsIds=${JSON.stringify(settingsIds).slice(0, 500)} openedTab=${opened.id}`);
     const targetId = (await domIdForAuthoredId("puzzle3d-play-settings.grid-spacing.control")) ?? (await domIdForAuthoredId("puzzle3d-play-settings.grid-spacing"));
@@ -2305,6 +2791,7 @@ if (booted && interact) {
       return;
     }
     const before = await readMeasure(targetId);
+    const bumpMark = consoleCursor();
     // 🪜️ `Stepper`'s +/− is a press-and-hold driven from mousedown/mouseup, never a synthesized `click`.
     const plus = page.locator(`[id="${targetId}"]`).locator("xpath=..").locator('[data-slot="stepper-plus"]').first();
     const plusCount = await plus.count().catch(() => 0);
@@ -2322,10 +2809,53 @@ if (booted && interact) {
     }
     await page.waitForTimeout(2500);
     const after = await readMeasure(targetId);
-    verdict("settings-grid-spacing-bumps", Boolean(before) && JSON.stringify(before) !== JSON.stringify(after), `targetId=${targetId} plusButtons=${plusCount} before=${JSON.stringify(before)} after=${JSON.stringify(after)}`);
+    // 🧾️ The stepper's own value is the host's OPTIMISTIC draft — a `NumberStepper` carries no
+    // `data-published-value` at all (`published: null` in every reading), so "the box says 10.5" is not
+    // evidence that the program answered. The dispatch is read off the console instead.
+    const bumpHops = consoleSince(bumpMark).filter((line) => /setGridSpacing/.test(line)).slice(-6);
+    log(`settings bump hops=${JSON.stringify(bumpHops).slice(0, 1200)}`);
+    verdict("settings-grid-spacing-bumps", Boolean(before) && JSON.stringify(before) !== JSON.stringify(after), `targetId=${targetId} plusButtons=${plusCount} before=${JSON.stringify(before)} after=${JSON.stringify(after)} dispatches=${bumpHops.length}`);
     await unfoldMeasures();
-    const railGrid = await readMeasure("puzzle3d-play-grid-spacing");
-    verdict("settings-value-reaches-window-rail", Boolean(railGrid) && railGrid?.value === after?.value, `settings=${JSON.stringify(after)} windowRail=${JSON.stringify(railGrid)}`);
+    // 🪟️ The rail that must carry it is the one the PANEL names. `Settings — puzzle3d-main-top` tags
+    // every stepper's dispatch `windowId: "puzzle3d-main-top"` (`📌️panels/⚙️settings/🦀️.rs:53-63`), and
+    // `unfoldMeasures` only ever unfolds the PERSPECTIVE — so the owning window's rail was not even in
+    // the document and the verdict compared two different window configs (wave B47 §2). Its rail is
+    // unfolded here by the same id shape, and a folded rail is named instead of read as a lost write.
+    const ownerWindow = typeof settingsOwner?.title === "string" ? ((settingsOwner.title as string).split("—").pop() ?? "").trim() : "";
+    const ownerCamel = ownerWindow.replace(/-([a-z])/g, (_match, letter: string) => letter.toUpperCase());
+    if (ownerCamel) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const fold = page.locator(`[id="framework.window.${ownerCamel}.measures.unfold"]`);
+        if (!(await fold.count())) break;
+        await fold.first().click({ force: true, timeout: 4000 }).catch(() => {});
+        await page.waitForTimeout(900);
+      }
+      log(`settings owner rail window=${ownerWindow} stillFolded=${await page.locator(`[id="framework.window.${ownerCamel}.measures.unfold"]`).count()}`);
+    }
+    // 🕰️ Wave B47 §2: the rail was read ONCE, 1.3 s after the stepper's own value had moved, with no
+    // settle at all (`settings=13 windowRail=12.5 published=12.5`, battery #58 `[188.2s]`). Settings →
+    // guest → window-config republication → rail is three round trips, so the read is POLLED and scored
+    // on the value the RAIL published, never on its draft; `waitedMs` separates a lost write from a
+    // late one.
+    const railsOf = async () =>
+      evalSafe(
+        () =>
+          Array.from(document.querySelectorAll<HTMLElement>('[id$="/puzzle3d-play-grid-spacing"], [id="puzzle3d-play-grid-spacing"]')).map((el) => {
+            const thumb = (el.matches('[role="slider"]') ? el : el.querySelector('[role="slider"]')) as HTMLElement | null;
+            const range = el.querySelector('input[type="range"]') as HTMLInputElement | null;
+            return { id: el.id, published: el.getAttribute("data-published-value"), value: range?.value ?? thumb?.getAttribute("aria-valuenow") ?? null };
+          }),
+        [] as { id: string; published: string | null; value: string | null }[],
+      );
+    const ownsValue = (rails: { id: string; published: string | null; value: string | null }[]) =>
+      rails.some((rail) => (!ownerWindow || rail.id.startsWith(`${ownerWindow}/`)) && (rail.published ?? rail.value) === after?.value);
+    const railSettle = await settleFor(() => railsOf(), ownsValue, 30000, 750);
+    log(`settings rails=${JSON.stringify(railSettle.value)} owner=${ownerWindow} target=${after?.value} settled=${railSettle.ok} waitedMs=${railSettle.waitedMs}`);
+    verdict(
+      "settings-value-reaches-window-rail",
+      railSettle.ok,
+      `settings=${JSON.stringify(after)} owner=${ownerWindow} rails=${JSON.stringify(railSettle.value)} waitedMs=${railSettle.waitedMs}`,
+    );
   });
 
   add("add-object-dialog", "§23", "read", process.argv.includes("--adddialog") || battery, async () => {
@@ -2474,7 +3004,7 @@ if (booted && interact) {
     await dismissChrome();
     const framed = await frameForestTableAfterCensus();
     const armed = await armUtility("volumeBrush");
-    verdict("volume-brush-arm", armed.found && armed.active === "volumeBrush", `found=${armed.found} activeUtility=${armed.active}`);
+    verdict("volume-brush-arm", armed.found && armed.active === "volumeBrush", `found=${armed.found} activeUtility=${armed.active} waitedMs=${armed.waitedMs}`);
     const before = await targetVolumeCount();
     verdict("volume-brush-target-volume-attribute", before >= 0, `data-target-volumes-json count=${before}`);
     const canvas = page.locator("canvas").last();
@@ -3000,13 +3530,46 @@ if (booted && interact) {
     // hand") — so a vocabulary read of the top level alone reports them missing when they are merely folded.
     const groups = topRows.filter((row) => row.id?.startsWith("menu.group."));
     const merged = new Map(topRows.filter((row) => row.id).map((row) => [row.id as string, row]));
+    // 🧯️ Wave B45: the submenu is POLLED, not sampled once 900 ms after the hover. A submenu opens on its
+    // own timing (the hover, then the menu's own open transition), and the single sample raced it: in a
+    // FRESH single-step lane the 900 ms read returned the 5 top-level rows while the very next read of
+    // the same DOM — 100 ms later — carried `hide-show` and `lock-unlock` with their ids and their
+    // `setSelectionFlag` action. That race, not a missing vocabulary, is what
+    // `context-menu-object-vocabulary missing=["hide-show","lock-unlock"]` has been reporting.
     for (const group of groups) {
+      const sizeBefore = merged.size;
       await page.locator(`[id="${group.id}"]`).first().hover({ timeout: 2500 }).catch(() => {});
-      await page.waitForTimeout(900);
-      for (const row of await menuRows()) if (row.id) merged.set(row.id, row);
+      const expanded = await settleFor(
+        async () => {
+          for (const row of await menuRows()) if (row.id) merged.set(row.id, row);
+          return merged.size;
+        },
+        (size) => size > sizeBefore,
+        8000,
+      );
+      log(`context-menu group ${group.id} rowsBefore=${sizeBefore} rowsAfter=${expanded.value} opened=${expanded.ok} waitedMs=${expanded.waitedMs}`);
     }
     const rows = [...merged.values()];
     log(`context-menu rows=${JSON.stringify(rows).slice(0, 1400)} groupsExpanded=${JSON.stringify(groups.map((group) => group.id))}`);
+    // 🧾️ Wave B45: every menu item the DOM carries, id-less ones INCLUDED, with the container it sits
+    // in. The merge above keys on `row.id` and silently drops an item whose id is empty, so a submenu
+    // that opened and rendered its rows was indistinguishable from one that never opened —
+    // `context-menu-object-vocabulary missing=["hide-show","lock-unlock"]` with `menu.group.hand` present.
+    log(
+      `context-menu raw=${JSON.stringify(
+        await evalSafe(
+          () =>
+            Array.from(document.querySelectorAll('[role="menuitem"], [data-slot="context-menu-item"]')).map((el) => ({
+              id: el.id || null,
+              action: el.getAttribute("data-menu-action"),
+              slot: el.getAttribute("data-slot"),
+              owner: el.closest('[data-slot="context-menu-content"]')?.getAttribute("id") ?? el.parentElement?.getAttribute("data-slot") ?? null,
+              text: (el as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 36),
+            })),
+          [] as unknown[],
+        ),
+      ).slice(0, 1600)}`,
+    );
     log(`context-menu selectionAtRightClick=${JSON.stringify(await worldInteraction()).slice(0, 300)} chrome=${JSON.stringify((await chromeState()).menus).slice(0, 400)}`);
     log(`context-menu console tail=${JSON.stringify(consoleSince(consoleMark).filter((row) => /context.?menu/i.test(row)).slice(-8)).slice(0, 800)}`);
     log(
@@ -3116,18 +3679,37 @@ if (booted && interact) {
         [] as { surface: string; hidden: string[] }[],
       );
     const hiddenBefore = await hiddenScales();
+    // 🧾️ Wave B45: `setSelectionFlag` is SELECTION-scoped, so what the row action can hide is decided by
+    // whatever is selected when it is pressed — not by the row it is drawn in. The selection is recorded
+    // on both sides of the press, because `historyUpserts:0 effects:0` on that action means "refused",
+    // and only the selection says whether the refusal was correct.
+    log(`outliner hide selectionBefore=${JSON.stringify((await selectionState()).selected).slice(0, 400)} world=${JSON.stringify(await worldInteraction()).slice(0, 400)}`);
     const hideMark = consoleCursor();
     await target.click({ force: true, timeout: 4000 }).catch(() => {});
     // 🕰️ POLLED, not a fixed wait: the document mutation, its history patch and the `refreshUi` that
     // repaints the panel are three separate round trips, so a single 3 s sample cannot tell "never
     // repainted" from "had not repainted yet".
-    const hideSettle = await settleFor(rowDump, (rows) => JSON.stringify(rows) !== JSON.stringify(before));
-    const afterHide = hideSettle.value;
-    const hiddenAfter = await hiddenScales();
-    log(`outliner hide clicked=${JSON.stringify(clicked)} waitedMs=${hideSettle.waitedMs} worldHiddenBefore=${JSON.stringify(hiddenBefore)} worldHiddenAfter=${JSON.stringify(hiddenAfter)}`);
+    // 🙈️ Wave B45: the WORLD is polled alongside the row, and the verdict below needs both. The row dump
+    // alone went green on runs whose world never hid anything (`worldHiddenAfter=[]` with
+    // `outliner-hide-applies PASS`, lanes `probe-2026-09-12T11-49-02` and `11-54-56`) — a row whose text
+    // moved for any other reason passed a verdict about hiding an object.
+    const rowObjectId = (clicked?.row ?? "").replace(/^panel:puzzle3d-play-document\//, "");
+    const worldHides = (surfaces: { surface: string; hidden: string[] }[]) => surfaces.some((surface) => surface.hidden.some((id) => id === rowObjectId || id.startsWith(`${rowObjectId}:`)));
+    const hideSettle = await settleFor(
+      async () => ({ rows: await rowDump(), world: await hiddenScales() }),
+      (state) => JSON.stringify(state.rows) !== JSON.stringify(before) && worldHides(state.world),
+    );
+    const afterHide = hideSettle.value.rows;
+    const hiddenAfter = hideSettle.value.world;
+    log(`outliner hide clicked=${JSON.stringify(clicked)} rowObject=${rowObjectId} waitedMs=${hideSettle.waitedMs} worldHiddenBefore=${JSON.stringify(hiddenBefore)} worldHiddenAfter=${JSON.stringify(hiddenAfter)}`);
+    log(`outliner hide selectionAfter=${JSON.stringify((await selectionState()).selected).slice(0, 300)} instances=${JSON.stringify(await dumpInstances()).slice(0, 400)}`);
     log(`outliner hide console tail=${JSON.stringify(consoleSince(hideMark).filter((row) => /selectionFlag|performInvocation|command ingress|ui-refresh|refreshUi|unchanged|dirty|scope|panel:|puzzle\.3d\.play\.document/i.test(row)).slice(-28)).slice(0, 4000)}`);
-    const hideApplied = JSON.stringify(afterHide) !== JSON.stringify(before);
-    verdict("outliner-hide-applies", hideApplied, `beforeHead=${JSON.stringify(before.slice(0, 3))} afterHead=${JSON.stringify(afterHide.slice(0, 3))} worldHidden=${JSON.stringify(hiddenAfter)} clicked=${JSON.stringify(clicked)} waitedMs=${hideSettle.waitedMs}`);
+    const hideApplied = JSON.stringify(afterHide) !== JSON.stringify(before) && worldHides(hiddenAfter);
+    verdict(
+      "outliner-hide-applies",
+      hideApplied,
+      `rowChanged=${JSON.stringify(afterHide) !== JSON.stringify(before)} worldHidesRowObject=${worldHides(hiddenAfter)} rowObject=${rowObjectId} beforeHead=${JSON.stringify(before.slice(0, 3))} afterHead=${JSON.stringify(afterHide.slice(0, 3))} worldHidden=${JSON.stringify(hiddenAfter)} clicked=${JSON.stringify(clicked)} waitedMs=${hideSettle.waitedMs}`,
+    );
     if (!hideApplied) {
       verdict("outliner-show-restores", false, "not reachable — the Hide row action itself never changed the row, so Show has nothing to restore");
       return;

@@ -2,8 +2,9 @@
 //! wrong, ticket
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/SCOPE-OWNED-SCHEMA-CONTRACTS` rows 47a/47b:
 //!
-//! 1. **`rename_all` never cases an enum variant's own named fields.** Only `rename_all_fields`
-//!    does (serde ≥ 1.0.190). `ContainerAttrs::field_rename_all()` used to fall back from
+//! 1. **Container `rename_all` never cases an enum variant's own named fields.** Container
+//!    `rename_all_fields` supplies their default; variant `rename_all` overrides it and an explicit
+//!    field rename wins. `ContainerAttrs::field_rename_all()` used to fall back from
 //!    `rename_all_fields` to `rename_all`, so every `#[value(rename_all = "camelCase")]` enum with
 //!    multi-word named variant fields wired them camelCase where serde wires them verbatim. Every
 //!    case below carries a `serde`/`serde_json` oracle (dev-dependency only, CLAUDE.md's sanctioned
@@ -16,6 +17,48 @@
 //!    accept it. serde refuses this shape at serialization time rather than defining a carrier, so
 //!    the oracle here is serde's own error — asserted, not asserted-about.
 use semio_framework_os_kernel::{DslValue, FromValue, ToValue};
+
+#[derive(Debug, Clone, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "snake_case", deny_unknown_fields)]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "snake_case", deny_unknown_fields)]
+enum VariantOverrideInternal {
+    #[value(rename_all = "camelCase")]
+    #[serde(rename_all = "camelCase")]
+    Bar { material_id: String, #[value(rename = "section")] #[serde(rename = "section")] section_id: String },
+}
+
+#[derive(Debug, Clone, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
+#[value(rename_all_fields = "snake_case", deny_unknown_fields)]
+#[serde(rename_all_fields = "snake_case", deny_unknown_fields)]
+enum VariantOverrideExternal {
+    #[value(rename = "bar-view", rename_all = "camelCase")]
+    #[serde(rename = "bar-view", rename_all = "camelCase")]
+    Bar { material_id: String, #[value(rename = "section")] #[serde(rename = "section")] section_id: String },
+}
+
+#[derive(Debug, Clone, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
+#[value(tag = "kind", content = "payload", rename_all = "camelCase", rename_all_fields = "snake_case", deny_unknown_fields)]
+#[serde(tag = "kind", content = "payload", rename_all = "camelCase", rename_all_fields = "snake_case", deny_unknown_fields)]
+enum VariantOverrideAdjacent {
+    #[value(rename_all = "camelCase")]
+    #[serde(rename_all = "camelCase")]
+    Bar { material_id: String, #[value(rename = "section")] #[serde(rename = "section")] section_id: String },
+}
+
+#[test]
+fn variant_level_field_casing_overrides_container_and_matches_neutral_serde_oracle() {
+    fn verify<T: ToValue + FromValue + serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + PartialEq>(value: T, expected: &serde_json::Value) {
+        assert_eq!(serde_json::to_value(&value).expect("serde encoding"), *expected);
+        assert_eq!(serde_json::Value::from(&value.to_value()), *expected);
+        assert_eq!(T::from_value(expected.clone().into()).expect("native decoding"), value);
+        assert_eq!(serde_json::from_value::<T>(expected.clone()).expect("serde decoding"), value);
+    }
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🐫️variant-field-casing/🔣️.json")).expect("neutral field casing corpus");
+    verify(VariantOverrideInternal::Bar { material_id: "m1".into(), section_id: "s1".into() }, &corpus["internal"]);
+    verify(VariantOverrideExternal::Bar { material_id: "m1".into(), section_id: "s1".into() }, &corpus["external"]);
+    verify(VariantOverrideAdjacent::Bar { material_id: "m1".into(), section_id: "s1".into() }, &corpus["adjacent"]);
+    eprintln!("[DEBUG] variant-owned field casing agrees with serde and three neutral wire shapes");
+}
 
 /// 🔑 The wire key names this derive emits, in emission order. `serde_json::Value`'s map compares
 /// (and, for the workspace's feature resolution, orders) independently of insertion order, so the

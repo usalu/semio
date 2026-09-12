@@ -1,0 +1,21 @@
+\documentclass[type=paper,theme=light,language=en,citestyle=alphabetic]{semio}
+\title{Class binding audit}
+\author{Semio}
+\date{2026-09-12}
+\subtitle{Native class and package relation}
+\makeatletter
+\ExplSyntaxOn
+\cs_set_protected:Npn \semio_begindocument_hook: {
+  \semio_language_apply:
+  \semio_theme_apply:
+  \semio@set@main@fonts
+  \semio@chrome@heading@set { \SemioFrontmatterTitle }
+}
+\ExplSyntaxOff
+\makeatother
+\begin{document}
+\typeout{AUDIT-CLASS-PACKAGE-RELATION-CALLED}
+\section*{Class binding audit}
+\SemioGraphState{audit}{draw=semio-primary}{semio graph label emphasized}
+\SemioGraphEdgeKind{audit}{-latex}
+\end{document}

@@ -9,17 +9,22 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 //#region 🔖️Artifact
 /// 🧬️ curation document artifact state. `catalog`/
 /// `stock_extra` mirror `CurationSnapshot`'s own composed-child split (see that struct's doc comment).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curation")]
 pub struct CurationArtifact {
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.kit")]
+    #[child(kind = "s.stdio.semio")]
     pub catalog: store::ArtifactChild<SemioKitSnapshot>,
     #[state(artifact)]
     pub stock_extra: Vec<ObjectKindExtra>,
     #[state(artifact)]
     pub curated: Vec<CuratedItem>,
+}
+impl dsl::FromValue for CurationArtifact {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        <CurationSnapshot as dsl::FromValue>::from_value(value).map(Self::from_snapshot)
+    }
 }
 //#endregion 🔖️Artifact
 

@@ -1,6 +1,6 @@
 use super::*;
 use crate::default_snapshot;
-use protocol::os_spr::testkit::{assert_missing_target_is_error, assert_mutation_inverse_law};
+use protocol::os_spr::protocol_laws::{assert_missing_target_is_error, assert_mutation_inverse_law};
 
 #[semio_framework_async_macros::async_test]
 async fn delete_step_inverse_law() {

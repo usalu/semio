@@ -26,5 +26,5 @@ neural_engine = { path = "../../../../../🧠️neural/⚙️engine/📦️packa
 graph = { path = "../../../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["testkit"] }
+semio-framework-os-kernel = { workspace = true }
 semio-framework-async-macros = { workspace = true }

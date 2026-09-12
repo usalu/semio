@@ -13,15 +13,18 @@
       "titlePrefix": "🎨️styling",
       "sourceRoots": [
         "📦️packages/🟦️typescript"
+      ],
+      "storyGlobs": [
+        "📖️stories/**/🧪️.story.tsx"
       ]
     }
   },
   "exports": {
     ".": "./🟦️.ts",
-    "./🖌️ui.css": "../../🖌️ui.css",
-    "./🎨️palette.css": "../../🎨️palette.css",
+    "./🖌️ui.css": "../../🖌️ui/🎨️.css",
+    "./🎨️palette.css": "../../🎨️palette/🎨️.css",
     "./tailwind.config": "./tailwind.config.ts",
-    "./tokens.generated": "../../🤖️generated/🟦️tokens.generated.ts"
+    "./tokens.generated": "../../🤖️generated/🔤️tokens/🟦️.ts"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",

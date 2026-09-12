@@ -131,7 +131,7 @@ export function createFreshComponentTests(dependencies: Record<string, any>, sou
       capabilityRequests: [],
       extensionPoints: [],
       execution: "isolated",
-      executionProtocol: { appChannelVersion: 15 },
+      executionProtocol: { appChannelVersion: fixture.appChannelVersion },
       quotas: {},
       contributions: {},
       assets: [],

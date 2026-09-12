@@ -9,7 +9,7 @@ import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
 import { cargoProviderTomlParser, discoverCatalogPackages, loadCatalogTaxonomy } from "../🔍️discovery/🟦️.ts";
-import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
+import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
 export type PlaygroundHostKind = string;
 

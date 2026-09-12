@@ -1,7 +1,7 @@
 //! 🕸️ Sequence play app commands — bulk node-graph edits and viewport pan/zoom.
 
-use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
-use crate::editor::sequence::ops_from_host_mutation;
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use crate::editor::sequence::sequence_child_emit_from_host_mutation;
 use crate::mutations::SequenceMutation;
 use crate::{SequenceCamera, SequenceSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
@@ -18,9 +18,9 @@ pub mod node_graph_edit {
         pub operations_json: String,
     }
 
-    fn edit_with_selection(payload: &NodeGraphEdit, fixture: &SequenceSnapshot, selected: &[String]) -> Emit<SequenceMutation, SequenceConfigMutation> {
+    fn edit_with_selection(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, selected: &[String]) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
         let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
-        let ops = ops_from_host_mutation(fixture, |host| {
+        sequence_child_emit_from_host_mutation(doc, |host| {
             for operation in &sub_operations {
                 match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                     "setFixture" => {
@@ -43,8 +43,7 @@ pub mod node_graph_edit {
                     _ => {}
                 }
             }
-        });
-        Emit::mutations(ops)
+        })
     }
 
     /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg).await` is framework-fixed at this exact 3-arg
@@ -52,12 +51,12 @@ pub mod node_graph_edit {
     /// reachable only through that macro-generated path (`SequencePlayApp::handle` always routes this
     /// command through `apply` below instead), so its `"deleteSelection"` sub-operation degrades to
     /// treating the selection as empty; every other sub-operation (`setFixture`/`connect`) is unaffected.
-    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        Ok(edit_with_selection(payload, doc.snapshot, &[]))
+    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
+        edit_with_selection(payload, doc, &[])
     }
 
-    pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        Ok(edit_with_selection(payload, doc.snapshot, &interaction.selection(crate::editor::sequence::SEQUENCE_INTERACTION_STEPS).ids))
+    pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, interaction: &InteractionView<'_>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
+        edit_with_selection(payload, doc, &interaction.selection(crate::editor::sequence::SEQUENCE_INTERACTION_STEPS).ids)
     }
 }
 //#endregion 🔖️NodeGraphEdit
@@ -73,8 +72,8 @@ pub mod set_viewport {
         pub camera: SequenceCamera,
     }
 
-    pub fn handle(payload: &SetViewport, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        Ok(Emit::config(vec![SequenceConfigMutation::SetCamera(crate::editor::sequence::config::SetCamera { camera: payload.camera.clone() })]))
+    pub fn handle(_payload: &SetViewport, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
+        Ok(Emit::default())
     }
 }
 //#endregion 🔖️SetViewport

@@ -313,6 +313,30 @@ export function isEphemeralShellBrand(brand: ShellBrand | undefined): boolean {
   return brand?.ephemeral === true;
 }
 
+/** 🎓️ One app's tour, offered at most once per shell session.
+ *
+ * The whole reason this is a pure predicate rather than an inline condition: the app definition the
+ * introduction hangs off is REPUBLISHED (a new object, same content) on every full refresh, plugin
+ * hot-swap and re-established session, so the auto-start effect re-runs many times per boot. A tour whose
+ * veil blocks pointers owns the entire application while it is up, so a tour the user already answered
+ * (Skip or Done) must never come back — not on a republication, not when a brand-scoped seen key resolves
+ * later than the bare app id, and not when the device-local seen flag cannot be written at all (an
+ * ephemeral brand's in-memory `StoragePort`). `dismissedAppIds` is that session-durable half, keyed on the
+ * app id so a genuinely different app can still introduce itself in the same shell. */
+export function shouldAutoStartIntroduction(input: {
+  readonly appId: string;
+  readonly hasIntroduction: boolean;
+  readonly tutorialActive: boolean;
+  readonly suppressed: boolean;
+  readonly replayOnLoad: boolean;
+  readonly seenOnDevice: boolean;
+  readonly dismissedAppIds: ReadonlySet<string>;
+}): boolean {
+  if (!input.appId || !input.hasIntroduction || input.tutorialActive || input.suppressed) return false;
+  if (input.dismissedAppIds.has(input.appId)) return false;
+  return input.replayOnLoad || !input.seenOnDevice;
+}
+
 /** 🧊️ Removes known durable shell keys so an ephemeral brand leaves no localStorage/sessionStorage residue across refresh. */
 export function clearDurableShellStorage(): void {
   if (typeof window === "undefined") return;
@@ -588,7 +612,7 @@ type SyncState = {
 };
 
 /** 💡️ Host-owned ephemeral inference-port slice, keyed by the exact hub document runtime key. It
- * is fed solely by `🧵️backbone-worker.ts`'s
+ * is fed solely by `🏪️store/👷️worker/🟦️.ts`'s
  * `inference-port-status` responses and by the shell's own operator intents; nothing in it is ever
  * persisted, and the proposal itself reaches a document only through the hub's server-stamped
  * approval command. */

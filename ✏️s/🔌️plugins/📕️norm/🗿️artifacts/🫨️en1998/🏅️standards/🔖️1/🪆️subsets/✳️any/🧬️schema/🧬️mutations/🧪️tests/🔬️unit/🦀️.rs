@@ -98,33 +98,33 @@ async fn from_snapshot_round_trips_via_full_document_replacement() {
 
 //#region 🧪️MutationLaws
 /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-/// (reachable here as `protocol::os_spr::testkit`), exercised against three structurally distinct
+/// (reachable here as `protocol::os_spr::protocol_laws`), exercised against three structurally distinct
 /// variants.
 #[semio_framework_async_macros::async_test]
 async fn change_seismic_zone_satisfies_the_inverse_and_absorb_laws() {
     let base = En1998Snapshot::default();
     let mutation = En1998Mutation::ChangeSeismicZone(change_seismic_zone::ChangeSeismicZone { new_seismic_zone: 3 });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = En1998Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: "en".to_string() }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 #[semio_framework_async_macros::async_test]
 async fn change_multiple_resisting_systems_satisfies_the_inverse_and_absorb_laws() {
     let base = En1998Snapshot::default();
     let mutation = En1998Mutation::ChangeMultipleResistingSystems(change_multiple_resisting_systems::ChangeMultipleResistingSystems { new_multiple_resisting_systems: false });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = En1998Mutation::ChangeT1S(change_t1_s::ChangeT1S { new_t1_s: 0.35 }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 #[semio_framework_async_macros::async_test]
 async fn change_ground_type_satisfies_the_inverse_and_absorb_laws() {
     let base = En1998Snapshot::default();
     let mutation = En1998Mutation::ChangeGroundType(change_ground_type::ChangeGroundType { new_ground_type: "c".to_string() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = En1998Mutation::ChangeMassT(change_mass_t::ChangeMassT { new_mass_t: 550.0 }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws

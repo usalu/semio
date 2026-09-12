@@ -7,7 +7,7 @@ pub(crate) mod fixture {
     use super::super::super::declaration_fixture_mutations::{std1_any as std1_any_mutations, std1_strict as std1_strict_mutations, std2_any as std2_any_mutations};
     use super::super::{
         AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactKindId, ArtifactPack, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, EngineHandles, Fault, IconName, InteractionView, LocalizedLabel,
-        Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, UiAssemblyResult, ViewEmit, Viewer, ViewModel, testkit,
+        artifact_app_laws, Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, UiAssemblyResult, ViewEmit, Viewer, ViewModel,
     };
     use super::*;
     use serde::{Deserialize, Serialize};
@@ -315,7 +315,7 @@ pub(crate) mod fixture {
     //#region 🔖️Tests
     #[semio_framework_async_macros::async_test]
     async fn ids_are_derived_from_the_dialect() {
-        testkit::assert_subset_declaration_ids_are_derived(&build_declaration()).await;
+        artifact_app_laws::assert_subset_declaration_ids_are_derived(&build_declaration()).await;
     }
 
     #[test]
@@ -329,7 +329,7 @@ pub(crate) mod fixture {
 
     #[semio_framework_async_macros::async_test]
     async fn declaring_registers_schema_io_and_surfaces() {
-        testkit::assert_declaration_tree_registers_all("testkit", build_declaration()).await;
+        artifact_app_laws::assert_declaration_tree_registers_all("testkit", build_declaration()).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -345,7 +345,7 @@ pub(crate) mod fixture {
         let mut conflicting = schema_descriptor("s.testkit.w1c-fixture@1/*");
         conflicting.artifact.rust = "// a different, conflicting facet body";
         invalid.standards[1].subsets[0].schema.descriptor = conflicting;
-        testkit::assert_declaration_registration_is_atomic("testkit", invalid).await;
+        artifact_app_laws::assert_declaration_registration_is_atomic("testkit", invalid).await;
     }
 
     #[semio_framework_async_macros::async_test]

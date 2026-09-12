@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::wires::testkit::{dispatch, new_app};
+use crate::editor::wires::unit_tests::context::{dispatch, new_app};
 use crate::editor::wires::WiresCommand;
 
 #[semio_framework_async_macros::async_test]

@@ -1,10 +1,10 @@
 use super::*;
-use crate::editor::shooting::testkit::{scene_window_measures, shooting_app};
+use crate::editor::shooting::unit_tests::context::{scene_window_measures, shooting_app};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_world_model_scene() {
     let mut app = shooting_app().await;
-    let scene = crate::editor::shooting::testkit::world_scene(&mut app).await;
+    let scene = crate::editor::shooting::unit_tests::context::world_scene(&mut app).await;
     let environment: Value = parse(scene.environment_json.as_deref().unwrap()).unwrap();
     assert_eq!(environment["sun"]["azimuth"], json!(45.0));
     assert_eq!(environment["material"]["roughness"], json!(1.0));
@@ -21,7 +21,7 @@ async fn renders_world_model_scene() {
 #[semio_framework_async_macros::async_test]
 async fn model_scene_uses_asset_mesh_urls() {
     let mut app = shooting_app().await;
-    let scene = crate::editor::shooting::testkit::world_scene(&mut app).await;
+    let scene = crate::editor::shooting::unit_tests::context::world_scene(&mut app).await;
     assert!(scene.meshes_json.contains("mesh:🧊️base"));
     assert!(scene.meshes_json.contains("/mesh/🧊️base.glb"));
 }

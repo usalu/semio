@@ -6,7 +6,7 @@ Feature: Apply every typed layout-document mutation to its committed specificati
   `s.layout.layout` is a semio-NATIVE artifact: no third party reads or writes
   `.dsl.semio`/`.pack.semio`, so no reference LIBRARY is registered — confirmed again, from the
   carrier side, by this subset's own `layout-mutation-semantics` no-oracle decision
-  (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracle/🔣️.json`): none of the five export serializers
+  (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`): none of the five export serializers
   this repository already links as third-party test oracles (dxf 0.6, png 0.18, svg, dwg, pdf) reads
   this artifact's own shape — each either coerces it into a permanently empty document, errors
   outright, or re-emits the artifact's own internal DSL text unparsed. The second producer a

@@ -297,7 +297,7 @@ impl Viewport {
     }
 
     #[cfg(test)]
-    fn from_typed(viewport: Option<&ui_wgpu::wgpu::NodeGraphViewport>) -> Self {
+    fn from_typed(viewport: Option<&semio_framework_os_kernel::Viewport2d>) -> Self {
         viewport.map(|viewport| Self { x: viewport.x as f32, y: viewport.y as f32, zoom: viewport.zoom as f32 }).unwrap_or(Self { x: 0.0, y: 0.0, zoom: 1.0 })
     }
 
@@ -1342,7 +1342,53 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
     };
     infinite_world::world::render_world_3d(scene, bounds, ctx, state, hosts.world_resources);
     engine_canvas::register_engine_surface(scene, bounds, engine_canvas::EngineSurfaceKindDetail::World3d, created);
+    world3d_surface_debug_log(scene, bounds, ctx, state);
     cursor.finish()
+}
+
+/// 🌍️ `[DEBUG] ` trace of what the World3d pass this step just pushed actually carries — the pass's
+/// mesh draws, their instances, its line draws and the surface it belongs to. Temporary: it is the
+/// only way to tell "no surface" from "a surface with no meshes" on 6118, where `eprintln!` is a
+/// no-op inside the frame Worker.
+fn world3d_surface_debug_log(scene: &UiComponentSceneNode, bounds: Rect, ctx: &FrameworkWidgetContext<'_>, state: &infinite_world::world::World3dState) {
+    let payload = match scene.world_3d.as_ref() {
+        Some(world) => format!(
+            "meshes={}b instances={}b delta={}b lanes=[{}] snapshot={} camera={}b",
+            world.meshes_json.len(),
+            world.instances_json.len(),
+            world.instances_delta_json.as_ref().map_or(0, String::len),
+            world.lanes.iter().map(|lane| format!("{}:{}", lane.lane, lane.bytes)).collect::<Vec<_>>().join(","),
+            world.snapshot.is_some(),
+            world.camera_json.len()
+        ) + &format!(
+            " meshesHead={:?} instancesHead={:?} camera={:?} status={:?}",
+            &world.meshes_json[..world.meshes_json.len().min(700)],
+            &world.instances_json[..world.instances_json.len().min(700)],
+            &world.camera_json[..world.camera_json.len().min(120)],
+            world.status_json.as_deref().map(|status| &status[..status.len().min(800)])
+        ),
+        None => "world3d=none".to_string(),
+    };
+    let geometry = match ctx.draw.scene_passes.last() {
+        Some(pass) => format!(
+            "draws={} translucent={} instances={} lines={} textured={} passes={}",
+            pass.draws.len(),
+            pass.translucent_draws.len(),
+            pass.draws.iter().chain(pass.translucent_draws.iter()).map(|draw| draw.instances.len()).sum::<usize>(),
+            pass.line_draws.len(),
+            pass.textured_draws.len(),
+            ctx.draw.scene_passes.len()
+        ),
+        None => "pass=none".to_string(),
+    };
+    debug_log(&format!("[DEBUG] world3d surface={} pane={:?} bounds={}x{} {geometry} {} {payload}", scene.surface_id, scene.pane_id, bounds.w.round(), bounds.h.round(), state.ingest_census()));
+}
+
+fn debug_log(line: &str) {
+    #[cfg(target_arch = "wasm32")]
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(line));
+    #[cfg(not(target_arch = "wasm32"))]
+    eprintln!("{line}");
 }
 
 /** @emoji 🧭️ Surface kinds that already receive pointer/wheel input through their own bespoke per-frame host state (`world3d_states`/`node_graph_states`/`tiled_map_states`/`board2d_states`, driven directly by the OS event loop) and must not be double-dispatched through the generic `handle_scene_*` handlers below. `pub(crate)` so `interpreter::apply_scene_ui_command` (the real per-event `UiCommand::Scene` handler, and now the ONLY caller of `handle_scene_wheel`/`handle_scene_pointer_button`/`handle_scene_pointer_move` — see that fn's own doc comment) applies this SAME exclusion list. */

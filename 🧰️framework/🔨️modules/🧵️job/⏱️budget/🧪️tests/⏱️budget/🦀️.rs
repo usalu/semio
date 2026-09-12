@@ -82,17 +82,17 @@ fn microsecond_language_neutral_deadline_boundaries_and_overflow() {
 //#endregion 🚧️DeadlineAdmission
 
 //#region 🧵️RetainedWorker
-fn close_authority(mut authority: WorkerJobAuthority<EntryProbe>) -> usize {
+fn close_authority(mut authority: WorkerJobAuthorityOwner<EntryProbe>) -> usize {
     let job = authority.job.as_mut().unwrap();
     job.begin_close();
     assert_eq!(job.close_step(1, 4_096), InteractiveJobCloseStep::Complete);
     assert!(job.terminal_is_empty());
     let entered = job.entered;
     if let Some(outcome) = authority.outcome.as_mut() {
-        while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, 4_096); }
+        while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
     }
     if let Some(fault) = authority.preadmitted_fault.as_mut() {
-        while !fault.terminal_is_empty() { let _ = fault.close_step(1, 4_096); }
+        while !fault.terminal_is_empty() { let _ = fault.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
     }
     entered
 }
@@ -102,7 +102,7 @@ fn microsecond_retained_worker_admits_half_ms_and_rejects_missing_or_overflow_cl
     for (clock, grant, fuel, expected_entries, faulted) in [(Some(1_000), 500, 1, 1, false), (Some(1_000), 0, 1, 0, false), (Some(1_000), 500, 0, 0, false), (None, 500, 1, 0, true), (Some(u64::MAX - 100), 500, 1, 0, true)] {
         bind_clock(clock);
         let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { site: "microsecond-worker", stage: InteractiveStage::InteractiveStep, fuel_per_step: fuel, step_budget_us: grant }, now_us: now };
-        let mut authority = WorkerJobAuthority::try_new(EntryProbe { entered: 0, closing: false }, params).unwrap_or_else(|_| panic!("fixture payload admission"));
+        let mut authority = WorkerJobAuthorityOwner::try_new(EntryProbe { entered: 0, closing: false }, params).unwrap_or_else(|_| panic!("fixture payload admission"));
         let terminal = drive_worker_job_authority(&mut authority);
         let actual_fault = matches!(authority.outcome, Some(StepOutcome::Fault(_)));
         let entered = close_authority(authority);
@@ -126,7 +126,7 @@ fn microsecond_platform_clock_and_real_half_ms_worker_progress() {
     }
     assert!(submillisecond_sample, "platform clock lost microsecond precision");
     let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { site: "microsecond-real-worker", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: default_now_us };
-    let mut authority = WorkerJobAuthority::try_new(EntryProbe { entered: 0, closing: false }, params).unwrap_or_else(|_| panic!("fixture payload admission"));
+    let mut authority = WorkerJobAuthorityOwner::try_new(EntryProbe { entered: 0, closing: false }, params).unwrap_or_else(|_| panic!("fixture payload admission"));
     let terminal = drive_worker_job_authority(&mut authority);
     let entered = close_authority(authority);
     assert!(!terminal);
@@ -192,7 +192,8 @@ fn microsecond_exact_callback_quarantine_retains_original_output_and_session_ide
         }
         assert!(session.terminal_is_empty());
         assert!(ledger.terminal_is_empty());
-        assert_eq!(released_bytes, 4 + b"job-session.terminal-fault".len());
+        assert_eq!(owned_bytes, 2 * JOB_PAYLOAD_PAGE_BYTES);
+        assert_eq!(released_bytes, owned_bytes);
         eprintln!("[DEBUG] exact callback quarantine {} sample_fault={faulted} session_quarantined={quarantined} original_bytes=4 retired_bytes={released_bytes} same_numeric_identity=true", law["id"]);
     }
 }
@@ -228,19 +229,19 @@ impl InteractiveJob for SlowProbe {
     fn terminal_is_empty(&self) -> bool { self.closing }
 }
 
-fn close_slow_authority(mut authority: WorkerJobAuthority<SlowProbe>) -> usize {
+fn close_slow_authority(mut authority: WorkerJobAuthorityOwner<SlowProbe>) -> usize {
     let job = authority.job.as_mut().unwrap();
     job.begin_close();
     assert_eq!(job.close_step(1, 4_096), InteractiveJobCloseStep::Complete);
     let steps = job.steps;
     if let Some(outcome) = authority.outcome.as_mut() {
-        while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, 4_096); }
+        while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
     }
     if let Some(outcome) = authority.quarantined_outcome.as_mut() {
-        while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, 4_096); }
+        while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
     }
     if let Some(fault) = authority.preadmitted_fault.as_mut() {
-        while !fault.terminal_is_empty() { let _ = fault.close_step(1, 4_096); }
+        while !fault.terminal_is_empty() { let _ = fault.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
     }
     steps
 }
@@ -255,7 +256,7 @@ fn drive_slow_probe(slow_steps: usize, attempts: usize) -> (usize, Option<usize>
         config: BatchDriveConfig { site: "sustained-overrun-probe", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: INTERACTIVE_LANE_WALL_US },
         now_us: now,
     };
-    let mut authority = WorkerJobAuthority::try_new(SlowProbe { remaining_slow_steps: slow_steps, steps: 0, closing: false }, params).unwrap_or_else(|_| panic!("exact worker admission"));
+    let mut authority = WorkerJobAuthorityOwner::try_new(SlowProbe { remaining_slow_steps: slow_steps, steps: 0, closing: false }, params).unwrap_or_else(|_| panic!("exact worker admission"));
     let mut quarantined_at = None;
     for attempt in 0..attempts {
         if drive_worker_job_authority(&mut authority) {

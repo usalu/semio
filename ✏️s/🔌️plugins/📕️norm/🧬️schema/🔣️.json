@@ -696,9 +696,9 @@
         }
       }
     },
-    "NormConfigMutationCases": {
-      "title": "NormConfigMutationCases",
-      "description": "📕️ The `semio.norm.config-mutation/v1` conformance vector: the reducer cases, the hostile payloads, and the text and binary wire rows the independent TypeScript oracle in `📦️packages/🦀️rust/📜️script.ts` replays against the owned `☑️change-selected-check-index` payload schema.",
+    "NormResultsWindowConfigMutationCases": {
+      "title": "NormResultsWindowConfigMutationCases",
+      "description": "📕️ The `semio.norm.results-window-config-mutation/v1` Results-window conformance vector: the reducer cases, the hostile payloads, and the text and binary wire rows the independent TypeScript oracle in `📦️packages/🦀️rust/📜️script.ts` replays against the owned `☑️change-selected-check-index` payload schema.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -710,7 +710,7 @@
       ],
       "properties": {
         "contractId": {
-          "const": "semio.norm.config-mutation/v1"
+          "const": "semio.norm.results-window-config-mutation/v1"
         },
         "cases": {
           "type": "array",
@@ -727,16 +727,16 @@
             ],
             "properties": {
               "id": {
-                "$ref": "#/$defs/NormConfigMutationCaseId"
+                "$ref": "#/$defs/NormResultsWindowConfigMutationCaseId"
               },
               "before": {
-                "$ref": "#/$defs/NormConfigMutationCaseIndex"
+                "$ref": "#/$defs/NormResultsWindowConfigMutationCaseIndex"
               },
               "payload": {
                 "type": "object"
               },
               "after": {
-                "$ref": "#/$defs/NormConfigMutationCaseIndex"
+                "$ref": "#/$defs/NormResultsWindowConfigMutationCaseIndex"
               },
               "warning": {
                 "type": "boolean"
@@ -764,7 +764,7 @@
             ],
             "properties": {
               "id": {
-                "$ref": "#/$defs/NormConfigMutationCaseId"
+                "$ref": "#/$defs/NormResultsWindowConfigMutationCaseId"
               },
               "wire": {
                 "type": "string",
@@ -774,7 +774,7 @@
                 "type": "boolean"
               },
               "after": {
-                "$ref": "#/$defs/NormConfigMutationCaseIndex"
+                "$ref": "#/$defs/NormResultsWindowConfigMutationCaseIndex"
               }
             }
           }
@@ -792,7 +792,7 @@
             ],
             "properties": {
               "id": {
-                "$ref": "#/$defs/NormConfigMutationCaseId"
+                "$ref": "#/$defs/NormResultsWindowConfigMutationCaseId"
               },
               "hex": {
                 "type": "string",
@@ -803,20 +803,20 @@
                 "type": "boolean"
               },
               "after": {
-                "$ref": "#/$defs/NormConfigMutationCaseIndex"
+                "$ref": "#/$defs/NormResultsWindowConfigMutationCaseIndex"
               }
             }
           }
         }
       }
     },
-    "NormConfigMutationCaseId": {
-      "title": "NormConfigMutationCaseId",
+    "NormResultsWindowConfigMutationCaseId": {
+      "title": "NormResultsWindowConfigMutationCaseId",
       "type": "string",
       "pattern": "^[a-z0-9-]+$"
     },
-    "NormConfigMutationCaseIndex": {
-      "title": "NormConfigMutationCaseIndex",
+    "NormResultsWindowConfigMutationCaseIndex": {
+      "title": "NormResultsWindowConfigMutationCaseIndex",
       "type": [
         "integer",
         "null"

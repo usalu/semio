@@ -48,11 +48,11 @@ async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants() {
 /// 👁️ A viewer instance never mutates the document store, even when dispatched.
 #[semio_framework_async_macros::async_test]
 async fn flow_viewer_never_mutates() {
-    semio_framework_plugin::testkit::assert_viewer_never_mutates::<FlowViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<FlowViewer>().await;
 }
 
 /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
 #[semio_framework_async_macros::async_test]
 async fn flow_editor_and_viewer_share_dialect() {
-    semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<FlowPlayApp, FlowViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<FlowPlayApp, FlowViewer>().await;
 }

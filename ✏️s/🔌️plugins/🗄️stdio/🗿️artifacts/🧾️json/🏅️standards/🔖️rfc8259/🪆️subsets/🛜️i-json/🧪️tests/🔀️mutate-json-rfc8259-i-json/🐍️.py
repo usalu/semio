@@ -1,6 +1,6 @@
 """🐍️ Python oracle adapter for the RFC 7493 I-JSON mutation vocabulary.
 
-The reference is ``simplejson``, registered by this subset's own 🧪️oracle contribution
+The reference is ``simplejson``, registered by this subset's own 🔮️oracles contribution
 (``../../🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🔣️oracle.json``) and put on this
 host's import path by the ``python`` entry in the plugin's ``oracleHostPackages``. Nothing in this
 file knows where the interpreter came from — the coordinator provisions it.

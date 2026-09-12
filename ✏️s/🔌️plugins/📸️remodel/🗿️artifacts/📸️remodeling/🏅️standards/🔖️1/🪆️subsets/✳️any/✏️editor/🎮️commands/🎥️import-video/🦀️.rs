@@ -1,6 +1,6 @@
 //! 🐚️ 🐚️ Remodeling play app commands command — `import-video`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::RemodelingMutation;
 use crate::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
@@ -28,7 +28,7 @@ pub struct ImportVideo {}
 
 /// 🎞️ Asks the host to decode and sample the picked video, using the document's own ingest params;
 /// `fallback_action` hands the raw container back when the host cannot decode it.
-pub fn handle(_payload: &ImportVideo, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(_payload: &ImportVideo, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     let ingest = &doc.snapshot.params.ingest;
     Ok(Emit::effect(Effect::RequestMediaFrames {
         req: semio_framework_plugin::RequestId(118),

@@ -38,6 +38,6 @@ pub fn render(generation: &GenerationPlayState, locale: Locale, terminology: Ter
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "../../🧪️tests/🗂️generations/🔬️unit/🦀️.rs"]
+#[path = "./🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

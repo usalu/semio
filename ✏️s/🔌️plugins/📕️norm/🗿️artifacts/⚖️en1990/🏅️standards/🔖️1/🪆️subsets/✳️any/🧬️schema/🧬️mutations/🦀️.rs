@@ -54,7 +54,7 @@ pub enum En1990Mutation {
 }
 
 /// 🏷️ Every declared kind of [`En1990Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
-/// order and spelling — the list `../../🔮️oracle/🔣️.json` publishes as the `en1990-1-any`
+/// order and spelling — the list `../../🔮️oracles/🔣️.json` publishes as the `en1990-1-any`
 /// mutation catalog and `../../🧪️tests/⚖️mutate-en1990-1` registers its scenarios from. The
 /// test platform never parses Rust, so [`kinds_catalog::kinds_match_the_enum_and_the_catalog`] below
 /// is what keeps the enum, this const and the committed manifest from drifting apart.

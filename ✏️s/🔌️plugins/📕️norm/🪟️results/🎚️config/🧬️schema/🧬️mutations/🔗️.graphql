@@ -1,0 +1,7 @@
+input ChangeSelectedCheckIndex {
+  index: Int
+}
+
+input NormResultsWindowConfigMutation @oneOf {
+  changeSelectedCheckIndex: ChangeSelectedCheckIndex
+}

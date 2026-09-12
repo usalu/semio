@@ -1,39 +1,6 @@
 //! 🧬️ schema leaf
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct CadSunConfig {
-    pub enabled: bool,
-    pub azimuth: f64,
-    pub elevation: f64,
-    pub intensity: f64,
-    pub color: String,
-}
-
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct CadProjectionDsl {
-    pub kind: String,
-}
-
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct CadCamera {
-    pub position: [f64; 3],
-    pub target: [f64; 3],
-    pub zoom: f64,
-    pub fov: f64,
-    pub projection: CadProjectionDsl,
-}
-
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct CadDislocateOptions {
-    pub move_enabled: bool,
-    pub rotate_enabled: bool,
-}
-
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad.config")]
@@ -63,24 +30,6 @@ pub struct CadConfig {
     pub engagement_preview_generation: i32,
     #[state(config)]
     pub last_finalized_interaction_id: Option<String>,
-    #[state(config)]
-    pub sun: CadSunConfig,
-    #[state(config)]
-    pub camera: CadCamera,
-    #[state(config)]
-    pub camera_building: CadCamera,
-    #[state(config)]
-    pub camera_energy: CadCamera,
-    #[state(config)]
-    pub camera_structure_classic: CadCamera,
-    #[state(config)]
-    pub dislocate_shape: CadDislocateOptions,
-    #[state(config)]
-    pub dislocate_building: CadDislocateOptions,
-    #[state(config)]
-    pub dislocate_energy: CadDislocateOptions,
-    #[state(config)]
-    pub dislocate_structure_classic: CadDislocateOptions,
     #[state(config)]
     pub contributions_json: String,
 }

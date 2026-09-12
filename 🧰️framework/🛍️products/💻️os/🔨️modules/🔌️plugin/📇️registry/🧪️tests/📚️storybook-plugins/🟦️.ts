@@ -1,13 +1,13 @@
 // #region 🧲️Header
 // 💻️ .storybook/os-plugins.spec.ts
-// Specs: End-to-end readiness checks for the `framework/os` scope's per-plugin boot matrix (`.storybook/stories/framework/os/plugins.stories.tsx`).
+// Specs: End-to-end readiness checks for the `framework/os` scope's per-plugin boot matrix (`🧰️framework/🛍️products/💻️os/📖️stories/🎭️plugins/🧪️.story.tsx`).
 // Summary: For every `PLUGIN_BUILD_TARGETS` entry, navigates `iframe.html?id=<plugins-story-id>&viewMode=story` and waits for the shell's readiness beacon (`semioOsReady`/`semioOsError` dataset keys — see `#region 🔖️ReadinessBeacon` in `framework/os/renderer/js/react/index.tsx`) for plugins with a prebuilt artifact, or the `OsBootHost` artifact-missing panel for the ones deliberately without one (`framework/os/dev/plugin-modules/`) — that panel never mounts `FrameworkOsShell`, so no beacon fires for it. Asserts zero unexpected `console.error` per story (model: `.storybook/puzzle-2d.spec.ts`).
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
 import { expect, test, type Page } from "@playwright/test";
 
-import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../🤖️generated/🧩️plugins.ts";
+import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../🤖️generated/🧩️plugins/🟦️.ts";
 
 const PLUGINS_STORY_TITLE_ID = "🛠️framework🖥️os-plugins";
 const READY_TIMEOUT_MS = 60_000;
@@ -17,7 +17,7 @@ function significantConsoleErrors(messages: string[]): string[] {
 }
 
 // #region 🔖️ArtifactAvailability
-/** @emoji 🔍️ Same HEAD-probe `OsBootHost` (`.storybook/framework/os/index.tsx`) itself does — mirrored here
+/** @emoji 🔍️ Same HEAD-probe `OsBootHost` (`🧰️framework/🛍️products/💻️os/📖️stories/🧭️coordination/🟦️.tsx`) itself does — mirrored here
  * so the spec knows, per target, whether to expect the readiness beacon or the artifact-missing panel. */
 async function pluginArtifactAvailable(page: Page, target: PluginBuildTarget): Promise<boolean> {
   const moduleUrl = pluginModuleUrl(target.pluginId);

@@ -3,7 +3,7 @@
 // AGPL-3.0 — pg-boss worker process entry (library lives in index.ts).
 // #endregion 🧲️Header
 
-import { runRepoServerWorker } from "../📦️packages/🟦️typescript/🟦️";
+import { runRepoServerWorker } from "./🏃️execution/🟦️.ts";
 
 runRepoServerWorker().catch((err) => {
   console.error("[worker] fatal error:", err);

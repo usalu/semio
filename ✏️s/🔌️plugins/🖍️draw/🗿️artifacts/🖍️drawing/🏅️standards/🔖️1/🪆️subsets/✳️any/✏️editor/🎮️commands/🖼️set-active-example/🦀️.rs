@@ -1,6 +1,6 @@
 //! 📄️ 📄️ Drawing play app commands command — `set-active-example`.
 
-use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::DrawingMutation;
 use crate::schema::default_drawing_document;
 use crate::standards::v1::subsets::any::examples;
@@ -22,9 +22,9 @@ pub struct SetActiveExample {
 pub fn handle(
     payload: &SetActiveExample,
     _doc: &ArtifactView<'_, DrawingSnapshot>,
-    _cfg: &ConfigView<'_, DrawingConfig>,
+    _cfg: &ConfigView<'_, NoConfig>,
     _session: &mut crate::editor::drawing::commands::canvas_pointer_down::DrawingSession,
-) -> Result<Emit<DrawingMutation, DrawingConfigMutation>, Fault> {
+) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let next = if payload.example_id.is_empty() {
         default_drawing_document("empty", None)
     } else {

@@ -12,8 +12,8 @@
 //! or generic over the artifact's `Document`/`NormFamily`, so `🫀️core` stays a leaf of the dependency
 //! graph exactly as the artifacts require.
 
-/// 🧵️ Retained norm command output with its shared config and draft mutation types.
-pub type NormRetainedCommandResult<M> = Result<Emit<M, crate::config::NormConfigMutation, semio_framework_plugin::NoDraftMutation>, Fault>;
+/// 🧵️ Retained norm command output with empty application config and draft lanes.
+pub type NormRetainedCommandResult<M> = Result<Emit<M, semio_framework_plugin::NoConfigMutation, semio_framework_plugin::NoDraftMutation>, Fault>;
 
 use crate::document::{CheckReport, NormFamily, NormHost};
 use semio_framework::ToolExecutionContract;
@@ -21,9 +21,60 @@ use semio_framework_plugin::plugin_app_close_prelude as ui;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::{
     AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Emit, Fault, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
-    MediaPortDirection, MediaPortSpec, MediaType, ModeDefinition, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, PortMultiplicity, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowLayout,
+    MediaPortDirection, MediaPortSpec, MediaType, ModeDefinition, NoConfig, NoConfigMutation, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, PortMultiplicity, SurfaceKind, UiAssemblyResult, WindowConfigOwner,
+    WindowKindDefinition, WindowLayout,
     WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowOptions,
 };
+
+/// 🧹️ Installs the exact bounded store owners and disposers shared by every Norm editor.
+#[macro_export]
+macro_rules! norm_exact_store_ownership {
+    () => {
+        fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+            Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+        }
+
+        fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+            Some(semio_framework_plugin::no_config_store_owners())
+        }
+
+        fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+            Some(semio_framework_plugin::no_draft_store_owners())
+        }
+
+        fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+            Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+        }
+
+        fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+            Some(semio_framework_plugin::no_config_store_disposer())
+        }
+
+        fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+            Some(semio_framework_plugin::no_draft_store_disposer())
+        }
+
+        fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+            Some(semio_framework_plugin::no_presence_store_disposer())
+        }
+
+        fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+            Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        }
+
+        fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+            Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        }
+
+        fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+            Some(semio_framework_plugin::no_transient_store_disposer())
+        }
+
+        fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+            Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        }
+    };
+}
 
 //#region 🔖️Ids
 /// 🆔️ The single mode every norm app's editor declares.
@@ -32,6 +83,15 @@ pub const MODE_EDIT: &str = "edit";
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET).
 pub const MODE_VIEW: &str = "view";
 //#endregion 🔖️Ids
+
+/// 📎️ Norm applications own no config or presence facets; Results-window config is registered separately.
+pub fn app_schema_descriptor() -> schema::AppSchemaDescriptor {
+    schema::AppSchemaDescriptor {
+        id: "s.norm.norm",
+        config: schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },
+        presence: schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },
+    }
+}
 
 //#region 🔖️ViewerManifest
 /// ✏️ The `view` mode definition — identical for all fifteen viewers, the read-only counterpart of
@@ -273,7 +333,7 @@ where
 /// single-mutation commit's history shape. Anything that doesn't decode is accepted but inert (no norm
 /// family document has a generic "raw model" field to stash a foreign shape into yet). `"document:in"`
 /// replicates the SDK default (decodes the base64 pack).
-pub fn import_media<D, M, F>(port: &str, media: &Media, wrap: F) -> Result<Emit<M, crate::config::NormConfigMutation>, MediaError>
+pub fn import_media<D, M, F>(port: &str, media: &Media, wrap: F) -> Result<Emit<M, NoConfigMutation>, MediaError>
 where
     D: Clone + Default + PartialEq + dsl::ToValue + dsl::FromValue + store::ArtifactPack,
     F: Fn(D) -> Vec<M>,
@@ -300,7 +360,7 @@ where
 
 //#region 🔖️Commands
 /// 📤️ Commits a typed document mutation under its manifest action description.
-pub fn commit_snapshot<M>(mutation: M, description: &str) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
+pub fn commit_snapshot<M>(mutation: M, description: &str) -> Result<Emit<M, NoConfigMutation>, Fault> {
     Ok(Emit::commit(vec![mutation], description))
 }
 
@@ -308,13 +368,8 @@ pub fn commit_snapshot<M>(mutation: M, description: &str) -> Result<Emit<M, crat
 /// replacement for `commit_snapshot`'s old single whole-document-replace commit: a `set-snapshot`
 /// command payload (or a re-evaluation re-commit) decomposes into one `change-<field>` mutation per
 /// persistent field via `XMutation::from_snapshot`, bundled here into a single undo entry.
-pub fn commit_snapshot_fields<M>(mutations: Vec<M>, description: &str) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
+pub fn commit_snapshot_fields<M>(mutations: Vec<M>, description: &str) -> Result<Emit<M, NoConfigMutation>, Fault> {
     Ok(Emit::commit(mutations, description))
-}
-
-/// ☑️ The one config-only edit every app's `selected-check` command emits.
-pub fn commit_selected_check_index<M>(index: Option<u32>) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
-    Ok(Emit::config(vec![crate::config::ChangeSelectedCheckIndex { index }.into()]))
 }
 
 /// 🎯️ Builds the args-side of an app's `command_from_action` bridge for `selected-check` — the shells
@@ -325,11 +380,6 @@ pub fn selected_check_index_arg(args: Option<&dsl::DslValue>) -> Option<u32> {
 //#endregion 🔖️Commands
 
 //#region 🔖️Views
-/// 👁️ Reads the config's selected check index out of a `ConfigView` — the one field norm apps read.
-pub fn selected_check_index(cfg: &ConfigView<'_, crate::config::NormConfig>) -> Option<u32> {
-    cfg.snapshot.selected_check_index
-}
-
 /// 📄️ Reads the document out of a `ArtifactView` — spelled once so every app's `render`/`handle` reads
 /// it the same way.
 pub fn snapshot<'a, D>(doc: &'a ArtifactView<'_, D>) -> &'a D {
@@ -350,16 +400,13 @@ pub const NORM_RETAINED_RAW_BYTES: usize = 8_192;
 /// 🎒️ Real bound for one Artifact-lane edit: a single `change-<field>`/`insert-layer`/`remove-layer`
 /// leaf, the only artifact mutations any norm command emits.
 pub const NORM_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
-/// 🎒️ Real bound for one Config-lane edit: `NormConfigMutation` carries a single `Option<u32>` index.
-pub const NORM_CONFIG_STORE_MAXIMUM_BYTES: usize = 4_096;
-
 /// 🚦️ Per-tool publication lanes, read straight off the three command bodies: `set-snapshot` commits
 /// artifact mutations, `evaluate` emits nothing at all (the report is derived on every read), and
-/// `selected-check` writes view state through the config lane.
+/// `selected-check` writes persisted-local state through the exact Results-window config lane.
 pub const NORM_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "evaluate", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "setSelectedCheckIndex", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setSelectedCheckIndex", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
 ];
 
 /// 🛣️ Stable language-neutral identifier for one live publication lane.
@@ -387,8 +434,29 @@ pub fn norm_bounded_contract() -> ToolExecutionContract {
 /// dispatches, and inherits every retained-command constant, reducer, factory and store preparation
 /// below. `dispatch_retained` MUST route into the app's `🎮️commands/*` bodies, which stay the sole
 /// authority for what a norm command does.
-pub trait NormRetainedEditor: semio_framework_plugin::ArtifactEditor<Config = crate::config::NormConfig, ConfigMutation = crate::config::NormConfigMutation, DraftMutation = semio_framework_plugin::NoDraftMutation> {
+pub trait NormRetainedEditor: semio_framework_plugin::ArtifactEditor<Config = NoConfig, ConfigMutation = NoConfigMutation, DraftMutation = semio_framework_plugin::NoDraftMutation> {
+    type ResultsWindowConfigOwner: WindowConfigOwner<State = crate::results_window_config::NormResultsWindowConfig, Mutation = crate::results_window_config::NormResultsWindowConfigMutation>;
+
+    fn selected_check_window_mutation(command: &Self::Command) -> Option<crate::results_window_config::NormResultsWindowConfigMutation>;
+
     fn dispatch_retained(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> NormRetainedCommandResult<Self::Mutation>;
+}
+
+/// 🎯️ Routes ordinary and retained commands through the same exact Results-window address.
+pub fn dispatch_norm_command<A: NormRetainedEditor>(
+    command: &A::Command,
+    doc: &ArtifactView<'_, A::Snapshot>,
+    cfg: &ConfigView<'_, NoConfig>,
+    view: Option<&semio_framework_plugin::ViewModel>,
+) -> NormRetainedCommandResult<A::Mutation> {
+    let Some(mutation) = A::selected_check_window_mutation(command) else {
+        return A::dispatch_retained(command, doc, cfg);
+    };
+    let view = view.ok_or_else(|| Fault::from("norm-results-window-view-required"))?;
+    Ok(Emit {
+        window_config_mutations: vec![crate::results_window_config::addressed::<A::ResultsWindowConfigOwner>(view, mutation)?],
+        ..Default::default()
+    })
 }
 
 /// 🧵️ The retained reducer shared by all fifteen apps — no norm command reads selection or hover, so the
@@ -407,14 +475,15 @@ pub fn norm_retained_reduce<A: NormRetainedEditor>(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<A>>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<A>>>,
     operation: &semio_framework_plugin::AppOperationContext,
 ) -> NormRetainedCommandResult<A::Mutation> {
     if !NORM_RETAINED_TOOL_IDS.contains(&A::command_id(command)) {
         return Err(Fault::from("norm-command-retained-route-rejected"));
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let emit = A::dispatch_retained(command, &doc, &ConfigView { snapshot: config, window: None })?;
+    let window = context.and_then(|context| context.window_config.as_ref());
+    let emit = dispatch_norm_command::<A>(command, &doc, &ConfigView { snapshot: config, window }, context.and_then(|context| context.view_state.as_ref()))?;
     Ok(emit)
 }
 
@@ -537,9 +606,7 @@ where
     Ok((post, inverse, mutation))
 }
 
-/// 🏭️ The exact one-item Store preparation authority both norm lanes need — the Artifact lane is
-/// unavailable to a migrated tool without it (`interactive-job.publication-contract` at app construction),
-/// and so is the Config lane.
+/// 🏭️ The exact one-item Store preparation authority the Norm artifact lane needs.
 pub struct NormOneItemPreparationFactory<P, M> {
     prefix: &'static str,
     maximum_bytes: usize,
@@ -682,11 +749,6 @@ pub fn norm_artifact_store_preparation<A: NormRetainedEditor>() -> Option<std::s
     Some(std::sync::Arc::new(NormOneItemPreparationFactory::<A::Snapshot, A::Mutation>::new("norm-artifact-retained", NORM_ARTIFACT_STORE_MAXIMUM_BYTES)))
 }
 
-/// 📬️ `ArtifactEditor::build_config_store_one_item_preparation_factory` for every norm editor.
-pub fn norm_config_store_preparation<A: NormRetainedEditor>() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Config, A::ConfigMutation>>> {
-    Some(std::sync::Arc::new(NormOneItemPreparationFactory::<A::Config, A::ConfigMutation>::new("norm-config-retained", NORM_CONFIG_STORE_MAXIMUM_BYTES)))
-}
-
 /// 🏭️ Declares one norm app's concrete owned factory as a newtype over the shared generic
 /// [`NormBoundedCommandJobFactory`], plus its `register_tool_job_factories` entry point. The newtype is
 /// required, not decorative: `ArtifactBoundedFirstStepProof` joins the `factory:` literal against the
@@ -790,7 +852,7 @@ pub fn build_norm_tool_job<A: NormRetainedEditor>(request: semio_framework_plugi
 }
 //#endregion 🔌️EditorOverrides
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(any(test, feature = "compliance-testing"))]
 //#region 🧵️RetainedDispositionOracle
 #[path = "🧪️tests/🔬️retained-disposition-oracle/🦀️.rs"]
 pub mod retained_disposition_oracle;

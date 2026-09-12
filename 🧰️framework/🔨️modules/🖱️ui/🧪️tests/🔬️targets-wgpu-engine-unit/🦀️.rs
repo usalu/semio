@@ -1448,7 +1448,7 @@ fn draw_text_overlay_on_writes_to_the_overlay_channel_not_the_main_one() {
 //#endregion 🧩️WidgetsInternalsTests
 
 /// 🧱️ The `boxed_fixed_slots` law for this module's fixed slot tables, against the one committed
-/// budget every implementation of it reads (`semio_framework_async::BOXED_FIXED_SLOTS_FIXTURE`).
+/// budget every implementation of it reads (`the committed fixed-slot fixture`).
 ///
 /// Asserts the measured shape of each table (capacity, one slot's bytes, the owner's own bytes)
 /// against that record, that each owner is smaller than the table it owns — the structural proof the
@@ -1457,7 +1457,7 @@ fn draw_text_overlay_on_writes_to_the_overlay_channel_not_the_main_one() {
 /// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
 #[test]
 fn ui_surface_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
-    let fixture: serde_json::Value = serde_json::from_str(semio_framework_async::BOXED_FIXED_SLOTS_FIXTURE).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../⏳️async/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")

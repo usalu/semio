@@ -1,7 +1,7 @@
 //! 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.5 — the real
-//! `semio_framework_plugin::testkit::{assert_viewer_never_mutates, assert_editor_and_viewer_share_dialect,
+//! `semio_framework_plugin::artifact_app_laws::{assert_viewer_never_mutates, assert_editor_and_viewer_share_dialect,
 //! new_viewer}` (closed by w0-f, gap 2), used directly rather than local stand-ins.
-use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
+use semio_framework_plugin::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 use semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp;
 use semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer;
 use semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp;

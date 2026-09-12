@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::puzzle2d::testkit::*;
+use crate::editor::puzzle2d::unit_tests::context::*;
 
 #[test]
 fn renders_puzzle2d_board_scene() {

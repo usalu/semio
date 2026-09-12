@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::remodeling::testkit::{app, render as render_body};
+use crate::editor::remodeling::unit_tests::context::{app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn a_fresh_document_reports_no_sparse_dense_trajectory_or_geo_products() {

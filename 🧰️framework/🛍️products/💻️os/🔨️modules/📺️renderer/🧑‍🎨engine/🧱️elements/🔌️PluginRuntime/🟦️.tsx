@@ -54,8 +54,8 @@ import {
   sectionViewContext,
   windowViewContext,
 } from "@semio-tech/framework";
-import { packedTextLeaf } from "./packed-text.ts";
-import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppCommand, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodeAppFrame, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
+import { packedTextLeaf } from "./🧳️packed-text/🟦️.ts";
+import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type DocumentArchivePack, type WindowConfigPackEntry, decodeAppCommand, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodeAppFrame, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
 import {
   DOCUMENT_BACKBONE_RETENTION_LIMITS,
   decodeLocalInteractionCaptureJson,
@@ -103,7 +103,7 @@ import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSu
 import type { RetainedUiNodeRecord } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
 import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
 import { hostContinuations } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
-import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, isRoutedWireSendMessage, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireExtensionInvocation, wireRespondAnswer, wireSendMessageTargetTag, wireTurnStatusTag } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts";
+import { drainTypedOperationTurns as driveTypedOperationDrain, driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, isRoutedWireSendMessage, shellFrameBytes as wireShellFrameBytes, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, TYPED_OPERATION_PAGE_MAGIC, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireExtensionInvocation, wireRespondAnswer, wireSendMessageTargetTag, wireTurnStatusTag } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { type PluginManifest, type ViewModel } from "../🐚️Shell/🟦️.tsx";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../📤️SegmentedDownload/🟦️.ts";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, decodeBackboneMessage } from "@semio-tech/framework-os";
@@ -174,6 +174,10 @@ export type PluginWasmHandle = {
   readonly readAppDocumentPack?: (instanceId: number) => Promise<{ readonly pack: Uint8Array; readonly spr: Uint8Array; readonly ops?: string } | null>;
   /** 📂️ Binary pack+spr document load (`AppCommand::LoadDocument`) — the Wave-1 channel-native path. */
   readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
+  /** 🗃️ Complete root plus recursive owned-member closure for durable document persistence. */
+  readonly readAppDocumentArchive?: (instanceId: number) => Promise<DocumentArchivePack>;
+  /** 🗃️ Atomically restores a complete recursive document archive. */
+  readonly loadAppDocumentArchive?: (instanceId: number, archive: DocumentArchivePack) => Promise<void>;
   /** 🪟️ Reads every concrete window's persisted-local config envelope. */
   readonly readWindowConfigPacks: (instanceId: number) => Promise<readonly WindowConfigPackEntry[]>;
   /** 🪟️ Restores one concrete window config envelope before its first render. */
@@ -361,7 +365,89 @@ function poolConcurrency(): number {
  * `ShardClient`/`Worker`. */
 function handlePluginShardLost(shardIndex: number, actorIds: readonly string[]): void {
   console.error(`[DEBUG] PluginRuntime: shard ${shardIndex} lost, restoring actors: ${actorIds.join(", ")}`);
+  // 🚑️ Restoring the ACTOR is not restoring the APP. `ActivationRegistry.restoreActor` re-activates
+  // the program on a rebuilt shard and restores whatever checkpoint it has — and a watchdog kill
+  // takes no checkpoint, so the guest comes back EMPTY: no `createApp` instance, no open document,
+  // no lifecycle slot. Every later command page then fails the guest's own liveness check with
+  // `plugin.command-page-invalid` and the session is dead until the user reloads, which is exactly
+  // what was measured on 2026-09-12 after a 16 s `brep.bool.cut` tripped the watchdog
+  // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`).
+  //
+  // So the instances those actors owned are retired HERE, before the restore, and announced — the
+  // runtime never keeps serving an instance whose guest state no longer exists, and whoever created
+  // the instance (the shell) is told it must create it again.
+  const lost = releaseInstancesForLostActors(actorIds);
   getActivationRegistry().handleShardLost(shardIndex, actorIds);
+  if (lost.length > 0) notifyPluginInstancesLost(shardIndex, lost);
+}
+
+/** 🚑️ One app instance that died with its shard — the plugin that owned it, the instance id the
+ * shell knows it by, and the actor that hosted it. */
+export type LostPluginInstance = {
+  readonly pluginId: string;
+  readonly instanceId: number;
+  readonly actorId: string;
+};
+
+/** 🩺️ The typed fault a surface publishes when an app instance was lost with its worker and could
+ * not be rebuilt. Distinct from `plugin.boot.shard-lost` on purpose: that one means the FIRST boot
+ * was killed, this one means a live session was. */
+export const PLUGIN_ACTOR_INSTANCE_LOST_FAULT = "plugin.actor-instance-lost";
+
+/** 🚑️ Every live instance's recovery record, keyed by the actor that hosts it. Module-level (not a
+ * per-handle closure) because `onShardLost` is a transport-level callback that knows only actor
+ * ids — it has no handle to ask. Written by `createApp`, cleared by `destroyApp`/`dispose`. */
+const instanceRecoveryByActor = new Map<string, LostPluginInstance & { readonly release: () => void }>();
+
+const pluginInstanceLostSubscribers = new Set<(shardIndex: number, lost: readonly LostPluginInstance[]) => void>();
+
+/** 🚑️ Subscribes to "an app instance died with its worker". Returns the unsubscribe. The shell is
+ * the only correct listener: it is what called `createApp`, so it is the only party that can call it
+ * again. */
+export function onPluginInstancesLost(listener: (shardIndex: number, lost: readonly LostPluginInstance[]) => void): () => void {
+  pluginInstanceLostSubscribers.add(listener);
+  return () => { pluginInstanceLostSubscribers.delete(listener); };
+}
+
+function notifyPluginInstancesLost(shardIndex: number, lost: readonly LostPluginInstance[]): void {
+  console.error(`PluginRuntime: ${PLUGIN_ACTOR_INSTANCE_LOST_FAULT} — ${lost.map((entry) => `${entry.pluginId}#${entry.instanceId}`).join(", ")} died with shard ${shardIndex} and must be re-created`);
+  for (const listener of Array.from(pluginInstanceLostSubscribers)) {
+    try {
+      listener(shardIndex, lost);
+    } catch (error) {
+      console.error("PluginRuntime: an instance-lost listener threw", error);
+    }
+  }
+}
+
+/** 🧹️ Retires the runtime bookkeeping of every instance hosted by a lost actor and reports them.
+ * Idempotent: an actor with no live instance (an extension's request actor, an instance already
+ * destroyed) contributes nothing. */
+function releaseInstancesForLostActors(actorIds: readonly string[]): readonly LostPluginInstance[] {
+  const lost: LostPluginInstance[] = [];
+  for (const actorId of actorIds) {
+    const record = instanceRecoveryByActor.get(actorId);
+    if (!record) continue;
+    instanceRecoveryByActor.delete(actorId);
+    lost.push({ pluginId: record.pluginId, instanceId: record.instanceId, actorId });
+    try {
+      record.release();
+    } catch (error) {
+      console.error(`PluginRuntime: releasing lost instance ${record.pluginId}#${record.instanceId} threw`, error);
+    }
+  }
+  return lost;
+}
+
+/** 🚑️ Test seam + the one writer: binds an actor to the instance it hosts so a shard loss can
+ * retire and announce it. */
+function rememberInstanceForRecovery(record: LostPluginInstance & { readonly release: () => void }): void {
+  instanceRecoveryByActor.set(record.actorId, record);
+}
+
+/** 🧹️ Forgets a recovery record for an instance that closed normally. */
+function forgetInstanceForRecovery(actorId: string): void {
+  instanceRecoveryByActor.delete(actorId);
 }
 
 /** 🎭️ Split out from {@link getShardClient} so a test can construct a REAL `ShardClient` (exercising
@@ -514,54 +600,25 @@ function commandIngressFaultDisplay(status: WireVariant | undefined): string {
   return text.length > 0 ? text : decoded;
 }
 
-/** 🔀️ `Effect::SendMessage{target: Shell{instance}}` → the raw `AppFrame` bytes it wraps —
- * `⚛️reactor/🦀️.rs`'s `route_app_frame` puts EVERY non-`UiPatch` `AppFrame` reply here
- * (design-abi.md §2). Mirrors `🦀️.rs`'s native `apply_turn_result` (H3-wgpu-native) — same
- * demux, TS twin. */
-function shellFrameBytes(effect: WireVariant, instanceId: number): Uint8Array | null {
-  if (effect.tag !== "send-message") return null;
-  const val = (effect.val ?? {}) as { readonly target?: WireVariant<number>; readonly payload?: unknown };
-  if (!val.target || val.target.tag !== "shell") return null;
-  if (Number(val.target.val) !== instanceId) return null;
-  if (val.payload === undefined) return null;
-  return coerceWireBytes(val.payload);
-}
+/** 🔀️ `Effect::SendMessage{target: Shell{instance}}` → the raw `AppFrame` bytes it wraps. The
+ * demux itself lives in `🖼️wire-turn.ts` so BOTH renderer targets read one rule (it is what tells an
+ * `AppFrame` apart from a typed-operation result page riding the same endpoint); this alias keeps
+ * every call site and the contract-test export surface below unchanged. */
+const shellFrameBytes = wireShellFrameBytes;
 
 //#region 📬️TypedOperationResult
-const TYPED_OPERATION_PAGE_MAGIC = new TextEncoder().encode("semio.typed-operation-page.v1\0");
-const TYPED_OPERATION_ACK_MAGIC = new TextEncoder().encode("semio.typed-operation-ack.v1\0");
 const DIRECTORY_PROJECTION_RECEIPT_SCHEMA = "semio.space.home.directory-projection-receipt.v1";
 const TYPED_OPERATION_TERMINAL_OUTPUT = "typed-operation-terminal-output";
 const TYPED_OPERATION_PENDING_OUTPUT = "typed-operation-pending-output";
 const TYPED_OPERATION_TERMINAL_SEEN = "typed-operation-terminal-seen";
 
-/** 🛤️ Highest `TypedOperationResultLane` discriminant the Rust host emits (`🔌️plugin/🦀️.rs` `TypedOperationResultLane` → byte 25 of a result page: Artifact 0 … Fault 11, Interaction 12, WindowTransient 13, WindowConfig 14). */
-const TYPED_OPERATION_RESULT_LANE_MAX = 14;
-
-function typedOperationResult(effect: WireVariant): { readonly acknowledgement: ShardEventEnvelope; readonly lane: number; readonly payload: Uint8Array; readonly operation: bigint; readonly sequence: number } | null {
-  if (effect.tag !== "send-message") return null;
-  const value = effect.val as { readonly target?: WireVariant; readonly payload?: unknown } | undefined;
-  if (value?.target?.tag !== "shell" || value.payload === undefined) return null;
-  const bytes = coerceWireBytes(value.payload);
-  if (!TYPED_OPERATION_PAGE_MAGIC.every((byte, index) => bytes[index] === byte)) return null;
-  const body = bytes.subarray(TYPED_OPERATION_PAGE_MAGIC.length);
-  if (body.length < 30) throw new Error("typed-operation result header is truncated");
-  const view = new DataView(body.buffer, body.byteOffset, body.byteLength);
-  const receiver = view.getUint32(0, true);
-  const lane = body[25]!;
-  const length = view.getUint32(26, true);
-  if (Number(value.target.val) !== receiver || lane > TYPED_OPERATION_RESULT_LANE_MAX || length > 4_096 || body.length !== 30 + length) throw new Error("typed-operation result violates its receiver, lane, or page authority");
-  const ack = new Uint8Array(TYPED_OPERATION_ACK_MAGIC.length + 25);
-  ack.set(TYPED_OPERATION_ACK_MAGIC);
-  ack.set(body.subarray(0, 25), TYPED_OPERATION_ACK_MAGIC.length);
-  return { acknowledgement: { kind: "message", payload: { source: { tag: "shell", val: String(receiver) }, payload: Array.from(ack) } }, lane, payload: body.subarray(30), operation: view.getBigUint64(4, true), sequence: view.getUint32(20, true) };
-}
+/** 📬️ One turn's result pages and the acknowledgements they owe — the page codec is
+ * `🖼️wire-turn.ts`'s, shared with the wgpu bridge; only the OWNER-attributing policy below is this
+ * renderer's own. */
+const typedOperationResult = wireTypedOperationResult;
 
 function typedOperationAcknowledgements(result: WireTurnResult): ShardEventEnvelope[] {
-  return result.effects.flatMap((effect) => {
-    const page = typedOperationResult(effect);
-    return page ? [page.acknowledgement] : [];
-  });
+  return wireTypedOperationAcknowledgements(result);
 }
 
 /** 🚨️ Real fault code a typed-operation fault page is surfaced under when no host call may be
@@ -691,13 +748,13 @@ function consumeTypedOperationEffects(effects: readonly WireVariant[], call?: Ty
       consumed.push(effect);
       continue;
     }
-    if (page.lane === 11) {
+    if (page.lane === TYPED_OPERATION_LANE_FAULT) {
       const message = new TextDecoder().decode(page.payload);
-      if (!call || call.fault(page.operation, page.sequence, message)) throw new Error(`typed-operation failed: ${message}`);
+      if (!call || call.fault(page.token.operation, page.token.sequence, message)) throw new Error(`typed-operation failed: ${message}`);
       continue;
     }
-    call?.observe(page.operation, page.sequence);
-    if (page.lane === 10) {
+    call?.observe(page.token.operation, page.token.sequence);
+    if (page.lane === TYPED_OPERATION_LANE_TERMINAL) {
       terminal = true;
       continue;
     }
@@ -712,7 +769,7 @@ function consumeTypedOperationEffects(effects: readonly WireVariant[], call?: Ty
     if (page.lane !== 9) continue;
     const metadata: unknown = JSON.parse(new TextDecoder().decode(page.payload));
     if (!Array.isArray(metadata) || typeof metadata[0] !== "string" || typeof metadata[1] !== "string" || (metadata[2] !== null && metadata[2] !== "base64" && metadata[2] !== "identity")) throw new Error("typed-operation download metadata is invalid");
-    consumed.push({ tag: "download-media-export", val: { filename: metadata[0], mimeType: metadata[1], data: String(page.operation), encoding: `${SEGMENTED_DOWNLOAD_MARKER_PREFIX}${metadata[2] ?? "identity"}` } });
+    consumed.push({ tag: "download-media-export", val: { filename: metadata[0], mimeType: metadata[1], data: String(page.token.operation), encoding: `${SEGMENTED_DOWNLOAD_MARKER_PREFIX}${metadata[2] ?? "identity"}` } });
   }
   if (terminalOutput !== undefined) {
     consumed.push({ tag: terminal ? TYPED_OPERATION_TERMINAL_OUTPUT : TYPED_OPERATION_PENDING_OUTPUT, val: terminalOutput });
@@ -988,7 +1045,7 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
     // stays loud.
     case "send-message": {
       if (isRoutedWireSendMessage(effect)) return null;
-      console.warn(`[DEBUG] wireEffectToFriendly: send-message to "${wireSendMessageTargetTag(effect) || "no endpoint"}" has no host route — only ${WIRE_SEND_MESSAGE_ROUTED_TARGETS.join("/")} are consumed`);
+      console.warn(`wireEffectToFriendly: send-message to "${wireSendMessageTargetTag(effect) || "no endpoint"}" has no host route — only ${WIRE_SEND_MESSAGE_ROUTED_TARGETS.join("/")} are consumed`);
       return null;
     }
     default:
@@ -1053,13 +1110,7 @@ async function drainTypedOperationTurns(
   settle: () => Promise<{ readonly status: unknown; readonly nextWake: number | null }>,
   yieldTurn: () => Promise<void> = yieldPluginUiContinuation,
 ): Promise<{ readonly polls: number; readonly stopped: "idle" | "closed" | "budget"; readonly nextWake: number | null }> {
-  for (let poll = 0; poll < budget; poll += 1) {
-    if (!live()) return { polls: poll, stopped: "closed", nextWake: null };
-    const settled = await settle();
-    if (wireTurnStatusTag(settled.status) !== "more-work") return { polls: poll + 1, stopped: "idle", nextWake: settled.nextWake };
-    await yieldTurn();
-  }
-  return { polls: budget, stopped: "budget", nextWake: null };
+  return driveTypedOperationDrain(budget, live, settle, yieldTurn);
 }
 
 /** 🪪️ H1-react — instance ids must be unique across EVERY plugin, not just within one
@@ -1435,7 +1486,7 @@ function pluginTurnStalledError(actorId: string, results: readonly WireTurnResul
   const missing = [...(requiredSurfaceIds ?? [])].filter((surface) => !published.has(surface));
   const pending = missing.length > 0 ? missing : [...published];
   return new Error(
-    `[DEBUG] PluginRuntime: actor ${actorId} published, acknowledged and emitted nothing for ${zeroProgress} consecutive continuations ` +
+    `PluginRuntime: actor ${actorId} published, acknowledged and emitted nothing for ${zeroProgress} consecutive continuations ` +
       `(operation=${call?.label ?? "none"}, pending=${JSON.stringify(pending)}, required=${JSON.stringify([...(requiredSurfaceIds ?? [])])}, ` +
       `continuations=${continuations}, status=${wireTurnStatusTag(results.at(-1)?.status)}, zeroProgressLimit=${PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT})`,
   );
@@ -2007,6 +2058,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     return actorId;
   };
   const releaseInstanceMaps = (instanceId: number, actorId: string): void => {
+    forgetInstanceForRecovery(actorId);
     documentBindings.delete(instanceId);
     documentBindingGenerations.delete(instanceId);
     actorIdByInstance.delete(instanceId);
@@ -2440,6 +2492,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         uiOwnerByInstance.set(instanceId, owner);
         uiSurfaceByInstance.set(instanceId, new Map());
         uiIntakesByInstance.set(instanceId, new Set());
+        // 🚑️ From here on this instance has real guest state, so losing its worker is a loss the
+        // shell has to be told about — see {@link onPluginInstancesLost}. Registered AFTER the open
+        // bound a UI owner, because an instance whose open never got that far is already handled by
+        // `settleFailedInstanceOpen`'s own path.
+        rememberInstanceForRecovery({ pluginId, instanceId, actorId, release: () => releaseInstanceMaps(instanceId, actorId) });
         requireOpening();
         await withTypedOperationCall(actorId, `open#${instanceId}`, async (call) => {
           await settlePluginTurn(actorId, opened.turn, "Interactive", new Set(), (turn) => acceptUiPatches(instanceId, turn), false, undefined, call);
@@ -2662,7 +2719,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       throw fault ? new SemioFaultError(fault) : refuse("extension.answer-not-a-fault", `extension ${pluginId} refused ${capability} with ${answer.result.fault.byteLength} undecodable bytes`);
     }
     if (answer.result.ok.byteLength > GUEST_HOST_ANSWER_CEILING_BYTES) throw refuse("extension.answer-too-large", `extension answer of ${answer.result.ok.byteLength} B exceeds the ${GUEST_HOST_ANSWER_CEILING_BYTES}-byte host-answer ceiling`);
-    console.debug("[DEBUG] extension request answered", { pluginId, capability, req: String(req), turns: answer.turns, bytes: answer.result.ok.byteLength });
     return answer.result.ok;
   };
 
@@ -3027,6 +3083,8 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
       if (errorFrame) throw new Error(`[DEBUG] loadAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
+    readAppDocumentArchive: (instanceId) => requireChannel(instanceId).readDocumentArchive(),
+    loadAppDocumentArchive: (instanceId, archive) => requireChannel(instanceId).loadDocumentArchive(archive),
     readWindowConfigPacks: (instanceId) => requireChannel(instanceId).readWindowConfigs(),
     loadWindowConfigPack: (instanceId, entry) => requireChannel(instanceId).loadWindowConfig(entry),
     // 🚧️ Same channel-v12 retirement as `attachBackbone`/`detachBackbone` above: the old
@@ -3596,7 +3654,7 @@ function pluginRuntimeTestDependenciesV1() {
     get sharedShardClient() { return sharedShardClient; },
     set sharedShardClient(value: typeof sharedShardClient) { sharedShardClient = value; },
   };
-  return { testState, leftoverShellInvocationFrames, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, DEFAULT_LEFTOVER_WINDOW_SURFACE, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
+  return { testState, leftoverShellInvocationFrames, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, DEFAULT_LEFTOVER_WINDOW_SURFACE, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
 }
 
 export type PluginRuntimeTestDependenciesV1 = ReturnType<typeof pluginRuntimeTestDependenciesV1>;

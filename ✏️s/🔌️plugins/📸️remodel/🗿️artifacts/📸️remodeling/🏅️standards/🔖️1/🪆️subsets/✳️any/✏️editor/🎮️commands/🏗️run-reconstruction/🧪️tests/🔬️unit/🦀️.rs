@@ -1,8 +1,8 @@
 use super::*;
-use crate::editor::remodeling::testkit::{app_with_registry, RemodelingApp};
+use crate::editor::remodeling::unit_tests::context::{app_with_registry, RemodelingApp};
 use crate::editor::remodeling::RemodelingPlayApp;
 
-use semio_framework_plugin::testkit::meta;
+use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::{ArtifactEditor, InvocationResult, PluginApp};
 
 #[test]
@@ -443,7 +443,7 @@ async fn cancellation_and_stale_delivery_are_isolated_between_documents() {
 
     let history = semio_framework_plugin::HistoryView::empty();
     let view_a = ArtifactView::new(&scene_a, &history);
-    let config = RemodelingConfig::default();
+    let config = NoConfig::default();
     let stale = handle_advance(&stale_payload_a, &view_a, &ConfigView { snapshot: &config, window: None }).expect("stale handler delivery");
     assert!(stale.artifact_mutations.is_empty());
     assert!(stale.effects.is_empty());

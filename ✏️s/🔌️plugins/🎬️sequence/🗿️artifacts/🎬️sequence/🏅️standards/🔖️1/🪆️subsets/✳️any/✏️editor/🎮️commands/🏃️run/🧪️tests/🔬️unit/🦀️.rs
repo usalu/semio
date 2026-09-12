@@ -1,4 +1,4 @@
-use crate::editor::sequence::testkit::{dispatch, new_app, render};
+use crate::editor::sequence::unit_tests::context::{dispatch, new_app, render};
 use crate::editor::sequence::SequenceCommand;
 
 use super::run_command::Run;

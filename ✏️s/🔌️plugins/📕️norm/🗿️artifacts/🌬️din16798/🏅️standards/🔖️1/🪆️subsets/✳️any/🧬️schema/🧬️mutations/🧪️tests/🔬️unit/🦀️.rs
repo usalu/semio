@@ -99,7 +99,7 @@ async fn every_variant_round_trips_via_inverse() {
 
 //#region 🧪️MutationLaws
 /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-/// (reachable here as `protocol::os_spr::testkit` — the bare `protocol::testkit` path is ambiguous crate-wide because `os_pack` also re-exports a `testkit` module), exercised against the three most structurally
+/// (reachable here as `protocol::os_spr::protocol_laws` — the bare `protocol::os_spr::protocol_laws` path is ambiguous crate-wide because `os_pack` also re-exports a `test context` module), exercised against the three most structurally
 /// distinct variants: the repurposed enum-typed slot (`change-annex`), a typical `f64` scalar
 /// (`change-t-op-c`), and a `String` scalar (`change-occupancy`).
 
@@ -107,27 +107,27 @@ async fn every_variant_round_trips_via_inverse() {
 async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
     let base = Din16798Snapshot::default();
     let mutation = Din16798Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = Din16798Mutation::ChangeOccupancy(change_occupancy::ChangeOccupancy { new_occupancy: "office".to_string() }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 #[semio_framework_async_macros::async_test]
 async fn change_t_op_c_satisfies_the_inverse_and_absorb_laws() {
     let base = Din16798Snapshot::default();
     let mutation = Din16798Mutation::ChangeTOpC(change_t_op_c::ChangeTOpC { new_t_op_c: 24.5 });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = Din16798Mutation::ChangeBedrooms(change_bedrooms::ChangeBedrooms { new_bedrooms: 4 }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 #[semio_framework_async_macros::async_test]
 async fn change_occupancy_satisfies_the_inverse_and_absorb_laws() {
     let base = Din16798Snapshot::default();
     let mutation = Din16798Mutation::ChangeOccupancy(change_occupancy::ChangeOccupancy { new_occupancy: "office".to_string() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = Din16798Mutation::ChangeDuctClass(change_duct_class::ChangeDuctClass { new_duct_class: "B".to_string() }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws

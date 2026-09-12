@@ -24,10 +24,10 @@ pub struct EnergyModelSnapshot {
     #[state(artifact)]
     pub model: crate::model::Model,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.value")]
+    #[child(kind = "s.stdio.semio")]
     pub structure: EnergyStructureChild,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.table")]
+    #[child(kind = "s.stdio.semio")]
     pub zones: EnergyZonesChild,
     #[state(artifact)]
     #[link_slot(roles("model"))]
@@ -274,8 +274,8 @@ impl store::ArtifactPack for EnergyModelSnapshot {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let _ = options;
         decode_energy_model_snapshot_binary(&inner).map_err(store::PackError::Schema)

@@ -7,7 +7,7 @@
 
 // 🏭️ Third-party fixture generator for the five `s.stdio.pdf@1.4/base` page mutations.
 //
-// Every before/after pair `🦀️lopdf-engine/src/🏗️generate.rs` writes is produced by the SAME registered `lopdf`
+// Every before/after pair `🔁️codec/🏗️generate/🦀️.rs` writes is produced by the SAME registered `lopdf`
 // 0.44 reference implementation named `lopdf-pdf-1-4-base-mutate` in `../🔣️oracle.json` —
 // through `lopdf`'s own public COS API inside the standalone
 // `semio-s-plugin-stdio-test-oracle` crate, the identical engine the differential test case
@@ -39,13 +39,13 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const ENGINE_DIR = join(HERE, "🦀️lopdf-engine");
+const ENGINE_DIR = join(HERE, "🔁️codec", "📦️packages", "🦀️rust");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 const SUBSET = "base";
 const ORACLE_ID = "lopdf-pdf-1-4-base-mutate-reader";
 const COMPARISON_PROFILE = "semantic-pdf-structural-base-14-v1";
-// 🧾️ Kept in step with `🦀️lopdf-engine/src/lib.rs::KINDS` (itself the same list as
+// 🧾️ Kept in step with `🔁️codec/🦀️.rs::KINDS` (itself the same list as
 // `../🔣️oracle.json`'s `pdf-1-4-base` catalog) — `manifests` walks whichever recipe directories the
 // engine actually wrote rather than trusting this constant, so a drift here fails loudly as a
 // missing-directory error instead of silently under-registering a kind.
@@ -128,7 +128,7 @@ async function manifests(): Promise<void> {
       comparisonProfile: COMPARISON_PROFILE,
       reproducible: true,
       family: "mechanical",
-      notes: `A minimal two-descriptor seed built with lopdf 0.44, with the ${kind} mutation applied through lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). ${BEFORE_FILENAME} is the arranged seed and ${AFTER_FILENAME} is the result lopdf wrote. Observability is checked before the pair is written.`,
+      notes: `A minimal two-descriptor seed built with lopdf 0.44, with the ${kind} mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ${BEFORE_FILENAME} is the arranged seed and ${AFTER_FILENAME} is the result lopdf wrote. Observability is checked before the pair is written.`,
     });
   }
   console.log(JSON.stringify(entries, null, 2));

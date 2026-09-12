@@ -60,35 +60,35 @@ async fn every_variant_round_trips_via_inverse() {
 
 //#region 🧪️MutationLaws
 /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-/// (reachable here as `protocol::os_spr::testkit`), exercised against three structurally distinct
+/// (reachable here as `protocol::os_spr::protocol_laws`), exercised against three structurally distinct
 /// variants: an enum scalar (`change-annex`), a plain `f64` scalar (`change-m-ed-knm`), and a
 /// `String` scalar (`change-unit`).
 #[semio_framework_async_macros::async_test]
 async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
     let base = En1996Snapshot::default();
     let mutation = En1996Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = En1996Mutation::ChangeUnit(change_unit::ChangeUnit { new_unit: "calcium_silicate".to_string() }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 #[semio_framework_async_macros::async_test]
 async fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
     let base = En1996Snapshot::default();
     let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 12.5 });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = En1996Mutation::ChangeStoreys(change_storeys::ChangeStoreys { new_storeys: 4 }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 #[semio_framework_async_macros::async_test]
 async fn change_unit_satisfies_the_inverse_and_absorb_laws() {
     let base = En1996Snapshot::default();
     let mutation = En1996Mutation::ChangeUnit(change_unit::ChangeUnit { new_unit: "calcium_silicate".to_string() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = En1996Mutation::ChangeFKMpa(change_f_k_mpa::ChangeFKMpa { new_f_k_mpa: 6.5 }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws
 
@@ -102,7 +102,7 @@ async fn change_m_ed_knm_non_finite_is_fatal() {
     let base = En1996Snapshot::default();
     let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: f64::NAN });
     let outcome = mutation.diff(&base);
-    protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
     assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
 }
 
@@ -119,6 +119,6 @@ async fn change_masonry_class_same_value_is_no_op() {
 async fn change_m_ed_knm_is_deterministic() {
     let base = En1996Snapshot::default();
     let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 12.5 });
-    protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_deterministic(&base, &mutation).await;
 }
 //#endregion 🔖️OutcomeLaws

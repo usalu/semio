@@ -56,7 +56,7 @@ pub fn plugin() -> Result<Plugin<FemApps>, PluginAssemblyError> {
 
 //#region 🧪️SurfaceTests
 /// 🧪️ Contract §2.3/§2.5: each artifact's editor and viewer share one `Dialect`, and the viewer can
-/// never mutate the document store. Uses the real framework testkit helpers (w0-f gap 2 closure), not
+/// never mutate the document store. Uses the real framework test context helpers (w0-f gap 2 closure), not
 /// local stand-ins.
 #[cfg(test)]
 #[path = "🧪️tests/🔬️surface/🦀️.rs"]

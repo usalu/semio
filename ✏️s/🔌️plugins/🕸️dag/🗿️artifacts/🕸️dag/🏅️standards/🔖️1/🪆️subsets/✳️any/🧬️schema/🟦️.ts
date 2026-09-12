@@ -1,24 +1,15 @@
-/** 🧬️ DAG artifact with one composed graph-content identity. */
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+/** 🧬️ Dag durable document with exact owned-child coordinates. */
+import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSemioChild, type ArtifactChild } from "../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🟦️.ts";
 
 export interface DagArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact @child kind=s.stdio.semio.graph */ content: ArtifactChild;
+  /** @state artifact */ schema: "dag.dag";
+  /** @state artifact @child kind=s.stdio.semio */ content: ArtifactChild;
 }
 
-const object = (value: unknown, at: string): Readonly<Record<string, unknown>> => {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: value must be an object`);
-  return value as Record<string, unknown>;
-};
-
-const exact = (row: Readonly<Record<string, unknown>>, keys: readonly string[], at: string): void => {
-  if (Object.keys(row).length !== keys.length || keys.some((key) => !Object.hasOwn(row, key))) throw new Error(`${at}: fields do not match DagArtifact`);
-};
-
-/** 🪪️ Parses the exact durable DAG document boundary and refuses embedded graph payloads. */
+/** 🪪️ Validates the document marker, declared fields and each exact child dialect. */
 export function parseDagArtifact(value: unknown, at = "$"): DagArtifact {
-  const row = object(value, at);
-  exact(row, ["schema", "content"], at);
-  if (typeof row.schema !== "string") throw new Error(`${at}.schema: value must be a string`);
-  return { schema: row.schema, content: parseArtifactChild(row.content) };
+  const row = parseSchemaRecord(value, ["schema", "content"], at);
+  if (row.schema !== "dag.dag") throw new Error(`${at}.schema: invalid Dag marker`);
+  return { schema: row.schema, content: parseSemioChild(row.content, "graph", `${at}.content`) };
 }

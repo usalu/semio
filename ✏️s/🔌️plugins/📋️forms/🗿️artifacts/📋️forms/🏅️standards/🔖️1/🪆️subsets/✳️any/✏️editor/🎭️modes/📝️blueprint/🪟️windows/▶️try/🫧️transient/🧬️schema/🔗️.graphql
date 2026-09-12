@@ -1,0 +1,8 @@
+type FormsTryValue {
+  key: String!
+  chunks: [String!]!
+}
+
+type FormsTryWindowTransient {
+  tryValues: [FormsTryValue!]! @state(class: WINDOW_TRANSIENT)
+}

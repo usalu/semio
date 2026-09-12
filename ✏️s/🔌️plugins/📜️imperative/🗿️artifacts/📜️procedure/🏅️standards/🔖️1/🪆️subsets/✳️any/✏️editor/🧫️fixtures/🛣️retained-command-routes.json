@@ -5,61 +5,61 @@
   "routes": [
     {
       "id": "addStep",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "fresh-id derivation clones and recursively scans the flow child"
     },
     {
       "id": "addStepAt",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "fresh-id and owner resolution clone and scan the flow child"
     },
     {
       "id": "removeStep",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "step resolution clones and scans the flow child"
     },
     {
       "id": "removeStepAt",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "nested step resolution clones and scans the flow child"
     },
     {
       "id": "moveStep",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "step resolution clones and scans the flow child"
     },
     {
       "id": "moveStepAt",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "nested step resolution clones and scans the flow child"
     },
     {
       "id": "setStepParams",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "step resolution clones and scans the flow child"
     },
     {
       "id": "setStepParamsAt",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "nested step resolution clones and scans the flow child"
     },
     {
       "id": "run",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "execution clones both children and has no child-job stepping seam"
     },
     {
       "id": "setContributions",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "reason": "the mutation synchronizes a process-global imperative module registry before Store publication"
     }

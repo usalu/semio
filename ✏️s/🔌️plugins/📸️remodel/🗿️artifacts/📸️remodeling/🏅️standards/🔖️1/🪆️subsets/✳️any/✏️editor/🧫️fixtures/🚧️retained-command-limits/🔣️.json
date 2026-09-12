@@ -15,241 +15,241 @@
     {
       "toolId": "runReconstruction",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "retryStage",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "runStage",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "importFramePayload",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "importVideoFramePayload",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "importVideoDone",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "importVideoBytesPayload",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "addStream",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "removeStream",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "setStreamSync",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "editCalibration",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "calibrateCameras",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "addGcp",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "removeGcp",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "placeGcpObservation",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "setIngestParams",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "setFeatureParams",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "setMatchParams",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "setSfmParams",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "setDenseParams",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "setMeshParams",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "setMotionParams",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "setGeoParams",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "resetPlaceholderMesh",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "clearSparse",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "clearDense",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "clearMeshResult",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "clearTracks",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "clearGeoProducts",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "clearResult",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "setCamera",
       "lanes": [
-        "config"
+        "Config"
       ]
     },
     {
       "toolId": "setLayerVisibility",
       "lanes": [
-        "config"
+        "Config"
       ]
     },
     {
       "toolId": "setFrameCursor",
       "lanes": [
-        "config"
+        "Config"
       ]
     },
     {
       "toolId": "setReportTable",
       "lanes": [
-        "config"
+        "Config"
       ]
     },
     {
       "toolId": "importFrames",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ]
     },
     {
       "toolId": "importVideo",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ]
     },
     {
       "toolId": "exportQcReport",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ]
     },
     {
       "toolId": "advanceReconstruction",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "cancelReconstruction",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "setActiveExample",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     }
   ],

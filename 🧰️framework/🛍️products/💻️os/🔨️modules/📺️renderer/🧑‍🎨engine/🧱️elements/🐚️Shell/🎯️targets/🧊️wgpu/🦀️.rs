@@ -13,7 +13,7 @@ use semio_framework_os_kernel::os_directory::{client::DirectoryTransport, direct
 #[cfg(test)]
 use ui_wgpu::wgpu::{push_chrome_group_border, Label, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode};
 
-use crate::dock::{compute_dock_drop_zone, parse_path, DockDragKind, DockDragPayload, DockDragState, DockState, WindowSilhouette};
+use crate::dock::{compute_dock_drop_zone, parse_path, DockDragKind, DockDragPayload, DockDragState, DockRenderContext, DockState, WindowSilhouette};
 use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, UiDocumentFrameCursor};
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig, ProgramBridgeEntry};
 use crate::scenes::{toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
@@ -1721,11 +1721,25 @@ impl ShellDocumentRetirementRegistry {
         Ok(())
     }
 
+    /// ♻️ Advances the NEXT occupied slot by one PAGE.
+    ///
+    /// ⚖️ Two prices were wrong here and both were invisible: the cursor advanced by one position per
+    /// call whether or not that position held anything, so a registry holding six documents in a
+    /// 512-slot ring spent 99 % of its steps on vacancies; and each real step was granted
+    /// `close_step()`'s one item / 4 KiB, which is a per-ITEM price for a walk whose unit is a page.
+    /// Together they made [`SHELL_DOCUMENT_RETIREMENT_STEPS`] buy ~128 real steps per document, far
+    /// short of what one 120-node document's typed descendants need — so a refresh's previous set was
+    /// still resident when the next asked the process-wide aggregate for credit, and every surface of
+    /// the second refresh was refused `Capacity`
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Priced per page, exactly as
+    /// `📓️close-ladder-budget-2026-09-12.md` §3 prices every other retirement in this shell.
     fn close_one(&mut self) -> bool {
-        let index = self.cursor;
-        self.cursor = (self.cursor + 1) % SHELL_DOCUMENT_RETIREMENT_CAPACITY;
-        let Some(slot) = self.slots[index].as_mut() else { return false };
-        let terminal = slot.document.close_step() && slot.document.terminal_is_empty();
+        let Some(index) = (0..SHELL_DOCUMENT_RETIREMENT_CAPACITY).map(|offset| (self.cursor + offset) % SHELL_DOCUMENT_RETIREMENT_CAPACITY).find(|index| self.slots[*index].is_some()) else {
+            return false;
+        };
+        self.cursor = (index + 1) % SHELL_DOCUMENT_RETIREMENT_CAPACITY;
+        let slot = self.slots[index].as_mut().expect("the located shell document retirement slot is occupied");
+        let terminal = slot.document.close_step_with_grant(SHELL_DOCUMENT_RETIREMENT_ITEMS, SHELL_DOCUMENT_RETIREMENT_BYTES).is_ok_and(|step| step.complete) && slot.document.terminal_is_empty();
         if terminal {
             let terminal = self.slots[index].take().expect("terminal shell document retirement slot");
             assert!(terminal.document.terminal_is_empty(), "shell document retirement witness changed before removal");
@@ -2259,7 +2273,7 @@ pub struct ShellSurfaceFault {
 /// and made that plugin's first-step trap the whole shell's boot failure. Falls back to the program
 /// that actually declares the requested app id, and only then to the requested program's first app;
 /// a variant whose plugin is absent resolves to `None` rather than to somebody else's app.
-pub fn select_boot_program(programs: &[(&str, &semio_framework::PluginManifest)], plugin_filter: &str) -> Option<(usize, AppDefinition)> {
+pub fn select_boot_program(programs: &[(&str, &semio_framework::PluginManifest)], plugin_filter: &str, app_role: semio_framework::manifest::AppRole) -> Option<(usize, AppDefinition)> {
     let registry_plugin_id = resolve_registry_plugin_id(plugin_filter);
     let requested_app_id = resolve_playground_app_id(plugin_filter);
     let index = programs
@@ -2267,10 +2281,70 @@ pub fn select_boot_program(programs: &[(&str, &semio_framework::PluginManifest)]
         .position(|(plugin_id, _)| *plugin_id == registry_plugin_id)
         .or_else(|| requested_app_id.and_then(|app_id| programs.iter().position(|(_, manifest)| manifest.apps.iter().any(|app| app.id == app_id))))?;
     let manifest = programs[index].1;
-    let app = requested_app_id.and_then(|app_id| manifest.apps.iter().find(|app| app.id == app_id)).or_else(|| manifest.apps.first())?;
-    Some((index, app.clone()))
+    let anchor = requested_app_id.and_then(|app_id| manifest.apps.iter().find(|app| app.id == app_id)).or_else(|| manifest.apps.first())?;
+    Some((index, project_boot_app_role(manifest, anchor, app_role).clone()))
+}
+
+/// 👁️✏️ Projects the variant's anchor app onto the boot ROLE (`?role=viewer`, `SEMIO_APP_ROLE`,
+/// `VITE_SEMIO_APP_ROLE`). A surface app id is `<dialect>#<role>` by construction
+/// (`semio_framework::surface_app_id`), so the registry's `generation3d → …#editor` row names the
+/// right DIALECT and the wrong role the moment a viewer boot is requested. This is the Rust twin of
+/// React's `resolveBootPrimaryAppV1` (`🏛️ShellHost/🔀️surface-switch/🟦️.ts`) and follows its rule
+/// exactly: a manifest that declares the sibling surface for the anchor's dialect wins, and a
+/// manifest that does not keeps the anchor — a viewer request on an editor-only artifact is a
+/// downgrade to the surface that exists, never a dead boot.
+fn project_boot_app_role<'a>(manifest: &'a semio_framework::PluginManifest, anchor: &'a AppDefinition, app_role: semio_framework::manifest::AppRole) -> &'a AppDefinition {
+    if anchor.role == app_role {
+        return anchor;
+    }
+    manifest.apps.iter().find(|app| app.role == app_role && app.dialect == anchor.dialect).unwrap_or(anchor)
 }
 //#endregion 🧯️BootProgramSelection
+
+/// 📏️ Rounds one `flush_deferred_actions` may spend chasing the chain an extension answer
+/// re-arms. The native preview chain converges in five ticks and six extension round trips per
+/// preview window; this is generous enough for several windows and finite enough that a guest that
+/// never settles is reported instead of spinning forever.
+const SHELL_DEFERRED_CHAIN_ROUNDS: usize = 512;
+
+/// 📏️ Bounded steps one `drain_retained_document_arenas` spends returning the previous refresh's
+/// retained documents and their `UiValue` pages. Finite so a registry that never settles is left
+/// behind rather than spinning the shell.
+const SHELL_DOCUMENT_RETIREMENT_STEPS: usize = 65_536;
+
+/// 📏️ Items one retirement step may return. A page, never one item — the unit the rest of this
+/// shell's close ladder is already priced in (`📓️close-ladder-budget-2026-09-12.md` §3).
+const SHELL_DOCUMENT_RETIREMENT_ITEMS: usize = 1_024;
+
+/// 📏️ Bytes one retirement step may return. Kept under the guest contiguous request ceiling so a
+/// grant never asks an arena for a block `dlmalloc` cannot serve once fragmented.
+const SHELL_DOCUMENT_RETIREMENT_BYTES: usize = 32 * 1_024;
+
+/// 📏️ Convergence rounds one `flush_deferred_actions` may spend re-entering the window bodies after
+/// its actions and extension answers have quiesced.
+///
+/// ⚖️ A guest's preview job is driven BY its own window render: rendering `procedural-preview` is
+/// what arms the next `flowEvalTick`, and each tick's extension answer arms exactly one more. One
+/// refresh plus one flush therefore stops the moment the chain THAT render armed quiesces — measured
+/// on 6118 as `meshingFaces 6/8` with the solid never published. React has no such hole because a
+/// mutation re-renders the shell, which re-enters every window body and re-arms
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+const SHELL_SETTLE_ROUNDS: usize = 64;
+
+/// 📏️ Opportunities one window body's retained paint may spend inside a single chrome walk before
+/// the walk gives up on it and moves to the next window. Generous enough for the largest document
+/// this shell renders and finite so one stalled body cannot hold the frame — and with it the navbar,
+/// the panels and the GPU present — forever.
+const SHELL_WINDOW_PAINT_OPPORTUNITIES: usize = 1 << 20;
+
+/// 📥️ One parked `Effect::InvokeExtension`, awaiting the flush that can publish its answer.
+#[cfg(target_arch = "wasm32")]
+struct PendingExtensionInvocation {
+    req: u64,
+    extension_id: String,
+    capability: String,
+    request_json: String,
+}
 
 pub struct ShellState {
     pub plugins: Vec<ProgramBridgeEntry>,
@@ -2361,6 +2435,16 @@ pub struct ShellState {
     pub dock_canvas_bounds: Rect,
     pub dock_drop_tab_bars: Vec<(Vec<usize>, WindowStackCorner, Rect, Vec<f32>)>,
     pub dock_drop_bodies: Vec<(Vec<usize>, Rect, String)>,
+    /// 🪟️ The windows this frame's chrome walk paints, in dock order, each with the content rect the
+    /// dock solved for it. Written once per frame by `render_main_window_step`'s plan phase and read
+    /// by its body loop — the wgpu twin of React's `shellLayout` pane walk. Before this existed the
+    /// walk painted `active_window_id` alone over the whole body, so an app whose authored mode
+    /// layout places two windows (generation3d's edit mode = Flow + Preview, `[68, 32]`) only ever
+    /// laid out one of them and the other's engine surface was never created
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub dock_window_plan: Vec<(String, Rect)>,
+    /// 🐛️ Last `[DEBUG] ` dock-plan line, so the trace prints on CHANGE rather than once per frame.
+    dock_plan_trace: Option<String>,
     pub layout_override: Option<ui_wgpu::wgpu::WindowLayout>,
     pub split_resize_origin: Vec<f32>,
     pub split_resize_secondary_path: Option<Vec<usize>>,
@@ -2369,6 +2453,14 @@ pub struct ShellState {
     pub split_resize_secondary_origin: Vec<f32>,
     pub measures_resize_window_id: Option<String>,
     pub deferred_actions: Vec<ActionDescriptor>,
+    /// 🔁️ Guards `flush_deferred_actions`'s convergence loop against re-entry: a nested flush (one a
+    /// dispatched action itself asks for) stays a plain drain so the outer loop keeps the single
+    /// authority over how many times the window bodies are re-entered.
+    settling: bool,
+    /// 📥️ Extension invocations the guest asked for, parked until a flush that owns `&mut self`
+    /// can run them AND fold their answers' own effects back in — see `flush_deferred_actions`.
+    #[cfg(target_arch = "wasm32")]
+    pending_extension_invocations: Vec<PendingExtensionInvocation>,
     #[cfg(not(target_arch = "wasm32"))]
     shell_io_pending: std::collections::VecDeque<PendingShellIo>,
     pub fullscreen_toggle_requested: bool,
@@ -2390,7 +2482,7 @@ pub struct ShellState {
     pub sync_card_anchor: Option<(f32, f32)>,
     pub last_envelope_dsl: Option<String>,
     /// @emoji 🏛️ Shell-lifetime document-host actor registry (native only); the browser wgpu build
-    /// has no native `ArtifactHost` — its sync flows through the React shell's `🧵️backbone-worker.ts`.
+    /// has no native `ArtifactHost` — its sync flows through the React shell's `🏪️store/👷️worker/🟦️.ts`.
     #[cfg(not(target_arch = "wasm32"))]
     pub document_host: ArtifactHost,
     /// @emoji 🧵️ The currently attached document's live actor channel (native only).
@@ -2894,6 +2986,8 @@ impl ShellState {
             dock_canvas_bounds: Rect::new(0.0, 0.0, 0.0, 0.0),
             dock_drop_tab_bars: Vec::new(),
             dock_drop_bodies: Vec::new(),
+            dock_window_plan: Vec::new(),
+            dock_plan_trace: None,
             layout_override: None,
             split_resize_origin: Vec::new(),
             split_resize_secondary_path: None,
@@ -2902,6 +2996,9 @@ impl ShellState {
             split_resize_secondary_origin: Vec::new(),
             measures_resize_window_id: None,
             deferred_actions: Vec::new(),
+            settling: false,
+            #[cfg(target_arch = "wasm32")]
+            pending_extension_invocations: Vec::new(),
             #[cfg(not(target_arch = "wasm32"))]
             shell_io_pending: std::collections::VecDeque::new(),
             fullscreen_toggle_requested: false,
@@ -3168,6 +3265,16 @@ impl ShellState {
         (!parts.is_empty()).then(|| parts.join(" · "))
     }
 
+    /// 👁️✏️ The boot-resolved surface role, as `AppRole`. The renderer keeps it as the UI crate's
+    /// `ChromeRole` (that is the type its chrome reads); the boot app selection needs the manifest's
+    /// own spelling, and the two are wire-identical by contract (`"viewer"`/`"editor"`).
+    fn boot_app_role() -> semio_framework::manifest::AppRole {
+        match crate::boot_app_role() {
+            ui_wgpu::wgpu::component::role_chrome::ChromeRole::Viewer => semio_framework::manifest::AppRole::Viewer,
+            ui_wgpu::wgpu::component::role_chrome::ChromeRole::Editor => semio_framework::manifest::AppRole::Editor,
+        }
+    }
+
     /// 🚪️ Opens one plugin's app for the boot session, isolating an activation fault as a per-plugin
     /// status. Returns `None` when the plugin is not loaded or its actor refused to open.
     async fn open_boot_instance(&mut self, plugin_id: &str, app_id: &str) -> Option<u32> {
@@ -3219,7 +3326,7 @@ impl ShellState {
         } else {
             let selection = {
                 let programs: Vec<(&str, &semio_framework::PluginManifest)> = self.plugins.iter().map(|entry| (entry.plugin_id.as_str(), &entry.manifest)).collect();
-                select_boot_program(&programs, &self.plugin_filter)
+                select_boot_program(&programs, &self.plugin_filter, Self::boot_app_role())
             };
             let Some((index, app)) = selection else {
                 let plugin_id = resolve_registry_plugin_id(&self.plugin_filter).to_string();
@@ -3251,10 +3358,32 @@ impl ShellState {
                 },
             });
         }
+        self.apply_boot_mode();
         if let Some(session) = &self.session {
-            Self::debug_log(&format!("[DEBUG] wgpu-shell boot: program={} app={}", session.plugin_id, session.app.id));
+            Self::debug_log(&format!("[DEBUG] wgpu-shell boot: program={} app={} mode={:?}", session.plugin_id, session.app.id, session.view_state.active_mode_id));
         }
         self.settle_boot().await
+    }
+
+    /// 🎭️ Applies the boot-requested mode (`?mode=`) to the session the boot just opened: the mode
+    /// becomes active AND its authored layout becomes the dock's, exactly as
+    /// `handle_control_command`'s `playground.navbar.modes.*` arm does for a click. A mode the open
+    /// app does not declare is ignored — a url is not a place to hard-fail a shell, the same rule
+    /// `ChromeRole::from_boot_env` follows for `?role=`.
+    fn apply_boot_mode(&mut self) {
+        let Some(mode_id) = crate::boot_app_mode() else { return };
+        let Some(session) = self.session.as_mut() else { return };
+        if !session.app.modes.iter().any(|mode| mode.id == mode_id) {
+            Self::debug_log(&format!("[DEBUG] wgpu-shell boot mode {mode_id:?} is not declared by app {} — keeping {}", session.app.id, session.app.default_mode_id));
+            return;
+        }
+        session.view_state.active_mode_id = Some(mode_id.clone());
+        let layout = semio_framework::resolve_layout_for_mode(&session.app, &mode_id);
+        if let Some(layout) = layout {
+            self.layout_override = Some(layout);
+            self.sync_dock();
+            self.active_window_id = self.dock.active_window_id.clone();
+        }
     }
 
     /// 🏁️ The boot tail every path shares — chrome sync plus the first UI refresh. A boot that opened
@@ -3329,8 +3458,20 @@ impl ShellState {
             let view_json = serde_json::to_string(&self.live_view_state(&session)).unwrap_or_else(|_| "{}".into());
             if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() {
                 Self::debug_log(&format!("[DEBUG] contributions push {}", serde_json::json!({ "plugin": plugin.plugin_id, "app": session.app.id, "active": true, "encoding": "pack", "crossings": 1, "reachableChars": reachability.len() })));
-                if let Err(error) = plugin.push_scoped_contributions(session.instance_id, &session.app.id, &reachability, &view_json).await {
-                    Self::debug_log(&format!("[DEBUG] setContributions command failed {} {error}", plugin.plugin_id));
+                match plugin.push_scoped_contributions(session.instance_id, &session.app.id, &reachability, &view_json).await {
+                    // 🧩️ The guest answers `setContributions` with the effects it could not arm before
+                    // its extension registry moved — a `flowEvalTick` per attached preview window. React's
+                    // `ShellHost` dispatches exactly these through `applyHostEffects`; this target dropped
+                    // the whole answer on the floor, so the guest's latch stayed armed and no preview ever
+                    // evaluated (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+                    Ok(result) => {
+                        Self::debug_log(&format!(
+                            "[DEBUG] setContributions deferred effects {}",
+                            serde_json::json!({ "plugin": plugin.plugin_id, "app": session.app.id, "effects": result.requested_effects.len() })
+                        ));
+                        self.queue_host_effects(&session.app.controller_id, result.requested_effects);
+                    }
+                    Err(error) => Self::debug_log(&format!("[DEBUG] setContributions command failed {} {error}", plugin.plugin_id)),
                 }
             }
         }
@@ -3350,11 +3491,17 @@ impl ShellState {
         // `bootstrap_identity`'s own doc): a slow/unreachable hub must never delay the first frame.
         #[cfg(not(target_arch = "wasm32"))]
         self.bootstrap_identity();
+        // 🧩️ Contributions cross BEFORE the first render, the way React's `refreshUi` starts its
+        // publisher before its own first await: a surface rendered against an EMPTY flow-extension
+        // registry arms nothing at all (the guest's `may_rearm` gate — a graph whose operator kinds
+        // the registry cannot serve owes no continuation), so pushing after the refresh left every
+        // preview window with no tick and no chain to re-arm
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        self.push_contributions().await?;
         Self::declare_boot_subphase("shell-boot:refresh-ui", "enter", 0.0);
         let refresh_started = Self::instant_now_ms();
         self.refresh_ui().await?;
         Self::declare_boot_subphase("shell-boot:refresh-ui", "leave", (Self::instant_now_ms() - refresh_started).max(0.0));
-        self.push_contributions().await?;
         Self::declare_boot_subphase("shell-boot:flush-deferred", "enter", 0.0);
         let flush_started = Self::instant_now_ms();
         self.flush_deferred_actions().await?;
@@ -3448,21 +3595,21 @@ impl ShellState {
         let Some(session) = self.session.clone() else {
             return Ok(());
         };
-        self.close_document_one();
+        self.drain_retained_document_arenas();
         self.sync_dock();
-        if let Err(documents) = Self::retain_document_map_for_close(&mut self.closing_documents, std::mem::take(&mut self.window_ui)) {
-            self.window_ui = documents;
-            return Err("shell: window document retirement registry refused the exact prior owners".to_string());
-        }
         let view_state = self.live_view_state(&session);
         let live_windows = self.dock.window_instances();
         let mut refresh_effects = Vec::new();
         let mut faults: Vec<(String, String, String)> = Vec::new();
         {
             let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
+            let retained: Vec<String> = live_windows.iter().map(|(window_id, _)| window_id.clone()).collect();
+            self.retire_documents_outside(&retained, true)?;
             for (window_id, window_kind_id) in live_windows {
                 let kind = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id).ok_or_else(|| format!("window kind '{}' is absent from the app", window_kind_id))?;
                 let window_view = view_state.for_window_instance(&window_id).ok_or_else(|| format!("window '{}' is absent from the live view", window_id))?;
+                let previous = self.window_ui.remove(&window_id);
+                self.retire_one_surface_document(previous)?;
                 Self::debug_log(&format!("[DEBUG] wgpu-shell render begin surface={window_id} body={}", kind.body_key));
                 let render_started = Self::instant_now_ms();
                 Self::declare_boot_subphase(&format!("shell-boot:render:{window_id}"), "enter", 0.0);
@@ -3474,29 +3621,29 @@ impl ShellState {
                 }
                 let elapsed = (Self::instant_now_ms() - render_started).max(0.0);
                 Self::declare_boot_subphase(&format!("shell-boot:render:{window_id}"), "leave", elapsed);
-                Self::debug_log(&format!("[DEBUG] wgpu-shell render leave surface={window_id} {elapsed:.0} ms"));
+                Self::debug_log(&format!("[DEBUG] wgpu-shell render leave surface={window_id} {elapsed:.0} ms{}", Self::resident_census()));
             }
-        }
-        if let Err(documents) = Self::retain_document_map_for_close(&mut self.closing_documents, std::mem::take(&mut self.panel_documents)) {
-            self.panel_documents = documents;
-            return Err("shell: panel document retirement registry refused the exact prior owners".to_string());
         }
         let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
         let panel_view = view_state.for_panel();
-        for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
-            let Some(body_key) = tab.body_key.as_deref() else { continue };
-            Self::debug_log(&format!("[DEBUG] wgpu-shell render begin surface={} body={body_key}", tab.id()));
+        let panel_leaves: Vec<(String, String)> = Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().filter_map(|tab| tab.body_key.as_deref().map(|body_key| (tab.id().to_string(), body_key.to_string()))).collect();
+        let retained: Vec<String> = panel_leaves.iter().map(|(id, _)| id.clone()).collect();
+        self.retire_documents_outside(&retained, false)?;
+        for (tab_id, body_key) in panel_leaves {
+            let previous = self.panel_documents.remove(&tab_id);
+            self.retire_one_surface_document(previous)?;
+            Self::debug_log(&format!("[DEBUG] wgpu-shell render begin surface={tab_id} body={body_key}"));
             let render_started = Self::instant_now_ms();
-            Self::declare_boot_subphase(&format!("shell-boot:render:{}", tab.id()), "enter", 0.0);
-            match program.render_with_document(session.instance_id, tab.id(), body_key, &panel_view, None, Some(&mut refresh_effects)).await {
+            Self::declare_boot_subphase(&format!("shell-boot:render:{tab_id}"), "enter", 0.0);
+            match program.render_with_document(session.instance_id, &tab_id, &body_key, &panel_view, None, Some(&mut refresh_effects)).await {
                 Ok(document) => {
-                    self.panel_documents.insert(tab.id().to_string(), document);
+                    self.panel_documents.insert(tab_id.clone(), document);
                 }
-                Err(error) => faults.push((tab.id().to_string(), body_key.to_string(), error)),
+                Err(error) => faults.push((tab_id.clone(), body_key.clone(), error)),
             }
             let elapsed = (Self::instant_now_ms() - render_started).max(0.0);
-            Self::declare_boot_subphase(&format!("shell-boot:render:{}", tab.id()), "leave", elapsed);
-            Self::debug_log(&format!("[DEBUG] wgpu-shell render leave surface={} {elapsed:.0} ms", tab.id()));
+            Self::declare_boot_subphase(&format!("shell-boot:render:{tab_id}"), "leave", elapsed);
+            Self::debug_log(&format!("[DEBUG] wgpu-shell render leave surface={tab_id} {elapsed:.0} ms{}", Self::resident_census()));
         }
         // 🧰️ The utility bar is derived from the app's declared `AppDefinition.utilities` (scoped to the active
         // window kind) via `ui_wgpu::wgpu::derive_utility_nodes` — the old per-call `plugin.utilities()` fetch and the
@@ -3667,18 +3814,6 @@ impl ShellState {
         }
     }
 
-    fn retain_document_map_for_close(registry: &mut ShellDocumentRetirementRegistry, documents: HashMap<String, UiDocumentLease>) -> Result<(), HashMap<String, UiDocumentLease>> {
-        let mut owners = documents.into_iter();
-        while let Some((id, document)) = owners.next() {
-            if let Err(document) = registry.try_admit(document) {
-                let mut refused = HashMap::from([(id, document)]);
-                refused.extend(owners);
-                return Err(refused);
-            }
-        }
-        Ok(())
-    }
-
     fn retain_document_for_close(&mut self, document: UiDocumentLease) -> Result<(), UiDocumentLease> {
         self.closing_documents.try_admit(document)
     }
@@ -3707,6 +3842,68 @@ impl ShellState {
         } else {
             self.window_ui.insert(window_id.to_string(), document);
         }
+    }
+
+    /// ♻️ Drives the retained-document retirement registry AND the `UiValue` arena it feeds to idle.
+    ///
+    /// ⚖️ One page per FRAME (`render_chrome_step`'s `CloseDocument` phase) is enough while the shell
+    /// only refreshes on interaction. A converging guest chain is different: `flush_deferred_actions`
+    /// runs many refreshes back to back inside ONE flush and no frame happens in between, so the
+    /// registry only grows — and the `UiValue` collection slots a retired document's records hold are
+    /// a FIXED process-wide arena. At `ui_value_headroom().collections == 0` every later `UiValue`
+    /// deserialization fails as `data did not match any variant of untagged enum UiValue` and the
+    /// shell stops painting entirely (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, measured on 6118 as
+    /// `headroom collections=0`). A refresh therefore returns the previous refresh's arenas before it
+    /// asks the guest for the next document.
+    fn drain_retained_document_arenas(&mut self) {
+        for _ in 0..SHELL_DOCUMENT_RETIREMENT_STEPS {
+            let consumed = self.close_document_one();
+            if !consumed && self.closing_documents.terminal_is_empty() {
+                break;
+            }
+        }
+        for _ in 0..SHELL_DOCUMENT_RETIREMENT_STEPS {
+            if ui_contract::close_ui_value_page_one() {
+                break;
+            }
+        }
+    }
+
+    /// ♻️ Retires ONE surface's previous document to terminal before its replacement is asked for.
+    ///
+    /// ⚖️ A refresh used to move EVERY live document into the retirement registry and only then ask
+    /// the guest for the replacements, so the process-wide resident aggregate had to carry two full
+    /// sets at once — and `UiResidentPermit::try_reserve` is a fixed aggregate, so the second set was
+    /// refused `Capacity` on every surface and the shell kept the stale documents forever
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-dock-layout-world3d-2026-09-12.md` §6.2).
+    /// One root at a time is the whole fix: the peak is the live surface count, never twice it.
+    fn retire_one_surface_document(&mut self, document: Option<UiDocumentLease>) -> Result<(), String> {
+        let Some(document) = document else { return Ok(()) };
+        if self.retain_document_for_close(document).is_err() {
+            return Err("shell: document retirement registry refused the exact prior owner".to_string());
+        }
+        self.drain_retained_document_arenas();
+        Ok(())
+    }
+
+    /// 🧹 Retires every window (or panel) document whose surface the active layout no longer names.
+    fn retire_documents_outside(&mut self, retained: &[String], windows: bool) -> Result<(), String> {
+        let stale: Vec<String> = if windows {
+            self.window_ui.keys().filter(|id| !retained.contains(id)).cloned().collect()
+        } else {
+            self.panel_documents.keys().filter(|id| !retained.contains(id)).cloned().collect()
+        };
+        for id in stale {
+            let document = if windows { self.window_ui.remove(&id) } else { self.panel_documents.remove(&id) };
+            self.retire_one_surface_document(document)?;
+        }
+        Ok(())
+    }
+
+    /// 🎟️ The process-wide resident census, appended to every render's own log line so a `Capacity`
+    /// refusal is never the first thing anyone learns about the aggregate.
+    fn resident_census() -> String {
+        ui_contract::UiResidentPermit::snapshot().map_or_else(|_| String::new(), |snapshot| format!(" resident-roots={} resident-bytes={}/{}", snapshot.used_slots, snapshot.bytes, ui_contract::UI_RESIDENT_AGGREGATE_BYTES))
     }
 
     fn close_document_one(&mut self) -> bool {
@@ -3771,21 +3968,15 @@ impl ShellState {
                 semio_framework::kernel::Effect::RequestInferenceProposal { .. } => {
                     self.open_inference_port();
                 }
+                // 📥️ The extension door. This used to fire a DETACHED `spawn_app_task` and throw the
+                // answer away — so the `flowEvalResolve` the answer arms never reached the shell and
+                // the chain stopped after exactly one evaluate (ticket
+                // 26/09/09/PROCEDURAL-3D-END-TO-END). React's `dispatchInvokeExtensionEffect`
+                // publishes the response through `applyHostEffects`; this parks the request for the
+                // flush below, which owns `&mut self` and can do the same.
                 semio_framework::kernel::Effect::InvokeExtension { req, extension_id, capability, request_json, .. } => {
                     #[cfg(target_arch = "wasm32")]
-                    {
-                        if let Some(session) = self.session.clone() {
-                            if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() {
-                                let instance_id = session.instance_id;
-                                Self::debug_log(&format!("[DEBUG] wgpu-shell invokeExtension dispatch extension={extension_id} capability={capability} req={}", req.0));
-                                crate::spawn_app_task(async move {
-                                    if let Err(error) = plugin.dispatch_invoke_extension(instance_id, &extension_id, &capability, &request_json, req.0).await {
-                                        web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!("[DEBUG] wgpu-shell invokeExtension failed: {error}")));
-                                    }
-                                });
-                            }
-                        }
-                    }
+                    self.pending_extension_invocations.push(PendingExtensionInvocation { req: req.0, extension_id, capability, request_json });
                     #[cfg(not(target_arch = "wasm32"))]
                     {
                         let _ = (req, extension_id, capability, request_json);
@@ -4088,13 +4279,19 @@ impl ShellState {
                         }
                     }
                 }
-                ArtifactEvent::SnapshotReplaced { pack, spr } => {
+                ArtifactEvent::DocumentArchiveReplaced { archive } => {
                     self.sync_bootstrap_progress = None;
                     if let Some(plugin) = plugin.as_ref() {
-                        // 🎠️ H3-wgpu-native — same treatment, `load_app_document_pack` is now async.
-                        match plugin.load_app_document_pack(instance_id, &pack, &spr).await {
+                        let archive = match protocol::decode_document_archive_bytes(&archive).await {
+                            Ok(archive) => archive,
+                            Err(error) => {
+                                eprintln!("[DEBUG] wgpu shell recursive document archive decode failed: {error}");
+                                continue;
+                            }
+                        };
+                        match plugin.load_app_document_archive(instance_id, &archive).await {
                             Ok(()) => changed = true,
-                            Err(error) => eprintln!("[DEBUG] wgpu shell load_app_document_pack failed: {error}"),
+                            Err(error) => eprintln!("[DEBUG] wgpu shell load_app_document_archive failed: {error}"),
                         }
                     }
                 }
@@ -4595,6 +4792,28 @@ impl ShellState {
         if !self.chrome_build.tutorial_dispatch_internal {
             self.tutorial_note_real_dispatch(&action);
         }
+        // 🔁️ An `Effect::DispatchAction` whose id is an APP COMMAND crosses as a command, never as an
+        // action — React's `makeEffectDispatchOne` picks `handleCommand` on exactly this predicate
+        // (`🛠️ShellHelpers/🟦️.tsx`, `isAppCommand`). The guest's re-arm chain is `flowEvalTick`, an
+        // app command with no action route at all, so sending it as an `ActionInvocation` faulted the
+        // whole dispatch and — through `flush_deferred_actions` — the boot
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        if !record_tutorial_after_acceptance && action.controller_id != "framework" {
+            if let Some(session) = self.session.clone() {
+                if Self::app_owns_command(&session.app, &action.action) {
+                    let arguments = action.args.as_ref().and_then(DslValue::as_object).map(|entries| entries.iter().cloned().collect()).unwrap_or_default();
+                    return self
+                        .dispatch_command(semio_framework::manifest::CommandInvocation {
+                            address: semio_framework::manifest::CommandAddress {
+                                owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone() },
+                                command_id: action.action.clone(),
+                            },
+                            arguments,
+                        })
+                        .await;
+                }
+            }
+        }
         if action.controller_id == "framework" {
             match action.action.as_str() {
                 "setAppearance" => {
@@ -4818,45 +5037,45 @@ impl ShellState {
         if owner_plugin_id != &session.plugin_id {
             return Err(format!("command owner plugin {owner_plugin_id} is not active"));
         }
-        let program = self.plugins.iter().find(|entry| entry.plugin_id == *owner_plugin_id).ok_or("command program missing")?;
+        let program = self.plugins.iter().find(|entry| entry.plugin_id == *owner_plugin_id).cloned().ok_or("command program missing")?;
         let command_json = dsl::os_pack::json::to_json_string(&invocation);
-        let result = program.handle_command(session.instance_id, &command_json, &session.view_state).await?;
+        // 🪟️ The LIVE view, exactly as `dispatch_action` and React's `makeEffectDispatchOne`
+        // (`resolveViewState(baseSession)`) read it: the session's stored `view_state` carries no
+        // window-instance roster, so a window-addressed command — every `flowEvalTick` the guest
+        // re-arms — was refused with `target window is absent from the exact ViewModel window
+        // instance roster` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        let live_view_state = self.live_view_state(&session);
+        let mut result = program.handle_command(session.instance_id, &command_json, &live_view_state).await?;
+        Self::debug_log(&format!("[DEBUG] wgpu-shell command {} settled effects={} mutations={}", invocation.address.command_id, result.requested_effects.len(), result.mutations.len()));
         // 🧾️ ticket §C5 — same fold `dispatch_action` performs; a command-boundary edit (e.g. a
         // plugin-owned command dispatched from the command palette) is just as real an uncommitted
         // edit as an action-boundary one.
         #[cfg(not(target_arch = "wasm32"))]
         self.observe_invocation_history(result.history_patch.as_ref()).await;
-        for effect in &result.requested_effects {
+        // 🧾️ ONE host-effect funnel for both dispatch paths. This arm used to be a SECOND,
+        // shorter hand-rolled fold, and every effect it did not name was dropped without a trace —
+        // including `InvokeExtension`, so the `flowEvalTick` reply that finally asked for an
+        // extension call went nowhere and the preview chain stopped one hop before its first
+        // evaluate (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). React has the same single funnel:
+        // `makeEffectDispatchOne` hands BOTH `handleAction` and `handleCommand` results to
+        // `applyHostEffects`. Only the two effects `queue_host_effects` cannot own — a `Navigate`
+        // that must also RESOLVE the uri, and the native replay relay — stay here, because both are
+        // `async` and that funnel is deliberately a plain `fn`.
+        let mut queued = Vec::with_capacity(result.requested_effects.len());
+        for effect in core::mem::take(&mut result.requested_effects) {
             match effect {
-                semio_framework::kernel::Effect::SetActiveUtility { window_id, utility_id } => self.apply_set_active_utility(window_id, utility_id),
                 semio_framework::kernel::Effect::Navigate { uri } => {
                     self.push_uri(uri.clone());
-                    self.apply_shell_uri(uri).await?;
+                    self.apply_shell_uri(&uri).await?;
                 }
-                semio_framework::kernel::Effect::LoadDocument { pack, spr } => {
-                    if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
-                        // 🎠️ H3-wgpu-native — `load_app_document_pack` is now async.
-                        plugin.load_app_document_pack(session.instance_id, pack, spr).await?;
-                    }
-                }
-                semio_framework::kernel::Effect::DispatchAction { action, args, .. } => {
-                    self.deferred_actions.push(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action.clone(), args: args.clone() });
-                }
-                // 📇️ ticket §C6/§3/§4 — same funnel as `dispatch_action`'s own arm above; a "surface
-                // command" per contract §C6's own wording is exactly a command-boundary emission, so
-                // both dispatch paths need the handler.
                 #[cfg(not(target_arch = "wasm32"))]
                 semio_framework::kernel::Effect::ReplayShellCommand { action_id, args } => {
-                    self.handle_replay_shell_command(action_id, args.as_ref()).await;
+                    self.handle_replay_shell_command(&action_id, args.as_ref()).await;
                 }
-                // 💡️ Slice D — a command-boundary emission opens the same one host-owned port.
-                #[cfg(not(target_arch = "wasm32"))]
-                semio_framework::kernel::Effect::RequestInferenceProposal { .. } => {
-                    self.open_inference_port();
-                }
-                _ => {}
+                other => queued.push(other),
             }
         }
+        self.queue_host_effects(&session.app.controller_id.clone(), queued);
         let operations: Vec<String> = result.mutations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect();
         self.apply_mutations(&operations).await
     }
@@ -6626,16 +6845,112 @@ impl ShellState {
         self.flush_deferred_actions().await
     }
 
+    /// 🔁️ Drains the deferred halves AND re-enters the window bodies until nothing new is armed.
+    ///
+    /// ⚖️ A guest's preview job is driven by its own window render, so a chain has THREE halves, not
+    /// two: the actions an effect deferred, the extension calls those actions asked for, and the
+    /// RENDER that turns a settled answer into the next `flowEvalTick`. Draining only the first two
+    /// parks the chain the moment the work one render armed quiesces — `meshingFaces 6/8` on 6118.
+    /// React converges because a mutation re-renders the shell; this is that, bounded
+    /// (`SHELL_SETTLE_ROUNDS`) and reentrancy-guarded so a nested flush stays a plain drain.
     pub async fn flush_deferred_actions(&mut self) -> Result<(), String> {
-        let actions = std::mem::take(&mut self.deferred_actions);
-        for action in actions {
-            self.dispatch_action(action).await?;
+        if self.settling {
+            self.drain_deferred_actions().await?;
+            return Ok(());
+        }
+        self.settling = true;
+        let result = self.settle_ui_chain().await;
+        self.settling = false;
+        result
+    }
+
+    /// ♻️ One settle round = drain everything armed, then re-enter the window bodies ONCE. A round
+    /// whose drain executed nothing is the fixed point: no render can arm what no work produced, so
+    /// the loop stops without spending a refresh (which is also why a bare pointer move, whose flush
+    /// executes nothing, never pays for one).
+    async fn settle_ui_chain(&mut self) -> Result<(), String> {
+        for round in 0..SHELL_SETTLE_ROUNDS {
+            let worked = self.drain_deferred_actions().await?;
+            if worked == 0 {
+                if round > 0 {
+                    Self::debug_log(&format!("[DEBUG] wgpu-shell ui chain settled after {round} round(s){}", Self::resident_census()));
+                }
+                return Ok(());
+            }
+            if self.session.is_none() {
+                return Ok(());
+            }
+            self.refresh_ui().await?;
+        }
+        Self::debug_log(&format!("[DEBUG] wgpu-shell ui chain exhausted {SHELL_SETTLE_ROUNDS} settle round(s) with {} action(s) left", self.deferred_actions.len()));
+        self.drain_deferred_actions().await?;
+        Ok(())
+    }
+
+    async fn drain_deferred_actions(&mut self) -> Result<usize, String> {
+        // 🔁️ ONE convergence loop for the two halves of a guest chain: the actions an effect
+        // deferred, and the extension calls those actions asked for. An answer commonly arms the next
+        // hop (`flowEvalTick` → evaluate → `flowEvalResolve` → tessellate → `flowTessellateResolve`),
+        // so draining either half once leaves the chain parked — which is exactly what a single-pass
+        // flush plus a detached extension task did (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        let mut worked = 0usize;
+        for _ in 0..SHELL_DEFERRED_CHAIN_ROUNDS {
+            let actions = std::mem::take(&mut self.deferred_actions);
+            #[cfg(target_arch = "wasm32")]
+            let invocations = std::mem::take(&mut self.pending_extension_invocations);
+            #[cfg(not(target_arch = "wasm32"))]
+            let invocations: Vec<()> = Vec::new();
+            if actions.is_empty() && invocations.is_empty() {
+                break;
+            }
+            worked = worked.saturating_add(actions.len()).saturating_add(invocations.len());
+            for action in actions {
+                // 🧯 One program action's failure is that action's failure, never the shell's: React's
+                // `applyHostEffects` logs a dropped dispatch and carries on, and this loop runs inside
+                // `settle_boot`, where a propagated error aborted the whole boot
+                // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+                let id = action.action.clone();
+                if let Err(error) = self.dispatch_action(action).await {
+                    Self::debug_log(&format!("[DEBUG] wgpu-shell deferred action {id} failed: {error}"));
+                }
+            }
+            #[cfg(target_arch = "wasm32")]
+            for invocation in invocations {
+                self.run_extension_invocation(invocation).await;
+            }
+        }
+        if !self.deferred_actions.is_empty() {
+            Self::debug_log(&format!("[DEBUG] wgpu-shell deferred chain exhausted {SHELL_DEFERRED_CHAIN_ROUNDS} rounds with {} action(s) left", self.deferred_actions.len()));
         }
         if self.pending_shell_uri_apply {
             self.pending_shell_uri_apply = false;
             self.apply_pending_shell_uri().await?;
+            worked = worked.saturating_add(1);
         }
-        Ok(())
+        Ok(worked)
+    }
+
+    /// 📥️ One extension round trip, with its answer's own effects folded back into this shell —
+    /// the wgpu twin of React's `dispatchInvokeExtensionEffect(..., publish)` callback, which ends in
+    /// `applyHostEffects(response.requestedEffects, ...)`.
+    #[cfg(target_arch = "wasm32")]
+    async fn run_extension_invocation(&mut self, invocation: PendingExtensionInvocation) {
+        let Some(session) = self.session.clone() else { return };
+        let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else { return };
+        let PendingExtensionInvocation { req, extension_id, capability, request_json } = invocation;
+        Self::debug_log(&format!("[DEBUG] wgpu-shell invokeExtension dispatch extension={extension_id} capability={capability} req={req}"));
+        match plugin.dispatch_invoke_extension(session.instance_id, &extension_id, &capability, &request_json, req).await {
+            Ok(result) => {
+                Self::debug_log(&format!("[DEBUG] wgpu-shell invokeExtension answered req={req} extension={extension_id} capability={capability} effects={}", result.requested_effects.len()));
+                let controller_id = session.app.controller_id.clone();
+                self.queue_host_effects(&controller_id, result.requested_effects);
+                let operations: Vec<String> = result.mutations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect();
+                if let Err(error) = self.apply_mutations(&operations).await {
+                    Self::debug_log(&format!("[DEBUG] wgpu-shell invokeExtension mutations req={req} failed: {error}"));
+                }
+            }
+            Err(error) => Self::debug_log(&format!("[DEBUG] wgpu-shell invokeExtension failed req={req} extension={extension_id}: {error}")),
+        }
     }
 
     async fn dispatch_widget_drag_values(&mut self, input: &InputState<ActionDescriptor>) -> Result<(), String> {
@@ -10678,6 +10993,58 @@ impl ShellState {
         }
     }
 
+    /// 🗣️ The per-INSTANCE tab label and icon the dock chrome reads, resolved off the app manifest's
+    /// own `LocalizedLabel`/`IconName` through the live terminology and locale — no shell dictionary
+    /// and no default language, the same rule React's `withLocalizedWindowKindLabels` follows.
+    fn dock_chrome_maps(&self) -> (HashMap<String, String>, HashMap<String, String>) {
+        let mut labels = HashMap::new();
+        let mut icon_ids = HashMap::new();
+        let Some(session) = &self.session else {
+            return (labels, icon_ids);
+        };
+        let terminology = self.active_terminology();
+        let locale = self.active_locale();
+        for (window_id, window_kind_id) in self.dock.window_instances() {
+            let Some(kind) = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id) else {
+                continue;
+            };
+            labels.insert(window_id.clone(), kind.label.resolve(terminology, locale).to_string());
+            let icon_id = kind.icon_id.as_str();
+            if !icon_id.is_empty() {
+                icon_ids.insert(window_id, icon_id.to_string());
+            }
+        }
+        (labels, icon_ids)
+    }
+
+    /// 🪟️ Solves this frame's dock layout into `dock_window_plan` and the three drop/pick registries
+    /// (`dock_drop_bodies`, `dock_drop_tab_bars`, `window_content_rects`/`window_silhouettes`), which
+    /// had no production writer at all before this call site existed. A spawned studio surface is the
+    /// one non-dock case and stays a single full-bounds pane.
+    fn plan_dock_windows(&mut self, rect: Rect, theme: &Theme, atlas: &mut FontAtlas) {
+        self.dock_canvas_bounds = rect;
+        if self.space_mode && self.spawned_ui.is_some() {
+            self.dock_window_plan = vec![("spawned".to_string(), rect)];
+            self.dock_drop_bodies = Vec::new();
+            self.dock_drop_tab_bars = Vec::new();
+            self.window_content_rects = HashMap::from([("spawned".to_string(), rect)]);
+            self.window_silhouettes = HashMap::new();
+            return;
+        }
+        let (labels, _icon_ids) = self.dock_chrome_maps();
+        let (bodies, silhouettes) = self.dock.stack_body_rects_with_silhouettes(rect, theme, &labels, atlas);
+        self.dock_drop_tab_bars = self.dock.stack_corner_tab_bar_rects(rect, theme, atlas, &labels);
+        self.dock_window_plan = bodies.iter().map(|(_, body, window_id)| (window_id.clone(), *body)).collect();
+        self.window_content_rects = bodies.iter().map(|(_, body, window_id)| (window_id.clone(), *body)).collect();
+        self.window_silhouettes = silhouettes;
+        self.dock_drop_bodies = bodies;
+        let plan = self.dock_window_plan.iter().map(|(id, body)| format!("{id}@{}x{}+{}", body.w.round(), body.h.round(), body.x.round())).collect::<Vec<_>>().join(" ");
+        if self.dock_plan_trace.as_deref() != Some(plan.as_str()) {
+            Self::debug_log(&format!("[DEBUG] wgpu-shell dock plan canvas={}x{} windows={} {plan}", rect.w.round(), rect.h.round(), self.dock_window_plan.len()));
+            self.dock_plan_trace = Some(plan);
+        }
+    }
+
     fn render_main_window_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
         match cursor.phase {
             0 => {
@@ -10686,8 +11053,12 @@ impl ShellState {
                 cursor.phase = 1;
             }
             1 => {
-                let window = if self.space_mode && self.spawned_ui.is_some() { UiText::try_from_str("spawned") } else { self.active_window_id.as_deref().and_then(UiText::try_from_str) };
-                cursor.window = window;
+                let Some(rect) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                self.plan_dock_windows(rect, theme, atlas);
+                cursor.item = 0;
                 cursor.phase = 2;
             }
             2 => {
@@ -10699,21 +11070,23 @@ impl ShellState {
                 cursor.phase = 3;
             }
             3 => {
-                let Some(rect) = cursor.rect else {
-                    cursor.phase = u16::MAX;
-                    return false;
-                };
-                let control_id = cursor.window.as_ref().map_or("window", UiText::as_str);
-                input.register_hit(HitTarget { rect, event: None, control_id: Some(control_id.into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
-                cursor.phase = 4;
-            }
-            4 => {
-                let Some(window) = cursor.window.clone() else {
+                let Some((window_id, window_rect)) = self.dock_window_plan.get(cursor.item).cloned() else {
                     cursor.phase = 5;
                     return false;
                 };
-                let Some(rect) = cursor.rect else {
-                    cursor.phase = u16::MAX;
+                let Some(window) = UiText::try_from_str(&window_id) else {
+                    cursor.item += 1;
+                    return false;
+                };
+                cursor.window = Some(window);
+                cursor.scalar = 0;
+                input.register_hit(HitTarget { rect: window_rect, event: None, control_id: Some(window_id.as_str().into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
+                draw.push_solid([window_rect.x, window_rect.y, window_rect.w, window_rect.h], theme.canvas_clear);
+                cursor.phase = 4;
+            }
+            4 => {
+                let Some((window_id, window_rect)) = self.dock_window_plan.get(cursor.item).cloned() else {
+                    cursor.phase = 5;
                     return false;
                 };
                 // 🎬️ Who answers this document's action bindings: the owning app's controller, the
@@ -10721,8 +11094,10 @@ impl ShellState {
                 // semantic contract moved it off the node onto the session, so the reconcile has to
                 // be handed it here rather than reading it off a record.
                 let controller = self.document_controller_id();
-                let Some(document) = self.take_window_document(window.as_str()) else {
-                    cursor.phase = 5;
+                let Some(document) = self.take_window_document(&window_id) else {
+                    cursor.document = UiDocumentFrameCursor::default();
+                    cursor.item += 1;
+                    cursor.phase = 3;
                     return false;
                 };
                 let complete = {
@@ -10732,25 +11107,47 @@ impl ShellState {
                     let widget_maps = &mut self.widget_maps;
                     let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources };
                     let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
-                    ctx.pick_clip = Some(rect);
-                    render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, window.as_str(), controller.as_str(), &mut hosts)
+                    ctx.pick_clip = Some(window_rect);
+                    render_ui_document_step(&mut cursor.document, &document, window_rect, &mut ctx, window_id.as_str(), controller.as_str(), &mut hosts)
                 };
-                self.restore_window_document(window.as_str(), document);
+                self.restore_window_document(&window_id, document);
                 if !complete {
-                    if !cursor.document.terminal_is_fault() {
+                    cursor.scalar = cursor.scalar.saturating_add(1);
+                    if !cursor.document.terminal_is_fault() && cursor.scalar < SHELL_WINDOW_PAINT_OPPORTUNITIES {
                         return false;
                     }
-                    self.record_document_paint_fault(window.as_str());
+                    // 🧯 One window's paint is that window's failure, never the frame's. The chrome
+                    // walk now places EVERY window the dock names, so a single body whose retained
+                    // paint never terminates would hold the whole walk — and with it the navbar, the
+                    // panels and the present — hostage forever. That is what a blank canvas with a
+                    // correct dock plan and a populated arena looks like
+                    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+                    if cursor.scalar >= SHELL_WINDOW_PAINT_OPPORTUNITIES {
+                        Self::debug_log(&format!("[DEBUG] wgpu-shell window paint {window_id} exhausted {SHELL_WINDOW_PAINT_OPPORTUNITIES} opportunities parked-in={}", cursor.document.phase_name()));
+                    }
+                    self.record_document_paint_fault(&window_id);
                 } else {
-                    self.clear_document_paint_fault(window.as_str());
+                    self.clear_document_paint_fault(&window_id);
                 }
-                cursor.phase = 5;
+                cursor.document = UiDocumentFrameCursor::default();
+                cursor.item += 1;
+                cursor.phase = 3;
             }
             5 => {
-                draw.pop_scissor();
+                if !(self.space_mode && self.spawned_ui.is_some()) {
+                    let (labels, icon_ids) = self.dock_chrome_maps();
+                    let bounds = self.dock_canvas_bounds;
+                    let mut ctx = DockRenderContext { draw, atlas, icons, input, theme, window_labels: &labels, window_icon_ids: &icon_ids };
+                    self.dock.paint_chrome(&mut ctx, bounds, false);
+                    self.dock.register_resize_hits(&mut ctx, bounds);
+                }
                 cursor.phase = 6;
             }
-            6 => return true,
+            6 => {
+                draw.pop_scissor();
+                cursor.phase = 7;
+            }
+            7 => return true,
             _ => return false,
         }
         false

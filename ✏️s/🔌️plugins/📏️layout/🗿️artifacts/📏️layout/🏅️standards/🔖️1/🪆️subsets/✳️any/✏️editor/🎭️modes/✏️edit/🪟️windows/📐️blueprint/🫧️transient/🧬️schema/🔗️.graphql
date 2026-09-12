@@ -1,0 +1,10 @@
+type LayoutDropPreview {
+  kind: String!
+  x: Float!
+  y: Float!
+}
+
+type LayoutWindowTransient {
+  dropPreview: LayoutDropPreview!
+  engagementInput: String!
+}

@@ -1,5 +1,5 @@
 /** 📽️ Sequence editor — Main window: typed twin of `🦀️.rs`'s view-model. Mirrors the
- * window's `render(fixture: &SequenceSnapshot, config: &SequenceConfig)` boundary — the live
+ * window's exact `SequenceMainWindowConfig` boundary — the live
  * step/edge node-graph plus the config-owned viewport camera, editable (mutation-capable), absent
  * from the viewer's read-only twin (see `👁️viewer/…/📽️main/🟦️.ts`). */
 

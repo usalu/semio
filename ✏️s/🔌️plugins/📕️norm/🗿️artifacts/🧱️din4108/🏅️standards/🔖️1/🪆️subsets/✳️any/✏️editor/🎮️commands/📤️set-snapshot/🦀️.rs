@@ -5,7 +5,7 @@
 //! (base + target, since `layers` is a real ordered collection needing full remove/re-insert),
 //! bundled into a single atomic edit.
 
-use crate::config::{NormConfig, NormConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::Din4108Mutation;
 use crate::Din4108Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -21,7 +21,7 @@ pub struct ReplaceSnapshot {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din4108Mutation, NormConfigMutation>, Fault> {
+pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Din4108Mutation, NoConfigMutation>, Fault> {
     crate::app_surface::commit_snapshot_fields(Din4108Mutation::from_snapshot(doc.snapshot, &payload.snapshot), "setSnapshot")
 }
 //#endregion 🔖️Handler

@@ -34,6 +34,6 @@ semio-framework-schema = { workspace = true }
 semio-framework-async-macros = { path = "../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 
 [features]
-# 🧬️ Generates the TypeScript mirror for boundary/protocol types (see `<owner>/🤖️generated/🪪️manifest.ts`);
+# 🧬️ Generates the TypeScript mirror for boundary/protocol types (see `<owner>/🤖️generated/🪪️manifest/🟦️.ts`);
 # never enabled by default so schema projection never affects the plain build/test path.
 typegen = []

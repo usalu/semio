@@ -8,6 +8,14 @@
         "{projectRoot}/../../../mcp",
         "{projectRoot}/../../../mcp.exe"
       ],
+      "dependsOn": [
+        {
+          "target": "generate",
+          "projects": [
+            "@semio-tech/framework-schema"
+          ]
+        }
+      ],
       "options": {
         "command": "bun ./📜️script.ts build"
       }
@@ -25,10 +33,21 @@
     },
     "test": {
       "outputs": [],
+      "dependsOn": [
+        {
+          "target": "generate",
+          "projects": [
+            "@semio-tech/framework-schema"
+          ]
+        }
+      ],
       "options": {
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "@semio-tech/framework-schema"
+  ]
 }

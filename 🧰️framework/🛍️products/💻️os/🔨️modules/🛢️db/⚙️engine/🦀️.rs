@@ -4816,8 +4816,8 @@ pub mod vcs_integration {
     impl store::MemberStoreOwner<HashMutation> for HashProjection {
         type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
 
-        fn member_store_owners() -> store::MemberStoreOwners<Self, HashMutation> {
-            store::MemberStoreOwners::new(
+        fn member_store_owners() -> store::DocumentStoreOwners<Self, HashMutation> {
+            store::DocumentStoreOwners::new(
                 std::sync::Arc::new(HashSnapshotRetirementFactory),
                 std::sync::Arc::new(HashOwnedRetirementFactory),
                 std::sync::Arc::new(HashOwnedRetirementFactory),
@@ -5176,7 +5176,7 @@ pub mod vcs_integration {
                 VcsStoreClaim::Build(permit) => {
                     let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
                     let mut store = store::ArtifactStore::new(envelope).await.map_err(map_vcs_error)?;
-                    store.install_member_store_owners_exact(<HashProjection as store::MemberStoreOwner<HashMutation>>::member_store_owners());
+                    store.install_document_store_owners_exact(<HashProjection as store::MemberStoreOwner<HashMutation>>::member_store_owners());
                     Ok(permit.install(store))
                 }
             }

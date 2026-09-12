@@ -2,68 +2,87 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/snapshot.json",
   "title": "SemioKitSnapshot",
-  "description": "Semio's type/design domain: types with representation links, designs of pieces and connections. Second COMPOSITE subset.",
   "type": "object",
-  "required": [
-    "schema"
-  ],
+  "additionalProperties": false,
+  "required": ["schema", "types", "designs", "objects", "models", "representations"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
+    "schema": { "const": "stdio.semio.kit", "x-semio-state": "artifact" },
     "types": {
       "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "category": {
-            "type": "string"
-          }
-        }
-      }
+      "items": { "$ref": "#/$defs/SemioKitType" },
+      "x-semio-state": "artifact"
     },
     "designs": {
       "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object"
-      }
+      "items": { "$ref": "#/$defs/SemioKitDesign" },
+      "x-semio-state": "artifact"
     },
     "objects": {
       "type": "array",
+      "items": { "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/object" },
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio.object",
-      "items": {
-        "type": "object"
-      }
+      "x-semio-child": "s.stdio.semio"
     },
     "models": {
       "type": "array",
+      "items": { "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/model" },
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio.model",
-      "items": {
-        "type": "object"
-      }
+      "x-semio-child": "s.stdio.semio"
     },
     "properties": {
-      "type": "object",
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/value",
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio.value"
+      "x-semio-child": "s.stdio.semio"
     },
     "representations": {
       "type": "array",
+      "items": { "$ref": "https://semio.tech/schema/os/store/link.json" },
       "x-semio-state": "artifact",
-      "x-semio-link": "representation",
-      "items": {
-        "type": "object"
+      "x-semio-link": "representation"
+    }
+  },
+  "$defs": {
+    "SemioKitType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "category"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" }
+      }
+    },
+    "SemioKitPiece": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "typeId", "transform"],
+      "properties": {
+        "id": { "type": "string" },
+        "typeId": { "type": "string" },
+        "transform": { "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/geometry.json" }
+      }
+    },
+    "SemioKitConnection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "connectingPieceId", "connectingPort", "connectedPieceId", "connectedPort"],
+      "properties": {
+        "id": { "type": "string" },
+        "connectingPieceId": { "type": "string" },
+        "connectingPort": { "type": "string" },
+        "connectedPieceId": { "type": "string" },
+        "connectedPort": { "type": "string" }
+      }
+    },
+    "SemioKitDesign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "pieces", "connections"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "pieces": { "type": "array", "items": { "$ref": "#/$defs/SemioKitPiece" } },
+        "connections": { "type": "array", "items": { "$ref": "#/$defs/SemioKitConnection" } }
       }
     }
   }

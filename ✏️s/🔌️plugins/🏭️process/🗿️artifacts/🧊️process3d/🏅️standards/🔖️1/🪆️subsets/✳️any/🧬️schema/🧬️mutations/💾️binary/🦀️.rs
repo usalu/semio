@@ -2421,8 +2421,8 @@ impl Drop for Process3dSnapshotCopyCursor {
 //#endregion 🔖️RetainedConstruction
 
 //#region 🔖️RetainedStoreInitialization
-pub fn process3d_document_store_owners() -> store::MemberStoreOwners<Process3dSnapshot, Process3dMutation> {
-    store::MemberStoreOwners::new(
+pub fn process3d_document_store_owners() -> store::DocumentStoreOwners<Process3dSnapshot, Process3dMutation> {
+    store::DocumentStoreOwners::new(
         std::sync::Arc::new(Process3dSnapshotRetirementFactory),
         std::sync::Arc::new(Process3dSnapshotRetirementFactory),
         std::sync::Arc::new(Process3dMutationRetirementFactory),

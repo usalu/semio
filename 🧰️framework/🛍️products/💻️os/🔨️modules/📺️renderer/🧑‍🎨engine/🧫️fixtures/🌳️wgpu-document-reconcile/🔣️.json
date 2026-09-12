@@ -1,0 +1,21 @@
+{
+  "fixture": "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🌳️document-tree-reconcile/🔣️.json",
+  "reconcileSource": "../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🔀️reconcile/🦀️.rs",
+  "treeSource": "../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🌳️tree/🦀️.rs",
+  "engineSource": "../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs",
+  "paintSource": "../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🦀️.rs",
+  "interpreterSource": "🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
+  "shellSource": "🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
+  "reactInterpreterSource": "🧱️elements/🗣️Interpreter/🟦️.tsx",
+  "projection": "ui_node_from_record",
+  "cursor": "UiDocumentReconcileCursor",
+  "engineEntry": "step_document_reconcile",
+  "identityLedger": "document_nodes",
+  "identityLookup": "document_node",
+  "consumeSubtreePredicate": "record_consumes_subtree",
+  "testkitOnlyArenaWriter": "apply_tree",
+  "paintCensus": "UiFramePaintCensus",
+  "mountedLayoutAccessor": "mounted_layout",
+  "reactIdentityHelper": "surfaceHostIdentityV1",
+  "treeRowSyncPhases": ["TreeApplyPrepare", "TreeApplyScan", "TreeApplyWrite"]
+}

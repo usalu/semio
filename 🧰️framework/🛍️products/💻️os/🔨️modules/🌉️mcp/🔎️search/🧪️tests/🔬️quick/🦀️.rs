@@ -1,7 +1,7 @@
 
 use super::*;
 use crate::catalog::compile;
-use crate::testkit;
+use crate::source_builders;
 use semio_framework::{Locale, Terminology};
 
 #[test]
@@ -13,7 +13,7 @@ fn tokenizer_splits_camel_case_and_kebab_case_and_drops_stopwords() {
 
 #[test]
 fn move_the_selection_finds_cad_translate_selection_as_top_hit() {
-    let source = testkit::note_and_cad_source();
+    let source = source_builders::note_and_cad_source();
     let catalog = compile(&source, Locale::En, Terminology::Native).expect("compiles");
     let hits = search(&catalog, "move the selection", &SearchFilters::default());
     assert!(!hits.is_empty(), "expected at least one hit");
@@ -22,7 +22,7 @@ fn move_the_selection_finds_cad_translate_selection_as_top_hit() {
 
 #[test]
 fn search_is_deterministic_across_repeated_calls() {
-    let source = testkit::note_and_cad_source();
+    let source = source_builders::note_and_cad_source();
     let catalog = compile(&source, Locale::En, Terminology::Native).expect("compiles");
     let first = search(&catalog, "delete the selection", &SearchFilters::default());
     let second = search(&catalog, "delete the selection", &SearchFilters::default());
@@ -31,7 +31,7 @@ fn search_is_deterministic_across_repeated_calls() {
 
 #[test]
 fn kind_filter_excludes_non_matching_capabilities() {
-    let source = testkit::note_and_cad_source();
+    let source = source_builders::note_and_cad_source();
     let catalog = compile(&source, Locale::En, Terminology::Native).expect("compiles");
     let filters = SearchFilters { kind: vec![crate::catalog::CapabilityKind::Shell], ..Default::default() };
     let hits = search(&catalog, "move the selection", &filters);
@@ -43,7 +43,7 @@ fn kind_filter_excludes_non_matching_capabilities() {
 
 #[test]
 fn owner_filter_restricts_to_one_plugin() {
-    let source = testkit::note_and_cad_source();
+    let source = source_builders::note_and_cad_source();
     let catalog = compile(&source, Locale::En, Terminology::Native).expect("compiles");
     let filters = SearchFilters { owner: Some("note".to_string()), ..Default::default() };
     let hits = search(&catalog, "delete", &filters);
@@ -55,7 +55,7 @@ fn owner_filter_restricts_to_one_plugin() {
 
 #[test]
 fn empty_query_returns_no_hits() {
-    let source = testkit::note_and_cad_source();
+    let source = source_builders::note_and_cad_source();
     let catalog = compile(&source, Locale::En, Terminology::Native).expect("compiles");
     assert!(search(&catalog, "   ", &SearchFilters::default()).is_empty());
 }

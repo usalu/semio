@@ -1,7 +1,7 @@
 //! 🧵️ Exact, resumable ownership retirement for persisted DAG snapshots and mutations.
 
 use crate::os_dsl::DslValue;
-use crate::os_store::{ArtifactOwnedValueRetirementFactory, ArtifactStoreCursorDisposer, ErasedSnapshotRetirement, MemberStoreOwner, MemberStoreOwners, SnapshotRetirementFactory, SnapshotRetirementStep};
+use crate::os_store::{ArtifactOwnedValueRetirementFactory, ArtifactStoreCursorDisposer, ErasedSnapshotRetirement, MemberStoreOwner, DocumentStoreOwners, SnapshotRetirementFactory, SnapshotRetirementStep};
 use crate::{DagFixtureEdge, DagMedia, DagMutation, DagNodeKind, DagNodeSpec, DagPreviewContent, DagSnapshot, IoPortSpec};
 use graph::manifest::{PropertyBag, PropertyValue};
 use std::collections::{BTreeSet, LinkedList};
@@ -423,8 +423,8 @@ impl ArtifactOwnedValueRetirementFactory<DagMutation> for DagMutationRetirementF
 impl MemberStoreOwner<DagMutation> for DagSnapshot {
     type SnapshotOpen = crate::os_store::UnsupportedMemberSnapshotOpen<Self>;
 
-    fn member_store_owners() -> MemberStoreOwners<Self, DagMutation> {
-        MemberStoreOwners::new(Arc::new(DagSnapshotRetirementFactory), Arc::new(DagOwnedSnapshotRetirementFactory), Arc::new(DagMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DagSnapshot, DagMutation>::new()))
+    fn member_store_owners() -> DocumentStoreOwners<Self, DagMutation> {
+        DocumentStoreOwners::new(Arc::new(DagSnapshotRetirementFactory), Arc::new(DagOwnedSnapshotRetirementFactory), Arc::new(DagMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DagSnapshot, DagMutation>::new()))
     }
 }
 

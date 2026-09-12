@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::sequence::terminology::sequence_play_labels;
-use crate::editor::sequence::testkit::{new_app, render as render_body};
+use crate::editor::sequence::unit_tests::context::{new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn inspection_shows_prompt_when_nothing_selected() {
@@ -20,6 +20,6 @@ async fn inspection_shows_selected_step_kind() {
     let fixture = app.snapshot().expect("projection").to_fixture();
     let labels = sequence_play_labels(&semio_framework_plugin::ViewModel::default());
     let node = render(&fixture, &["step-1".to_string()], labels).expect("inspector");
-    let node = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire inspector");
+    let node = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire inspector");
     assert!(serde_json::to_string(&node).unwrap().contains("state.set"));
 }

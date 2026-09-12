@@ -9,6 +9,9 @@ use crate::CadPaneId;
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowEngagement, WindowKindDefinition, WindowMeasure, WindowOptions};
 use ui_wgpu::wgpu::SurfaceKind;
 
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "cad-play-building";
 pub const BODY_KEY: &str = "cad.play.building";

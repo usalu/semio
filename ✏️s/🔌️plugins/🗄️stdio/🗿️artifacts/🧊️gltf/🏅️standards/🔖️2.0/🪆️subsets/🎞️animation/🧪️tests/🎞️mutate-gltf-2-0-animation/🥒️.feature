@@ -3,7 +3,7 @@
 @comparison-semantic-gltf-v1
 @mutations-gltf-2-0-animation
 Feature: Apply every registered glTF 2.0 animation mutation to a real-world document
-  The `gltf-2-0-animation` catalog (`../../🔮️oracle/🔣️.json`) declares the 4 kinds
+  The `gltf-2-0-animation` catalog (`../../🔮️oracles/🔣️.json`) declares the 4 kinds
   `document/animations` owns (§5.5): `create-animation`, `delete-animation`, `move-animation`,
   `reorder-animations`. Shard A6 already scaffolded this catalog and its 4 committed
   `⬅️before.gltf`/`➡️after.gltf` fixture pairs (exact `../../🧫️fixtures/<fixture>/` coordinates below), each derived from
@@ -22,7 +22,7 @@ Feature: Apply every registered glTF 2.0 animation mutation to a real-world docu
   target.node` points at a node), so these 4 kinds need no `apply_node_ref_change` step at all.
   `create-animation`'s own payload carries no field content (same shape as `🦴️skin`'s
   `create-skin`), so `delete-animation`'s inverse is special-cased through `undo_delete_animation`
-  (`../../../♾️any/🔮️oracle/🦀️.rs`) rather than a second `create-animation` call, for the identical
+  (`../../../♾️any/🔮️oracles/🦀️.rs`) rather than a second `create-animation` call, for the identical
   reason `🦴️skin`'s own feature file documents for `undo_delete_skin`.
 
   @id-mutate

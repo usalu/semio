@@ -52,7 +52,7 @@
 //! `impl_serde_op_codec!` synthesizes stay byte-for-byte identical — serde's internally-tagged
 //! representation supports a newtype variant wrapping a plain struct.
 //!
-//! @see ../../🔮️oracle/🔣️.json — every entry of `KINDS` below must appear in its `kinds` catalog
+//! @see ../../🔮️oracles/🔣️.json — every entry of `KINDS` below must appear in its `kinds` catalog
 //! (the manifest also carries `no-mutation`, the identity-probe row `✅️mutate-xml-1-0-valid`'s own
 //! test adapter registers directly; it names no `XmlValidMutation` variant of its own).
 //! @see ../../../../../../🧪️tests/✅️mutate-xml-1-0-valid/🥒️.feature — the case that exercises it.
@@ -121,7 +121,7 @@ pub enum XmlValidMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `XmlValidMutation` variant, in declaration order — the exact
-/// `kinds` list `../../🔮️oracle/🔣️.json`'s `mutationCatalogs` entry declares. The framework
+/// `kinds` list `../../🔮️oracles/🔣️.json`'s `mutationCatalogs` entry declares. The framework
 /// never parses this enum; `kinds_matches_enum_variants_in_declaration_order` below is what keeps
 /// the two declarations honest against each other.
 pub const KINDS: &[&str] = &["set-snapshot", "declare-doctype", "rename-document-element", "set-external-subset", "set-standalone", "declare-entity", "set-internal-subset", "set-text"];

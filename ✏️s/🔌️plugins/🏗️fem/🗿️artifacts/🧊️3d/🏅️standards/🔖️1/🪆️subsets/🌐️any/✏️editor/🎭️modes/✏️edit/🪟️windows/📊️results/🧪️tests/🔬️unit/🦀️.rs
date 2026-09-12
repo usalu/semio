@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::fem3d::testkit::{dispatch, fem3d_app, fem3d_empty_app, render as render_body, Fem3dApp};
+use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app, fem3d_empty_app, render as render_body, Fem3dApp};
 use crate::editor::fem3d::Fem3dCommand;
 
 async fn app_with_example() -> Fem3dApp {
@@ -43,10 +43,10 @@ async fn results_window_renders_buckling_mode_shape_3d() {
 async fn results_scene_includes_solid_vertex_colors_3d() {
     let app = app_with_example().await;
     let snapshot = app.snapshot().expect("snapshot");
-    let config = Fem3dConfig { result_source_id: Some("dead".into()), result_mode: "static".into(), ..Fem3dConfig::default() };
+    let config = Fem3dResultsWindowConfig { result_source_id: Some("dead".into()), result_mode: crate::app_surface::ResultMode::Static, ..Fem3dResultsWindowConfig::default() };
     let node = render(&snapshot, &config).expect("fixture surface admission");
     let surface = node.children.iter().find(|child| matches!(&child.component, semio_framework_ui_contract::Component::Surface(_))).expect("world surface child");
-    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::testkit::built_surface_scene(surface).expect("assemble world scene");
+    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(surface).expect("assemble world scene");
     let json = serde_json::to_string(&node).expect("independent semantic JSON oracle");
     assert!(scene.meshes_json.contains("solid-sol1"), "expected the solid mesh in the results scene: {}", scene.meshes_json);
     assert!(scene.meshes_json.contains("\"colors\""), "expected a vertex colors array on the solid mesh data: {}", scene.meshes_json);

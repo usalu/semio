@@ -29,7 +29,7 @@
 //
 // @see ../../../../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🏭️generator/📜️script.ts —
 //      the sibling generator this file's CLI/recipe shape is mirrored from.
-// @see ./🦀️image-bmp-codec/src/🦀️.rs — the actual codec; `build <recipe-id> <out-dir>` and
+// @see ./🔁️codec/🦀️.rs — the actual codec; `build <recipe-id> <out-dir>` and
 //      `project <path>` are its only two commands.
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/
 
@@ -43,14 +43,14 @@ import { spawnSync } from "node:child_process";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-const CODEC_MANIFEST = join(import.meta.dir, "🦀️image-bmp-codec", "Cargo.toml");
+const CODEC_MANIFEST = join(import.meta.dir, "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 const ORACLE_ID = "image-bmp-3-mutate-reader";
 const ENGINE_FAMILY = "image-rs";
 const ENGINE_VERSION = "0.25.10";
 
 type Recipe = Readonly<{ id: string; directoryName: string; mutation: string; notes: string }>;
 
-/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🦀️image-bmp-codec/src/🦀️.rs` verbatim — one entry per
+/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🔁️codec/🦀️.rs` verbatim — one entry per
  *  witnessable `BmpMutation` kind (see this subset's own report for why `change-header-fields` has
  *  no entry here). Every recipe's outcome is `applied` — this catalog declares no `rejected`
  *  mutations, per this ticket's own scoping. */

@@ -10,7 +10,7 @@
 //! `✏️editor/🎮️commands/🛑️cancel-preview-eval/🧪️tests/🔬️unit/contract.ts`.
 
 use super::*;
-use crate::viewer::generation3d::testkit::{self, app};
+use crate::viewer::generation3d::unit_tests::context::{self, app};
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::PluginApp;
 
@@ -205,7 +205,7 @@ fn assert_contract_shape(status: &serde_json::Value, contract: &StatusContract, 
 /// the two editor preview windows publish.
 #[test]
 fn the_viewer_preview_status_obeys_the_shared_contract_in_every_state() {
-    let _serial = testkit::lock();
+    let _serial = context::lock();
     let fixture = preview_cancel_fixture();
     let contract = &fixture.status_contract;
     let viewer = contract.surfaces.iter().find(|row| row.surface == VIEWER_SURFACE_ID).expect("the fixture declares the viewer surface");
@@ -252,7 +252,7 @@ fn the_viewer_preview_status_obeys_the_shared_contract_in_every_state() {
 /// idle, zero progress, nothing to cancel. Publishing nothing is never an option.
 #[test]
 fn a_sessionless_viewer_preview_still_publishes_the_contract() {
-    let _serial = testkit::lock();
+    let _serial = context::lock();
     let fixture = preview_cancel_fixture();
     let status: serde_json::Value = serde_json::from_str(&preview_eval::preview_progress_status_json_for(None, address(true))).expect("status json");
     assert_contract_shape(&status, &fixture.status_contract, &fixture.phase_labels, &fixture.cancel_action, "sessionless");
@@ -266,13 +266,13 @@ fn a_sessionless_viewer_preview_still_publishes_the_contract() {
 /// `data-status-json` off. This is the assertion the browser gap was measured against.
 #[semio_framework_async_macros::async_test]
 async fn the_rendered_viewer_preview_scene_carries_the_status_contract() {
-    let _serial = testkit::lock();
+    let _serial = context::lock();
     let fixture = preview_cancel_fixture();
     let mut app = app().await;
-    let shell_view = testkit::view_shell_view(VIEW_PREVIEW_WINDOW_ID);
-    let projection = testkit::render_with_view(&mut app, preview::BODY_KEY, &shell_view).await;
+    let shell_view = context::view_shell_view(VIEW_PREVIEW_WINDOW_ID);
+    let projection = context::render_with_view(&mut app, preview::BODY_KEY, &shell_view).await;
     drop(app);
-    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::testkit::decode_fixture_scene_with_lanes(&projection).expect("the viewer preview body decodes as a world-3d scene");
+    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).expect("the viewer preview body decodes as a world-3d scene");
     let published = world.status_json.clone().expect("the viewer preview window must publish a status contract, exactly as both editor preview windows do");
     let status: serde_json::Value = serde_json::from_str(&published).expect("the published status is one JSON object");
     assert_contract_shape(&status, &fixture.status_contract, &fixture.phase_labels, &fixture.cancel_action, "rendered");
@@ -309,16 +309,16 @@ fn the_viewer_declares_the_cancel_verb_its_status_names() {
 /// is a hidden runtime command rather than a window chrome action.
 #[semio_framework_async_macros::async_test]
 async fn a_viewer_cancel_dispatches_live_and_never_mutates_the_document() {
-    let _serial = testkit::lock();
+    let _serial = context::lock();
     let mut app = app().await;
-    let before = testkit::snapshot(&app);
-    let shell_view = testkit::view_shell_view(VIEW_PREVIEW_WINDOW_ID);
-    let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(shell_view), ..semio_framework_plugin::testkit::meta("local") };
+    let before = context::snapshot(&app);
+    let shell_view = context::view_shell_view(VIEW_PREVIEW_WINDOW_ID);
+    let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(shell_view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     let args = preview_eval::window_args(VIEW_PREVIEW_WINDOW_ID, preview::WINDOW_KIND_ID);
-    testkit::dispatch_effect_command(&mut app, preview_eval::PREVIEW_CANCEL_ACTION_ID, Some(&args), &action_meta).await.expect("the shell dispatches the declared cancel verb");
-    let receipt = semio_framework_plugin::testkit::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await.expect("the cancel settles through the retained ladder");
+    context::dispatch_effect_command(&mut app, preview_eval::PREVIEW_CANCEL_ACTION_ID, Some(&args), &action_meta).await.expect("the shell dispatches the declared cancel verb");
+    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await.expect("the cancel settles through the retained ladder");
     assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the viewer cancel faulted in the retained job ladder");
-    assert_eq!(testkit::snapshot(&app), before, "a cancel must not mutate the document");
+    assert_eq!(context::snapshot(&app), before, "a cancel must not mutate the document");
     eprintln!("[DEBUG] viewer cancel settled lanes={:?} effects={}", receipt.lanes, receipt.effects.len());
     let _ = app.pending_effects(None).await;
 }

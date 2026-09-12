@@ -37,7 +37,7 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 const here = dirname(Bun.fileURLToPath(import.meta.url));
 const subset = join(here, "..");
 const fixtures = process.env.SEMIO_FIXTURE_OUT ?? join(subset, "🧫️fixtures");
-const engine = join(here, "🦀️serde-json-engine");
+const engine = join(here, "🔁️codec", "📦️packages", "🦀️rust");
 const KINDS = [
   { kind: "insert-array-element", directory: "📥️insert-array-element" },
   { kind: "remove-array-element", directory: "📤️remove-array-element" },
@@ -104,7 +104,7 @@ const manifests = (): void => {
   // 🧾️The REGISTRY reads `fixtureManifests` off the contribution file itself (`loadOracleRegistry`
   // parses it there, not from `🧫️fixtures/🔣️.json`), so the generated block is merged into
   // the catalog too — the standalone file stays as the generator's reviewable output.
-  const catalogPath = join(subset, "🔮️oracle", "🔣️.json");
+  const catalogPath = join(subset, "🔮️oracles", "🔣️.json");
   const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
   const keep = (catalog.fixtureManifests ?? []).filter((entry: { family?: string }) => entry.family !== "json-base-carrier");
   catalog.fixtureManifests = [...keep, ...entries];

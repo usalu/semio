@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/app/drawing/drawing/canvas-window-transient/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["engagementInput", "tracePointerGeneration", "tracePointerCompletedWork", "tracePointerPendingWork"],
+  "properties": {
+    "engagementInput": { "type": "string" },
+    "tracePointerGeneration": { "type": "integer", "minimum": 0 },
+    "tracePointerCompletedWork": { "type": "integer", "minimum": 0 },
+    "tracePointerPendingWork": { "type": "integer", "minimum": 0 }
+  }
+}

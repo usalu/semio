@@ -1,0 +1,331 @@
+{
+  "sources": [
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py",
+      "legacyDisposition": "absent",
+      "owners": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🐍️.py",
+          "language": "python",
+          "anchors": [
+            "def run_main(",
+            "class Adapter:"
+          ]
+        }
+      ],
+      "consumers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "legacyDisposition": "absent",
+      "owners": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export function getPool",
+            "export async function upsertTicket",
+            "export async function runSchema"
+          ]
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔎️source-index/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export function parseRegionMarker",
+            "export function parseUnifiedDiff"
+          ]
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔐️authentication/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export function hashApiKey",
+            "export async function requireAuth"
+          ]
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📡️event/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export async function publishEvent",
+            "export async function sendDiscordMessage"
+          ]
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/👷️worker/🏃️execution/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export async function runRepoServerWorker"
+          ]
+        }
+      ],
+      "consumers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/👷️worker/🟦️.ts"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts",
+      "legacyDisposition": "absent",
+      "owners": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export function shardWorkerSource",
+            "export async function transpilePluginComponentAsync",
+            "export function hostShimSource"
+          ]
+        }
+      ],
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+        "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📦️distribution/🟦️.ts",
+      "legacyDisposition": "absent",
+      "owners": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export async function copyBrowserArtifacts"
+          ]
+        }
+      ],
+      "consumers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌐️browser/🟦️.ts",
+        "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📦️assets/🟦️.ts"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📦️distribution/⚡️vite/🟦️.ts",
+      "legacyDisposition": "absent",
+      "owners": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export function browserArtifactVitePlugin"
+          ]
+        }
+      ],
+      "consumers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌐️browser/🟦️.ts",
+        "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🕸️imports/🟦️.ts",
+      "legacyDisposition": "absent",
+      "owners": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export function rewritePreview2ShimImportSource"
+          ]
+        }
+      ],
+      "consumers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
+        "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📦️assets/🟦️.ts"
+      ]
+    },
+    {
+      "legacy": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts",
+      "legacyDisposition": "thin-command",
+      "owners": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export const ACTOR_COMPONENT_EXPORTS",
+            "export function finalizePluginDescriptor"
+          ]
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export function artifactFiles"
+          ]
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export class SupportScript",
+            "export class MaterializeScript"
+          ]
+        }
+      ],
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts"
+      ]
+    }
+  ],
+  "supportMoves": [
+    {
+      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔷️.cs",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🔷️.cs",
+      "language": "dotnet",
+      "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet/🧪️Semio.Repo.Test.csproj"
+    }
+  ],
+  "aliases": [
+    {
+      "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
+      "specifier": "@/lib/persistence",
+      "target": "../../../📚️library/🗄️persistence/🟦️.ts",
+      "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🟦️.ts"
+    },
+    {
+      "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
+      "specifier": "@/lib/source-index",
+      "target": "../../../📚️library/🔎️source-index/🟦️.ts",
+      "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts"
+    },
+    {
+      "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
+      "specifier": "@/lib/authentication",
+      "target": "../../../📚️library/🔐️authentication/🟦️.ts",
+      "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔐️authentication/🟦️.ts"
+    },
+    {
+      "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
+      "specifier": "@/lib/event",
+      "target": "../../../📚️library/📡️event/🟦️.ts",
+      "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📡️event/🟦️.ts"
+    }
+  ],
+  "command": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts",
+    "maximumLines": 12,
+    "forbiddenExports": [
+      "ACTOR_COMPONENT_EXPORTS",
+      "assertActorComponentExports",
+      "PLUGIN_DESCRIPTOR_PROBE_SOURCE",
+      "finalizePluginDescriptor",
+      "artifactFiles"
+    ]
+  },
+  "cacheAuthority": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "fragments": [
+        "const webSourceRoot = \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle\";",
+        "`{workspaceRoot}/${webSourceRoot}/**/*.ts`"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json",
+      "fragments": [
+        "\"browserBundleSources\"",
+        "plugin/🌐️browser-bundle/**/*.ts"
+      ]
+    }
+  ],
+  "descriptorProbe": {
+    "bytes": [1, 2, 3],
+    "base64": "AQID"
+  },
+  "directoryContexts": [
+    {
+      "name": "📚️library",
+      "parentKind": "members-of-modules",
+      "kind": "repo-server-library"
+    },
+    {
+      "name": "🗄️persistence",
+      "parentKind": "repo-server-library",
+      "kind": "repo-server-persistence"
+    },
+    {
+      "name": "🔎️source-index",
+      "parentKind": "repo-server-library",
+      "kind": "repo-server-source-index"
+    },
+    {
+      "name": "🔐️authentication",
+      "parentKind": "repo-server-library",
+      "kind": "repo-server-authentication"
+    },
+    {
+      "name": "📡️event",
+      "parentKind": "repo-server-library",
+      "kind": "repo-server-event"
+    },
+    {
+      "name": "👷️worker",
+      "parentKind": "repo-server-library",
+      "kind": "repo-server-worker"
+    },
+    {
+      "name": "🏃️execution",
+      "parentKind": "repo-server-worker",
+      "kind": "repo-server-worker-execution"
+    },
+    {
+      "name": "🌐️browser-bundle",
+      "parentKind": "members-of-modules",
+      "kind": "plugin-browser-bundle"
+    },
+    {
+      "name": "🏗️materialization",
+      "parentKind": "plugin-browser-bundle",
+      "kind": "plugin-browser-materialization"
+    },
+    {
+      "name": "🚀️commands",
+      "parentKind": "plugin-browser-materialization",
+      "kind": "plugin-browser-materialization-commands"
+    },
+    {
+      "name": "📦️distribution",
+      "parentKind": "plugin-browser-bundle",
+      "kind": "plugin-browser-distribution"
+    },
+    {
+      "name": "⚡️vite",
+      "parentKind": "plugin-browser-distribution",
+      "kind": "plugin-browser-distribution-vite"
+    },
+    {
+      "name": "📋️inventory",
+      "parentKind": "plugin-browser-distribution",
+      "kind": "plugin-browser-distribution-inventory"
+    },
+    {
+      "name": "🕸️imports",
+      "parentKind": "plugin-browser-bundle",
+      "kind": "plugin-browser-imports"
+    },
+    {
+      "name": "🛂️descriptor",
+      "parentKind": "plugin-browser-bundle",
+      "kind": "plugin-browser-descriptor"
+    },
+    {
+      "name": "🧱️manifestless-source-closure",
+      "parentKind": "schema",
+      "kind": "manifestless-source-closure"
+    },
+    {
+      "name": "🧱️manifestless-source-closure",
+      "parentKind": "fixtures",
+      "kind": "manifestless-source-closure"
+    },
+    {
+      "name": "🧱️manifestless-source-closure",
+      "parentKind": "tests",
+      "kind": "manifestless-source-closure"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 //! 🧹️ 🧹️ Remodeling play app commands command — `clear-mesh-result`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::replace_mesh_result;
 use crate::op::RemodelingMutation;
 use crate::{MeshSource, RemodelingMesh, RemodelingSnapshot};
@@ -39,6 +39,6 @@ fn empty_result() -> RemodelingMesh {
 #[dsl(keyword = "clear-mesh-result")]
 pub struct ClearMeshResult {}
 
-pub fn handle(_payload: &ClearMeshResult, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(_payload: &ClearMeshResult, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![replace_mesh_result(Box::new(empty_result()))]))
 }

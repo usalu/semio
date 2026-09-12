@@ -13,7 +13,7 @@ id = "ui-contract"
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [[test]]
 name = "typegen_export"

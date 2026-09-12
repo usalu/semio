@@ -1,7 +1,60 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    /// ✏️ `RemodelingPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
+    /// `ArtifactApp` — `EditorApp<RemodelingPlayApp>` (SDK adapter, contract §2.1) is the real
+    /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
+    /// `PluginBuilder::editor::<RemodelingPlayApp>` builds it.
+    pub type RemodelingApp = VcsArtifactApp<EditorApp<RemodelingPlayApp>>;
+    
+    /// ✏️ Adapts `create_remodeling_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
+    /// examples }` shape `artifact_app_laws::assert_declared_actions_bridge_to_commands`/
+    /// `context::new_app_with_registry` still expect — framework test context gap, not modifiable here
+    /// (`🧰️framework/**` is outside this packet's lease).
+    pub fn remodeling_app_manifest_for_tests() -> App {
+        App { definition: create_remodeling_app(), examples: Vec::new() }
+    }
+    
+    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// The RUNTIME side stays async (`ArtifactApp`/`VcsArtifactApp` are async traits, unlike the
+    /// AUTHORING `ArtifactEditor` this crate implements), so every harness entry point awaits.
+    pub async fn app() -> RemodelingApp {
+        new_app::<EditorApp<RemodelingPlayApp>>().await
+    }
+    
+    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
+    pub async fn app_with_registry() -> RemodelingApp {
+        new_app_with_registry::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_tests).await
+    }
+    
+    pub async fn dispatch(app: &mut RemodelingApp, command: RemodelingCommand) -> InvocationResult {
+        let window_kind = match &command {
+            RemodelingCommand::SetCamera(_) | RemodelingCommand::SetLayerVisibility(_) => Some(model::windows::model::REMODELING_PLAY_WINDOW_MAIN),
+            RemodelingCommand::SetFrameCursor(_) => Some(capture::windows::frames::REMODELING_PLAY_WINDOW_FRAMES),
+            RemodelingCommand::SetReportTable(_) => Some(analyze::windows::report::REMODELING_PLAY_WINDOW_REPORT),
+            _ => None,
+        };
+        let view_state = window_kind.map(|window_kind_id| ViewModel {
+            window_id: Some("remodeling-test-window".into()),
+            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "remodeling-test-window".into(), window_kind_id: window_kind_id.into() }],
+            ..Default::default()
+        });
+        app.dispatch_typed(command, &semio_framework_plugin::ActionMeta { view_state, ..meta("local") }).await.expect("dispatch")
+    }
+    
+    /// 🖼️ The rendered tree as text — `ComponentTree` is neither `Serialize` nor `ToValue`, so its own
+    /// `Debug` projection is what body assertions match against.
+    pub async fn render(app: &mut RemodelingApp, body_key: &str) -> String {
+        format!("{:?}", app.render(body_key, None, &ViewModel::default()).await.expect("render"))
+    }
+}
+
 use super::*;
-use crate::editor::remodeling::testkit::{app, app_with_registry, remodeling_app_manifest_for_testkit, render};
+use crate::editor::remodeling::unit_tests::context::{app, app_with_registry, remodeling_app_manifest_for_tests, render};
 use protocol::{OpBinary, OpText};
-use semio_framework_plugin::testkit;
+use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::{EditorApp, HistoryView};
 
 //#region 🧪️RetainedCatalogOracle
@@ -38,7 +91,7 @@ impl RemodelingRetainedCatalogOracle for SerdeJsonRemodelingRetainedCatalogOracl
             .and_then(serde_json::Value::as_array)
             .expect("publication contracts array")
             .iter()
-            .filter(|contract| contract.get("lanes").and_then(serde_json::Value::as_array).is_some_and(|lanes| lanes.as_slice() == [serde_json::Value::String("hostOnly".into())]))
+            .filter(|contract| contract.get("lanes").and_then(serde_json::Value::as_array).is_some_and(|lanes| lanes.as_slice() == [serde_json::Value::String("HostOnly".into())]))
             .filter_map(|contract| contract.get("toolId").and_then(serde_json::Value::as_str).map(str::to_string))
             .collect::<std::collections::BTreeSet<_>>();
         RemodelingRetainedCatalogSummary { routes: routes.len(), bounded, resumable, unique: ids.len() == routes.len(), bounded_ids, host_only_ids }
@@ -65,7 +118,7 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
         host_only_ids,
     };
     let expected_host_only = ["exportQcReport", "importFrames", "importVideo"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(oracle, RemodelingRetainedCatalogSummary { routes: 42, bounded: 42, resumable: 0, unique: true, bounded_ids: bounded_owned, host_only_ids: expected_host_only });
+    assert_eq!(oracle, RemodelingRetainedCatalogSummary { routes: 40, bounded: 40, resumable: 0, unique: true, bounded_ids: bounded_owned, host_only_ids: expected_host_only });
     assert_eq!(subject, oracle);
 }
 
@@ -73,7 +126,7 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
 async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
     let fixture = include_str!("../../🧫️fixtures/🚧️retained-command-limits/🔣️.json");
     let expected = ["exportQcReport", "importFrames", "importVideo"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
-    let wrong_lane = fixture.replacen("\"hostOnly\"", "\"artifact\"", 1);
+    let wrong_lane = fixture.replacen("\"HostOnly\"", "\"Artifact\"", 1);
     let wrong_tool = fixture.replacen("\"importFrames\"", "\"forgedImport\"", 1);
     assert_ne!(wrong_lane, fixture, "the hostile lane mutation must actually change the fixture");
     assert_ne!(wrong_tool, fixture, "the hostile tool mutation must actually change the fixture");
@@ -143,7 +196,7 @@ fn every_command() -> Vec<RemodelingCommand> {
         RemodelingCommand::ClearTracks(clear_tracks::ClearTracks {}),
         RemodelingCommand::ClearGeoProducts(clear_geo_products::ClearGeoProducts {}),
         RemodelingCommand::ClearResult(clear_result::ClearResult {}),
-        RemodelingCommand::SetCamera(set_camera::SetCamera { camera: crate::editor::remodeling::config::RemodelingWorldCamera::default() }),
+        RemodelingCommand::SetCamera(set_camera::SetCamera { camera: crate::editor::remodeling::modes::model::windows::model::config::RemodelingModelWindowConfig::default().camera }),
         RemodelingCommand::SetLayerVisibility(set_layer_visibility::SetLayerVisibility { layer: "dense".into(), visible: false }),
         RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 }),
         RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: None, frame_index: 0 }),
@@ -195,6 +248,64 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     for id in &retained {
         assert_eq!(declared.get(id), Some(&InteractiveJobClassification::Migrated), "action '{id}' must be declared and classified Migrated");
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_once() {
+    let envelope = store::create_document_envelope(REMODELING_DOCUMENT_SCHEMA, "remodel-window-preparation-law", RemodelingSnapshot::default(), None);
+    let mut document = store::ArtifactStore::new(envelope).await.expect("Remodel window preparation-law Store opens");
+    document.install_document_store_owners_exact(
+        <RemodelingPlayApp as ArtifactEditor>::build_document_store_owners().expect("Remodel document Store owners"),
+    );
+    let factory: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<RemodelingSnapshot, RemodelingMutation>> =
+        std::sync::Arc::new(RemodelingStorePreparationFactory);
+    let mutation = RemodelingMutation::ReplaceQc(crate::mutations::replace_qc::ReplaceQc { qc: None });
+    let mut publication = document
+        .begin_apply_batch(
+            semio_framework_job::OperationId(992),
+            document.generation_now(),
+            document.content_revision_now(),
+            "remodel-window-preparation-law".into(),
+            vec![mutation],
+            Some("candidate transfer".into()),
+            store::HistoryLane::Document,
+            Some(&factory),
+        )
+        .expect("Remodel one-item publication admits its exact factory");
+    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES };
+    let mut published = false;
+    for _ in 0..64 {
+        match document.advance_apply_batch(&mut publication, grant).expect("Remodel candidate transfer turn") {
+            store::ArtifactStoreOneItemAdvance::Published(_) => {
+                published = true;
+                break;
+            }
+            store::ArtifactStoreOneItemAdvance::Blocked => panic!("Remodel one-item preparation blocked after admitting its exact candidate"),
+            store::ArtifactStoreOneItemAdvance::Progress(_) => {}
+            store::ArtifactStoreOneItemAdvance::AwaitingAck(_) => panic!("Remodel one-item preparation reached ACK without exposing its exact publication receipt"),
+            store::ArtifactStoreOneItemAdvance::Complete => panic!("Remodel one-item preparation completed before publishing its exact candidate"),
+        }
+    }
+    assert!(published, "Remodel one-item preparation must transfer its candidate exactly once");
+    assert!(publication.acknowledge());
+    for _ in 0..64 {
+        if matches!(publication.close_step(grant).expect("Remodel publication close"), store::SnapshotRetirementStep::Complete) {
+            break;
+        }
+    }
+    assert!(publication.terminal_is_empty());
+    drop(publication);
+    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<RemodelingSnapshot, RemodelingMutation>::new();
+    for _ in 0..100_000 {
+        if matches!(
+            semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut document, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
+                .expect("Remodel preparation-law Store close"),
+            semio_framework_plugin::PluginCloseStep::Complete
+        ) {
+            break;
+        }
+    }
+    assert!(semio_framework_plugin::ArtifactOwnedDisposer::terminal_is_empty(&disposer, &document));
 }
 
 /// ⚖️ Every row round trips through BOTH projections, and its printed line starts with the row's own
@@ -292,7 +403,7 @@ async fn command_ids_and_wire_keywords_are_unique_per_row() {
 /// and rejects anything else — the gap this migration closed (see `command_from_action`'s doc).
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-    testkit::assert_declared_actions_bridge_to_commands::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_testkit).await;
+    artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_tests).await;
     assert!(RemodelingPlayApp::command_from_action("nonsense", None).is_err());
 }
 
@@ -304,8 +415,8 @@ async fn the_action_bridge_coerces_select_strings_and_both_camera_arg_shapes() {
     let RemodelingCommand::SetMeshParams(payload) = mesh else { panic!("expected SetMeshParams") };
     assert_eq!(payload.texture_size, 4096);
 
-    let flat = RemodelingPlayApp::command_from_action("setCamera", Some(&dsl::DslValue::from(&serde_json::json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "fov": 60.0 })))).expect("bridge");
-    let nested = RemodelingPlayApp::command_from_action("setCamera", Some(&dsl::DslValue::from(&serde_json::json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "fov": 60.0 } })))).expect("bridge");
+    let flat = RemodelingPlayApp::command_from_action("setCamera", Some(&dsl::DslValue::from(&serde_json::json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 })))).expect("bridge");
+    let nested = RemodelingPlayApp::command_from_action("setCamera", Some(&dsl::DslValue::from(&serde_json::json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 } })))).expect("bridge");
     assert_eq!(flat, nested);
 
     let example = RemodelingPlayApp::command_from_action("setActiveExample", Some(&dsl::DslValue::from(&serde_json::json!({ "exampleId": "demo-session" })))).expect("bridge");
@@ -365,7 +476,12 @@ async fn remodeling_io_declares_photos_in_and_mesh_out_on_the_manifest() {
 #[semio_framework_async_macros::async_test]
 async fn view_rows_dispatch_cleanly_against_the_real_registry() {
     let mut app = app_with_registry().await;
-    let result = testkit::meta("local");
+    let view = semio_framework_plugin::ViewModel {
+        window_id: Some("report-test".into()),
+        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "report-test".into(), window_kind_id: analyze::windows::report::REMODELING_PLAY_WINDOW_REPORT.into() }],
+        ..Default::default()
+    };
+    let result = semio_framework_plugin::ActionMeta { view_state: Some(view), ..artifact_app_laws::meta("local") };
     app.dispatch_typed(RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result).await.expect("view dispatch");
 }
 //#endregion 🔖️ManifestSanity
@@ -376,7 +492,7 @@ async fn view_rows_dispatch_cleanly_against_the_real_registry() {
 /// whole-document `setDocument` snapshot, where one side's write would clobber the other's.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    testkit::assert_two_instances_converge::<EditorApp<RemodelingPlayApp>, _>(
+    artifact_app_laws::assert_two_instances_converge::<EditorApp<RemodelingPlayApp>, _>(
         "mem://remodeling-convergence",
         RemodelingCommand::SetFeatureParams(set_feature_params::SetFeatureParams { detector: "akaze".into(), target_count: 1000, octaves: 4, edge_threshold: 10.0 }),
         RemodelingCommand::AddGcp(add_gcp::AddGcp { name: "corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 }),

@@ -2,7 +2,7 @@
 //! artifact-level `mutate-equation-1` case in ticket
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! `✳️equation`'s own kinds have a subset-owned test. Recorded no-oracle decision
-//! `equation-mutation-semantics` (`../../../✳️any/🔮️oracle/🔣️.json`, which also records why
+//! `equation-mutation-semantics` (`../../../✳️any/🔮️oracles/🔣️.json`, which also records why
 //! `petgraph` and the external CAS candidates were surveyed and DECLINED).
 //!
 //! 📐️ `change-coefficient` is this subset's only kind, and it carries a real, observable vector:
@@ -14,7 +14,7 @@
 //! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner resolves
 //! an oracle implementation from the feature's `@oracle-` tag and this feature has none — so every law
 //! this case claims is asserted inside the SUBJECT handlers, through the shared law module
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` that the stdio subsets use. The oracle handlers
+//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` that the stdio subsets use. The oracle handlers
 //! below still answer with the committed vector read literally, so the reference side exists the
 //! moment a second producer ever does. The subject half is gated behind the generated host's `sut`
 //! feature so the oracle-only run never compiles the local implementation.

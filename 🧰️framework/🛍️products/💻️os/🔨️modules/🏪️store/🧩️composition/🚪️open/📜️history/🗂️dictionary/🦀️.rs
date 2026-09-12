@@ -559,6 +559,19 @@ impl VerifiedMemberHistoryDictionary {
         self.initial_history_exact
     }
 
+    pub(super) fn verified_end(&self) -> u64 {
+        self.owners.as_ref().and_then(|owners| owners.input.as_ref()).map_or(0, VerifiedMemberHistoryInput::verified_end)
+    }
+
+    pub(super) fn copy_verified_history_chunk(&mut self, offset: usize, output: &mut [u8], cx: &mut StepContext<'_>) -> Result<usize, MemberOpenDiagnostic> {
+        self.check_step_authority(cx)?;
+        self.owners
+            .as_mut()
+            .and_then(|owners| owners.input.as_mut())
+            .ok_or(MemberOpenDiagnostic::Stale)?
+            .copy_verified_history_chunk(offset, output, cx)
+    }
+
     pub(super) fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(crate::os_io::ArtifactRef, Option<crate::os_store::OwnerRef>, &'static str), MemberOpenDiagnostic> {
         self.check_step_authority(cx)?;
         let request = self.owners.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.request()?;

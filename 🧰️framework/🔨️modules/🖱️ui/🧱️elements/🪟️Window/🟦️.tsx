@@ -12,12 +12,12 @@ import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { childElementId } from "../🆔️ElementId/🟦️.tsx";
 import { ActionGroup, ActionGroupItem } from "../⚡️ActionGroup/🟦️.tsx";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
-import { loadingBorderStateClass, waitingBorderStateClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
+import { loadingBorderStateClass, waitingBorderStateClass } from "../../🎯️targets/⚛️react/🟦️";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional, NULL_SHELL_ROOT_REF, useShellKeydown } from "../🐚️ShellScope/🟦️.tsx";
 import { SurfaceScope, isSurfaceActiveBackgroundPointer, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
 import { measureWindowChromeScrollClearancePx, windowChromeScrollClearanceVar, windowContentDeadLineVar } from "../🚧️WindowContentDeadLine/🟦️.tsx";
-import { type UiStatus, type EngagementSpec, type SearchSpec, UI_WINDOW_SEARCH, useUiMobile, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, uiSpacingPx, ExternalLinkIcon, GhostRegionShell, PaneHost, Pane, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, Engagement, Search, panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass, focusActiveSearchInput, windowChromeClearedTopOffset } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
+import { type UiStatus, type EngagementSpec, type SearchSpec, UI_WINDOW_SEARCH, useUiMobile, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, uiSpacingPx, useShellDockRightColumnLeftPx, dockColumnInlineReservePx, ExternalLinkIcon, GhostRegionShell, PaneHost, Pane, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, Engagement, Search, panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass, focusActiveSearchInput, windowChromeClearedTopOffset } from "../../🎯️targets/⚛️react/🟦️";
 import { Minimize2Icon, Maximize2Icon, CloseIcon } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -200,6 +200,32 @@ const Window: React.FC<WindowProps> = ({
     return Math.max(windowMeasuresMinWidthPx, Math.min(windowMeasuresMaxWidthPx, Math.round(bodyWidth) - 8));
   }, []);
   const measuresMaxWidthPx = readMeasuresMaxWidthPx();
+  // ↔️ A window reaching under an open right-hand dock column shares that column with the panel body,
+  // which paints at `z-panel` and takes every press meant for this window's own right-edge chrome — the
+  // Projection group of wave B47 §1.3. The window yields exactly the overlap (and only what it can
+  // actually spare), so a window that stops short of the column keeps its rail flush.
+  // 📱️ Desktop only: the mobile chrome docks ONE full-width panel sheet instead of a side column, so
+  // there is no column for a window's right-edge chrome to yield to — and yielding to a full-width sheet
+  // would push the rail across its own window. The store is still subscribed unconditionally (hook order).
+  const publishedDockRightColumnLeftPx = useShellDockRightColumnLeftPx(shellScope?.rootRef.current ?? undefined);
+  const dockRightColumnLeftPx = mobile ? null : publishedDockRightColumnLeftPx;
+  const [rightChromeReservePx, setRightChromeReservePx] = reactHostPort.useState(0);
+  reactHostPort.useLayoutEffect(() => {
+    const body = windowBodyRef.current;
+    if (!body) return;
+    const sync = () => {
+      const bodyRect = body.getBoundingClientRect();
+      setRightChromeReservePx(dockColumnInlineReservePx(bodyRect.right, dockRightColumnLeftPx, bodyRect.width - windowMeasuresMinWidthPx));
+    };
+    sync();
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
+    resizeObserver?.observe(body);
+    window.addEventListener("resize", sync);
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", sync);
+    };
+  }, [dockRightColumnLeftPx]);
   const engagementVisible = !measuresExpanded && !!(engagement || actionPane);
   const engagementExpanded = engagementVisible && !actionsFolded;
   const searchVisible = !measuresExpanded && !!search;
@@ -314,7 +340,11 @@ const Window: React.FC<WindowProps> = ({
           className,
         )}
       >
-        {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
+        {hasControls ? (
+          <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single" style={rightChromeReservePx > 0 ? { right: `calc(var(--spacing-quarter) + ${rightChromeReservePx}px)` } : undefined}>
+            {controlsContent}
+          </div>
+        ) : null}
         <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
           {/* 🪟️ PaneHost wraps window body content so deep canvas hosts (e.g. projection switcher via usePaneSlot) receive PaneHostContext; the portal mount is a sibling overlay. */}
           <PaneHost className={cn("flex min-w-0 flex-col", fill ? "min-h-0 flex-1" : undefined)}>{error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}</PaneHost>
@@ -346,6 +376,7 @@ const Window: React.FC<WindowProps> = ({
               }}
               size={measuresWidthPx}
               onSizeChange={setMeasuresWidthPx}
+              inlineEdgeReservePx={rightChromeReservePx}
               minSize={windowMeasuresMinWidthPx}
               maxSize={measuresMaxWidthPx}
               onResizeActiveChange={setMeasuresResizeLeftActive}

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::generation2d::panels::catalogue as catalogue_panel;
-use crate::editor::generation2d::testkit::{app, close, render_with_view};
+use crate::editor::generation2d::unit_tests::context::{app, close, render_with_view};
 
 /// 🌍️ Labels resolve off `ViewModel::locale` — the renderer is handed `Locale::De` here, exactly as
 /// the `🧊️generation3d` twin does, so this law measures the German vocabulary rather than the

@@ -6,7 +6,7 @@ import { join } from "node:path";
 /** 🧪️ Compares native component optimization with Binaryen's independent JavaScript distribution. */
 export async function testPluginCoreOptimization(workspace: string, output: string): Promise<void> {
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🕸️native-optimization/🔣️.json"), "utf8")), require = createRequire(import.meta.url);
-  const { optimizePluginCoreModulesAsync } = await import("../../📦️packages/🟦️typescript/🟦️.ts");
+  const { optimizePluginCoreModulesAsync } = await import("../../🌐️browser-bundle/🏗️materialization/🟦️.ts");
   mkdirSync(output, { recursive: true }); const root = mkdtempSync(join(output, "component-optimizer-"));
   try {
     const input = join(root, "input.wat"), original = join(root, "input.wasm"), oracle = join(root, "oracle.wasm"), js = require.resolve("binaryen/bin/wasm-opt");

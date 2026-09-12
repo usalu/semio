@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::din18599::testkit;
+use crate::editor::din18599::unit_tests::context;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
@@ -13,13 +13,13 @@ async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn an_out_of_range_selected_index_falls_back_to_the_first_check() {
     let host = NormHost::<DinV18599Family>::from_document(crate::Din18599Snapshot::default());
-    let first = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render(&host, None).expect("node assembly") }).expect("json");
-    let clamped = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render(&host, Some(9_999)).expect("node assembly") }).expect("json");
+    let first = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render(&host, None).expect("node assembly") }).expect("json");
+    let clamped = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render(&host, Some(9_999)).expect("node assembly") }).expect("json");
     assert_eq!(first, clamped);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn renders_a_single_check() {
-    let mut app = testkit::app_with_registry().await;
-    assert!(!testkit::render(&mut app, BODY_INSPECTION).await.contains("Unknown body"));
+    let mut app = context::app_with_registry().await;
+    assert!(!context::render(&mut app, BODY_INSPECTION).await.contains("Unknown body"));
 }

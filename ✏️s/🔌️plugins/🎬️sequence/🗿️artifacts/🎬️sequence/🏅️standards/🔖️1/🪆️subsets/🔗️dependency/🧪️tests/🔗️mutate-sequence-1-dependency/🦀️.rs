@@ -4,10 +4,10 @@
 //! the edge vocabulary has a subset-owned test.
 //!
 //! Recorded no-oracle decision `sequence-step-graph-mutation-semantics`
-//! (`../../../✳️any/🔮️oracle/🔣️.json`): `s.sequence.sequence` is a semio-NATIVE artifact with no
+//! (`../../../✳️any/🔮️oracles/🔣️.json`): `s.sequence.sequence` is a semio-NATIVE artifact with no
 //! third-party reader or writer in any ecosystem, so this adapter registers NO oracle handler at
 //! all. All evidence lives in the SUBJECT role below, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` module.
+//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module.
 //!
 //! The subject half is `sut`-gated because the generated host links this repository's crate only
 //! for the subject role.

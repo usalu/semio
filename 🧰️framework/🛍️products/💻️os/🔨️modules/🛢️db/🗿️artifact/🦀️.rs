@@ -145,7 +145,7 @@ async fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
 }
 
 /// @emoji 🧰️ Public convenience for every crate above this one that hand-builds a `DB_PATHMAP_SCHEMA`
-/// `MutationEnvelope` (test fixtures, `db_cli`'s `profile`/`migrate` commands, `db_testkit`'s
+/// `MutationEnvelope` (test fixtures, `db_cli`'s `profile`/`migrate` commands, `db_fault_testing`'s
 /// workload generators) rather than going through `envelope_from_operation`: encodes a
 /// `serde_json::Value::Object` the same way `decode_pathmap`/`apply_one` decode it. Centralizing
 /// this is the single source of truth for `DB_PATHMAP_SCHEMA`'s actual wire bytes — a caller that

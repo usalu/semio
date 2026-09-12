@@ -697,7 +697,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("keeps the private port and proof names out of malicious plugin shard source and transfers before activation", async () => {
       const { readFile } = await import("node:fs/promises");
-      const pluginShard = await readFile(new URL("./🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", source.url), "utf8");
+      const pluginShard = await readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts", source.url), "utf8");
       const shellHost = await readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx", source.url), "utf8");
       expect(pluginShard).not.toContain("semio-browser-broker-port");
       expect(pluginShard).not.toContain("x-semio-browser-broker");
@@ -5521,7 +5521,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           expect(documentExecutionTargetStatusRoleV1(code as keyof typeof DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1)).toBe(fixture.expected.statusRoles[code]);
         }
         expect(Object.keys(DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1).sort()).toEqual(Object.keys(fixture.expected.status).sort());
-        const workerSource = await (await import("node:fs/promises")).readFile(new URL("./🧵️backbone-worker.ts", source.url), "utf8");
+        const workerSource = await (await import("node:fs/promises")).readFile(new URL("../🔨️modules/🏪️store/👷️worker/🟦️.ts", source.url), "utf8");
         const leaseRegion = workerSource.slice(workerSource.indexOf("//#region 🪪️ExecutionTargetLease"), workerSource.indexOf("//#endregion 🪪️ExecutionTargetLease"));
         expect(leaseRegion).not.toContain("loadPluginModule");
         expect(leaseRegion).not.toContain("ActivationRegistry");

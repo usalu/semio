@@ -68,7 +68,7 @@
     },
     {
       "id": "sibling-modules-ui-modules-control-keybinding-context-tsx",
-      "dir": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/⌨️control-keybinding-context",
+      "dir": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context",
       "implName": "🟦️.tsx",
       "roleName": "🧪️component.test.tsx"
     },
@@ -164,13 +164,13 @@
     },
     {
       "id": "sibling-modules-ui-elements-select-tsx",
-      "dir": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/☑️Select",
+      "dir": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select",
       "implName": "🟦️.tsx",
       "roleName": "🧪️component.test.tsx"
     },
     {
       "id": "sibling-modules-ui-elements-select-target",
-      "dir": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/☑️Select",
+      "dir": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select",
       "implName": "⌨️component.rs",
       "roleName": "🧊️component.rs"
     },
@@ -188,7 +188,7 @@
     },
     {
       "id": "sibling-modules-ui-elements-toggle-tsx",
-      "dir": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle",
+      "dir": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔀️Toggle",
       "implName": "🟦️.tsx",
       "roleName": "🧪️component.test.tsx"
     },
@@ -206,7 +206,7 @@
     },
     {
       "id": "sibling-modules-ui-elements-diagram-tsx",
-      "dir": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram",
+      "dir": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram",
       "implName": "🟦️.tsx",
       "roleName": "🧪️component.test.tsx"
     },
@@ -242,7 +242,7 @@
     },
     {
       "id": "sibling-modules-ui-elements-tree-tsx",
-      "dir": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree",
+      "dir": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree",
       "implName": "🟦️.tsx",
       "roleName": "🧪️component.test.tsx"
     }
@@ -261,7 +261,7 @@
     {
       "id": "hoist-avoidance-modules-ui-styling-ts",
       "packageDir": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
-      "ownerTestPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️test/🟦️s.ts"
+      "ownerTestPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts"
     }
   ]
 }

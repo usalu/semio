@@ -1,4 +1,4 @@
-use crate::editor::lowpoly::testkit::{app, render};
+use crate::editor::lowpoly::unit_tests::context::{app, render};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_world_scene() {

@@ -21,7 +21,7 @@
 /// `AppFrame::Welcome` handshake entirely — lifecycle now arrives through the reactor ABI's
 /// `Event::InstanceOpen`/`InstanceClose`, so this constant is no longer carried on the wire by any
 /// frame; it exists purely as the drift guard the tests below assert against.
-pub const CHANNEL_VERSION: u32 = 15;
+pub const CHANNEL_VERSION: u32 = 17;
 //#endregion 🔖️Version
 
 //#region 🔖️ChildPackEntry
@@ -41,6 +41,87 @@ pub struct ChildPackEntry {
     pub envelope_pack: Vec<u8>,
 }
 //#endregion 🔖️ChildPackEntry
+
+//#region 🔖️DocumentArchive
+pub const DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS: usize = 1_024;
+pub const DOCUMENT_ARCHIVE_MAXIMUM_BYTES: usize = 4 * 1_024 * 1_024;
+
+/// 🪪️ Full artifact identity carried by a recursive document archive without depending on a
+/// concrete store implementation.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct DocumentArchiveArtifactRef {
+    pub artifact_id: String,
+    pub artifact_kind: String,
+    pub standard: String,
+    pub subset: String,
+}
+
+/// 🪆️ Exact ownership edge for one archived member, including the parent's complete dialect.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct DocumentArchiveOwnerRef {
+    pub parent: DocumentArchiveArtifactRef,
+    pub slot: String,
+    pub child_id: String,
+}
+
+/// 📦️ One member of a complete recursive owned-document closure.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct OwnedDocumentMemberPackEntry {
+    pub ordinal: u32,
+    pub reference: DocumentArchiveArtifactRef,
+    pub owner: DocumentArchiveOwnerRef,
+    pub envelope_pack: Vec<u8>,
+}
+
+/// 🗃️ One root document envelope and its complete, bounded recursive owned-member closure.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct DocumentArchivePack {
+    pub parent_pack: Vec<u8>,
+    pub parent_spr: Vec<u8>,
+    pub members: Vec<OwnedDocumentMemberPackEntry>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DocumentArchiveLoadState {
+    Pending,
+    Running,
+    Ready,
+    Cancelled,
+    Fault,
+}
+
+impl DocumentArchiveLoadState {
+    fn wire(self) -> u8 {
+        match self {
+            Self::Pending => 0,
+            Self::Running => 1,
+            Self::Ready => 2,
+            Self::Cancelled => 3,
+            Self::Fault => 4,
+        }
+    }
+
+    fn from_wire(value: u8) -> Result<Self, crate::os_spr::ProtocolError> {
+        match value {
+            0 => Ok(Self::Pending),
+            1 => Ok(Self::Running),
+            2 => Ok(Self::Ready),
+            3 => Ok(Self::Cancelled),
+            4 => Ok(Self::Fault),
+            _ => Err(malformed("document archive load state", 0, "unknown state")),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DocumentArchiveLoadStatus {
+    pub operation: u64,
+    pub state: DocumentArchiveLoadState,
+    pub completed: u64,
+    pub total: u64,
+    pub fault: Vec<u8>,
+}
+//#endregion 🔖️DocumentArchive
 
 //#region 🔖️WindowConfigPackEntry
 /// 🪟️ One concrete window's persisted-local configuration envelope.
@@ -1203,6 +1284,256 @@ impl PresenceCommandCursor {
 //#region 🔖️PagedAppCommandDecode
 const APP_COMMAND_FIELD_MAXIMUM_BYTES: usize = COMMAND_MAXIMUM_BYTES;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DocumentArchiveDecodePhase {
+    ParentPack,
+    ParentSpr,
+    MemberCount,
+    Ordinal,
+    ReferenceArtifactId,
+    ReferenceKind,
+    ReferenceStandard,
+    ReferenceSubset,
+    OwnerParentArtifactId,
+    OwnerParentKind,
+    OwnerParentStandard,
+    OwnerParentSubset,
+    OwnerSlot,
+    OwnerChildId,
+    EnvelopePack,
+    Complete,
+}
+
+#[derive(Debug, Default)]
+struct PartialDocumentArchiveMember {
+    ordinal: u32,
+    reference: DocumentArchiveArtifactRef,
+    owner: DocumentArchiveOwnerRef,
+    envelope_pack: Vec<u8>,
+}
+
+#[derive(Debug)]
+struct PagedDocumentArchiveDecode {
+    archive: DocumentArchivePack,
+    partial: PartialDocumentArchiveMember,
+    remaining: usize,
+    phase: DocumentArchiveDecodePhase,
+    rejected: Option<Vec<u8>>,
+    closing_member: Option<OwnedDocumentMemberPackEntry>,
+    close_field: u8,
+}
+
+impl PagedDocumentArchiveDecode {
+    fn new() -> Self {
+        Self {
+            archive: DocumentArchivePack::default(),
+            partial: PartialDocumentArchiveMember::default(),
+            remaining: 0,
+            phase: DocumentArchiveDecodePhase::ParentPack,
+            rejected: None,
+            closing_member: None,
+            close_field: 0,
+        }
+    }
+
+    fn closing(archive: DocumentArchivePack) -> Self {
+        Self {
+            archive,
+            partial: PartialDocumentArchiveMember::default(),
+            remaining: 0,
+            phase: DocumentArchiveDecodePhase::Complete,
+            rejected: None,
+            closing_member: None,
+            close_field: 0,
+        }
+    }
+
+    fn read_string(&mut self, reader: &mut PagedCommandReader, label: &'static str) -> Result<String, crate::Fault> {
+        let bytes = reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+        String::from_utf8(bytes).map_err(|error| {
+            self.rejected = Some(error.into_bytes());
+            crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-utf8"), label)
+        })
+    }
+
+    fn step(&mut self, reader: &mut PagedCommandReader) -> Result<Option<DocumentArchivePack>, crate::Fault> {
+        if self.rejected.is_some() {
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-closing"), "rejected document archive must be closed before another decode step"));
+        }
+        match self.phase {
+            DocumentArchiveDecodePhase::ParentPack => {
+                self.archive.parent_pack = reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                self.phase = DocumentArchiveDecodePhase::ParentSpr;
+            }
+            DocumentArchiveDecodePhase::ParentSpr => {
+                self.archive.parent_spr = reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                self.phase = DocumentArchiveDecodePhase::MemberCount;
+            }
+            DocumentArchiveDecodePhase::MemberCount => {
+                let count = usize::try_from(reader.read_varint()?).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-members"), "document archive member count is not representable"))?;
+                if count > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
+                    return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-members"), "document archive exceeds its fixed 1024-member authority"));
+                }
+                self.archive.members.try_reserve_exact(count).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-allocation"), "document archive member roster could not reserve its exact bounded authority"))?;
+                self.remaining = count;
+                self.phase = if count == 0 { DocumentArchiveDecodePhase::Complete } else { DocumentArchiveDecodePhase::Ordinal };
+            }
+            DocumentArchiveDecodePhase::Ordinal => {
+                self.partial.ordinal = u32::try_from(reader.read_varint()?).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-ordinal"), "document archive member ordinal exceeds u32"))?;
+                self.phase = DocumentArchiveDecodePhase::ReferenceArtifactId;
+            }
+            DocumentArchiveDecodePhase::ReferenceArtifactId => {
+                self.partial.reference.artifact_id = self.read_string(reader, "document archive reference artifact id is not UTF-8")?;
+                self.phase = DocumentArchiveDecodePhase::ReferenceKind;
+            }
+            DocumentArchiveDecodePhase::ReferenceKind => {
+                self.partial.reference.artifact_kind = self.read_string(reader, "document archive reference kind is not UTF-8")?;
+                self.phase = DocumentArchiveDecodePhase::ReferenceStandard;
+            }
+            DocumentArchiveDecodePhase::ReferenceStandard => {
+                self.partial.reference.standard = self.read_string(reader, "document archive reference standard is not UTF-8")?;
+                self.phase = DocumentArchiveDecodePhase::ReferenceSubset;
+            }
+            DocumentArchiveDecodePhase::ReferenceSubset => {
+                self.partial.reference.subset = self.read_string(reader, "document archive reference subset is not UTF-8")?;
+                self.phase = DocumentArchiveDecodePhase::OwnerParentArtifactId;
+            }
+            DocumentArchiveDecodePhase::OwnerParentArtifactId => {
+                self.partial.owner.parent.artifact_id = self.read_string(reader, "document archive owner parent artifact id is not UTF-8")?;
+                self.phase = DocumentArchiveDecodePhase::OwnerParentKind;
+            }
+            DocumentArchiveDecodePhase::OwnerParentKind => {
+                self.partial.owner.parent.artifact_kind = self.read_string(reader, "document archive owner parent kind is not UTF-8")?;
+                self.phase = DocumentArchiveDecodePhase::OwnerParentStandard;
+            }
+            DocumentArchiveDecodePhase::OwnerParentStandard => {
+                self.partial.owner.parent.standard = self.read_string(reader, "document archive owner parent standard is not UTF-8")?;
+                self.phase = DocumentArchiveDecodePhase::OwnerParentSubset;
+            }
+            DocumentArchiveDecodePhase::OwnerParentSubset => {
+                self.partial.owner.parent.subset = self.read_string(reader, "document archive owner parent subset is not UTF-8")?;
+                self.phase = DocumentArchiveDecodePhase::OwnerSlot;
+            }
+            DocumentArchiveDecodePhase::OwnerSlot => {
+                self.partial.owner.slot = self.read_string(reader, "document archive owner slot is not UTF-8")?;
+                self.phase = DocumentArchiveDecodePhase::OwnerChildId;
+            }
+            DocumentArchiveDecodePhase::OwnerChildId => {
+                self.partial.owner.child_id = self.read_string(reader, "document archive owner child id is not UTF-8")?;
+                self.phase = DocumentArchiveDecodePhase::EnvelopePack;
+            }
+            DocumentArchiveDecodePhase::EnvelopePack => {
+                self.partial.envelope_pack = reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                let partial = std::mem::take(&mut self.partial);
+                self.archive.members.push(OwnedDocumentMemberPackEntry { ordinal: partial.ordinal, reference: partial.reference, owner: partial.owner, envelope_pack: partial.envelope_pack });
+                self.remaining -= 1;
+                self.phase = if self.remaining == 0 { DocumentArchiveDecodePhase::Complete } else { DocumentArchiveDecodePhase::Ordinal };
+            }
+            DocumentArchiveDecodePhase::Complete => return Ok(Some(std::mem::take(&mut self.archive))),
+        }
+        if self.phase == DocumentArchiveDecodePhase::Complete {
+            Ok(Some(std::mem::take(&mut self.archive)))
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn close_string(value: &mut String, maximum_bytes: usize) -> Option<usize> {
+        if value.is_empty() {
+            return None;
+        }
+        let bytes = value.len();
+        if bytes > maximum_bytes {
+            return Some(0);
+        }
+        let value = std::mem::take(value);
+        drop(value);
+        Some(bytes)
+    }
+
+    fn close_bytes(value: &mut Vec<u8>, maximum_bytes: usize) -> Option<usize> {
+        if value.is_empty() {
+            return None;
+        }
+        if value.len() > maximum_bytes {
+            return Some(0);
+        }
+        let value = std::mem::take(value);
+        let bytes = value.len();
+        drop(value);
+        Some(bytes)
+    }
+
+    fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        if let Some(bytes) = self.rejected.as_ref() {
+            if bytes.len() > maximum_bytes {
+                return (false, 0);
+            }
+            let bytes = self.rejected.take().expect("rejected archive field remains retained");
+            let released = bytes.len();
+            drop(bytes);
+            return (false, released);
+        }
+        for field in [
+            &mut self.partial.reference.artifact_id,
+            &mut self.partial.reference.artifact_kind,
+            &mut self.partial.reference.standard,
+            &mut self.partial.reference.subset,
+            &mut self.partial.owner.parent.artifact_id,
+            &mut self.partial.owner.parent.artifact_kind,
+            &mut self.partial.owner.parent.standard,
+            &mut self.partial.owner.parent.subset,
+            &mut self.partial.owner.slot,
+            &mut self.partial.owner.child_id,
+        ] {
+            if let Some(released) = Self::close_string(field, maximum_bytes) {
+                return (false, released);
+            }
+        }
+        if let Some(released) = Self::close_bytes(&mut self.partial.envelope_pack, maximum_bytes) {
+            return (false, released);
+        }
+        if self.closing_member.is_none() {
+            self.closing_member = self.archive.members.pop();
+            self.close_field = 0;
+        }
+        if let Some(entry) = self.closing_member.as_mut() {
+            let field = match self.close_field {
+                0 => Some(&mut entry.reference.artifact_id),
+                1 => Some(&mut entry.reference.artifact_kind),
+                2 => Some(&mut entry.reference.standard),
+                3 => Some(&mut entry.reference.subset),
+                4 => Some(&mut entry.owner.parent.artifact_id),
+                5 => Some(&mut entry.owner.parent.artifact_kind),
+                6 => Some(&mut entry.owner.parent.standard),
+                7 => Some(&mut entry.owner.parent.subset),
+                8 => Some(&mut entry.owner.slot),
+                9 => Some(&mut entry.owner.child_id),
+                _ => None,
+            };
+            if let Some(field) = field {
+                if let Some(released) = Self::close_string(field, maximum_bytes) {
+                    return (false, released);
+                }
+                self.close_field += 1;
+                return (false, 0);
+            }
+            if let Some(released) = Self::close_bytes(&mut entry.envelope_pack, maximum_bytes) {
+                return (false, released);
+            }
+            drop(self.closing_member.take());
+            return (false, 0);
+        }
+        if let Some(released) = Self::close_bytes(&mut self.archive.parent_spr, maximum_bytes) {
+            return (false, released);
+        }
+        if let Some(released) = Self::close_bytes(&mut self.archive.parent_pack, maximum_bytes) {
+            return (false, released);
+        }
+        (true, 0)
+    }
+}
+
 #[derive(Debug)]
 enum PagedAppCommandDecodeState {
     Header,
@@ -1226,6 +1557,9 @@ enum PagedAppCommandDecodeState {
     LoadWindowConfigKind { seq: u64, window_id: Option<String> },
     LoadWindowConfigPack { seq: u64, window_id: Option<String>, window_kind_id: Option<String> },
     ReadWindowConfigs { seq: u64 },
+    ReadDocumentArchive { seq: u64 },
+    LoadDocumentArchive { seq: u64, decode: PagedDocumentArchiveDecode },
+    DocumentArchiveOperation { seq: u64, kind: u8 },
     RejectedFields { fields: Vec<Vec<u8>> },
     Terminal,
     Faulted,
@@ -1241,11 +1575,12 @@ pub struct PagedAppCommandDecodeCursor {
 pub struct DecodedAppCommandOwner {
     command: Option<AppCommand>,
     close_stage: u8,
+    archive_close: Option<PagedDocumentArchiveDecode>,
 }
 
 impl DecodedAppCommandOwner {
     pub fn new(command: AppCommand) -> Self {
-        Self { command: Some(command), close_stage: 0 }
+        Self { command: Some(command), close_stage: 0, archive_close: None }
     }
 
     pub fn take_for_dispatch(&mut self) -> Option<AppCommand> {
@@ -1256,6 +1591,19 @@ impl DecodedAppCommandOwner {
         let Some(command) = self.command.as_mut() else {
             return (true, 0, 0);
         };
+        if self.archive_close.is_none() {
+            if let AppCommand::LoadDocumentArchive { archive, .. } = command {
+                self.archive_close = Some(PagedDocumentArchiveDecode::closing(std::mem::take(archive)));
+            }
+        }
+        if let Some(archive) = self.archive_close.as_mut() {
+            let (empty, released) = archive.close_step(maximum_bytes);
+            if !empty || released != 0 {
+                return (false, usize::from(released != 0), released);
+            }
+            drop(self.archive_close.take());
+            return (false, 1, 0);
+        }
         let field = match (self.close_stage, command) {
             (0, AppCommand::ConfigCommand { command, .. }) | (0, AppCommand::ContextMenu { request: command, .. }) | (0, AppCommand::ArtifactCommand { command, .. }) | (0, AppCommand::Command { command, .. }) => Some(std::mem::take(command)),
             (0, AppCommand::CommandText { line, .. }) => Some(std::mem::take(line).into_bytes()),
@@ -1328,6 +1676,9 @@ impl PagedAppCommandDecodeCursor {
                     29 => PagedAppCommandDecodeState::LocalInteractionQuery { seq },
                     30 => PagedAppCommandDecodeState::LoadWindowConfigWindowId { seq },
                     31 => PagedAppCommandDecodeState::ReadWindowConfigs { seq },
+                    32 => PagedAppCommandDecodeState::LoadDocumentArchive { seq, decode: PagedDocumentArchiveDecode::new() },
+                    33 => PagedAppCommandDecodeState::ReadDocumentArchive { seq },
+                    34..=36 => PagedAppCommandDecodeState::DocumentArchiveOperation { seq, kind: tag },
                     _ => {
                         return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-route-state-machine-required"), "this AppCommand kind requires its route-specific retained decoder before admission"));
                     }
@@ -1462,6 +1813,27 @@ impl PagedAppCommandDecodeCursor {
                 })
             }
             PagedAppCommandDecodeState::ReadWindowConfigs { seq } => Some(AppCommand::ReadWindowConfigs { seq }),
+            PagedAppCommandDecodeState::ReadDocumentArchive { seq } => Some(AppCommand::ReadDocumentArchive { seq }),
+            PagedAppCommandDecodeState::LoadDocumentArchive { seq, mut decode } => match decode.step(&mut self.reader) {
+                Ok(Some(archive)) => Some(AppCommand::LoadDocumentArchive { seq, archive }),
+                Ok(None) => {
+                    self.state = PagedAppCommandDecodeState::LoadDocumentArchive { seq, decode };
+                    None
+                }
+                Err(fault) => {
+                    self.state = PagedAppCommandDecodeState::LoadDocumentArchive { seq, decode };
+                    return Err(fault);
+                }
+            },
+            PagedAppCommandDecodeState::DocumentArchiveOperation { seq, kind } => {
+                let operation = self.reader.read_varint()?;
+                Some(match kind {
+                    34 => AppCommand::PollDocumentArchiveLoad { seq, operation },
+                    35 => AppCommand::CancelDocumentArchiveLoad { seq, operation },
+                    36 => AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation },
+                    _ => unreachable!("archive operation command tag was admitted exactly"),
+                })
+            }
             PagedAppCommandDecodeState::RejectedFields { fields } => {
                 self.state = PagedAppCommandDecodeState::RejectedFields { fields };
                 return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-closing"), "rejected paged command must be closed before it can be stepped again"));
@@ -1484,7 +1856,12 @@ impl PagedAppCommandDecodeCursor {
                     | AppCommand::ReadHistory { .. }
                     | AppCommand::ReadConflicts { .. }
                     | AppCommand::LocalInteractionQuery { .. }
-                    | AppCommand::ReadWindowConfigs { .. } => Vec::new(),
+                    | AppCommand::ReadWindowConfigs { .. }
+                    | AppCommand::PollDocumentArchiveLoad { .. }
+                    | AppCommand::CancelDocumentArchiveLoad { .. }
+                    | AppCommand::AcknowledgeDocumentArchiveLoad { .. } => Vec::new(),
+                    AppCommand::ReadDocumentArchive { .. } => Vec::new(),
+                    AppCommand::LoadDocumentArchive { archive, .. } => document_archive_into_fields(archive),
                     AppCommand::Presence { .. } => unreachable!("Presence is never decoded by the generic paged cursor"),
                     _ => unreachable!("route-specific AppCommand is never decoded by the generic paged cursor"),
                 };
@@ -1499,6 +1876,12 @@ impl PagedAppCommandDecodeCursor {
     }
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        if let PagedAppCommandDecodeState::LoadDocumentArchive { decode, .. } = &mut self.state {
+            let (empty, released) = decode.close_step(maximum_bytes);
+            if !empty || released != 0 {
+                return (false, released);
+            }
+        }
         if let PagedAppCommandDecodeState::CommandView { command, .. } = &mut self.state {
             if let Some(bytes) = command.as_ref() {
                 if bytes.len() > maximum_bytes {
@@ -1772,6 +2155,32 @@ pub enum AppCommand {
         seq: u64,
         command: protocol::LocalInteractionQueryCommand,
     },
+    /// 🗃️ Restores one root envelope and its complete recursive owned-member closure through one
+    /// retained publication transaction. CHANNEL_VERSION 16 wire addition.
+    LoadDocumentArchive {
+        seq: u64,
+        archive: DocumentArchivePack,
+    },
+    /// 🗃️ Reads one generation-fenced root envelope and complete recursive owned-member closure.
+    /// CHANNEL_VERSION 16 wire addition.
+    ReadDocumentArchive {
+        seq: u64,
+    },
+    /// 📊️ Reads one retained archive operation without transferring or releasing its owner.
+    PollDocumentArchiveLoad {
+        seq: u64,
+        operation: u64,
+    },
+    /// 🛑️ Marks one retained archive operation cancelled; maintenance owns cleanup.
+    CancelDocumentArchiveLoad {
+        seq: u64,
+        operation: u64,
+    },
+    /// 📨️ Releases one terminal archive operation after its exact result was observed.
+    AcknowledgeDocumentArchiveLoad {
+        seq: u64,
+        operation: u64,
+    },
 }
 //#endregion 🔖️AppCommand
 
@@ -1965,6 +2374,16 @@ pub enum AppFrame {
     /// 📃️ ACK-owned local-only pages are independent of ordinary command outcomes.
     LocalInteractionQuery {
         reply: protocol::LocalInteractionQueryReply,
+    },
+    /// 🗃️ Complete generation-fenced recursive document archive. CHANNEL_VERSION 16 wire addition.
+    DocumentArchive {
+        in_reply_to: u64,
+        archive: DocumentArchivePack,
+    },
+    /// 📊️ Progress or terminal state for one ACK-owned archive load.
+    DocumentArchiveLoad {
+        in_reply_to: u64,
+        status: DocumentArchiveLoadStatus,
     },
 }
 //#endregion 🔖️AppFrame
@@ -2367,6 +2786,49 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
             out.varint(*seq)?;
             out.bytes(&protocol::encode_local_interaction_query_command(command))?;
         }
+        AppCommand::LoadDocumentArchive { seq, archive } => {
+            if archive.members.len() > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
+                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-members"), "document archive exceeds its fixed 1024-member authority"));
+            }
+            out.byte(32)?;
+            out.varint(*seq)?;
+            out.bytes(&archive.parent_pack)?;
+            out.bytes(&archive.parent_spr)?;
+            out.varint(archive.members.len() as u64)?;
+            for entry in &archive.members {
+                out.varint(u64::from(entry.ordinal))?;
+                out.string(&entry.reference.artifact_id)?;
+                out.string(&entry.reference.artifact_kind)?;
+                out.string(&entry.reference.standard)?;
+                out.string(&entry.reference.subset)?;
+                out.string(&entry.owner.parent.artifact_id)?;
+                out.string(&entry.owner.parent.artifact_kind)?;
+                out.string(&entry.owner.parent.standard)?;
+                out.string(&entry.owner.parent.subset)?;
+                out.string(&entry.owner.slot)?;
+                out.string(&entry.owner.child_id)?;
+                out.bytes(&entry.envelope_pack)?;
+            }
+        }
+        AppCommand::ReadDocumentArchive { seq } => {
+            out.byte(33)?;
+            out.varint(*seq)?;
+        }
+        AppCommand::PollDocumentArchiveLoad { seq, operation } => {
+            out.byte(34)?;
+            out.varint(*seq)?;
+            out.varint(*operation)?;
+        }
+        AppCommand::CancelDocumentArchiveLoad { seq, operation } => {
+            out.byte(35)?;
+            out.varint(*seq)?;
+            out.varint(*operation)?;
+        }
+        AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation } => {
+            out.byte(36)?;
+            out.varint(*seq)?;
+            out.varint(*operation)?;
+        }
         AppCommand::Presence { .. } => unreachable!(),
     }
     out.finish()
@@ -2392,6 +2854,105 @@ async fn read_vec_child_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildP
         entries.push(ChildPackEntry { slot: crate::os_spr::read_str(bytes, pos)?, child_id: crate::os_spr::read_str(bytes, pos)?, dialect: crate::os_spr::read_str(bytes, pos)?, envelope_pack: crate::os_spr::read_bytes(bytes, pos)? });
     }
     Ok(entries)
+}
+
+fn write_document_archive(out: &mut Vec<u8>, archive: &DocumentArchivePack) {
+    crate::os_spr::write_bytes(out, &archive.parent_pack);
+    crate::os_spr::write_bytes(out, &archive.parent_spr);
+    crate::os_spr::write_varint_u64(out, archive.members.len() as u64);
+    for entry in &archive.members {
+        crate::os_spr::write_varint_u64(out, u64::from(entry.ordinal));
+        crate::os_spr::write_str(out, &entry.reference.artifact_id);
+        crate::os_spr::write_str(out, &entry.reference.artifact_kind);
+        crate::os_spr::write_str(out, &entry.reference.standard);
+        crate::os_spr::write_str(out, &entry.reference.subset);
+        crate::os_spr::write_str(out, &entry.owner.parent.artifact_id);
+        crate::os_spr::write_str(out, &entry.owner.parent.artifact_kind);
+        crate::os_spr::write_str(out, &entry.owner.parent.standard);
+        crate::os_spr::write_str(out, &entry.owner.parent.subset);
+        crate::os_spr::write_str(out, &entry.owner.slot);
+        crate::os_spr::write_str(out, &entry.owner.child_id);
+        crate::os_spr::write_bytes(out, &entry.envelope_pack);
+    }
+}
+
+/// 🗃️ Encodes one exact persisted recursive-document archive with an explicit version owner.
+pub fn encode_document_archive_bytes(archive: &DocumentArchivePack) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+    if archive.members.len() > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
+        return Err(malformed("document archive member count", 0, "member count exceeds 1024"));
+    }
+    let mut bytes = vec![1];
+    write_document_archive(&mut bytes, archive);
+    if bytes.len() > DOCUMENT_ARCHIVE_MAXIMUM_BYTES {
+        return Err(malformed("document archive bytes", 0, "archive exceeds its fixed byte authority"));
+    }
+    Ok(bytes)
+}
+
+fn document_archive_into_fields(mut archive: DocumentArchivePack) -> Vec<Vec<u8>> {
+    let mut fields = Vec::with_capacity(archive.members.len().saturating_mul(11).saturating_add(2));
+    fields.push(std::mem::take(&mut archive.parent_pack));
+    fields.push(std::mem::take(&mut archive.parent_spr));
+    for mut entry in archive.members.drain(..) {
+        fields.push(std::mem::take(&mut entry.reference.artifact_id).into_bytes());
+        fields.push(std::mem::take(&mut entry.reference.artifact_kind).into_bytes());
+        fields.push(std::mem::take(&mut entry.reference.standard).into_bytes());
+        fields.push(std::mem::take(&mut entry.reference.subset).into_bytes());
+        fields.push(std::mem::take(&mut entry.owner.parent.artifact_id).into_bytes());
+        fields.push(std::mem::take(&mut entry.owner.parent.artifact_kind).into_bytes());
+        fields.push(std::mem::take(&mut entry.owner.parent.standard).into_bytes());
+        fields.push(std::mem::take(&mut entry.owner.parent.subset).into_bytes());
+        fields.push(std::mem::take(&mut entry.owner.slot).into_bytes());
+        fields.push(std::mem::take(&mut entry.owner.child_id).into_bytes());
+        fields.push(std::mem::take(&mut entry.envelope_pack));
+    }
+    fields
+}
+
+async fn read_document_archive(bytes: &[u8], pos: &mut usize) -> Result<DocumentArchivePack, crate::os_spr::ProtocolError> {
+    let parent_pack = crate::os_spr::read_bytes(bytes, pos)?;
+    let parent_spr = crate::os_spr::read_bytes(bytes, pos)?;
+    let count = usize::try_from(crate::os_spr::read_varint_u64(bytes, pos)?).map_err(|_| malformed("document archive member count", *pos as u64, "member count is not representable"))?;
+    if count > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
+        return Err(malformed("document archive member count", *pos as u64, "member count exceeds 1024"));
+    }
+    let mut members = Vec::new();
+    members.try_reserve_exact(count).map_err(|_| malformed("document archive member count", *pos as u64, "member roster allocation failed"))?;
+    for _ in 0..count {
+        let ordinal = u32::try_from(crate::os_spr::read_varint_u64(bytes, pos)?).map_err(|_| malformed("document archive member ordinal", *pos as u64, "ordinal exceeds u32"))?;
+        let reference = DocumentArchiveArtifactRef {
+            artifact_id: crate::os_spr::read_str(bytes, pos)?,
+            artifact_kind: crate::os_spr::read_str(bytes, pos)?,
+            standard: crate::os_spr::read_str(bytes, pos)?,
+            subset: crate::os_spr::read_str(bytes, pos)?,
+        };
+        let parent = DocumentArchiveArtifactRef {
+            artifact_id: crate::os_spr::read_str(bytes, pos)?,
+            artifact_kind: crate::os_spr::read_str(bytes, pos)?,
+            standard: crate::os_spr::read_str(bytes, pos)?,
+            subset: crate::os_spr::read_str(bytes, pos)?,
+        };
+        let owner = DocumentArchiveOwnerRef { parent, slot: crate::os_spr::read_str(bytes, pos)?, child_id: crate::os_spr::read_str(bytes, pos)? };
+        let envelope_pack = crate::os_spr::read_bytes(bytes, pos)?;
+        members.push(OwnedDocumentMemberPackEntry { ordinal, reference, owner, envelope_pack });
+    }
+    Ok(DocumentArchivePack { parent_pack, parent_spr, members })
+}
+
+/// 🗃️ Decodes one exact persisted recursive-document archive and rejects trailing ownership.
+pub async fn decode_document_archive_bytes(bytes: &[u8]) -> Result<DocumentArchivePack, crate::os_spr::ProtocolError> {
+    if bytes.is_empty() || bytes.len() > DOCUMENT_ARCHIVE_MAXIMUM_BYTES {
+        return Err(malformed("document archive bytes", 0, "archive exceeds its fixed byte authority"));
+    }
+    if bytes[0] != 1 {
+        return Err(malformed("document archive version", 0, "unsupported or missing version"));
+    }
+    let mut position = 1;
+    let archive = read_document_archive(bytes, &mut position).await?;
+    if position != bytes.len() {
+        return Err(malformed("document archive bytes", position as u64, "trailing bytes"));
+    }
+    Ok(archive)
 }
 
 /// 🪟️ Writes the exact concrete-window config pack roster.
@@ -2521,6 +3082,11 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
             },
         },
         31 => AppCommand::ReadWindowConfigs { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        32 => AppCommand::LoadDocumentArchive { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, archive: read_document_archive(bytes, &mut pos).await? },
+        33 => AppCommand::ReadDocumentArchive { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        34 => AppCommand::PollDocumentArchiveLoad { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, operation: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        35 => AppCommand::CancelDocumentArchiveLoad { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, operation: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        36 => AppCommand::AcknowledgeDocumentArchiveLoad { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, operation: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -2703,6 +3269,21 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_bytes(&mut out, ui_scope);
             crate::os_spr::write_bytes(&mut out, history_patch);
         }
+        AppFrame::DocumentArchive { in_reply_to, archive } => {
+            assert!(archive.members.len() <= DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS, "document archive exceeds its fixed 1024-member authority");
+            out.push(26);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            write_document_archive(&mut out, archive);
+        }
+        AppFrame::DocumentArchiveLoad { in_reply_to, status } => {
+            out.push(27);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_varint_u64(&mut out, status.operation);
+            out.push(status.state.wire());
+            crate::os_spr::write_varint_u64(&mut out, status.completed);
+            crate::os_spr::write_varint_u64(&mut out, status.total);
+            crate::os_spr::write_bytes(&mut out, &status.fault);
+        }
     }
     out
 }
@@ -2790,6 +3371,17 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             ui_scope: crate::os_spr::read_bytes(bytes, &mut pos)?,
             history_patch: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
+        26 => AppFrame::DocumentArchive { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, archive: read_document_archive(bytes, &mut pos).await? },
+        27 => {
+            let in_reply_to = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let operation = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let state = DocumentArchiveLoadState::from_wire(*bytes.get(pos).ok_or_else(|| malformed("document archive load state", pos as u64, "truncated"))?)?;
+            pos += 1;
+            let completed = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let total = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let fault = crate::os_spr::read_bytes(bytes, &mut pos)?;
+            AppFrame::DocumentArchiveLoad { in_reply_to, status: DocumentArchiveLoadStatus { operation, state, completed, total, fault } }
+        }
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(frame)

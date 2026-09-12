@@ -15,7 +15,7 @@
 //! reason) is the honest fit here, not `MeshWindowKit`.
 
 use crate::{PackedF32, RemodelingSnapshot};
-use semio_framework_plugin::{world3d_camera_json, world3d_scene, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions, WorldSunConfig};
+use semio_framework_plugin::{world3d_scene, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions, WorldSunConfig};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
@@ -29,12 +29,8 @@ const SURFACE_ID: &str = "remodeling.view.scene3d/model";
 /// 👁️ Matches the editor's `REMODELING_MESH_ID` literal — duplicated on purpose rather than imported
 /// through the sibling editor module, which `policyViewerPurityBreaches` forbids outright.
 const REMODELING_VIEW_MESH_ID: &str = "remodeling-result";
-/// 👁️ Hardcoded default viewport — a viewer has no persisted per-session camera (`Config = NoConfig`
-/// on `RemodelingViewer`), matching `RemodelingWorldCamera::default()`'s own values. Documented
-/// simplification for a first pass, not a bug.
-const REMODELING_VIEW_CAMERA_POSITION: [f64; 3] = [4.0, -4.0, 3.0];
-const REMODELING_VIEW_CAMERA_TARGET: [f64; 3] = [0.0, 0.0, 0.0];
-const REMODELING_VIEW_CAMERA_FOV: f64 = 45.0;
+/// 👁️ A viewer has no persisted navigation owner, so every render uses this explicit shared pose.
+const REMODELING_VIEW_VIEWPORT: store::Viewport3dOrbit = store::Viewport3dOrbit { position: [4.0, -4.0, 3.0], target: [0.0; 3], zoom: 1.0, up: None };
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -157,7 +153,7 @@ fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
 /// warm.
 pub fn render(scene: &RemodelingSnapshot) -> UiAssemblyResult<BuiltNode> {
     let mut world_scene = world3d_scene(
-        world3d_camera_json(REMODELING_VIEW_CAMERA_POSITION, REMODELING_VIEW_CAMERA_TARGET, REMODELING_VIEW_CAMERA_FOV),
+        dsl::json::to_json_string(&dsl::ToValue::to_value(&REMODELING_VIEW_VIEWPORT)),
         world_meshes_json(scene),
         world_instances_json(),
         world3d_selection_json("rectangle", &[], None),

@@ -2,7 +2,7 @@
  * app's own unchromed read-only pane (separate from `👁️viewer/…/👁️preview`, which is a genuinely
  * independent surface — this window still renders through the editor's `LayoutEngine`/full glyph
  * layout, the viewer's does not, see that file's own doc). Mirrors the pane's
- * `render(engine: &mut LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig)` boundary. */
+ * its exact `LayoutWindowConfig` boundary. */
 
 import type { LayoutCameraViewModel } from "../📐️blueprint/🟦️";
 

@@ -3,7 +3,7 @@ use crate::editor::gis2d::terminology::gis2d_labels;
 
 #[semio_framework_async_macros::async_test]
 async fn weight_entries_default_to_one_and_honour_explicit_overrides() {
-    let mut config = Gis2dConfig::default();
+    let mut config = MapWindowConfig::default();
     let labels = gis2d_labels(&semio_framework_plugin::ViewModel::default());
     let defaults = layer_weight_entries(&config, labels);
     assert!(defaults.iter().all(|(_, _, value)| *value == 1.0));
@@ -15,7 +15,7 @@ async fn weight_entries_default_to_one_and_honour_explicit_overrides() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_group_is_collapsed_by_default_and_mirrors_the_entry_list() {
-    let config = Gis2dConfig::default();
+    let config = MapWindowConfig::default();
     let labels = gis2d_labels(&semio_framework_plugin::ViewModel::default());
     let WindowMeasure::Group { children, default_open, .. } = measure(&config, labels) else {
         panic!("layer weights is a group measure");

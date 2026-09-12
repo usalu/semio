@@ -8,7 +8,7 @@
 //! payload decomposes into one `change-<field>` mutation per persistent field via
 //! `En1998Mutation::from_snapshot`, bundled into a single atomic edit.
 
-use crate::config::{NormConfig, NormConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::En1998Mutation;
 use crate::En1998Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -24,7 +24,7 @@ pub struct ReplaceSnapshot {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &ReplaceSnapshot, _doc: &ArtifactView<'_, En1998Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1998Mutation, NormConfigMutation>, Fault> {
+pub fn handle(payload: &ReplaceSnapshot, _doc: &ArtifactView<'_, En1998Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1998Mutation, NoConfigMutation>, Fault> {
     crate::app_surface::commit_snapshot_fields(En1998Mutation::from_snapshot(&payload.snapshot), "setSnapshot")
 }
 //#endregion 🔖️Handler

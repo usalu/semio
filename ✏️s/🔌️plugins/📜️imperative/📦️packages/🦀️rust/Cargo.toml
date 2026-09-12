@@ -50,6 +50,7 @@ semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️
 semio-framework.workspace = true
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
 semio-framework-ui-scene = { package = "semio-framework-ui-scene", path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true

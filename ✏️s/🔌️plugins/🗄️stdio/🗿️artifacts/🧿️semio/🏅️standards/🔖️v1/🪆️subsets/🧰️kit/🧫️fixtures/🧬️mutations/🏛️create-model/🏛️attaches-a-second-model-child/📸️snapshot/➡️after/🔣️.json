@@ -47,7 +47,7 @@
     {
       "childId": "obj-1",
       "target": {
-        "artifactId": "frame-beam-object",
+        "artifactId": "obj-1",
         "dialect": {
           "artifactKind": "s.stdio.semio",
           "standard": "v1",
@@ -60,7 +60,7 @@
     {
       "childId": "mod-1",
       "target": {
-        "artifactId": "frame-model",
+        "artifactId": "mod-1",
         "dialect": {
           "artifactKind": "s.stdio.semio",
           "standard": "v1",
@@ -71,7 +71,7 @@
     {
       "childId": "mod-2",
       "target": {
-        "artifactId": "roof-model",
+        "artifactId": "mod-2",
         "dialect": {
           "artifactKind": "s.stdio.semio",
           "standard": "v1",

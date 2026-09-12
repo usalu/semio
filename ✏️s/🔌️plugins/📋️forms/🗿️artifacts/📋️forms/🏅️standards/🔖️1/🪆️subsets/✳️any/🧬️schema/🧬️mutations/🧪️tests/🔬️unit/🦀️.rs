@@ -1,7 +1,7 @@
 use super::*;
 use crate::mutations::{change_form_title, change_step_description, create_block, create_step, delete_block, delete_step, move_block_to_step, rename_step, reorder_step, replace_block};
 use crate::{FormQuestion, FormStep, FORMS_DOCUMENT_SCHEMA};
-use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
 use protocol::{MutationDiff, SemanticMutation};
 
 fn sample_step(id: &str) -> FormStep {
@@ -252,7 +252,7 @@ async fn apply_form_edit_mutation_and_inverse_form_mutation_delegate_to_the_deri
 //#region 🔖️OutcomeLaws
 // 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — one law test per verb
 // family present in this facet (`assert_missing_target_is_error`/`assert_fatal_never_applies`,
-// landed in `📡️spr/🧪️testkit`). `assert_outcome_policy_matrix` is NOT landed under that name
+// landed in `📡️spr/🧪️tests/⚖️protocol-laws`). `assert_outcome_policy_matrix` is NOT landed under that name
 // (only the generic closure-based `assert_policy_matrix` exists) — see this ticket's report.
 #[semio_framework_async_macros::async_test]
 async fn delete_family_missing_target_is_error() {

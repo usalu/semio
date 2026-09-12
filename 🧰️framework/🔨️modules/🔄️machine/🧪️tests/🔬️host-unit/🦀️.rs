@@ -4,7 +4,7 @@ mod tests {
     struct DummyMachine;
     impl Machine for DummyMachine {
         type Context = ();
-        type Event = super::super::testing::support::UnitEvent;
+        type Event = super::super::testing::toggle_model::UnitEvent;
         type Input = ();
         type Output = ();
         type Effect = &'static str;

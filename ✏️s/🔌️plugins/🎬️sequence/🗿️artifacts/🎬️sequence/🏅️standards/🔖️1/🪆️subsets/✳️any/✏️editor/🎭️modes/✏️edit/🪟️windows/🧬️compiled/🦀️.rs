@@ -1,7 +1,7 @@
 //! 🧬️ Sequence play app — the compiled-DAG window: the read-only wire literal of the current fixture.
 
-use crate::editor::sequence::host_from_snapshot;
-use crate::SequenceSnapshot;
+use crate::editor::sequence::host_from_fixture;
+use crate::SequenceFixture;
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -32,8 +32,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let host = host_from_snapshot(fixture);
+pub fn render(fixture: &SequenceFixture) -> UiAssemblyResult<BuiltNode> {
+    let host = neural_engine::ColdOwner::new(host_from_fixture(fixture));
     semio_framework_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_COMPILED, semio_framework_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
 }
 //#endregion 🔖️Render

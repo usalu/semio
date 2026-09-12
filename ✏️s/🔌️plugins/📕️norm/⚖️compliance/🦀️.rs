@@ -8,7 +8,7 @@ use store::TextError;
 // #region 🔖️Quantity
 /// 📐️ Physical quantity kind for SI-normalized norm computations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum QuantityKind {
     Dimensionless,
     Length,
@@ -33,7 +33,7 @@ pub enum QuantityKind {
 
 /// 📊️ A scalar value tagged with its physical quantity kind (SI units).
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct Quantity {
     pub kind: QuantityKind,
     pub value: f64,
@@ -77,7 +77,7 @@ impl Quantity {
 // #region 🔖️Clause
 /// 📑️ Stable clause identifier within a norm family (e.g. `EN 1992-1-1` §6.1).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct ClauseId {
     pub family: String,
     pub part: String,
@@ -109,7 +109,7 @@ impl fmt::Display for ClauseId {
 /// composed child handle is for a single large content slot with its own working-scene cache
 /// (`📓️migration-recipe.md` §1/§3), not a value type reused pervasively as a struct field.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct LocalizedText {
     pub locale: String,
     pub text: String,
@@ -125,7 +125,7 @@ impl LocalizedText {
 // #region 🔖️Check
 /// ✅️ Outcome of a single norm compliance check.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum CheckStatus {
     Pass,
     Fail,
@@ -134,7 +134,7 @@ pub enum CheckStatus {
 
 /// 📋️ One computed check with clause traceability.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct CheckResult {
     pub clause: ClauseId,
     pub status: CheckStatus,
@@ -176,7 +176,7 @@ impl CheckResult {
 
 /// 📑️ Aggregated compliance report for a norm computation run.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct CheckReport {
     pub checks: Vec<CheckResult>,
 }
@@ -199,7 +199,7 @@ impl CheckReport {
 // #region 🔖️Annex
 /// 🇪️🇺️ National annex selection for Eurocode / DIN EN families.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum AnnexChoice {
     #[dsl(key = "en")]
     En,
@@ -295,7 +295,7 @@ pub fn table_lookup_bilinear(x: f64, y: f64, x_vals: &[f64], y_vals: &[f64], z: 
 // #region 🔖️DesignSituation
 /// 🏗️ Design situation per EN 1990 Table A1.1.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum DesignSituation {
     #[dsl(key = "persistent")]
     Persistent,
@@ -309,7 +309,7 @@ pub enum DesignSituation {
 
 /// 📋️ Consequence class per EN 1990.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum ConsequenceClass {
     Cc1,
     Cc2,
@@ -328,7 +328,7 @@ impl ConsequenceClass {
 
 /// 📊️ Variable action category per EN 1991-1-1 Table 6.1.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum ImposedCategory {
     #[dsl(key = "a")]
     A,
@@ -380,7 +380,7 @@ impl ImposedCategory {
 // #region 🔖️Shared
 /// ⚖️ Limit state per EN 1990.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum LimitState {
     Uls,
     Sls,
@@ -390,7 +390,7 @@ pub enum LimitState {
 
 /// ⏱️ Load duration class for timber and similar materials.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum LoadDuration {
     Permanent,
     Long,
@@ -401,7 +401,7 @@ pub enum LoadDuration {
 
 /// 🌡️ Reference climate zone for thermal norms (Germany).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum ClimateZoneDe {
     #[dsl(key = "zone1")]
     Zone1,
@@ -444,7 +444,7 @@ impl ClimateZoneDe {
 
 /// 🏠️ Occupancy type for indoor environment norms.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum OccupancyType {
     #[dsl(key = "residential")]
     Residential,
@@ -488,7 +488,7 @@ impl std::error::Error for NormError {}
 // #region 🔖️Family
 /// 🏷️ Stable identifier for each norm family crate exposed as a ArtifactApp.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum NormFamilyId {
     Din4108,
     DinEn16798,
@@ -540,8 +540,8 @@ pub trait NormFamily: Send + Sync + 'static {
 
 /// 🧠️ Retained headless session: document inputs plus the last computed compliance report.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(any(test, feature = "test-support"), serde(bound(serialize = "F::Document: serde::Serialize", deserialize = "F::Document: serde::de::DeserializeOwned")))]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), serde(bound(serialize = "F::Document: serde::Serialize", deserialize = "F::Document: serde::de::DeserializeOwned")))]
 #[value(bound = "F::Document: dsl::ToValue, F::Document: dsl::FromValue")]
 pub struct NormHost<F: NormFamily> {
     pub document: F::Document,
@@ -588,7 +588,7 @@ impl<F: NormFamily> NormHost<F> {
 // #endregion 🔖️Family
 
 /// 🪪️ Independent Serde oracle for composed child identities; local materialization never enters JSON.
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(any(test, feature = "compliance-testing"))]
 #[path = "🧪️tests/🔬️child-identity-oracle/🦀️.rs"]
 pub mod child_identity_oracle;
 
@@ -597,7 +597,7 @@ pub mod child_identity_oracle;
 /// op-text field. Mirrors vcs's own private `escape_text_field`/`unescape_text_field` convention
 /// exactly (same three escapes, same order) so escaping behaves identically repo-wide, even though vcs
 /// does not expose those helpers for reuse.
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(any(test, feature = "compliance-testing"))]
 pub fn escape_op_text_field(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {
@@ -687,8 +687,8 @@ pub fn norm_encode_pack<T: NormArtifactRecord>(value: &T, options: &store::PackE
 /// own), pack-decode the inner record, then lower it back into `T`.
 pub fn norm_decode_pack<T: NormArtifactRecord>(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<T, store::PackError> {
     let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    if envelope.envelope_id() != T::ENVELOPE_ID {
-        return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", T::ENVELOPE_ID, envelope.envelope_id())));
+    if !envelope.matches_identity(T::ENVELOPE_ID, store::semio_format::Component::Pack, 1) {
+        return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", T::ENVELOPE_ID, envelope.binary_token())));
     }
     let (record, _report) = store::pack_rt::decode_document(&inner, &T::dsl_spec(), options)?;
     T::dsl_from_record(&record).map_err(store::text_error_to_pack_error)

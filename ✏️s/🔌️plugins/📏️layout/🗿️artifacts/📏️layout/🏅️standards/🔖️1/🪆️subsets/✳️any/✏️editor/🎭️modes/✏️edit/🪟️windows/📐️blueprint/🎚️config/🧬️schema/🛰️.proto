@@ -1,0 +1,13 @@
+syntax = "proto3";
+package semio.layout.windowconfig.v1;
+
+message LayoutWindowCamera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+
+message LayoutWindowConfig {
+  string active_page_id = 1;
+  LayoutWindowCamera camera = 2;
+}

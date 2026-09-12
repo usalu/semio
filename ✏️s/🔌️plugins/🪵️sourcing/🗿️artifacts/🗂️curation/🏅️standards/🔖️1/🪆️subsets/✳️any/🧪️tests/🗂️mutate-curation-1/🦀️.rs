@@ -29,7 +29,7 @@
 //! `apply_sourcing_mutation_reporting`/`inverse_sourcing_mutation_steps`
 //! (`…/🧬️schema/🧬️mutations/🦀️.rs`).
 //!
-//! **Why the shared `⚖️law` module is not used here.** `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` is
+//! **Why the shared `⚖️law` module is not used here.** `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` is
 //! reachable only where the stdio oracle crate is linked into the generated host, which happens for
 //! a case whose owner sits under `✏️s/🔌️plugins/🗄️stdio`. This case's owner does not, and declaring
 //! stdio's contribution directory as a host package for the curation artifact would make one plugin's
@@ -53,7 +53,7 @@ const KINDS: &[&str] = &["create-curated-item", "delete-curated-item", "change-c
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::schema::mutations::{apply_sourcing_mutation_reporting, decode_sourcing_mutation_json, inverse_sourcing_mutation_steps, SourcingMutation};
-    use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::schema::snapshot::{curation_selection_summary, decode_curation_snapshot_json, encode_curation_snapshot_json, parse_curation_dsl, print_curation_dsl, CurationSnapshot};
+    use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::{schema::snapshot::{curation_selection_summary, CurationSnapshot}, io::snapshot::{json::{decode_curation_snapshot_json, encode_curation_snapshot_json}, text::{parse_curation_dsl, print_curation_dsl}}};
 
     //#region 🔖️Plan
     /// 🧫️ The one declared fixture URI of this scenario's steps containing `needle`.

@@ -18,6 +18,9 @@ crate-type = ["rlib", "cdylib"]
 path = "🦀️.rs"
 
 [features]
+protocol-laws = ["record-codec-laws"]
+record-codec-laws = ["semio-framework-pack/corruption-testing"]
+durable-group-testing = []
 default = ["deflate"]
 deflate = ["semio-framework-replication/deflate", "semio-framework-pack/deflate"]
 # 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet terra-directory-and-run): the native
@@ -38,14 +41,13 @@ worker = ["sync"]
 # 🧬️ Keeps the boundary/protocol type-generation capability explicit at this layer. The current
 # wire declarations are owned by `semio-framework`, so enabling this feature adds no dependency.
 typegen = []
-# 🧪️ Exposes only canonical, Store-owned fixture constructors to downstream native law suites.
-testkit = []
 
 [dependencies]
 dsl_derive = { path = "../../🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
 semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-pack = { workspace = true }
 semio-framework-replication = { workspace = true }
+semio-framework-ui-viewport = { workspace = true }
 # 🪪️ `OperationContext`/`CancelToken`/`ScopeHandle` vocabulary (ticket
 # 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) — pure, zero-tokio, wasm32-safe, so this is an
 # unconditional (not target-gated) dependency: `📇️directory/🔌️client`'s `DirectoryTransport` trait
@@ -114,16 +116,17 @@ semio-framework-actor = { workspace = true, optional = true }
 
 [[bin]]
 name = "pack"
-path = "../../🔨️modules/🎒️pack/⌨️cli/📦️main.rs"
+path = "../../🔨️modules/🎒️pack/⌨️cli/💾️binary/🦀️.rs"
 
 [[bin]]
 name = "spr"
-path = "../../🔨️modules/📡️spr/⌨️cli/📦️main.rs"
+path = "../../🔨️modules/📡️spr/⌨️cli/💾️binary/🦀️.rs"
 
 [[bin]]
 name = "semio"
-path = "../../🔨️modules/🧬️semio/📦️bin.rs"
+path = "../../🔨️modules/🧬️semio/🏗️bootstrap/🦀️.rs"
 
 [dev-dependencies]
 blake3 = "1.8.2"
+semio-framework-pack = { workspace = true, features = ["corruption-testing"] }
 semio-framework-async-macros = { path = "../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

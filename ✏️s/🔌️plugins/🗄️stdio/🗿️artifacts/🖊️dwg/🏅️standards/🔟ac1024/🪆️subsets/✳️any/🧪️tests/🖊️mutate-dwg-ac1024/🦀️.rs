@@ -7,7 +7,7 @@
 //! real values the published offsets carry in that file (`AC1024`, `maint_version` 0x02,
 //! codepage 30 = ANSI_1252), not against invented ones.
 //!
-//! No differential oracle is registered (`../../🏅️standards/🔟ac1024/🪆️subsets/✳️any/🔮️oracle/
+//! No differential oracle is registered (`../../🏅️standards/🔟ac1024/🪆️subsets/✳️any/🔮️oracles/
 //! 🔣️.json`'s `noOracleDecisions`: DWG is proprietary, LibreDWG is GPL-3.0 C, and no
 //! permissively licensed Rust DWG reader exists), so the platform never dispatches the oracle role
 //! for this feature. The handlers below are registered anyway — the shape every stdio case has — and

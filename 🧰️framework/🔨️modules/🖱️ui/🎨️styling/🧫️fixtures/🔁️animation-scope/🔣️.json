@@ -77,7 +77,7 @@
     }
   ],
   "stylesheet": {
-    "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui.css",
+    "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css",
     "keyframesByProperty": {
       "--celebrate-border-angle": ["celebrate-border-spin"],
       "--celebrate-border-padding": ["celebrate-border-burst"],

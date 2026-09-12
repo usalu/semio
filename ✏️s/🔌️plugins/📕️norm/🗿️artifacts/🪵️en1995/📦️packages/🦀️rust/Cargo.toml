@@ -33,7 +33,9 @@ semio-s-artifact-norm-en1994 = { workspace = true }
 
 
 [dev-dependencies]
-semio-s-artifact-norm-contract = { workspace = true, features = ["test-support"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
+semio-s-artifact-norm-contract = { workspace = true, features = ["compliance-testing"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-ui-scene = { workspace = true }
 serde = { workspace = true }

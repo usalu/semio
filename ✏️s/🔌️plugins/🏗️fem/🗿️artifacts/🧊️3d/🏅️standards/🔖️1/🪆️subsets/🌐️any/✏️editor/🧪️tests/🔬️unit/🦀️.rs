@@ -1,9 +1,64 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+
+    pub type Fem3dApp = VcsArtifactApp<EditorApp<Fem3dPlayApp>>;
+
+    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// `EditorApp<Fem3dPlayApp>` (SDK adapter, contract §2.1) is the real `ArtifactApp` implementor
+    /// `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<Fem3dPlayApp>` builds it.
+    fn view(kind: &str) -> ViewModel {
+        let id = if kind == crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL { "model-left" } else { "results-left" };
+        ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..Default::default() }
+    }
+
+    fn manifest() -> App { App { definition: create_fem3d_app(), examples: Vec::new() } }
+
+    pub fn fem3d_app() -> Fem3dApp {
+        semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest))
+    }
+
+    pub async fn dispatch(app: &mut Fem3dApp, command: Fem3dCommand) -> InvocationResult {
+        let kind = match &command {
+            Fem3dCommand::SetCamera(_) => crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL,
+            Fem3dCommand::SetResultDisplay(_) => crate::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS,
+            _ => crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL,
+        };
+        let mut action = meta("local");
+        action.view_state = Some(view(kind));
+        let result = app.dispatch_typed(command, &action).await.expect("dispatch");
+        for effect in &result.requested_effects {
+            if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
+                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+            }
+        }
+        result
+    }
+
+    pub fn render(app: &mut Fem3dApp, body_key: &str) -> String {
+        let kind = if body_key == crate::editor::fem3d::modes::edit::windows::model::FEM3D_BODY_MODEL { crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL } else { crate::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS };
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::resolve_ready(app.render(body_key, None, &view(kind))).expect("render")).expect("fixture projection")
+    }
+
+    /// 🧪️ An app reset to the empty document. `Fem3dPlayApp::initial_snapshot` now boots the bundled
+    /// `default` example (so the `World3d` Model window paints real geometry on first paint), which means
+    /// a test reasoning about "the first material" or "no load cases yet" has to say so explicitly —
+    /// `setActiveExample` with any id other than `examples::demo::ID` is exactly that reset, and `dispatch` above
+    /// already applies its `Effect::LoadDocument` the way the real host does.
+    pub async fn fem3d_empty_app() -> Fem3dApp {
+        let mut app = fem3d_app();
+        dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "empty".into() })).await;
+        app
+    }
+}
+
 use super::*;
 
 //#region 🧪️RetainedCommandEnvelope
 #[test]
-fn retained_command_fixture_matches_exact_routes_and_value_codec_boundaries() {
-    use store::ArtifactStoreOneItemPreparationFactory as _;
+fn fem3d_window_config_retained_command_fixture_matches_exact_routes_and_value_codec_boundaries() {
     let fixture: dsl::DslValue = dsl::json::from_json_str(include_str!("../../🧫️fixtures/🚧️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
     let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"].as_str() == Some("Migrated")).map(|row| row["id"].as_str().expect("route id")).collect();
     assert_eq!(migrated, FEM3D_RETAINED_TOOL_IDS);
@@ -34,49 +89,10 @@ fn retained_command_fixture_matches_exact_routes_and_value_codec_boundaries() {
     assert_eq!(fixture["limits"]["workItems"].as_u64(), Some(FEM3D_RETAINED_WORK_ITEMS as u64));
     assert_eq!(fixture["limits"]["decodedItems"].as_u64(), Some(FEM3D_RETAINED_DECODED_ITEMS as u64));
     assert_eq!(fixture["limits"]["artifactStoreBytes"].as_u64(), Some(FEM3D_ARTIFACT_STORE_MAXIMUM_BYTES as u64));
-    assert_eq!(fixture["limits"]["configValueBytes"].as_u64(), Some(FEM3D_CONFIG_VALUE_BYTES as u64));
-    assert_eq!(fixture["limits"]["storeStepBytes"].as_u64(), Some(FEM3D_CONFIG_STEP_BYTES as u64));
-    let factory = Fem3dConfigPreparationFactory;
-    for case in fixture["boundaryCases"].as_array().expect("boundary cases") {
-        let value = "x".repeat(case["bytes"].as_u64().expect("byte count") as usize);
-        let mutation = Fem3dConfigMutation::SetCamera { camera: crate::FemCamera { json: value } };
-        let encoded = dsl::json::to_json_string(&mutation);
-        let decoded: Fem3dConfigMutation = dsl::json::from_json_str(&encoded).expect("first-party JSON decode");
-        assert_eq!(decoded, mutation);
-        assert_eq!(factory.preflight(&decoded, None, store::HistoryLane::Document).is_ok(), case["accepted"].as_bool().expect("admission oracle"));
-    }
+    assert_eq!(fixture["limits"]["windowCommandValueBytes"].as_u64(), Some(FEM3D_WINDOW_COMMAND_VALUE_BYTES as u64));
+
 }
 
-#[test]
-fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
-    use std::io::Write as _;
-    use store::ArtifactStoreOneItemPreparation as _;
-    let value = "x".repeat(FEM3D_CONFIG_VALUE_BYTES);
-    let mut preparation = Fem3dConfigPreparation {
-        base: None,
-        mutation: Some(Fem3dConfigMutation::SetCamera { camera: crate::FemCamera { json: value } }),
-        description: None,
-        authority: None,
-        candidate: None,
-        sealed_candidate: None,
-        serialized_bytes: None,
-        prepared: None,
-        checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-        cancelled: false,
-        closing: false,
-    };
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 };
-    preparation.cancel();
-    assert!(matches!(preparation.advance(grant).expect("cancelled step"), store::ArtifactStoreOneItemPreparationStep::Blocked));
-    preparation.begin_close();
-    assert!(matches!(preparation.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).expect("undersized close"), store::SnapshotRetirementStep::Blocked));
-    assert!(matches!(preparation.close_step(grant).expect("bounded close"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 4_096 }));
-    assert!(matches!(preparation.close_step(grant).expect("terminal close"), store::SnapshotRetirementStep::Complete));
-    assert!(preparation.terminal_is_empty());
-    let mut counter = Fem3dConfigByteCounter { bytes: 0 };
-    assert_eq!(counter.write(&[0; 4_096]).expect("maximum serialized envelope"), 4_096);
-    assert!(counter.write(&[0]).is_err());
-}
 
 /// ⚖️ LAW: every one of the 18 declared actions is owned by `Fem3dRetainedCommandJobFactory`, is
 /// classified `Migrated` in the manifest, and declares a nonempty publication lane contract.
@@ -128,7 +144,6 @@ async fn both_declared_publication_lanes_have_a_preparation_factory() {
 /// one-item envelope, measured on the boot document (the largest fixture this app ships).
 #[semio_framework_async_macros::async_test]
 async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
-    use store::ArtifactStoreOneItemPreparationFactory as _;
     let boot = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
     let factory = Fem3dArtifactPreparationFactory;
     for solid in &boot.solids {
@@ -154,8 +169,8 @@ async fn initial_snapshot_is_the_bundled_example_not_empty() {
 }
 //#endregion 🧪️RetainedCommandEnvelope
 
-use crate::editor::fem3d::testkit::{dispatch, fem3d_app, Fem3dApp};
-use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
+use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app, Fem3dApp};
+use semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip;
 
 //#region 🔖️CommandSurface
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order — mirrors the exact
@@ -178,7 +193,7 @@ fn every_command() -> Vec<Fem3dCommand> {
         Fem3dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0) }),
         Fem3dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["n1".into(), "e1".into()] }),
         Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
-        Fem3dCommand::SetCamera(set_camera::SetCamera { json: "{\"x\":1}".into() }),
+        Fem3dCommand::SetCamera(set_camera::SetCamera { camera: crate::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None } }),
         Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 }),
     ]
 }
@@ -309,7 +324,7 @@ async fn undo_restores_document_after_add_node() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-    use crate::editor::fem3d::testkit::render;
+    use crate::editor::fem3d::unit_tests::context::render;
     let mut app = fem3d_app();
     assert!(render(&mut app, "fem3d.play.nope").contains("Unknown body"));
 }
@@ -350,7 +365,7 @@ async fn export_media_results_out_errors_without_load_cases_3d() {
 /// 🎞️ `"geometry:in"` decodes an extruded-footprint JSON contract into a new `FemSolid` operation.
 #[semio_framework_async_macros::async_test]
 async fn import_media_geometry_in_adds_a_new_solid_3d() {
-    let mut app: Fem3dApp = testkit::fem3d_empty_app().await;
+    let mut app: Fem3dApp = context::fem3d_empty_app().await;
     dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Concrete".into(), e: 30e9, g: 12.5e9 })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let history = semio_framework_plugin::HistoryView::empty();
@@ -426,11 +441,12 @@ async fn quat_z_to_handles_antiparallel_direction() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn fem3d_camera_json_falls_back_to_world3d_default_for_empty_object() {
-    let camera = crate::FemCamera::default();
-    assert_eq!(fem3d_camera_json(&camera), semio_framework_plugin::world3d_default_camera());
-    let custom = crate::FemCamera { json: "{\"x\":1}".into() };
-    assert_eq!(fem3d_camera_json(&custom), "{\"x\":1}");
+async fn fem3d_camera_scene_encoding_preserves_the_typed_pose() {
+    let camera = crate::viewport::INITIAL;
+    let decoded = dsl::json::from_json_str::<crate::Viewport3dOrbit>(&crate::viewport::scene_camera_json(&camera)).unwrap();
+    assert_eq!(decoded, camera);
+    let custom = crate::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None };
+    assert_eq!(dsl::json::from_json_str::<crate::Viewport3dOrbit>(&crate::viewport::scene_camera_json(&custom)).unwrap(), custom);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -441,3 +457,4 @@ async fn fem3d_scene_parts_include_solid_mesh_and_oriented_member_instances() {
     assert!(instances_json.contains("el-e1"), "expected a single oriented box instance per member (no -{{i}} sphere chain): {instances_json}");
 }
 //#endregion 🎬️SceneRender
+use store::ArtifactStoreOneItemPreparationFactory;

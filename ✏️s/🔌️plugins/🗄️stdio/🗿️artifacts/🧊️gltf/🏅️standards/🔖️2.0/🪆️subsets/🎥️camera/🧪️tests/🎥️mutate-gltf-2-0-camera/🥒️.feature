@@ -3,7 +3,7 @@
 @comparison-semantic-gltf-v1
 @mutations-gltf-2-0-camera
 Feature: Apply every registered glTF 2.0 camera mutation to a real-world document
-  The `gltf-2-0-camera` catalog (`../../🔮️oracle/🔣️.json`) declares the 4 kinds `document/cameras`
+  The `gltf-2-0-camera` catalog (`../../🔮️oracles/🔣️.json`) declares the 4 kinds `document/cameras`
   owns (§5.10): `create-camera`, `delete-camera`, `move-camera`, `reorder-cameras`. Shard A6 already
   scaffolded this catalog and its 4 committed `⬅️before.gltf`/`➡️after.gltf` fixture pairs
   (the exact `../../🧫️fixtures/<fixture>/` coordinates below), each derived from the same `gltf-2-0-any-reader-oracle` base
@@ -13,7 +13,7 @@ Feature: Apply every registered glTF 2.0 camera mutation to a real-world documen
   mutation root — the exact registered domain/operation owners are declared through this catalog and the manifest's
   per-mutation `subset` override, never through moving the directory.
 
-  The independent oracle (`../../../♾️any/🔮️oracle/🦀️.rs`) is the SAME domain-blind `json`-crate
+  The independent oracle (`../../../♾️any/🔮️oracles/🦀️.rs`) is the SAME domain-blind `json`-crate
   GLB/JSON reader the artifact-root case measures its 7 kinds through, extended here with 4 more
   kinds reimplemented from scratch against the parsed tree: `create_camera`/`delete_camera`/
   `move_camera`/`reorder_cameras` re-derive the exact four-branch index-remap arithmetic

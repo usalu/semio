@@ -1,5 +1,5 @@
 mod tests {
-    use super::super::testing::support::{UnitToggleEvent, UnitToggleMachine};
+    use super::super::testing::toggle_model::{UnitToggleEvent, UnitToggleMachine};
     use super::*;
 
     #[test]

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::generation2d::testkit::{app, close, render as render_body, snapshot_read};
+use crate::editor::generation2d::unit_tests::context::{app, close, render as render_body, snapshot_read};
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_widgets() {

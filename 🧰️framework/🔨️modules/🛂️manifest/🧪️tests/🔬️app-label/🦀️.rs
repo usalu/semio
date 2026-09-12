@@ -516,7 +516,7 @@ async fn app_definition_and_window_kind_definition_serde_round_trip_interactions
 }
 /// ⚖️ LAW: an EMPTY collection still reaches the wire as `[]`, never as an absent key.
 ///
-/// The generated TypeScript (`🤖️generated/🪪️manifest.ts`) declares these fields as **required**
+/// The generated TypeScript (`🤖️generated/🪪️manifest/🟦️.ts`) declares these fields as **required**
 /// arrays — `commands: Array<CommandDefinition>`, not `commands?:` — because only
 /// field carries it. A `skip_serializing_if = "Vec::is_empty"` therefore handed the host
 /// `undefined` where its own types promised an array, and every unguarded `app.commands.some(…)`
@@ -861,7 +861,7 @@ async fn introduction_gesture_drag_orbit_default_button_and_modifiers() {
     let drag: IntroductionGesture = serde_json::from_str(r#"{"kind":"drag","from":{"kind":"element","id":"puzzle3d-main"},"to":{"kind":"element","id":"puzzle3d-main"}}"#).unwrap();
     assert_eq!(drag, IntroductionGesture::Drag { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Left, modifiers: vec![] });
     // ⚖️ Defaults are still INFERRED on the way in (the input literal above names neither field),
-    // but they are always WRITTEN on the way out: `🤖️generated/🪪️manifest.ts` declares both
+    // but they are always WRITTEN on the way out: `🤖️generated/🪪️manifest/🟦️.ts` declares both
     // `button: IntroductionPointerButton` and `modifiers: Array<IntroductionKeyModifier>` as
     // required, so omitting a defaulted value handed the host `undefined` where its own types
     // promised a value. Asserting the omission — as this test previously did — pinned the defect.
@@ -1479,6 +1479,6 @@ fn exports_typescript_bindings() {
     if let Some(path) = std::env::var_os("SEMIO_TYPEGEN_OUT") {
         std::fs::write(path, &rendered).unwrap();
     } else {
-        assert_eq!(rendered, include_str!("../../🤖️generated/🪪️manifest.ts"));
+        assert_eq!(rendered, include_str!("../../🤖️generated/🪪️manifest/🟦️.ts"));
     }
 }

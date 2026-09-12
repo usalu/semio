@@ -1,6 +1,0 @@
-syntax = "proto3";
-package semio.app.gis.gis2d;
-message Gis2dPresence {
-  // @state presence
-  string camera_json = 2;
-}

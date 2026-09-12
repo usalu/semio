@@ -217,10 +217,10 @@ async fn change_cursor_round_trips() {
 }
 
 //#region 🧪️MutationLaws
-/// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️.rs`
-/// (reachable here as `protocol::os_spr::testkit` — the bare `protocol::testkit` path is
+/// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs`
+/// (reachable here as `protocol::os_spr::protocol_laws` — the bare `protocol::os_spr::protocol_laws` path is
 /// ambiguous: the kernel root glob-reexports both `os_pack::*` and `os_spr::*`, and both mount
-/// a `testkit` module), exercised against the three most structurally
+/// a `test context` module), exercised against the three most structurally
 /// distinct new variants: an id-keyed create/delete pair on an ordered collection
 /// (`create-step`), an id-keyed create/delete pair on an unordered collection
 /// (`create-machine`), and a document-level facet setter (`change-stock-label`).
@@ -228,30 +228,30 @@ async fn change_cursor_round_trips() {
 async fn create_step_satisfies_the_inverse_and_absorb_laws() {
     let base = empty_process3d_snapshot();
     let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-fresh") });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }).diff(&base).into_parts().0;
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_machine_satisfies_the_inverse_and_absorb_laws() {
     let base = empty_process3d_snapshot();
     let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-fresh") });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(1) }).diff(&base).into_parts().0;
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn change_stock_label_satisfies_the_inverse_and_absorb_laws() {
     let base = empty_process3d_snapshot();
     let mutation = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(2) }).diff(&base).into_parts().0;
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws
 
@@ -264,14 +264,14 @@ async fn change_stock_label_satisfies_the_inverse_and_absorb_laws() {
 async fn delete_machine_missing_target_is_an_error() {
     let base = empty_process3d_snapshot();
     let mutation = Process3dMutation::DeleteMachine(DeleteMachine { id: "does-not-exist".into() });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_machine_missing_target_is_an_error() {
     let base = empty_process3d_snapshot();
     let mutation = Process3dMutation::RenameMachine(RenameMachine { id: "does-not-exist".into(), new_label: "X".into() });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -281,7 +281,7 @@ async fn create_machine_duplicate_id_is_fatal_and_never_applies() {
     let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-1") });
     let outcome = mutation.diff(&base);
     assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
-    protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -289,7 +289,7 @@ async fn delete_machine_outcome_obeys_the_policy_matrix() {
     let mut base = empty_process3d_snapshot();
     base.workshop.machines.push(saw_machine("machine-1"));
     let mutation = Process3dMutation::DeleteMachine(DeleteMachine { id: "machine-1".into() });
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -297,28 +297,28 @@ async fn rename_machine_outcome_obeys_the_policy_matrix() {
     let mut base = empty_process3d_snapshot();
     base.workshop.machines.push(saw_machine("machine-1"));
     let mutation = Process3dMutation::RenameMachine(RenameMachine { id: "machine-1".into(), new_label: "X".into() });
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_machine_outcome_obeys_the_policy_matrix() {
     let base = empty_process3d_snapshot();
     let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-fresh") });
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_step_missing_target_is_an_error() {
     let base = empty_process3d_snapshot();
     let mutation = Process3dMutation::DeleteStep(DeleteStep { id: "does-not-exist".into() });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_step_missing_target_is_an_error() {
     let base = empty_process3d_snapshot();
     let mutation = Process3dMutation::RenameStep(RenameStep { id: "does-not-exist".into(), new_label: "X".into() });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -327,28 +327,28 @@ async fn create_step_duplicate_id_is_fatal_and_never_applies() {
     let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-1") });
     let outcome = mutation.diff(&base);
     assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
-    protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_step_outcome_obeys_the_policy_matrix() {
     let base = base_with_steps(vec![cut_step("step-1")]);
     let mutation = Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() });
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_step_outcome_obeys_the_policy_matrix() {
     let base = base_with_steps(vec![cut_step("step-1")]);
     let mutation = Process3dMutation::RenameStep(RenameStep { id: "step-1".into(), new_label: "X".into() });
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_step_outcome_obeys_the_policy_matrix() {
     let base = empty_process3d_snapshot();
     let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-fresh") });
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 //#endregion 🔖️OutcomeLaws
 

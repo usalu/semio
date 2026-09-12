@@ -4,7 +4,7 @@ use crate::editor::dag::terminology::DagPlayLabels;
 use crate::schema::document_to_workflow;
 use crate::DagSnapshot;
 use semio_framework_artifact_infinite_dag::DagCamera;
-use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, NodeGraphScene, Viewport2d, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const DAG_PLAY_WINDOW_MAIN: &str = "dag-main";
@@ -44,7 +44,7 @@ pub fn definition() -> WindowKindDefinition {
 /// (empty/none), matching `space`'s workflow window's identical gap.
 pub fn render(document: &DagSnapshot, camera: &DagCamera, _labels: &DagPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges) = document_to_workflow(document);
-    let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
+    let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };
     scene_surface(DAG_PLAY_SURFACE_MAIN, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render

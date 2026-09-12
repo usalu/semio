@@ -1,7 +1,7 @@
 //! 🦀️ TIFF 6.0 mutation case — Rust adapter. Every scenario copies the real, committed, genuinely
 //! two-page fixture into the case work directory first; the committed document is never written to.
 //! `oracle` drives this subset's own independent hand-rolled IFD-chain codec
-//! (`../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracle/🦀️.rs`), `subject` drives this
+//! (`../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🦀️.rs`), `subject` drives this
 //! repository's own `decode_tiff`/`apply_tiff_mutation`/`encode_tiff`. Both results are read back by
 //! the SAME independent `project_tiff` reader before the `semantic-raster-v1` profile compares them.
 //! The subject half is gated behind the generated host's `sut` feature, so the oracle-only run never
@@ -10,7 +10,7 @@
 //! `KINDS` is duplicated locally rather than imported from `semio_s_plugin_stdio` because the
 //! oracle-only host does not link that crate at all (`sut` is off), so registration must not name it.
 //! Keep this list in sync with `../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🦀️.rs`'s own
-//! `KINDS` and `../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracle/🔣️.json`'s
+//! `KINDS` and `../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🔣️.json`'s
 //! `mutationCatalogs[0].kinds` — the `kinds_manifest_law` test there is what keeps those two honest;
 //! this third copy is test-harness wiring, not vocabulary.
 
@@ -93,7 +93,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// 🚫️ The "re-encoded bytes must differ from the input" half of the law is NOT assertable on this
 /// side and is deliberately not contrived: `shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff` is
 /// itself the output of this very `write_tiff`
-/// (`../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracle/🦀️.rs`'s own `derive_real_world_fixture`),
+/// (`../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🦀️.rs`'s own `derive_real_world_fixture`),
 /// so a canonical, deterministic writer reproducing it byte-for-byte is CORRECT, not a pass-through.
 /// What is assertable — and asserted — is that this writer is a fixpoint on its own output: any
 /// asymmetry between `read_tiff` and `write_tiff` would move the bytes. The pass-through tripwire

@@ -9,7 +9,7 @@
 //! therefore never dispatched for it. Registering an oracle handler here would be dead code that
 //! reads as coverage in every listing, so there is none; every law this case claims is asserted
 //! inside the subject handlers, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` module, whose helpers are dependency-free
+//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module, whose helpers are dependency-free
 //! and format-neutral by their own doc comment.
 //!
 //! What the evidence rests on is the committed `(before, mutation, after, outcome)` specification

@@ -5,7 +5,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { stripExecutableShebang } from "./🧹️executable-source/🟦️.ts";
+import { stripExecutableShebang } from "../../🧹️executable-source/🟦️.ts";
 
 /** 🎚️`resolveTestLevel` (`🦑️repo/📚️library/📦️packages/🟦️typescript/🟦️.ts`) exports `testLevelAtLeast` and
  * publishes the active level in `SEMIO_TEST_LEVEL` before spawning Vitest. This config reads the env

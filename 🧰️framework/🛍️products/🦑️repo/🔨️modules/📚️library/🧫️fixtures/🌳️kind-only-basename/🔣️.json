@@ -1,0 +1,401 @@
+{
+  "schemaVersion": 1,
+  "contractId": "kind-only-implementation-leaf-v1",
+  "semantics": {
+    "implementationLeaf": "file-kind-emoji-and-longest-extension-chain",
+    "semanticConcern": "registered-directory",
+    "targetOwnership": "target-before-package",
+    "fixedAdmission": "exact-scope-only",
+    "unknownKind": "fail-closed"
+  },
+  "topology": {
+    "packagesDirectory": "📦️packages",
+    "targetsDirectory": "🎯️targets",
+    "packageLanguageDirectories": [
+      "🦀️rust",
+      "🟦️typescript",
+      "🟨️javascript",
+      "🐹️go",
+      "🐍️python",
+      "🔷️dotnet"
+    ],
+    "semanticExecutionCollections": [
+      "🏭️generator",
+      "🔬️probes",
+      "🔮️oracles"
+    ],
+    "obsoleteExecutionCollections": [
+      "🏗️generator"
+    ]
+  },
+  "fileKinds": [
+    {
+      "id": "rust-source",
+      "emoji": "🦀️",
+      "extensionChains": [".rs"],
+      "role": "source",
+      "implementation": true
+    },
+    {
+      "id": "typescript-source",
+      "emoji": "🟦️",
+      "extensionChains": [".ts", ".tsx", ".mts", ".cts", ".d.ts", ".d.mts", ".d.cts"],
+      "role": "source",
+      "implementation": true
+    },
+    {
+      "id": "javascript-source",
+      "emoji": "🟨️",
+      "extensionChains": [".js", ".mjs", ".cjs"],
+      "role": "source",
+      "implementation": true
+    },
+    {
+      "id": "go-source",
+      "emoji": "🐹️",
+      "extensionChains": [".go"],
+      "role": "source",
+      "implementation": true
+    },
+    {
+      "id": "python-source",
+      "emoji": "🐍️",
+      "extensionChains": [".py"],
+      "role": "source",
+      "implementation": true
+    },
+    {
+      "id": "dotnet-source",
+      "emoji": "🔷️",
+      "extensionChains": [".cs"],
+      "role": "source",
+      "implementation": true
+    },
+    {
+      "id": "css",
+      "emoji": "🎨️",
+      "extensionChains": [".css"],
+      "role": "asset",
+      "implementation": true
+    },
+    {
+      "id": "html",
+      "emoji": "🌐️",
+      "extensionChains": [".html", ".htm"],
+      "role": "configuration",
+      "implementation": true
+    },
+    {
+      "id": "story",
+      "emoji": "🧪️",
+      "extensionChains": [".story.tsx"],
+      "role": "source",
+      "implementation": true
+    },
+    {
+      "id": "grammar-semio",
+      "emoji": "📖️",
+      "extensionChains": [".grammar.semio"],
+      "role": "specification",
+      "implementation": false
+    },
+    {
+      "id": "png",
+      "emoji": "🖼️",
+      "extensionChains": [".png"],
+      "role": "asset",
+      "implementation": false
+    }
+  ],
+  "externalContracts": [
+    {
+      "id": "cargo-build-script",
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/build.rs",
+      "scope": "rust-package-root"
+    }
+  ],
+  "files": [
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/🔁️reconcile/🦀️.rs",
+      "content": "pub fn reconcile() {}\n"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/🔁️reconcile/🦀️reconcile.rs",
+      "content": "pub fn reconcile_named() {}\n"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "content": "[package]\nname = \"fixture-wgpu\"\nversion = \"0.1.0\"\n[package.metadata.semio]\nrole = \"framework\"\nid = \"fixture-wgpu\"\n[lib]\npath = \"🦀️.rs\"\n"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️.rs",
+      "content": "pub use crate::wire::*;\n"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/build.rs",
+      "content": "fn main() { println!(\"cargo:rerun-if-changed=build.rs\"); }\n"
+    },
+    {
+      "path": "🧰️naked/📦️packages/🦀️rust/build.rs",
+      "content": "fn main() {}\n"
+    },
+    {
+      "path": "🧰️disabled/📦️packages/🦀️rust/Cargo.toml",
+      "content": "[package]\nname = \"disabled-build\"\nversion = \"0.1.0\"\nbuild = false\n"
+    },
+    {
+      "path": "🧰️disabled/📦️packages/🦀️rust/build.rs",
+      "content": "fn main() {}\n"
+    },
+    {
+      "path": "🧰️custom/📦️packages/🦀️rust/Cargo.toml",
+      "content": "[package]\nname = \"custom-build\"\nversion = \"0.1.0\"\nbuild = \"🦀️.rs\"\n"
+    },
+    {
+      "path": "🧰️custom/📦️packages/🦀️rust/build.rs",
+      "content": "fn main() {}\n"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/lib.rs",
+      "content": "pub fn conventional_name_is_not_authority() {}\n"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/src/lib.rs",
+      "content": "pub fn configurable_library_default_is_not_authority() {}\n"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/src/main.rs",
+      "content": "fn main() {}\n"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️component.rs",
+      "content": "pub struct Component;\n"
+    },
+    {
+      "path": "🧰️inverse/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml",
+      "content": "[package]\nname = \"inverse-wgpu\"\nversion = \"0.1.0\"\n[package.metadata.semio]\nrole = \"framework\"\nid = \"inverse-wgpu\"\n"
+    },
+    {
+      "path": "🧰️inverse/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
+      "content": "pub fn inverse() {}\n"
+    },
+    {
+      "path": "🧰️web/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "content": "{\"name\":\"fixture-react\",\"semio\":{\"role\":\"framework\",\"id\":\"fixture-react\"},\"exports\":{\".\":\"./🟦️.tsx\"}}\n"
+    },
+    {
+      "path": "🧰️web/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
+      "content": "export const Fixture = () => null;\n"
+    },
+    {
+      "path": "🧰️languages/🟦️typescript/🟦️index.ts",
+      "content": "export const index = 1;\n"
+    },
+    {
+      "path": "🧰️languages/🟦️typescript/🟦️view.tsx",
+      "content": "export const View = () => null;\n"
+    },
+    {
+      "path": "🧰️languages/🟦️typescript/🟦️.d.mts",
+      "content": "export declare const canonicalModule: true;\n"
+    },
+    {
+      "path": "🧰️languages/🟦️typescript/📣️contract.d.mts",
+      "content": "export declare const namedModule: true;\n"
+    },
+    {
+      "path": "🧰️languages/🟦️typescript/🟦️.d.cts",
+      "content": "export declare const canonicalCommonJs: true;\n"
+    },
+    {
+      "path": "🧰️languages/🟦️typescript/📣️contract.d.cts",
+      "content": "export declare const namedCommonJs: true;\n"
+    },
+    {
+      "path": "🧰️languages/🟨️javascript/🟨️worker.js",
+      "content": "export const worker = true;\n"
+    },
+    {
+      "path": "🧰️languages/🐹️go/🗄️repository.go",
+      "content": "package repository\n"
+    },
+    {
+      "path": "🧰️languages/🐍️python/🐍️service.py",
+      "content": "value = 1\n"
+    },
+    {
+      "path": "🧰️languages/🔷️dotnet/🔷️Program.cs",
+      "content": "public sealed class Program {}\n"
+    },
+    {
+      "path": ".agents/🧭️worker.ts",
+      "content": "export const worker = true;\n"
+    },
+    {
+      "path": "🧰️styles/🎨️layout.css",
+      "content": ":root { color: CanvasText; }\n"
+    },
+    {
+      "path": "🧰️templates/index.html",
+      "content": "<!doctype html><title>Fixture</title>\n"
+    },
+    {
+      "path": "🧰️stories/📖️stories/🧪️.story.tsx",
+      "content": "export default { title: 'Fixture/Canonical' };\nexport const Default = {};\n"
+    },
+    {
+      "path": "🧰️stories/📖️stories/domain.story.tsx",
+      "content": "export default { title: 'Fixture/Named' };\nexport const Default = {};\n"
+    },
+    {
+      "path": "🧰️generated/🤖️generated/🟦️.ts",
+      "content": "export const canonicalGenerated = true;\n"
+    },
+    {
+      "path": "🧰️generated/🤖️generated/🟦️actor.ts",
+      "content": "export const namedGenerated = true;\n"
+    },
+    {
+      "path": "🧰️grammar/📖️.grammar.semio",
+      "content": "grammar Fixture;\n"
+    },
+    {
+      "path": "🧰️assets/🖼️logo/🖼️.png",
+      "content": "png-fixture"
+    }
+  ],
+  "expectedFindings": [
+    {
+      "path": ".agents/🧭️worker.ts",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "typescript-source",
+      "expectedBasename": "🟦️.ts"
+    },
+    {
+      "path": "🧰️inverse/📦️packages/🦀️rust/🎯️targets",
+      "breachId": "taxonomy/target-inside-package-boundary",
+      "fileKindId": null,
+      "expectedBasename": null
+    },
+    {
+      "path": "🧰️custom/📦️packages/🦀️rust/build.rs",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "rust-source",
+      "expectedBasename": "🦀️.rs"
+    },
+    {
+      "path": "🧰️disabled/📦️packages/🦀️rust/build.rs",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "rust-source",
+      "expectedBasename": "🦀️.rs"
+    },
+    {
+      "path": "🧰️generated/🤖️generated/🟦️actor.ts",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "typescript-source",
+      "expectedBasename": "🟦️.ts"
+    },
+    {
+      "path": "🧰️languages/🐍️python/🐍️service.py",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "python-source",
+      "expectedBasename": "🐍️.py"
+    },
+    {
+      "path": "🧰️languages/🐹️go/🗄️repository.go",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "go-source",
+      "expectedBasename": "🐹️.go"
+    },
+    {
+      "path": "🧰️languages/🔷️dotnet/🔷️Program.cs",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "dotnet-source",
+      "expectedBasename": "🔷️.cs"
+    },
+    {
+      "path": "🧰️languages/🟦️typescript/🟦️index.ts",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "typescript-source",
+      "expectedBasename": "🟦️.ts"
+    },
+    {
+      "path": "🧰️languages/🟦️typescript/🟦️view.tsx",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "typescript-source",
+      "expectedBasename": "🟦️.tsx"
+    },
+    {
+      "path": "🧰️languages/🟦️typescript/📣️contract.d.cts",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "typescript-source",
+      "expectedBasename": "🟦️.d.cts"
+    },
+    {
+      "path": "🧰️languages/🟦️typescript/📣️contract.d.mts",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "typescript-source",
+      "expectedBasename": "🟦️.d.mts"
+    },
+    {
+      "path": "🧰️languages/🟨️javascript/🟨️worker.js",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "javascript-source",
+      "expectedBasename": "🟨️.js"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/lib.rs",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "rust-source",
+      "expectedBasename": "🦀️.rs"
+    },
+    {
+      "path": "🧰️naked/📦️packages/🦀️rust/build.rs",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "rust-source",
+      "expectedBasename": "🦀️.rs"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/src/lib.rs",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "rust-source",
+      "expectedBasename": "🦀️.rs"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/src/main.rs",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "rust-source",
+      "expectedBasename": "🦀️.rs"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️component.rs",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "rust-source",
+      "expectedBasename": "🦀️.rs"
+    },
+    {
+      "path": "🧰️owner/🎯️targets/🧊️wgpu/🔁️reconcile/🦀️reconcile.rs",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "rust-source",
+      "expectedBasename": "🦀️.rs"
+    },
+    {
+      "path": "🧰️styles/🎨️layout.css",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "css",
+      "expectedBasename": "🎨️.css"
+    },
+    {
+      "path": "🧰️templates/index.html",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "html",
+      "expectedBasename": "🌐️.html"
+    },
+    {
+      "path": "🧰️stories/📖️stories/domain.story.tsx",
+      "breachId": "taxonomy/kind-only-basename",
+      "fileKindId": "story",
+      "expectedBasename": "🧪️.story.tsx"
+    }
+  ]
+}

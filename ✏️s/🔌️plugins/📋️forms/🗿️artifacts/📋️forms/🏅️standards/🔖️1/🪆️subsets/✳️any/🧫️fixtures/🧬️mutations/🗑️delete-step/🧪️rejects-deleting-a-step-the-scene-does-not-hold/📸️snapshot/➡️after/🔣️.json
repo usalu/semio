@@ -4,9 +4,9 @@
   "version": "1",
   "title": "Site Survey",
   "structure": {
-    "childId": "forms-scene-delete-step-missing-step",
+    "childId": "forms-value-delete-step-missing-step",
     "target": {
-      "artifactId": "forms-value",
+      "artifactId": "forms-value-delete-step-missing-step",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -15,9 +15,9 @@
     }
   },
   "results": {
-    "childId": "forms-scene-delete-step-missing-step",
+    "childId": "forms-table-delete-step-missing-step",
     "target": {
-      "artifactId": "forms-table",
+      "artifactId": "forms-table-delete-step-missing-step",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

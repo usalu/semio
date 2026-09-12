@@ -5,7 +5,7 @@
 //! it never links the subject implementation. The older Python second implementation remains
 //! supplemental evidence, while this carrier reader is the qualifying third-party oracle. The laws
 //! this half claims are asserted inside the subject handlers through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` module, whose helpers are dependency-free
+//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module, whose helpers are dependency-free
 //! and format-neutral by their own doc comment; the Python half restates them by hand in its own
 //! `🔖️Laws` region, because the Python host exposes no `law` module.
 //!

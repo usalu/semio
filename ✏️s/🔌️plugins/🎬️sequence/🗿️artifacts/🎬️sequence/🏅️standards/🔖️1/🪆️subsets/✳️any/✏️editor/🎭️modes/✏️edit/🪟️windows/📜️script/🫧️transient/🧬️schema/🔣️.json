@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sequence.scriptwindowtransient",
+  "title": "Sequence Script Window Transient",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lastRunJson"],
+  "properties": {
+    "lastRunJson": { "type": "string" }
+  }
+}

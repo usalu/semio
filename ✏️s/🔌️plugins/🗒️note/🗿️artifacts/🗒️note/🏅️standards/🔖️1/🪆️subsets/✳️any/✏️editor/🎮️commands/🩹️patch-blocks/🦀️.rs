@@ -1,6 +1,5 @@
 //! 🧱️ 🧱️ Note play app commands command — `patch-blocks`.
 
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::op::NoteMutation;
 use crate::schema::mutations::{
     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, edit_block_math, edit_block_text, insert_table_column, insert_table_row, move_block as move_block_mutation, remove_table_column, remove_table_row,
@@ -23,7 +22,7 @@ pub struct PatchBlocks {
 /// owns it — one mutation per (id, field) pair, batched into a single `Emit` so a multi-select
 /// patch is still one undo step. Replaces the old `note_engine::patch_block_field`
 /// whole-document-clone + whole-collection re-dump.
-pub fn handle(payload: &PatchBlocks, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &PatchBlocks, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     if payload.block_ids.is_empty() || payload.field.is_empty() {
         return Ok(Emit::default());
     }

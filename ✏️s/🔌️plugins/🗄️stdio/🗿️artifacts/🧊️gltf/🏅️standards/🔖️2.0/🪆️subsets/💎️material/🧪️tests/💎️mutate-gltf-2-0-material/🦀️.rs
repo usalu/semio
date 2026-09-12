@@ -1,12 +1,12 @@
 //! 🦀️ glTF 2.0 `💎️material` subset mutation case — Rust adapter. Covers the 18 kinds
-//! `../../🔮️oracle/🔣️.json`'s `gltf-2-0-material` catalog declares: `create`/`delete`/`move`/
+//! `../../🔮️oracles/🔣️.json`'s `gltf-2-0-material` catalog declares: `create`/`delete`/`move`/
 //! `reorder` for each of the 4 families `materials`/`textures`/`images`/`samplers`, plus
 //! `change-material-alpha-mode`/`change-material-double-sided` (already the artifact-root case's
 //! own 2 kinds, oracle functions reused unmodified). Every leaf's own `apply()` stays physically
 //! owned by `♾️any` — `validate_mutation_leaf_source` requires a leaf's `owner` to be an immediate
 //! child of its aggregate mutation root, so this case reaches it by import, never by moving the
 //! directory. The oracle performs every kind by independent GLB/JSON-tree manipulation
-//! (`../../../♾️any/🔮️oracle/🦀️.rs`, extended with these 16 new kinds by this same change); the
+//! (`../../../♾️any/🔮️oracles/🦀️.rs`, extended with these 16 new kinds by this same change); the
 //! subject fully parses each kind's own committed fixture into `GltfSnapshot` via
 //! `parse_gltf_document` and re-serializes with `serialize_gltf_document` alone, dispatching through
 //! each leaf's own typed `apply()` function directly. Every `delete-*`'s inverse is special-cased on
@@ -230,7 +230,7 @@ mod subject {
     /// reference DIRECTLY from `before` — the exact typed values this snapshot already holds, not a
     /// same-shaped substitute a second `create-*` call could only approximate (its own payload
     /// carries no field content — see the feature file's own doc comment). Mirrors
-    /// `../../../♾️any/🔮️oracle/🦀️.rs`'s own `undo_delete_{material,texture,image,sampler}` on the
+    /// `../../../♾️any/🔮️oracles/🦀️.rs`'s own `undo_delete_{material,texture,image,sampler}` on the
     /// independent-reader side.
     fn undo_delete(before: &GltfSnapshot, mutated: &GltfSnapshot, kind: &str) -> GltfSnapshot {
         let mut restored = mutated.clone();

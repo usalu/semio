@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/repo-vscode` router: `bun ./📜️script.ts <dev|test [level]|build|lint|build-vsix>`. */
 import { build } from "vite";
-import { extensionBuildConfig, extensionPackageEnvironment } from "./⚙️build/🟦️.ts";
+import { extensionBuildConfig, extensionPackageEnvironment } from "../../🏗️builder/🟦️.ts";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, TEST_LEVELS } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 //#region Build

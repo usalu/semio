@@ -1,6 +1,51 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    pub type LayoutApp = VcsArtifactApp<EditorApp<LayoutPlayApp>>;
+    
+    /// ✏️ `LayoutPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
+    /// `ArtifactApp` — `EditorApp<LayoutPlayApp>` (SDK adapter, contract §2.1) is the real
+    /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
+    /// `PluginBuilder::editor::<LayoutPlayApp>` builds it.
+    
+    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    pub async fn layout_app() -> LayoutApp {
+        new_app::<EditorApp<LayoutPlayApp>>().await
+    }
+    
+    /// 🧪️ Adapts `create_layout_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
+    /// examples }` shape `new_app_with_registry` still expects — framework test context gap, not
+    /// modifiable here (`🧰️framework/**` is outside this packet's lease).
+    fn layout_app_manifest_for_tests() -> App {
+        App { definition: create_layout_app(), examples: Vec::new() }
+    }
+    
+    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
+    pub async fn layout_app_with_registry() -> LayoutApp {
+        new_app_with_registry::<EditorApp<LayoutPlayApp>>(layout_app_manifest_for_tests).await
+    }
+    
+    pub async fn dispatch(app: &mut LayoutApp, command: LayoutCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut LayoutApp, body_key: &str) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("fixture projection")
+    }
+    
+    pub fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {
+        let camera = infinite_canvas::camera::Camera { x: camera_x, y: camera_y, zoom };
+        let viewport = infinite_canvas::camera::Viewport { width: width as u32, height: height as u32, dpr: 1.0 };
+        let screen = infinite_canvas::camera::world_to_screen(&camera, &viewport, infinite_canvas::Point::new(world_x, world_y));
+        (screen.x, screen.y)
+    }
+}
+
 use super::*;
-use crate::editor::layout::testkit::{dispatch, layout_app, layout_app_with_registry, render, test_screen_point};
-use semio_framework_plugin::testkit;
+use crate::editor::layout::unit_tests::context::{dispatch, layout_app, layout_app_with_registry, render, test_screen_point};
+use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::PluginApp;
 
 //#region 🔖️CommandSurface
@@ -220,7 +265,7 @@ async fn export_media_document_out_round_trips_through_pack() {
 async fn import_media_fields_in_sets_data_fields_json() {
     let mut app = layout_app().await;
     let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "form.dictionary".into(), json: r#"{"name":"Ada"}"#.into() } };
-    app.import_media("fields:in", media, &testkit::meta("local")).await.expect("import fields:in");
+    app.import_media("fields:in", media, &artifact_app_laws::meta("local")).await.expect("import fields:in");
     let document = app.snapshot().expect("projection");
     assert_eq!(document.data_fields_json.as_deref(), Some(r#"{"name":"Ada"}"#));
 }

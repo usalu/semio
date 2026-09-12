@@ -1336,17 +1336,10 @@ mod testing {
 
     //#endregion 🔖️Conformance
 
-    //#region 🔖️Support
-
-    #[cfg(test)]
-    include!("🧪️tests/🔬️testing-support/🦀️.rs");
-
-    //#endregion 🔖️Support
-
     //#region 🧪️Tests
 
     #[cfg(test)]
-    include!("🧪️tests/🔬️testing-unit/🦀️.rs");
+    include!("🧪️tests/🔀️toggle-machine/🦀️.rs");
 
     //#endregion 🧪️Tests
 }

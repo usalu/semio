@@ -1,6 +1,6 @@
 //! 🏋️ 🏋️ Fem2d play app commands command — `add-member-udl`.
 
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{add_load, create_load_case};
 use crate::{FemLoad, FemLoadCase};
@@ -61,7 +61,7 @@ pub struct AddMemberUdl {
     pub case_id: Option<String>,
 }
 
-pub fn handle(payload: &AddMemberUdl, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub fn handle(payload: &AddMemberUdl, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let load_id = next_load_id(doc.snapshot, payload.case_id.as_deref());
     let load = FemLoad::MemberUdl { id: load_id, element_id: payload.element_id.clone(), wx: payload.wx, wy: payload.wy };
     Ok(Emit::mutations(vec![add_load_mutation(doc.snapshot, payload.case_id.as_deref(), load)]))

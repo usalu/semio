@@ -22,8 +22,8 @@ impl RetireOwned for RewriteRuleMutation {
 }
 
 /// 🗃️ Installs concrete cursor authorities for every document root and retained mutation.
-pub fn document_store_owners() -> store::MemberStoreOwners<RewritingSnapshot, RewriteRuleMutation> {
-    store::MemberStoreOwners::new(
+pub fn document_store_owners() -> store::DocumentStoreOwners<RewritingSnapshot, RewriteRuleMutation> {
+    store::DocumentStoreOwners::new(
         std::sync::Arc::new(SharedValueRetirementFactory::<RewritingSnapshot>::default()),
         std::sync::Arc::new(OwnedValueRetirementFactory::<RewritingSnapshot>::default()),
         std::sync::Arc::new(OwnedValueRetirementFactory::<RewriteRuleMutation>::default()),

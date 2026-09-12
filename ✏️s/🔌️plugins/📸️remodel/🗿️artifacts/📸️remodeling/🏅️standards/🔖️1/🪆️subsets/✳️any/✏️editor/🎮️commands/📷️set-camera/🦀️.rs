@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Remodeling play app commands command — `set-camera`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation, RemodelingWorldCamera};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::RemodelingMutation;
 use crate::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -10,11 +10,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "camera")]
 pub struct SetCamera {
     #[dsl(block)]
-    pub camera: RemodelingWorldCamera,
+    pub camera: store::Viewport3dOrbit,
 }
 
-pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
-    Ok(Emit::config(vec![RemodelingConfigMutation::SetCamera(crate::editor::remodeling::config::SetCamera { camera: payload.camera.clone() })]))
+pub fn handle(_payload: &SetCamera, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
+    Ok(Emit::default())
 }
 
 //#region 🧪️Tests

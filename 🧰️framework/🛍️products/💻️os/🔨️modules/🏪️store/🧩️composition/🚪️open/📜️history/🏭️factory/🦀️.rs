@@ -298,6 +298,14 @@ impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
         self.input.as_ref().is_some_and(VerifiedMemberHistoryDictionary::initial_history_is_exact)
     }
 
+    pub(crate) fn verified_end(&self) -> u64 {
+        self.input.as_ref().map_or(0, VerifiedMemberHistoryDictionary::verified_end)
+    }
+
+    pub(crate) fn copy_verified_history_chunk(&mut self, offset: usize, output: &mut [u8], cx: &mut StepContext<'_>) -> Result<usize, MemberOpenDiagnostic> {
+        self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.copy_verified_history_chunk(offset, output, cx)
+    }
+
     pub(crate) fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(crate::os_io::ArtifactRef, Option<crate::os_store::OwnerRef>, &'static str), MemberOpenDiagnostic> {
         let (expected, owner, schema) = self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.clone_initial_identity(cx)?;
         if schema != self.declaration.schema {

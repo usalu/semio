@@ -1,5 +1,5 @@
 use super::*;
-use crate::{empty_cad_snapshot, testkit::sample_model_child};
+use crate::{empty_cad_snapshot, sample_scene_fixture::sample_model_child};
 use protocol::Inference;
 
 //#region 🧪️InferenceLaws

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sequence.mainwindowconfig",
+  "title": "Sequence Main Window Config",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["orientation", "camera"],
+  "properties": {
+    "orientation": { "enum": ["leftRight", "topBottom"] },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "zoom": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

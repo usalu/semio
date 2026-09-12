@@ -1,7 +1,7 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `duplicate-layer`.
 
 use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
-use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::DrawingMutation;
 use crate::DrawingSnapshot;
 use dsl::{FromValue, ToValue};
@@ -13,7 +13,7 @@ pub struct DuplicateLayer {
     pub layer_id: String,
 }
 
-pub fn handle(payload: &DuplicateLayer, _doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, DrawingConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, DrawingConfigMutation>, Fault> {
+pub fn handle(payload: &DuplicateLayer, _doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     if payload.layer_id.is_empty() {
         return Ok(Emit::default());
     }

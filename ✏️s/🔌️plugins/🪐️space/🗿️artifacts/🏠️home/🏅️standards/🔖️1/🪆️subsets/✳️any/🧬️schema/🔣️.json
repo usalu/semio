@@ -24,7 +24,7 @@
     "HomeRetainedCommandLimits": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandLimits"
+          "$ref": "https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/RetainedCommandLimits"
         },
         {
           "type": "object",
@@ -99,7 +99,7 @@
             "routes": {
               "allOf": [
                 {
-                  "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes"
+                  "$ref": "https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutes"
                 },
                 {
                   "type": "array",
@@ -120,11 +120,11 @@
                           "const": "applyDirectoryEventPage"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "config"
+                            "Config"
                           ]
                         },
                         "blocker": {
@@ -146,11 +146,11 @@
                           "const": "createStudio"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "artifact"
+                            "Artifact"
                           ]
                         },
                         "blocker": {
@@ -172,11 +172,11 @@
                           "const": "bindSpaceFile"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "host-only"
+                            "HostOnly"
                           ]
                         },
                         "blocker": {
@@ -198,11 +198,11 @@
                           "const": "importSpace"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "artifact"
+                            "Artifact"
                           ]
                         },
                         "blocker": {
@@ -224,11 +224,11 @@
                           "const": "openSpace"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "host-only"
+                            "HostOnly"
                           ]
                         },
                         "blocker": {
@@ -250,11 +250,11 @@
                           "const": "navigateVirtualFileSystemNode"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "host-only"
+                            "HostOnly"
                           ]
                         },
                         "blocker": {
@@ -276,11 +276,11 @@
                           "const": "deleteVirtualFileSystemNode"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "artifact"
+                            "Artifact"
                           ]
                         },
                         "blocker": {
@@ -302,11 +302,11 @@
                           "const": "goHome"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "host-only"
+                            "HostOnly"
                           ]
                         },
                         "blocker": {
@@ -328,11 +328,11 @@
                           "const": "setActivePanelTab"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "config"
+                            "Config"
                           ]
                         },
                         "blocker": {
@@ -354,11 +354,11 @@
                           "const": "createSpace"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "host-only"
+                            "HostOnly"
                           ]
                         },
                         "blocker": {
@@ -380,11 +380,11 @@
                           "const": "deleteSpace"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "host-only"
+                            "HostOnly"
                           ]
                         },
                         "blocker": {
@@ -406,11 +406,11 @@
                           "const": "renameSpace"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "host-only"
+                            "HostOnly"
                           ]
                         },
                         "blocker": {
@@ -432,11 +432,11 @@
                           "const": "shareSpace"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "host-only"
+                            "HostOnly"
                           ]
                         },
                         "blocker": {
@@ -458,11 +458,11 @@
                           "const": "manageSpace"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "host-only"
+                            "HostOnly"
                           ]
                         },
                         "blocker": {
@@ -484,11 +484,11 @@
                           "const": "copyInviteLink"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "host-only"
+                            "HostOnly"
                           ]
                         },
                         "blocker": {
@@ -510,11 +510,11 @@
                           "const": "foldDirectoryEvents"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "config"
+                            "Config"
                           ]
                         },
                         "blocker": {
@@ -536,11 +536,11 @@
                           "const": "presenceHeartbeat"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "host-only"
+                            "HostOnly"
                           ]
                         },
                         "blocker": {
@@ -562,11 +562,11 @@
                           "const": "setClient"
                         },
                         "disposition": {
-                          "const": "migrated"
+                          "const": "Migrated"
                         },
                         "lanes": {
                           "const": [
-                            "config"
+                            "Config"
                           ]
                         },
                         "blocker": {

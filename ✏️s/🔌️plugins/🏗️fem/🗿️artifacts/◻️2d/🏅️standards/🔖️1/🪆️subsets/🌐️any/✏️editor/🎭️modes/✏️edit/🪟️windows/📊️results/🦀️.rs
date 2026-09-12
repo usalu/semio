@@ -1,13 +1,16 @@
 //! 📊️ Fem2d play app — the results window: static/modal/buckling analysis views, nodal-averaged
 //! von-Mises stress contours, reaction labels and moment diagrams.
 
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+
 /// 🌈️ Triangle coordinates and scalar stress values at its vertices.
 type StressContourTriangle = ([(f64, f64); 3], [f64; 3]);
 
 use crate::app_surface::{hex_to_rgb01, normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
 use crate::editor::fem2d::modes::edit::windows::model::{fem2d_deformed_shape_layers, fem2d_element_endpoints, fem2d_model_extent, fem2d_region_mesh_triangles, fem2d_structure_layers, find_node_2d, screen_2d, MOMENT_SCALE_2D};
 use crate::model::ElementResult;
-use crate::{element_id, Fem2dSnapshot, FemCamera};
+use crate::{element_id, Fem2dSnapshot, Viewport2d};
 use dsl::json::Value;
 use semio_framework_plugin::{built_text_node, BuiltNode, Canvas2dScene, Label};
 use std::collections::HashMap;
@@ -116,7 +119,7 @@ fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
 
 //#region 🔖️Render
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
-pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &Viewport2d) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     match display.mode {
         DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera),
         DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera),
@@ -133,7 +136,7 @@ fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<BuiltNo
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
-fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &Viewport2d) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let results = match crate::fem2d_engine::fem2d_solve_all(doc) {
         Ok(results) => results,
         Err(e) => return placeholder(Label::data(format!("Analysis error: {e}"))),
@@ -236,7 +239,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
 /// 📊️ Modal mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a frequency caption.
-fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &Viewport2d) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (freq_hz, mut disp_map) = match crate::fem2d_engine::modal_buckling::fem2d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
         Err(e) => return placeholder(Label::data(format!("Modal analysis error: {e}"))),
@@ -257,7 +260,7 @@ fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> s
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a load-factor caption. `source_id` selects the reference
 /// load case, falling back to the first load case when `None`.
-fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &Viewport2d) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return placeholder(Label::data("No load case defined"));
     };

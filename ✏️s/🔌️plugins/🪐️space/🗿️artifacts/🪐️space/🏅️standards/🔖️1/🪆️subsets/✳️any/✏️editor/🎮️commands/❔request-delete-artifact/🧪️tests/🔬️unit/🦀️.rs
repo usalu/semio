@@ -1,11 +1,11 @@
 
 use super::*;
-use crate::editor::space_index::{SpaceIndexCommand, testkit};
+use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn request_delete_opens_the_confirm_dialog_without_mutating() {
-    let (mut app, id) = testkit::new_app_with_artifact().await;
-    let result = app.dispatch_typed(SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: id.clone() }), &semio_framework_plugin::testkit::meta("local")).await.expect("request delete");
+    let (mut app, id) = context::new_app_with_artifact().await;
+    let result = app.dispatch_typed(SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: id.clone() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("request delete");
     assert!(result.mutations.is_empty(), "requesting delete never mutates the document directly");
     assert_eq!(app.snapshot().unwrap().artifacts.len(), 1, "the row survives until the dialog is confirmed");
     assert_eq!(result.requested_effects.len(), 1);
@@ -21,7 +21,7 @@ async fn request_delete_opens_the_confirm_dialog_without_mutating() {
 
 #[semio_framework_async_macros::async_test]
 async fn request_delete_of_a_missing_row_faults() {
-    let mut app = testkit::new_app().await;
-    let error = app.dispatch_typed(SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: "ghost".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect_err("missing row must fault");
+    let mut app = artifact_app_laws::new_app().await;
+    let error = app.dispatch_typed(SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: "ghost".into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect_err("missing row must fault");
     assert_eq!(error.code.0, "s.space.mutation.target-missing");
 }

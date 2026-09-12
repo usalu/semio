@@ -1,10 +1,13 @@
 //! 🤝️ FEM plugin — helpers shared by the 2D and 3D apps' `ui` crates (non-constitutional; see the
 //! constitutional-split recipe's "shared code used by ≥2 apps" rule). Everything here is used by BOTH
 //! `fem2d_ui` and `fem3d_ui` — `next_id`/id-collision retry, hex/von-Mises color helpers, mode-shape
-//! normalization, and the `setResultDisplay` ephemeral view-state plumbing.
+//! normalization, and the result-window display projection.
+
+#[path = "🧬️schema/👁️result-mode/🦀️.rs"]
+mod result_mode;
+pub use result_mode::ResultMode;
 
 use crate::model::Dof;
-use dsl::DslValue;
 use semio_framework_plugin::{ActionArgDef, ActionArgOption, BuiltNode, LocalizedLabel};
 use semio_framework_ui_contract::{Buildable, HasBase};
 use std::collections::HashMap;
@@ -89,10 +92,7 @@ pub fn von_mises_color(value: f64, min: f64, max: f64) -> &'static str {
 //#endregion 🔖️Shared
 
 //#region 🔖️ResultDisplay
-/// 👁️ Ephemeral (non-document) view state selecting what the results window shows — which
-/// `fem2d_solve_all`/`fem3d_solve_all` case-or-combination id (`source_id`) and which `DisplayMode`.
-/// Mutated by the `setResultDisplay` VIEW action (`ActionEmit::default()`, no operations — never recorded in
-/// history) and lives directly on the app struct, per `ArtifactApp::handle_action`'s `&mut self`.
+/// 👁️ Render projection of the persisted configuration of one exact results window.
 #[derive(Clone, Debug, Default)]
 pub struct ResultDisplay {
     pub source_id: Option<String>,
@@ -109,17 +109,14 @@ pub enum DisplayMode {
     Buckling(usize),
 }
 
-/// 👁️ Parses `setResultDisplay`'s `{"sourceId"?, "mode": "static"|"modal"|"buckling", "modeIndex"?}`
-/// args into a `ResultDisplay` — unknown/missing `mode` falls back to `Static`.
-pub fn parse_result_display(args: Option<&DslValue>) -> ResultDisplay {
-    let source_id = args.and_then(|v| v.get("sourceId")).and_then(DslValue::as_str).map(str::to_string);
-    let mode_index = args.and_then(|v| v.get("modeIndex")).and_then(DslValue::as_f64).filter(|value| value.is_finite() && *value >= 0.0 && value.fract() == 0.0 && *value <= usize::MAX as f64).map_or(0, |value| value as usize);
-    let mode = match args.and_then(|v| v.get("mode")).and_then(DslValue::as_str) {
-        Some("modal") => DisplayMode::Modal(mode_index),
-        Some("buckling") => DisplayMode::Buckling(mode_index),
-        _ => DisplayMode::Static,
-    };
-    ResultDisplay { source_id, mode }
+impl ResultMode {
+    pub fn display(self, index: u32) -> DisplayMode {
+        match self {
+            Self::Static => DisplayMode::Static,
+            Self::Modal => DisplayMode::Modal(index as usize),
+            Self::Buckling => DisplayMode::Buckling(index as usize),
+        }
+    }
 }
 
 /// 📝️ Shared `setResultDisplay` arg declarations for both apps' builders — `sourceId` (a case/

@@ -150,21 +150,21 @@ async fn connect_then_disconnect_nodes_round_trips() {
 }
 
 //#region ⚖️SemanticLaws
-/// ⚖️ `assert_mutation_inverse_law` (`protocol::os_spr::testkit`) against the remaining kinds not
+/// ⚖️ `assert_mutation_inverse_law` (`protocol::os_spr::protocol_laws`) against the remaining kinds not
 /// already covered by an explicit round-trip test above: the two document-root scalar
 /// setters and the two remaining collection verbs (`change`/`remove`).
 #[semio_framework_async_macros::async_test]
 async fn change_graph_directed_obeys_the_inverse_law() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::ChangeGraphDirected(change_graph_directed::ChangeGraphDirected { new_directed: !equation_graph(&base).directed });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn update_graph_algorithm_obeys_the_inverse_law() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::UpdateGraphAlgorithm(update_graph_algorithm::UpdateGraphAlgorithm { new_algorithm: "dijkstra".into(), new_algorithm_seed: Some("seed-1".into()) });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -172,14 +172,14 @@ async fn change_node_label_obeys_the_inverse_law() {
     let base = EquationSnapshot::default();
     let id = equation_graph(&base).nodes[0].id.clone();
     let mutation = EquationMutation::ChangeNodeLabel(change_node_label::ChangeNodeLabel { id, new_label: "Relabeled".into() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn remove_point_obeys_the_inverse_law() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::RemovePoint(remove_point::RemovePoint { index: 0 });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -189,7 +189,7 @@ async fn change_coefficient_obeys_the_inverse_law() {
     let base = EquationSnapshot::default();
     let label = base.equation.expr.label;
     let mutation = EquationMutation::ChangeCoefficient(change_coefficient::ChangeCoefficient { label, numer: "5".into(), denom: "2".into() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -216,7 +216,7 @@ async fn change_coefficient_at_an_unknown_label_is_a_no_op() {
 
 //#region 🔖️OutcomeLaws
 /// 🪧 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS Pass 3 — one test per
-/// verb family, calling the two testkit laws landed under their frozen names
+/// verb family, calling the two test context laws landed under their frozen names
 /// (`assert_missing_target_is_error`/`assert_fatal_never_applies`,
 /// `📡️spr/🧪️test/🦀️kit.rs`). `assert_outcome_policy_matrix` is NOT landed under that
 /// name — only the differently-shaped `assert_policy_matrix(rejects, is_applicable)` exists,
@@ -226,14 +226,14 @@ async fn change_coefficient_at_an_unknown_label_is_a_no_op() {
 async fn delete_node_missing_target_is_error() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::DeleteNode(delete_node::DeleteNode { id: "nonexistent".into() });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_nodes_all_missing_targets_is_error() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::DeleteNodes(delete_nodes::DeleteNodes { ids: vec!["nonexistent-1".into(), "nonexistent-2".into()] });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -241,35 +241,35 @@ async fn remove_point_missing_target_is_error() {
     let base = EquationSnapshot::default();
     let out_of_range = equation_geometry(&base).points.len();
     let mutation = EquationMutation::RemovePoint(remove_point::RemovePoint { index: out_of_range });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn move_node_missing_target_is_error() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::MoveNode(move_node::MoveNode { id: "nonexistent".into(), x: 1.0, y: 1.0 });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn change_node_label_missing_target_is_error() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::ChangeNodeLabel(change_node_label::ChangeNodeLabel { id: "nonexistent".into(), new_label: "X".into() });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn connect_nodes_missing_target_is_error() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: "e-new".into(), source: "nonexistent".into(), target: "a".into() });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn disconnect_nodes_missing_target_is_error() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::DisconnectNodes(disconnect_nodes::DisconnectNodes { id: "nonexistent".into() });
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -277,7 +277,7 @@ async fn create_node_duplicate_id_fatal_never_applies() {
     let base = EquationSnapshot::default();
     let existing_id = equation_graph(&base).nodes[0].id.clone();
     let mutation = EquationMutation::CreateNode(create_node::CreateNode { id: existing_id, label: "dup".into(), x: 0.0, y: 0.0 });
-    protocol::os_spr::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -285,14 +285,14 @@ async fn connect_nodes_duplicate_id_fatal_never_applies() {
     let base = EquationSnapshot::default();
     let existing_edge_id = equation_graph(&base).edges[0].id.clone();
     let mutation = EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: existing_edge_id, source: "a".into(), target: "d".into() });
-    protocol::os_spr::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn move_point_non_finite_fatal_never_applies() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::MovePoint(move_point::MovePoint { index: 0, x: f64::NAN, y: 0.0 });
-    protocol::os_spr::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -300,6 +300,6 @@ async fn change_coefficient_zero_denominator_fatal_never_applies() {
     let base = EquationSnapshot::default();
     let label = base.equation.expr.label;
     let mutation = EquationMutation::ChangeCoefficient(change_coefficient::ChangeCoefficient { label, numer: "1".into(), denom: "0".into() });
-    protocol::os_spr::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
 }
 //#endregion 🔖️OutcomeLaws

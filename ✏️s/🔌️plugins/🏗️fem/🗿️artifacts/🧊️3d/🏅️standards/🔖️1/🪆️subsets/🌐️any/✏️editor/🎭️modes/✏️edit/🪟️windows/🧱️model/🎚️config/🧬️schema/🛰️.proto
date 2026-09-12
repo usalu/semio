@@ -1,0 +1,6 @@
+syntax = "proto3";
+import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🛰️.proto";
+package semio.app.fem.fem3d.model_window_config;
+message Fem3dModelWindowConfig {
+  semio.framework.ui.viewport.Viewport3dOrbit camera = 1;
+}

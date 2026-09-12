@@ -1,0 +1,119 @@
+{
+  "expected": {
+    "id": "forms.form",
+    "component": "pack",
+    "version": 1
+  },
+  "cases": [
+    {
+      "name": "exact pack",
+      "envelope": {
+        "plugin": "forms",
+        "artifact": "form",
+        "component": "pack",
+        "version": 1
+      },
+      "matches": true
+    },
+    {
+      "name": "foreign plugin",
+      "envelope": {
+        "plugin": "dag",
+        "artifact": "form",
+        "component": "pack",
+        "version": 1
+      },
+      "matches": false
+    },
+    {
+      "name": "foreign artifact",
+      "envelope": {
+        "plugin": "forms",
+        "artifact": "other",
+        "component": "pack",
+        "version": 1
+      },
+      "matches": false
+    },
+    {
+      "name": "text component",
+      "envelope": {
+        "plugin": "forms",
+        "artifact": "form",
+        "component": "dsl",
+        "version": 1
+      },
+      "matches": false
+    },
+    {
+      "name": "operation component",
+      "envelope": {
+        "plugin": "forms",
+        "artifact": "form",
+        "component": "op",
+        "version": 1
+      },
+      "matches": false
+    },
+    {
+      "name": "command component",
+      "envelope": {
+        "plugin": "forms",
+        "artifact": "form",
+        "component": "cmd",
+        "version": 1
+      },
+      "matches": false
+    },
+    {
+      "name": "history component",
+      "envelope": {
+        "plugin": "forms",
+        "artifact": "form",
+        "component": "spr",
+        "version": 1
+      },
+      "matches": false
+    },
+    {
+      "name": "future version",
+      "envelope": {
+        "plugin": "forms",
+        "artifact": "form",
+        "component": "pack",
+        "version": 2
+      },
+      "matches": false
+    },
+    {
+      "name": "zero version",
+      "envelope": {
+        "plugin": "forms",
+        "artifact": "form",
+        "component": "pack",
+        "version": 0
+      },
+      "matches": false
+    },
+    {
+      "name": "plugin prefix",
+      "envelope": {
+        "plugin": "form",
+        "artifact": "s.form",
+        "component": "pack",
+        "version": 1
+      },
+      "matches": false
+    },
+    {
+      "name": "artifact suffix",
+      "envelope": {
+        "plugin": "forms",
+        "artifact": "form.more",
+        "component": "pack",
+        "version": 1
+      },
+      "matches": false
+    }
+  ]
+}

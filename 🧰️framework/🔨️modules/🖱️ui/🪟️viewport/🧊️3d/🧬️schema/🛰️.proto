@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.framework.ui.viewport;
+
+// 🪟️ Position and target contain exactly three finite values; up contains zero or three.
+// 🔎️ Zoom must be present, finite and positive.
+message Viewport3dOrbit {
+  repeated double position = 1;
+  repeated double target = 2;
+  optional double zoom = 3;
+  repeated double up = 4;
+}

@@ -12,7 +12,7 @@
 //! `semantic-ooxml-docx-transitional-v1` compares them. The subject half is `sut`-gated so the
 //! oracle-only run never compiles the local implementation.
 //!
-//! ⚖️ All three laws are asserted IN ROLE through the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law`
+//! ⚖️ All three laws are asserted IN ROLE through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
 //! module, under a profile that declares no writer freedom at all, and no kind is exempt from any
 //! of them. Only ONE kind — `remove-conformance-attribute` — needs an arranged pre-state, three
 //! fewer than the 📏️strict sibling, because a Transitional fixture already sits where this class

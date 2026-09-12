@@ -237,7 +237,7 @@ impl<P, M> Drop for PresenceStore<P, M> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️testkit/🧬️mutations/🦀️.rs"]
+#[path = "🧫️fixtures/🧬️mutations/🦀️.rs"]
 mod fixture_mutations;
 
 #[cfg(test)]

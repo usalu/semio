@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn direct_counter_leaf_contract() {
-    super::super::super::assert_counter_leaf_descriptor::<AddCounterTwice>(include_str!("../../🧪️testkit/🧬️mutation-laws/🧬️mutations/✌️add-counter-twice/🔣️.json"));
+    super::super::super::assert_counter_leaf_descriptor::<AddCounterTwice>(include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/✌️add-counter-twice/🔣️.json"));
 }
 #[test]
 fn plan_has_two_local_adds() {

@@ -5,7 +5,7 @@
 //! decode primitives plus the thin artifact-facing `encode`/`decode` wrappers and the pack↔dsl
 //! equivalence law.
 
-use crate::{DagFixtureEdge, DagNodeSpec, DagSnapshot, DAG_DOCUMENT_SCHEMA};
+use crate::{DagFixtureEdge, DagNodeSpec, DagSnapshot};
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -61,13 +61,17 @@ fn decode_dag_snapshot_binary(bytes: &[u8]) -> Result<DagSnapshot, String> {
     let nodes: Vec<DagNodeSpec> = dsl::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
     let edges: Vec<DagFixtureEdge> = dsl::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
     let content = crate::dag_content_child_with_owner(nodes, edges);
-    Ok(DagSnapshot { schema, content })
+    let snapshot = DagSnapshot { schema, content };
+    if reader.read_u8().is_ok() { return Err("trailing DAG snapshot bytes".into()); }
+    snapshot.validate()?;
+    Ok(snapshot)
 }
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔖️HandcraftedArtifactPack
 impl store::ArtifactPack for DagSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        self.validate().map_err(PackError::Schema)?;
         let _ = options;
         let raw = encode_dag_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
@@ -75,13 +79,11 @@ impl store::ArtifactPack for DagSnapshot {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let _ = options;
-        let mut snapshot = decode_dag_snapshot_binary(&inner).map_err(PackError::Schema)?;
-        snapshot.schema = DAG_DOCUMENT_SCHEMA.into();
-        Ok(snapshot)
+        decode_dag_snapshot_binary(&inner).map_err(PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactPack

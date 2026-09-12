@@ -29,7 +29,7 @@
 //! the second and third vectors of a kind, which cannot ride a `mutate-<kind>` id because the
 //! completeness gate reads that id as a claim about the KIND itself.
 //!
-//! @see ../../../../../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs — the shared law helpers.
+//! @see ../../../../../../../../../🗄️stdio/🔮️oracles/⚖️law/🦀️.rs — the shared law helpers.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
@@ -41,7 +41,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 /// implicit `🦀️component/` child directory.
 #[path = "."]
 mod shared {
-    #[path = "../../../../../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs"]
+    #[path = "../../../../../../../../../🗄️stdio/🔮️oracles/⚖️law/🦀️.rs"]
     pub mod law;
 }
 use shared::law;

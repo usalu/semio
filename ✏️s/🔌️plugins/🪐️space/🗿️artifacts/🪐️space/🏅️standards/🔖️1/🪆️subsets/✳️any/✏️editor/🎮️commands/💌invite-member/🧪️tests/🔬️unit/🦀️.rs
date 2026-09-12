@@ -1,11 +1,11 @@
 
 use super::*;
-use crate::editor::space_index::{SpaceIndexCommand, testkit};
+use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn invite_member_relays_upsert_member() {
-    let mut app = testkit::new_app().await;
-    let result = app.dispatch_typed(SpaceIndexCommand::InviteMember(InviteMember { email: "a@example.com".into(), role: "author".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("invite");
+    let mut app = artifact_app_laws::new_app().await;
+    let result = app.dispatch_typed(SpaceIndexCommand::InviteMember(InviteMember { email: "a@example.com".into(), role: "author".into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("invite");
     assert!(result.mutations.is_empty());
     assert_eq!(result.requested_effects.len(), 1);
     match &result.requested_effects[0] {

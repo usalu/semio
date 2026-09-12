@@ -1,7 +1,92 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    pub type Generation2dApp = VcsArtifactApp<EditorApp<Generation2dPlayApp>>;
+    
+    /// 🧪️ The ONE app fixture. This app publishes `bounded_first_step_tool_proofs!` factories, so the
+    /// registryless `context::new_app` cannot satisfy the framework's tool-proof catalog: `migrated_tool_ids`
+    /// reads an EMPTY `AppActionRegistry` while the generated catalog lists all 21 rows, and every bounded
+    /// proof is rejected with `interactive-job.catalog-authority` before the app is even constructed. Every
+    /// fixture therefore goes through the registry variant, exactly as the `🧊️generation3d` sibling does
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.3).
+    pub async fn app() -> Generation2dApp {
+        app_with_registry().await
+    }
+    
+    pub async fn app_with_registry() -> Generation2dApp {
+        let mut app = new_app_with_registry::<EditorApp<Generation2dPlayApp>>(generation2d_manifest_for_tests).await;
+        app.bind_instance_id(1).await;
+        app
+    }
+    
+    /// 📸️ `PluginApp::snapshot` hands back an OWNED projection whose `fixture.layout` is a live
+    /// `OrderedMap` root — the bundled 2d default document carries layout entries, so a bare
+    /// `app.snapshot().expect(..)` temporary panics on drop. Every read goes through this closing read.
+    pub fn snapshot_read(app: &Generation2dApp) -> crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead {
+        crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(app.snapshot().expect("Generation2d fixture app snapshot"))
+    }
+    
+    /// 🕹️ Dispatch AND settle. Every generation2d action is `InteractiveJobClassification::Migrated`, so
+    /// `dispatch_typed` only ENQUEUES a retained job — the document, config and transient lanes are
+    /// published when the host drives the ladder. `settle_registered_typed_operation` is that host loop.
+    pub async fn dispatch(app: &mut Generation2dApp, command: Generation2dCommand) -> InvocationResult {
+        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, 1).await.expect("Generation2d dispatched operation settles");
+        result
+    }
+    
+    /// 🧹️ Walks the fixture app to its terminal-empty ownership witness — a registered app owns an
+    /// `ArtifactStore` and a fixed owner registry, both of which reject a bare drop.
+    pub fn close(mut app: Generation2dApp) {
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    }
+    
+    pub async fn render(app: &mut Generation2dApp, body_key: &str) -> String {
+        render_with_view(app, body_key, &ViewModel::default()).await
+    }
+    
+    /// 🌍️ The localized twin of [`render`] — labels resolve off `ViewModel::locale`, so a translation
+    /// law has to hand the renderer the locale it is asserting.
+    pub async fn render_with_view(app: &mut Generation2dApp, body_key: &str, view_state: &ViewModel) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, view_state).await.expect("render")).expect("render json")
+    }
+    
+    /// ✏️ Adapts `create_generation2d_app`'s `AppDefinition` (contract §2.4) into the `App {
+    /// definition, examples }` shape `context::assert_declared_actions_bridge_to_commands` still
+    /// expects — framework test context gap, not modifiable here (`🧰️framework/**` is outside this
+    /// packet's lease).
+    pub fn generation2d_manifest_for_tests() -> App {
+        App { definition: create_generation2d_app(), examples: Vec::new() }
+    }
+    
+    /// 🧹️ `FlowEvalSession` rejects a live drop, so a test that owns one must walk it across the close
+    /// boundary itself — the same `begin_close` + granted `close_step` loop
+    /// `Generation2dInstanceOperationOwner::maintenance_step` runs in production.
+    pub fn retire_flow_eval_session(mut session: FlowEvalSession) {
+        close_flow_session(&mut session);
+    }
+    
+    /// 📜️ The empty `HistoryView` a command-handler unit test hands `ArtifactView::new` — built here once
+    /// because `HistoryView` (`🧰️framework/…/🔌️plugin/🦀️.rs`) derives no `Default`.
+    pub fn empty_history_view() -> semio_framework_plugin::HistoryView {
+        semio_framework_plugin::HistoryView {
+            columns: Vec::new(),
+            can_undo: false,
+            can_redo: false,
+            active_alternative_id: None,
+            current_checkpoint_id: None,
+            commands: Vec::new(),
+            command_filter: semio_framework_plugin::app::HistoryCommandFilter::default(),
+        }
+    }
+}
+
 use super::*;
-use crate::editor::generation2d::testkit::{app, app_with_registry, close, snapshot_read};
+use crate::editor::generation2d::unit_tests::context::{app, app_with_registry, close, snapshot_read};
 use semio_framework_artifact_flow_flow::Widget;
-use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
+use semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip;
 use semio_framework_plugin::PluginApp;
 
 fn production_initial_snapshot(label: &str) -> Generation2dSnapshot {
@@ -231,7 +316,7 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
 
 async fn drive_preview_operation(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>) -> Result<(u64, u64, u64), String> {
     use semio_framework_plugin::app::TypedOperationResultLane;
-    let receipt = semio_framework_plugin::testkit::settle_registered_typed_operation(app, 1).await.map_err(|error| format!("{error:?}"))?;
+    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, 1).await.map_err(|error| format!("{error:?}"))?;
     let count = |wanted: TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count() as u64;
     Ok((count(TypedOperationResultLane::Artifact), count(TypedOperationResultLane::Config), count(TypedOperationResultLane::Transient)))
 }
@@ -242,7 +327,7 @@ async fn generation_preview_is_one_app_transient_shared_by_two_generation_window
     let result: Result<(), String> = async {
         let before_document = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(app.snapshot().map_err(|error| format!("{error:?}"))?);
         let before_generation = app.ephemeral_snapshot().await.transient_generation;
-        app.dispatch_typed(Generation2dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_framework_plugin::testkit::meta("preview-owner")).await.map_err(|error| format!("{error:?}"))?;
+        app.dispatch_typed(Generation2dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_framework_plugin::artifact_app_laws::meta("preview-owner")).await.map_err(|error| format!("{error:?}"))?;
         if drive_preview_operation(&mut app).await? != (1, 1, 1) {
             return Err("preview command did not publish artifact, selection config, and app transient exactly once".into());
         }
@@ -263,7 +348,7 @@ async fn generation_preview_is_one_app_transient_shared_by_two_generation_window
         for window_id in ["preview-a", "preview-b"] {
             let context = view.for_window_instance(window_id).ok_or("missing generation preview window")?;
             let tree = app.render(generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW, None, &context).await.map_err(|error| format!("{error:?}"))?;
-            rendered.push(semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?);
+            rendered.push(semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?);
         }
         if rendered[0] != rendered[1] {
             return Err("generation windows did not consume the same app-transient preview".into());
@@ -346,7 +431,7 @@ pub(super) fn every_command() -> Vec<Generation2dCommand> {
         Generation2dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "g1".into() }),
         Generation2dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "g1".into(), name: "Copy".into() }),
         Generation2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: dsl::DslValue::float(5.0) }),
-        Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: "{}".into() }),
+        Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d::default() }),
         Generation2dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wire".into() }),
         Generation2dCommand::Generate(enter_generate::Generate {}),
         Generation2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs { outputs_json: "{}".into() }),
@@ -388,7 +473,7 @@ fn the_manifest_stitches_every_taxonomy_node() {
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn declared_actions_bridge_to_commands() {
-    semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Generation2dPlayApp>>(testkit::generation2d_manifest_for_testkit).await;
+    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Generation2dPlayApp>>(context::generation2d_manifest_for_tests).await;
 }
 
 /// 🧩️ `addWidget` is a MIGRATED interactive job now, so `dispatch_typed` only ENQUEUES it — the
@@ -399,7 +484,7 @@ async fn add_widget_materializes_declared_kind_default_into_an_operation() {
     let mut app = app_with_registry().await;
     let result: Result<(usize, usize), String> = async {
         let before = snapshot_read(&app).fixture.widgets.len();
-        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local"))
+        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::artifact_app_laws::meta("local"))
             .await
             .map_err(|error| format!("{error:?}"))?;
         let (artifact, _, _) = drive_preview_operation(&mut app).await?;
@@ -432,9 +517,9 @@ async fn two_instances_converge_disjoint_widget_moves() {
     // 🧹️ The REGISTERED pair, never `assert_two_instances_converge` — this app publishes
     // `bounded_first_step_tool_proofs!`, so a registryless instance faults with
     // `interactive-job.catalog-authority` and its unwind aborts the binary.
-    semio_framework_plugin::testkit::assert_two_registered_instances_converge::<EditorApp<Generation2dPlayApp>, (Option<f64>, Option<f64>), _, _>(
+    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<Generation2dPlayApp>, (Option<f64>, Option<f64>), _, _>(
         "mem://generation2d-convergence",
-        || async { crate::editor::generation2d::testkit::generation2d_manifest_for_testkit() },
+        || async { crate::editor::generation2d::unit_tests::context::generation2d_manifest_for_tests() },
         Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w0.clone(), x: 111.0, y: 5.0 }),
         Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w1.clone(), x: 222.0, y: 6.0 }),
         move |app| {
@@ -447,7 +532,7 @@ async fn two_instances_converge_disjoint_widget_moves() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-    use crate::editor::generation2d::testkit::render;
+    use crate::editor::generation2d::unit_tests::context::render;
     let mut app = app().await;
     let rendered = render(&mut app, "generation2d.play.nope").await;
     close(app);
@@ -476,7 +561,7 @@ const GENERATION2D_BODY_KEYS: [&str; 8] = [
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
 #[semio_framework_async_macros::async_test]
 async fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
-    use crate::editor::generation2d::testkit::render;
+    use crate::editor::generation2d::unit_tests::context::render;
     let bound = semio_framework_ui_contract::UI_RESIDENT_SURFACE_BYTES;
     let mut app = app_with_registry().await;
     for body_key in GENERATION2D_BODY_KEYS {
@@ -528,7 +613,7 @@ async fn export_document_out_returns_flow_media() {
 #[semio_framework_async_macros::async_test]
 async fn import_params_in_patches_matching_input_slider() {
     let mut app = app().await;
-    crate::editor::generation2d::testkit::dispatch(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None })).await;
+    crate::editor::generation2d::unit_tests::context::dispatch(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None })).await;
     let slider_id = snapshot_read(&app)
         .fixture
         .widgets
@@ -542,7 +627,7 @@ async fn import_params_in_patches_matching_input_slider() {
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ slider_id.clone(): 42.0 }).to_string() },
     };
-    app.import_media("params:in", media, &semio_framework_plugin::testkit::meta("local")).await.expect("import params");
+    app.import_media("params:in", media, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("import params");
     let value = snapshot_read(&app).fixture.widgets.iter().find_map(|widget| match widget {
         Widget::InputSlider { id, value, .. } if id == &slider_id => Some(*value),
         _ => None,
@@ -574,7 +659,7 @@ async fn import_media_fails_closed_off_its_own_params_in_contract() {
     ] {
         let mut app = app().await;
         let before = snapshot_read(&app).fixture.widgets.len();
-        let rejected = app.import_media(port, media, &semio_framework_plugin::testkit::meta("local")).await;
+        let rejected = app.import_media(port, media, &semio_framework_plugin::artifact_app_laws::meta("local")).await;
         let after = snapshot_read(&app).fixture.widgets.len();
         close(app);
         assert!(rejected.is_err(), "generation2d import must reject '{port}' instead of publishing");
@@ -592,7 +677,7 @@ async fn import_params_skips_unmatched_keys_and_non_numeric_values() {
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ "no-such-widget": 1.0, "another": "text" }).to_string() },
     };
-    app.import_media("params:in", media, &semio_framework_plugin::testkit::meta("local")).await.expect("import params");
+    app.import_media("params:in", media, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("import params");
     let after: Vec<String> = snapshot_read(&app).fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
     close(app);
     assert_eq!(after, before);
@@ -645,11 +730,11 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
     assert_eq!(windows.len(), 5, "generation2d declares five window kinds");
     let mut app = app_with_registry().await;
     for _ in 0..2 {
-        crate::editor::generation2d::testkit::dispatch(&mut app, Generation2dCommand::AddGeneration(add_generation::AddGeneration {})).await;
+        crate::editor::generation2d::unit_tests::context::dispatch(&mut app, Generation2dCommand::AddGeneration(add_generation::AddGeneration {})).await;
     }
     let mut emitted: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> = Default::default();
     for (kind_id, body_key, _) in &windows {
-        let projection = crate::editor::generation2d::testkit::render(&mut app, body_key).await;
+        let projection = crate::editor::generation2d::unit_tests::context::render(&mut app, body_key).await;
         emitted.insert(kind_id.clone(), crate::emitted_action_ids(&projection));
     }
     close(app);

@@ -1534,8 +1534,8 @@
         },
         "publicationContracts": {
           "type": "array",
-          "minItems": 42,
-          "maxItems": 42,
+          "minItems": 40,
+          "maxItems": 40,
           "items": {
             "type": "object",
             "required": [
@@ -1553,9 +1553,9 @@
                 "maxItems": 1,
                 "items": {
                   "enum": [
-                    "host-only",
-                    "artifact",
-                    "config"
+                    "HostOnly",
+                    "Artifact",
+                    "Config"
                   ]
                 }
               }
@@ -1566,12 +1566,12 @@
         "routes": {
           "allOf": [
             {
-              "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes"
+              "$ref": "https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutes"
             },
             {
               "type": "array",
-              "minItems": 42,
-              "maxItems": 42,
+              "minItems": 40,
+              "maxItems": 40,
               "items": {
                 "type": "object",
                 "required": [
@@ -1629,10 +1629,10 @@
               ],
               "properties": {
                 "routes": {
-                  "const": 42
+                "const": 40
                 },
                 "bounded": {
-                  "const": 42
+                "const": 40
                 },
                 "resumable": {
                   "const": 0

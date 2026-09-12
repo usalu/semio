@@ -3,9 +3,9 @@
   "id": "site-survey",
   "version": "1",
   "structure": {
-    "childId": "forms-scene-change-form-title-untitled",
+    "childId": "forms-value-change-form-title-untitled",
     "target": {
-      "artifactId": "forms-value",
+      "artifactId": "forms-value-change-form-title-untitled",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -14,9 +14,9 @@
     }
   },
   "results": {
-    "childId": "forms-scene-change-form-title-untitled",
+    "childId": "forms-table-change-form-title-untitled",
     "target": {
-      "artifactId": "forms-table",
+      "artifactId": "forms-table-change-form-title-untitled",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

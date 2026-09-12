@@ -1,8 +1,8 @@
 use super::*;
-use crate::editor::animate::testkit::{presentation_app, render as render_body};
+use crate::editor::animate::unit_tests::context::{presentation_app, render as render_body};
 use crate::editor::animate::PresentationCommand;
 use dsl::os_pack::json::Value;
-use semio_framework_plugin::testkit::meta;
+use semio_framework_plugin::artifact_app_laws::meta;
 
 #[semio_framework_async_macros::async_test]
 async fn renders_canvas_2d_scene() {

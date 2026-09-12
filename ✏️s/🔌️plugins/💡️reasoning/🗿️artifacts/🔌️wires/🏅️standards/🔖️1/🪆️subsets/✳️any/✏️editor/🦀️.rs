@@ -178,7 +178,7 @@ fn wires_retained_extent(command: &WiresCommand, _snapshot: &WiresSnapshot, _int
         WiresCommand::CanvasPointerUp(_) => Some(WIRES_RETAINED_WORK_ITEMS),
         WiresCommand::CanvasPointerDown(payload) if payload.id.as_ref().is_none_or(|id| id.len() <= 1_024) && payload.x.is_finite() && payload.y.is_finite() => Some(WIRES_RETAINED_WORK_ITEMS),
         WiresCommand::CanvasPointerMove(payload) if payload.x.is_finite() && payload.y.is_finite() => Some(1),
-        WiresCommand::NodeGraphViewport(payload) if payload.camera.x.is_finite() && payload.camera.y.is_finite() && payload.camera.zoom.is_finite() && payload.camera.zoom > 0.0 => Some(1),
+        WiresCommand::NodeGraphViewport(payload) if payload.viewport.validate().is_ok() => Some(1),
         _ => None,
     }
 }
@@ -340,7 +340,9 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
                 let window = input.context.and_then(|context| context.window_config.as_ref()).ok_or_else(|| Fault::from("wires-viewport-requires-window"))?;
                 let mutation = semio_framework_plugin::WindowConfigMutation::of::<edit::windows::canvas::config::WiresCanvasWindowConfigOwner>(
                     window.window_id(),
-                    edit::windows::canvas::config::WiresCanvasWindowConfigMutation::SetCamera(edit::windows::canvas::config::SetCamera { camera: payload.camera.clone() }),
+                    edit::windows::canvas::config::WiresCanvasWindowConfigMutation::SetCamera(edit::windows::canvas::config::SetCamera {
+                        camera: edit::windows::canvas::config::WiresCanvasCamera { x: payload.viewport.x, y: payload.viewport.y, zoom: payload.viewport.zoom },
+                    }),
                 );
                 self.consumed = true;
                 Ok(ArtifactCommandWorkStep::Complete(Emit { window_config_mutations: vec![mutation], ..Default::default() }))
@@ -425,7 +427,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::MINDMAP_WIRES_SCHEMA;
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::schema::retirement::document_store_owners())
     }
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -435,13 +437,13 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         Some(retained::factory())
     }
 
-    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::no_config_store_owners())
     }
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::no_config_store_disposer())
     }
-    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
         Some(semio_framework_plugin::no_draft_store_owners())
     }
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
@@ -553,7 +555,9 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
                 let view = view_state.ok_or_else(|| Fault::from("wires-canvas-window-context-required"))?;
                 let mut emit = Emit::default();
                 emit.window_config_mutations
-                    .push(edit::windows::canvas::config::addressed(view, edit::windows::canvas::config::WiresCanvasWindowConfigMutation::SetCamera(edit::windows::canvas::config::SetCamera { camera: payload.camera.clone() }))?);
+                    .push(edit::windows::canvas::config::addressed(view, edit::windows::canvas::config::WiresCanvasWindowConfigMutation::SetCamera(edit::windows::canvas::config::SetCamera {
+                        camera: edit::windows::canvas::config::WiresCanvasCamera { x: payload.viewport.x, y: payload.viewport.y, zoom: payload.viewport.zoom },
+                    }))?);
                 Ok(emit)
             }
             _ => command.dispatch(doc, cfg),
@@ -681,16 +685,10 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
 /// able to drive the whole app without re-deriving the harness.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
-#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests

@@ -42,12 +42,12 @@ import {
   windowMeasureTreeGroupLabelClass,
   windowMeasureTreeLeafLabelClass,
   windowPaneChromeToggleClass,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
+} from "../../🎯️targets/⚛️react/🟦️";
 import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation, useControlAccessibleLabel, useControlInlineText, useControlTooltipText } from "../🏷️Label/🟦️.tsx";
 import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
-import { usePanelGhost, useUiDriverDragSurface, TREE_SECTION_REORDER_MIME, interactionMergeFromModifiers } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
+import { usePanelGhost, useUiDriverDragSurface, TREE_SECTION_REORDER_MIME, interactionMergeFromModifiers } from "../../🎯️targets/⚛️react/🟦️";
 import { Icon, renderControlIcon, type ControlIcon, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, DocumentIcon, FolderIcon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 import { ContextMenu, type ContextMenuItem } from "../🖱️ContextMenu/🟦️.tsx";
@@ -612,6 +612,10 @@ export interface TreeCheckboxProps {
   title?: UiLabel;
   disabled?: boolean;
   ariaLabel?: string;
+  /** @emoji 🕰️ The value the state's AUTHORITY last published, when `checked` may still be an optimistic
+   * draft — stamped as `data-published-value` so a reader outside React can tell a pending draft from a
+   * landed change. See `WindowMeasureToggle`. */
+  publishedValue?: string;
 }
 
 /**
@@ -625,11 +629,12 @@ export interface TreeCheckboxProps {
  *
  * @see https://html.spec.whatwg.org/multipage/input.html#checkbox-state-(type=checkbox)
  */
-export const TreeCheckbox: React.FC<TreeCheckboxProps> = ({ id, checked, onCheckedChange, title, disabled, ariaLabel }) => (
+export const TreeCheckbox: React.FC<TreeCheckboxProps> = ({ id, checked, onCheckedChange, title, disabled, ariaLabel, publishedValue }) => (
   <label data-slot="tree-action-checkbox-wrapper" className="inline-flex h-medium min-w-tiny flex-shrink-0 cursor-pointer items-center justify-center" title={title} onClick={(event) => event.stopPropagation()}>
     <input
       data-slot="tree-action-checkbox"
       id={id}
+      data-published-value={publishedValue}
       type="checkbox"
       className="m-0 size-tiny cursor-pointer accent-foreground"
       aria-label={ariaLabel ?? title ?? id}

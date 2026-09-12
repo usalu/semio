@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv, { type ValidateFunction } from "ajv";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { runNestedCargoPackageAdapter } from "../../../../../📜️script.ts";
+import { runNestedCargoPackageAdapter } from "../../../🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
 
 //#region 🧬️OwnedSchemaExports
 const OS_MODULE_SCHEMAS = {
@@ -1243,7 +1243,7 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     assert(!artifactSchedule.includes("scheduled.compare_exchange"));
     const graph = readFileSync(join(owner, "..", "..", "🕸️version-graph", "🦀️.rs"), "utf8");
     assert(graph.includes("fn emit(&self, event: EmitEvent) -> impl Future<Output = ()> + Send;"));
-    const hub = readFileSync(join(this.repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+    const hub = readFileSync(join(this.repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
     const ensure = hub.slice(hub.indexOf("async fn ensure_document(&self"), hub.indexOf("fn bearer("));
     assert(ensure.includes("self.db.ensure_document(id).await") && ensure.includes("rejected.retry_close().await"));
     assert(!ensure.includes("self.db.create_document") && !ensure.includes("self.db.document(id)"));
@@ -1578,7 +1578,7 @@ class WalRecoveryCheckScript extends BundleScript {
       "db_wal::retained_tests::artifact_wal_append_error_is_fail_stop_until_reopen",
       "db_wal::retained_tests::artifact_wal_sync_error_is_fail_stop_until_reopen",
       "db_wal::retained_tests::artifact_wal_successor_failure_after_seal_is_fail_stop_until_reopen",
-      "db_testkit::tests::fault_storage_fail_nth_sync_fails_once_after_the_preceding_append",
+      "db_fault_testing::tests::fault_storage_fail_nth_sync_fails_once_after_the_preceding_append",
     ];
     laws.push(
       ...[
@@ -1592,8 +1592,8 @@ class WalRecoveryCheckScript extends BundleScript {
         "empty_document_open_creates_a_fresh_wal",
       ].map((law) => `db_wal::tests::${law}`),
     );
-    const testkitSource = readFileSync(join(owner, "../🧪️testkit/🦀️.rs"), "utf8");
-    for (const law of laws) assert((law.startsWith("db_testkit::") ? testkitSource : source).includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
+    const faultStorageLawsSource = readFileSync(join(owner, "../🧪️tests/🧯️fault-storage-laws/🦀️.rs"), "utf8");
+    for (const law of laws) assert((law.startsWith("db_fault_testing::") ? faultStorageLawsSource : source).includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
@@ -1768,7 +1768,7 @@ export async function directorySessionAuthorityOracle(repoRoot: string): Promise
   }
   const rust = readFileSync(join(root, "🦀️.rs"), "utf8");
   const client = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
-  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const hub = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   assert(rust.includes("pub struct DirectorySessionAuthorityV1") && rust.includes("parse_canonical_json"), "Rust session authority contract missing");
   assert(client.includes("DirectorySessionAuthorityV1::parse_canonical_json") && client.includes("DIRECTORY_SESSION_AUTHORITY_MAX_BYTES"), "Rust client does not enforce canonical session authority");
   assert(hub.includes("directory_event_page_session_binding_v1(&caller)") && hub.includes("Json<DirectorySessionAuthorityV1>"), "Hub session response is not bound to the existing session digest");
@@ -1934,7 +1934,7 @@ export function directoryEventPageBootstrapOracle(repoRoot: string): number {
   assert.throws(() => acknowledge(trace.pages[1], trace.bootstrapEpoch + 1), undefined, "stale epoch");
   assert.equal(acknowledge(trace.pages[1]), "live");
   for (const wakeup of trace.wakeups) assert(wakeup > cursor && cursor === trace.expectedSocketSince);
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
   assert(worker.includes("DirectoryEventPageBootstrapV1") && worker.includes("directory-bootstrap-ack") && worker.includes("directory-event-page"), "browser worker bootstrap owner missing");
   return 11;
 }
@@ -1953,7 +1953,7 @@ export function walSegmentStateOracle(repoRoot: string): number {
   const sqlite = readFileSync(join(storageRoot, "🗄️storage/🪶️sqlite/🦀️.rs"), "utf8");
   const postgres = readFileSync(join(storageRoot, "🗄️storage/🐘️postgres/🦀️.rs"), "utf8");
   const neo4j = readFileSync(join(storageRoot, "🗄️storage/🌐️neo4j/🦀️.rs"), "utf8");
-  const testkit = readFileSync(join(storageRoot, "🧪️testkit/🦀️.rs"), "utf8");
+  const faultStorage = readFileSync(join(storageRoot, "🧪️tests/🧯️fault-storage/🦀️.rs"), "utf8");
   assert(core.includes("pub enum WalSegmentState") && core.includes("Active,") && core.includes("Sealed,"));
   assert(core.includes("async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError>"));
   assert(core.includes("WalState { backend: DbIoBackendControl") && core.includes("WalSegmentState(WalSegmentState)"));
@@ -1961,7 +1961,8 @@ export function walSegmentStateOracle(repoRoot: string): number {
   assert(sqlite.includes("SELECT sealed FROM wal_segment") && sqlite.includes("Err(DbError::Corrupt") && sqlite.includes("DbIoTask::WalState"));
   assert(postgres.includes("POSTGRES_WAL_STATE_QUERY") && postgres.includes("fetch_optional") && !postgres.slice(postgres.indexOf("const POSTGRES_WAL_STATE_QUERY"), postgres.indexOf("const POSTGRES_WAL_STATE_QUERY") + 240).includes("FOR UPDATE"));
   assert(neo4j.includes("const CYPHER_WAL_STATE") && neo4j.includes("RETURN n.sealed AS sealed") && !neo4j.slice(neo4j.indexOf("const CYPHER_WAL_STATE"), neo4j.indexOf("const CYPHER_WAL_STATE") + 240).includes("bytes"));
-  assert(testkit.includes("async fn segment_state") && testkit.includes("fault_storage_segment_state_is_observational_and_counter_neutral"));
+  const faultStorageLaws = readFileSync(join(storageRoot, "🧪️tests/🧯️fault-storage-laws/🦀️.rs"), "utf8");
+  assert(faultStorage.includes("async fn segment_state") && faultStorageLaws.includes("fault_storage_segment_state_is_observational_and_counter_neutral"));
   return 12;
 }
 

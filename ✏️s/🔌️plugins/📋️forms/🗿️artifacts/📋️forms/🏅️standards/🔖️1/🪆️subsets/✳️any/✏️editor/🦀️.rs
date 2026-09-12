@@ -26,7 +26,7 @@ use crate::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FOR
 use dsl::os_pack::json::{object, Object, Value};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
     ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, IconName, InteractionDefinition, InteractionRef,
@@ -138,8 +138,8 @@ fn forms_fields_topology(spec: &FormsSnapshot) -> DomainTopology {
 
 //#region 🔖️Values
 /// 🔠️ Materializes the independently stored answer leaves for rendering and validation.
-pub fn try_values_map(config: &FormsConfig) -> Object {
-    config
+pub fn try_values_map(transient: &try_window::transient::FormsTryWindowTransient) -> Object {
+    transient
         .try_values
         .iter_chunks()
         .into_iter()
@@ -153,15 +153,8 @@ pub fn try_values_map(config: &FormsConfig) -> Object {
         .collect()
 }
 
-pub fn effective_try_values(spec: &FormsSnapshot, config: &FormsConfig) -> Object {
-    crate::schema::initial_try_values(spec, &try_values_map(config))
-}
-
-/// 🌱️ Building block for every `handle()` arm that must both clear the Try wizard's answers and reset its
-/// active step — was `reset_try_runtime`'s effect on the old `FormsPlayRuntime`, now two config operations
-/// instead of two field writes.
-pub fn reset_try_config_mutations() -> Vec<FormsConfigMutation> {
-    vec![FormsConfigMutation::ClearTryValues(crate::editor::forms::config::ClearTryValues {}), FormsConfigMutation::SetStepIndex(crate::editor::forms::config::SetStepIndex { index: 0 })]
+pub fn effective_try_values(spec: &FormsSnapshot, transient: &try_window::transient::FormsTryWindowTransient) -> Object {
+    crate::schema::initial_try_values(spec, &try_values_map(transient))
 }
 
 /// 🔠️ Parses a command's JSON-blob payload field (`value_json`/`values_json`/…), falling back to
@@ -411,28 +404,120 @@ fn forms_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(FORMS_RETAINED_RAW_BYTES, 64, 64, 4_096, 7_500)
 }
 
-#[expect(clippy::unnecessary_wraps, reason = "BoundedArtifactCommandWork requires an optional extent callback")]
-fn forms_bounded_extent(_command: &FormsCommand, _snapshot: &FormsSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    Some(1)
+struct FormsWindowCommandWork {
+    tool_id: &'static str,
+    completed: bool,
 }
 
-#[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
-fn forms_retained_reduce(
-    command: &FormsCommand,
-    snapshot: &FormsSnapshot,
-    config: &FormsConfig,
-    history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<FormsPlayApp>>>,
-    operation: &AppOperationContext,
-) -> Result<Emit<FormMutation, FormsConfigMutation, NoDraftMutation>, Fault> {
-    if !FORMS_RETAINED_TOOL_IDS.contains(&command.command_id()) {
-        return Err(Fault::from("forms-command-retained-route-rejected"));
+impl FormsWindowCommandWork {
+    fn new(tool_id: &'static str) -> Self { Self { tool_id, completed: false } }
+}
+
+fn forms_try_view<'a>(view: &'a semio_framework_plugin::ViewModel, window_id: &str, window_kind_id: &str) -> Result<&'a semio_framework_plugin::ViewModel, Fault> {
+    if view.window_id.as_deref() != Some(window_id)
+        || window_kind_id != try_window::FORMS_PLAY_WINDOW_TRY
+        || !view.window_instances.iter().any(|window| window.id == window_id && window.window_kind_id == window_kind_id)
+    {
+        return Err(Fault::from("forms-try-window-route-stale"));
     }
-    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let cfg = ConfigView { snapshot: config, window: None };
-    command.dispatch(&doc, &cfg)
+    Ok(view)
+}
+
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<FormsPlayApp>> for FormsWindowCommandWork {
+    fn tool_id(&self) -> &'static str { self.tool_id }
+
+    fn extent(
+        &self,
+        command: &FormsCommand,
+        _snapshot: &FormsSnapshot,
+        _interaction: &protocol::InteractionState,
+        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<FormsPlayApp>>>,
+    ) -> Option<usize> {
+        if self.completed || command.command_id() != self.tool_id { return None; }
+        match command {
+            FormsCommand::SetTryValue(_)
+            | FormsCommand::SetTryValues(_)
+            | FormsCommand::SetTryValueStep(_)
+            | FormsCommand::ResetTry(_)
+            | FormsCommand::PreviousStep(_)
+            | FormsCommand::NextStep(_)
+            | FormsCommand::Submit(_) => context?.view_state.as_ref().map(|_| 1),
+            _ => Some(1),
+        }
+    }
+
+    fn step(
+        &mut self,
+        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<FormsPlayApp>>,
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<FormsPlayApp>>, Fault> {
+        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        if self.completed || input.command.command_id() != self.tool_id { return Err(Fault::from("forms-window-work-terminal")); }
+        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
+        let mut emit = Emit::default();
+        let mut transient = None;
+        match input.command {
+            FormsCommand::SetTryValue(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
+                let output = set_try_value::start_window(payload, input.operation, &try_window::transient::from_snapshot(context.window_transient.as_ref()), &lease)?;
+                emit = output.emit;
+                transient = output.transient.map(|state| try_window::transient::addressed(view, state)).transpose()?;
+            }
+            FormsCommand::SetTryValues(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
+                let output = set_try_values::start_window(payload, input.operation, &try_window::transient::from_snapshot(context.window_transient.as_ref()), &lease)?;
+                emit = output.emit;
+                transient = output.transient.map(|state| try_window::transient::addressed(view, state)).transpose()?;
+            }
+            FormsCommand::SetTryValueStep(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
+                let output = set_try_value::advance_window(payload, input.operation, &try_window::transient::from_snapshot(context.window_transient.as_ref()), &lease)?;
+                emit = output.emit;
+                transient = output.transient.map(|state| try_window::transient::addressed(view, state)).transpose()?;
+            }
+            FormsCommand::ResetTry(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
+                let (output, config) = reset_try::handle_window(payload, input.operation, &lease)?;
+                emit = output.emit;
+                emit.window_config_mutations.push(try_window::config::addressed(view, config)?);
+                transient = output.transient.map(|state| try_window::transient::addressed(view, state)).transpose()?;
+            }
+            FormsCommand::PreviousStep(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let next = previous_step::handle_window(payload, &try_window::config::from_snapshot(context.window_config.as_ref()))?;
+                emit.window_config_mutations.push(try_window::config::addressed(view, next)?);
+            }
+            FormsCommand::NextStep(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let next = next_step::handle_window(payload, input.snapshot, &try_window::config::from_snapshot(context.window_config.as_ref()), &try_window::transient::from_snapshot(context.window_transient.as_ref()))?;
+                emit.window_config_mutations.push(try_window::config::addressed(view, next)?);
+            }
+            FormsCommand::Submit(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                emit = input.command.dispatch(&doc, &cfg)?;
+            }
+            _ => emit = input.command.dispatch(&doc, &cfg)?,
+        }
+        self.completed = true;
+        match transient {
+            Some(mutation) => Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
+                emit,
+                ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] },
+            }),
+            None => Ok(ArtifactCommandWorkStep::Complete(emit)),
+        }
+    }
 }
 
 struct FormsBoundedCommandJobFactory {
@@ -488,33 +573,33 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommand
     const TOOL_IDS: &'static [&'static str] = FORMS_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
-        ArtifactToolPublicationContract { tool_id: "setTryValue", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setTryValues", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "resetTry", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "previousStep", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "nextStep", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setTryValue", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "setTryValues", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "resetTry", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "previousStep", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "nextStep", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "submit", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "patchStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "updateForm", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "addQuestion", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "removeQuestion", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "patchQuestions", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "addQuestion", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "removeQuestion", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchQuestions", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "patchQuestionOptions", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "addQuestionOption", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "removeQuestionOption", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "patchVectorField", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "addVectorField", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "removeVectorField", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "moveQuestion", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "dropQuestionKind", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setSpecJson", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "moveQuestion", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "dropQuestionKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setSpecJson", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "exportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "setTryValueStep", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setTryValueStep", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
     ];
 }
 //#endregion 🧵️RetainedCommands
@@ -557,7 +642,7 @@ fn admit_forms_store_mutation<M: protocol::OpBinary>(mutation: &M) -> Result<sto
     if retained_bytes > FORMS_STORE_MUTATION_MAXIMUM_BYTES {
         return Err("forms-store-mutation-envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes))
 }
 
 fn prepare_forms_store_mutation<P, M>(base: &P, mutation: M) -> Result<(P, Vec<M>, M), String>
@@ -738,6 +823,72 @@ impl ArtifactEditor for FormsPlayApp {
         Some(std::sync::Arc::new(FormsStorePreparationFactory::<FormsConfig, FormsConfigMutation>::new("forms-config-retained")))
     }
 
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        try_window::config::register(registry)
+    }
+
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        try_window::transient::register(registry)
+    }
+
+    fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
+        let target = match command {
+            FormsCommand::SetTryValue(payload) => (&payload.window_id, &payload.window_kind_id),
+            FormsCommand::SetTryValues(payload) => (&payload.window_id, &payload.window_kind_id),
+            FormsCommand::SetTryValueStep(payload) => (&payload.window_id, &payload.window_kind_id),
+            FormsCommand::ResetTry(payload) => (&payload.window_id, &payload.window_kind_id),
+            FormsCommand::PreviousStep(payload) => (&payload.window_id, &payload.window_kind_id),
+            FormsCommand::NextStep(payload) => (&payload.window_id, &payload.window_kind_id),
+            FormsCommand::Submit(payload) => (&payload.window_id, &payload.window_kind_id),
+            _ => return None,
+        };
+        (!target.0.is_empty() && target.1 == try_window::FORMS_PLAY_WINDOW_TRY).then_some((target.0.as_str(), try_window::FORMS_PLAY_WINDOW_TRY))
+    }
+
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(FormsBoundedCommandJobFactory::new(&controller))
@@ -751,7 +902,7 @@ impl ArtifactEditor for FormsPlayApp {
             return Err(Fault::from("forms-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, forms_retained_reduce, forms_bounded_extent));
+        let work = Box::new(FormsWindowCommandWork::new(tool_id));
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -840,11 +991,24 @@ impl ArtifactEditor for FormsPlayApp {
         doc: &ArtifactView<'_, FormsSnapshot>,
         cfg: &ConfigView<'_, FormsConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+        match (command, view_state) {
+            (FormsCommand::PreviousStep(payload), Some(view)) => {
+                forms_try_view(view, &payload.window_id, &payload.window_kind_id)?;
+                let mut emit = Emit::default();
+                emit.window_config_mutations.push(try_window::config::addressed(view, previous_step::handle_window(payload, &try_window::config::current(cfg))?)?);
+                Ok(emit)
+            }
+            (FormsCommand::NextStep(_), _)
+            | (FormsCommand::SetTryValue(_), _)
+            | (FormsCommand::SetTryValues(_), _)
+            | (FormsCommand::SetTryValueStep(_), _)
+            | (FormsCommand::ResetTry(_), _) => Err(Fault::from("forms-try-window-retained-context-required")),
+            _ => command.dispatch(doc, cfg),
+        }
     }
 
     /// 🕹️ `fields` domain: `HierarchyProvider::Topology` from the document's own step/question nesting —
@@ -860,8 +1024,8 @@ impl ArtifactEditor for FormsPlayApp {
     /// exactly (overriding `export_media` for `dictionary:out` forfeits the default's dispatch);
     /// `dictionary:out` re-exports the form's currently-configured default field values as a
     /// `form.dictionary` JSON object keyed by question id — no `cfg` parameter reaches this method, so
-    /// this is the form's authored defaults, not a live in-progress Try-wizard session (that lives in
-    /// `Self::Config`).
+    /// this is the form's authored defaults, not a live in-progress Try-wizard session (which lives
+    /// in the exact Try window config and transient owners).
     fn export_media(port: &str, doc: &ArtifactView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "document:out" => {
@@ -887,7 +1051,30 @@ impl ArtifactEditor for FormsPlayApp {
         let labels = forms_play_labels(view_state);
         let node = match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, labels),
-            FORMS_PLAY_BODY_TRY => try_window::render(spec, config, labels),
+            FORMS_PLAY_BODY_TRY => try_window::render(spec, config, &try_window::config::current(cfg), &try_window::transient::FormsTryWindowTransient::default(), labels, view_state),
+            FORMS_PLAY_BODY_DOCUMENT => document_panel::render(spec, labels),
+            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, labels),
+            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec),
+            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
+    }
+
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, FormsSnapshot>,
+        cfg: &ConfigView<'_, FormsConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        _interaction: &InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let spec = doc.snapshot;
+        let config = cfg.snapshot;
+        let labels = forms_play_labels(view_state);
+        let node = match body_key {
+            FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, labels),
+            FORMS_PLAY_BODY_TRY => try_window::render(spec, config, &try_window::config::current(cfg), &try_window::transient::current(transient), labels, view_state),
             FORMS_PLAY_BODY_DOCUMENT => document_panel::render(spec, labels),
             FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, labels),
             FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec),
@@ -950,7 +1137,6 @@ pub fn create_forms_app() -> AppDefinition {
             .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
             .mutation("patchStep", LocalizedLabel::native("Patch Step", "Schritt aktualisieren"))
             .mutation("updateForm", LocalizedLabel::native("Update Form", "Formular aktualisieren"))
-            .mutation("updatePlaybook", LocalizedLabel::native("Update Playbook", "Playbook aktualisieren"))
             .mutation("dropQuestionKind", LocalizedLabel::native("Drop Question Kind", "Frageart ablegen"))
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             // 🛠️ Dev-only whole-spec import — kept out of the command palette, staged JSON form.
@@ -1042,16 +1228,10 @@ pub fn create_forms_app() -> AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
 /// able to drive the whole app without re-deriving the harness.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
-#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests

@@ -1,0 +1,34 @@
+{
+  "name": "@semio-tech/ui-styling-dotnet",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "tags": [
+    "language:dotnet"
+  ],
+  "targets": {
+    "deps": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "parallelism": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet",
+        "command": "bun ./📜️script.ts deps"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "parallelism": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet",
+        "command": "bun ./📜️script.ts build"
+      }
+    }
+  }
+}

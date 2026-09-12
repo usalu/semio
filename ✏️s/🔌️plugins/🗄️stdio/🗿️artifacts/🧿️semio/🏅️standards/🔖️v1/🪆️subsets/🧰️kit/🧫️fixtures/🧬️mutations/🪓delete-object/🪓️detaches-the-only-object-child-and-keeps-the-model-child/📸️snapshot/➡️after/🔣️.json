@@ -48,7 +48,7 @@
     {
       "childId": "mod-1",
       "target": {
-        "artifactId": "frame-model",
+        "artifactId": "mod-1",
         "dialect": {
           "artifactKind": "s.stdio.semio",
           "standard": "v1",

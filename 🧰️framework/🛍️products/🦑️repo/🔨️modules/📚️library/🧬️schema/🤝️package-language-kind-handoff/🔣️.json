@@ -23,7 +23,7 @@
         "parentKindId": "packages",
         "variation": "canonical-registered-emoji",
         "ambiguity": "fail-closed",
-        "packagePurity": "unchanged"
+        "packagePurity": "target-before-package"
       }
     },
     "oracleCompilation": {

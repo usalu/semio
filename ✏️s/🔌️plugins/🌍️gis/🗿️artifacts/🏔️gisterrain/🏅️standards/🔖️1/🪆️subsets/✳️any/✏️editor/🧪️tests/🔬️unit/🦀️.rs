@@ -1,5 +1,64 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, settle_registered_typed_operation, TypedOperationFixtureReceipt};
+    use semio_framework_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    
+    pub type Gis3dApp = VcsArtifactApp<EditorApp<Gis3dPlayApp>>;
+    
+    /// 🧬️ Builds the real registered fixture and binds the instance addressed by [`meta`].
+    pub async fn app() -> Gis3dApp {
+        let mut app = new_app_with_registry::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_tests).await;
+        app.bind_instance_id(meta("local").instance_id).await;
+        app
+    }
+    
+    /// ✏️ Adapts `create_gis3d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
+    /// examples }` shape `context::assert_declared_actions_bridge_to_commands` still expects —
+    /// framework test context gap, not modifiable here.
+    pub fn gis3d_app_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_gis3d_app(), examples: Vec::new() }
+    }
+    
+    /// 🪟️ Targets the real Terrain window instance for render and command authority.
+    pub fn main_window_view() -> ViewModel {
+        ViewModel {
+            window_id: Some(modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into()),
+            window_instances: vec![ViewWindowInstance { id: modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into(), window_kind_id: modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into() }],
+            ..Default::default()
+        }
+    }
+    
+    /// 🧹️ Drives a Terrain fixture to its exact terminal-empty ownership witness.
+    pub fn close(app: &mut Gis3dApp) {
+        close_registered_fixture_app(app);
+    }
+    
+    /// 🎯️ Dispatches a typed Terrain command and completes its bounded host publication protocol.
+    pub async fn dispatch(app: &mut Gis3dApp, command: Gis3dCommand) -> TypedOperationFixtureReceipt {
+        dispatch_at(app, command, main_window_view()).await
+    }
+    
+    /// 🎯️ Dispatches through the exact addressed Terrain window captured by the retained operation.
+    pub async fn dispatch_at(app: &mut Gis3dApp, command: Gis3dCommand, view_state: ViewModel) -> TypedOperationFixtureReceipt {
+        let mut action_meta = meta("local");
+        action_meta.view_state = Some(view_state);
+        let admission = app.dispatch_typed(command, &action_meta).await.expect("dispatch");
+        assert!(admission.mutations.is_empty(), "retained Terrain commands publish only through acknowledged result pages");
+        settle_registered_typed_operation(app, action_meta.instance_id).await.expect("settle Terrain dispatch")
+    }
+    
+    pub async fn render(app: &mut Gis3dApp, body_key: &str) -> String {
+        render_at(app, body_key, &main_window_view()).await
+    }
+    
+    /// 🪟️ Renders from the persisted configuration of one exact Terrain window.
+    pub async fn render_at(app: &mut Gis3dApp, body_key: &str, view_state: &ViewModel) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, view_state).await.expect("render")).expect("render projection")
+    }
+}
+
 use super::*;
-use crate::editor::gis3d::testkit::{app, close, dispatch, gis3d_app_manifest_for_testkit, render};
+use crate::editor::gis3d::unit_tests::context::{app, close, dispatch, gis3d_app_manifest_for_tests, render};
 use semio_framework_plugin::EditorApp;
 use serde_json::json;
 
@@ -49,7 +108,7 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 /// hard error and the whole `{action,args}` host wire was dead.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-    semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_testkit).await;
+    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_tests).await;
     assert!(Gis3dPlayApp::command_from_action("noSuchAction", None).is_err());
 }
 

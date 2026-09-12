@@ -2,7 +2,7 @@
 use super::*;
 use crate::demo_space_projection;
 use crate::engine::space::SpaceCommand;
-use crate::engine::space::testkit::{apply_mutations, seed_draw_plugin, seed_multi_port_plugins, studio_emit, test_surface_id};
+use crate::engine::space::unit_tests::context::{apply_mutations, seed_draw_plugin, seed_multi_port_plugins, studio_emit, test_surface_id};
 use std::collections::HashSet;
 
 #[semio_framework_async_macros::async_test]
@@ -97,11 +97,11 @@ async fn spawns_puzzle5d_and_shooting_with_multi_port_registrations() {
 
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_on_spawn() {
-    use semio_framework_plugin::{VcsArtifactApp, testkit};
+    use semio_framework_plugin::{VcsArtifactApp, artifact_app_laws};
     seed_draw_plugin().await;
     let mut app = VcsArtifactApp::<crate::engine::space::SpaceApp>::new(crate::engine::space::SpaceApp::default()).await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
-    testkit::assert_undo_redo_round_trip(
+    artifact_app_laws::assert_undo_redo_round_trip(
         &mut app,
         SpaceCommand::SpawnApp(SpawnApp { plugin_id: "draw".into(), app_id: test_surface_id("draw").await, x: 80.0, y: 80.0 }),
         |app| app.snapshot().expect("projection").graph.nodes.len(),

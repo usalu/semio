@@ -1,10 +1,10 @@
 
 use super::*;
 use crate::catalog::compile;
-use crate::testkit;
+use crate::source_builders;
 
 fn compiled() -> Catalog {
-    compile(&testkit::note_and_cad_source(), Locale::En, Terminology::Native).expect("compiles")
+    compile(&source_builders::note_and_cad_source(), Locale::En, Terminology::Native).expect("compiles")
 }
 
 #[test]
@@ -16,7 +16,7 @@ fn note_and_cad_fixtures_produce_zero_conformance_findings() {
 
 #[test]
 fn note_and_cad_fixtures_have_non_empty_bilingual_labels() {
-    let findings = check_bilingual_labels(&testkit::note_and_cad_source());
+    let findings = check_bilingual_labels(&source_builders::note_and_cad_source());
     assert!(findings.is_empty(), "unexpected bilingual findings: {findings:?}");
 }
 
@@ -54,7 +54,7 @@ fn bare_action_id_grammar_violation_is_flagged() {
 #[test]
 fn eval_harness_measures_top1_and_top3_accuracy_deterministically() {
     let catalog = compiled();
-    let cases = testkit::eval_cases(include_str!("../../../🧫️fixtures/🧠️conformance/🔣️.json"));
+    let cases = source_builders::eval_cases(include_str!("../../../🧫️fixtures/🧠️conformance/🔣️.json"));
     let first = run_eval(&catalog, &cases);
     let second = run_eval(&catalog, &cases);
     assert_eq!(first, second, "eval must be fully deterministic");

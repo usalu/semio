@@ -268,7 +268,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("MessageEndpoint variant/field names match the live Rust enum in 🎠️kernel/🦀️.rs", async () => {
       const { readFileSync } = await import("node:fs");
-      const kernelUrl = new URL("../../🔨️modules/🎠️kernel/🦀️.rs", source.url);
+      const kernelUrl = new URL("../../../../../🔨️modules/🎠️kernel/🦀️.rs", source.url);
       const testSource = readFileSync(kernelUrl, "utf8");
       const enumMatch = testSource.match(/pub enum MessageEndpoint \{([\s\S]*?)\n\}/);
       expect(enumMatch).not.toBeNull(); // [DEBUG] `pub enum MessageEndpoint { ... }` shape not found — Rust source changed, update this test's regex
@@ -283,7 +283,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("Effect::SendMessage fields match the live Rust variant in 🎠️kernel/🦀️.rs", async () => {
       const { readFileSync } = await import("node:fs");
-      const kernelUrl = new URL("../../🔨️modules/🎠️kernel/🦀️.rs", source.url);
+      const kernelUrl = new URL("../../../../../🔨️modules/🎠️kernel/🦀️.rs", source.url);
       const testSource = readFileSync(kernelUrl, "utf8");
       const variantMatch = testSource.match(/\bSendMessage\s*\{([^{}]*)\}/);
       expect(variantMatch).not.toBeNull(); // [DEBUG] `SendMessage { ... }` not found — Rust `Effect::SendMessage` changed, update this test
@@ -292,7 +292,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("Event::Message fields match the live Rust variant in 🎠️kernel/🦀️.rs", async () => {
       const { readFileSync } = await import("node:fs");
-      const kernelUrl = new URL("../../🔨️modules/🎠️kernel/🦀️.rs", source.url);
+      const kernelUrl = new URL("../../../../../🔨️modules/🎠️kernel/🦀️.rs", source.url);
       const testSource = readFileSync(kernelUrl, "utf8");
       const variantMatch = testSource.match(/\bMessage\s*\{([^{}]*)\}/);
       expect(variantMatch).not.toBeNull(); // [DEBUG] `Message { ... }` not found — Rust `Event::Message` changed, update this test

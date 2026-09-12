@@ -70,7 +70,7 @@ use host_async_bindings::semio::framework::{effects as wit_effects, host_async a
 // `⚡️effects/🦀️.rs`), but this async-world state has zero production callers today (see
 // this file's own `not_wired`/`run_router_effect` doc comments), so there is no real caller to
 // thread `R` from. `TokioHostRuntime` is the one production `HostAsyncRuntime` impl
-// (`🛎️services/🦀️component.rs`) and matches what a real instantiation would need — pinned here
+// (`🛎️services/🦀️.rs`) and matches what a real instantiation would need — pinned here
 // rather than making this whole file generic, which would thread `R` through ~25 trait methods
 // with no caller yet to prove the shape against. Revisit once this world is actually wired.
 pub struct AsyncActorHostState {

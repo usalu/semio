@@ -4,7 +4,7 @@
 //! Every scenario copies the real, committed `🧪️macos-uttype-plist/🏷️.xml` fixture into the case work
 //! directory first; the committed document is never written to. `oracle` drives the registered
 //! `quick-xml` reference implementation through THIS subset's own oracle module
-//! (`../../🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🔮️oracle/🦀️.rs`), whose DOCTYPE grammar and
+//! (`../../🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🔮️oracles/🦀️.rs`), whose DOCTYPE grammar and
 //! §2.8/§2.9 verdicts are written from the W3C text rather than from this repository's
 //! `check_valid_conformance`; `subject` drives this repository's own
 //! `XmlSnapshot::import_utf8`/`export_utf8` and `apply_xml_valid_mutation` over the full 8-kind

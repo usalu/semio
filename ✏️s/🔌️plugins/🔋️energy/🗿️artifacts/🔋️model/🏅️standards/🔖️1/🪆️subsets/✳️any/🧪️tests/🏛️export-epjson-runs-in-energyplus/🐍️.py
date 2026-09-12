@@ -77,7 +77,7 @@ def _openstudio_root(ctx: Context) -> Path:
     if not candidates:
         raise AssertionError(
             "no provisioned OpenStudio/EnergyPlus toolchain under %s. This case runs EnergyPlus itself; "
-            "run `nx run @semio-tech/energy-oracle-py:oracle-setup` (or the 🔮️oracle🔋️energy⚙️setup launch entry) "
+            "run `nx run @semio-tech/energy-oracle-py:oracle-setup` (or the 🔮️oracles🔋️energy⚙️setup launch entry) "
             "to download, sha256-verify and extract it. There is no skip channel in this host, so an "
             "unprovisioned machine reports this error rather than a meaningless green." % cache
         )

@@ -57,34 +57,34 @@ async fn every_variant_round_trips_via_inverse() {
 
 //#region 🧪️MutationLaws
 /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-/// (reachable here as `protocol::testkit`), exercised against the three most structurally
+/// (reachable here as `protocol::os_spr::protocol_laws`), exercised against the three most structurally
 /// distinct variants: the enum-typed scalar (`change-annex`), a typical `f64` scalar
 /// (`change-m-ed-knm`), and a `String` scalar (`change-service-class`).
 #[semio_framework_async_macros::async_test]
 async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
     let base = En1995Snapshot::default();
     let mutation = En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = En1995Mutation::ChangeServiceClass(change_service_class::ChangeServiceClass { new_service_class: "sc2".into() }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 #[semio_framework_async_macros::async_test]
 async fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
     let base = En1995Snapshot::default();
     let mutation = En1995Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 999.0 });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = En1995Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 77.0 }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 #[semio_framework_async_macros::async_test]
 async fn change_service_class_satisfies_the_inverse_and_absorb_laws() {
     let base = En1995Snapshot::default();
     let mutation = En1995Mutation::ChangeServiceClass(change_service_class::ChangeServiceClass { new_service_class: "sc2".into() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = En1995Mutation::ChangeLoadDuration(change_load_duration::ChangeLoadDuration { new_load_duration: "short".into() }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws

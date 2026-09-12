@@ -133,7 +133,7 @@ pub fn dag_content_child_handle(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge])
     let content_hash = hasher.finish();
     let child_id = format!("dag-content-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "dag-content".into(), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️ContentBridge

@@ -497,7 +497,7 @@ impl TrustedCatalogLoader {
         Ok(Some(verified))
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(any(test, feature = "integration-fixtures"))]
     pub(crate) async fn load_fixture(bundle_path: &Path, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
         let path = std::fs::canonicalize(bundle_path).map_err(catalog_error)?;
         let fixture_root = path.parent().ok_or_else(|| catalog("bundle has no containing directory"))?;
@@ -1278,7 +1278,7 @@ fn report_package_progress(context: &OperationContext<'_>, package_position: usi
 }
 
 /// 🧫️ Shares headless Stdio metadata between native GIS fixtures; synthetic bytes are never executed.
-#[cfg(all(feature = "native-artifact-execution", any(test, feature = "test-support")))]
+#[cfg(all(feature = "native-artifact-execution", any(test, feature = "integration-fixtures")))]
 fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, serde_json::Value), AuthorityError> {
     let dependency = semio_s_plugin_stdio::registry::native_artifact_catalog_dependency().map_err(catalog_error)?;
     let semio_framework::VersionReq::Exact(version) = dependency.version else { return Err(catalog("compiled Stdio fixture dependency is not exact")); };
@@ -1320,9 +1320,9 @@ fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, ser
 }
 
 /// 🏗️ Feature-gated real GIS Map profile builder, reachable from every crate target (see its module doc).
-#[cfg(all(feature = "test-support", feature = "native-artifact-execution"))]
-#[path = "🏗️test-support/🦀️.rs"]
-pub mod test_support;
+#[cfg(all(feature = "integration-fixtures", feature = "native-artifact-execution"))]
+#[path = "../../🧪️tests/🔏️trusted-catalog-profile/🦀️.rs"]
+pub mod trusted_catalog_fixture;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

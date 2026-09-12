@@ -17,8 +17,9 @@ fn fem_analysis_settings_default_matches_pre_migration_values() {
 }
 
 #[test]
-fn fem_camera_default_is_empty_json_object() {
-    assert_eq!(FemCamera::default().json, "{}");
+fn fem_initial_viewport_has_a_valid_explicit_pose() {
+    assert!(crate::viewport::INITIAL.validate().is_ok());
+    assert_eq!(crate::viewport::INITIAL.position, [4.0, -4.0, 3.0]);
 }
 
 #[test]

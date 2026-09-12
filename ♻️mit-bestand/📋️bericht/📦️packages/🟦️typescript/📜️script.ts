@@ -15,7 +15,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const level = segments[0] ?? "quick";
     if (!["quick", "long", "exhaustive"].includes(level)) throw new Error(`unknown report test level: ${level}`);
-    const fixture = JSON.parse(readFileSync(join(ownerRoot, "🧫️tests/🔣️report-family.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(ownerRoot, "🧫️fixtures/🔣️report-family.json"), "utf8"));
     const require = createRequire(import.meta.url), modulePath = join(ownerRoot, "🔨️modules/📄️documents");
     const schema = JSON.parse(readFileSync(join(modulePath, "🧬️schema/🔣️.json"), "utf8"));
     assert.ok(new (require("ajv").default)({ strict: false }).validate(schema, reportCatalog));
@@ -33,7 +33,7 @@ class TestScript extends BundleScript {
       assert.deepEqual(project.targets[`watch-${document.id}`].dependsOn, [`build-${document.id}`]);
     }
     assert.deepEqual(project.targets.build.dependsOn, reportCatalog.documents.map(document => `build-${document.id}`));
-    const boundaries = JSON.parse(readFileSync(join(ownerRoot, "🧫️tests/🧭️commands.json"), "utf8"));
+    const boundaries = JSON.parse(readFileSync(join(ownerRoot, "🧫️fixtures/🧭️commands.json"), "utf8"));
     for (const entry of boundaries.entries) {
       const bundle = await require("esbuild").build({ entryPoints: [join(ownerRoot, entry)], bundle: true, write: false, metafile: true, platform: "node", format: "esm", packages: "external", logLevel: "silent" });
       const inputs = Object.keys(bundle.metafile.inputs);
@@ -83,7 +83,7 @@ class TestScript extends BundleScript {
       const canvas = require("@napi-rs/canvas");
       (globalThis as { DOMMatrix?: unknown }).DOMMatrix ??= canvas.DOMMatrix;
       const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
-      const expected = JSON.parse(readFileSync(join(ownerRoot, "🧫️tests/📄️pdf.json"), "utf8"));
+      const expected = JSON.parse(readFileSync(join(ownerRoot, "🧫️fixtures/📄️pdf.json"), "utf8"));
       for (const vector of expected.documents) {
         const path = join(packageRoot, "dist/documents", vector.id, `${basename(DOCUMENTS[vector.id]!, ".tex")}.pdf`);
         const pdf = await getDocument({ data: new Uint8Array(readFileSync(path)) }).promise;

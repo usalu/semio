@@ -103,6 +103,8 @@ export type BrowserFrameWorkerBoot = {
   readonly pluginVariant: string;
   readonly locale: "en" | "de";
   readonly appRole: string;
+  /** @emoji 🎭️ `?mode=`'s value, or `""` when the url named none — the boot-time mode axis beside `appRole`. */
+  readonly appMode: string;
   readonly hub?: { readonly hubUrl: string; readonly user: string; readonly dataDir: string };
 };
 
@@ -126,7 +128,7 @@ export type BrowserFrameWireLosslessEvent =
  * frame message uses. Read-only by construction: no probe mutates renderer state. */
 export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats";
 
-export type BrowserFrameWorkerIntrospect = { readonly kind: "introspect"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe };
+export type BrowserFrameWorkerIntrospect = { readonly kind: "introspect"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe; readonly windowId?: string };
 
 /** @emoji 🧵️ One shard worker the UI isolate spawned on the frame worker's behalf, handed back as a
  * `MessagePort`. Nested dedicated workers are unavailable in some embedded browsers, so the frame worker
@@ -405,7 +407,7 @@ export class BrowserFrameTransport {
    * so a diagnostic can distinguish "no hooks" from "empty dump" without ever taking the shell down. The
    * batch flushed first is what makes the answer meaningful: message order guarantees the Worker has ticked
    * at least one frame before it reads the retained tree. */
-  introspect(probe: BrowserFrameIntrospectionProbe): Promise<string | null> {
+  introspect(probe: BrowserFrameIntrospectionProbe, windowId?: string): Promise<string | null> {
     if (this.status !== "ready" || this.introspections.size >= FRAME_WORKER_INTROSPECTION_CAPACITY) return Promise.resolve(null);
     const requestId = this.nextIntrospectionId++;
     this.requestFrame();
@@ -417,7 +419,7 @@ export class BrowserFrameTransport {
       }, FRAME_WORKER_INTROSPECTION_TIMEOUT_MS);
       this.introspections.set(requestId, { resolve, timer });
       try {
-        this.worker.postMessage({ kind: "introspect", lifecycle: this.lifecycle, requestId, probe });
+        this.worker.postMessage({ kind: "introspect", lifecycle: this.lifecycle, requestId, probe, ...(windowId === undefined ? {} : { windowId }) });
       } catch {
         this.introspections.delete(requestId);
         this.clearTimer(timer);

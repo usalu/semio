@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "description": "Independent native Cargo build-entry basename controls; no repository build or runtime dependencies.",
+  "cargoVersion": "cargo 1.99.0-nightly (2f0e7011e 2026-07-05)",
+  "manifestTemplate": "[package]\nname = \"taxonomy-build-{id}\"\nversion = \"0.0.0\"\nedition = \"2021\"\nbuild = \"{leaf}\"\n[workspace]\n[lib]\npath = \"lib.rs\"\n",
+  "librarySource": "pub fn value() -> u8 { 1 }\n",
+  "buildSource": "fn main() { println!(\"cargo:warning=[DEBUG] native build hook executed\"); }\n",
+  "arguments": [
+    "check",
+    "--offline",
+    "--manifest-path",
+    "{root}/{id}/Cargo.toml"
+  ],
+  "targetDirectory": "{root}/{id}/target",
+  "cases": [
+    {
+      "id": "emoji",
+      "leaf": "🦀️.rs",
+      "expectedExit": 101,
+      "expectedDiagnostic": "invalid character",
+      "expectedBuildExecution": false
+    },
+    {
+      "id": "anonymous-ascii",
+      "leaf": "_.rs",
+      "expectedExit": 0,
+      "expectedDiagnostic": "[DEBUG] native build hook executed",
+      "expectedBuildExecution": true
+    },
+    {
+      "id": "named",
+      "leaf": "build.rs",
+      "expectedExit": 0,
+      "expectedDiagnostic": "[DEBUG] native build hook executed",
+      "expectedBuildExecution": true
+    }
+  ]
+}

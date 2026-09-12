@@ -1,16 +1,11 @@
 /** 🧊️ Remodeling editor — Model window: typed twin of `🦀️.rs`'s view-model. Mirrors the
- * pane's `render(scene: &RemodelingSnapshot, config: &RemodelingConfig)` boundary — the World3d scene
+ * pane's `render(scene: &RemodelingSnapshot, config: &RemodelingModelWindowConfig)` boundary — the World3d scene
  * carrying the reconstructed mesh, the sparse/dense clouds, the recovered camera positions and the
  * ground control points (`world_meshes_json`/`world_instances_json`/`world_points_json`'s own
  * shapes). The viewer's read-only twin (`👁️viewer/…/🧊️model/🟦️.ts`) mirrors this same
  * scene shape minus `layers`/mutation-facing fields — never imports from here. */
 
-/** 🎥️ Ephemeral viewport orbit camera — mirrors Rust `RemodelingWorldCamera`. */
-export interface RemodelingWorldCamera {
-  position: [number, number, number];
-  target: [number, number, number];
-  fov: number;
-}
+import type { Viewport3dOrbit } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts";
 
 /** 👁️ Which point-cloud/mesh layers are visible — mirrors Rust `RemodelingLayerVisibility`. */
 export interface RemodelingLayerVisibility {
@@ -47,7 +42,7 @@ export interface RemodelingModelViewModel {
   windowKindId: "remodeling-main";
   bodyKey: "remodeling.play.main";
   surfaceId: "remodeling.play";
-  camera: RemodelingWorldCamera;
+  camera: Viewport3dOrbit;
   layers: RemodelingLayerVisibility;
   meshInstances: RemodelingMeshInstance[];
   pointLayers: RemodelingPointLayer[];

@@ -28,7 +28,7 @@
 //! What is NOT shared is what the two standards' containers hold behind that header, and this
 //! repository has one decoder for both — recorded as a real gap, not resolved here.
 //!
-//! No differential oracle is registered (`../../🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🔮️oracle/
+//! No differential oracle is registered (`../../🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🔮️oracles/
 //! 🔣️.json`'s `noOracleDecisions`), so the platform never dispatches the oracle role for
 //! this feature; the handlers are registered in the shape every stdio case has, compute a real
 //! answer from an independently hand-written preamble reader that never calls this repository's

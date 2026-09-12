@@ -595,8 +595,7 @@ impl RetainedJobPayload {
             return JobPayloadCloseStep::Complete;
         }
         let index = self.pages.iter().position(Option::is_some).expect("retained payload page count matches occupied pages");
-        let page_bytes = self.pages[index].as_ref().expect("retained payload close page").length;
-        if maximum_items == 0 || maximum_bytes < page_bytes {
+        if maximum_items == 0 || maximum_bytes < JOB_PAYLOAD_PAGE_BYTES {
             return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
         let page = self.pages[index].take().expect("retained payload close owns exact page");
@@ -605,7 +604,7 @@ impl RetainedJobPayload {
         if let Some(ledger) = self.ledger.as_ref() {
             ledger.release(self.stream);
         }
-        let released_bytes = page.length;
+        let released_bytes = JOB_PAYLOAD_PAGE_BYTES;
         drop(page);
         if self.page_count == 0 {
             self.ledger = None;
@@ -726,22 +725,22 @@ impl RetainedJobPayloadWriter {
 
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> JobPayloadCloseStep {
         self.sealed = true;
-        if let Some((ledger, _, length)) = self.staged.as_ref() {
-            if maximum_items == 0 || maximum_bytes < *length {
+        if let Some((ledger, _, _)) = self.staged.as_ref() {
+            if maximum_items == 0 || maximum_bytes < JOB_PAYLOAD_PAGE_BYTES {
                 return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
             let stream = self.payload.as_ref().expect("retained payload writer owns payload while staged page exists").stream;
             ledger.release(stream);
-            let (_, source, released_bytes) = self.staged.take().expect("staged page remains owned until exact close");
+            let (_, source, _) = self.staged.take().expect("staged page remains owned until exact close");
             drop(source);
-            return JobPayloadCloseStep::Pending { released_items: 1, released_bytes };
+            return JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES };
         }
         if self.rejected.is_some() {
-            if maximum_items == 0 {
+            if maximum_items == 0 || maximum_bytes < JOB_PAYLOAD_PAGE_BYTES {
                 return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
             *self.rejected = None;
-            return JobPayloadCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES };
         }
         let Some(payload) = self.payload.as_mut() else { return JobPayloadCloseStep::Complete };
         if !payload.terminal_is_empty() {
@@ -1890,27 +1889,59 @@ struct WorkerJobAuthority<J> {
     close_stage: u8,
 }
 
-impl<J> WorkerJobAuthority<J> {
-    fn try_new(job: J, params: BatchJobParams) -> Result<Self, (J, BatchJobParams, JobPayloadPageSource)> {
+/// 🧺️ Unique heap owner for one worker authority. Its vector always contains exactly
+/// one fully initialized authority, so submission, checkout, rejection, cancellation, and bounded
+/// retirement transfer only this owner while the large retained payload carriers keep one address.
+struct WorkerJobAuthorityOwner<J>(Vec<WorkerJobAuthority<J>>);
+
+impl<J> std::ops::Deref for WorkerJobAuthorityOwner<J> {
+    type Target = WorkerJobAuthority<J>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0[0]
+    }
+}
+
+impl<J> std::ops::DerefMut for WorkerJobAuthorityOwner<J> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0[0]
+    }
+}
+
+impl<J> WorkerJobAuthorityOwner<J> {
+    /// 🪹️ Fallibly reserves the exact one-authority extent before consuming the producer.
+    /// Successful reservation establishes one uninitialized heap slot; every field is then written
+    /// once before the vector length becomes one. The buffer is never grown after publication, so its
+    /// address remains stable. Allocation or payload refusal returns the exact job, parameters, and
+    /// any pre-admitted page source to the caller without partial authority exposure.
+    fn try_new(job: J, params: BatchJobParams) -> Result<Self, (J, BatchJobParams, Option<JobPayloadPageSource>)> {
+        let mut storage = Vec::<WorkerJobAuthority<J>>::new();
+        if storage.try_reserve_exact(1).is_err() {
+            return Err((job, params, None));
+        }
         let payload_ledger = Arc::new(JobPayloadOperationLedger::new(params.operation, params.generation));
         let fault_source = JobPayloadPageSource::new();
         let preadmitted_fault = match preadmitted_static_payload(&payload_ledger, JobPayloadStream::Fault, b"job-session.terminal-fault", fault_source) {
             Ok(payload) => payload,
-            Err(fault_source) => return Err((job, params, fault_source)),
+            Err(fault_source) => return Err((job, params, Some(fault_source))),
         };
-        Ok(Self {
-            job: Some(job),
-            params: Some(params),
-            preview_sequence: 0,
-            step_sequence: 0,
-            payload_ledger,
-            preadmitted_fault: Some(preadmitted_fault),
-            outcome: None,
-            callback_verdict: None,
-            overruns: semio_framework_trace::StepOverrunLedger::new(),
-            quarantined_outcome: None,
-            close_stage: 0,
-        })
+        let overruns = semio_framework_trace::StepOverrunLedger::new();
+        let target = storage.as_mut_ptr();
+        unsafe {
+            std::ptr::addr_of_mut!((*target).job).write(Some(job));
+            std::ptr::addr_of_mut!((*target).params).write(Some(params));
+            std::ptr::addr_of_mut!((*target).preview_sequence).write(0);
+            std::ptr::addr_of_mut!((*target).step_sequence).write(0);
+            std::ptr::addr_of_mut!((*target).payload_ledger).write(payload_ledger);
+            std::ptr::addr_of_mut!((*target).preadmitted_fault).write(Some(preadmitted_fault));
+            std::ptr::addr_of_mut!((*target).outcome).write(None);
+            std::ptr::addr_of_mut!((*target).callback_verdict).write(None);
+            std::ptr::addr_of_mut!((*target).overruns).write(overruns);
+            std::ptr::addr_of_mut!((*target).quarantined_outcome).write(None);
+            std::ptr::addr_of_mut!((*target).close_stage).write(0);
+            storage.set_len(1);
+        }
+        Ok(Self(storage))
     }
 }
 
@@ -2270,7 +2301,7 @@ pub fn pump_worker_job_retirements(maximum_sessions: usize, maximum_items: usize
 struct WorkerJobSessionInner<J> {
     generation: Generation,
     phase: AtomicU8,
-    authority: ManuallyDrop<std::cell::UnsafeCell<Option<WorkerJobAuthority<J>>>>,
+    authority: ManuallyDrop<std::cell::UnsafeCell<Option<WorkerJobAuthorityOwner<J>>>>,
     rejection_kind: AtomicU8,
     close_requested: AtomicBool,
     terminal_intent: AtomicU8,
@@ -2289,11 +2320,11 @@ impl<J> WorkerJobSessionInner<J> {
         self.phase.load(Ordering::Acquire)
     }
 
-    unsafe fn take_authority(&self) -> WorkerJobAuthority<J> {
+    unsafe fn take_authority(&self) -> WorkerJobAuthorityOwner<J> {
         unsafe { (&mut *self.authority.get()).take().expect("session phase owns exact authority") }
     }
 
-    unsafe fn put_authority(&self, authority: WorkerJobAuthority<J>, phase: u8) {
+    unsafe fn put_authority(&self, authority: WorkerJobAuthorityOwner<J>, phase: u8) {
         unsafe {
             let storage = &mut *self.authority.get();
             assert!(storage.is_none(), "session transition cannot overwrite an authority");
@@ -2303,7 +2334,7 @@ impl<J> WorkerJobSessionInner<J> {
         self.raise_wake();
     }
 
-    unsafe fn put_authority_quiet(&self, authority: WorkerJobAuthority<J>, phase: u8) {
+    unsafe fn put_authority_quiet(&self, authority: WorkerJobAuthorityOwner<J>, phase: u8) {
         unsafe {
             let storage = &mut *self.authority.get();
             assert!(storage.is_none(), "session transition cannot overwrite an authority");
@@ -2475,7 +2506,7 @@ impl<J> Drop for WorkerJobSessionAdmissionRejected<J> {
 
 struct WorkerJobSubmission<J> {
     inner: Arc<WorkerJobSessionInner<J>>,
-    authority: Option<WorkerJobAuthority<J>>,
+    authority: Option<WorkerJobAuthorityOwner<J>>,
     ran: bool,
 }
 
@@ -2698,11 +2729,11 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         };
         let generation = params.generation;
         let operation = params.operation;
-        let authority = match WorkerJobAuthority::try_new(job, params) {
+        let authority = match WorkerJobAuthorityOwner::try_new(job, params) {
             Ok(authority) => authority,
             Err((job, params, fault_source)) => {
                 WORKER_JOB_RETIREMENT_SLOTS[slot].store(std::ptr::null_mut(), Ordering::Release);
-                return Err(WorkerJobSessionAdmissionRejected { job: ManuallyDrop::new(Some(job)), params: ManuallyDrop::new(Some(params)), fault_source: ManuallyDrop::new(Some(fault_source)), closing: false, close_stage: 0 });
+                return Err(WorkerJobSessionAdmissionRejected { job: ManuallyDrop::new(Some(job)), params: ManuallyDrop::new(Some(params)), fault_source: ManuallyDrop::new(fault_source), closing: false, close_stage: 0 });
             }
         };
         record_operation_started(operation, generation);
@@ -2921,7 +2952,7 @@ impl<J: InteractiveJob + 'static> Drop for WorkerJobSession<J> {
 
 pub struct WorkerJobOutcome<J> {
     inner: Arc<WorkerJobSessionInner<J>>,
-    authority: Option<WorkerJobAuthority<J>>,
+    authority: Option<WorkerJobAuthorityOwner<J>>,
     restore_phase: u8,
 }
 
@@ -2986,7 +3017,7 @@ impl<J> Drop for WorkerJobOutcome<J> {
 
 pub struct WorkerJobRejected<J> {
     inner: Arc<WorkerJobSessionInner<J>>,
-    authority: Option<WorkerJobAuthority<J>>,
+    authority: Option<WorkerJobAuthorityOwner<J>>,
     kind: semio_framework_async::WorkerSubmitErrorKind,
 }
 

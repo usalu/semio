@@ -4,6 +4,7 @@
   "kind": "canonical-wgpu-package",
   "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu",
   "packageRelativePath": "📦️packages/🦀️rust",
+  "nodePackageRelativePath": "📦️packages/🟦️typescript",
   "identity": {
     "cargoPackageName": "semio-framework-os-renderer-wgpu",
     "nodePackageName": "@semio-tech/framework-renderer-wgpu",
@@ -13,7 +14,7 @@
     "cargoLibrary": "📚️library/🦀️.rs",
     "cargoBinary": "💾️binary/🦀️.rs",
     "cargoBuild": "build.rs",
-    "nodeLibrary": "🟦️typescript/📚️library/🟦️.ts"
+    "nodeLibrary": "📚️library/🟦️.ts"
   },
   "artifacts": [
     {
@@ -34,11 +35,11 @@
     },
     {
       "id": "typescript-adapter",
-      "relativePath": "📦️packages/🦀️rust/🟦️typescript/📚️library/🟦️.ts",
+      "relativePath": "📦️packages/🟦️typescript/📚️library/🟦️.ts",
       "targetRelativePath": "🎬️renderer-boot/🟦️.ts",
       "language": "typescript",
       "role": "declaration",
-      "content": "/** 🧊️ Renderer package adapter. */\nexport * from \"../../../../🎬️renderer-boot/🟦️.ts\";\n"
+      "content": "/** 🧊️ Renderer package adapter. */\nexport * from \"../../../🎬️renderer-boot/🟦️.ts\";\n"
     },
     {
       "id": "renderer-registration",

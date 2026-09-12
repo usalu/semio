@@ -27,12 +27,12 @@
         "routes": {
           "allOf": [
             {
-              "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes"
+              "$ref": "https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutes"
             },
             {
               "type": "array",
-              "minItems": 9,
-              "maxItems": 9,
+              "minItems": 10,
+              "maxItems": 10,
               "items": {
                 "type": "object",
                 "additionalProperties": false,
@@ -49,19 +49,19 @@
                   },
                   "disposition": {
                     "enum": [
-                      "migrated",
-                      "batch-only-pending-rewrite"
+                      "Migrated",
+                      "BatchOnlyPendingRewrite"
                     ]
                   },
                   "lanes": {
                     "type": "array",
                     "items": {
                       "enum": [
-                        "artifact",
-                        "config",
-                        "transient",
-                        "host-only",
-                        "window-transient"
+                        "Artifact",
+                        "Config",
+                        "Transient",
+                        "HostOnly",
+                        "WindowTransient"
                       ]
                     },
                     "uniqueItems": true

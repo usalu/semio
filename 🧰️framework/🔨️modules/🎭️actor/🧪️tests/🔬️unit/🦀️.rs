@@ -1662,7 +1662,7 @@ async fn exports_typescript_bindings() {
     if let Some(path) = std::env::var_os("SEMIO_TYPEGEN_OUT") {
         std::fs::write(path, &rendered).unwrap();
     } else {
-        assert_eq!(rendered, include_str!("../../🤖️generated/🟦️actor.ts"));
+        assert_eq!(rendered, include_str!("../../🤖️generated/🎭️actor/🟦️.ts"));
     }
 }
 //#endregion 🔖️Typegen

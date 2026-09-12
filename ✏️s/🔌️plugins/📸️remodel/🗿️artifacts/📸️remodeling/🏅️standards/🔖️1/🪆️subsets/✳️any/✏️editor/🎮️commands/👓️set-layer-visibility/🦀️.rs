@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Remodeling play app commands command — `set-layer-visibility`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::RemodelingMutation;
 use crate::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -13,6 +13,6 @@ pub struct SetLayerVisibility {
     pub visible: bool,
 }
 
-pub fn handle(payload: &SetLayerVisibility, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
-    Ok(Emit::config(vec![RemodelingConfigMutation::SetLayerVisibility(crate::editor::remodeling::config::SetLayerVisibility { layer: payload.layer.clone(), visible: payload.visible })]))
+pub fn handle(_payload: &SetLayerVisibility, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
+    Ok(Emit::default())
 }

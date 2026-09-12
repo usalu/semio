@@ -12,9 +12,11 @@ adapter per implementation.
 
 ```
 <owner>/
-├── 🧫️fixtures/                     immutable, shared by every case of this owner
+├── 🖼️assets/                       static production data
+├── 🧫️fixtures/                     immutable testing input owned by this domain
+├── 📚️examples/<example>/           executable usage projects, with their own 🧪️tests
+├── 🔮️oracles/<oracle>/             real reference or comparator implementations, with their own 🧪️tests
 ├── 🧪️tests/<kebab-case>/
-│   ├── 🧫️fixtures/                 immutable, private to this case
 │   ├── 🥒️.feature                 the normative, language-neutral contract
 │   ├── 🦀️.rs                      one adapter per implementation that claims the capability
 │   ├── 🟦️.ts
@@ -23,6 +25,11 @@ adapter per implementation.
 │   └── 🔷️.cs
 └── 📦️packages/<language>/          the implementations under test
 ```
+
+These four collection names are exact: `🧪️tests`, `🧫️fixtures`, `📚️examples`, and `🔮️oracles`.
+Test helpers and harness code belong inside the test-case implementation that uses them. A fixture
+may contain any modeled path as inert input; executable examples and oracles remain subject to the
+same testing layout as other semantic owners.
 
 ## Commands
 
@@ -87,7 +94,7 @@ selector.
 
 A runtime mutation is owned by the **smallest semantic subset**, never by an artifact-wide or `*`/`any`
 wildcard scope — a cross-subset operation declares an explicit typed `compound` instead of falling
-back to the whole artifact. The owner's `🔣️oracle.json` carries a `MutationManifest` naming, per
+back to the whole artifact. The owner's `🔮️oracles/🔣️.json` carries a `MutationManifest` naming, per
 mutation, the production dispatch variant it corresponds to and the outcome classes
 (`applied|no-op|empty|disjoint|rejected`) it can reach. `bun ./📜️script.ts inventory` runs the owner's
 **production mutation bridge** (`🏭️bridge/📜️script.ts`, discovered by walking up from the owner) and
@@ -121,7 +128,7 @@ into that route.
 
 An oracle runs in whichever implementation its registry `ecosystem` names, and the library it needs
 is declared by the OWNER, never by the framework. One field carries this, in the owner's
-`🔣️oracle.json`:
+`🔮️oracles/🔣️.json`:
 
 ```json
 "oracleHostPackages": [

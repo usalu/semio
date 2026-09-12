@@ -2,19 +2,18 @@
 // #region 🧲️Header
 // 💻️ .storybook/main.ts
 // Specs: Aggregate the existing package-local Storybook trees into one root monorepo Storybook.
-// Summary: Configures the workspace Storybook with shared aliases, Markdown docs support, Vite `resolve.conditions` so `node_modules` `exports` resolve (`import` before `storybook`), a composable scope system driven by `.storybook/scopes.ts` (`STORYBOOK_SCOPE` is a comma-separated list of hierarchical scope ids), and module-worker-safe Vite behavior.
+// Summary: Configures the workspace Storybook with shared aliases, Markdown docs support, Vite `resolve.conditions` so `node_modules` `exports` resolve (`import` before `storybook`), a composable scope system driven by `.storybook/📖️stories/🧭️coordination/🟦️.ts` (`STORYBOOK_SCOPE` is a comma-separated list of hierarchical scope ids), and module-worker-safe Vite behavior.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
-import { existsSync } from "node:fs";
 
 import type { StorybookConfig } from "@storybook/react-vite";
-import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
-import { uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏗️build-tooling.ts";
-import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildScopeWatchIgnores, type StoryScope } from "./scopes.ts";
+import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildScopeWatchIgnores, type StoryScope } from "./📖️stories/🧭️coordination/🟦️.ts";
 import { repoCacheDirectory } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 const require = createRequire(import.meta.url);
@@ -23,7 +22,7 @@ const __dirname = dirname(__filename);
 const repoRootPath = resolve(__dirname, "..");
 const storybookScope = process.env.STORYBOOK_SCOPE ?? "";
 
-const uiReactDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react");
+const uiReactDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript");
 const uiStylingDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript");
 const assetsDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript");
 
@@ -44,19 +43,6 @@ function getAbsolutePath(value: string): string {
 const activeScopes: readonly StoryScope[] = resolveActiveScopes(storybookScope);
 const activeScopeIds: readonly string[] = activeScopes.map((s) => s.id);
 
-/** @emoji 🧭️ First candidate that exists on disk — the taxonomy sweep renames these entry files (and
- * moves whole package roots) in passes, so an alias pinned to one spelling breaks on the other side
- * of a rename. Falls back to the first candidate so a genuinely-missing file still reports its
- * canonical name rather than a stale one. */
-function firstExisting(...candidates: readonly string[]): string {
-  return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0];
-}
-
-/** @emoji 📦️ The ui-react package's entry file under either taxonomy naming, newest convention first. */
-function uiReactEntry(): string {
-  return firstExisting(...["🟦️.tsx", "📦️index.tsx", "🟦️index.tsx"].map((name) => join(uiReactDir, name)));
-}
-
 /** @emoji 🔗️ Irregular per-scope aliases + a fixed baseline of always-present workspace shortcuts (css subpaths, single-file entries) not worth registering per-scope. */
 function buildStorybookAliases(): Record<string, string> {
   const baseline: Record<string, string> = {
@@ -65,13 +51,12 @@ function buildStorybookAliases(): Record<string, string> {
     // `<uiReactDir>/test` that does not exist. `🟦️Interpreter/🟦️.tsx` reaches it through a
     // runtime `await import(...)`, which Vite still has to resolve at build time, so a plain
     // (non-test) storybook build fails on it. Mirrors the same pair in os/dev's `⚙️vite.config.ts`.
-    "@semio-tech/ui-react/test": toVitePath(join(uiReactDir, "🖌️render.ts")),
+    "@semio-tech/ui-react/test": toVitePath(join(uiReactDir, "🟦️.ts")),
     // 📦️ Point at the package's real entry FILE, not the directory: Vite's alias substitution is
     // literal, and it only auto-resolves a directory via a bare `index.*`, which an emoji-prefixed
     // `📦️index.tsx` is not. The taxonomy sweep is renaming these entries to `🟦️.tsx` and updates
-    // `package.json`'s `exports` ahead of the file itself, so resolve whichever currently exists
-    // rather than pinning a name that is true only on one side of that rename.
-    "@semio-tech/ui-react": toVitePath(uiReactEntry()),
+    // `package.json`'s `exports` to this canonical implementation leaf.
+    "@semio-tech/ui-react": toVitePath(join(uiReactDir, "🟦️.tsx")),
     "@semio-tech/ui-styling": toVitePath(uiStylingDir),
     "@semio-tech/assets": toVitePath(assetsDir),
   };
@@ -122,22 +107,10 @@ const config: StorybookConfig = {
     const aliasRecord: Record<string, string> = {
       ...buildStorybookAliases(),
       "vite/internal": resolve(repoRootPath, "node_modules/vite/dist/node/index.js"),
-      "@semio-tech/framework-platform-core": firstExisting(
-        resolve(repoRootPath, "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"),
-        resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/🟦️.ts"),
-      ),
-      "@semio-tech/framework-playground-core": firstExisting(
-        resolve(repoRootPath, "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"),
-        resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/🟦️.ts"),
-      ),
-      "@semio-tech/framework-platform-renderer-react": firstExisting(
-        resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
-        resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
-      ),
-      "@semio-tech/framework-playground-renderer-react": firstExisting(
-        resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
-        resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
-      ),
+      "@semio-tech/framework-platform-core": resolve(repoRootPath, "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"),
+      "@semio-tech/framework-playground-core": resolve(repoRootPath, "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"),
+      "@semio-tech/framework-platform-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"),
+      "@semio-tech/framework-playground-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"),
     };
     for (const item of workspaceResolve.resolve?.alias ?? []) {
       if (typeof item === "object" && item && "find" in item && "replacement" in item && typeof item.find === "string") {
@@ -225,6 +198,7 @@ const config: StorybookConfig = {
       ? [...existingExternal, /\.node$/]
       : [/\.node$/];
     const scopeDefines = {
+      "import.meta.vitest": "undefined",
       __STORYBOOK_SCOPE__: JSON.stringify(storybookScope),
       __STORYBOOK_ACTIVE_SCOPES__: JSON.stringify(activeScopeIds),
     };

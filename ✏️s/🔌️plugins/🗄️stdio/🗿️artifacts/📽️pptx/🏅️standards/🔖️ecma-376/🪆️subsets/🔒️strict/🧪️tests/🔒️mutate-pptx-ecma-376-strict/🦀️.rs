@@ -12,7 +12,7 @@
 //! compares them. The subject half is `sut`-gated so the oracle-only run never compiles the local
 //! implementation.
 //!
-//! ⚖️ All three laws are asserted IN ROLE through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracle/⚖️law`
+//! ⚖️ All three laws are asserted IN ROLE through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
 //! module, under a profile that declares no writer freedom at all, and no kind is exempt from any
 //! of them. Three of the eleven — `remove-conformance-attribute`, `remove-vml-part`,
 //! `remove-alternate-content` — run against a pre-state [`arranged_input`] builds with the SAME

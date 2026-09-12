@@ -182,6 +182,16 @@
       "expected": []
     },
     {
+      "id": "production-negative-vitest-gate",
+      "sources": [
+        {
+          "path": "🧩️domain/src/🟦️.ts",
+          "source": "if (typeof document !== \"undefined\" && document.getElementById(\"root\") != null && !import.meta.vitest) { boot(); }"
+        }
+      ],
+      "expected": []
+    },
+    {
       "id": "invalid-rust-wiring",
       "sources": [
         {
@@ -361,9 +371,16 @@
           "source": "test(\"real\", () => {});"
         },
         {
+          "path": "🧩️domain/🗑️generated/🔮️oracle/widget.test.ts",
+          "source": "test(\"generated\", () => {});"
+        },
+        {
           "path": "🧩️domain/source/widget.ts",
           "source": "test(\"real\", () => {});"
         }
+      ],
+      "directories": [
+        "🧩️domain/🗑️generated/🔮️oracle"
       ],
       "expected": [
         {
@@ -944,13 +961,21 @@
           "source": "[package]\nname = \"guest\"\nversion = \"0.1.0\"\n"
         }
       ],
-      "expected": [
+      "expected": []
+    },
+    {
+      "id": "fixture-manifest-workspace-dependency",
+      "sources": [
         {
-          "code": "production-fixture-dependency",
           "path": "Cargo.toml",
-          "line": null
+          "source": "[workspace]\nmembers = [\"owner\"]\n[workspace.dependencies]\nguest = { path = \"owner/🧫️fixtures/guest\" }\n"
+        },
+        {
+          "path": "owner/🧫️fixtures/guest/Cargo.toml",
+          "source": "[package]\nname = \"guest\"\nversion = \"0.1.0\"\n"
         }
-      ]
+      ],
+      "expected": []
     },
     {
       "id": "fixture-manifest-dev-fixture-package",
@@ -1077,6 +1102,182 @@
         }
       ],
       "expected": []
+    },
+    {
+      "id": "obsolete-testing-category-roots",
+      "sources": [
+        {
+          "path": "owner/🧪️testkit/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🧨️testkit/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/test-kit/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/testing/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🏗️test-support/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🔬️testing-support/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🔬️tests-support/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🧪️helper/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🧪️helpers/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🧪️harness/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🧪️mock/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🧪️stub/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🧪️oracle/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🔮️oracle/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🧪️oracles/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/⚖️oracles/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🧫️examples/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/📚️examples/🎬️demo/🔬️testkit/data.json",
+          "source": "{}"
+        }
+      ],
+      "expected": [
+        { "code": "obsolete-testing-category", "path": "owner/🧪️testkit/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🧨️testkit/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/test-kit/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/testing/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🏗️test-support/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🔬️testing-support/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🔬️tests-support/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🧪️helper/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🧪️helpers/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🧪️harness/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🧪️mock/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🧪️stub/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🧪️oracle/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🔮️oracle/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🧪️oracles/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/⚖️oracles/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🧫️examples/data.json", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/📚️examples/🎬️demo/🔬️testkit/data.json", "line": null }
+      ]
+    },
+    {
+      "id": "canonical-testing-categories-and-production-domains",
+      "sources": [
+        {
+          "path": "owner/🧪️tests/🔬️testkit/🟦️.ts",
+          "source": "import { test } from \"bun:test\"; test(\"case identity\", () => {});"
+        },
+        {
+          "path": "owner/🧫️fixtures/repository/🧪️testkit/🦀️.rs",
+          "source": "#[test]\nfn modeled_legacy_source() {}"
+        },
+        {
+          "path": "owner/📚️examples/🎬️demo/🧪️tests/🔬️unit/🟦️.ts",
+          "source": "import { test } from \"bun:test\"; test(\"example\", () => {});"
+        },
+        {
+          "path": "owner/🔮️oracles/✅️reference/🧪️tests/🔬️unit/🦀️.rs",
+          "source": "#[test]\nfn reference() {}"
+        },
+        {
+          "path": "owner/🔮️oracles/✅️reference/🦀️.rs",
+          "source": "pub fn reference() -> bool { true }"
+        },
+        {
+          "path": "owner/🌐️harness/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🧩️helper/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🎭️mock/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🧱️stub/data.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🖼️assets/testing-support.json",
+          "source": "{}"
+        },
+        {
+          "path": "owner/🖼️assets/🧪️example/source.test.ts",
+          "source": "test(\"modeled source\", () => {});"
+        }
+      ],
+      "expected": []
+    },
+    {
+      "id": "empty-obsolete-testing-category-directories",
+      "sources": [
+        {
+          "path": "owner/🖼️assets/data.json",
+          "source": "{}"
+        }
+      ],
+      "directories": [
+        "owner/🧪️testkit",
+        "owner/tests",
+        "owner/🔮️oracle",
+        "owner/⚖️oracles",
+        "owner/fixtures",
+        "owner/🧪️tests/🔬️case/🧫️fixtures",
+        "owner/📦️packages/🧫️fixtures",
+        "owner/🧫️fixtures/repository/🧪️testkit",
+        "owner/🧩️helper"
+      ],
+      "expected": [
+        { "code": "obsolete-testing-category", "path": "owner/🧪️testkit", "line": null },
+        { "code": "legacy-test-directory", "path": "owner/tests", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/🔮️oracle", "line": null },
+        { "code": "obsolete-testing-category", "path": "owner/⚖️oracles", "line": null },
+        { "code": "legacy-fixture-directory", "path": "owner/fixtures", "line": null },
+        { "code": "fixture-in-test-case", "path": "owner/🧪️tests/🔬️case/🧫️fixtures", "line": null },
+        { "code": "fixture-owner-delivery-scope", "path": "owner/📦️packages/🧫️fixtures", "line": null }
+      ]
     },
     {
       "id": "fixture-directory-opaque-interior",

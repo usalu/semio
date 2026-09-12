@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn renders_a_canvas_2d_scene_for_the_default_document() {
     let document = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
-    let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&document).expect("fixture surface admission"))).expect("fixture projection");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&document).expect("fixture surface admission"))).expect("fixture projection");
     assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
 }
 

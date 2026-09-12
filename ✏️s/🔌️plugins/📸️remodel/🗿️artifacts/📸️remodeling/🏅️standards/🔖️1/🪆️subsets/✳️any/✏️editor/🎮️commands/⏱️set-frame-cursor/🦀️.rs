@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Remodeling play app commands command — `set-frame-cursor`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::RemodelingMutation;
 use crate::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -14,6 +14,6 @@ pub struct SetFrameCursor {
     pub frame_index: u32,
 }
 
-pub fn handle(payload: &SetFrameCursor, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
-    Ok(Emit::config(vec![RemodelingConfigMutation::SetFrameCursor(crate::editor::remodeling::config::SetFrameCursor { stream_id: payload.stream_id.clone(), frame_index: payload.frame_index })]))
+pub fn handle(_payload: &SetFrameCursor, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
+    Ok(Emit::default())
 }

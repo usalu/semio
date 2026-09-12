@@ -7,7 +7,8 @@ import { describe, expect, it } from "vitest";
 import {
   createSegmentedDownloadSink,
   drainSegmentedMediaExport,
-  MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES,
+  SEGMENTED_DOWNLOAD_CONTRACT,
+  SEGMENTED_DOWNLOAD_REFUSAL,
   parseSegmentedDownloadMarker,
   parseSegmentedDownloadOperationId,
   segmentedDownloadSinkFactory,
@@ -112,11 +113,11 @@ describe("segmented download drain", () => {
   });
 
   it("fails closed on per-chunk and total-cap overflow", async () => {
-    for (const invalid of [new Uint8Array(0), new Uint8Array(MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES + 1)]) {
-      await expect(drainSegmentedMediaExport("x.bin", "application/octet-stream", "11", "semio-segmented-handle-v1:identity", async () => invalid, { sinkFactory: async () => fakeSink([], []) })).rejects.toThrow("segmented-download-chunk-limit");
+    for (const [invalid, code] of [[new Uint8Array(0), SEGMENTED_DOWNLOAD_REFUSAL.chunkEmpty], [new Uint8Array(SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes + 1), SEGMENTED_DOWNLOAD_REFUSAL.chunkOverCap]] as const) {
+      await expect(drainSegmentedMediaExport("x.bin", "application/octet-stream", "11", "semio-segmented-handle-v1:identity", async () => invalid, { sinkFactory: async () => fakeSink([], []) })).rejects.toThrow(code);
     }
     const chunks = [new Uint8Array(2), new Uint8Array(2), undefined];
-    await expect(drainSegmentedMediaExport("x.bin", "application/octet-stream", "12", "semio-segmented-handle-v1:identity", async () => chunks.shift(), { maximumBytes: 3, sinkFactory: async () => fakeSink([], []) })).rejects.toThrow("segmented-download-total-limit");
+    await expect(drainSegmentedMediaExport("x.bin", "application/octet-stream", "12", "semio-segmented-handle-v1:identity", async () => chunks.shift(), { maximumBytes: 3, sinkFactory: async () => fakeSink([], []) })).rejects.toThrow(SEGMENTED_DOWNLOAD_REFUSAL.totalOverCap);
   });
 });
 //#endregion 🧵Drain
@@ -127,8 +128,8 @@ describe("segmented download assembled sink", () => {
    * File System Access API: `createSegmentedDownloadSink` fails closed wherever `showSaveFilePicker` is
    * absent, which used to make an over-budget export silence (ticket 26/09/02, wave B38). */
   it("assembles every chunk in order and delivers the payload once", async () => {
-    const payload = "x".repeat(MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES) + "TAIL";
-    const pages = [bytes(payload.slice(0, MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES)), bytes(payload.slice(MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES)), undefined];
+    const payload = "x".repeat(SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes) + "TAIL";
+    const pages = [bytes(payload.slice(0, SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes)), bytes(payload.slice(SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes)), undefined];
     const delivered: { filename: string; mimeType: string; text: string }[] = [];
     await drainSegmentedMediaExport("nakagin-capsule-tower.json", "application/json", "7", "semio-segmented-handle-v1:identity", async () => pages.shift(), {
       sinkFactory: segmentedDownloadSinkFactory((filename, mimeType, assembled) => delivered.push({ filename, mimeType, text: new TextDecoder().decode(assembled) })),

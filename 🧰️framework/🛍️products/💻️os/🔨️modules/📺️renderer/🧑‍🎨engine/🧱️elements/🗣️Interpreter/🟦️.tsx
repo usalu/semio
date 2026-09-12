@@ -14,7 +14,7 @@
 
 // #region 🔌️Adapters
 import { createContext, memo, Profiler, useCallback, useContext, useMemo, useState, useSyncExternalStore, type ComponentType, type CSSProperties, type ReactElement, type ReactNode } from "react";
-import { packedTextLeaf } from "../🔌️PluginRuntime/packed-text.ts";
+import { packedTextLeaf } from "../🔌️PluginRuntime/🧳️packed-text/🟦️.ts";
 import { leftoverTreeItemSelectedV1, leftoverWorldSelectionOverlayV1, subscribeLeftoverWorldSelectionV1 } from "../🌐️World3dHost/🟦️.tsx";
 import {
   Button,
@@ -1429,14 +1429,7 @@ function PagedSurfaceView({ record, component, context }: { readonly record: UiN
       void carrierEpoch;
       const declared = Array.isArray(spine.lanes) ? (spine.lanes as readonly World3dSceneLaneRef[]) : [];
       const texts = world3dSurfaceLaneTexts(record, store.getState(), declared);
-      const assembled = world3dSceneFromLanes(spine as unknown as World3dScene, texts) as unknown as Record<string, unknown>;
-      if (typeof console !== "undefined") {
-        const preview = assembled.brushPreviewJson;
-        const interaction = typeof assembled.interactionJson === "string" ? assembled.interactionJson : "";
-        const previewLane = declared.find((lane) => lane.lane === "brushPreview");
-        console.log("[DEBUG] puzzle3d.brushPreview.assemble", { recordKey: record.key, spinePreview: typeof spine.brushPreviewJson === "string" ? spine.brushPreviewJson.length : 0, assembledPreview: typeof preview === "string" ? preview.length : 0, collectedPreview: texts.get("framework.scene.world3d.brushPreview")?.length ?? 0, previewBytes: previewLane?.bytes ?? 0, interactionHasPreview: interaction.includes("brushPreviewJson"), declared: declared.map((lane) => lane.lane), carrierEpoch: carrierEpoch.length });
-      }
-      return assembled;
+      return world3dSceneFromLanes(spine as unknown as World3dScene, texts) as unknown as Record<string, unknown>;
     },
     [record, store, revision, carrierEpoch],
   );

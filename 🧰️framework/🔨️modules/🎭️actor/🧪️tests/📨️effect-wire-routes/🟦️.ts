@@ -1,5 +1,5 @@
 /** 📨️ Who owns a `send-message` effect at the wire→friendly boundary, read from
- * `📦️packages/🟦️typescript/🧫️fixtures/📨️effect-wire-routes.json`. */
+ * `🧫️fixtures/📨️effect-wire-routes/🔣️.json`. */
 type TestSource = { readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
@@ -16,7 +16,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     readonly warns: boolean;
     readonly shellFramePayload: readonly number[] | null;
   };
-  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "🧫️fixtures/📨️effect-wire-routes.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../🧫️fixtures/📨️effect-wire-routes/🔣️.json"), "utf8")) as {
     readonly instanceId: number;
     readonly routedTargets: readonly string[];
     readonly cases: readonly Case[];

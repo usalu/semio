@@ -1,6 +1,6 @@
 //! 🧱️ 🧱️ FEM 3D app commands command — `add-section`.
 
-use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
 use crate::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -16,7 +16,7 @@ pub struct AddSection {
     pub j: f64,
 }
 
-pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
     Ok(Emit::mutations(vec![Fem3dMutation::CreateSection(crate::standards::v1::subsets::any::schema::mutations::create_section::CreateSection {

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::equation::testkit::{dispatch, math_app};
+use crate::editor::equation::unit_tests::context::{dispatch, math_app};
 use crate::editor::equation::EquationCommand;
 use crate::EquationGeometry;
 

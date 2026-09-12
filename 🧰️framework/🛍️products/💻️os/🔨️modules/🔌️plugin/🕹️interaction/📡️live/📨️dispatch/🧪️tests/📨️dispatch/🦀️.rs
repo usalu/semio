@@ -24,7 +24,7 @@ fn terminal_close_state(complete: bool, faulted: bool, blocked: bool) -> std::sy
     };
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) { Ok(session) => session, Err(_) => panic!("fixed terminal fixture admission") };
     session.begin_close();
-    for _ in 0..1_000 { if session.terminal_is_empty() { break; } let _ = session.close_step(1, 4096); }
+    for _ in 0..1_000 { if session.terminal_is_empty() { break; } let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES); }
     assert!(session.terminal_is_empty());
     let mut pump = RuntimeCloseCleanupPump::new();
     pump.session = Some(session); pump.terminal = true; pump.complete = complete; pump.faulted = faulted; pump.blocked = blocked;
@@ -237,11 +237,11 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
     let mut pump = state.pump.lock().unwrap();
     let session_preserved = pump.session.is_some();
     let source_preserved = matches!(pump.outcome.as_ref(), Some(semio_framework_job::StepOutcome::Complete(candidate)) if candidate.state.single_page().is_some_and(|bytes| bytes.as_ptr() as usize == identity && bytes == [7, 0, 0, 0]));
-    if let Some(outcome) = pump.outcome.as_mut() { while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, 4096); } }
+    if let Some(outcome) = pump.outcome.as_mut() { while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES); } }
     pump.outcome = None;
     if let Some(session) = pump.session.as_mut() {
         session.begin_close();
-        for _ in 0..1_000 { if session.terminal_is_empty() { break; } let _ = session.close_step(1, 4096); }
+        for _ in 0..1_000 { if session.terminal_is_empty() { break; } let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES); }
         assert!(session.terminal_is_empty());
     }
     pump.session = None;
@@ -435,7 +435,7 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
     let state: InteractionState = serde_json::from_value(state).unwrap();
     let envelope = store::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None);
     let mut interaction = store::ArtifactStore::new(envelope).await.unwrap();
-    interaction.install_member_store_owners_exact(crate::local_interaction::retirement::interaction_store_owners());
+    interaction.install_document_store_owners_exact(crate::local_interaction::retirement::interaction_store_owners());
     let mut app = interaction_app_under_test().await;
     let mut previous = std::mem::replace(&mut app.interaction_store, interaction);
     for _ in 0..10_000 { if previous.close_owned_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete { break; } }

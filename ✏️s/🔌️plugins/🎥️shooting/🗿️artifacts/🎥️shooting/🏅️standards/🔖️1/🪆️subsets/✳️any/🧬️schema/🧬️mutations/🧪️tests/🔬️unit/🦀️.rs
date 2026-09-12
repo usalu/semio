@@ -1,6 +1,6 @@
 use super::*;
 use crate::{ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
-use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
 use protocol::{Mutation, MutationDiff};
 
 fn sample_asset(id: &str) -> ShootingAsset {
@@ -291,7 +291,7 @@ async fn shooting_op_text_round_trips_every_variant() {
 //#endregion 🗣️OpText
 
 //#region ⚖️SemanticLaws
-/// ⚖️ `assert_mutation_inverse_law`/`assert_mutation_diff_absorb_law` (`protocol::os_spr::testkit`,
+/// ⚖️ `assert_mutation_inverse_law`/`assert_mutation_diff_absorb_law` (`protocol::os_spr::protocol_laws`,
 /// added by the Wave 0 mechanism pass) against the three most structurally distinct new kinds:
 /// an id-keyed collection create/delete pair, a bulk bulk-bulk transform, and a document-root
 /// scalar setter.
@@ -299,25 +299,25 @@ async fn shooting_op_text_round_trips_every_variant() {
 async fn create_asset_obeys_the_inverse_and_absorb_laws() {
     let base = representative_snapshot();
     let create = ShootingMutation::CreateAsset(super::super::create_asset::CreateAsset { asset: sample_asset("a9"), index: None });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &create).await;
     let d1 = create.diff(&base).into_parts().0;
     let after = d1.apply(&base).expect("valid mutation diff");
     let d2 = ShootingMutation::RenameAsset(super::super::rename_asset::RenameAsset { id: "a9".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn drag_assets_obeys_the_inverse_law() {
     let base = representative_snapshot();
     let drag = ShootingMutation::DragAssets(super::super::drag_assets::DragAssets { asset_ids: vec!["a1".into()], dx: 4.0, dy: -1.0, dz: 0.5 });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &drag).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &drag).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_active_shot_obeys_the_inverse_law() {
     let base = representative_snapshot();
     let set = ShootingMutation::SetActiveShot(super::super::set_active_shot::SetActiveShot { shot_id: Some("s2".into()) });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &set).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &set).await;
 }
 //#endregion ⚖️SemanticLaws
 
@@ -422,7 +422,7 @@ async fn change_shot_width_missing_target_is_error() {
 fn kinds_match_the_enum_and_the_catalog() {
     let declared: Vec<&str> = <ShootingMutation as protocol::SemanticMutation<ShootingSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
     assert_eq!(KINDS, declared.as_slice(), "KINDS must name every ShootingMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog shooting-1-any");
     }

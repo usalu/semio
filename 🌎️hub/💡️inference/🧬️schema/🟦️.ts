@@ -277,7 +277,7 @@ export function parseInferenceApprovalOutboxV1(value: unknown): InferenceApprova
   return { proposal: "ledger-only-proposal", commandHex: row.commandHex as string, jobId: row.jobId as string, mutationId: row.mutationId as string, proposalHash: row.proposalHash as string, commandHash: row.commandHash as string, preparedCount: 1, reconciledCount: 1 };
 }
 
-/** ⏸️ One test-support checkpoint control frame on the fixed inherited descriptor. */
+/** ⏸️ One integration-fixtures checkpoint control frame on the fixed inherited descriptor. */
 export type GisInferenceCheckpointControlFrameV1 = {
   readonly schema: "semio.hub.gis-inference-checkpoint-control/v1";
   readonly version: 1;

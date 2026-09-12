@@ -627,3 +627,161 @@ A3 also re-verified `worldRelocate` on Nakagin as NOT a live defect (extent ≈1
   verdict (outliner hide, catalogue, duplicate/delete, export, import, guest-alive) measured a dead guest. The mutate
   group also runs on 176 instances after the brush stroke (`puzzle3d.brush.*` objects painted on hovered vortices).
 | B42 | 20:25 (09-12) | `cancelJob` for the fill plan is a non-yielding guest turn (18.6 s) → watchdog kill; cancellation and drops must be bounded per turn | `📓️2026-09-12-wave-B42-cancel-job-watchdog.md` |
+- 20:50 (09-12) full battery #56 WITH locale (`🗑️generated/probe-2026-09-12T08-28-10.md`): PASS=56 FAIL=39, faults 15 —
+  the locale switch no longer kills the actor (B40 holds); the same `cancelJob` watchdog kill at 755 s (B42) plus a NEW
+  `shard 0 worker fault [handler/takeSegmentedDownloadChunk]` (B38's segmented export guest half on #56 faults in the
+  bridge) → wave B43; the window-option / projection controls read "absent from the measures rail" because B41 is
+  mid-rename of the measure ids (probe locators vs live ids) — re-measure after B41.
+| B43 | 20:55 (09-12) | `takeSegmentedDownloadChunk` worker fault on the Nakagin export (segmented lane guest/bridge half) | `📓️2026-09-12-wave-B43-segmented-download-fault.md` |
+- 21:40 (09-12) B41 landed (`📓️2026-09-12-wave-B41-projection-id-probe-scoring.md`): the projection pane, its switch rows
+  and the measures rail produced ELEVEN duplicated DOM ids per extra pane (kind-level `id_prefix`) → host-side
+  instance qualification (`childElementId`, `qualifyWindowMeasureIds`) mirroring `uiNodeDomId`, fold-state bleed
+  between panes fixed, CAD's invalid `cad-orbit-projection` id fixed; 4 laws. Probe: `cameraSettled` for the
+  projection repaint, DE label from the ACTIVE terminology; select triggers have no DOM value → product stamps
+  `data-published-value` on every draft-bearing rail control (law). Live: `projection-options,locale-switch,
+  window-content` 16/16 PASS, 0 faults. Note: `🎨️r3f` vitest config cannot load (strip-only TS import) — its in-source
+  laws are unrun; a `ReferenceError` in the probe's `locked-refusal` step fixed.
+- 21:45 (09-12) checkpoint battery on #56 with B39/B40/B41 host-live queued (`🗑️generated/battery-2026-09-12-56c-6013.txt`); B42/B43 in flight.
+- 22:10 (09-12) checkpoint battery did not boot: `📤️SegmentedDownload/🟦️.ts does not provide an export named 'MAX_SEGMENTED_DOWNLOAD_BYTES'` — B43 mid-edit of the segmented-download contract; re-run after B43 (touch the module).
+- 23:05 (09-12) B43 landed (`📓️2026-09-12-wave-B43-segmented-download-fault.md`): no limit fired — the bridge's
+  `takeSegmentedDownloadChunk` handed jco's TAGGED `option<list<u8>>` (`{tag,val}`) to the worker unwrapped, so chunk 0
+  was refused as `[object Object]` (the only guest option not routed through `unwrapOption`); new schema-first
+  contract leaf `📮️shard-client/📤️segmented-download` (chunk bytes, outstanding, total, refusal codes) replaces four
+  `4_096` literals; over-cap export refuses with a notice. Bridge law fails with the line reverted; worker law streams
+  145 KB (36 chunks) and 32 MiB−1 (8 192 chunks). Served `🌉️bridge.js` restaged (no wasm rebuild). :6013 answers 500
+  (`Failed to resolve import "@semio-tech/framework-renderer-react"` — a peer's install recreated `node_modules`
+  under the running vite) → recycling the serve, then the checkpoint battery.
+- 23:40 (09-12) serve boot broken by a peer's registry relayout (generated output moved into `🤖️generated/🧩️plugins/` at 12:34 CEST while the generator still emitted `../📦️deployment`): fixed the one emitted path at `📇️registry/📜️script.ts:696` to `../../📦️deployment`, regenerated, restarted :6013.
+- 00:20 (09-13) second peer-drift repair: the ui relocation `📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx → 🎯️targets/⚛️react/🟦️.tsx` rewrote ShellScope's import to the thin test barrel (exports only 🖌️render) → pointed it at the relocated module.
+- 00:30 (09-13) the same mis-rewrite hit every element importer (Tree, ContextMenu, Input, Stepper, …): repointed all of them at `🎯️targets/⚛️react/🟦️`.
+- 00:45 (09-13) the repaired imports were served STALE by vite (`sed -i` replaces the inode; the new fs.watch-based watcher misses it) — `touch` on each file re-transforms; checkpoint battery #56f running.
+- 01:05 (09-13) the package entry `⚛️react/📦️packages/🟦️typescript/🟦️.ts` had become a thin test adapter (only 🖌️render) while every `@semio-tech/ui-react` consumer resolves there → added `export * from "../../🟦️.tsx"` (the relocated target index).
+- 01:40 (09-13) checkpoint battery #56g (`🗑️generated/probe-2026-09-12T11-06-48.md`, 1 744 s): booted, **FAULTS=0, PASS=64
+  FAIL=27** (best full run so far; every host repair holds). The mutate group runs on a ~350-instance document (Nakagin
+  180 + ~170 brush-painted objects) and every mutation burns its 30 s budget → the remaining ceiling is mutation
+  latency vs document size (wave B44). Full-run-only reds still: engagement pane unfold obstruction, settings tab
+  `puzzle3d.panel.settings` absent, export download none, volume-brush arm `select` (wave B45 bisect round 3).
+| B44 | 01:45 (09-13) | mutation latency scales with document size (350 instances → 30 s per translate/delete): delta publication of the instances lane | `📓️2026-09-13-wave-B44-mutation-latency-large-document.md` |
+| B45 | 01:47 (09-13) | full-run-only reds round 3: engagement unfold obstruction, settings tab absent, export in the long run, volume-brush arm | `📓️2026-09-13-wave-B45-full-run-bisect-3.md` |
+- 04:10 (09-13) B42 landed (`📓️2026-09-12-wave-B42-cancel-job-watchdog.md`): the watchdog text was a misdiagnosis — no
+  unyielding turn exists. (A) the shard worker had an early `if (kind === "cancelJob") { …; return }` BEFORE the
+  requestId gate, so `ShellClient.cancelJob` (sent with a requestId) never got a reply/heartbeat and the watchdog killed
+  the shard on the oldest outstanding request → branch deleted, 3 vm laws red→green (this is what killed #56 at 740 s).
+  (B) cancellation was never incremental: puzzle3d implemented none of the `mounted_job_*` hooks and the session
+  `Drop` drained up to 262 180 close units inline under the registry mutex (and could not finish) → process-wide reaper
+  spending one `close_step` per granted turn, constant-time Drops; census worst_turn=1, `fill cancel abort` 91/0.
+  Also repaired a peer codemod that left the puzzle3d testkit self-recursive (`context::meta`). Host part live; guest
+  rides #57.
+- 04:15 (09-13) build #57 (compile only, pid 47375; B42 guest reaper + whatever of B44 compiles) started; deploy after B44/B45 report.
+- 05:20 (09-13) B45 landed (`📓️2026-09-13-wave-B45-full-run-bisect-3.md`): 8 verdicts, 4 causes — context-menu submenu rows
+  appear ~100 ms after the probe sampled (probe poll); `unfoldPerspectiveUtilities` matched both the unfold and fold
+  chips and FOLDED the bar (probe); an open History panel's full-height 3 px resize handle covered the Settings tab
+  centre (product, `🖼️Panel`, law) + `ensurePanel` read attributes a tab never publishes (probe); the polluter for the
+  rest is `fill-apply-max` when it lands ~150 objects → later small writes settle `historyUpserts:0` and change nothing
+  in 30–45 s = B44's latency lane; Inspection `locked` row goes stale while the guest fires its notice. Export needs the
+  next wasm. Blocker: :6013 down — PluginRuntime imports `🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts`, consolidated
+  by a peer into that package's `🟦️.ts`.
+- 05:35 (09-13) peer relocation `🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts → 🎭️actor/🖼️wire-turn/🟦️.ts` left PluginRuntime (and any other importer) on the old path → repointed by relative path, touched.
+- 06:10 (09-13) third peer-drift repair: the relocated styling vite builder (`🎨️styling/🏗️builder/🌐️vite/🟦️.ts`, untracked) kept in-source test imports at `./🧪️tests/…` (tests live two levels up) and esbuild fails the config bundle → `../../🧪️tests/…`; serve restarted.
+- 06:20 (09-13) #57 materialized (B42 guest reaper); checkpoint battery #57 started (`🗑️generated/battery-2026-09-13-57-6013.txt`).
+- 07:30 (09-13) B44 landed (`📓️2026-09-13-wave-B44-mutation-latency-large-document.md`): the 30 s is NOT the lane payload
+  (intake 282 ms, apply 0 ms) — a `deleteSelection` guest turn is 6.2 s at 180 objects and even `setCamera` 2.3–4.8 s:
+  `fixture_geometry_fingerprint` materialised the whole fixture JSON 3× per refresh (54 % of a cache-hit render) and a
+  mutation costs 104–235 host↔guest turns even at 1 object (one-item publication grant). Changes: per-object instance
+  residency + `instancesDelta` lane (19th, all four pinned sides; delta 368 B vs 55 154 B full), structural fingerprint
+  20.7 ms → 0.65 ms (32×), host in-place apply by id; Nakagin switch 1 235 → 808 ms, click→180 instances 2.76 → 1.69 s.
+  NEW BLOCKING DEFECT: no selection can be established on Nakagin at all (six canvas picks return nothing, the outliner
+  publishes zero entity rows) — every large-document mutation verdict measured a document with no selection → wave B46.
+  Residual: the one-item publication grant (framework, Codex peer live in that file), `interactionSelect` 20× at 180
+  objects, relocate gesture at 1 object.
+| B46 | 07:35 (09-13) | selection impossible on Nakagin (canvas pick + outliner rows), `interactionSelect` 20× cost at 180 objects, relocate precondition | `📓️2026-09-13-wave-B46-selection-on-nakagin.md` |
+- 07:40 (09-13) build #58 (compile only, pid 64404; B44 guest residency/delta lane + fingerprint) started; deploy after the #57 battery.
+- 08:10 (09-13) battery #57 (`🗑️generated/probe-2026-09-12T14-31-16.md`, 1 377 s, 99 steps): **FAULTS=0, PASS=74 FAIL=25**
+  (best full run). NEW PASS: the whole engagement family (input, brush/fill/clear verbs, abort, placeholder), export
+  + example-named export, settings panel/steppers/bumps, window-options-emit-no-history, context-menu vocabulary.
+  Remaining 25 = the mutate group on a 165-brush-object document (selection/latency: B44 guest in #58, B46 selection on
+  large documents), clipboard in the long run, projection flips (qualified ids), settings→rail, camera history, locked
+  refusal, brush preview, volume-brush arm (20 s), import-distinct (`guestTaps=[]`), outliner hide.
+- 09:00 (09-13) #58 deployed (B44 guest) and battery (`🗑️generated/probe-2026-09-12T14-55-2*.md`, 1 562 s): FAULTS=0, PASS=73
+  FAIL=25 — identical verdict set to #57 (the mutate lanes wait on B46's large-document selection). The other full-run
+  reds get their own wave now: projection flips on the instance-qualified ids, settings→rail, camera history,
+  clipboard in the long run, import-distinct `guestTaps=[]`, outliner hide, volume-brush arm 20 s, locked refusal.
+| B47 | 09:05 (09-13) | full-run reds outside the selection family: projection flips (qualified ids), settings→rail, camera history, clipboard, import taps, outliner hide, volume-brush arm | `📓️2026-09-13-wave-B47-full-run-residuals.md` |
+- 10:35 (09-13) B46 landed (`📓️2026-09-13-wave-B46-selection-on-nakagin.md`): B44's "no selection on Nakagin" was two reader
+  defects (outliner rows arrive after 2.5 s; B44's probe read `ids` while the pane publishes `selectedIds`). REAL fixes:
+  canvas pick/marquee were blind on GLB meshes (URL-backed mesh records carry no inline data → unit-cube AABB; now
+  `GLB_MESH_LOCAL_BOUNDS` from `GlbInstanceMesh`; 0/20 → 14 candidates, hit found); the leftover overlay left
+  `activeObjectId` null (gumball target / Inspection focus read nothing); `interactionSelect` built the topology TWICE
+  per pick (two full fixture decodes, ~1 800 nodes) + linear id scans → generation-keyed memo + `membership()`;
+  outliner rows clamp to the arena page and keep their select binding. Subset battery on #58 host-live: 17/17 PASS
+  incl. outliner hide/show. STILL BROKEN: the guest never re-publishes its selection lane after a pick on Nakagin
+  (`data-guest-selection-json` stays `[]` for 150 s; `puzzle.3d.play.document` never projects in that window —
+  guest `plugin_refresh_ui` vs `UiDirtyScope::Partial`) and `registerBrushMesh` never drains (8 min re-announce loop).
+| B48 | 10:40 (09-13) | guest selection lane not republished after a pick on Nakagin (`plugin_refresh_ui` vs Partial scope); `registerBrushMesh` re-announce loop never drains | `📓️2026-09-13-wave-B48-nakagin-selection-lane.md` |
+- #59 deployed (B46 guest) 18:24; battery #59 queued (`🗑️generated/battery-2026-09-13-59-6013.txt`).
+- 11:40 (09-13) B47 landed (`📓️2026-09-13-wave-B47-full-run-residuals.md`): PRODUCT — `uiIntentPayload` let a scalar gesture
+  payload replace the authored args wholesale (a stepper sent `10.5`, evicting `{windowId}`) so the whole Settings panel
+  was mute for scalar controls (fixed, law; `settings-value-reaches-window-rail` PASS); a full-viewport
+  `div.ui-veil.z-tutorial` (z 10000, pointer-events auto) RE-ARMS after the welcome tour is skipped and makes the app
+  inert — earlier full runs' `example-switch` silently did not switch (probe clears it; product defect open); the
+  Inspection panel body (absolute z-30) covers the measures rail so Projection is unusable while Inspection is open
+  (product, handed off); outliner Hide fails only when a SIBLING is selected (row-action explicit `{entity, ids}` lost
+  in the row-action hop; tap on #59). PROBE — projection combobox polling, camera-history rows were the probe's own
+  panel toggles, import fell back to a 2026-09-10 fossil export that REPLACED Nakagin. Clipboard ×3 PASS fresh.
+| B49 | 11:45 (09-13) | tutorial veil re-arms after skip (inert app); Inspection panel covers the measures rail; row-action explicit args lost with a selection | `📓️2026-09-13-wave-B49-veil-inspection-overlap-row-args.md` |
+- 12:30 (09-13) battery #59 (`🗑️generated/probe-2026-09-12T16-24-2*.md`, 1 446 s): FAULTS=0 but PASS=67 FAIL=32 — the whole
+  pointer-driven read group is inert (camera orbit/pan/zoom `before == after`, no pick lands, mutate group on the
+  1-object document) = the tutorial veil B47 found re-arming (z 10000, pointer-events auto); B47's probe-side
+  `clearIntroductionVeil` did not cover this run's reload path. #59's verdicts are therefore confounded; B49 owns the
+  product fix (Skip must dismiss the veil durably). New PASS anyway: camera-emits-no-artifact-history, clipboard
+  copy/paste hops.
+- 12:45 (09-13) correction on #59: the veil was cleared at 48 s and picks DO land (leftover `selectedIds:["seed-left-001"]`);
+  what died is the CAMERA lane — orbit/pan/zoom `moved=false` for 30 s each while #57/#58 moved in ~1 s. `data-camera-json`
+  mirrors the guest-published pose (B12), so `setCamera` → WindowConfig lane → republish regressed with #59's guest
+  (B46: generation-keyed `interaction_topology_memo`, outliner page clamp, pick bounds are host) → wave B50 (bisect B46's
+  guest hunks against #58). Verdicts downstream of the camera (projection flips, focus/zoom) are collateral.
+| B50 | 12:50 (09-13) | #59 regression: `setCamera` no longer republishes the camera lane (orbit/pan/zoom dead) — bisect B46 guest hunks vs #58 | `📓️2026-09-13-wave-B50-camera-lane-regression.md` |
+- 13:40 (09-13) B50 landed (`📓️2026-09-13-wave-B50-camera-lane-regression.md`): the camera lane is fine — `setCamera` is
+  dispatched, run and settled, but the guest reactor LIVELOCKS after the first gesture: the re-admitted `1:window`
+  alias surface holds a zero-byte output that never acks/retires, every later reconcile is refused-and-dropped
+  (`more-work streak` 2 323 → 7 843, `sources=["reconcile"]`), so every retained surface stays at its boot revision
+  (`hashes …:1`) — same wedge B48 is on (identical hashes hours apart); #59 only changed the surface traffic.
+  Camera/projection/inspection reds on #59 are collateral; a camera refresh-route law now exists (passes natively).
+| A6 | 13:50 (09-13) | read-only `[DEBUG]`/flood inventory for the close-out sweep (attribution per wave, keep/remove) | `📓️2026-09-13-audit-A6-debug-trace-inventory.md` |
+- 14:10 (09-13) A6 landed (`📓️2026-09-13-audit-A6-debug-trace-inventory.md`): 419 production `[DEBUG]` hits in scope, 281
+  pre-session, 138 session-added → 99 REMOVE, 22 KEEP (gated), 17 PEER; a NEW ungated flood `puzzle3d.brushPreview.bind`
+  / `.assemble` (World3dHost :5026, Interpreter :1437; 174 lines = 14.5 % of a console tail); 44 ticket input scripts to
+  keep. The sweep wave (B51) runs after B48/B49 land so it does not clobber live edits.
+- 14:50 (09-13) B49 landed (`📓️2026-09-13-wave-B49-veil-inspection-overlap-row-args.md`): the welcome-tour veil never re-armed —
+  the FIRST Skip could not be pressed: `resolveIntroductionPlacement` returned the centered branch unclamped (Skip at
+  y −78) and `WindowChrome`'s `z-[1]`/`z-[2]` arbitrary utilities are not emitted by the stylesheet so the body plane
+  swallowed every cap-row press → clamp all branches, real inline stacking, a press on a blocking veil ends the tour,
+  session-durable dismissal (4 laws). Inspection over the measures rail → shell-root-keyed dock-column reserve
+  consumed by `🪟️Window` (rail x 1130 → 833, listbox opens in 1 ms; law). Row-action args: the host sends
+  `{entity, flag, ids, value}` verbatim — the three silent exits are in the guest's staged prologue (B48's lane).
+  All host-live.
+- 15:50 (09-13) B48 landed (`📓️2026-09-13-wave-B48-nakagin-selection-lane.md`): the guest UI freeze was never Nakagin-specific
+  — `MountedReconcileGrant`'s `Drop` released less than `cancel` (never cleared `slot.output_index`, never closed the
+  reserved `ready` output); `commit_source` has seven `Err` exits taking the Drop path (`let _ = grant.commit_source`)
+  and `reserve_mounted_owned` refuses any slot with `output_index.is_some()` → one refused commit makes a surface
+  permanently un-reservable (refuse → defer → re-dirty forever, `streak=62 288`, all 13 surfaces deferred) and leaks
+  1 of 64 output slots per exit. Fix: one shared `release()`, refused commit/defer become named shell faults,
+  `redirty_acknowledged_deferred_surfaces` drains all ready deferred surfaces per turn, `reserve_refusal` in
+  `debug_state`. Mesh loop: three announce paths left the standing request unretired + host `claimReupload` gate moved
+  by its own traffic → `retire_mesh_reupload` on all paths + `PUZZLE3D_MESH_REUPLOAD_CLAIMS = 2` (live: 60 commands in
+  30 s then zero). ⚠️ a peer's `♻️reconcile` edit (17:07 CEST) no longer terminates its retirement ladder (3 `patches::`
+  laws + B2's law red with B48 on and off) — #60 is built from that tree. Build #60 + deploy + battery chained.
+| B51 | 16:00 (09-13) | close-out `[DEBUG]` sweep (gated: Rust after #60 compiles, host TS after the #60 battery) | `📓️2026-09-13-wave-B51-debug-sweep.md` |
+- 17:05 (09-13) #60 deployed (B48 guest) and battery (`🗑️generated/probe-2026-09-12T18-29-0*.md`, 1 297 s): FAULTS=0,
+  PASS=64 FAIL=33 — the camera is STILL frozen (orbit/pan/zoom before == after), i.e. the guest still livelocks after the
+  first gesture: B48 warned that a peer's `♻️reconcile` edit (17:07 CEST) no longer terminates its retirement ladder
+  (3 `patches::` laws + B2's mixed-surface law red with B48 on and off) and #60 was built from that tree → wave B52.
+| B52 | 17:10 (09-13) | reactor retirement ladder no longer terminates on #60 (peer's ♻️reconcile edit; alias surface zero-byte output): bounded livelock + termination laws | `📓️2026-09-13-wave-B52-reconcile-ladder-livelock.md` |
+- 17:55 (09-13) B51 landed (`📓️2026-09-13-wave-B51-debug-sweep.md`): 148 session-added `[DEBUG]` lines re-derived; 53 removed
+  in scope (incl. the `brushPreview.bind/.assemble` flood and the guest `puzzle3d.import.*` taps), 46 remain classified
+  KEEP-gated/KEEP-doc/PEER; `.catch` handlers and named fault reports kept with the prefix stripped; three
+  literal-pinning laws repaired properly (peer contributions block restored verbatim + PEER; B31's gumball landmark made
+  a permanent record). Findings: the biggest console families (`performInvocation`/`command ingress`, 43 % of a tail)
+  are PRE-session in PluginRuntime (`grep` treats those long-line files as binary — use `grep -a`) → follow-up outside
+  this ticket's sweep rule; two close-out paths a glob misses: `🗑generated/` without U+FE0F (59 files, 3.6 MB) and a
+  corrupted nested `<U+FFFD>️26/…` tree. 0 errors on all three checks, renderer 1037/6 (baseline), ui-react 718/13.

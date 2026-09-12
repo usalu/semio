@@ -644,8 +644,8 @@ export {
   createBufferedDownloadSink,
   createSegmentedDownloadSink,
   drainSegmentedMediaExport,
-  MAX_SEGMENTED_DOWNLOAD_BYTES,
-  MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES,
+  SEGMENTED_DOWNLOAD_CONTRACT,
+  SEGMENTED_DOWNLOAD_REFUSAL,
   parseSegmentedDownloadMarker,
   parseSegmentedDownloadOperationId,
   SEGMENTED_DOWNLOAD_MARKER_PREFIX,
@@ -1960,11 +1960,31 @@ export function spawnedWindowChromeForKind(
   };
 }
 
+/** 🏷️ The argument FIELD a trigger's scalar payload travels under. An action reads named arguments —
+ * `value` for an absolute edit (`engagement_input`, `engagement_control_select`,
+ * `puzzle3d_absolute_or_delta`'s absolute half) and `delta` for a relative bump (its relative half) —
+ * so the name belongs to the TRIGGER, not to the control that fired it. */
+function uiInputField(trigger: UiIntent["trigger"]): string {
+  return trigger === "delta" ? "delta" : "value";
+}
+
+/** 🎬️ The arguments one intent dispatches: the node's AUTHORED args with the gesture's own payload
+ * merged over them.
+ *
+ * 🧯️ A scalar payload used to REPLACE the authored args wholesale — a `NumberStepper`'s `onChange`
+ * reports the number `10.5`, so the action received the bare scalar `10.5` and every guest, which reads
+ * `args.get("value")`, saw nothing at all while the authored `{windowId}` was thrown away with it. The
+ * whole Settings panel was mute for exactly that reason: browser-measured on `:6013`, `setGridSpacing`
+ * reaching the guest and settling with `historyUpserts: 0, effects: 0` while the stepper rendered its
+ * optimistic 10.5 and both windows' rails stayed at 10 for 30 s (ticket 26/09/02/PUZZLE-3D-END-TO-END
+ * wave B47 §2). A scalar is NAMED by its trigger and merged; a map payload merges as it always did. */
 function uiIntentPayload(intent: UiIntent): unknown {
   if (intent.input === null) return intent.args ?? undefined;
-  if (intent.args === null) return intent.input;
-  if (typeof intent.args === "object" && !Array.isArray(intent.args) && typeof intent.input === "object" && !Array.isArray(intent.input)) return { ...intent.args, ...intent.input };
-  return intent.input;
+  const scalar = typeof intent.input === "string" || typeof intent.input === "number" || typeof intent.input === "boolean" || typeof intent.input === "bigint";
+  const named = scalar ? { [uiInputField(intent.trigger)]: intent.input } : intent.input;
+  if (intent.args === null) return named;
+  if (typeof intent.args === "object" && !Array.isArray(intent.args) && typeof named === "object" && !Array.isArray(named)) return { ...intent.args, ...named };
+  return named;
 }
 
 /** @emoji 🌉️ Bridges one semantic UI intent onto the existing plugin action address. Version one is the direct `ActionFactory` mapping; later versions stay explicit in the action name until the host wire owns a version field. */
@@ -2956,6 +2976,14 @@ export const PUZZLE3D_MESH_UPLOAD_MAX_PAGES = 384;
  * ceiling. A run that would overrun this is refused here rather than queued into unbounded memory. */
 export const PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES = PUZZLE3D_MESH_UPLOAD_SLOTS * PUZZLE3D_MESH_UPLOAD_MAX_PAGES;
 
+/** 🚚️ How many times one mesh identity's guest-side re-upload request may be claimed under a single
+ * guest instantiation — see {@link Puzzle3dBrushMeshRegistry.claimReupload}. Two: the page run the
+ * request asks for, plus exactly one retry for a run that failed part-way (a `Gap`, a refused digest, a
+ * world host unmounted mid-drain). A third claim can only ever repeat an outcome the first two already
+ * produced, and each one costs a full `PUZZLE3D_MESH_UPLOAD_MAX_PAGES`-bounded run on the serialized
+ * per-actor command lane, which is what every user interaction then queues behind. */
+export const PUZZLE3D_MESH_REUPLOAD_CLAIMS = 2;
+
 /** 🥽️ One page of a `registerBrushMesh` upload run. Positions fill a page first; the indices stream
  * continues in whatever of the page's value budget is left, so the run is dense and its last page is
  * the only partial one. */
@@ -2983,12 +3011,12 @@ export type Puzzle3dBrushMeshPage = {
  *   instantiation and starts at zero in a fresh one, so a value below the high-water mark this page
  *   saw is proof of a restart and voids every entry ({@link observeResidency}).
  * - `meshReuploadUrls` — identities a refused id-only announcement is waiting on bytes for
- *   ({@link claimReupload}), claimed at most once per publishing residency so a republished stale
- *   scene cannot re-drive an upload that already ran. */
+ *   ({@link claimReupload}), claimed at most {@link PUZZLE3D_MESH_REUPLOAD_CLAIMS} times per guest
+ *   instantiation so a republished stale scene cannot re-drive an upload that already ran. */
 export class Puzzle3dBrushMeshRegistry {
   #residency = -1;
   readonly #entries = new Map<string, { readonly digest: string; readonly paged: boolean }>();
-  readonly #repaged = new Map<string, number>();
+  readonly #claims = new Map<string, number>();
   readonly #refusedAlias = new Set<string>();
 
   /** 🔄️ Folds one published `meshResidency` in. Answers `true` exactly when the count went backwards —
@@ -2999,7 +3027,7 @@ export class Puzzle3dBrushMeshRegistry {
     this.#residency = installs;
     if (restarted) {
       this.#entries.clear();
-      this.#repaged.clear();
+      this.#claims.clear();
       this.#refusedAlias.clear();
     }
     return restarted;
@@ -3053,12 +3081,26 @@ export class Puzzle3dBrushMeshRegistry {
     this.#entries.delete(url);
   }
 
-  /** 🚚️ Claims one guest-side re-upload request, dropping the stale claim. `false` for a request this
-   * registry already answered at that residency or later — the guest republishes the same world body
-   * until the bytes land, and re-driving on each of those would be an upload storm, not a recovery. */
-  claimReupload(url: string, residency: number): boolean {
-    if (!Number.isFinite(residency) || residency <= (this.#repaged.get(url) ?? -1)) return false;
-    this.#repaged.set(url, residency);
+  /** 🚚️ Claims one guest-side re-upload request, dropping the stale claim. `false` once this identity
+   * has been claimed {@link PUZZLE3D_MESH_REUPLOAD_CLAIMS} times under the live guest instantiation.
+   *
+   * 🐛️ The gate used to be `residency <= #repaged[url]` — "at most one claim per published residency
+   * value" — and `meshResidency` is the guest's own install counter, which EVERY accepted announcement
+   * increments (`derive_brush_mesh`/`adopt_brush_mesh_by_digest`, `✏️editor/⏳️precompute/🦀️.rs`). So the
+   * brake was moved by the very traffic it existed to suppress: one standing request that outlived its
+   * identity's install re-opened the gate on every unit of progress anywhere in the tab, each claim
+   * deleted the paged entry and permanently set {@link mayAlias} false, and the next announcement was
+   * therefore a full 72-command page run instead of a one-command adopt. Measured at wasm #58 on the
+   * 180-object Nakagin document: `registerBrushMesh` still arriving 8 minutes after the example switch
+   * (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B46 §5, wave B48 §1.2).
+   *
+   * A count is a fact the guest's accepted work cannot move, and only a RESTART
+   * ({@link observeResidency}) or a deliberate {@link clear} resets it — so the announce is bounded per
+   * document per guest, with exactly one retry left for a page run that failed mid-way. */
+  claimReupload(url: string): boolean {
+    const claimed = this.#claims.get(url) ?? 0;
+    if (claimed >= PUZZLE3D_MESH_REUPLOAD_CLAIMS) return false;
+    this.#claims.set(url, claimed + 1);
     if (this.#entries.get(url)?.paged === false) this.#refusedAlias.add(url);
     this.#entries.delete(url);
     return true;
@@ -3066,7 +3108,7 @@ export class Puzzle3dBrushMeshRegistry {
 
   clear(): void {
     this.#entries.clear();
-    this.#repaged.clear();
+    this.#claims.clear();
     this.#refusedAlias.clear();
     this.#residency = -1;
   }
@@ -3235,6 +3277,7 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
   return (
     <Slider
       id={measure.id}
+      data-published-value={String(measure.value)}
       value={[measure.value]}
       min={measure.min}
       max={measure.max}

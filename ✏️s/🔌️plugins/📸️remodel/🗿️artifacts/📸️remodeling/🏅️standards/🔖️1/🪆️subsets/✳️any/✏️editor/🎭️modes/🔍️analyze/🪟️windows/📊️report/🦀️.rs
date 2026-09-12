@@ -1,7 +1,7 @@
 //! 📊️ Remodeling play app — the Report window: a Table surface over whichever reconstruction dataset the
 //! config's `report_table` selects.
 
-use crate::editor::remodeling::config::RemodelingConfig;
+use crate::editor::remodeling::modes::analyze::windows::report::config::RemodelingReportWindowConfig;
 use crate::RemodelingSnapshot;
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TableScene, UiAssemblyResult, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
@@ -117,7 +117,7 @@ fn report_table_json(scene: &RemodelingSnapshot, table: &str) -> (String, String
     (pack::json_to_string(&pack::json_array(columns)), pack::json_to_string(&pack::json_array(rows)))
 }
 
-pub fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &RemodelingSnapshot, config: &RemodelingReportWindowConfig) -> UiAssemblyResult<BuiltNode> {
     let (columns_json, rows_json) = report_table_json(scene, &config.report_table);
     semio_framework_plugin::scene_surface(REMODELING_PLAY_SURFACE_REPORT, ContractSurfaceKind::Table, &TableScene::base(columns_json, rows_json))
 }

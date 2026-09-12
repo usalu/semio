@@ -1044,7 +1044,7 @@ fn a_node_graph_surface_stays_under_the_fixed_admission_with_five_hundred_operat
         fixture_json: extras.fixture_json,
         eval_json: extras.eval_json,
         status_json: extras.status_json,
-        ..ui_wgpu::wgpu::NodeGraphScene::base(Vec::new(), Vec::new(), ui_wgpu::wgpu::NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 })
+        ..ui_wgpu::wgpu::NodeGraphScene::base(Vec::new(), Vec::new(), semio_framework::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 })
     };
     let props = ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::NodeGraph, &scene).expect("a node-graph surface must fit the fixed admission with 500 operators registered");
     let surface_bytes = props.doc.bytes.as_slice().len();

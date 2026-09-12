@@ -21,7 +21,7 @@ pub struct Block3dArtifact {
     #[state(artifact)]
     pub representations: Vec<BlockRepresentation>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.kit")]
+    #[child(kind = "s.stdio.semio")]
     pub catalog: store::ArtifactChild<SemioKitSnapshot>,
     #[state(artifact)]
     pub vortex_kind_extra: Vec<Block3dVortexKindExtra>,

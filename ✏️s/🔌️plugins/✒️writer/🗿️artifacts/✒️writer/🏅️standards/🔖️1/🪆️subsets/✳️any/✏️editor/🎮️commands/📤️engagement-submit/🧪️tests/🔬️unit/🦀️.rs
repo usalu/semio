@@ -1,5 +1,5 @@
 use super::EngagementSubmit;
-use crate::editor::writer::testkit::new_app;
+use crate::editor::writer::unit_tests::context::new_app;
 use crate::editor::writer::{WriterCommand, WRITER_PLAY_WINDOW_KIND};
 use semio_framework_plugin::{PluginApp, ViewModel, ViewWindowInstance, WindowMeasure};
 
@@ -12,7 +12,7 @@ fn view() -> ViewModel {
 #[semio_framework_async_macros::async_test]
 async fn engagement_submit_parses_font_size() {
     let mut app = new_app().await;
-    let result = app.dispatch_typed(WriterCommand::EngagementSubmit(EngagementSubmit { value: Some("font 16".into()) }), &semio_framework_plugin::testkit::meta("local")).await.expect("submit");
+    let result = app.dispatch_typed(WriterCommand::EngagementSubmit(EngagementSubmit { value: Some("font 16".into()) }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("submit");
     // Font size is ephemeral config state — no history entry.
     assert!(result.mutations.is_empty());
     let measures = app.window_measures(&view()).await;
@@ -28,9 +28,9 @@ async fn engagement_submit_parses_normalized_shell_drafts() {
     let mut app = new_app().await;
     let before_toggle = app.window_engagements(&view()).await.get(WINDOW_ID).and_then(|engagement| engagement.options.as_ref()).and_then(|options| options.first()).and_then(|option| option.pressed).expect("line-numbers pressed state");
 
-    app.dispatch_typed(WriterCommand::EngagementSubmit(EngagementSubmit { value: Some("Font16".into()) }), &semio_framework_plugin::testkit::meta("local")).await.expect("font");
-    app.dispatch_typed(WriterCommand::EngagementSubmit(EngagementSubmit { value: Some("Tab4".into()) }), &semio_framework_plugin::testkit::meta("local")).await.expect("tab");
-    app.dispatch_typed(WriterCommand::EngagementSubmit(EngagementSubmit { value: Some("LineNumbers".into()) }), &semio_framework_plugin::testkit::meta("local")).await.expect("line numbers");
+    app.dispatch_typed(WriterCommand::EngagementSubmit(EngagementSubmit { value: Some("Font16".into()) }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("font");
+    app.dispatch_typed(WriterCommand::EngagementSubmit(EngagementSubmit { value: Some("Tab4".into()) }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("tab");
+    app.dispatch_typed(WriterCommand::EngagementSubmit(EngagementSubmit { value: Some("LineNumbers".into()) }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("line numbers");
 
     let measures = app.window_measures(&view()).await;
     let main = measures.get(WINDOW_ID).expect("main measures");

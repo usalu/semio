@@ -9,7 +9,7 @@
 //
 // Every BEFORE/AFTER byte pair is built by `./🦀️note-oracle-codec` — a standalone Rust binary that
 // links `dxf` 0.6, `quick-xml` 0.42 and `lopdf` 0.44 DIRECTLY (the SAME crates already registered as
-// this subset's oracle in `../🔮️oracle/🔣️.json`), never note's own (currently non-building)
+// this subset's oracle in `../🔮️oracles/🔣️.json`), never note's own (currently non-building)
 // production serializers. This file only marshals: it shells out to `cargo run`, computes digests
 // over what the crate wrote, and emits/merges the `fixtureManifests` index — exactly the split
 // `…✳️mesh/🏭️generator/📜️script.ts` and `…✳️cad/🏭️generator/📜️script.ts` already use.
@@ -23,9 +23,9 @@
 // `SEMIO_FIXTURE_OUT` (set by `test fixture generate|reproduce`) is a FIXTURES ROOT; every recipe
 // writes `<root>/<recipe>/<file>`. Absent it, the committed 🧫️fixtures directory is the root.
 //
-// @see ./🦀️note-oracle-codec/🧫️recipes/🦀️.rs — the 16 recipes (one per witnessable mutation)
+// @see ./🔁️codec/🧫️recipes/🦀️.rs — the 16 recipes (one per witnessable mutation)
 // @see ../🔬️probes/📜️script.ts — the sibling that reads/compares what this file writes
-// @see ../🔮️oracle/🔣️.json — the fixtureManifests this file's `manifests` output is pasted into
+// @see ../🔮️oracles/🔣️.json — the fixtureManifests this file's `manifests` output is pasted into
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️note-1-any-fixture-corpus.md
 
 //#endregion 🧲️Header
@@ -41,7 +41,7 @@ type FixtureFile = { role: string; path: string; mediaType: string; sha256: stri
 type Recipe = { id: string; mutation: string; subset: string; subsetDirectoryName: string; directoryName: string; files: readonly { carrier: "dxf" | "svg" | "pdf"; before: string; after: string }[] };
 
 /** 🎯️ id, mutation kind, and which of dxf/svg/pdf carriers this recipe covers — MIRRORS
- * `🦀️note-oracle-codec/🧫️recipes/🦀️.rs::recipes()`. Duplicated here (never imported — TS cannot import
+ * `🔁️codec/🧫️recipes/🦀️.rs::recipes()`. Duplicated here (never imported — TS cannot import
  * Rust) so this file can compute file roles/paths/media-types without re-invoking the crate to ask;
  * kept in the SAME order and content as the Rust source, which is the single source of truth for what
  * bytes actually get written. A recipe added on one side and not the other is caught immediately by
@@ -67,7 +67,7 @@ const RECIPES: readonly Recipe[] = [
 ] as const;
 
 const MEDIA_TYPE: Record<string, string> = { dxf: "image/vnd.dxf", svg: "image/svg+xml", pdf: "application/pdf" };
-const CRATE_DIR = join(import.meta.dir, "🦀️note-oracle-codec");
+const CRATE_DIR = join(import.meta.dir, "🔁️codec", "📦️packages", "🦀️rust");
 const SUBSETS_DIR = join(import.meta.dir, "..", "..");
 const COMMITTED_FIXTURES = join(import.meta.dir, "..", "🧫️fixtures");
 const ORACLE_BY_CARRIER: Record<string, string> = { dxf: "dxf-crate-note-ink-reader", svg: "quick-xml-note-drawing-reader", pdf: "lopdf-note-text-reader" };

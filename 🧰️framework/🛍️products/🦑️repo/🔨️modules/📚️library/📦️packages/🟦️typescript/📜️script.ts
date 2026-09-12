@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/repo-lib` router: `bun ./📜️script.ts <lint|test [level]|workspaces <--write|--check>>`. */
-import { appendFileSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
 import { dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
-import { BundleScript, ScriptRouter, computeWorkspaces, runBundleScriptMain, runBunx, resolveTestLevel, runTestBudgeted } from "./🟦️.ts";
+import { BundleScript, ScriptRouter, canonicalGoPlan, computeWorkspaces, runBundleScriptMain, runBunx, runCanonicalGoTests, resolveTestLevel, runTestBudgeted } from "./🟦️.ts";
 
 /** 🧫️ Allocates one exclusive no-follow semantic run owner and its bundle directory. */
 export function transactionV2BundleRoot(repoRoot: string, runId: string): string {
@@ -37,6 +37,27 @@ class LintScript extends BundleScript {
   }
 }
 
+/** 🐹️Executes one canonical Go module selection for native callers and Nx routes. */
+class GoTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length < 2) throw new Error("Expected go-test <module-root> <input-path|-> [go-test-args...]");
+    const moduleRoot = realpathSync(resolve(segments[0]!));
+    const input = segments[1]!;
+    let packages: string[] | undefined;
+    if (input !== "-") {
+      const path = realpathSync(resolve(input));
+      const plan = canonicalGoPlan(moduleRoot);
+      const projected = Object.entries(plan.replacements).find(([, source]) => realpathSync(source) === path)?.[0];
+      const info = lstatSync(path);
+      const owner = relative(moduleRoot, projected ? dirname(projected) : info.isDirectory() ? path : dirname(path)).split(sep).join("/");
+      const selected = owner ? `./${owner}` : ".";
+      if (owner === ".." || owner.startsWith("../") || !plan.packages.includes(selected)) throw new Error(`Go input has no compiler package owner: ${path}`);
+      packages = [selected];
+    }
+    await runCanonicalGoTests(moduleRoot, segments.slice(2), { env: process.env, packages });
+  }
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "process-budgets") {
@@ -48,6 +69,90 @@ class TestScript extends BundleScript {
     if (segments[0] === "exact-cargo-laws") {
       if (segments.length !== 1) throw new Error("Expected test exact-cargo-laws");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️exact-cargo-laws/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "go-input-projection") {
+      if (segments.length !== 1) throw new Error("Expected test go-input-projection");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️canonical-go-discovery/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 30_000 });
+      return;
+    }
+    if (segments[0] === "go-test-dispatch") {
+      if (segments.length !== 1) throw new Error("Expected test go-test-dispatch");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚦️test-dispatch/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 70_000 });
+      return;
+    }
+    if (segments[0] === "generated-source-topology") {
+      if (segments.length !== 1) throw new Error("Expected test generated-source-topology");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏭️generated-source-topology/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "package-body-policy") {
+      if (segments.length !== 1) throw new Error("Expected test package-body-policy");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 60_000 });
+      return;
+    }
+    if (segments[0] === "kind-only-basename") {
+      if (segments.length !== 1) throw new Error("Expected test kind-only-basename");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🌳️kind-only-basename/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "framework-source-topology") {
+      if (segments.length !== 1) throw new Error("Expected test framework-source-topology");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️framework-source-topology/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 30_000 });
+      return;
+    }
+    if (segments[0] === "root-artifact-dependency-source") {
+      if (segments.length !== 1) throw new Error("Expected test root-artifact-dependency-source");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-artifact-dependency-source/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 45_000 });
+      return;
+    }
+    if (segments[0] === "root-taxonomy-workflow-source") {
+      if (segments.length !== 1) throw new Error("Expected test root-taxonomy-workflow-source");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-taxonomy-workflow-source/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 45_000 });
+      return;
+    }
+    if (segments[0] === "framework-root-source-topology") {
+      if (segments.length !== 1) throw new Error("Expected test framework-root-source-topology");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧰️framework-root-source-topology/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 30_000 });
+      return;
+    }
+    if (segments[0] === "manifestless-source-closure") {
+      if (segments.length !== 1) throw new Error("Expected test manifestless-source-closure");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️manifestless-source-closure/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 30_000 });
+      return;
+    }
+    if (segments[0] === "plugin-publication-source-ownership") {
+      if (segments.length !== 1) throw new Error("Expected test plugin-publication-source-ownership");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📣️plugin-publication-source-ownership/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 30_000 });
+      return;
+    }
+    if (segments[0] === "repo-source-ownership") {
+      if (segments.length !== 1) throw new Error("Expected test repo-source-ownership");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦑️repo-source-ownership/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 30_000 });
+      return;
+    }
+    if (segments[0] === "storybook-discovery") {
+      if (segments.length !== 1) throw new Error("Expected test storybook-discovery");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️storybook-discovery/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "os-source-topology") {
+      if (segments.length !== 1) throw new Error("Expected test os-source-topology");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🖥️os-source-topology/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
@@ -310,6 +415,11 @@ class TestScript extends BundleScript {
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
+    if (segments[0] === "composition-policy") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, "-t", "composition policy"], { cwd: this.repoRoot });
+      return;
+    }
     if (segments[0] === "artifact-source-residue") {
       if (segments.length !== 1) throw new Error("Artifact source residue accepts no extra arguments");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts");
@@ -532,6 +642,7 @@ class TicketImportantFemHandoffCheckScript extends BundleScript {
 const router = new ScriptRouter(import.meta.dir)
   .register("lint", LintScript)
   .register("test", TestScript)
+  .register("go-test", GoTestScript)
   .register("workspaces", WorkspacesScript)
   .register("generate-ticket-important-fem-handoff", TicketImportantFemHandoffGenerateScript)
   .register("preview-generated", TicketImportantFemHandoffPreviewScript)

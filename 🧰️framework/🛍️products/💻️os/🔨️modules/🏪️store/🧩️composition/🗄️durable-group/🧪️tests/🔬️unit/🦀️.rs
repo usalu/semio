@@ -118,7 +118,7 @@ async fn owned_store(id: &str, dialect: crate::os_io::ArtifactDialect, owner: Op
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
     let mut store = ArtifactStore::new(envelope).await.expect("owned group fixture Store");
-    store.install_member_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners());
     store
 }
 

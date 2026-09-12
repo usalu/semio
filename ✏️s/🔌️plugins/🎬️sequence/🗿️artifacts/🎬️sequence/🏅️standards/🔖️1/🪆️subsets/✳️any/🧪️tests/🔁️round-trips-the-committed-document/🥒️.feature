@@ -7,7 +7,7 @@ Feature: Decode and re-encode the real committed sequence artifact
   vector and no mutation kind, so unlike its two subset siblings it claims no `@mutations-` catalog —
   `✳️any` owns no mutation catalog of its own now that `steps` and dependency-edges each have their
   smallest owner. It carries the same recorded no-oracle decision
-  (`sequence-step-graph-mutation-semantics`, in `../../🔮️oracle/🔣️.json`) because the same debt
+  (`sequence-step-graph-mutation-semantics`, in `../../🔮️oracles/🔣️.json`) because the same debt
   applies here too: this subset's committed snapshot text grammar is the repository-wide placeholder
   `payload = OCTET+`, whose header production declares `"schema" SP "stdio.json"` against an artifact
   whose own first line says otherwise, so a second implementation would be refused by clause exactly

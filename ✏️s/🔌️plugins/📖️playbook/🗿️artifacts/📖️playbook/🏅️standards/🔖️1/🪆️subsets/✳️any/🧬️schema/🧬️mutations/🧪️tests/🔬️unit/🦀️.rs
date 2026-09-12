@@ -1,6 +1,6 @@
 use super::*;
 use crate::{PlaybookBlock, PlaybookStep};
-use protocol::os_spr::testkit::{assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use protocol::os_spr::protocol_laws::{assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 use protocol::MutationKind;
 use protocol::SemanticMutation;
 
@@ -140,7 +140,7 @@ async fn dispatch_registers_semantic_descriptors() {
 //#region 🔖️OutcomeLaws
 // 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — one law test per verb
 // family present in this facet, calling `assert_missing_target_is_error` (landed in
-// `📡️spr/🧪️testkit`). No family in this facet reaches Fatal (playbook's only duplicate-prone
+// `📡️spr/🧪️tests/⚖️protocol-laws`). No family in this facet reaches Fatal (playbook's only duplicate-prone
 // family, `add`, treats a duplicate id as Warning `mutation.no-op`, never Fatal), so
 // `assert_fatal_never_applies` has nothing meaningful to exercise here.
 // `assert_outcome_policy_matrix` is NOT landed under that name (only the generic closure-based

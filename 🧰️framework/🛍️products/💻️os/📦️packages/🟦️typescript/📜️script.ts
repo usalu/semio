@@ -3,6 +3,7 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -14,19 +15,19 @@ class TestScript extends BundleScript {
 /** 🏗️ Routes the package generator through the shared workspace implementation. */
 class GenerateWgpuScript extends BundleScript {
   async run(): Promise<void> {
-    await (await import("../../../../../📜️script.ts")).runWgpuPackageGenerator(getWorkspaceRoot(), "generate");
+    await runWgpuPackageGenerator(getWorkspaceRoot(), "generate");
   }
 }
 /** 🔎️ Checks the exact package artifacts without writing outputs. */
 class CheckWgpuScript extends BundleScript {
   async run(): Promise<void> {
-    await (await import("../../../../../📜️script.ts")).runWgpuPackageGenerator(getWorkspaceRoot(), "check");
+    await runWgpuPackageGenerator(getWorkspaceRoot(), "check");
   }
 }
 /** 🔮️ Streams the canonical read-only package preview. */
 class PreviewGeneratedScript extends BundleScript {
   async run(): Promise<void> {
-    await (await import("../../../../../📜️script.ts")).runWgpuPackageGenerator(getWorkspaceRoot(), "preview");
+    await runWgpuPackageGenerator(getWorkspaceRoot(), "preview");
   }
 }
 
@@ -232,7 +233,7 @@ async function proveGisMapApprovalHistory(repoRoot: string): Promise<Record<stri
   };
   if (!deepEqual(routes, fixture.ordinaryHistory)) throw new Error("Shell history arbitration disagrees with the neutral corpus");
 
-  const worker = readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧵️backbone-worker.ts"), "utf8");
+  const worker = readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🏪️store", "👷️worker", "🟦️.ts"), "utf8");
   const shell = readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📺️renderer", "🧑‍🎨engine", "🧱️elements", "🏛️ShellHost", "🟦️.tsx"), "utf8");
   const conforms = (candidateWorker: string, candidateShell: string): boolean =>
     candidateWorker.includes('owner.abort.abort(new Error("gis map approval undo owner rebootstrap"));')
@@ -487,7 +488,7 @@ async function proveDocumentOpeningAttempt(repoRoot: string): Promise<number> {
   if (!deepEqual(rebootstrapObserved, rebootstrapExpected)) throw new Error("document rebootstrap owner retirement differs from the corpus");
 
   const protocol = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"), "utf8");
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
   const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
   const storeWire = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");
   const storeWorker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🦀️.rs"), "utf8");
@@ -578,7 +579,7 @@ async function proveGisMapPeerRebootstrap(repoRoot: string): Promise<number> {
   });
   const expected = fixture.clients.map((client: { clientInstanceId: string }) => ({ phase: "live", currentPair: fixture.published.aggregateSha256, uiOwner: client.clientInstanceId, frontier: fixture.published.frontier, scene: fixture.published.scene }));
   if (!deepEqual(observed, expected) || !deepEqual(observed[0]?.frontier, observed[1]?.frontier) || !deepEqual(observed[0]?.scene, observed[1]?.scene)) throw new Error("GIS Map peer rebootstrap model diverged");
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
   const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
   const conforms = (candidateWorker: string, candidateShell: string): boolean =>
     candidateWorker.includes("control.space_id !== binding.spaceId || control.document_id !== state.config.documentId") &&
@@ -633,7 +634,7 @@ async function proveMountedGisMapProbe(repoRoot: string): Promise<number> {
     regionIds: fixture.source.regions.map((region: { id: string }) => region.id).sort(),
   };
   if (!deepEqual(observed, fixture.expected)) throw new Error("mounted GIS Map independent projection differs from the corpus");
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
   const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
   const conforms = (candidateWorker: string, candidateShell: string): boolean =>
     candidateWorker.includes('kind: "browser-actor-ui-mounted"')

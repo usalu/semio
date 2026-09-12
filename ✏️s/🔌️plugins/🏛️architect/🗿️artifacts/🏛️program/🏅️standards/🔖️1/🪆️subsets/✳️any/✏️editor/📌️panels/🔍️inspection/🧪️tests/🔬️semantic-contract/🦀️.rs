@@ -1,7 +1,7 @@
 use super::*;
 
 fn project(node: BuiltNode) -> serde_json::Value {
-    let text = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire semantic tree");
+    let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire semantic tree");
     serde_json::from_str(&text).expect("independent tree JSON oracle")
 }
 

@@ -1141,11 +1141,11 @@ macro_rules! member_owners {
         {
             semio_snapshot_open!($module, subsets::$module::schema::snapshot::$snapshot);
 
-            fn member_store_owners() -> dsl::MemberStoreOwners<
+            fn member_store_owners() -> dsl::DocumentStoreOwners<
                 Self,
                 subsets::$module::schema::mutations::$mutation,
             > {
-                dsl::MemberStoreOwners::new(Arc::new(
+                dsl::DocumentStoreOwners::new(Arc::new(
                     SemioSnapshotRetirementFactory::<Self>(PhantomData),
                 ), Arc::new(SemioOwnedValueRetirementFactory::<Self>(PhantomData)), Arc::new(
                     SemioMutationRetirementFactory::<subsets::$module::schema::mutations::$mutation>(PhantomData),

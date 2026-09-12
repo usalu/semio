@@ -365,7 +365,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     // `node:fs` and `typescript`, plus repo-lib's `🔍️discovery` — into the browser worker bundle,
     // which fails the storybook preview build and the os/dev server alike with
     // `"node:url" doesn't have a matching export named "fileURLToPath"`.
-    const materializeSpecifier = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", source.url).href;
+    const materializeSpecifier = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts", source.url).href;
     const { shardWorkerSource } = await import(/* @vite-ignore */ materializeSpecifier);
     const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", source.url), "utf8"));
     const prior = BigInt(fixture.reopen.prior.activationGeneration);

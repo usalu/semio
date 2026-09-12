@@ -35,7 +35,7 @@ fn node_graph_hover_port_id_round_trips_as_camel_case_and_omits_when_none() {
 
 #[test]
 fn node_graph_scene_highlighted_round_trips_and_omits_when_empty() {
-    let viewport = NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 };
+    let viewport = semio_framework_ui_viewport::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
     let mut scene = NodeGraphScene { highlighted: vec!["a".into(), "b@out".into()], ..NodeGraphScene::base(Vec::new(), Vec::new(), viewport.clone()) };
     let value = serde_json::to_value(&scene).expect("serialize");
     assert_eq!(value.get("highlighted").and_then(Value::as_array).map(Vec::len), Some(2));

@@ -48,7 +48,7 @@ Feature: Apply every typed IFC2X3 mutation to a real-world building model
   mutated bytes to diff the subject against. It is registered as the INDEPENDENT READER instead:
   every mutation this subset's own oracle dispatcher performs (`ruststep` parses the real input;
   this subset's own from-scratch Part-21 writer, in `../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/
-  🔮️oracle/🦀️.rs`, re-serializes it -- independent of this subset's own production
+  🔮️oracles/🦀️.rs`, re-serializes it -- independent of this subset's own production
   `step::engine::part21` codec, since comparing that codec against itself would be the exact failure
   mode this platform exists to prevent) is read back through a FRESH, independent
   `ruststep::ast::Exchange::from_str` call (`project_ifc_2x3_any`) before `semantic-ifc-v1` compares

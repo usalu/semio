@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Runs `cargo test`/wasm checks for the `semio-framework-ui` crate and regenerates the
- * cross-language UI axes (`Locale`/`Terminology`) from `🎯️targets/🧊️wgpu/🔣️ui-axes.json` — single
+ * cross-language UI axes (`Locale`/`Terminology`) from `🔣️ui-axes.json` — single
  * source of truth for every `app_labels!` exhaustive match and every locale/terminology-typed field
  * in Rust and TypeScript. */
 import { existsSync, readFileSync } from "node:fs";
@@ -11,7 +11,7 @@ import { writeGeneratedFileIfChanged } from "../../../../🛍️products/🦑️
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 const uiOwnerRoot = join(packageRoot, "..", "..");
-const wgpuTargetRoot = join(packageRoot, "🎯️targets", "🧊️wgpu");
+const wgpuTargetRoot = join(uiOwnerRoot, "🎯️targets", "🧊️wgpu");
 
 //#region 🔖️UiAxesSpec
 type UiAxisEntry = { readonly id: string; readonly variant: string; readonly label?: string };
@@ -110,8 +110,8 @@ type GeneratedTarget = { readonly path: string; readonly content: string };
 
 function generatedTargets(repoRoot: string, axes: UiAxesSpec): GeneratedTarget[] {
   return [
-    { path: join(wgpuTargetRoot, "🤖️generated.rs"), content: emitRust(axes) },
-    { path: join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes.ts"), content: emitTypeScript(axes) },
+    { path: join(wgpuTargetRoot, "🤖️generated", "🦀️.rs"), content: emitRust(axes) },
+    { path: join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts"), content: emitTypeScript(axes) },
   ];
 }
 //#endregion 🔖️targets
@@ -137,7 +137,7 @@ class GenerateAxesScript extends BundleScript {
     for (const target of generatedTargets(repoRoot, axes)) {
       writeGeneratedFileIfChanged(target.path, target.content);
     }
-    console.log(`ui axes refreshed (${axes.locales.length} locales, ${axes.terminologies.length} terminologies) -> 🤖️generated.rs, 🤖️generated/🎚️ui-axes.ts`);
+    console.log(`ui axes refreshed (${axes.locales.length} locales, ${axes.terminologies.length} terminologies) -> 🤖️generated/🦀️.rs, 🤖️generated/🎚️ui-axes/🟦️.ts`);
   }
 }
 //#endregion 🔖️generate

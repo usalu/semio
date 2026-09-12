@@ -37,7 +37,7 @@ pub type Puzzle3dStore = ArtifactStore<Puzzle3dSnapshot, Puzzle3dMutation>;
 /// under one authority instead of two.
 pub async fn puzzle3d_store(envelope: Puzzle3dEnvelope) -> Result<Puzzle3dStore, store::VcsError> {
     let mut store = Puzzle3dStore::new(envelope).await?;
-    store.install_member_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Puzzle3dSnapshot, Puzzle3dMutation>());
+    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Puzzle3dSnapshot, Puzzle3dMutation>());
     Ok(store)
 }
 

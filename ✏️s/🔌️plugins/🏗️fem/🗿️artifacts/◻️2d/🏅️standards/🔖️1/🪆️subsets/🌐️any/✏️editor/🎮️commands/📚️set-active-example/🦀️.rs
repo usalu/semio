@@ -1,6 +1,6 @@
 //! 📚️ 📚️ Fem2d play app commands command — `set-active-example`.
 
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -26,22 +26,14 @@ pub struct SetActiveExample {
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetSnapshot` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `editor::fem2d::reset_document_effect`
 /// (a `Effect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
-pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let document = if payload.example_id == crate::examples::demo::ID {
         Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot())
     } else {
         crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot()
     };
     eprintln!("[DEBUG] fem2d setActiveExample '{}': loading nodes={} elements={} regions={} loadCases={}", payload.example_id, document.nodes.len(), document.elements.len(), document.regions.len(), document.load_cases.len());
-    let defaults = Fem2dConfig::default();
-    Ok(Emit {
-        effects: vec![crate::editor::fem2d::reset_document_effect(&document)],
-        config_mutations: vec![
-            Fem2dConfigMutation::SetResultDisplay { source_id: defaults.result_source_id.clone(), mode: defaults.result_mode.clone(), mode_index: defaults.result_mode_index },
-            Fem2dConfigMutation::SetCamera { camera: defaults.camera },
-        ],
-        ..Default::default()
-    })
+    Ok(Emit { effects: vec![crate::editor::fem2d::reset_document_effect(&document)], ..Default::default() })
 }
 
 //#region 🧪️Tests

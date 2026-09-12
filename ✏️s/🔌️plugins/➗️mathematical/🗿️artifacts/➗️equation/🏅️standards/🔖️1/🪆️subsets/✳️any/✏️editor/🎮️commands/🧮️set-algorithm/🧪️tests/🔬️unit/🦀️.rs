@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::equation::commands::{node_graph_edit, node_graph_viewport, set_directed};
-use crate::editor::equation::testkit::{dispatch, math_app, MathApp};
+use crate::editor::equation::unit_tests::context::{dispatch, math_app, MathApp};
 use crate::editor::equation::EquationCommand;
 use crate::{equation_graph, EquationCamera};
 use pack::json::{self, Value};
@@ -35,7 +35,10 @@ async fn node_graph_viewport_writes_config_not_mutations() {
         ..Default::default()
     };
     let result = app
-        .dispatch_typed(EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera }), &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::testkit::meta("local") })
+        .dispatch_typed(
+            EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }),
+            &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") },
+        )
         .await
         .expect("viewport");
     assert!(result.mutations.is_empty(), "nodeGraphViewport must not emit a VCS operation");
@@ -80,9 +83,9 @@ async fn node_graph_edit_delete_selection_removes_nodes_and_incident_edges() {
 #[semio_framework_async_macros::async_test]
 async fn node_graph_edit_unknown_operation_and_empty_array_emit_no_operations() {
     let mut app = math_app().await;
-    let result = app.dispatch_typed(node_graph_edit(json::object([("operation".to_string(), Value::from("unknownTag"))])), &semio_framework_plugin::testkit::meta("local")).await.expect("no-op tag");
+    let result = app.dispatch_typed(node_graph_edit(json::object([("operation".to_string(), Value::from("unknownTag"))])), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("no-op tag");
     assert!(result.mutations.is_empty());
-    let result = app.dispatch_typed(EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("empty array");
+    let result = app.dispatch_typed(EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("empty array");
     assert!(result.mutations.is_empty());
 }
 
@@ -90,7 +93,7 @@ async fn node_graph_edit_unknown_operation_and_empty_array_emit_no_operations() 
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = math_app().await;
     let before = equation_graph(&app.snapshot().expect("projection")).nodes.len();
-    semio_framework_plugin::testkit::assert_undo_redo_round_trip(
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
         &mut app,
         node_graph_edit(json::object([("operation".to_string(), Value::from("addNode")), ("x".to_string(), Value::from(1.0)), ("y".to_string(), Value::from(2.0))])),
         |app| equation_graph(&app.snapshot().expect("projection")).nodes.len(),
@@ -102,7 +105,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, _>(
+    semio_framework_plugin::artifact_app_laws::assert_two_instances_converge::<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, _>(
         "mem://equation-convergence",
         node_graph_edit(json::object([("operation".to_string(), Value::from("addNode")), ("x".to_string(), Value::from(9.0)), ("y".to_string(), Value::from(9.0))])),
         EquationCommand::SetDirected(set_directed::SetDirected { directed: false }),
@@ -116,7 +119,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent_for_equation() {
-    semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, _>(
+    semio_framework_plugin::artifact_app_laws::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, _>(
         node_graph_edit(json::object([("operation".to_string(), Value::from("addNode")), ("x".to_string(), Value::from(3.0)), ("y".to_string(), Value::from(4.0))])),
         |app| equation_graph(&app.snapshot().expect("projection")).nodes.len(),
     )

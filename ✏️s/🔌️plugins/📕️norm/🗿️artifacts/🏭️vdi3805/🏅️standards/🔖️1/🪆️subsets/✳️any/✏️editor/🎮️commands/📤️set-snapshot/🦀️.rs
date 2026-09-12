@@ -5,7 +5,7 @@
 //! (base + target, since `catalog.products`/`geometry`/`curves` are real id-keyed collections
 //! needing full remove/re-insert), bundled into a single atomic edit.
 
-use crate::config::{NormConfig, NormConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::Vdi3805Mutation;
 use crate::Vdi3805Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -21,7 +21,7 @@ pub struct ReplaceSnapshot {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation>, Fault> {
+pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Vdi3805Mutation, NoConfigMutation>, Fault> {
     crate::app_surface::commit_snapshot_fields(Vdi3805Mutation::from_snapshot(doc.snapshot, &payload.snapshot), "setSnapshot")
 }
 //#endregion 🔖️Handler

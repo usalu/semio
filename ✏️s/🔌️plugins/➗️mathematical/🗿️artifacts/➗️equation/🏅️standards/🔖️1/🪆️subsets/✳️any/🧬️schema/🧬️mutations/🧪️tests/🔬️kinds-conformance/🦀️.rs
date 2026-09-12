@@ -17,7 +17,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifests = [include_str!("../../../../🔮️oracle/🔣️.json"), include_str!("../../../../../🕸️graph/🔮️oracle/🔣️.json"), include_str!("../../../../../📐️geometry/🔮️oracle/🔣️.json"), include_str!("../../../../../➗️equation/🔮️oracle/🔣️.json")];
+    let manifests = [include_str!("../../../../🔮️oracles/🔣️.json"), include_str!("../../../../../🕸️graph/🔮️oracles/🔣️.json"), include_str!("../../../../../📐️geometry/🔮️oracles/🔣️.json"), include_str!("../../../../../➗️equation/🔮️oracles/🔣️.json")];
     for kind in KINDS {
         let needle = format!("\"{kind}\"");
         assert!(manifests.iter().any(|manifest| manifest.contains(&needle)), "KINDS entry {kind:?} must also appear in one of the owning subsets' committed oracle manifests");

@@ -17,7 +17,7 @@ async fn stores() -> [TestStore; 3] {
     for id in ["document", "config", "interaction"] {
         let envelope = store::create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", id, state.clone(), None);
         let mut store = TestStore::new(envelope).await.unwrap();
-        store.install_member_store_owners_exact(interaction_store_owners());
+        store.install_document_store_owners_exact(interaction_store_owners());
         result.push(store);
     }
     result.try_into().ok().unwrap()

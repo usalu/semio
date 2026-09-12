@@ -23,7 +23,7 @@ pub use infinite_canvas::board::ports::directed_dag as dag;
 
 use dag::{dag_screen_to_world, fit_node_size, DagHost};
 use semio_framework_artifact_infinite_dag::{DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
-use semio_framework_os_kernel::{DomainHover, DomainSelection, SelectionMethod};
+use semio_framework_os_kernel::{DomainHover, DomainSelection, SelectionMethod, Viewport2d};
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
 // ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 use dsl::{FromValue, ToValue};
@@ -102,25 +102,6 @@ pub struct GraphEdgeRecord {
     source_port_id: String,
     target_node_id: String,
     target_port_id: String,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub struct GraphViewport {
-    #[serde(default)]
-    #[value(default)]
-    x: f64,
-    #[serde(default)]
-    #[value(default)]
-    y: f64,
-    #[serde(default = "default_zoom")]
-    #[value(default = "default_zoom")]
-    zoom: f64,
-}
-
-fn default_zoom() -> f64 {
-    1.0
 }
 
 //#region ⚠️ Errors
@@ -227,16 +208,8 @@ fn node_record_to_spec(record: &GraphNodeRecord) -> DagNodeSpec {
     node
 }
 
-pub fn fixture_from_node_graph_json(nodes_json: &str, edges_json: &str, viewport_json: &str) -> Result<DagFixture, NodeGraphError> {
-    let nodes: Vec<GraphNodeRecord> = if nodes_json.trim().is_empty() { vec![] } else { serde_json::from_str(nodes_json)? };
-    let edges: Vec<GraphEdgeRecord> = if edges_json.trim().is_empty() { vec![] } else { serde_json::from_str(edges_json)? };
-    let viewport: GraphViewport = if viewport_json.trim().is_empty() { GraphViewport::default() } else { serde_json::from_str(viewport_json)? };
-    Ok(fixture_from_node_graph_records(&nodes, &edges, Some(&viewport)))
-}
-
-/// 🕸️ Same as [`fixture_from_node_graph_json`] but over already-typed records (the `NodeGraphScene`
-/// wire shape decodes straight into these, no per-field JSON-string hop).
-pub fn fixture_from_node_graph_records(nodes: &[GraphNodeRecord], edges: &[GraphEdgeRecord], viewport: Option<&GraphViewport>) -> DagFixture {
+/// 🕸️ Projects the typed `NodeGraphScene` records into the retained DAG host.
+pub fn fixture_from_node_graph_records(nodes: &[GraphNodeRecord], edges: &[GraphEdgeRecord], viewport: Option<&Viewport2d>) -> DagFixture {
     let viewport = viewport.cloned().unwrap_or_default();
     DagFixture {
         schema: "dag.fixture".into(),
@@ -255,7 +228,7 @@ pub fn fixture_from_node_graph_records(nodes: &[GraphNodeRecord], edges: &[Graph
 pub struct NodeGraphScenePayload {
     pub nodes: Vec<GraphNodeRecord>,
     pub edges: Vec<GraphEdgeRecord>,
-    pub viewport: Option<GraphViewport>,
+    pub viewport: Option<Viewport2d>,
     pub preview_off_json: Option<String>,
     pub lod_json: Option<String>,
     pub controls_json: Option<String>,
@@ -295,11 +268,11 @@ fn expand_payload_pack_fields(payload: &mut NodeGraphScenePayload) -> Result<(),
 }
 
 impl NodeGraphScenePayload {
-    pub fn from_json(value: &Value) -> Self {
-        Self {
+    pub fn from_json(value: &Value) -> Result<Self, NodeGraphError> {
+        Ok(Self {
             nodes: value.get("nodes").cloned().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default(),
             edges: value.get("edges").cloned().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default(),
-            viewport: value.get("viewport").cloned().and_then(|v| serde_json::from_value(v).ok()),
+            viewport: value.get("viewport").cloned().map(serde_json::from_value).transpose()?,
             preview_off_json: value.get("previewOffJson").and_then(|v| v.as_str()).map(str::to_string),
             lod_json: value.get("lodJson").and_then(|v| v.as_str()).map(str::to_string),
             controls_json: value.get("controlsJson").and_then(|v| v.as_str()).map(str::to_string),
@@ -308,7 +281,7 @@ impl NodeGraphScenePayload {
             status_json: value.get("statusJson").and_then(|v| v.as_str()).map(str::to_string),
             capabilities_json: value.get("capabilitiesJson").and_then(|v| v.as_str()).map(str::to_string),
             fixture_json: value.get("fixtureJson").and_then(|v| v.as_str()).map(str::to_string),
-        }
+        })
     }
 }
 //#endregion 🔖️ScenePayload
@@ -481,7 +454,7 @@ impl GraphHost {
     }
 
     fn sync_from_scene_value(&mut self, value: &Value) -> Result<(), NodeGraphError> {
-        let mut payload = NodeGraphScenePayload::from_json(value);
+        let mut payload = NodeGraphScenePayload::from_json(value)?;
         expand_payload_pack_fields(&mut payload)?;
         self.sync_from_payload(&payload)
     }
@@ -496,8 +469,9 @@ impl GraphHost {
         self.refresh_interaction_projection();
     }
 
-    pub fn camera_json(&self) -> String {
-        dsl::os_pack::json::to_json_string(&self.dag.fixture.camera)
+    pub fn viewport(&self) -> Viewport2d {
+        let camera = &self.dag.fixture.camera;
+        Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom }
     }
 
     pub fn selected_node_ids_json(&self) -> String {
@@ -876,9 +850,14 @@ mod wasm_session {
             self.state.borrow().host.hovered_channel_json()
         }
 
-        #[wasm_bindgen(js_name = cameraJson)]
-        pub fn camera_json(&self) -> String {
-            self.state.borrow().host.camera_json()
+        #[wasm_bindgen(js_name = viewport)]
+        pub fn viewport(&self) -> js_sys::Object {
+            let viewport = self.state.borrow().host.viewport();
+            let object = js_sys::Object::new();
+            js_sys::Reflect::set(&object, &JsValue::from_str("x"), &JsValue::from_f64(viewport.x)).expect("viewport x property");
+            js_sys::Reflect::set(&object, &JsValue::from_str("y"), &JsValue::from_f64(viewport.y)).expect("viewport y property");
+            js_sys::Reflect::set(&object, &JsValue::from_str("zoom"), &JsValue::from_f64(viewport.zoom)).expect("viewport zoom property");
+            object
         }
 
         #[wasm_bindgen(js_name = lodScaleJson)]

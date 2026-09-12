@@ -18,8 +18,8 @@ import { decodeFaultFromWire, decodePackValue, encodePackValue } from "@semio-te
 // that throws the other package's class degrades to a generic `extension.invoke-failed`.
 import { SemioFaultError } from "@semio-tech/framework";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
-import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, wireEffectToFriendly, wireRespondAnswer, type WireVariant } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts";
-import { runInvokeExtensionEffect } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
+import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, wireEffectToFriendly, wireRespondAnswer, type WireVariant } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { EXTENSION_WORKER_LOST_FAULT, runInvokeExtensionEffect } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 import { abortExtensionRequestsForActor, declareSurfaceCancelAction, inFlightExtensionRequestCount, isDeclaredSurfaceCancelAction } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import reactorSchema from "../../../../🔌️plugin/⚛️reactor/🧬️schema/🔣️.json";
@@ -267,6 +267,52 @@ describe("a surface cancel aborts the in-flight extension request", () => {
     expect("fault" in outcome).toBe(true);
     expect(decodeFaultFromWire(Array.from(outcome.fault!), decodePackValue)?.code).toBe("extension.request-cancelled");
     expect(inFlightExtensionRequestCount(actorKey), "a settled request leaves no controller behind").toBe(0);
+  });
+
+  /** ⚖️ LAW: a callee whose WORKER was taken down is not an anonymous invocation failure. The host's
+   * own watchdog killed it, `ShardClient.rebuild` has already replaced it, and re-issuing the same
+   * request is the correct response — so the fault the requester receives is the typed, RETRYABLE
+   * `extension.worker-lost`, which its surface can name. Calling it `extension.invoke-failed`
+   * alongside a genuine guest refusal left the preview unable to distinguish "the geometry kernel
+   * refused this" from "the geometry kernel's worker died"
+   * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`). */
+  it("answers a shard-lost invocation with the typed, retryable extension.worker-lost fault", async () => {
+    const complete = vi.fn(async () => ({}));
+    const requester = {
+      handle: {
+        pluginId: "s.procedural",
+        captureExtensionCompletion: (instanceId: number, req: bigint) => ({ instanceId, req, assertActive: () => {}, complete }),
+      },
+      manifest: {},
+    } as unknown as LoadedProgramState;
+    // 🩺️ The exact message `ShardClient.terminate` raises — `isShardLostError` matches on that
+    // prefix, so a test that invented its own wording would prove nothing.
+    const shardLost = new Error("shard 0 terminated by the host watchdog: the worker was silent for 16271 ms; outstanding: turn flow-extension-brep#request started 16299 ms ago.");
+    const dyingDoor = { handle: { pluginId: "flow-extension-brep", invoke: async () => { throw shardLost; } }, manifest: {} } as unknown as LoadedProgramState;
+    await runInvokeExtensionEffect(requester, dyingDoor, 1, "flow-extension-brep", "evaluate", "{\"operatorId\":\"brep.bool.cut\",\"inputJson\":\"{}\"}", 9n);
+    expect(complete).toHaveBeenCalledOnce();
+    const [outcome] = complete.mock.calls[0] as unknown as [{ ok?: Uint8Array; fault?: Uint8Array }];
+    expect("fault" in outcome).toBe(true);
+    const fault = decodeFaultFromWire(Array.from(outcome.fault!), decodePackValue);
+    expect(fault?.code).toBe(EXTENSION_WORKER_LOST_FAULT);
+    expect(fault?.retryable, "a rebuilt shard means the identical request is worth re-issuing").toBe(true);
+  });
+
+  it("still answers a genuine guest refusal with extension.invoke-failed, not a worker loss", async () => {
+    const complete = vi.fn(async () => ({}));
+    const requester = {
+      handle: {
+        pluginId: "s.procedural",
+        captureExtensionCompletion: (instanceId: number, req: bigint) => ({ instanceId, req, assertActive: () => {}, complete }),
+      },
+      manifest: {},
+    } as unknown as LoadedProgramState;
+    const refusingDoor = { handle: { pluginId: "flow-extension-brep", invoke: async () => { throw new Error("the guest could not decode that request"); } }, manifest: {} } as unknown as LoadedProgramState;
+    await runInvokeExtensionEffect(requester, refusingDoor, 1, "flow-extension-brep", "evaluate", "{}", 10n);
+    const [outcome] = complete.mock.calls[0] as unknown as [{ ok?: Uint8Array; fault?: Uint8Array }];
+    const fault = decodeFaultFromWire(Array.from(outcome.fault!), decodePackValue);
+    expect(fault?.code).toBe("extension.invoke-failed");
+    expect(fault?.retryable).toBe(false);
   });
 
   it("offers the affordance only for an action a mounted surface declared", () => {

@@ -1,6 +1,5 @@
 //! 🧱️ 🧱️ Note play app commands command — `delete-block`.
 
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::op::NoteMutation;
 use crate::schema::mutations::delete_block as delete_block_mutation;
 use crate::NoteSnapshot;
@@ -17,6 +16,6 @@ pub struct DeleteBlock {
 // the "blocks" domain's selection is now the framework's job (`revalidate_interaction_state_after_document_change`
 // prunes stale ids against `interaction_topology` after every document dispatch) — this handler no
 // longer touches selection at all.
-pub fn handle(payload: &DeleteBlock, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &DeleteBlock, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![delete_block_mutation(payload.block_id.clone())]))
 }

@@ -1,0 +1,43 @@
+{
+  "schema": "framework.store.snapshot-read-retirement.v1",
+  "cases": [
+    {
+      "name": "one-returned-before-cursor",
+      "issued": 1,
+      "cursor": 1,
+      "returned": [
+        0
+      ],
+      "visits": [
+        0
+      ]
+    },
+    {
+      "name": "wrap-to-returned",
+      "issued": 2,
+      "cursor": 1023,
+      "returned": [
+        0,
+        1
+      ],
+      "visits": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "live-read-does-not-starve-returned",
+      "issued": 3,
+      "cursor": 1,
+      "returned": [
+        2,
+        0
+      ],
+      "visits": [
+        null,
+        2,
+        0
+      ]
+    }
+  ]
+}

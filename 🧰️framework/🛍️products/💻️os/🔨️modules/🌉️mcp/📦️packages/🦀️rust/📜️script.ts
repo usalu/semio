@@ -423,7 +423,7 @@ class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
 
 /** ▶️ `bun ./📜️script.ts dev [-- stdio [flags...]]` — boots the real stdio server for local/manual
  *  smoke testing (`printf '<json-rpc line>' | bun ./📜️script.ts dev -- stdio | ...`). Defaults to
- *  `stdio` when no mode is given, matching `🚀️bin.rs`'s own default-less argv contract. */
+ *  `stdio` when no mode is given, matching `🏗️bootstrap/🦀️.rs`'s own default-less argv contract. */
 class DevScript extends BundleScript {
   run(segments: string[]): void {
     const args = segments.length > 0 ? segments : ["stdio"];

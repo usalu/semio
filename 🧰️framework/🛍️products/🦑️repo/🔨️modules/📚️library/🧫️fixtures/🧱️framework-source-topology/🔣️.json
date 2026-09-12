@@ -1,0 +1,1019 @@
+{
+  "version": 1,
+  "moves": [
+    {
+      "source": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts",
+      "owner": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "WireTurn"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🌐️globals-ui.css",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🌐️globals/🎨️.css",
+      "kind": "css",
+      "anchor": "--foreground"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🌓️theme.css",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🎨️.css",
+      "kind": "css",
+      "anchor": "🎨️palette/🎨️.css"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui.css",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css",
+      "kind": "css",
+      "anchor": "@import"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧵️.css",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧵️styles/🎨️.css",
+      "kind": "css",
+      "anchor": "@import"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🪆️slot.tsx",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🪆️slot/🟦️.tsx",
+      "kind": "typescript-jsx",
+      "anchor": "Slot"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs.ts",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "InteractiveJob"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout.ts",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "layout"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🌐️delivery.ts",
+      "owner": "🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "SEMIO_ASSET_DIRECTORY"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/📡️event.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📡️event/🦀️.rs",
+      "kind": "rust",
+      "anchor": "BrowserHostEvent"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/📥️enqueue.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️enqueue/🦀️.rs",
+      "kind": "rust",
+      "anchor": "Enqueue"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/🔌️backend_alias.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🔌️backend/🦀️.rs",
+      "kind": "rust",
+      "anchor": "ActiveBackend"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/🪟️window.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🪟️window/🦀️.rs",
+      "kind": "rust",
+      "anchor": "WindowDelegate"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🧬️schema/⚛️component.rs",
+      "owner": "🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs",
+      "kind": "rust",
+      "anchor": "register_scope_schema_exports"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🧬️schema/✅️validator.rs",
+      "owner": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🦀️.rs",
+      "kind": "rust",
+      "anchor": "SchemaValidator"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/♿️accessibility.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub "
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🎨️style.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎨️style/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub "
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🎬️action.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub "
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🏗️builder.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub "
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/👥️presence.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/👥️presence/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub "
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📃️document.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📃️document/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub "
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📐️layout.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📐️layout/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub "
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🗺️surface.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🗺️surface/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub "
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🛡️limits.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub "
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🧩️component.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub "
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🪢️text_edit.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪢️text-edit/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub "
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/📃️document.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/📃️document/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub(super)"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧱️component.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧱️component/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub(crate)"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌐️favicon.json",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌐️favicon/🔣️.json",
+      "kind": "json",
+      "anchor": "svg"
+    }
+  ],
+  "extractions": [
+    {
+      "packageEntry": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts",
+      "owner": "🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
+      "maximumPackageLines": 3,
+      "anchor": "TurnScheduler"
+    },
+    {
+      "packageEntry": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts",
+      "owner": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🟦️.ts",
+      "maximumPackageLines": 3,
+      "anchor": "ICON_NAMES"
+    },
+    {
+      "packageEntry": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🟨️javascript/🟨️.js",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🪟️window/🟨️.js",
+      "maximumPackageLines": 3,
+      "anchor": "createBrowserHostImports"
+    },
+    {
+      "packageEntry": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts",
+      "maximumPackageLines": 3,
+      "anchor": "UiTheme"
+    }
+  ],
+  "nativeCrates": [
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+      "library": "../../🦀️.rs",
+      "implementation": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🪟️window/🦀️.rs",
+      "formerRoot": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/🦀️.rs"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "library": "../../🦀️.rs",
+      "implementation": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/🦀️.rs",
+      "formerRoot": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️.rs"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/Cargo.toml",
+      "library": "../../🦀️.rs",
+      "implementation": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/🦀️.rs",
+      "formerRoot": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🦀️.rs"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "library": "../../🦀️.rs",
+      "implementation": "🧰️framework/🔨️modules/🔄️machine/✨️derive/⚙️expansion/🦀️.rs",
+      "formerRoot": "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/🦀️.rs"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "library": "../../🦀️.rs",
+      "implementation": "🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🦀️.rs",
+      "formerRoot": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/🦀️.rs"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "library": "../../🦀️.rs",
+      "implementation": "🧰️framework/🔨️modules/🧬️schema/✨️derive/⚙️expansion/🦀️.rs",
+      "formerRoot": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/🦀️.rs"
+    }
+  ],
+  "browserBoundary": {
+    "entry": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts",
+    "builder": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts",
+    "buildConfig": ".storybook/main.ts",
+    "testSentinel": "\"import.meta.vitest\": \"undefined\"",
+    "forbiddenImports": [
+      "node:",
+      "🎮️playground/🟦️.ts",
+      "🛠️build-tooling/🟦️.ts"
+    ],
+    "browserReachable": [
+      "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌐️iframe/🟦️.ts"
+    ]
+  },
+  "testOwners": [
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️d3d12-packages-rust-backend-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️d3d12-backend-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️d3d12-packages-rust-frame-buffers-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️d3d12-frame-buffers-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️d3d12-packages-rust-pipelines-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️d3d12-pipelines-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️metal-packages-rust-backend-drawable-size",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️metal-backend-drawable-size"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️metal-packages-rust-backend-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️metal-backend-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️metal-packages-rust-frame-buffers-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️metal-frame-buffers-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️metal-packages-rust-objective-c-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️metal-objective-c-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️vulkan-packages-rust-descriptor-layout-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️vulkan-descriptor-layout-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️vulkan-packages-rust-memory-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️vulkan-memory-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️vulkan-packages-rust-resources-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️vulkan-resources-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️vulkan-packages-rust-surface-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️vulkan-surface-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️vulkan-packages-rust-swapchain-support-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️vulkan-swapchain-support-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️vulkan-packages-rust-vk-error-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️vulkan-vk-error-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-packages-rust-backend-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-backend-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-packages-rust-buffers-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-buffers-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-packages-rust-frame-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-frame-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-packages-rust-gpu-context-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-gpu-context-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-packages-rust-gpu-types-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-gpu-types-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-packages-rust-gpu-uniforms-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-gpu-uniforms-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-packages-rust-resources-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-resources-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-packages-rust-scene-target-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-scene-target-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-packages-rust-surface-adapter-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-surface-adapter-unit"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-packages-rust-surface-state-unit",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️webgpu-surface-state-unit"
+    }
+  ],
+  "directoryContexts": [
+    {
+      "name": "📡️interactive-jobs",
+      "parentKind": "members-of-elements",
+      "kind": "ui-ports-interactive-jobs"
+    },
+    {
+      "name": "📐️layout",
+      "parentKind": "members-of-elements",
+      "kind": "ui-diagram-layout"
+    },
+    {
+      "name": "♿️accessibility",
+      "parentKind": "schema",
+      "kind": "ui-contract-accessibility"
+    },
+    {
+      "name": "📐️layout",
+      "parentKind": "schema",
+      "kind": "ui-contract-layout"
+    },
+    {
+      "name": "🧩️component",
+      "parentKind": "schema",
+      "kind": "ui-contract-component"
+    },
+    {
+      "name": "🪢️text-edit",
+      "parentKind": "schema",
+      "kind": "ui-contract-text-edit"
+    },
+    {
+      "name": "🛡️limits",
+      "parentKind": "schema",
+      "kind": "ui-contract-limits"
+    },
+    {
+      "name": "📃️document",
+      "parentKind": "ui-contract-typed-retirement",
+      "kind": "ui-contract-typed-document"
+    },
+    {
+      "name": "🧱️component",
+      "parentKind": "ui-contract-typed-retirement",
+      "kind": "ui-contract-typed-component"
+    },
+    {
+      "name": "🪆️slot",
+      "parentKind": "members-of-modules",
+      "kind": "ui-class-name-slot"
+    },
+    {
+      "name": "🌐️delivery",
+      "parentKind": "members-of-assets",
+      "kind": "asset-resolver-delivery"
+    },
+    {
+      "name": "⚙️expansion",
+      "parentKind": "members-of-members-of-modules",
+      "kind": "derive-expansion"
+    },
+    {
+      "name": "⚙️expansion",
+      "parentKind": "members-of-schema",
+      "kind": "derive-expansion"
+    },
+    {
+      "name": "⚛️component",
+      "parentKind": "schema",
+      "kind": "schema-component"
+    },
+    {
+      "name": "🌐️favicon",
+      "parentKind": "styling",
+      "kind": "ui-styling-favicon"
+    },
+    {
+      "name": "🌐️iframe",
+      "parentKind": "styling",
+      "kind": "ui-styling-iframe"
+    },
+    {
+      "name": "🌗️mixing",
+      "parentKind": "styling",
+      "kind": "ui-styling-mixing"
+    },
+    {
+      "name": "🖌️ui",
+      "parentKind": "styling",
+      "kind": "ui-styling-ui"
+    },
+    {
+      "name": "🔌️backend",
+      "parentKind": "members-of-members-of-modules",
+      "kind": "ui-host-backend"
+    },
+    {
+      "name": "🪟️window",
+      "parentKind": "members-of-members-of-modules",
+      "kind": "ui-host-window"
+    },
+    {
+      "name": "🔬️d3d12-backend-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-d3d12-backend-unit"
+    },
+    {
+      "name": "🔬️d3d12-frame-buffers-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-d3d12-frame-buffers-unit"
+    },
+    {
+      "name": "🔬️d3d12-pipelines-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-d3d12-pipelines-unit"
+    },
+    {
+      "name": "🔬️metal-backend-drawable-size",
+      "parentKind": "tests",
+      "kind": "ui-render-test-metal-backend-drawable-size"
+    },
+    {
+      "name": "🔬️metal-backend-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-metal-backend-unit"
+    },
+    {
+      "name": "🔬️metal-frame-buffers-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-metal-frame-buffers-unit"
+    },
+    {
+      "name": "🔬️metal-objective-c-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-metal-objective-c-unit"
+    },
+    {
+      "name": "🔬️vulkan-descriptor-layout-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-vulkan-descriptor-layout-unit"
+    },
+    {
+      "name": "🔬️vulkan-memory-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-vulkan-memory-unit"
+    },
+    {
+      "name": "🔬️vulkan-resources-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-vulkan-resources-unit"
+    },
+    {
+      "name": "🔬️vulkan-surface-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-vulkan-surface-unit"
+    },
+    {
+      "name": "🔬️vulkan-swapchain-support-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-vulkan-swapchain-support-unit"
+    },
+    {
+      "name": "🔬️vulkan-vk-error-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-vulkan-vk-error-unit"
+    },
+    {
+      "name": "🔬️webgpu-backend-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-webgpu-backend-unit"
+    },
+    {
+      "name": "🔬️webgpu-buffers-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-webgpu-buffers-unit"
+    },
+    {
+      "name": "🔬️webgpu-frame-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-webgpu-frame-unit"
+    },
+    {
+      "name": "🔬️webgpu-gpu-context-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-webgpu-gpu-context-unit"
+    },
+    {
+      "name": "🔬️webgpu-gpu-types-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-webgpu-gpu-types-unit"
+    },
+    {
+      "name": "🔬️webgpu-gpu-uniforms-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-webgpu-gpu-uniforms-unit"
+    },
+    {
+      "name": "🔬️webgpu-resources-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-webgpu-resources-unit"
+    },
+    {
+      "name": "🔬️webgpu-scene-target-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-webgpu-scene-target-unit"
+    },
+    {
+      "name": "🔬️webgpu-surface-adapter-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-webgpu-surface-adapter-unit"
+    },
+    {
+      "name": "🔬️webgpu-surface-state-unit",
+      "parentKind": "tests",
+      "kind": "ui-render-test-webgpu-surface-state-unit"
+    },
+    {
+      "name": "🌐️vite",
+      "parentKind": "builder",
+      "kind": "ui-styling-builder-vite"
+    },
+    {
+      "name": "🖼️assets",
+      "parentKind": "members-of-modules",
+      "kind": "assets"
+    },
+    {
+      "name": "🔣️icons",
+      "parentKind": "assets",
+      "kind": "members-of-assets"
+    },
+    {
+      "name": "🌱️metabolism",
+      "parentKind": "assets",
+      "kind": "members-of-assets"
+    },
+    {
+      "name": "🪧️logos",
+      "parentKind": "assets",
+      "kind": "members-of-assets"
+    },
+    {
+      "name": "🏗️builder",
+      "parentKind": "assets",
+      "kind": "builder"
+    },
+    {
+      "name": "🏗️builder",
+      "parentKind": "members-of-assets",
+      "kind": "builder"
+    },
+    {
+      "name": "📽️projection",
+      "parentKind": "builder",
+      "kind": "asset-builder-projection"
+    },
+    {
+      "name": "📦️publication",
+      "parentKind": "builder",
+      "kind": "asset-builder-publication"
+    },
+    {
+      "name": "🎞️animation",
+      "parentKind": "builder",
+      "ancestorKinds": [
+        "members-of-assets",
+        "assets"
+      ],
+      "kind": "asset-logo-group-members"
+    },
+    {
+      "name": "🔤️fonts",
+      "parentKind": "styling",
+      "kind": "fonts"
+    },
+    {
+      "name": "📽️projection",
+      "parentKind": "styling",
+      "ancestorKinds": [
+        "members-of-modules"
+      ],
+      "kind": "members-of-members-of-modules"
+    },
+    {
+      "name": "🛡️verification",
+      "parentKind": "styling",
+      "kind": "ui-styling-verification"
+    },
+    {
+      "name": "🖼️canvas",
+      "parentKind": "members-of-modules",
+      "kind": "members-of-members-of-modules"
+    },
+    {
+      "name": "🔤️fonts",
+      "parentKind": "members-of-members-of-modules",
+      "kind": "fonts"
+    }
+  ],
+  "scriptExtractions": [
+    {
+      "command": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/🟦️.ts",
+      "exports": [
+        "FONT_ASSET",
+        "validateFontAsset"
+      ],
+      "context": {
+        "parentKind": "members-of-members-of-modules",
+        "ancestorKinds": [
+          "members-of-modules"
+        ],
+        "kind": "fonts"
+      }
+    },
+    {
+      "command": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️fonts/🟦️.ts",
+      "exports": [
+        "ELEMENTS_ASSETS_ROOT",
+        "fetchElementsFonts",
+        "fontCatalogSources",
+        "parseFontCatalog",
+        "parseGoogleFontWoff2Map",
+        "resolveFontFaceUrl",
+        "resolveFontSource"
+      ],
+      "context": {
+        "parentKind": "styling",
+        "ancestorKinds": [
+          "members-of-modules"
+        ],
+        "kind": "fonts"
+      }
+    },
+    {
+      "command": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📽️projection/🟦️.ts",
+      "exports": [
+        "checkStylingArtifacts",
+        "generateStylingArtifacts",
+        "renderStylingArtifacts",
+        "resolveAppearances"
+      ],
+      "context": {
+        "parentKind": "styling",
+        "ancestorKinds": [
+          "members-of-modules"
+        ],
+        "kind": "members-of-members-of-modules"
+      }
+    },
+    {
+      "command": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🟦️.ts",
+      "exports": [
+        "COLOR_SCAN_ROOTS",
+        "PX_SCAN_ROOTS",
+        "collectColorViolations",
+        "collectPxViolations"
+      ],
+      "context": {
+        "parentKind": "styling",
+        "ancestorKinds": [
+          "members-of-modules"
+        ],
+        "kind": "ui-styling-verification"
+      }
+    },
+    {
+      "command": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts",
+      "owner": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🏗️builder/📽️projection/🟦️.ts",
+      "exports": [
+        "catalogSvgSources",
+        "iconIdToPascal",
+        "iconIdToPythonConst",
+        "iconIdToRustVariant",
+        "normalizeCatalogSvg",
+        "renderCatalogArtifacts"
+      ],
+      "context": {
+        "parentKind": "builder",
+        "ancestorKinds": [
+          "members-of-assets",
+          "assets"
+        ],
+        "kind": "asset-builder-projection"
+      }
+    },
+    {
+      "command": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts",
+      "owner": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🏗️builder/📽️projection/🟦️.ts",
+      "exports": [
+        "renderMetabolismArtifacts"
+      ],
+      "context": {
+        "parentKind": "builder",
+        "ancestorKinds": [
+          "members-of-assets",
+          "assets"
+        ],
+        "kind": "asset-builder-projection"
+      }
+    },
+    {
+      "command": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts",
+      "owner": "🧰️framework/🔨️modules/🖼️assets/🏗️builder/📦️publication/🟦️.ts",
+      "exports": [
+        "assetOutputManifest",
+        "checkAssetArtifacts",
+        "previewAssetArtifacts",
+        "publishAssetArtifacts"
+      ],
+      "context": {
+        "parentKind": "builder",
+        "ancestorKinds": [
+          "assets",
+          "members-of-modules"
+        ],
+        "kind": "asset-builder-publication"
+      }
+    },
+    {
+      "command": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts",
+      "owner": "🧰️framework/🔨️modules/🖼️assets/🪧️logos/🏗️builder/🎞️animation/🟦️.ts",
+      "exports": [
+        "exportLogoAnimation",
+        "generateLogoAnimation",
+        "logoKeyframePaths"
+      ],
+      "context": {
+        "parentKind": "builder",
+        "ancestorKinds": [
+          "members-of-assets",
+          "assets"
+        ],
+        "kind": "asset-logo-group-members"
+      }
+    }
+  ],
+  "producerContracts": [
+    {
+      "contract": "assets-build",
+      "inputs": [
+        "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🏗️builder/📽️projection/🟦️.ts",
+        "🧰️framework/🔨️modules/🖼️assets/🏗️builder/📦️publication/🟦️.ts",
+        "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🏗️builder/📽️projection/🟦️.ts"
+      ]
+    },
+    {
+      "contract": "styling-tokens",
+      "inputs": [
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📽️projection/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️fonts/🟦️.ts",
+        "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/📇️catalog.json",
+        "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧬️schema/🔣️.json"
+      ]
+    }
+  ],
+  "packedFontCases": [
+    {
+      "name": "one-font",
+      "bytes": [
+        1,
+        0,
+        0,
+        0,
+        12,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "count": 1
+    },
+    {
+      "name": "missing-count",
+      "bytes": [
+        1,
+        0,
+        0
+      ],
+      "error": "Missing packed font count"
+    },
+    {
+      "name": "empty",
+      "bytes": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "error": "Invalid packed font count"
+    },
+    {
+      "name": "too-many",
+      "bytes": [
+        1,
+        4,
+        0,
+        0
+      ],
+      "error": "Invalid packed font count"
+    },
+    {
+      "name": "missing-extent",
+      "bytes": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "error": "Missing packed font extent"
+    },
+    {
+      "name": "small-extent",
+      "bytes": [
+        1,
+        0,
+        0,
+        0,
+        11,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "error": "Invalid packed font extent"
+    },
+    {
+      "name": "overrun",
+      "bytes": [
+        1,
+        0,
+        0,
+        0,
+        12,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "error": "Invalid packed font extent"
+    },
+    {
+      "name": "trailing",
+      "bytes": [
+        1,
+        0,
+        0,
+        0,
+        12,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "error": "Trailing packed font bytes"
+    }
+  ],
+  "scanCoverage": {
+    "roots": [
+      {
+        "former": "framework/module/ui/js/react",
+        "current": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react"
+      },
+      {
+        "former": "framework/module/ui/styling/js",
+        "current": "🧰️framework/🔨️modules/🖱️ui/🎨️styling"
+      },
+      {
+        "former": "framework/product/os",
+        "current": "🧰️framework/🛍️products/💻️os"
+      },
+      {
+        "former": "framework/product/os/module/dev",
+        "current": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev"
+      },
+      {
+        "former": "s/plugin/flow",
+        "current": "✏️s/🔌️plugins/🌊️flow"
+      },
+      {
+        "former": "s/plugin/cad/renderer",
+        "current": "✏️s/🔌️plugins/📐️cad"
+      },
+      {
+        "former": "s/plugin/puzzle",
+        "current": "✏️s/🔌️plugins/🧩️puzzle"
+      },
+      {
+        "former": "framework/os/kernel/infinite/world",
+        "current": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world"
+      },
+      {
+        "former": "s/plugin/gis/2d",
+        "current": "✏️s/🔌️plugins/🌍️gis"
+      }
+    ],
+    "hostileCases": [
+      {
+        "kind": "px",
+        "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react",
+        "path": "🧪️tests/🧪️hostile/🟦️.tsx",
+        "content": "export const hostile = \"w-[13px]\";",
+        "expected": "tailwind-arbitrary-px"
+      },
+      {
+        "kind": "color",
+        "root": "✏️s/🔌️plugins/🌊️flow",
+        "path": "🧪️tests/🧪️hostile/🟦️.ts",
+        "content": "export const hostile = \"#123456\";",
+        "expected": "raw-hex-color"
+      }
+    ],
+    "overlappingRootCase": {
+      "root": "owner",
+      "nestedRoot": "nested",
+      "path": "🟦️.ts",
+      "content": "export const className = \"w-[13px]\"; export const color = \"#123456\";",
+      "expectedPx": "tailwind-arbitrary-px",
+      "expectedColor": "raw-hex-color"
+    }
+  }
+}

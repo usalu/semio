@@ -5,7 +5,8 @@
       "executor": "nx:run-commands",
       "cache": true,
       "inputs": [
-        "production"
+        "production",
+        "browserBundleSources"
       ],
       "outputs": [
         "{projectRoot}/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
@@ -19,7 +20,8 @@
       "executor": "nx:run-commands",
       "cache": true,
       "inputs": [
-        "production"
+        "production",
+        "browserBundleSources"
       ],
       "outputs": [
         "{projectRoot}/dist/release/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
@@ -31,6 +33,11 @@
     }
   },
   "namedInputs": {
+    "browserBundleSources": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/**/*.ts",
+      "!{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/**/🧪️tests/**/*.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🛂️actor-exports/🔣️.json"
+    ],
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*.{ts,json}"
     ]

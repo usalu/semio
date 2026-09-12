@@ -1,0 +1,10 @@
+\documentclass[type=paper,language=en]{semio}
+\begin{document}
+\typeout{AUDIT-GRAPH-MACROS-CALLED}
+\begin{GraphFigure}[title={Audit graph},width=40,height=24]
+\SemioGraphEdge[kind=directed]{5,12}{25,12}
+\SemioGraphNode[state=focal]{5,12}{A}
+\SemioGraphNode[state=attested]{25,12}{B}
+\end{GraphFigure}
+\SemioGraphLegend{focal=source,attested=target}
+\end{document}

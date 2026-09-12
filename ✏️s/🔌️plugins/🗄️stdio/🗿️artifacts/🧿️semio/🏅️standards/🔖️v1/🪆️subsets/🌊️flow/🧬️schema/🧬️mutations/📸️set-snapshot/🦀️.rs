@@ -13,6 +13,13 @@ pub struct SetSnapshot {
     pub(crate) snapshot: SemioFlowSnapshot,
 }
 
+impl SetSnapshot {
+    /// 🌊️ Transfers one typed flow snapshot into its exact replacement mutation.
+    pub fn new(snapshot: SemioFlowSnapshot) -> Self {
+        Self { snapshot }
+    }
+}
+
 impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for SetSnapshot {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "snapshot", kind: "set-snapshot", record: "SetSnapshot" };
 

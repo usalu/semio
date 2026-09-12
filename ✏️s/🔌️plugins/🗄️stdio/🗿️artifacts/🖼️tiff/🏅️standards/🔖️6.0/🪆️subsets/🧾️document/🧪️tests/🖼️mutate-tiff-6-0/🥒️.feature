@@ -10,7 +10,7 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   `shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff`. Its second IFD is a genuinely real second
   page — the actual decoded, downsampled (16x16) pixels of the real
   `🏛️rathaus-ahlen-grundriss/🖼️.png` floor plan, appended by this subset's own independent IFD-chain
-  writer (`../../../../🧪️oracle/🦀️component.rs`'s `fixture_derivation` module — `image`'s public TIFF
+  writer (`../../../../🔮️oracles/🦀️component.rs`'s `fixture_derivation` module — `image`'s public TIFF
   encoder can only ever emit a single IFD) — so `InsertIfd`/`RemoveIfd`, TIFF's own multi-page
   operations, are substantive on a genuinely multi-IFD document from the very first `Given`, without
   needing a second fixture per row. Every scenario copies the fixture into the case work directory

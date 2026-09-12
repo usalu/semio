@@ -34,8 +34,8 @@ Feature: Apply every typed Coordination View 2.0 mutation to a real IFC2X3 build
   syntax under a different EXPRESS schema) but has NO writer at all. Per the fleet brief's §6 that
   rules out `@mode-differential`: ruststep cannot be a second PRODUCER of mutated bytes to diff the
   subject against. It is the INDEPENDENT READER instead — every mutation the oracle dispatcher
-  performs (`../../🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🔮️oracle/🦀️.rs`, re-serializing through
-  the standard-level from-scratch Part-21 writer at `../../🏅️standards/🔖️2x3/🔮️oracle/🦀️.rs`
+  performs (`../../🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🔮️oracles/🦀️.rs`, re-serializing through
+  the standard-level from-scratch Part-21 writer at `../../🏅️standards/🔖️2x3/🔮️oracles/🦀️.rs`
   rather than this repository's own production `step::engine::part21` writer, which would compare the
   implementation against itself) is read back through a FRESH `ruststep::ast::Exchange::from_str`
   call before `semantic-ifc-v1` compares it. That is real third-party evidence about the entity

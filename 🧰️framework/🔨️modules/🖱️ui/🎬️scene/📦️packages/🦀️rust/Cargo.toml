@@ -26,6 +26,7 @@ ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", p
 # the `NodeGraph*Record` impls below are hand-written against `protocol::value::` directly instead of
 # derived. Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
 protocol = { path = "../../../../📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-framework-ui-viewport = { path = "../../../🪟️viewport/📦️packages/🦀️rust" }
 
 [dependencies.semio-framework-geometry]
 path = "../../../../📐️geometry/📦️packages/🦀️rust"

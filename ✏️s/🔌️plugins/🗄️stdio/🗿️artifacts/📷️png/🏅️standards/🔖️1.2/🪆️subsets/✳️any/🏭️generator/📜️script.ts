@@ -24,7 +24,7 @@
 //
 // @see ../../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🏭️generator/📜️script.ts — the
 //      sibling generator this file's CLI/recipe shape is mirrored from.
-// @see ./🦀️png-codec/src/main.rs — the actual codec; `build <recipe-id> <out-dir>` and
+// @see ./🔁️codec/🦀️.rs — the actual codec; `build <recipe-id> <out-dir>` and
 //      `project <path>` are its only two commands.
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/
 
@@ -38,14 +38,14 @@ import { spawnSync } from "node:child_process";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-const CODEC_MANIFEST = join(import.meta.dir, "🦀️png-codec", "Cargo.toml");
+const CODEC_MANIFEST = join(import.meta.dir, "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 const ORACLE_ID = "png-png-1-2-mutate-reader";
 const ENGINE_FAMILY = "png";
 const ENGINE_VERSION = "0.18.1";
 
 type Recipe = Readonly<{ id: string; directory: string; mutation: string; notes: string }>;
 
-/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🦀️png-codec/src/main.rs` verbatim — one entry per declared
+/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🔁️codec/🦀️.rs` verbatim — one entry per declared
  *  `png-1-2-any` kind. All fifteen kinds carry `outcomes: ["applied"]` only in this catalog (no
  *  `no-mutation` baseline and no `rejected` outcome, unlike `avi`), so every recipe is `-applied`. */
 const RECIPES: readonly Recipe[] = [

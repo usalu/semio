@@ -124,10 +124,10 @@ export async function testCommandInputs(workspace: string, output: string): Prom
 
 /** 🪢️ Compares generated module relocation with independent JavaScript import spans. */
 export async function testBrowserModuleRelocation(workspace: string): Promise<void> {
-  const require = createRequire(import.meta.url), directory = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🕸️imports");
+  const require = createRequire(import.meta.url), directory = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports");
   const { rewritePreview2ShimImportSource } = await import(pathToFileURL(join(directory, "🟦️.ts")).href);
   const fixture = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🕸️imports/🧫️cases.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(directory, "../../../🌐️browser-bundle/🧬️schema/🔣️.json"), "utf8")), validator = new (require("ajv").default)();
+  const schema = JSON.parse(readFileSync(join(directory, "../🧬️schema/🔣️.json"), "utf8")), validator = new (require("ajv").default)();
   validator.addSchema(schema);
   assert.ok(validator.validate({ $ref: schema.$id + "#/$defs/Preview2ShimImportRewriteV1" }, fixture));
   const lexer = await import("es-module-lexer");
@@ -771,7 +771,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     console.log("[DEBUG] Component and activation contracts passed; checking editor and playground contracts");
     const registryRoot = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
     const registry = await import(join(registryRoot, "📜️script.ts"));
-    const launch = await import(join(registryRoot, "🖥️launch.ts"));
+    const launch = await import(join(registryRoot, "🚀️launch/🟦️.ts"));
     const configurations = Bun.JSONC.parse(launch.generateLaunchJson(root, registry.generatePlaygroundRegistry(root), componentLaunchers)).configurations;
     for (const project of contracts) for (const [name, target] of Object.entries(project.targets) as [string, any][]) if (target.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts") && ["build", "check", "test"].includes(name)) assert.ok(configurations.some((row: any) => row.command === `bun nx run ${project.name}:${name}`), `Missing native editor command ${project.name}:${name}`);
     const preparationProject = contracts.find((project) => project.name === vectors.playgroundPreparation.project)!;

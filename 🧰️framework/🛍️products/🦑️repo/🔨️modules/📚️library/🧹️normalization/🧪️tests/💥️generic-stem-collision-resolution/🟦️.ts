@@ -4,7 +4,7 @@ import fastGlob from "fast-glob";
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { classifyPackageGlueContent } from "../../🟦️.ts";
+import { classifyPackageSource } from "../../../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -102,7 +102,7 @@ describe("generic-stem collision resolution (26/08/17/END-TO-END-TAXONOMY-NORMAL
   for (const row of vectors.gluePurityCases) test(row.id, () => {
     const content = readFileSync(resolve(repoRoot, row.path), "utf8");
     // 🐙️ the real production classifier, not a reimplementation — must not be "implementation".
-    const role = classifyPackageGlueContent("rust", content, 32);
+    const role = classifyPackageSource(content, { analyzer: "rust", allowedRoles: ["declaration", "registration", "bootstrap", "thin-delegation"], maxDelegationStatements: 32 }).role;
     expect(role, `${row.path} classifies as "${role}" — a struct/enum/trait/union/impl crept back into package glue, which packageImplementationDestination will hoist onto the owner's canonical slot`).toBe("declaration");
   });
 

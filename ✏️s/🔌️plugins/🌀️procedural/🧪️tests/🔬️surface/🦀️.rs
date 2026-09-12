@@ -12,7 +12,7 @@ fn plugin_manifest_builds_synchronously() {
 /// 👁️ A viewer instance never mutates the document store, even when dispatched.
 #[semio_framework_async_macros::async_test]
 async fn generation2d_viewer_never_mutates() {
-    semio_framework_plugin::testkit::assert_viewer_never_mutates::<Generation2dViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<Generation2dViewer>().await;
 }
 // 👁️ `Generation3dViewer` cannot use the same helper any more, and the law is not lost.
 // `assert_viewer_never_mutates` is bounded `Presence = NoPresence, Transient = NoTransient`
@@ -30,11 +30,11 @@ async fn generation2d_viewer_never_mutates() {
 /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
 #[semio_framework_async_macros::async_test]
 async fn generation2d_editor_and_viewer_share_dialect() {
-    semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Generation2dPlayApp, Generation2dViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<Generation2dPlayApp, Generation2dViewer>().await;
 }
 #[semio_framework_async_macros::async_test]
 async fn generation3d_editor_and_viewer_share_dialect() {
-    semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Generation3dPlayApp, Generation3dViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<Generation3dPlayApp, Generation3dViewer>().await;
 }
 
 /// 📚️ Ticket 26/09/03/PROCEDURAL-3D-END-TO-END — `.editor_with_examples::<Generation3dPlayApp>`
@@ -64,7 +64,7 @@ fn generation3d_manifest_examples_are_registered_on_the_dialect_for_both_surface
 
 #[semio_framework_async_macros::async_test]
 async fn assembly_editor_and_viewer_share_dialect() {
-    semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<semio_s_artifact_procedural_assembly::editor::assembly::AssemblyEditor, semio_s_artifact_procedural_assembly::viewer::assembly::AssemblyViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<semio_s_artifact_procedural_assembly::editor::assembly::AssemblyEditor, semio_s_artifact_procedural_assembly::viewer::assembly::AssemblyViewer>().await;
 }
 
 #[test]

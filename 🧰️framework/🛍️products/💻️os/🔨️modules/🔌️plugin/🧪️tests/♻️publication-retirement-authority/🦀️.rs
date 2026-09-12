@@ -7,7 +7,7 @@
 //! `typed-operation failed: …` on every turn of the drain and `invokeExtension` never completed.
 
 use super::{ArtifactApp, ArtifactMutationOutcome, ArtifactView, ConfigView, DraftView, EngineHandles, InteractionView, PendingArtifactStorePublication, PendingArtifactStorePublicationRetirement, UiAssemblyResult, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry};
-use crate::app::{built_text_to_component_tree, bounded_config_store_one_item_preparation_factory, bounded_config_store_owners, bounded_config_store_disposer, bounded_document_store_disposer, bounded_document_store_owners, testkit, testkit::close_registered_fixture_app};
+use crate::app::{artifact_app_laws, artifact_app_laws::close_registered_fixture_app, built_text_to_component_tree, bounded_config_store_one_item_preparation_factory, bounded_config_store_owners, bounded_config_store_disposer, bounded_document_store_disposer, bounded_document_store_owners};
 use crate::publication_fixture::{ChangePublicationPresence, ChangePublicationTransient, PublicationPresence, PublicationPresenceMutation, PublicationTransient, PublicationTransientMutation};
 use crate::store;
 use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, SetCount, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
@@ -164,7 +164,7 @@ impl WindowConfigOwner for RetirementWindowConfigOwner {
     type State = TestConfig;
     type Mutation = TestConfigMutation;
 
-    fn build_store_owners() -> store::MemberStoreOwners<Self::State, Self::Mutation> {
+    fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> {
         crate::app::bounded_window_config_store_owners::<Self>()
     }
 
@@ -185,7 +185,7 @@ impl WindowTransientOwner for RetirementWindowTransientOwner {
     type Mutation = PublicationTransientMutation;
 
     fn build_owners() -> WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        crate::window_transient_testkit::owners()
+        crate::window_transient_owners::owners()
     }
 }
 //#endregion ♻️RetirementFixtureLeaves
@@ -220,15 +220,15 @@ impl ArtifactApp for RetirementApp {
         registry.register::<RetirementWindowTransientOwner>()
     }
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
         Some(bounded_config_store_owners::<Self::Draft, Self::DraftMutation>())
     }
 
@@ -396,7 +396,7 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
     assert_eq!(rows.len(), 7, "the law covers every publication lane");
     assert_eq!(fixture["law"]["incompleteRetirementTurnIsOk"], true);
     let operation = semio_framework_job::OperationId(1);
-    let mut app = testkit::new_app::<RetirementApp>().await;
+    let mut app = artifact_app_laws::new_app::<RetirementApp>().await;
     let view = retirement_view();
     let window_config_authority = app.window_config_store.capture(Some(&view)).await.expect("window config capture").expect("registered window config owner");
     let window_transient_authority = app.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
@@ -514,7 +514,7 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
     assert_eq!(expected["windowKindId"], RETIREMENT_WINDOW_KIND);
     let window_id = expected["windowId"].as_str().expect("fixture window id");
     let operation = semio_framework_job::OperationId(2);
-    let mut app = testkit::new_app::<RetirementApp>().await;
+    let mut app = artifact_app_laws::new_app::<RetirementApp>().await;
     let view = retirement_view();
     let mut authority = app.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
     let captured_generation = authority.generation;

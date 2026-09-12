@@ -5,7 +5,7 @@ const path = require("path");
 
 const TECHNOLOGIES = ["compose", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand"];
 const BOOTSTRAP_TOOLING_ENTRY_PATH = "(^|/)(?:📜️script\\.ts|(?:⚙️|🧪️)?(?:vite|vitest)\\.config\\.[cm]?[jt]s)$";
-const RENDERER_HOST_ROOT = "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/(📦️packages/🟦️typescript/🎯️targets/⚛️react|🧱️elements)/";
+const RENDERER_HOST_ROOT = "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/(🎯️targets/⚛️react|🧱️elements)/";
 const RESOLVED_NODE_BUILTIN_PATH = `^(?:${[...new Set(builtinModules.map((name) => name.replace(/^node:/, "")))].map(escapeRegex).join("|")})(?:$|/)`;
 const RENDERER_HOST_ALLOWED_RESOLVED_PATHS = [
   RENDERER_HOST_ROOT,
@@ -68,7 +68,7 @@ function assertFocusedBoundarySemantics() {
   const rendererAllows = rendererRule.to.pathNot.map((pattern) => new RegExp(pattern, "u"));
   const allowedRendererTargets = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
     "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
     "node_modules/react/index.js",
@@ -337,7 +337,7 @@ function noPluginToExtensionRules() {
  * err-long ✏️s`, grep `plugins-framework-sdk-only` minus `📜️script\.ts →` lines) — `📐️cad`'s renderer/brepjs
  * components reaching `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f`,
  * `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg` (a wasm build output), and three plugins'
- * `🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react` direct-renderer imports — real,
+ * `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript` direct-renderer imports — real,
  * pre-existing, left as WARN backlog for a future wave to triage rather than silenced or hastily excepted. */
 function pluginsFrameworkSdkOnlyRule() {
   const otherFrameworkPackageNames = FRAMEWORK_PACKAGES.filter((p) => /^@semio-tech\/framework($|-)/.test(p.name) && p.name !== "@semio-tech/framework").map(

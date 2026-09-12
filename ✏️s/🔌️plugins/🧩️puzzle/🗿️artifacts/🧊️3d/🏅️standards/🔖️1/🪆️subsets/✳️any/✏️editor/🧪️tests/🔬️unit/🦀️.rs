@@ -1,4 +1,1135 @@
-use super::testkit::*;
+pub(crate) mod context {
+    
+    use super::super::*;
+    use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, MAINTENANCE_STAGES, PluginApp, PluginCloseStep, VcsArtifactApp, ViewModel, ViewWindowInstance, artifact_app_laws};
+    
+    pub type Puzzle3dRawApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
+    
+    /// 📏️ The byte grant the OS runtime's cooperative-maintenance clock hands one live-cleanup unit
+    /// (`RuntimeLiveCleanupJob::step`'s `maintenance_step(1, RUNTIME_CLOSE_BYTES_PER_STEP)`), restated
+    /// here so a step-budget law measures the exact unit the host drives rather than a wider one.
+    pub const RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP: usize = 4_096;
+    
+    /// 📐️ Units retained per stage for the typical-cost statistic. Fixed, and taken from the FIRST
+    /// units a stage runs — the busy ones, where a stage that has real work does it.
+    const MAINTENANCE_UNIT_SAMPLES: usize = 64;
+    
+    /// ⏱️ Measured wall cost of the cooperative-maintenance units of one run, per fixed maintenance
+    /// stage. Fixed capacity by construction: the round robin has exactly [`MAINTENANCE_STAGES`]
+    /// stages, each keeping [`MAINTENANCE_UNIT_SAMPLES`] readings, and nothing grows.
+    ///
+    /// Two statistics, because one cannot carry both halves of the framework's law. [`worst`] is the
+    /// per-stage MEDIAN — a stage that overruns because of its OWN work overruns unit after unit, so a
+    /// median catches a systemic regression while ignoring the machine (the runtime's ceiling verdict
+    /// times `maintenance_step` on the wall clock of a contended thread: the same unit that costs 19us
+    /// alone was seen costing 14571us inside a fully parallel suite run). [`worst_unit`] is the plain
+    /// maximum, which is what the ceiling itself actually bounds, and is therefore budgeted against the
+    /// ceiling rather than against the far tighter typical-unit budget. Median precedent:
+    /// `🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️fixed-operation-registry/🦀️.rs`.
+    pub struct MaintenanceStageBudget {
+        samples_us: [[u64; MAINTENANCE_UNIT_SAMPLES]; MAINTENANCE_STAGES as usize],
+        sampled: [usize; MAINTENANCE_STAGES as usize],
+        worst_us: [u64; MAINTENANCE_STAGES as usize],
+        units: [u32; MAINTENANCE_STAGES as usize],
+    }
+    
+    impl Default for MaintenanceStageBudget {
+        fn default() -> Self {
+            Self { samples_us: [[0; MAINTENANCE_UNIT_SAMPLES]; MAINTENANCE_STAGES as usize], sampled: [0; MAINTENANCE_STAGES as usize], worst_us: [0; MAINTENANCE_STAGES as usize], units: [0; MAINTENANCE_STAGES as usize] }
+        }
+    }
+    
+    impl MaintenanceStageBudget {
+        /// ⏱️ Typical cost of one unit of `stage`: the median of its retained readings.
+        pub fn median(&self, stage: usize) -> u64 {
+            let sampled = self.sampled[stage];
+            if sampled == 0 {
+                return 0;
+            }
+            let mut ordered = self.samples_us[stage];
+            ordered[..sampled].sort_unstable();
+            ordered[sampled / 2]
+        }
+    
+        /// ⏱️ The stage whose typical unit is the most expensive, with that median in microseconds.
+        pub fn worst(&self) -> (u8, u64) {
+            let mut worst = (0_u8, 0_u64);
+            for stage in 0..MAINTENANCE_STAGES as usize {
+                let median = self.median(stage);
+                if median > worst.1 {
+                    worst = (stage as u8, median);
+                }
+            }
+            worst
+        }
+    
+        /// ⏱️ The stage that ran the single most expensive unit, with that maximum in microseconds.
+        pub fn worst_unit(&self) -> (u8, u64) {
+            let mut worst = (0_u8, 0_u64);
+            for stage in 0..MAINTENANCE_STAGES as usize {
+                if self.worst_us[stage] > worst.1 {
+                    worst = (stage as u8, self.worst_us[stage]);
+                }
+            }
+            worst
+        }
+    
+        /// 🎲️ Folds one more independent round of the same scenario in by keeping, per stage, the
+        /// SMALLEST median and the SMALLEST maximum any round observed. Real work costs the same in
+        /// every round; a run that happened to share the machine with a heavier neighbour is dropped.
+        pub fn keep_best_round(&mut self, round: &Self) {
+            for stage in 0..MAINTENANCE_STAGES as usize {
+                if round.units[stage] == 0 {
+                    continue;
+                }
+                if self.sampled[stage] == 0 || round.median(stage) < self.median(stage) {
+                    self.samples_us[stage] = round.samples_us[stage];
+                    self.sampled[stage] = round.sampled[stage];
+                }
+                if self.units[stage] == 0 || round.worst_us[stage] < self.worst_us[stage] {
+                    self.worst_us[stage] = round.worst_us[stage];
+                }
+                self.units[stage] = self.units[stage].max(round.units[stage]);
+            }
+        }
+    
+        /// 📊️ Per-stage `stage=median/worst/units` breakdown of every unit measured so far.
+        pub fn report(&self) -> String {
+            let mut report = String::new();
+            for stage in 0..MAINTENANCE_STAGES as usize {
+                if self.units[stage] > 0 {
+                    report.push_str(&format!("{stage}={}/{}us/{}u ", self.median(stage), self.worst_us[stage], self.units[stage]));
+                }
+            }
+            report
+        }
+    
+        fn record(&mut self, stage: u8, elapsed_us: u64) {
+            let stage = stage as usize;
+            if self.sampled[stage] < MAINTENANCE_UNIT_SAMPLES {
+                self.samples_us[stage][self.sampled[stage]] = elapsed_us;
+                self.sampled[stage] += 1;
+            }
+            self.units[stage] += 1;
+            self.worst_us[stage] = self.worst_us[stage].max(elapsed_us);
+        }
+    }
+    
+    /// 🧪️ The one puzzle3d fixture app. Wraps the raw wrapper so every fixture drains its stores on the
+    /// way out: a registry-backed `VcsArtifactApp` installs framework-owned `ArtifactStoreCursorDisposer`
+    /// members whose own `Drop` asserts terminal-empty ownership (`🏪️store/🦀️.rs`), so a bare drop panics
+    /// inside a destructor. `Drop` here therefore NEVER panics and never asserts: a second panic while a
+    /// failing assertion is already unwinding is a non-unwinding abort that kills the whole test binary
+    /// and hides the assertion that actually failed. A drain that cannot reach the witness leaks the raw
+    /// app instead ([`std::mem::forget`]) — leaking a fixture inside a test process costs nothing, and the
+    /// close contract itself is stated exactly once, explicitly, by [`close_witness`].
+    /// 📦️ Both owners are boxed on purpose. `Puzzle3dRawApp` is 42 KiB by value and
+    /// [`MaintenanceStageBudget`] carries a fixed `[[u64; MAINTENANCE_UNIT_SAMPLES]; MAINTENANCE_STAGES]`
+    /// sample matrix; inline, one fixture is 55 KiB, and a law's `#[async_test]` future — which
+    /// `#[async_test]` pins ON THE STACK — moves it through every frame of the harness. The default test
+    /// thread has 2 MiB, and the app-fixture laws in this crate already spend most of it inside the
+    /// framework's own construction chain.
+    pub struct Puzzle3dApp {
+        raw: Option<Box<Puzzle3dRawApp>>,
+        /// 🏛️ The HOST's own session state, owned here because the host owns it in production: the live
+        /// window roster, the mode-wide `active_tool_id`, and the per-window `active_utility_by_window_id`
+        /// (`📓️2026-09-09-peer-config-runtime-split.md` §1(d)). `setActiveTool`/`setActiveUtility` are
+        /// dispatched by the framework as an empty `Emit` (`🔌️plugin/🦀️.rs` `dispatch_action`), so the app
+        /// writes nothing and the ONLY thing that can carry an activation to the next call is this record.
+        /// Minting a fresh `ViewModel` per call — what this fixture used to do — made every activation
+        /// unobservable one call later, which is a state no real host can be in.
+        view: ViewModel,
+        /// ⏱️ Every cooperative-maintenance unit this fixture drove, attributed to its own fixed stage.
+        pub maintenance: Box<MaintenanceStageBudget>,
+    }
+    
+    /// 🧰️ `resolveUtilityActivation` (`🛠️ShellHelpers/🟦️.tsx`), verbatim: an empty request — or
+    /// re-requesting what is already active — deactivates; anything else activates.
+    fn resolve_activation(current: Option<&str>, requested: &str) -> Option<String> {
+        (!requested.is_empty() && current != Some(requested)).then(|| requested.to_string())
+    }
+    
+    impl std::ops::Deref for Puzzle3dApp {
+        type Target = Puzzle3dRawApp;
+        fn deref(&self) -> &Self::Target {
+            self.raw.as_deref().expect("fixture app was already consumed by close_witness")
+        }
+    }
+    
+    impl std::ops::DerefMut for Puzzle3dApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            self.raw.as_deref_mut().expect("fixture app was already consumed by close_witness")
+        }
+    }
+    
+    impl Puzzle3dApp {
+        /// 🪟️ Registers one window instance in the fixture's live roster, exactly as the shell's own
+        /// `sessionWindowInstances` grows the moment a pane is opened or split. Idempotent.
+        fn ensure_window(&mut self, window_id: &str) {
+            if !self.view.window_instances.iter().any(|instance| instance.id == window_id) {
+                self.view.window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: main::WINDOW_KIND_ID.into() });
+            }
+        }
+    
+        /// 🎯️ The exact per-call projection a host sends: the whole live session — roster, mode-wide tool,
+        /// per-window utility map — addressed at ONE concrete window instance through the framework's own
+        /// `ViewModel::for_window_instance`, which is what stamps `active_utility_id` for that pane.
+        /// 🗣️ Names the host's live label axes for every later render/measures call on this fixture. The
+        /// app resolves its label set from `ViewModel.locale`/`.terminology` and fails closed on an axis it
+        /// never authored (`puzzle3d_labels`), so a test that asserts German or reuse text has to say so —
+        /// there is no default language to fall back to.
+        pub fn set_label_axes(&mut self, locale: semio_framework_plugin::Locale, terminology: semio_framework_plugin::Terminology) {
+            self.view.locale = locale;
+            self.view.terminology = terminology;
+        }
+    
+        pub fn window_view(&self, window_id: &str) -> ViewModel {
+            let mut view = self.view.clone();
+            if !view.window_instances.iter().any(|instance| instance.id == window_id) {
+                view.window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: main::WINDOW_KIND_ID.into() });
+            }
+            view.for_window_instance(window_id).expect("puzzle3d test window roster")
+        }
+    
+        /// 🛠️🧰️ The shell's own activation branches (`🏛️ShellHost/🟦️.tsx`'s `SET_ACTIVE_TOOL_ACTION_ID`
+        /// and `SET_ACTIVE_UTILITY_ACTION_ID`), applied to this fixture's session BEFORE the verb is
+        /// forwarded — the same order the shell uses, so the plugin call already sees the new activation.
+        /// A tool and a window utility are mutually exclusive interaction owners: activating a tool clears
+        /// every window's utility, activating a utility clears the tool.
+        fn activate(&mut self, action: &str, args: Option<&Value>, window_id: &str) {
+            let requested = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).unwrap_or_default();
+            if action == SET_ACTIVE_TOOL_ACTION_ID {
+                let next = resolve_activation(self.view.active_tool_id.as_deref(), requested("toolId"));
+                self.view.active_tool_id = next.clone();
+                if next.is_some() {
+                    self.view.active_utility_by_window_id.clear();
+                }
+                return;
+            }
+            let window = args.and_then(|value| value.get("windowId")).and_then(Value::as_str).filter(|id| !id.is_empty()).unwrap_or(window_id).to_string();
+            match resolve_activation(self.view.active_utility_by_window_id.get(&window).map(String::as_str), requested("utilityId")) {
+                Some(utility) => {
+                    self.view.active_utility_by_window_id.insert(window, utility);
+                    self.view.active_tool_id = None;
+                }
+                None => {
+                    self.view.active_utility_by_window_id.remove(&window);
+                }
+            }
+        }
+    
+        /// ⏱️ One cooperative-maintenance unit shaped exactly like the OS runtime's live-cleanup clock
+        /// drives it, timed by the framework's own clock and attributed to the fixed stage that ran it.
+        /// The stage is read BEFORE the call: `maintenance_step`'s idle early return leaves the
+        /// round-robin cursor untouched, so reading it afterwards names a stale stage.
+        pub fn measure_maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            let stage = self.next_maintenance_stage();
+            let started_us = semio_framework_job::default_now_us();
+            let step = PluginApp::maintenance_step(self.raw.as_deref_mut().expect("fixture app was already consumed by close_witness"), maximum_items, maximum_bytes);
+            if let (Some(started_us), Some(finished_us)) = (started_us, semio_framework_job::default_now_us()) {
+                self.maintenance.record(stage, finished_us.saturating_sub(started_us));
+            }
+            step
+        }
+    }
+    
+    /// 🧹️ Drives `app` through the real `PluginApp` close state machine, one item and one envelope page
+    /// per turn exactly as a host actor tick does, and returns the terminal-empty witness or the fault
+    /// that stopped it. Bounded only as a runaway guard: this app carries five stores plus its retained
+    /// tool operations, which outgrows `context::close_registered_fixture_app`'s own 64-turn cap.
+    fn drain_close(app: &mut Puzzle3dRawApp) -> Result<bool, Fault> {
+        let mut blocked_on = None;
+        for _ in 0..1_048_576 {
+            if app.close_terminal_is_empty() {
+                return Ok(true);
+            }
+            match PluginApp::close_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)? {
+                PluginCloseStep::Complete => break,
+                PluginCloseStep::Blocked { reason } | PluginCloseStep::AwaitingInput { reason } => blocked_on = Some(reason),
+                PluginCloseStep::Pending { .. } => {}
+            }
+        }
+        if app.close_terminal_is_empty() {
+            return Ok(true);
+        }
+        // 🧷️ A close that ends non-terminal because an owner is BLOCKED is not "the machine reported
+        // complete too early" — it is a live lease the caller still holds (a captured window transient
+        // snapshot is the usual one: `capture` hands out a read of the partition's own store). Naming that
+        // reason is the difference between a diagnosable failure and a bare `false` after a million spins.
+        match blocked_on {
+            Some(reason) => Err(Fault::from(format!("close drained non-terminal while blocked on {reason}"))),
+            None => Ok(false),
+        }
+    }
+    
+    /// 🧹️ Consumes one fixture app through its real close state machine and reports the outcome, so the
+    /// close contract is asserted by a test rather than by a destructor. `Err` carries the framework's own
+    /// fault; `Ok(false)` means the machine reported `Complete` without reaching terminal-empty ownership.
+    pub fn close_witness(mut app: Puzzle3dApp) -> Result<bool, Fault> {
+        let mut raw = app.raw.take().expect("fixture app was already consumed by close_witness");
+        match drain_close(&mut raw) {
+            Ok(true) => Ok(true),
+            other => {
+                std::mem::forget(raw);
+                other
+            }
+        }
+    }
+    
+    impl Drop for Puzzle3dApp {
+        fn drop(&mut self) {
+            let Some(mut raw) = self.raw.take() else {
+                return;
+            };
+            if !matches!(drain_close(&mut raw), Ok(true)) {
+                std::mem::forget(raw);
+            }
+        }
+    }
+    
+    pub fn meta(actor: &str) -> ActionMeta {
+        artifact_app_laws::meta(actor)
+    }
+    
+    /// 🌉️ `new_app_with_registry`'s `manifest: fn() -> App` shape predates the `AppDefinition`-returning
+    /// `create_puzzle3d_app()` convention (contract §2.4 / SDK gap 3) — this tiny local wrapper bridges
+    /// the two, mirroring `📓️w2-cad-report.md`'s recipe step 7.
+    pub fn puzzle3d_manifest_for_tests() -> App {
+        App { definition: create_puzzle3d_app(), examples: Vec::new() }
+    }
+    
+    /// 🧰️ The registry-backed, instance-bound fixture app — the ONLY constructor this plugin can use.
+    /// puzzle3d declares `bounded_first_step_tool_proofs!`, so `VcsArtifactApp::with_registry_on_bus`'s
+    /// `registry.tool_job_registration::<A>(…)` join needs the manifest's migrated generated
+    /// declarations; the registry-less `artifact_app_laws::new_app` carries an `AppActionRegistry::default()` and
+    /// fails closed with `interactive-job.catalog-authority` before any dispatch is attempted. The bound
+    /// instance id is what `advance_typed_operation_publication`/`maintenance_step` and the local
+    /// interaction query authority key their live-runtime bookkeeping on, exactly as the host binds it.
+    /// 🧱 Builds the action registry on its own frame and drops the definition before `with_registry`.
+    #[inline(never)]
+    fn puzzle3d_action_registry() -> semio_framework_plugin::AppActionRegistry {
+        let definition = create_puzzle3d_app();
+        let registry = semio_framework_plugin::AppActionRegistry::from_definition(&definition);
+        drop(definition);
+        registry
+    }
+    
+    pub async fn app() -> Puzzle3dApp {
+        crate::editor::puzzle3d::precompute::drain_fill_envelope_registry_for_test();
+        let registry = puzzle3d_action_registry();
+        let mut app = VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry).await;
+        app.bind_instance_id(1).await;
+        let view = ViewModel { window_instances: vec![ViewWindowInstance { id: main::WINDOW_KIND_ID.into(), window_kind_id: main::WINDOW_KIND_ID.into() }], ..Default::default() };
+        Puzzle3dApp { raw: Some(Box::new(app)), view, maintenance: Box::new(MaintenanceStageBudget::default()) }
+    }
+    
+    /// 🖌️ Host-session utility activation without minting a typed operation or running `settle`.
+    #[inline(never)]
+    pub fn activate_window_utility(app: &mut Puzzle3dApp, utility_id: &str) {
+        app.ensure_window(main::WINDOW_KIND_ID);
+        app.activate(semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utility_id })), main::WINDOW_KIND_ID);
+    }
+    
+    /// 🪪️ The instance identity every fixture binds, and therefore the receiver `take_typed_operation_result_page`
+    /// answers for.
+    pub const FIXTURE_INSTANCE_ID: u32 = 1;
+    
+    /// 🔁️ Runs the host's continuation loop to quiescence and hands back the effects/events/UI scope the
+    /// host would have forwarded to the shell. A registry-backed `VcsArtifactApp` does NOT apply a retained
+    /// tool job inline — `dispatch_typed` mints a `ToolOperationSpec` whose worker, store publication,
+    /// result page and outboxes are advanced only by later continuation turns, which is why the
+    /// registry-less fixture used to see mutations land synchronously and this one does not. One turn is
+    /// exactly the host's own: `maintenance_step` (worker + retirement stages), one
+    /// `advance_typed_operation_publication` unit, the result page for the bound receiver plus its
+    /// mandatory ACK, then one effect, one event, one COMPLETION witness and one UI scope. The ACK is what
+    /// actually retires the operation — without it the app stays pending forever. Bounded only as a
+    /// runaway guard.
+    ///
+    /// 📬️ The completion witness is drained in exactly the host's own position — `advance_typed_operation_output`
+    /// (`🧰️framework/…/🔌️plugin/🦀️.rs`) takes it between the event and the UI scope and forwards it as
+    /// `AppFrame::OperationCompleted`. It is not optional bookkeeping: every terminal typed operation
+    /// pushes one into a 64-slot outbox that ONLY this take drains, and `has_pending_typed_operations`
+    /// counts it, so a fixture that skips it can never observe quiescence again after its first
+    /// completed operation.
+    pub async fn settle(app: &mut Puzzle3dApp) -> Puzzle3dSettled {
+        settle_with_items(app, 1).await
+    }
+
+    /// ⏱️ [`settle`] with the host's OWN per-turn item grant instead of the one-item-per-turn paging every
+    /// other law reads. A turn is a host↔guest round trip, and the host grants 256 items / 64 KiB per
+    /// turn (`🔌️PluginRuntime/🟦️.tsx`'s `uiGrant`), so a law about per-command LATENCY must count turns
+    /// at that granularity — at one item per turn the count is the item count, which says nothing about
+    /// how many round trips a browser actually pays. Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B44.
+    pub const SETTLE_HOST_TURN_ITEMS: usize = 256;
+
+    pub async fn settle_with_items(app: &mut Puzzle3dApp, maximum_items: usize) -> Puzzle3dSettled {
+        let mut settled = Puzzle3dSettled::default();
+        for _ in 0..1_048_576 {
+            if !app.has_pending_typed_operations() {
+                return settled;
+            }
+            settled.turns += 1;
+            app.measure_maintenance_step(maximum_items, SETTLE_TURN_BYTES).expect("maintenance step drives the mounted operation's worker and retirement stages");
+            app.advance_typed_operation_publication().await.expect("advance one typed operation publication unit");
+            if let Some(page) = app.take_typed_operation_result_page(FIXTURE_INSTANCE_ID) {
+                assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
+                // ⬇️ The Download lane's page is the ONLY place the segmented handle is named, and the ACK
+                // below is what admits the chunks into the app's `segmented_downloads` authority — so the
+                // handle is captured here, exactly where the host's own `consumeTypedOperationEffects`
+                // captures it, or a law can never drain what it just published.
+                if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Download {
+                    settled.downloads.push(Puzzle3dDownload::from_page(page.token.operation, page.bytes()));
+                }
+                assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page"), "the app's own presented result page must accept its exact token");
+            }
+            settled.effects.extend(app.take_typed_operation_effect());
+            settled.events.extend(app.take_typed_operation_event());
+            if let Some(completion) = app.take_typed_operation_completion().await.expect("take one typed operation completion witness") {
+                settled.completions.push(Puzzle3dCompletion { operation: completion.operation, ui_scope: completion.ui_scope, history_patch: completion.history_patch });
+            }
+            settled.scope = app.take_typed_operation_ui_scope().or(settled.scope);
+            acknowledge_local_interaction_pages(app);
+        }
+        panic!("puzzle3d app never quiesced: pending typed operations outlived the settle budget");
+    }
+    
+    /// 📬️ Everything the HOST forwards to the shell once a dispatch has run to quiescence — the same
+    /// four channels `plugin_runtime` carries, so a law reads exactly what a client would.
+    ///
+    /// 🧲️ [`Self::completions`] is the channel the browser reads as `AppFrame::OperationCompleted` and the
+    /// shell applies through `subscribeOperationCompletions` → `applyHostEffects`. It used to be drained
+    /// and DROPPED here, which is why a command that answers before it runs — every verb carrying a
+    /// `coalesce_key` enters the latest-wins channel and its accepted invocation returns
+    /// `{operationId, generation}` immediately — had no observable outcome in-process at all, and a
+    /// refusal on that lane could not be asserted (`📓️2026-09-09-wave-L-…md` §5.4).
+    #[derive(Debug, Default)]
+    pub struct Puzzle3dSettled {
+        /// ⏱️ How many host continuation turns this settle spent. Ticket 26/09/02/PUZZLE-3D-END-TO-END
+        /// wave B44: the observable a latency law reads, because per-command latency in the browser is
+        /// turns × per-turn cost and a turn count that grows with the document is the shape that burns a
+        /// 30-second interaction budget.
+        pub turns: usize,
+        pub effects: Vec<Effect>,
+        pub events: Vec<semio_framework_plugin::AppEvent>,
+        pub scope: Option<UiDirtyScope>,
+        pub completions: Vec<Puzzle3dCompletion>,
+        pub downloads: Vec<Puzzle3dDownload>,
+    }
+    
+    /// ⬇️ One segmented download handle a typed operation published — the metadata the host turns into
+    /// `download-media-export` with a `semio-segmented-handle-v1:` marker, plus the operation id the chunks
+    /// are drained by ([`drain_segmented_download`]).
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct Puzzle3dDownload {
+        pub operation: u64,
+        pub filename: String,
+        pub mime_type: String,
+        pub encoding: Option<String>,
+        pub bytes: usize,
+    }
+    
+    impl Puzzle3dDownload {
+        /// 📦️ The Download lane's wire shape is a flat 4-element JSON array
+        /// (`DownloadResultPayload`'s hand-written `ToValue`), read here exactly as the renderer reads it.
+        fn from_page(operation: u64, page: &[u8]) -> Self {
+            let text = String::from_utf8_lossy(page).into_owned();
+            let value: Value = parse(&text).unwrap_or_else(|_| panic!("download result page must be JSON: {text}"));
+            let row = value.as_array().unwrap_or_else(|| panic!("download result page must be a 4-element array: {text}"));
+            Self {
+                operation,
+                filename: row.first().and_then(Value::as_str).unwrap_or_default().to_string(),
+                mime_type: row.get(1).and_then(Value::as_str).unwrap_or_default().to_string(),
+                encoding: row.get(2).and_then(Value::as_str).map(str::to_string),
+                bytes: row.get(3).and_then(Value::as_u64).unwrap_or_default() as usize,
+            }
+        }
+    }
+    
+    /// ⬇️ Drains one published segmented download the way the host's `drainSegmentedMediaExport` does: one
+    /// bounded chunk per await until the producer answers `None`, concatenated in order. The whole point of
+    /// the lane is that the payload never crosses as one contiguous block, so a law that asserts the
+    /// REASSEMBLED bytes has to drain it exactly like this.
+    pub async fn drain_segmented_download(app: &mut Puzzle3dApp, download: &Puzzle3dDownload) -> Vec<u8> {
+        let mut assembled = Vec::with_capacity(download.bytes);
+        let mut chunks = 0usize;
+        while let Some(chunk) = app.take_segmented_download_chunk(download.operation).await.expect("take one segmented download chunk") {
+            assert!(!chunk.is_empty(), "a segmented download chunk is never empty");
+            assert!(chunk.len() <= semio_framework_plugin::app::ArtifactOutputChunks::CHUNK_BYTES, "chunk {} exceeds the wire's own page cap", chunks);
+            assembled.extend_from_slice(&chunk);
+            chunks += 1;
+            assert!(chunks <= download.bytes / semio_framework_plugin::app::ArtifactOutputChunks::CHUNK_BYTES + 2, "segmented drain never terminated");
+        }
+        assembled
+    }
+    
+    /// 📬️ One `AppFrame::OperationCompleted` witness, projected to what a law can assert on.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct Puzzle3dCompletion {
+        pub operation: u64,
+        pub ui_scope: UiDirtyScope,
+        pub history_patch: Option<semio_framework::kernel::HistoryPatch>,
+    }
+    
+    /// 📏️ One continuation turn's byte grant. Deliberately one fixed envelope page, not a huge number: the
+    /// point of the loop is that every unit is bounded exactly as a host actor tick bounds it.
+    const SETTLE_TURN_BYTES: usize = 16_384;
+    
+    /// 🕹️ Plays the CLIENT half of the local interaction query protocol: drains the replies the app
+    /// published this turn and acknowledges every page, which is what returns the document snapshot-read
+    /// leases the query captured — the same Started → Page → acknowledge → Closed round trip
+    /// `local_interaction_query_return_does_not_fault_the_next_maintenance_step` drives by hand.
+    fn acknowledge_local_interaction_pages(app: &mut Puzzle3dApp) {
+        while let Some(reply) = app.take_local_interaction_query_reply() {
+            if let protocol::LocalInteractionQueryReply::Page { page } = reply {
+                let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
+                assert!(app.acknowledge_local_interaction_query(&token), "the app's own local-interaction page must accept its exact token");
+            }
+        }
+    }
+    
+    /// 🔁️ Folds one settled turn's forwarded output into the invocation the shell observes, so a test reads
+    /// the same `(requested_effects, events, ui_scope)` triple a client would after the continuation turns.
+    async fn settle_into(app: &mut Puzzle3dApp, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
+        settle_into_reporting(app, result).await.0
+    }
+    
+    /// 🧾️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B21: [`settle_into`] plus the settle census it folded
+    /// from, for laws that must read a channel the `InvocationResult` deliberately does NOT carry — above
+    /// all the command-log delta. A typed operation never calls `record_command`: its edit reaches the log
+    /// through `backfill_command_log` and the patch that carries it is minted by
+    /// `take_typed_operation_completion`, so a MUTATING verb's row rides `AppFrame::OperationCompleted`
+    /// while `InvocationResult::history_patch` keeps its own narrower meaning — the delta the ADMISSION
+    /// itself recorded. Six import laws asserted the former on the latter and were green only because the
+    /// row they read was the PREVIOUS command's un-delivered one (the one-command lag).
+    async fn settle_into_reporting(app: &mut Puzzle3dApp, result: Result<InvocationResult, Fault>) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
+        settle_into_reporting_with_items(app, result, 1).await
+    }
+
+    async fn settle_into_reporting_with_items(app: &mut Puzzle3dApp, result: Result<InvocationResult, Fault>, maximum_items: usize) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
+        let settled = settle_with_items(app, maximum_items).await;
+        let folded = result.map(|mut result| {
+            result.requested_effects.extend(settled.effects.iter().cloned());
+            result.events.extend(settled.events.iter().cloned());
+            // 🧲️ A latest-wins command answers BEFORE it runs, so its own terminal `UiDirtyScope` only
+            // exists on the completion lane; folding the last completion's scope in is what makes
+            // `InvocationResult::ui_scope` mean the same thing for a coalesced verb as for a plain one.
+            if let Some(scope) = settled.scope.clone().or_else(|| settled.completions.last().map(|completion| completion.ui_scope.clone())) {
+                result.ui_scope = scope;
+            }
+            result
+        });
+        (folded, settled)
+    }
+    
+    /// 🧾️ How many command-log rows one settle published on the completion lane — the `historyUpserts` a
+    /// browser client counts on its `AppFrame::OperationCompleted` frames.
+    pub fn history_rows(settled: &Puzzle3dSettled) -> usize {
+        settled.completions.iter().filter_map(|completion| completion.history_patch.as_ref()).map(|patch| patch.upserts.len()).sum()
+    }
+    
+    /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
+    /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
+    /// `Self::Command` channel). Reconstructs the `Puzzle3dCommand` from the same
+    /// `(action, args, window_id)` triple every pre-B1 test already passed.
+    ///
+    /// 🛰️ Wave B7: a framework-reserved verb is a TWO-half gesture since `dispatch_framework_reserved_action`
+    /// began answering every non-clipboard route with `Effect::SpawnJob { kind: FRAMEWORK_RESERVED_JOB_KIND }`.
+    /// `handle_action` only ADMITS it; the document changes when the host drives that Isolated job to a
+    /// terminal step and hands the bytes back through `complete_reserved_spawned_job`. A fixture that stopped
+    /// at the admission observed `undo`/`interactionSelect`/`interactionHover` succeeding while the store and
+    /// the interaction snapshot never moved — the exact silent no-op shape wave B5 reported. [`settle_reserved`]
+    /// plays that host half, and is a no-op for the clipboard routes that still commit inline.
+    pub async fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+        dispatch_reporting(app, action, args, window_id).await.0
+    }
+    
+    /// 🧾️ [`dispatch`] plus the settle census, for laws that must read the completion lane — above all
+    /// [`history_rows`], the command-log delta a MUTATING verb publishes on
+    /// `AppFrame::OperationCompleted` rather than on its accepted invocation. See
+    /// [`settle_into_reporting`] for why the two channels stay separate.
+    pub async fn dispatch_reporting(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
+        dispatch_reporting_with_items(app, action, args, window_id, 1).await
+    }
+
+    /// ⏱️ [`dispatch_reporting`] settling at the HOST's own per-turn item grant, so `Puzzle3dSettled::turns`
+    /// counts host↔guest round trips rather than paging items. See [`SETTLE_HOST_TURN_ITEMS`].
+    pub async fn dispatch_reporting_with_items(
+        app: &mut Puzzle3dApp,
+        action: &str,
+        args: Option<&Value>,
+        window_id: Option<&str>,
+        maximum_items: usize,
+    ) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
+        let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
+        app.ensure_window(window_id);
+        // 🏛️ The host resolves its OWN session state first and only then forwards the verb — so the very
+        // call that activates a tool/utility already carries it, exactly as `🏛️ShellHost/🟦️.tsx` does.
+        if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID) {
+            app.activate(action, args, window_id);
+        }
+        let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..meta("local") };
+        // 🕰️ Framework-reserved verbs stay on `handle_action`: this is exactly the `skip` set
+        // `PluginBuilder`'s own declared-action bridge check uses (`🧰️framework/…/🔌️plugin/🦀️.rs`), i.e. every
+        // verb the framework injects and handles itself. A reserved verb sent down the typed channel faults
+        // `interactive-job.missing-factory` — the app owns no tool proof for a verb it never declared.
+        if matches!(
+            action,
+            "undo"
+                | "redo"
+                | "commitCheckpoint"
+                | "createAlternative"
+                | "switchAlternative"
+                | "checkoutCheckpoint"
+                | "revertToCommand"
+                | "setHistoryCommandFilter"
+                | "noteShellCommand"
+                | "recordTutorial"
+                | "startIntroduction"
+                | "startTutorial"
+                | "copy"
+                | "cut"
+                | "paste"
+                | "setActiveUtility"
+                | "setActiveTool"
+                | "interactionSelect"
+                | "interactionHover"
+                | "clearSelection"
+                | "selectAll"
+                | "setSelectionMode"
+                | "setInteractionGranularity"
+        ) {
+            let dsl_args = args.map(json::to_dsl_value);
+            let admitted = app.handle_action(action, dsl_args.as_ref(), &action_meta).await;
+            let reserved = match admitted {
+                Ok(admitted) => settle_reserved(app, admitted).await,
+                Err(fault) => Err(fault),
+            };
+            return settle_into_reporting_with_items(app, reserved, maximum_items).await;
+        }
+        let typed = app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &action_meta).await;
+        settle_into_reporting_with_items(app, typed, maximum_items).await
+    }
+    
+    /// 📤 `dispatch` up to the point the host has minted the typed operation and NOT one continuation
+    /// turn further: the operation is mounted, its worker session holds one of the process-wide
+    /// [`semio_framework_job::WORKER_JOB_SESSION_SLOTS`] admissions, and nothing has retired it. Dropping
+    /// the fixture here is exactly what a closed tab, a cancelled command or a torn-down app does, which
+    /// is the ONLY way a law can witness the retirement array a live app is expected to give back.
+    pub async fn dispatch_unsettled(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+        let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
+        app.ensure_window(window_id);
+        let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..meta("local") };
+        let command = Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}"));
+        app.dispatch_typed(command, &action_meta).await
+    }
+    
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
+    /// for one `(granularity, id)` pair in the `vortex` domain — the test-side replacement for the
+    /// deleted `worldPick`/`worldSelect`/`worldVortexSelect`/`setSelection` actions.
+    pub async fn select_id(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
+        let targets = to_json_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]);
+        dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None).await
+    }
+    
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionHover`
+    /// for one `(granularity, id)` pair on the `pointer` channel in the `vortex` domain — the
+    /// test-side replacement for the deleted `worldHover`/`setHover`/`worldVortexHover`/`setKindHover`
+    /// actions. `id: None` clears the hover (mirrors the old "hover nothing" call shape).
+    pub async fn hover_id(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>) -> Result<InvocationResult, Fault> {
+        let targets: Vec<InteractionTarget> = id.map(|id| InteractionTarget { granularity: granularity.into(), id: id.into() }).into_iter().collect();
+        let targets_json = to_json_string(&targets);
+        dispatch(app, "interactionHover", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "channel": "pointer", "targets": targets_json })), None).await
+    }
+    
+    /// 🖱️ Browser pointermove over vortices admits many `interactionHover`s before Isolated reserved
+    /// jobs finish. Laws that reproduce that storm must not `settle` between admits.
+    pub async fn dispatch_reserved_unsettled(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+        let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
+        app.ensure_window(window_id);
+        let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..meta("local") };
+        let dsl_args = args.map(json::to_dsl_value);
+        app.handle_action(action, dsl_args.as_ref(), &action_meta).await
+    }
+    
+    pub async fn hover_id_unsettled(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>) -> Result<InvocationResult, Fault> {
+        let targets: Vec<InteractionTarget> = id.map(|id| InteractionTarget { granularity: granularity.into(), id: id.into() }).into_iter().collect();
+        let targets_json = to_json_string(&targets);
+        dispatch_reserved_unsettled(app, "interactionHover", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "channel": "pointer", "targets": targets_json })), None).await
+    }
+    
+    pub async fn select_id_unsettled(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
+        let targets = to_json_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]);
+        dispatch_reserved_unsettled(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None).await
+    }
+    
+    pub async fn settle_reserved(app: &mut Puzzle3dApp, admitted: InvocationResult) -> Result<InvocationResult, Fault> {
+        semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await
+    }
+    
+    /// 🖼️ The rendered body, as JSON — every panel/window assertion navigates this value.
+    ///
+    /// 🪟️ The ViewModel is addressed at the very window the body key names (`<body>:<windowInstanceId>`,
+    /// else the main instance), exactly like `dispatch`: a host never asks "render this pane" without
+    /// saying which pane, and the window-owned config/transient partitions are captured through
+    /// `ViewModel::window_id` — a bare `ViewModel::default()` renders every window-owned field at its
+    /// type default (no camera, no suggestion popup, no engagement scratch), which is a state no real
+    /// render can be in.
+    pub async fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
+        let window_id = body_key.split_once(':').map_or(main::WINDOW_KIND_ID, |(_, window)| window);
+        app.ensure_window(window_id);
+        let view = app.window_view(window_id);
+        let tree = app.render(body_key, None, &view).await.expect("render");
+        rendered_body_value(tree)
+    }
+    
+    /// 📌️ One APP-LEVEL PANEL body rendered exactly the way `plugin_refresh_ui` renders it:
+    /// `ViewModel::for_panel()` over the live session, i.e. with NO `window_id` at all — the projection a
+    /// panel actually receives, and the one a `render_body`/`render_window_refresh` call can never
+    /// reproduce because both address a concrete instance. `focused_window_id` is the shell's last-focused
+    /// pane, the only per-call carrier of "which window is the user looking at" a panel is given.
+    pub async fn render_panel_body(app: &mut Puzzle3dApp, body_key: &str, focused_window_id: Option<&str>) -> Value {
+        if let Some(window_id) = focused_window_id {
+            app.ensure_window(window_id);
+        }
+        let mut view = app.view.clone();
+        view.focused_window_id = focused_window_id.map(str::to_string);
+        let tree = app.render(body_key, None, &view.for_panel()).await.expect("render");
+        rendered_body_value(tree)
+    }
+    
+    /// 🪟️ One window INSTANCE rendered exactly the way `plugin_refresh_ui` renders it: the window KIND's
+    /// own body key — the host sends `windowKinds[].n` for every instance, never a `<body>:<instance>`
+    /// spelling — with the view narrowed at that one instance through `ViewModel::for_window_instance`.
+    /// The `<body>:<instance>` form [`render_window`] uses is the OTHER host route
+    /// (`plugin_render_surface`'s bound surface context), so a law about what a split pane publishes has
+    /// to state THIS shape: it is the only one where the instance id reaches the guest through the view
+    /// alone.
+    pub async fn render_window_refresh(app: &mut Puzzle3dApp, body_key: &str, window_id: &str) -> Value {
+        app.ensure_window(window_id);
+        let view = app.window_view(window_id);
+        let tree = app.render(body_key, None, &view).await.expect("render");
+        rendered_body_value(tree)
+    }
+    
+    /// 🖼️ The world-3d scene a rendered tree publishes, else the projected node JSON — the one projection
+    /// every render probe in this test context reads.
+    fn rendered_body_value(tree: semio_framework_plugin::ComponentTree) -> Value {
+        let mut stack = vec![&tree.root];
+        let mut rendered_scene = None;
+        while let Some(node) = stack.pop() {
+            if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
+                if surface.doc_schema.as_str() == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
+                    let scene: semio_framework_ui_scene::World3dScene = artifact_app_laws::built_surface_scene(node).expect("assemble world scene");
+                    let world3d = json::from_dsl_value(&dsl::ToValue::to_value(&scene));
+                    rendered_scene = Some(object([("schema".to_string(), Value::from(surface.doc_schema.as_str())), ("world3d".to_string(), world3d)]));
+                    if scene.interaction_json.is_some() {
+                        break;
+                    }
+                }
+            }
+            stack.extend(node.children.iter());
+        }
+        let projected = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection");
+        rendered_scene.unwrap_or_else(|| parse(&projected.to_string()).expect("rendered node JSON"))
+    }
+    
+    /// 📏️ The packed byte length of the world-3d surface payload this body actually admits, plus the
+    /// fixed capacity it is admitted against — the two numbers `scene-surface.encode` compares. The
+    /// payload is read back off the built `Surface` node rather than re-encoded, so the law measures the
+    /// same bytes the host shipped.
+    pub async fn world_surface_payload_bytes(app: &mut Puzzle3dApp, body_key: &str) -> (usize, usize) {
+        let window_id = body_key.split_once(':').map_or(main::WINDOW_KIND_ID, |(_, window)| window);
+        app.ensure_window(window_id);
+        let view = app.window_view(window_id);
+        let tree = app.render(body_key, None, &view).await.expect("render");
+        let mut stack = vec![&tree.root];
+        let mut widest = 0;
+        while let Some(node) = stack.pop() {
+            if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
+                if surface.doc_schema.as_str() == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
+                    widest = widest.max(surface.doc.bytes.as_slice().len());
+                }
+            }
+            stack.extend(node.children.iter());
+        }
+        assert!(widest > 0, "{body_key} rendered no world-3d surface");
+        (widest, semio_framework_ui_contract::UI_FIXED_BYTES)
+    }
+    
+    fn count_built_nodes(node: &semio_framework_ui_contract::BuiltNode) -> usize {
+        1 + node.children.iter().map(count_built_nodes).sum::<usize>()
+    }
+    
+    //#region 🚚️WorldSceneCarrierCensus
+    /// 🚚️ One out-of-doc payload lane as it was actually published: the carrier's measured shape next to
+    /// what the spine declared about it.
+    pub struct WorldSceneLaneCensus {
+        pub key: String,
+        pub bytes: usize,
+        pub leaves: usize,
+        pub leaf_depth: usize,
+        pub widest_children: usize,
+        pub widest_leaf: usize,
+        pub declared_bytes: u32,
+        pub declared_hash: String,
+    }
+    
+    /// 🚚️ Everything the paged-carrier laws measure about one rendered world body: the spine that rode
+    /// inside the fixed-capacity surface doc, every lane carrier beside it, and the scene a render host
+    /// reassembles from the two.
+    pub struct WorldSceneCarrierCensus {
+        pub doc_bytes: usize,
+        pub capacity: usize,
+        pub nodes: usize,
+        pub lanes: Vec<WorldSceneLaneCensus>,
+        pub assembled: semio_framework_ui_scene::World3dScene,
+    }
+    
+    impl WorldSceneCarrierCensus {
+        pub fn payload_bytes(&self) -> usize {
+            self.lanes.iter().map(|lane| lane.bytes).sum()
+        }
+    
+        pub fn lane(&self, key: &str) -> Option<&WorldSceneLaneCensus> {
+            self.lanes.iter().find(|lane| lane.key == key)
+        }
+    
+        pub fn report(&self) -> String {
+            self.lanes.iter().map(|lane| format!("{}={}B/{}leaves", lane.key.trim_start_matches(semio_framework_ui_scene::WORLD3D_SCENE_LANE_KEY_PREFIX), lane.bytes, lane.leaves)).collect::<Vec<_>>().join(" ")
+        }
+    }
+    
+    /// 🚚️ Renders `body_key` and censuses the world-3d surface it publishes. Reads the built tree
+    /// directly — never a re-encode — so the law measures exactly the bytes the host shipped.
+    pub async fn world_surface_carrier_census(app: &mut Puzzle3dApp, body_key: &str) -> WorldSceneCarrierCensus {
+        let window_id = body_key.split_once(':').map_or(main::WINDOW_KIND_ID, |(_, window)| window);
+        app.ensure_window(window_id);
+        let view = app.window_view(window_id);
+        let tree = app.render(body_key, None, &view).await.expect("render");
+        let mut stack = vec![&tree.root];
+        let mut census = None;
+        while let Some(node) = stack.pop() {
+            if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
+                if surface.doc_schema.as_str() == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
+                    let spine: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(surface).expect("decode world spine");
+                    let mut lanes = Vec::new();
+                    for child in node.children.iter() {
+                        let payload = artifact_app_laws::built_carrier_text(child);
+                        let (mut leaves, mut leaf_depth, mut widest_children, mut widest_leaf) = (0usize, 0usize, 0usize, 0usize);
+                        let mut frontier = vec![(child, 0usize)];
+                        while let Some((current, level)) = frontier.pop() {
+                            widest_children = widest_children.max(current.children.len());
+                            if let semio_framework_ui_contract::Component::Text(text) = &current.component {
+                                leaves += 1;
+                                leaf_depth = leaf_depth.max(level);
+                                widest_leaf = widest_leaf.max(text.value.0.as_str().len());
+                            }
+                            frontier.extend(current.children.iter().map(|grandchild| (grandchild, level + 1)));
+                        }
+                        let reference = spine.lanes.iter().find(|reference| semio_framework_ui_scene::World3dSceneLane::from_name(&reference.lane).is_some_and(|lane| lane.body_key() == child.key.as_str()));
+                        lanes.push(WorldSceneLaneCensus {
+                            key: child.key.as_str().to_string(),
+                            bytes: payload.len(),
+                            leaves,
+                            leaf_depth,
+                            widest_children,
+                            widest_leaf,
+                            declared_bytes: reference.map_or(0, |reference| reference.bytes),
+                            declared_hash: reference.map_or_else(String::new, |reference| reference.hash.clone()),
+                        });
+                    }
+                    census = Some(WorldSceneCarrierCensus { doc_bytes: surface.doc.bytes.as_slice().len(), capacity: semio_framework_ui_contract::UI_FIXED_BYTES, nodes: count_built_nodes(node), lanes, assembled: artifact_app_laws::built_surface_scene(node).expect("assemble world scene") });
+                    break;
+                }
+            }
+            stack.extend(node.children.iter());
+        }
+        let census = census.unwrap_or_else(|| panic!("{body_key} rendered no world-3d surface"));
+        artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection");
+        census
+    }
+    //#endregion 🚚️WorldSceneCarrierCensus
+    
+    /// 🪟️ The world composite body for one window INSTANCE — the `<body>:<windowInstanceId>` form is
+    /// how a split pane asks for its own materialized options (see `ArtifactApp::render`).
+    pub async fn render_window(app: &mut Puzzle3dApp, window_id: &str) -> Value {
+        render_body(app, &format!("{}:{window_id}", main::BODY_KEY)).await
+    }
+    
+    pub async fn render_composite(app: &mut Puzzle3dApp) -> Value {
+        render_body(app, main::BODY_KEY).await
+    }
+    
+    pub fn projection_of(app: &Puzzle3dApp) -> Value {
+        parse(&app.snapshot().expect("projection").value().to_string()).expect("snapshot JSON")
+    }
+    
+    
+    pub fn object_count(app: &Puzzle3dApp) -> usize {
+        projection_of(app).get("objects").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
+    }
+    
+    pub fn first_object_id(app: &Puzzle3dApp) -> String {
+        projection_of(app).get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("first object id").to_string()
+    }
+    
+    pub fn vortex_full_ids(app: &Puzzle3dApp) -> Vec<String> {
+        let projection = projection_of(app);
+        let mut ids = Vec::new();
+        for object in projection.get("objects").and_then(Value::as_array).into_iter().flatten() {
+            let object_id = object.get("id").and_then(Value::as_str).unwrap_or_default();
+            for vortex in object.get("vortices").and_then(Value::as_array).into_iter().flatten() {
+                if let Some(vortex_id) = vortex.get("id").and_then(Value::as_str) {
+                    ids.push(puzzle3d_vortex_full_id(object_id, vortex_id));
+                }
+            }
+        }
+        ids
+    }
+    
+    pub fn first_vortex_full_id(app: &Puzzle3dApp) -> String {
+        vortex_full_ids(app).into_iter().next().expect("seed vortex")
+    }
+    
+    //#region 🔖️SceneProbes
+    fn scene_field(node: &Value, field: &str) -> Value {
+        node.pointer(&format!("/world3d/{field}")).and_then(Value::as_str).and_then(|raw| parse(raw).ok()).unwrap_or(Value::Null)
+    }
+    
+    pub fn instances_of(node: &Value) -> Vec<Value> {
+        scene_field(node, "instancesJson").as_array().cloned().unwrap_or_default()
+    }
+    
+    pub fn instance_count(node: &Value) -> usize {
+        instances_of(node).len()
+    }
+    
+    pub fn scene_meshes_of(node: &Value) -> Vec<Value> {
+        scene_field(node, "meshesJson").as_array().cloned().unwrap_or_default()
+    }
+    
+    pub fn vortices_of(node: &Value) -> Vec<Value> {
+        scene_field(node, "vorticesJson").as_array().cloned().unwrap_or_default()
+    }
+    
+    pub fn interaction_of(node: &Value) -> Value {
+        scene_field(node, "interactionJson")
+    }
+    
+    pub fn selection_of(node: &Value) -> Value {
+        scene_field(node, "selectionJson")
+    }
+    
+    pub fn lod_of(node: &Value) -> Value {
+        scene_field(node, "lodJson")
+    }
+    
+    pub fn camera_of(node: &Value) -> Value {
+        scene_field(node, "cameraJson")
+    }
+    
+    pub fn brush_preview_of(node: &Value) -> Value {
+        scene_field(node, "brushPreviewJson")
+    }
+    //#endregion 🔖️SceneProbes
+    
+    //#region 🔖️MeasureProbes
+    /// 🔍️ Depth-first search for a `WindowMeasure::Slider`'s value by id, descending into groups (the
+    /// fill-count slider nests inside the fill tool's measure group rather than sitting on the engagement).
+    pub fn find_measure_slider(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
+        measures.iter().find_map(|measure| match measure {
+            WindowMeasure::Slider { id, value, .. } if id == slider_id => Some(*value),
+            WindowMeasure::Group { children, .. } => find_measure_slider(children, slider_id),
+            _ => None,
+        })
+    }
+    
+    pub fn find_measure_slider_max(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
+        measures.iter().find_map(|measure| match measure {
+            WindowMeasure::Slider { id, max, .. } if id == slider_id => Some(*max),
+            WindowMeasure::Group { children, .. } => find_measure_slider_max(children, slider_id),
+            _ => None,
+        })
+    }
+    
+    pub fn find_measure_slider_ready(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
+        measures.iter().find_map(|measure| match measure {
+            WindowMeasure::Slider { id, ready, .. } if id == slider_id => *ready,
+            WindowMeasure::Group { children, .. } => find_measure_slider_ready(children, slider_id),
+            _ => None,
+        })
+    }
+    
+    pub fn find_measure_select(measures: &[WindowMeasure], select_id: &str) -> Option<String> {
+        measures.iter().find_map(|measure| match measure {
+            WindowMeasure::Select { id, value, .. } if id == select_id => Some(value.clone()),
+            WindowMeasure::Group { children, .. } => find_measure_select(children, select_id),
+            _ => None,
+        })
+    }
+    
+    pub fn find_measure_toggle(measures: &[WindowMeasure], toggle_id: &str) -> Option<bool> {
+        measures.iter().find_map(|measure| match measure {
+            WindowMeasure::Toggle { id, pressed, .. } if id == toggle_id => Some(*pressed),
+            WindowMeasure::Group { children, .. } => find_measure_toggle(children, toggle_id),
+            _ => None,
+        })
+    }
+    
+    /// 🎯️ Top-level utility tag of a `WindowMeasure::Group` by id, or `None` when the group is absent.
+    pub fn measure_group_tag(measures: &[WindowMeasure], group_id: &str) -> Option<Option<String>> {
+        measures.iter().find_map(|measure| match measure {
+            WindowMeasure::Group { id, active_utility_id, .. } if id == group_id => Some(active_utility_id.clone()),
+            _ => None,
+        })
+    }
+    
+    /// 🪣️ How far background fill planning has preloaded, read off the fill tool's own count slider.
+    pub async fn fill_ready(app: &mut Puzzle3dApp) -> f64 {
+        let view = app.window_view(main::WINDOW_KIND_ID);
+        app.tool_measures(&view).await.get(fill_tool::TOOL_ID).and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count")).unwrap_or(0.0)
+    }
+    
+    /// 🛑 The `(job, operation, generation)` triple the Fill panel's own `Cancel fill` affordance carries,
+    /// read off the published measure exactly as the host reads it before dispatching `cancelFillBuild` —
+    /// `None` while no run is planning, which is also when the affordance itself is absent.
+    pub async fn fill_cancel_identity(app: &mut Puzzle3dApp) -> Option<(u64, u64, u64)> {
+        let view = app.window_view(main::WINDOW_KIND_ID);
+        let measures = app.tool_measures(&view).await;
+        let toggle_id = format!("{}-fill-cancel", crate::editor::puzzle3d::PUZZLE3D_PLAY_CONTROLLER_ID);
+        let descriptor = measures.get(fill_tool::TOOL_ID)?.iter().find_map(|measure| match measure {
+            WindowMeasure::Toggle { id, on_change, .. } if *id == toggle_id => Some(on_change.clone()),
+            _ => None,
+        })?;
+        let args = dsl::os_pack::json::from_dsl_value(descriptor.args.as_ref()?);
+        let field = |key: &str| args.get(key).and_then(dsl::os_pack::json::Value::as_u64);
+        Some((field("job")?, field("operation")?, field("generation")?))
+    }
+    
+    /// ⚙️ Steps isolated `FILL_JOB_KIND` jobs the same way the React host does after a guest turn:
+    /// `start_job` once per `SpawnJob`, then `step_job` until `Done`/`Failed` or the per-tick slice
+    /// budget. `drive_enqueued_fill_job_for_test` is a different empty `Puzzle3dPlayApp` than the
+    /// dispatch session and must not be used as a stand-in for this runtime.
+    pub async fn step_spawned_fill_jobs(effects: &[Effect], live: &mut Vec<u64>) {
+        use crate::editor::puzzle3d::precompute::FILL_JOB_KIND;
+        use semio_framework_plugin::reactor::jobs::{self, JobBudget, JobStep};
+        for effect in effects {
+            if let Effect::SpawnJob { job, kind, input, .. } = effect {
+                if kind == FILL_JOB_KIND {
+                    jobs::start_job(*job, kind, input).await;
+                    live.push(*job);
+                }
+            }
+        }
+        let mut still = Vec::new();
+        for job in live.drain(..) {
+            let mut terminal = false;
+            for _ in 0..64 {
+                match jobs::step_job(job, JobBudget { fuel: 1, deadline_ms: 1 }).await {
+                    JobStep::Running(_) => {}
+                    JobStep::Done(_) | JobStep::Failed(_) => {
+                        terminal = true;
+                        break;
+                    }
+                }
+            }
+            if !terminal {
+                still.push(job);
+            }
+        }
+        *live = still;
+    }
+    
+    /// 📑️ Drives `fillBuildTick` plus the isolated bounded fill job until planning has reached `target` placements (or the budget runs out).
+    pub async fn drive_fill_until_ready(app: &mut Puzzle3dApp, target: f64) -> f64 {
+        let mut live = Vec::new();
+        for _ in 0..256 {
+            let result = dispatch(app, "fillBuildTick", None, None).await.expect("fillBuildTick");
+            step_spawned_fill_jobs(&result.requested_effects, &mut live).await;
+            if fill_ready(app).await >= target {
+                break;
+            }
+        }
+        fill_ready(app).await
+    }
+    
+    /// 🧵️ The retained command completes the bounded fill delta before publishing one atomic result.
+    pub async fn finish_fill_count(_app: &mut Puzzle3dApp, _result: InvocationResult) -> (usize, std::time::Duration) {
+        (0, std::time::Duration::ZERO)
+    }
+    
+    pub async fn set_fill_count_and_finish(app: &mut Puzzle3dApp, value: u32, window_id: Option<&str>) -> (usize, std::time::Duration) {
+        let result = dispatch(app, "setFillCount", Some(&json!({ "value": value })), window_id).await.expect("begin setFillCount");
+        finish_fill_count(app, result).await
+    }
+    //#endregion 🔖️MeasureProbes
+    
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `context_menu` reads the
+    /// CLIENT-supplied `request.surface.selection` now (selection is framework-owned, no live config
+    /// field to derive it from) — the test-side replacement for the deleted `contextMenuAt` command's
+    /// "select then open the menu" round trip.
+    pub async fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
+        let request = ContextMenuRequest {
+            menu: UiMenuRef { id: "world3d".into(), args: None },
+            surface: Some(ContextMenuSurfaceTarget { surface_id: "world3d".into(), kind: "world3d".into(), hits: Vec::new(), selection: vec![ContextMenuSelectionGroup { domain: granularity.into(), ids: vec![id.to_string()] }], text: None }),
+            window_instance_id: None,
+            point: None,
+        };
+        let view = app.window_view(main::WINDOW_KIND_ID);
+        app.context_menu(&request, &view).await
+    }
+    
+    /// 🎯️ The menu a right-click on an UNSELECTED entity opens: the surface carries a `hits` entry and an
+    /// empty `selection`, exactly what `World3dHost` sends when `resolveWorldContextMenuTarget` resolves a
+    /// pointer target the document has not selected.
+    pub async fn context_menu_for_hit(app: &mut Puzzle3dApp, domain: &str, id: &str) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        use semio_framework_plugin::{ContextMenuHit, ContextMenuRequest, ContextMenuSurfaceTarget, UiMenuRef};
+        let request = ContextMenuRequest {
+            menu: UiMenuRef { id: "world3d".into(), args: None },
+            surface: Some(ContextMenuSurfaceTarget {
+                surface_id: "world3d".into(),
+                kind: "world3d".into(),
+                hits: vec![ContextMenuHit { domain: domain.into(), id: id.to_string(), label: None }],
+                selection: Vec::new(),
+                text: None,
+            }),
+            window_instance_id: None,
+            point: None,
+        };
+        let view = app.window_view(main::WINDOW_KIND_ID);
+        app.context_menu(&request, &view).await
+    }
+    
+    //#region 🧮️HeapWitness
+    /// 🧮️ The test binary's own allocator, counting retained bytes across the WHOLE PROCESS. The guest
+    /// heap this artifact ships into is a fixed `GUEST_LINEAR_MEMORY_MAXIMUM_BYTES` wasm linear memory
+    /// with ONE allocator and no threads at all, so an owner the tick loop never frees is a hard trap in
+    /// production and nothing at all in a native suite — the only way a law can state the growth bound
+    /// is to weigh the heap itself.
+    ///
+    /// 🧵️ Process-wide, deliberately NOT per-thread: natively a mounted worker session allocates its
+    /// owners on a pool thread and the tick loop frees them on the caller's, so a per-thread counter
+    /// reads a growing leak as a NEGATIVE number on the law's own thread and reports the exact opposite
+    /// of the truth. A growth law therefore runs its ticks with the fill registry guard held
+    /// ([`crate::editor::puzzle3d::precompute::fill_envelope_test_guard`]) and differences this counter.
+    ///
+    /// 🧬️ The instrument itself is `semio_framework_trace::HeapWitness`, shared with the procedural
+    /// artifact's guest-memory laws instead of written twice
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    #[global_allocator]
+    static PUZZLE3D_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+    
+    /// 🧮️ Retained bytes in the whole process right now — the reading a growth law differences. Signed,
+    /// because a `realloc` shrink and a free of memory allocated before this counter existed both
+    /// legitimately push it down; a law reads DIFFERENCES of it, never its absolute value.
+    pub fn retained_heap_bytes() -> isize {
+        semio_framework_trace::retained_heap_bytes()
+    }
+    //#endregion 🧮️HeapWitness
+}
+
+use context::*;
 use super::*;
 /// 🧰️ The framework-injected utility verb: the editor module itself no longer names it, so `use super::*`
 /// cannot carry it into the tests. Imported from its owner instead of relying on a re-export.
@@ -792,7 +1923,7 @@ fn transform_brackets_are_migrated_host_only_routes_that_complete_empty() {
 /// resulting typed operation to completion via repeated `maintenance_step` turns exactly as a
 /// real host does every actor tick, then asserting the document was actually swapped. Uses
 /// the registry-backed, instance-bound `app()`: this plugin declares
-/// `bounded_first_step_tool_proofs!`, so the bare registry-less `testkit::new_app` faults closed
+/// `bounded_first_step_tool_proofs!`, so the bare registry-less `artifact_app_laws::new_app` faults closed
 /// with `interactive-job.catalog-authority` before any dispatch is even attempted.
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_dispatches_through_the_tool_job_path_and_swaps_the_document() {
@@ -820,7 +1951,7 @@ async fn set_active_example_dispatches_through_the_tool_job_path_and_swaps_the_d
 /// slider actually observed the requested target land in the live config (`SetFillRequest`'s
 /// `next.fill_count = *count`, `✏️s/…/🎚️config/🦀️.rs:539`). Uses the registry-backed,
 /// instance-bound `app()`: this plugin declares `bounded_first_step_tool_proofs!`, so the bare
-/// registry-less `testkit::new_app` faults closed with `interactive-job.catalog-authority` before
+/// registry-less `artifact_app_laws::new_app` faults closed with `interactive-job.catalog-authority` before
 /// any dispatch is even attempted. Deliberately reads only the config-side slider measure, not
 /// the document — `fillBuildTick` (unmigrated; see its own blocker note in
 /// `🔏️publication-authority/🔣️.json`) is what materializes actual fill objects, not this tool.
@@ -866,9 +1997,9 @@ async fn reserved_refresh_section_payloads_admit_into_the_retained_section_carri
     assert!(payloads[1].1.contains(main::WINDOW_KIND_ID), "the main window instance must key its own entry in the measures section");
     for (section, payload) in payloads {
         let tree = semio_framework_plugin::section_component_tree(section, &payload).expect("reserved section payload admits into the bounded carrier");
-        let projected: serde_json::Value = serde_json::from_str(&semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("carrier projects")).expect("carrier projection is json");
+        let projected: serde_json::Value = serde_json::from_str(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("carrier projects")).expect("carrier projection is json");
         assert_eq!(projected["key"], section.body_key());
-        assert_eq!(semio_framework_plugin::testkit::fixture_carrier_text(&projected), payload, "{} carrier must round-trip byte-exactly", section.key());
+        assert_eq!(semio_framework_plugin::artifact_app_laws::fixture_carrier_text(&projected), payload, "{} carrier must round-trip byte-exactly", section.key());
         eprintln!("[DEBUG] puzzle3d {} section payload is {} bytes", section.key(), payload.len());
     }
 }
@@ -1437,7 +2568,7 @@ async fn app_definition_declares_its_four_panel_tabs() {
 /// `command_id` via the shared framework harness.
 #[semio_framework_async_macros::async_test]
 async fn every_declared_action_bridges_to_a_command() {
-    semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_testkit).await;
+    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_tests).await;
     assert!(Puzzle3dPlayApp::command_from_action("noSuchAction", None).is_err());
 }
 
@@ -2224,7 +3355,7 @@ async fn the_tick_rewarms_the_latched_brush_target_after_an_edit_invalidated_its
     // example (wave B22 measured 202 `registerBrushMesh` commands for one). Geometry no other law in
     // this binary derives, so the content-addressed store cannot adopt it by id and the install really
     // runs.
-    let (positions, indices) = crate::standards::v1::subsets::any::schema::testkit::seeded_cube_mesh_buffers(41.0);
+    let (positions, indices) = crate::standards::v1::subsets::any::schema::precompute_model_tests::context::seeded_cube_mesh_buffers(41.0);
     let position_bytes: Vec<u8> = positions.iter().flat_map(|value| value.to_le_bytes()).collect();
     let index_bytes: Vec<u8> = indices.iter().flat_map(|value| value.to_le_bytes()).collect();
     let upload = json!({
@@ -2611,6 +3742,30 @@ async fn one_window_config_mutation_publishes_exactly_one_generation_and_quiesce
     let after = app.window_config_generation(&view).await.expect("window config generation").expect("puzzle3d registers one window config owner");
     assert_eq!(after, before + 1, "one window-config mutation publishes exactly one store generation, never zero and never a spin");
     assert_eq!(camera_of(&render_window(&mut app, main::WINDOW_KIND_ID).await).pointer("/position/0").and_then(Value::as_f64), Some(7.0), "the published window config is what the window renders");
+}
+
+/// 🛰️📷️ Wave B50: `setCamera` must move the pose the REFRESH route publishes, not only the one the
+/// `<body>:<windowInstanceId>` surface route does. `plugin_refresh_ui` renders a window section as
+/// `app.render(body_key, None, view.for_window_instance(key))` (`🔌️plugin/🦀️.rs:33790`) — the
+/// instance reaches the guest through the VIEW alone, with no instance-suffixed body key — and the
+/// section hash it answers is what `uiRefreshSectionUnchanged` compares. Every pre-existing camera
+/// law measured [`render_window`] (the surface route), so a refresh route that publishes the opening
+/// pose forever read green while the browser froze: wasm #59's battery reported
+/// `camera settle puzzle3d-main-perspective moved=false waitedMs=30184` for orbit, pan AND zoom with
+/// `refreshUi sections asked=["puzzle3d-main","puzzle3d-main-top","puzzle3d-main-perspective"]
+/// changed=[] hashes={…"puzzle3d-main-perspective":"aba169d7:1"}` — the same hash after every
+/// `setCamera`, on a `full` scope included. Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B50.
+#[semio_framework_async_macros::async_test]
+async fn set_camera_moves_the_pose_the_window_refresh_route_publishes() {
+    let mut app = app().await;
+    let window = main::WINDOW_INSTANCE_PERSPECTIVE;
+    let before = camera_of(&render_window_refresh(&mut app, main::BODY_KEY, window).await);
+    dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "position": [11.0, 22.0, 33.0], "target": [1.0, 2.0, 3.0], "zoom": 4.0 } })), Some(window)).await.expect("setCamera on the perspective instance");
+    let after = camera_of(&render_window_refresh(&mut app, main::BODY_KEY, window).await);
+    assert_ne!(after, before, "the refresh route must publish the gestured pose, not the opening one: before={before} after={after}");
+    assert_eq!(after.get("position").and_then(|value| value.as_array()).cloned(), Some(vec![json!(11.0), json!(22.0), json!(33.0)]), "the refresh route's published camera is the one `setCamera` wrote: {after}");
+    let sibling = camera_of(&render_window_refresh(&mut app, main::BODY_KEY, main::WINDOW_INSTANCE_TOP).await);
+    assert_ne!(sibling.get("position").and_then(|value| value.as_array()).cloned(), Some(vec![json!(11.0), json!(22.0), json!(33.0)]), "one instance's gesture must not move its sibling's refresh pose: {sibling}");
 }
 
 /// 🪟️📷️ Orbiting one window instance's camera must never move any sibling instance's camera, and
@@ -3104,17 +4259,25 @@ async fn a_host_initiated_cancel_of_a_stepping_fill_job_leaves_the_guest_serving
 /// `the worker was silent for 18603 ms; outstanding: cancelJob`.
 const CANCEL_TEARDOWN_UNITS_PER_TURN: u64 = 8;
 
-/// 📏️ Turns the whole post-cancel teardown may take before the registry is quiet. One per retained
-/// owner a plan may have been admitted against, plus the close cursor's stages, per envelope slot —
-/// derived from the very ceiling `finish_measurement` admits against, never chosen.
-const CANCEL_TEARDOWN_TURNS: usize = crate::editor::puzzle3d::precompute::FILL_ENVELOPE_MAX_ITEMS + 9;
+/// 📏️ Granted teardown calls the whole post-cancel retirement may take before the registry is quiet —
+/// `FILL_ENVELOPE_SESSION_CLOSE_TURNS`, the plugin's own derived budget: every envelope slot, each at
+/// most `FILL_ENVELOPE_MAX_ITEMS` retained owners (the ceiling `finish_measurement` admits against),
+/// plus the close cursor's stages.
+const CANCEL_TEARDOWN_TURNS: usize = crate::editor::puzzle3d::precompute::FILL_ENVELOPE_SESSION_CLOSE_TURNS;
 
-/// 🛑 Escape while the Fill tool is armed on a Nakagin-scale document. The census this law reads is
-/// the plugin's own: [`fill_drop_drain_census`] counts every teardown unit spent INSIDE a synchronous
-/// drop, and the unit is the same `FillEnvelopeTerminalHandle::close_step` the incremental ladder
-/// spends one of per turn. So "the cancel turn stays within the reactor slice" is stated as a unit
-/// count, not a wall clock: no dispatch, no `jobs::cancel-job` and no drop may charge more than
-/// [`CANCEL_TEARDOWN_UNITS_PER_TURN`] units to a single turn, and the teardown the cancel starts must
+/// 📏️ Maintenance turns the law spends proving the FRAMEWORK ladder reaches the app's own teardown
+/// stage. It has to be more than one round of the ladder's round-robin: `mounted_job_maintenance_step`
+/// is one stage of `MAINTENANCE_STAGES`, so a plan-sized retirement driven only through this path takes
+/// that many turns per unit — which is production's own cadence, and far too slow for a law to grind a
+/// whole Nakagin plan through. The law proves reachability here and bounded completeness below.
+const CANCEL_TEARDOWN_LADDER_TURNS: usize = semio_framework_plugin::MAINTENANCE_STAGES as usize * 4;
+
+/// 🛑 Escape while the Fill tool is armed on a Nakagin-scale document. The census this law reads is the
+/// plugin's own `fill_close_unit_census`: one unit is one `FillEnvelopeTerminalHandle::close_step` —
+/// one retired plan owner, or one close-cursor stage. So "the cancel turn stays within the reactor
+/// slice" is stated as a unit count, not a wall clock: reset, run ONE turn, read, and the number IS what
+/// that turn charged to the guest's single thread. No dispatch, no `jobs::cancel-job` and no maintenance
+/// turn may charge more than [`CANCEL_TEARDOWN_UNITS_PER_TURN`], and the teardown the cancel starts must
 /// still finish — the registry quiet — within [`CANCEL_TEARDOWN_TURNS`] ordinary maintenance turns.
 ///
 /// 🧊️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42, battery wasm #56: right after `engagement-abort`
@@ -3123,7 +4286,7 @@ const CANCEL_TEARDOWN_TURNS: usize = crate::editor::puzzle3d::precompute::FILL_E
 /// later verdict.
 #[semio_framework_async_macros::async_test]
 async fn engagement_abort_tears_the_fill_plan_down_across_turns_and_never_inside_one() {
-    use crate::editor::puzzle3d::precompute::{fill_drop_drain_census, fill_envelope_occupancy, reset_fill_drop_drain_census};
+    use crate::editor::puzzle3d::precompute::{fill_close_unit_census, fill_envelope_close_debt, fill_envelope_close_diagnostics, fill_envelope_occupancy, reset_fill_close_unit_census};
     let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
     crate::editor::puzzle3d::precompute::initialize();
     let mut app = app().await;
@@ -3138,9 +4301,9 @@ async fn engagement_abort_tears_the_fill_plan_down_across_turns_and_never_inside
         }
     }
     let identity = fill_cancel_identity(&mut app).await.expect("an armed, planning fill run publishes its cancel identity");
-    reset_fill_drop_drain_census();
+    reset_fill_close_unit_census();
     let result = dispatch(&mut app, "engagementAbort", None, None).await.expect("engagementAbort");
-    let (abort_units, abort_worst) = fill_drop_drain_census();
+    let abort_units = fill_close_unit_census();
     let cancelled: Vec<u64> = result
         .requested_effects
         .iter()
@@ -3150,32 +4313,106 @@ async fn engagement_abort_tears_the_fill_plan_down_across_turns_and_never_inside
         })
         .collect();
     assert_eq!(cancelled, vec![identity.0], "Escape on an armed Fill tool cancels exactly the run the panel named");
-    reset_fill_drop_drain_census();
+    reset_fill_close_unit_census();
     for job in &cancelled {
         semio_framework_plugin::reactor::jobs::cancel_job(*job).await;
     }
-    let (cancel_units, cancel_worst) = fill_drop_drain_census();
-    let mut turns = 0_usize;
+    let cancel_units = fill_close_unit_census();
     let mut worst_turn = 0_u64;
+    let mut ladder_units = 0_u64;
+    for _ in 0..CANCEL_TEARDOWN_LADDER_TURNS {
+        reset_fill_close_unit_census();
+        app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("the live-cleanup ladder keeps ticking while the cancelled plan retires");
+        let spent = fill_close_unit_census();
+        worst_turn = worst_turn.max(spent);
+        ladder_units += spent;
+    }
+    let mut turns = 0_usize;
     let mut quiet = false;
     while turns < CANCEL_TEARDOWN_TURNS {
         turns += 1;
-        reset_fill_drop_drain_census();
-        app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("the live-cleanup ladder keeps ticking while the cancelled plan retires");
-        worst_turn = worst_turn.max(fill_drop_drain_census().1);
-        if fill_envelope_occupancy().0 == 0 {
+        reset_fill_close_unit_census();
+        let step = crate::editor::puzzle3d::precompute::fill_envelope_maintenance_step(1);
+        worst_turn = worst_turn.max(fill_close_unit_census());
+        if matches!(step, semio_framework_plugin::PluginCloseStep::Complete) && fill_envelope_occupancy().0 == 0 {
             quiet = true;
             break;
         }
     }
-    let census =
-        format!("abort_turn={abort_units} units (worst {abort_worst}), cancel_job={cancel_units} units (worst {cancel_worst}), teardown turns={turns} worst_turn={worst_turn} quiet={quiet}, occupancy={:?}", fill_envelope_occupancy());
-    assert!(abort_worst <= CANCEL_TEARDOWN_UNITS_PER_TURN, "the engagementAbort turn tore the plan down inline instead of marking it cancelled: {census}");
-    assert!(cancel_worst <= CANCEL_TEARDOWN_UNITS_PER_TURN, "`jobs::cancel-job` tore the plan down inline — this is the guest turn that never yields: {census}");
-    assert!(worst_turn <= CANCEL_TEARDOWN_UNITS_PER_TURN, "one maintenance turn spent more than its granted teardown unit: {census}");
+    let census = format!(
+        "abort_turn={abort_units} units, cancel_job={cancel_units} units, ladder_units={ladder_units} over {CANCEL_TEARDOWN_LADDER_TURNS} maintenance turns, teardown grants={turns} worst_turn={worst_turn} quiet={quiet}, occupancy={:?}, close_position={:?}, close_debt={:?}",
+        fill_envelope_occupancy(),
+        fill_envelope_close_diagnostics(),
+        fill_envelope_close_debt()
+    );
+    assert!(abort_units <= CANCEL_TEARDOWN_UNITS_PER_TURN, "the engagementAbort turn tore the plan down inline instead of marking it cancelled: {census}");
+    assert!(cancel_units <= CANCEL_TEARDOWN_UNITS_PER_TURN, "`jobs::cancel-job` tore the plan down inline — this is the guest turn that never yields: {census}");
+    assert!(worst_turn <= CANCEL_TEARDOWN_UNITS_PER_TURN, "one granted teardown call spent more than its granted unit: {census}");
+    assert!(ladder_units > 0, "the framework maintenance ladder never reached this app's own teardown stage, so nothing would ever retire the cancelled plan: {census}");
     assert!(quiet, "the teardown the cancel started never finished: {census}");
+    println!("puzzle3d.cancel-teardown-census {census}");
     drop(app);
     crate::editor::puzzle3d::precompute::drain_fill_envelope_registry_for_test();
+}
+
+/// 🧾️ The OTHER turns in the same family, measured with the same close-unit census. Every one of them
+/// supersedes or abandons a live fill plan, and a session that abandons one is dropped — by
+/// `with_puzzle3d_app_for`'s refused check-in, or by `Puzzle3dSessionRegistry::retire`, which drops it
+/// while holding the registry mutex. Before wave B42 that drop drained the plan's whole close ladder
+/// inline, so ANY of these could be the unyielding turn, not only the cancel.
+///
+/// 📏️ What is measured is the ADMISSION turn of each command — the one that runs
+/// `with_puzzle3d_app_for` against the live session and so is the one that can drop it — plus a round
+/// of the maintenance ladder after it. None may charge more than [`CANCEL_TEARDOWN_UNITS_PER_TURN`]
+/// close units. Each command gets its own app: the point is the turn's own cost, not what three
+/// document-scale commands do to one document in a row.
+#[semio_framework_async_macros::async_test]
+async fn no_document_scale_turn_retires_a_live_fill_plan_inside_itself() {
+    use crate::editor::puzzle3d::precompute::{fill_close_unit_census, reset_fill_close_unit_census};
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
+    let mut census: Vec<(&str, u64, u64)> = Vec::new();
+    for label in ["example-switch", "import-fixture", "delete-selection"] {
+        let mut app = app().await;
+        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the Nakagin example");
+        let payload = to_json_string(&projection_of(&app));
+        let target = first_object_id(&app);
+        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("arm fill");
+        let mut live: Vec<u64> = Vec::new();
+        for _ in 0..FILL_TICK_GROWTH_CYCLES {
+            let result = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick");
+            step_spawned_fill_jobs(&result.requested_effects, &mut live).await;
+            if !live.is_empty() && fill_ready(&mut app).await > 0.0 {
+                break;
+            }
+        }
+        let (action, args) = match label {
+            "example-switch" => ("setActiveExample", Some(json!({ "exampleId": "" }))),
+            "import-fixture" => ("importFixture", Some(json!({ "payload": payload }))),
+            _ => {
+                select_id(&mut app, "object", &target).await.expect("select one object before deleting it");
+                ("deleteSelection", None)
+            }
+        };
+        reset_fill_close_unit_census();
+        drop(dispatch_unsettled(&mut app, action, args.as_ref(), None).await);
+        let admission = fill_close_unit_census();
+        let mut worst_ladder = 0_u64;
+        for _ in 0..CANCEL_TEARDOWN_LADDER_TURNS {
+            reset_fill_close_unit_census();
+            drop(app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP));
+            worst_ladder = worst_ladder.max(fill_close_unit_census());
+        }
+        census.push((label, admission, worst_ladder));
+        drop(app);
+        crate::editor::puzzle3d::precompute::drain_fill_envelope_registry_for_test();
+    }
+    let report = census.iter().map(|(label, admission, ladder)| format!("{label}=admission:{admission}/ladder:{ladder}")).collect::<Vec<_>>().join(" ");
+    for (label, admission, ladder) in &census {
+        assert!(*admission <= CANCEL_TEARDOWN_UNITS_PER_TURN, "the {label} turn retired a live fill plan inside itself instead of leaving it to the maintenance ladder: {report}");
+        assert!(*ladder <= CANCEL_TEARDOWN_UNITS_PER_TURN, "a maintenance turn after {label} spent more than its granted teardown unit: {report}");
+    }
+    println!("puzzle3d.turn-close-units {report}");
 }
 //#endregion 🪣️FillJobLifetime
 
@@ -4222,7 +5459,7 @@ async fn selection_scoped_commands_with_no_selection_refuse_with_exactly_one_not
     }
     // 🧲️ The three gumball verbs carry a `coalesce_key`, so they enter the latest-wins channel whose
     // accepted invocation answers BEFORE the command runs — their whole outcome (notice, scope) lives on
-    // the completion lane, which `testkit::settle` now drains into `InvocationResult` instead of
+    // the completion lane, which `context::settle` now drains into `InvocationResult` instead of
     // dropping. They also never reach `refuse_without_selection`: `build_tool_job` routes them to
     // `Puzzle3dScaleWork`, not through `dispatch_step`, which is why they used to complete with an empty
     // edit, a coalesce key and `UiDirtyScope::Full` — measured 2026-09-09 in-process as
@@ -4657,9 +5894,10 @@ fn a_second_call_on_one_instance_reuses_the_geometry_cache_instead_of_reserializ
     let after_first = PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get);
     assert_eq!(after_first - cold, 1, "the first call for a cold instance serializes exactly once");
     let second = with_puzzle3d_app_for(session, &config, |app| {
-        let cached = app.geometry_cache.lock().expect("geometry cache");
-        assert_eq!(cached.as_ref().map(|(cached, _, _)| *cached), Some(fingerprint), "the session slot handed the warm cache to a brand-new app object");
+        let cached = app.mesh_cache.lock().expect("mesh cache");
+        assert_eq!(cached.as_ref().map(|(cached, _)| *cached), Some(fingerprint), "the session slot handed the warm cache to a brand-new app object");
         drop(cached);
+        assert_eq!(app.instance_residency.lock().expect("instance residency").as_ref().map(|residency| residency.revision()), Some(1), "the per-object instance residency came back with the slot too");
         app.geometry_jsons(&fixture)
     });
     assert_eq!(PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get), after_first, "the second call on the same instance must not re-serialize anything");
@@ -4700,16 +5938,16 @@ fn a_stale_session_lease_is_rejected_and_a_rekeyed_instance_starts_cold() {
     let stale = {
         let mut registry = puzzle3d_session_registry().lock().expect("session registry");
         let (stale, held) = registry.check_out(instance, Some("document-a")).expect("first lease");
-        assert!(held.geometry.is_none(), "a cold slot hands out no cached geometry");
+        assert!(held.instances.is_none() && held.meshes.is_none(), "a cold slot hands out no cached geometry");
         let (fresh, rekeyed) = registry.check_out(instance, Some("document-b")).expect("re-keyed lease");
-        assert!(rekeyed.geometry.is_none(), "a re-keyed instance starts cold instead of adopting the previous document");
+        assert!(rekeyed.instances.is_none() && rekeyed.meshes.is_none(), "a re-keyed instance starts cold instead of adopting the previous document");
         assert_ne!(stale.generation, fresh.generation, "re-keying bumps the slot generation");
-        registry.check_in(stale, Puzzle3dSessionState { geometry: Some((7, "stale-instances".into(), "stale-meshes".into())), ..Default::default() });
+        registry.check_in(stale, Puzzle3dSessionState { meshes: Some((7, "stale-meshes".into())), ..Default::default() });
         stale
     };
     let mut registry = puzzle3d_session_registry().lock().expect("session registry");
     let (_, adopted) = registry.check_out(instance, Some("document-b")).expect("post-stale lease");
-    assert!(adopted.geometry.is_none(), "the stale lease's state was refused, so document-b is still cold");
+    assert!(adopted.instances.is_none() && adopted.meshes.is_none(), "the stale lease's state was refused, so document-b is still cold");
     assert_ne!(stale.generation, registry.generations[usize::try_from(instance).expect("slot base") % PUZZLE3D_SESSION_SLOTS], "the retired generation is never handed out again");
 }
 
@@ -4719,14 +5957,14 @@ fn a_stale_session_lease_is_rejected_and_a_rekeyed_instance_starts_cold() {
 fn a_session_check_in_over_the_process_byte_ceiling_is_dropped() {
     let mut registry = Puzzle3dSessionRegistry::default();
     let (lease, _) = registry.check_out(11, Some("document-census")).expect("lease");
-    registry.check_in(lease, Puzzle3dSessionState { geometry: Some((1, "x".repeat(PUZZLE3D_SESSION_PROCESS_BYTES), String::new())), ..Default::default() });
+    registry.check_in(lease, Puzzle3dSessionState { meshes: Some((1, "x".repeat(PUZZLE3D_SESSION_PROCESS_BYTES))), ..Default::default() });
     assert_eq!(registry.aggregate_bytes, PUZZLE3D_SESSION_PROCESS_BYTES, "a census exactly at the ceiling is still admissible");
     let (lease, held) = registry.check_out(12, Some("document-second")).expect("second lease");
-    assert!(held.geometry.is_none(), "a different instance owns a different slot and starts cold");
-    registry.check_in(lease, Puzzle3dSessionState { geometry: Some((2, "y".into(), String::new())), ..Default::default() });
+    assert!(held.instances.is_none() && held.meshes.is_none(), "a different instance owns a different slot and starts cold");
+    registry.check_in(lease, Puzzle3dSessionState { meshes: Some((2, "y".into())), ..Default::default() });
     assert_eq!(registry.aggregate_bytes, PUZZLE3D_SESSION_PROCESS_BYTES, "one byte past the ceiling is refused rather than admitted");
     let (_, refused) = registry.check_out(12, Some("document-second")).expect("third lease");
-    assert!(refused.geometry.is_none(), "the refused state is simply absent on the next call, so that instance rebuilds cold");
+    assert!(refused.instances.is_none() && refused.meshes.is_none(), "the refused state is simply absent on the next call, so that instance rebuilds cold");
 }
 
 /// 📐️ Wave W-P: the session row is a fixed 64-slot array, so one slot's inline size is multiplied by 64
@@ -5454,6 +6692,28 @@ async fn outliner_hide_reaches_the_world_instance_lane_and_flips_the_row_control
     eprintln!("[DEBUG] outliner hide world lane scale={:?} rowIcon={after_icon:?}", instance_scale(&hidden, &object_id));
 }
 
+/// 🎯️ An outliner row's flag write names its OWN entity, so the live selection must not decide what it
+/// hits. `set_selection_flag` chooses between the explicit `{entity, ids}` the row declares and the whole
+/// live selection, and the browser only ever exercised the branch with NOTHING selected: with a sibling
+/// entity selected, `outliner-hide-applies` failed on the same row with the same args while the command
+/// still settled `command-complete` with `historyUpserts: 0` (ticket 26/09/02/PUZZLE-3D-END-TO-END wave
+/// B47 §6 — PASS with an empty selection at 2 345 ms, FAIL with a sibling selected at 30 237 ms). Locked,
+/// too: a lock guards an entity's GEOMETRY, and a row that says "Hide" must still hide.
+#[semio_framework_async_macros::async_test]
+async fn an_explicit_outliner_flag_write_ignores_whatever_is_selected() {
+    let mut app = app().await;
+    let object_id = first_object_id(&app);
+    let vortex = first_vortex_full_id(&app);
+    select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortex).await.expect("select a vortex, i.e. NOT the object the row names");
+    dispatch(&mut app, "setSelectionFlag", Some(&json!({ "entity": "object", "flag": "locked", "ids": [object_id.clone()], "value": true })), None).await.expect("lock the object by its own row");
+    assert_eq!(object_flag(&app, &object_id, "locked"), Some(true), "an explicit lock write lands while a vortex is the live selection");
+
+    dispatch(&mut app, "setSelectionFlag", Some(&json!({ "entity": "object", "flag": "hidden", "ids": [object_id.clone()], "value": true })), None).await.expect("hide the object by its own row");
+
+    assert_eq!(object_flag(&app, &object_id, "hidden"), Some(true), "the row's explicit id decides what is hidden — never the live selection, and never its lock");
+    eprintln!("[DEBUG] explicit flag write hidden={:?} locked={:?} selection=vortex", object_flag(&app, &object_id, "hidden"), object_flag(&app, &object_id, "locked"));
+}
+
 
 fn first_target_volume_id(app: &Puzzle3dApp) -> String {
     let projection = projection_of(app);
@@ -5844,6 +7104,25 @@ async fn export_fixture_names_the_download_after_the_active_example() {
     eprintln!("[DEBUG] export filename law reached the blank/concrete/nakagin/blank sequence");
 }
 
+/// ⬇️ Wave B43: an export above what ONE segmented download may carry is refused with a NOTICE, and the
+/// budget it is measured against is the framework's own end-to-end cap — never a literal of this app's.
+///
+/// 🧯 A fault here would land as a dead job; before B43 the whole lane's over-cap answer was a producer
+/// `Fault`. The refusal names the file, its size and the budget, so the answer is readable.
+#[test]
+fn export_refuses_a_payload_above_the_declared_segmented_budget_with_a_notice() {
+    use crate::editor::puzzle3d::commands::export_fixture::{puzzle3d_export_refusal, puzzle3d_export_segmented, puzzle3d_export_segmented_budget_bytes};
+    use crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES;
+    use semio_framework_plugin::app::ArtifactOutputChunks;
+    let budget = puzzle3d_export_segmented_budget_bytes().expect("the declared output budget is within the framework cap");
+    assert_eq!(budget, PUZZLE_COMMAND_OUTPUT_BYTES, "the segmented budget IS this command's declared contract output budget");
+    assert!(budget <= ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES, "no app may declare a download larger than the wire admits");
+    let over = "x".repeat(budget + 1);
+    assert!(puzzle3d_export_segmented("nakagin-capsule-tower.json".into(), &over).is_err(), "a payload above the budget must never open a download handle");
+    let notice = puzzle3d_export_refusal("nakagin-capsule-tower.json", budget + 1, budget);
+    assert!(notice.contains("nakagin-capsule-tower.json") && notice.contains(&(budget + 1).to_string()) && notice.contains(&budget.to_string()), "the refusal must name the file, its size and the budget: {notice}");
+}
+
 /// ⬇️ Wave B38: an export larger than one wire page must reach the user as ONE download carrying the WHOLE
 /// fixture, through the framework's segmented lane — never as an inline effect field.
 ///
@@ -6145,7 +7424,7 @@ async fn an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes() {
     // 🎲️ Geometry no other law in this binary derives — the brush-mesh store is content-addressed since
     // wave B22, so the shared cube's digest would be adoptable under a new id and the refusal this law is
     // about could never happen.
-    let (positions, indices) = crate::standards::v1::subsets::any::schema::testkit::seeded_cube_mesh_buffers(23.0);
+    let (positions, indices) = crate::standards::v1::subsets::any::schema::precompute_model_tests::context::seeded_cube_mesh_buffers(23.0);
     let digest = crate::editor::puzzle3d::precompute::brush_mesh_digest(&positions, &indices);
     let url = "/test/restarted-guest-reannounce.glb";
     let announcement = json!({ "surfaceId": "world-3d", "url": url, "digest": digest });
@@ -6413,7 +7692,7 @@ async fn the_settings_panel_renders_the_focused_panes_own_value_not_a_default() 
 /// keeps the pick across both routes and both mutating dispatches, including the
 /// `revalidate_interaction_state_after_document_change` pass every document-intent dispatch runs.
 /// What the browser has and this law cannot reach is the surface-context route
-/// (`plugin_mount_surface` → `SurfaceContexts` → `plugin_render_surface`): every testkit render
+/// (`plugin_mount_surface` → `SurfaceContexts` → `plugin_render_surface`): every test context render
 /// helper calls `PluginApp::render` directly with a hand-built `ViewModel`, so a body that is never
 /// re-rendered — or re-rendered against another surface's retained view — is invisible here.
 #[semio_framework_async_macros::async_test]

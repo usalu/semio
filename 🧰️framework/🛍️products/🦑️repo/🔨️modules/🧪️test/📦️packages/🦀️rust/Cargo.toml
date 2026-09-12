@@ -11,9 +11,9 @@ description = "🧪️ Rust native host of the semio repository test platform. D
 
 [lib]
 name = "semio_repo_test_host"
-path = "📦️lib.rs"
+path = "../../🦀️.rs"
 
 # 🚫️ No dependencies, optional or otherwise. Reference implementations are CONTRIBUTED by the owner
-# of the format they reference (see `testContributionDirName` in 🔣️taxonomy.json); the framework host
+# of the format they reference (see `testOraclesDirName` in 🔣️taxonomy.json); the framework host
 # supplies only the protocol, the runner and the adapter API. If a dependency ever appears here, the
 # framework has started to know about an implementation.

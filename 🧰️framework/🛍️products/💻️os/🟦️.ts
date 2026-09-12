@@ -1,7 +1,7 @@
 // #region Header
 /**
  * 🖥️ `@semio-tech/framework-os` — JS sync/backbone protocol surface (backbone URIs, document
- * envelopes, `🧵️backbone-worker.ts` request/response wire types, `PersistenceBinding`/`MutationEnvelope`,
+ * envelopes, `🏪️store/👷️worker/🟦️.ts` request/response wire types, `PersistenceBinding`/`MutationEnvelope`,
  * {@link buildFrameworkSyncUtilities}) consumed by `framework/os/renderer/js/react/index.tsx` and
  * `framework/os/dev/script.ts`. The OS kernel's *stateful* logic (operation application, program
  * registry) is Rust/wasm-only, hosted by the s-plugin wasm — this file is not a JS port of that. The
@@ -358,6 +358,7 @@ export type BinaryBackboneMessage =
 
 export const BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES = 262_144;
 export const BACKBONE_SNAPSHOT_MAXIMUM_BYTES = 4 * 1024 * 1024;
+export const DOCUMENT_ARCHIVE_MAXIMUM_BYTES = BACKBONE_SNAPSHOT_MAXIMUM_BYTES;
 
 /** 📤️ Canonical Store OpBinary: version, variant, symbol table and exact record fields. */
 export function encodeBackboneMessage(message: BinaryBackboneMessage): Uint8Array {
@@ -561,7 +562,7 @@ export function desktopWindowControlsBridge(invoke: (channel: string) => Promise
 /** 📦️ Dev-server-proxied content-addressed blob endpoint: `PUT ${BLOB_ENDPOINT_PATH}?mediaType=` (raw
  * bytes body, returns `{"hash":"..."}`) and `GET ${BLOB_ENDPOINT_PATH}/:hash` (raw bytes response).
  * Shared with the dev host shim (`framework/os/dev/script.ts`'s `hostShimSource`) and the
- * browser blob cache (`🧵️backbone-worker.ts`) so all three stay in sync on the same literal. Backed by
+ * browser blob cache (`🏪️store/👷️worker/🟦️.ts`) so all three stay in sync on the same literal. Backed by
  * `vcs::BlobStore`'s native counterpart; a hub-backed route is a later ticket. */
 export const BLOB_ENDPOINT_PATH = "/semio-blob";
 //#endregion 🔖️Blob
@@ -669,7 +670,7 @@ export type ArtifactActorConfig = {
 export type ArtifactActorMsg =
   | { readonly kind: "localMutations"; readonly envelopes: readonly MutationEnvelope[] }
   | { readonly kind: "documentBackbone"; readonly message: Uint8Array }
-  | { readonly kind: "localSnapshot"; readonly pack: readonly number[]; readonly spr: readonly number[] }
+  | { readonly kind: "localDocumentArchive"; readonly archive: readonly number[] }
   | { readonly kind: "presenceHeartbeat"; readonly peer: ArtifactPresencePeer }
   | { readonly kind: "publishPreview"; readonly key: string; readonly seq: number; readonly payload: readonly number[] }
   | { readonly kind: "externalChanged" }
@@ -701,7 +702,7 @@ export type CommandAckOutcome = { readonly kind: "accepted" } | { readonly kind:
 export type ArtifactEvent =
   | { readonly kind: "remoteMutations"; readonly envelopes: readonly MutationEnvelope[] }
   | { readonly kind: "documentBackbone"; readonly message: Uint8Array }
-  | { readonly kind: "snapshotReplaced"; readonly pack: readonly number[]; readonly spr: readonly number[] }
+  | { readonly kind: "documentArchiveReplaced"; readonly archive: readonly number[] }
   | ({ readonly kind: "status" } & ArtifactSyncStatus)
   | { readonly kind: "presence"; readonly peers: readonly ArtifactPresencePeer[] }
   /** 🎨️ The hub's one-time session color assignment (`ServerFrame::Session`) — mirrors Rust
@@ -714,7 +715,7 @@ export type ArtifactEvent =
   | { readonly kind: "commandOutcome"; readonly batchId: number; readonly outcome: CommandAckOutcome }
   | ({ readonly kind: "conflict" } & SyncConflict);
 
-/** 📤️ Main thread → `🧵️backbone-worker.ts` — `bytes` is a UTF-8 worker wire payload (see {@link encodeBackboneWorkerRequest}). */
+/** 📤️ Main thread → `🏪️store/👷️worker/🟦️.ts` — `bytes` is a UTF-8 worker wire payload (see {@link encodeBackboneWorkerRequest}). */
 export type BackboneWorkerWireMessage = { readonly wire: Uint8Array };
 
 /** @emoji 🧵️ Worker wire magic — must match `store_sync::backbone_worker_wire::MAGIC`. */
@@ -1177,10 +1178,10 @@ export type SpaceArtifactCreationCatalogStatusV1 = Readonly<{
   phase: SpaceArtifactCreationCatalogPhaseV1;
 }>;
 
-/** 📤️ Main thread → `🧵️backbone-worker.ts` messages (structured clone or {@link BackboneWorkerWireMessage}).
+/** 📤️ Main thread → `🏪️store/👷️worker/🟦️.ts` messages (structured clone or {@link BackboneWorkerWireMessage}).
  * The `directory-*` kinds (contract-freeze §C6) are the shell's ONLY way to reach the directory hub
  * — plugin surfaces never talk to the network, and the shell never opens a directory socket on the
- * UI thread; see `🧵️backbone-worker.ts`'s `🔖️Directory` region. */
+ * UI thread; see `🏪️store/👷️worker/🟦️.ts`'s `🔖️Directory` region. */
 export type BackboneWorkerRequest =
   | (BrowserActorActionRequestV1 & { readonly clientInstanceId: string })
   | BrowserActorViewStateRequest
@@ -1252,7 +1253,7 @@ export type ArtifactBootstrapWorkerEvent =
       readonly scope?: DocumentScope;
     };
 
-/** 📥️ `🧵️backbone-worker.ts` → main thread messages. `directory-status.pendingCommands` is the
+/** 📥️ `🏪️store/👷️worker/🟦️.ts` → main thread messages. `directory-status.pendingCommands` is the
  * bounded, in-memory offline queue's length (contract-freeze §C6 "commands queue... and flush on
  * reconnect"). */
 export type BackboneWorkerResponse =
@@ -1352,6 +1353,11 @@ function wireArtifactActorMsg(message: ArtifactActorMsg): unknown {
   if (message.kind === "localMutations") {
     return { kind: "localMutations", envelopes: encodeCausalEnvelopeBatch(message.envelopes, replicationPackCodec) };
   }
+  if (message.kind === "localDocumentArchive") {
+    const archive = Uint8Array.from(message.archive);
+    decodeDocumentArchiveBytes(archive);
+    return { kind: "localDocumentArchive", archive: Array.from(archive) };
+  }
   return message;
 }
 
@@ -1363,6 +1369,12 @@ function parseArtifactActorMsg(message: Record<string, unknown>): ArtifactActorM
   if (message.kind === "localMutations" && Array.isArray(message.envelopes) && message.envelopes.every((entry) => typeof entry === "number")) {
     return { kind: "localMutations", envelopes: decodeCausalEnvelopeBatch(message.envelopes as readonly number[], replicationPackCodec) };
   }
+  if (message.kind === "localDocumentArchive") {
+    if (Object.keys(message).sort().join(",") !== "archive,kind" || !Array.isArray(message.archive) || message.archive.length === 0 || message.archive.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES || !message.archive.every((entry) => Number.isInteger(entry) && entry >= 0 && entry <= 255)) throw new Error("backbone worker request: invalid document archive");
+    const archive = Uint8Array.from(message.archive as readonly number[]);
+    decodeDocumentArchiveBytes(archive);
+    return { kind: "localDocumentArchive", archive: Array.from(archive) };
+  }
   return message as ArtifactActorMsg;
 }
 
@@ -1372,6 +1384,11 @@ function wireArtifactEvent(event: ArtifactEvent): unknown {
   }
   if (event.kind === "remoteMutations") {
     return { kind: "remoteMutations", envelopes: encodeCausalEnvelopeBatch(event.envelopes, replicationPackCodec) };
+  }
+  if (event.kind === "documentArchiveReplaced") {
+    const archive = Uint8Array.from(event.archive);
+    decodeDocumentArchiveBytes(archive);
+    return { kind: "documentArchiveReplaced", archive: Array.from(archive) };
   }
   return event;
 }
@@ -1383,6 +1400,12 @@ function parseArtifactEvent(event: Record<string, unknown>): ArtifactEvent {
   }
   if (event.kind === "remoteMutations" && Array.isArray(event.envelopes) && event.envelopes.every((entry) => typeof entry === "number")) {
     return { kind: "remoteMutations", envelopes: decodeCausalEnvelopeBatch(event.envelopes as readonly number[], replicationPackCodec) };
+  }
+  if (event.kind === "documentArchiveReplaced") {
+    if (Object.keys(event).sort().join(",") !== "archive,kind" || !Array.isArray(event.archive) || event.archive.length === 0 || event.archive.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES || !event.archive.every((entry) => Number.isInteger(entry) && entry >= 0 && entry <= 255)) throw new Error("backbone worker response: invalid document archive");
+    const archive = Uint8Array.from(event.archive as readonly number[]);
+    decodeDocumentArchiveBytes(archive);
+    return { kind: "documentArchiveReplaced", archive: Array.from(archive) };
   }
   return event as ArtifactEvent;
 }
@@ -2415,6 +2438,12 @@ if (import.meta.vitest) {
 //#region 🔖️Types
 export type ChildPackEntry = { readonly slot: string; readonly child_id: string; readonly dialect: string; readonly envelope_pack: readonly number[] };
 export type WindowConfigPackEntry = { readonly window_id: string; readonly window_kind_id: string; readonly envelope_pack: readonly number[] };
+export type DocumentArchiveArtifactRef = { readonly artifact_id: string; readonly artifact_kind: string; readonly standard: string; readonly subset: string };
+export type DocumentArchiveOwnerRef = { readonly parent: DocumentArchiveArtifactRef; readonly slot: string; readonly child_id: string };
+export type OwnedDocumentMemberPackEntry = { readonly ordinal: number; readonly reference: DocumentArchiveArtifactRef; readonly owner: DocumentArchiveOwnerRef; readonly envelope_pack: readonly number[] };
+export type DocumentArchivePack = { readonly parent_pack: readonly number[]; readonly parent_spr: readonly number[]; readonly members: readonly OwnedDocumentMemberPackEntry[] };
+export type DocumentArchiveLoadState = "pending" | "running" | "ready" | "cancelled" | "fault";
+export type DocumentArchiveLoadStatus = { readonly operation: number; readonly state: DocumentArchiveLoadState; readonly completed: number; readonly total: number; readonly fault: readonly number[] };
 
 export type AppCommandValue =
   | { readonly LocalInteractionQuery: { readonly seq: number; readonly command: LocalInteractionQueryCommand } }
@@ -2426,6 +2455,11 @@ export type AppCommandValue =
   | { readonly ApplyEnvelopes: { readonly seq: number; readonly envelopes: readonly MutationEnvelope[] } }
   | { readonly LoadDocument: { readonly seq: number; readonly pack: readonly number[]; readonly spr: readonly number[] } }
   | { readonly ReadDocument: { readonly seq: number } }
+  | { readonly LoadDocumentArchive: { readonly seq: number; readonly archive: DocumentArchivePack } }
+  | { readonly ReadDocumentArchive: { readonly seq: number } }
+  | { readonly PollDocumentArchiveLoad: { readonly seq: number; readonly operation: number } }
+  | { readonly CancelDocumentArchiveLoad: { readonly seq: number; readonly operation: number } }
+  | { readonly AcknowledgeDocumentArchiveLoad: { readonly seq: number; readonly operation: number } }
   | { readonly LoadConfig: { readonly seq: number; readonly pack: readonly number[]; readonly spr: readonly number[] } }
   | { readonly ReadConfig: { readonly seq: number } }
   | { readonly LoadWindowConfig: { readonly seq: number; readonly entry: WindowConfigPackEntry } }
@@ -2491,6 +2525,8 @@ export type AppFrameValue =
     }
   | { readonly DocumentChanged: { readonly envelopes: readonly (readonly number[])[]; readonly origin: string } }
   | { readonly Document: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
+  | { readonly DocumentArchive: { readonly in_reply_to: number; readonly archive: DocumentArchivePack } }
+  | { readonly DocumentArchiveLoad: { readonly in_reply_to: number; readonly status: DocumentArchiveLoadStatus } }
   | { readonly Config: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
   | { readonly WindowConfigs: { readonly in_reply_to: number; readonly entries: readonly WindowConfigPackEntry[] } }
   | { readonly ConfigChanged: { readonly envelopes: readonly (readonly number[])[]; readonly origin: string } }
@@ -2585,6 +2621,59 @@ function readVecChildPackEntry(bytes: Uint8Array, pos: [number]): ChildPackEntry
   const count = readVarintU64(bytes, pos);
   return Array.from({ length: count }, () => readChildPackEntry(bytes, pos));
 }
+export const DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS = 1_024;
+function writeDocumentArchive(out: number[], archive: DocumentArchivePack): void {
+  if (archive.members.length > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS) throw new Error("document archive exceeds its fixed 1024-member authority");
+  writeBytes(out, archive.parent_pack);
+  writeBytes(out, archive.parent_spr);
+  writeVarintU64(out, archive.members.length);
+  for (const entry of archive.members) {
+    writeVarintU64(out, entry.ordinal);
+    writeStr(out, entry.reference.artifact_id);
+    writeStr(out, entry.reference.artifact_kind);
+    writeStr(out, entry.reference.standard);
+    writeStr(out, entry.reference.subset);
+    writeStr(out, entry.owner.parent.artifact_id);
+    writeStr(out, entry.owner.parent.artifact_kind);
+    writeStr(out, entry.owner.parent.standard);
+    writeStr(out, entry.owner.parent.subset);
+    writeStr(out, entry.owner.slot);
+    writeStr(out, entry.owner.child_id);
+    writeBytes(out, entry.envelope_pack);
+  }
+}
+function readDocumentArchive(bytes: Uint8Array, pos: [number]): DocumentArchivePack {
+  const parent_pack = readBytes(bytes, pos);
+  const parent_spr = readBytes(bytes, pos);
+  const count = readVarintU64(bytes, pos);
+  if (count > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS) throw new Error("document archive exceeds its fixed 1024-member authority");
+  const members = Array.from({ length: count }, () => {
+    const ordinal = readVarintU64(bytes, pos);
+    const reference = { artifact_id: readStr(bytes, pos), artifact_kind: readStr(bytes, pos), standard: readStr(bytes, pos), subset: readStr(bytes, pos) };
+    const parent = { artifact_id: readStr(bytes, pos), artifact_kind: readStr(bytes, pos), standard: readStr(bytes, pos), subset: readStr(bytes, pos) };
+    const owner = { parent, slot: readStr(bytes, pos), child_id: readStr(bytes, pos) };
+    return { ordinal, reference, owner, envelope_pack: readBytes(bytes, pos) };
+  });
+  return { parent_pack, parent_spr, members };
+}
+
+/** 🗃️ Canonical persisted recursive-document archive bytes: version byte plus the channel archive body. */
+export function encodeDocumentArchiveBytes(archive: DocumentArchivePack): Uint8Array {
+  const out = [1];
+  writeDocumentArchive(out, archive);
+  if (out.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("document archive exceeds its fixed byte authority");
+  return Uint8Array.from(out);
+}
+
+/** 🗃️ Decodes one exact persisted recursive-document archive and rejects trailing ownership. */
+export function decodeDocumentArchiveBytes(bytes: Uint8Array): DocumentArchivePack {
+  if (bytes.length === 0 || bytes.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("document archive exceeds its fixed byte authority");
+  if (bytes[0] !== 1) throw new Error("document archive: unsupported or missing version");
+  const pos: [number] = [1];
+  const archive = readDocumentArchive(bytes, pos);
+  if (pos[0] !== bytes.length) throw new Error("document archive: trailing bytes");
+  return archive;
+}
 function writeWindowConfigPackEntry(out: number[], entry: WindowConfigPackEntry): void {
   writeStr(out, entry.window_id);
   writeStr(out, entry.window_kind_id);
@@ -2611,13 +2700,14 @@ const APP_COMMAND_TAGS = {
   transactionPrepare: 17, transactionCommit: 18, transactionRollback: 19, transactionUndo: 20, transactionRedo: 21,
   openArtifact: 22, setDefaultApp: 23, clearDefaultApp: 24,
   setMergePolicy: 25, resolveConflict: 26, readConflicts: 27,
-  presence: 28, LocalInteractionQuery: 29, LoadWindowConfig: 30, ReadWindowConfigs: 31,
+  presence: 28, LocalInteractionQuery: 29, LoadWindowConfig: 30, ReadWindowConfigs: 31, LoadDocumentArchive: 32, ReadDocumentArchive: 33,
+  PollDocumentArchiveLoad: 34, CancelDocumentArchiveLoad: 35, AcknowledgeDocumentArchiveLoad: 36,
 } as const;
 const APP_FRAME_TAGS = {
   Done: 0, Invocation: 1, DocumentChanged: 2, Document: 3,
   Config: 4, ConfigChanged: 5, ContextMenu: 6, Media: 7, MediaFingerprint: 8, Error: 9, Emit: 10, Draft: 11, Children: 12, Ephemeral: 13, HistorySnapshot: 14,
   transactionProposal: 15, transactionPrepared: 16, transactionCommitted: 17, transactionRolledBack: 18,
-  MergeReport: 19, Conflicts: 20, UiPatch: 21, UiSnapshotEnd: 22, LocalInteractionQuery: 23, WindowConfigs: 24, OperationCompleted: 25,
+  MergeReport: 19, Conflicts: 20, UiPatch: 21, UiSnapshotEnd: 22, LocalInteractionQuery: 23, WindowConfigs: 24, OperationCompleted: 25, DocumentArchive: 26, DocumentArchiveLoad: 27,
 } as const;
 
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
@@ -2674,6 +2764,25 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
   } else if ("ReadWindowConfigs" in cmd) {
     out.push(APP_COMMAND_TAGS.ReadWindowConfigs);
     writeVarintU64(out, cmd.ReadWindowConfigs.seq);
+  } else if ("LoadDocumentArchive" in cmd) {
+    out.push(APP_COMMAND_TAGS.LoadDocumentArchive);
+    writeVarintU64(out, cmd.LoadDocumentArchive.seq);
+    writeDocumentArchive(out, cmd.LoadDocumentArchive.archive);
+  } else if ("ReadDocumentArchive" in cmd) {
+    out.push(APP_COMMAND_TAGS.ReadDocumentArchive);
+    writeVarintU64(out, cmd.ReadDocumentArchive.seq);
+  } else if ("PollDocumentArchiveLoad" in cmd) {
+    out.push(APP_COMMAND_TAGS.PollDocumentArchiveLoad);
+    writeVarintU64(out, cmd.PollDocumentArchiveLoad.seq);
+    writeVarintU64(out, cmd.PollDocumentArchiveLoad.operation);
+  } else if ("CancelDocumentArchiveLoad" in cmd) {
+    out.push(APP_COMMAND_TAGS.CancelDocumentArchiveLoad);
+    writeVarintU64(out, cmd.CancelDocumentArchiveLoad.seq);
+    writeVarintU64(out, cmd.CancelDocumentArchiveLoad.operation);
+  } else if ("AcknowledgeDocumentArchiveLoad" in cmd) {
+    out.push(APP_COMMAND_TAGS.AcknowledgeDocumentArchiveLoad);
+    writeVarintU64(out, cmd.AcknowledgeDocumentArchiveLoad.seq);
+    writeVarintU64(out, cmd.AcknowledgeDocumentArchiveLoad.operation);
   } else if ("MediaIn" in cmd) {
     out.push(APP_COMMAND_TAGS.MediaIn);
     writeVarintU64(out, cmd.MediaIn.seq);
@@ -2828,6 +2937,16 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       return { LoadWindowConfig: { seq: readVarintU64(bytes, pos), entry: readWindowConfigPackEntry(bytes, pos) } };
     case APP_COMMAND_TAGS.ReadWindowConfigs:
       return { ReadWindowConfigs: { seq: readVarintU64(bytes, pos) } };
+    case APP_COMMAND_TAGS.LoadDocumentArchive:
+      return { LoadDocumentArchive: { seq: readVarintU64(bytes, pos), archive: readDocumentArchive(bytes, pos) } };
+    case APP_COMMAND_TAGS.ReadDocumentArchive:
+      return { ReadDocumentArchive: { seq: readVarintU64(bytes, pos) } };
+    case APP_COMMAND_TAGS.PollDocumentArchiveLoad:
+      return { PollDocumentArchiveLoad: { seq: readVarintU64(bytes, pos), operation: readVarintU64(bytes, pos) } };
+    case APP_COMMAND_TAGS.CancelDocumentArchiveLoad:
+      return { CancelDocumentArchiveLoad: { seq: readVarintU64(bytes, pos), operation: readVarintU64(bytes, pos) } };
+    case APP_COMMAND_TAGS.AcknowledgeDocumentArchiveLoad:
+      return { AcknowledgeDocumentArchiveLoad: { seq: readVarintU64(bytes, pos), operation: readVarintU64(bytes, pos) } };
     case APP_COMMAND_TAGS.MediaIn: {
       const seq = readVarintU64(bytes, pos);
       const port = readStr(bytes, pos);
@@ -2958,6 +3077,18 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeBytes(out, frame.Document.pack);
     writeBytes(out, frame.Document.spr);
     writeStr(out, frame.Document.ops);
+  } else if ("DocumentArchive" in frame) {
+    out.push(APP_FRAME_TAGS.DocumentArchive);
+    writeVarintU64(out, frame.DocumentArchive.in_reply_to);
+    writeDocumentArchive(out, frame.DocumentArchive.archive);
+  } else if ("DocumentArchiveLoad" in frame) {
+    out.push(APP_FRAME_TAGS.DocumentArchiveLoad);
+    writeVarintU64(out, frame.DocumentArchiveLoad.in_reply_to);
+    writeVarintU64(out, frame.DocumentArchiveLoad.status.operation);
+    out.push(["pending", "running", "ready", "cancelled", "fault"].indexOf(frame.DocumentArchiveLoad.status.state));
+    writeVarintU64(out, frame.DocumentArchiveLoad.status.completed);
+    writeVarintU64(out, frame.DocumentArchiveLoad.status.total);
+    writeBytes(out, frame.DocumentArchiveLoad.status.fault);
   } else if ("Config" in frame) {
     out.push(APP_FRAME_TAGS.Config);
     writeVarintU64(out, frame.Config.in_reply_to);
@@ -3112,6 +3243,16 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       const spr = readBytes(bytes, pos);
       const ops = readStr(bytes, pos);
       return { Document: { in_reply_to, pack, spr, ops } };
+    }
+    case APP_FRAME_TAGS.DocumentArchive:
+      return { DocumentArchive: { in_reply_to: readVarintU64(bytes, pos), archive: readDocumentArchive(bytes, pos) } };
+    case APP_FRAME_TAGS.DocumentArchiveLoad: {
+      const in_reply_to = readVarintU64(bytes, pos);
+      const operation = readVarintU64(bytes, pos);
+      const states = ["pending", "running", "ready", "cancelled", "fault"] as const;
+      const state = states[bytes[pos[0]++]!];
+      if (state === undefined) throw new Error("document archive load state: unknown state");
+      return { DocumentArchiveLoad: { in_reply_to, status: { operation, state, completed: readVarintU64(bytes, pos), total: readVarintU64(bytes, pos), fault: readBytes(bytes, pos) } } };
     }
     case APP_FRAME_TAGS.Config: {
       const in_reply_to = readVarintU64(bytes, pos);
@@ -3285,7 +3426,7 @@ export function decodeConflictsFromWire(conflictsBytes: readonly number[], decod
  * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session.
  * Channel v12 retired the `Hello`/`Welcome` handshake this constant used to be carried on — it now
  * exists purely for the drift-guard test below. */
-export const APP_CHANNEL_VERSION = 15;
+export const APP_CHANNEL_VERSION = 17;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any object shaped like it (a real handle, a test
@@ -3669,6 +3810,84 @@ export class AppChannelClient {
     return this.sendCommand({ LoadDocument: { seq: this.nextSeq(), pack: Array.from(pack), spr: Array.from(spr) } });
   }
 
+  /** 🗃️ Restores one root envelope and its complete recursive owned-member closure atomically. */
+  async loadDocumentArchive(
+    archive: DocumentArchivePack,
+    signal?: AbortSignal,
+    progress?: (status: DocumentArchiveLoadStatus) => void,
+  ): Promise<void> {
+    const operation = this.nextSeq();
+    const admitted = await this.sendCommand({ LoadDocumentArchive: { seq: operation, archive } });
+    const admissionError = admitted.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+    if (admissionError) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(admissionError.Error.fault, decodePackValue)}`);
+    if (!admitted.some((frame) => "Done" in frame && frame.Done.in_reply_to === operation)) {
+      throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): missing admission Done frame for seq ${operation}`);
+    }
+    let cancellationSent = false;
+    for (;;) {
+      if (signal?.aborted && !cancellationSent) {
+        const cancelSequence = this.nextSeq();
+        const cancelled = await this.sendCommand({ CancelDocumentArchiveLoad: { seq: cancelSequence, operation } });
+        const cancelError = cancelled.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+        if (cancelError) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(cancelError.Error.fault, decodePackValue)}`);
+        cancellationSent = true;
+      }
+      const pollSequence = this.nextSeq();
+      const polled = await this.sendCommand({ PollDocumentArchiveLoad: { seq: pollSequence, operation } });
+      const pollError = polled.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+      if (pollError) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(pollError.Error.fault, decodePackValue)}`);
+      const frame = polled.find(
+        (candidate): candidate is Extract<AppFrameValue, { readonly DocumentArchiveLoad: unknown }> =>
+          "DocumentArchiveLoad" in candidate && candidate.DocumentArchiveLoad.in_reply_to === pollSequence && candidate.DocumentArchiveLoad.status.operation === operation,
+      );
+      if (!frame) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): missing operation status for ${operation}`);
+      const status = frame.DocumentArchiveLoad.status;
+      progress?.(status);
+      if (status.state === "pending" || status.state === "running") {
+        await Promise.resolve();
+        continue;
+      }
+      const acknowledgeSequence = this.nextSeq();
+      const acknowledged = await this.sendCommand({ AcknowledgeDocumentArchiveLoad: { seq: acknowledgeSequence, operation } });
+      const acknowledgeError = acknowledged.find((candidate): candidate is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in candidate);
+      if (acknowledgeError && status.state === "cancelled") {
+        await Promise.resolve();
+        continue;
+      }
+      if (acknowledgeError) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(acknowledgeError.Error.fault, decodePackValue)}`);
+      if (status.state === "cancelled") throw signal?.reason ?? new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): cancelled`);
+      if (status.state === "fault") throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(status.fault, decodePackValue)}`);
+      this.cachedPack = Uint8Array.from(archive.parent_pack);
+      this.cachedSpr = Uint8Array.from(archive.parent_spr);
+      return;
+    }
+  }
+
+  /** 🗃️ Reads one generation-fenced root envelope and its complete recursive owned-member closure. */
+  async readDocumentArchive(): Promise<DocumentArchivePack> {
+    const seq = this.nextSeq();
+    const frames = await this.sendCommand({ ReadDocumentArchive: { seq } });
+    const error = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+    if (error) throw new Error(`AppChannelClient.readDocumentArchive(${this.appId}): ${faultDisplayMessage(error.Error.fault, decodePackValue)}`);
+    const response = frames.find(
+      (frame): frame is Extract<AppFrameValue, { readonly DocumentArchive: unknown }> =>
+        "DocumentArchive" in frame && frame.DocumentArchive.in_reply_to === seq,
+    );
+    if (!response) throw new Error(`AppChannelClient.readDocumentArchive(${this.appId}): missing DocumentArchive frame for seq ${seq}`);
+    this.cachedPack = Uint8Array.from(response.DocumentArchive.archive.parent_pack);
+    this.cachedSpr = Uint8Array.from(response.DocumentArchive.archive.parent_spr);
+    return {
+      parent_pack: [...response.DocumentArchive.archive.parent_pack],
+      parent_spr: [...response.DocumentArchive.archive.parent_spr],
+      members: response.DocumentArchive.archive.members.map((entry) => ({
+        ordinal: entry.ordinal,
+        reference: { ...entry.reference },
+        owner: { parent: { ...entry.owner.parent }, slot: entry.owner.slot, child_id: entry.owner.child_id },
+        envelope_pack: [...entry.envelope_pack],
+      })),
+    };
+  }
+
   /** 🪟️ Restores one exact concrete window's persisted-local config envelope. */
   async loadWindowConfig(entry: WindowConfigPackEntry): Promise<void> {
     const seq = this.nextSeq();
@@ -3840,7 +4059,7 @@ export class AppChannelClient {
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests2 } = await import("./🧪️tests/🧪️backbone-envelope-io/🟦️.ts");
-  await registerTests2(import.meta.vitest, { APP_CHANNEL_VERSION, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, applyBackboneMessage, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests2(import.meta.vitest, { APP_CHANNEL_VERSION, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, applyBackboneMessage, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests
 
@@ -3879,7 +4098,7 @@ export function mediaAcceptFilterKinds(formatArtifactKinds: readonly string[]): 
 // `@semio-tech/framework-os` consumers get it from the package root. Logic lives in
 // `🔨️modules/📇️directory/🟦️.ts`; this region only imports/re-exports and, per this
 // package's `🧪️tests/🟦️.ts` (`include`/`includeSource` list only THIS file and
-// `🧵️backbone-worker.ts`), hosts the in-source parity test against the Rust twin's golden fixture.
+// `🏪️store/👷️worker/🟦️.ts`), hosts the in-source parity test against the Rust twin's golden fixture.
 import { descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind, parseDirectorySpaceAdministrationPageV1 } from "./🔨️modules/📇️directory/🟦️.ts";
 import type { DirectoryReadModel, DocumentDescriptor } from "./🔨️modules/📇️directory/🟦️.ts";
 
@@ -3946,7 +4165,7 @@ if (import.meta.vitest) {
 //#region 🔖️HubBinding
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS C2/C6 — the shell's ONLY
 // point of contact with the directory hub's HTTP/WS control plane. Plugin surfaces never talk to
-// the network (contract §C6); `🧵️backbone-worker.ts`'s `🔖️Directory` region is the only caller, so
+// the network (contract §C6); `🏪️store/👷️worker/🟦️.ts`'s `🔖️Directory` region is the only caller, so
 // the shell never opens a directory socket on the UI thread. `fetch`/`WebSocket` only — no external
 // HTTP library (CLAUDE.md "no external libraries for runtime purposes").
 import type { DirectorySpaceAdministrationPageV1, DirectorySpaceListEntryV1, DocumentScope } from "./🔨️modules/📇️directory/🟦️.ts";
@@ -3959,7 +4178,7 @@ export interface CanonicalDirectorySpaceAdministrationPageV1 {
 }
 
 /** 🔁️ Reconnect backoff shared by every hub transport this package opens — `connectHub` in
- * `🧵️backbone-worker.ts` (artifact sync) and {@link DirectoryClient.stream} both import these
+ * `🏪️store/👷️worker/🟦️.ts` (artifact sync) and {@link DirectoryClient.stream} both import these
  * (single source of truth; the two used to carry independent copies of the same two numbers). */
 export const HUB_RECONNECT_MIN_MS = 500;
 export const HUB_RECONNECT_MAX_MS = 30_000;
@@ -4017,7 +4236,7 @@ export type DirectoryEventPageAckV1 = Readonly<{
 }>;
 
 /** 🚨️ Thrown by every {@link DirectoryClient} REST method on a non-2xx response — `status` lets a
- * caller (this package's `🧵️backbone-worker.ts` directory lane) distinguish "the hub answered and
+ * caller (this package's `🏪️store/👷️worker/🟦️.ts` directory lane) distinguish "the hub answered and
  * rejected this" (surface immediately) from a thrown network error with no `status` at all ("the
  * hub is unreachable" — queue and retry). */
 export class DirectoryHttpError extends Error {
@@ -4425,7 +4644,7 @@ export class DirectoryClient {
    * `retryWithJitteredBackoff`'s own jitter still inserts a `[MIN, 2·MIN]` pause before the real
    * redial — reusing its jitter math for that pause rather than reinventing it, and avoiding an
    * instant reconnect that would defeat jitter's whole point of not synchronizing many clients onto
-   * the same instant. Mirrors `🧵️backbone-worker.ts`'s `connectHubOnce`/`connectHub` idiom for the
+   * the same instant. Mirrors `🏪️store/👷️worker/🟦️.ts`'s `connectHubOnce`/`connectHub` idiom for the
    * base reconnect loop; the health-reset addition here has no counterpart there (routed to that
    * file's own owning packet). */
   private streamFor(scope: DocumentScope | undefined, since: number, onMessage: (message: DirectoryStreamMessage) => void, onRevoked: (() => void) | undefined, trackObservedFrontier: boolean): DirectoryAcknowledgedStream {

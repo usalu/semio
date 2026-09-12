@@ -1,4 +1,4 @@
-use crate::editor::sequence::testkit::{dispatch, new_app};
+use crate::editor::sequence::unit_tests::context::{dispatch, new_app};
 use crate::editor::sequence::SequenceCommand;
 
 use super::reorganize::Reorganize;
@@ -7,11 +7,10 @@ use move_step_helper::move_all_steps_to_origin;
 
 mod move_step_helper {
     use crate::editor::sequence::commands::step::move_step::MoveStep;
-    use crate::editor::sequence::testkit::dispatch;
+    use crate::editor::sequence::unit_tests::context::{dispatch, SequenceApp};
     use crate::editor::sequence::SequenceCommand;
-    use semio_framework_plugin::{EditorApp, VcsArtifactApp};
 
-    pub async fn move_all_steps_to_origin(app: &mut VcsArtifactApp<EditorApp<crate::editor::sequence::SequencePlayApp>>) {
+    pub async fn move_all_steps_to_origin(app: &mut SequenceApp) {
         let ids: Vec<String> = app.snapshot().expect("projection").to_fixture().steps.iter().map(|step| step.id.clone()).collect();
         for id in &ids {
             dispatch(app, SequenceCommand::MoveStep(MoveStep { node_id: id.clone(), x: 0.0, y: 0.0 })).await;

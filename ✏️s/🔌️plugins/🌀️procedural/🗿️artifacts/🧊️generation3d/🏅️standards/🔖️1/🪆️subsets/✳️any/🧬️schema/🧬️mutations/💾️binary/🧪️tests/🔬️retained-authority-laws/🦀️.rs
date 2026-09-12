@@ -213,7 +213,7 @@ fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 fn close_outcome(outcome: &mut semio_framework_job::StepOutcome) {
     for _ in 0..GENERATION3D_MAXIMUM_DOMAIN_ITEMS {
-        if matches!(outcome.close_step(1, 4096), semio_framework_job::JobPayloadCloseStep::Complete) {
+        if matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {
             return;
         }
     }

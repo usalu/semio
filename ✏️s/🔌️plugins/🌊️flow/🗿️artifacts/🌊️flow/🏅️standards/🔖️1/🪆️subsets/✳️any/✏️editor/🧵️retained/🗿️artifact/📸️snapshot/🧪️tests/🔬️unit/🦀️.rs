@@ -18,7 +18,7 @@ mod tests {
                     ($value:expr, $owners:expr, $disposer:expr) => {{
                         let envelope = store::create_document_envelope("flow.owner-law", row["id"].as_str().unwrap(), $value, None);
                         let mut owner = store::ArtifactStore::new(envelope).await.unwrap();
-                        owner.install_member_store_owners_exact($owners.expect("Flow lane must declare exact owners"));
+                        owner.install_document_store_owners_exact($owners.expect("Flow lane must declare exact owners"));
                         let mut disposer = $disposer.expect("Flow lane must declare a bounded close adapter");
                         let mut released = 0;
                         let mut completed = false;

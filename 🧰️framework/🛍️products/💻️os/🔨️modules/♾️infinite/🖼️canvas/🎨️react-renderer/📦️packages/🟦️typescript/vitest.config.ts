@@ -11,7 +11,7 @@ const componentSource = "../../🟦️.tsx";
 export default {
   root: configDir,
   resolve: {
-    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") }],
+    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") }],
   },
   test: {
     name: "@semio-tech/infinite-canvas-react-renderer",

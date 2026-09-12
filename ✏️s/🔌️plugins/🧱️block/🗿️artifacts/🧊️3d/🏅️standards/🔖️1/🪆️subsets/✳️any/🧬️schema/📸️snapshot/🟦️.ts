@@ -11,7 +11,7 @@ export interface Block3dSnapshot {
   objectKind: BlockKindIdentity;
   /** @state artifact */
   representations: BlockRepresentation[];
-  /** @state artifact @child kind=s.stdio.semio.kit */
+  /** @state artifact @child kind=s.stdio.semio */
   catalog: ArtifactChild;
   /** @state artifact */
   vortexKindExtra: Block3dVortexKindExtra[];

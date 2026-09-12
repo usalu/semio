@@ -7,7 +7,7 @@ Feature: Apply every typed identity mutation to its committed specification vect
   signed in as, or nothing at all. No third party implements it and none could adjudicate it, so
   there is no reference implementation to register (recorded as the
   `os-config-identity-mutation-semantics` no-oracle decision in
-  `../../../../../🎚️config/🧪️oracle/🔣️.json`).
+  `../../../../../🎚️config/🔮️oracles/🔣️.json`).
 
   ⚠️ Like its opening-preferences and merge-policy siblings, this case lives under `🔌️plugin/🖥️host`
   rather than beside the vocabulary it exercises, because `🎚️config` has no crate of its own:

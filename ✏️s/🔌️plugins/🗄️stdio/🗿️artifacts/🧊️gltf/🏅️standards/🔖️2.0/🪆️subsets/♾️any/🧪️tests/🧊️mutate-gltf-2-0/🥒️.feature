@@ -18,7 +18,7 @@ Feature: Apply every registered typed glTF 2.0 mutation to a real-world document
   pristine real source are committed, so the substitution is auditable. Every scenario copies the
   fixture into the case work directory before touching it; the committed files are never written to.
   The oracle performs every kind by direct, independent GLB-container and JSON-tree manipulation
-  (../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔮️oracle/🦀️component.rs, using the already-linked `json`
+  (../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔮️oracles/🦀️component.rs, using the already-linked `json`
   0.12 crate as the JSON layer only -- every mutation's own semantics are reimplemented from scratch,
   never delegated to `json`'s domain-blind reader/writer); the subject fully parses into `GltfSnapshot`
   and re-serializes from it alone (no byte pass-through). `create-scene` has no separate

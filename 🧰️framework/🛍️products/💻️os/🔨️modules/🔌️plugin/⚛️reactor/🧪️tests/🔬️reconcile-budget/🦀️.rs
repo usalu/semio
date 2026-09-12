@@ -264,3 +264,45 @@ fn a_nakagin_scale_mixed_surface_turn_retires_every_ladder_within_a_handful_of_r
     assert!(turns < 10, "a mixed world-3d + retained-table turn must retire every ladder inside a single-digit number of reactor turns; observed {turns} turns against the {dripped_units} turns the same table costs at one owner per turn");
     eprintln!("[DEBUG] mixed-surface retirement completed in {turns} turns, against {dripped_units} turns for the retained table alone at the pre-W-B2 one-owner-per-turn pacing ({table_units} units queued)");
 }
+
+/// 🕹️ Wave B48 LAW: a surface whose publication the host has retired must become RE-RESERVABLE, so the
+/// next dirty render of it actually renders.
+///
+/// 🧾️ `PatchTracker::reserve_mounted` refuses a slot that still holds an output, a producer or a job, or
+/// whose reconciler is checked out, and the turn then only `defer`s that render
+/// (`⚛️reactor/🔄️turn/🦀️.rs`). A slot that never returns to reservable is therefore a surface that never
+/// re-renders again — silently, because `has_publishable_work` excludes a deferred surface whose slot
+/// is not ready, so the guest answers "no more work" and the host's refresh answers `unchanged` from the
+/// stale retained tree.
+///
+/// 🐛️ That is exactly the shape measured live on `:6013` at wasm #58 (wave B48 §3): after a pick, with
+/// the right scope declared and all three world bodies asked for and none dropped, the guest answered
+/// `changed:[]` with every retained surface still at **revision 1** — on the 1-object document, where no
+/// reconcile is large enough to still be in flight. This law is the native question behind that reading,
+/// and it names the slot state in its own failure message so a red run says WHICH family held it.
+#[test]
+fn a_retired_surface_publication_leaves_its_slot_reservable_for_the_next_dirty_render() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let instance = 11u32;
+    let surface = format!("{instance}:puzzle3d-main-perspective");
+    let (tracker, patch) = mount_and_publish_nakagin_world(&surface);
+    let (_turns, _units) = retirement_turns(patch, PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_CLOSE_UNITS_PER_TURN);
+    let key = instance_lifetime::NativeCloseKey::fixture(instance, 1);
+    let id = ui_contract::SurfaceId::try_from(surface.clone()).expect("fixture surface id");
+    let mut steps = 0usize;
+    let grant = loop {
+        match tracker.reserve_mounted(id.clone(), key) {
+            Ok(grant) => break grant,
+            Err(_refused) => {
+                assert!(steps < 1_000_000, "a published-and-retired world surface never became reservable again after {steps} reconcile steps, so every later dirty render of it would be deferred forever: {}", tracker.debug_state());
+                steps += 1;
+                tracker.drive_one();
+                tracker.close_step(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT);
+                let _ = semio_framework_ui_runtime::close_surface_reconcile_handback_one();
+            }
+        }
+    };
+    eprintln!("[DEBUG] b48.reservable surface={surface} steps={steps}");
+    grant.cancel();
+    assert!(tracker.reserve_mounted(id, key).is_ok(), "a cancelled reservation releases the slot for the render that follows it: {}", tracker.debug_state());
+}

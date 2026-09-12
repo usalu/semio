@@ -148,8 +148,8 @@ impl ArtifactOwnedValueRetirementFactory<InteractionConfigMutation> for Interact
     }
 }
 
-pub(crate) fn interaction_store_owners() -> store::MemberStoreOwners<InteractionState, InteractionConfigMutation> {
-    store::MemberStoreOwners::new(
+pub(crate) fn interaction_store_owners() -> store::DocumentStoreOwners<InteractionState, InteractionConfigMutation> {
+    store::DocumentStoreOwners::new(
         Arc::new(InteractionRetirementFactory),
         Arc::new(InteractionRetirementFactory),
         Arc::new(InteractionRetirementFactory),

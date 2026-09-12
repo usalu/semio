@@ -808,7 +808,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     itLong("keeps generated host imports and replies isolated across same-package activations", async () => {
       const { execFileSync } = await import("node:child_process");
       const { default: Ajv } = await import("ajv");
-      const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧫️fixtures");
+      const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures");
       const fixture = JSON.parse(readFileSync(join(fixtureRoot, "⚡️host-activation.json"), "utf8")) as { activations: Array<{ actorId: string; generation: string; value: string }> };
       const oracle = new Ajv();
       expect(oracle.validate(JSON.parse(readFileSync(join(fixtureRoot, "🛡️host-activation.schema.json"), "utf8")), fixture)).toBe(true);
@@ -940,7 +940,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
     itLong("executes independent Wasm memories from one cached explicit factory module", async () => {
       const { execFileSync } = await import("node:child_process");
       const { default: Ajv } = await import("ajv");
-      const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧫️fixtures");
+      const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures");
       const fixture = JSON.parse(readFileSync(join(root, "🏗️component-instantiation.json"), "utf8"));
       const oracle = new Ajv({ strict: true });
       expect(oracle.validate(JSON.parse(readFileSync(join(root, "📐️component-instantiation.schema.json"), "utf8")), fixture)).toBe(true);
@@ -1203,7 +1203,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
     itLong("emits runtime URL assets but no dead in-source-test assets in production", async () => {
       const ts = await import("typescript"), { execFileSync } = await import("node:child_process");
       const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🧹️production-tests.json");
-      const pluginSource = ts.createSourceFile("vite-plugins.ts", readFileSync(join(dirname(fileURLToPath(source.url)), "🔌️vite-plugins.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+      const pluginSource = ts.createSourceFile("🟦️.ts", readFileSync(join(dirname(fileURLToPath(source.url)), "../../🔌️vite-plugins/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
       const node = pluginSource.statements.find((item) => ts.isFunctionDeclaration(item) && item.name?.text === "semioProductionTestBoundaryVitePlugin");
       const emitted = node ? ts.transpileModule(node.getText(pluginSource).replace("export function", "function"), { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText : "";
       const config = readFileSync(join(dirname(fileURLToPath(source.url)), "⚙️vite.config.ts"), "utf8");
@@ -1356,8 +1356,8 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
         readRequestBody: async () => Buffer.from([1]),
       };
       const specs = [
-        { owner: "plugin", path: join(dirname(fileURLToPath(source.url)), "🔌️vite-plugins.ts"), name: "semioPluginHotSwapVitePlugin" },
-        { owner: "extension", path: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts"), name: "semioExtensionStoreVitePlugin" },
+        { owner: "plugin", path: join(dirname(fileURLToPath(source.url)), "../../🔌️vite-plugins/🟦️.ts"), name: "semioPluginHotSwapVitePlugin" },
+        { owner: "extension", path: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts"), name: "semioExtensionStoreVitePlugin" },
       ];
       for (const spec of specs) {
         const source = ts.createSourceFile(spec.path, readFileSync(spec.path, "utf8"), ts.ScriptTarget.Latest, true);

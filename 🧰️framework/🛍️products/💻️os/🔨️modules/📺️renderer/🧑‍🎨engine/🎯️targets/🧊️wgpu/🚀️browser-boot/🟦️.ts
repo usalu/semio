@@ -2,14 +2,19 @@
 /** @emoji 🧵️ Browser UI isolate host for the dedicated frame Worker. */
 
 import { BrowserFrameTransport, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFramePointer, type BrowserFrameWorkerFaultCode } from "../🚚️browser-frame-transport/🟦️.ts";
-import { setInteractiveJobPort } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs.ts";
+import { setInteractiveJobPort } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts";
 import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics } from "../⏱️turn-budget/🟦️.ts";
 import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
-import { DEFAULT_HOST_VARIANT } from "../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
+import { DEFAULT_HOST_VARIANT } from "../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
-const RENDERER_MODULE_URL = new URL("./semio-framework-os-renderer-wgpu.js", import.meta.url).href;
-const RENDERER_WASM_URL = new URL("./semio-framework-os-renderer-wgpu_bg.wasm", import.meta.url).href;
-const FRAME_WORKER_URL = new URL("./🎞️frame-worker.js", import.meta.url);
+/** 🚏️ Trunk's `copy-file` `data-target-path` names a DIRECTORY, so the two generated `🤖️generated/🟨️.js`
+ * artifacts are served at `/🚀️boot.js/🟨️.js` and `/🎞️frame-worker.js/🟨️.js` while the wasm-bindgen pair
+ * stays at the dist ROOT. This module IS the first of those, so every sibling it reaches for is one
+ * level up (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Relative, not absolute, so the bundle keeps
+ * working under a non-root `public_url`. */
+const RENDERER_MODULE_URL = new URL("../semio-framework-os-renderer-wgpu.js", import.meta.url).href;
+const RENDERER_WASM_URL = new URL("../semio-framework-os-renderer-wgpu_bg.wasm", import.meta.url).href;
+const FRAME_WORKER_URL = new URL("../🎞️frame-worker.js/🟨️.js", import.meta.url);
 const BOOT_FIELD_CAPACITY = 2048;
 const LOCATION_SEARCH_CAPACITY = 8192;
 
@@ -20,7 +25,7 @@ await new Promise<void>((resolve) => {
 
 /** @emoji 🩺️ Resolves a stored `SEMIO_RUNTIME_DIAGNOSTICS` preference and hands it to the UI-turn
  * ledger. The read lives HERE, in the UI isolate, and not in `../⏱️turn-budget/🟦️.ts`: that module is
- * also bundled into `🎞️frame-worker.js`, whose carrier census forbids every storage carrier. Wrapped
+ * also bundled into `🎞️frame-worker.js`, whose carrier census forbids credential-bearing storage. Wrapped
  * because a sandboxed page throws on `localStorage`; an absent value leaves the build-time switch to
  * decide. */
 function armUiTurnDiagnostics(): void {
@@ -41,13 +46,14 @@ function bounded(value: string, field: string): string {
   return value;
 }
 
-function bootDescriptor(): { pluginVariant: string; appRole: string; hub?: { hubUrl: string; user: string; dataDir: string } } {
+function bootDescriptor(): { pluginVariant: string; appRole: string; appMode: string; hub?: { hubUrl: string; user: string; dataDir: string } } {
   if (window.location.search.length > LOCATION_SEARCH_CAPACITY) throw new Error(`boot-descriptor-overflow: location.search exceeds ${LOCATION_SEARCH_CAPACITY} code units`);
   const params = new URLSearchParams(window.location.search);
   const hubUrl = params.get("hub");
   return {
     pluginVariant: bounded(params.get("plugin") ?? DEFAULT_HOST_VARIANT, "plugin"),
     appRole: params.get("role") === "viewer" ? "viewer" : "editor",
+    appMode: bounded(params.get("mode") ?? "", "mode"),
     ...(hubUrl ? { hub: { hubUrl: bounded(hubUrl, "hub"), user: bounded(params.get("user") ?? "", "user"), dataDir: bounded(params.get("dataDir") ?? "", "dataDir") } } : {}),
   };
 }
@@ -79,10 +85,10 @@ function canvasElement(): HTMLCanvasElement {
  * a page error. */
 export const WGPU_INTROSPECTION_GLOBAL = "semioWgpuIntrospection";
 
-type WgpuIntrospection = { readonly dumpStructure: () => Promise<string>; readonly dumpFrameStats: () => Promise<string> };
+type WgpuIntrospection = { readonly dumpStructure: (windowId?: string) => Promise<string>; readonly dumpFrameStats: (windowId?: string) => Promise<string> };
 
 function attachIntrospectionBindings(transport: BrowserFrameTransport): () => void {
-  const probe = (kind: BrowserFrameIntrospectionProbe) => async () => (await transport.introspect(kind)) ?? "";
+  const probe = (kind: BrowserFrameIntrospectionProbe) => async (windowId?: string) => (await transport.introspect(kind, windowId)) ?? "";
   const host = window as unknown as { semioWgpuIntrospection?: WgpuIntrospection };
   host.semioWgpuIntrospection = { dumpStructure: probe("structure"), dumpFrameStats: probe("frame-stats") };
   return () => delete host.semioWgpuIntrospection;
@@ -257,7 +263,7 @@ async function mount(root: HTMLElement): Promise<void> {
   let detachIntrospection = () => {};
   const transport = new BrowserFrameTransport({
     worker,
-    boot: { bindingsModuleUrl: RENDERER_MODULE_URL, bindingsWasmUrl: RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, pluginVariant: descriptor.pluginVariant, locale: locale(), appRole: descriptor.appRole, hub: descriptor.hub },
+    boot: { bindingsModuleUrl: RENDERER_MODULE_URL, bindingsWasmUrl: RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, pluginVariant: descriptor.pluginVariant, locale: locale(), appRole: descriptor.appRole, appMode: descriptor.appMode, hub: descriptor.hub },
     requestAnimationFrame: (callback) => window.requestAnimationFrame(callback),
     cancelAnimationFrame: (handle) => window.cancelAnimationFrame(handle),
     onProgress: (stage, progress, worker) => {

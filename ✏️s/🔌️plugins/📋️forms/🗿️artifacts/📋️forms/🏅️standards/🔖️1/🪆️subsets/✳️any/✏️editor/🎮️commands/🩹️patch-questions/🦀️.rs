@@ -1,7 +1,7 @@
 //! ❓️ ❓️ Forms play app commands command — `patch-questions`.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::{parse_value_json, reset_try_config_mutations};
+use crate::editor::forms::parse_value_json;
 use crate::schema::{update_block_operation, value_to_dsl};
 use crate::{op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
 use dsl::os_pack::json::{object, Value};
@@ -177,7 +177,7 @@ pub fn handle(payload: &PatchQuestions, doc: &ArtifactView<'_, FormsSnapshot>, _
         payload.question_ids.iter().filter_map(|question_id| patch_question_field(spec, question_id, &payload.field, &raw_value)).collect()
     };
     if operations.is_empty() {
-        return Ok(Emit::config(reset_try_config_mutations()));
+        return Ok(Emit::default());
     }
-    Ok(Emit { artifact_mutations: operations, config_mutations: reset_try_config_mutations(), coalesce_key: Some(format!("patch:{}:{}", payload.field, payload.question_ids.join(","))), ..Default::default() })
+    Ok(Emit { artifact_mutations: operations, coalesce_key: Some(format!("patch:{}:{}", payload.field, payload.question_ids.join(","))), ..Default::default() })
 }

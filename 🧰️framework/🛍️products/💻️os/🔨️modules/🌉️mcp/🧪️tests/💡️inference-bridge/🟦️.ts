@@ -3,7 +3,7 @@
  *
  * Two halves, deliberately separable so the gate can run the cheap one alone:
  *
- * 1. the **source oracle** — `proveMcpInferenceBridgeFixture` (`💡️inference-bridge.ts`), a real
+ * 1. the **source oracle** — `proveMcpInferenceBridgeFixture` (`💡️inference-bridge/🟦️.ts`), a real
  *    third-party AJV draft-07 pass over the shared neutral fixture
  *    `🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1`, the four closed wire shapes with their
  *    hostile mutations, and a cross-check of the client's five path builders against the routes the
@@ -17,8 +17,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { INFERENCE_JOB_TOOLS, approvalRequestSchema, proveMcpInferenceBridgeFixture, proveOsMirrorsHubApprovalAuthority } from "../../📦️packages/🟦️typescript/💡️inference-bridge.ts";
-import { isValidJsonSchema2020_12 } from "../../📦️packages/🟦️typescript/🧬️schema-validation.ts";
+import { INFERENCE_JOB_TOOLS, approvalRequestSchema, proveMcpInferenceBridgeFixture, proveOsMirrorsHubApprovalAuthority } from "../../💡️inference-bridge/🟦️.ts";
+import { isValidJsonSchema2020_12 } from "../../🧬️schema-validation/🟦️.ts";
 import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 

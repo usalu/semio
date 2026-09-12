@@ -1,6 +1,74 @@
 use super::*;
 use crate::model::{solve_linear_static, Model, NodalLoad, Node, Support};
 
+fn fixture_number(value: &serde_json::Value, field: &str) -> f64 {
+    value[field].as_f64().unwrap_or_else(|| panic!("{field} fixture number"))
+}
+
+/// 🧪️ Every mounted 3D element borrows its exact node ids and evaluates each fixed-schema cell
+/// against both its cold matrix path and the committed independent NumPy reference matrix.
+#[test]
+fn mounted_3d_element_interfaces_match_numpy_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧱️mounted-stiffness/🔣️.json")).expect("mounted stiffness fixture");
+    let tolerance = fixture_number(&fixture, "tolerance");
+    for case in fixture["cases"].as_array().expect("mounted stiffness cases") {
+        let kind = case["kind"].as_str().expect("element kind");
+        let ids = case["nodeIds"].as_array().expect("node ids").iter().map(|value| value.as_str().expect("node id")).collect::<Vec<_>>();
+        let properties = &case["properties"];
+        let element: Elements = match kind {
+            "bar3" => Bar3 { id: "bar-fixture".into(), node_a: ids[0].into(), node_b: ids[1].into(), e: fixture_number(properties, "e"), a: fixture_number(properties, "a"), density: 0.0 }.into(),
+            "frame3" => Frame3 {
+                id: "frame-fixture".into(),
+                node_a: ids[0].into(),
+                node_b: ids[1].into(),
+                e: fixture_number(properties, "e"),
+                g: fixture_number(properties, "g"),
+                a: fixture_number(properties, "a"),
+                iy: fixture_number(properties, "iy"),
+                iz: fixture_number(properties, "iz"),
+                j: fixture_number(properties, "j"),
+                roll: fixture_number(properties, "roll"),
+                density: 0.0,
+            }
+            .into(),
+            "tet4" => Tet4 { id: "tet-fixture".into(), nodes: [ids[0].into(), ids[1].into(), ids[2].into(), ids[3].into()], e: fixture_number(properties, "e"), nu: fixture_number(properties, "nu"), density: 0.0 }.into(),
+            _ => panic!("unknown mounted stiffness kind {kind}"),
+        };
+        let positions = case["positions"]
+            .as_array()
+            .expect("positions")
+            .iter()
+            .map(|position| {
+                let values = position.as_array().expect("position");
+                [values[0].as_f64().expect("x"), values[1].as_f64().expect("y"), values[2].as_f64().expect("z")]
+            })
+            .collect();
+        let context = ElementContext { positions };
+        let node_count = element.mounted_node_id_count().expect("mounted node count");
+        assert_eq!(node_count, ids.len(), "{kind} node count");
+        for (index, expected) in ids.iter().enumerate() {
+            assert_eq!(element.mounted_node_id(index), Some(*expected), "{kind} node {index}");
+        }
+        assert_eq!(element.mounted_node_id(node_count), None, "{kind} node bound");
+        let side = node_count * element.dofs_per_node().len();
+        let expected = case["matrix"].as_array().expect("matrix");
+        assert_eq!(expected.len(), side * side, "{kind} matrix side");
+        let cold = element.stiffness_global(&context);
+        for row in 0..side {
+            for column in 0..side {
+                let mounted = element.mounted_stiffness_cell(&context, row, column).expect("mounted stiffness cell");
+                let reference = expected[row * side + column].as_f64().expect("reference cell");
+                assert_eq!(mounted, cold.get(row, column), "{kind} shared cell ({row}, {column})");
+                assert!((mounted - reference).abs() <= tolerance * reference.abs().max(1.0), "{kind} NumPy cell ({row}, {column}): {mounted} vs {reference}");
+            }
+        }
+        assert_eq!(element.mounted_stiffness_cell(&context, side, 0), None, "{kind} row bound");
+        assert_eq!(element.mounted_stiffness_cell(&context, 0, side), None, "{kind} column bound");
+        assert_eq!(element.mounted_stiffness_cell(&ElementContext { positions: Vec::new() }, 0, 0), None, "{kind} context bound");
+    }
+    eprintln!("[DEBUG] Bar3, Frame3, and Tet4 borrowed exact node ids and matched every allocation-free mounted cell to cold and NumPy matrices");
+}
+
 /// ↕️ The y-bending blocks of `local_mass` and `local_geometric_stiffness` must be `S·B·S` of the
 /// z-bending blocks (`S = diag(1, −1, 1, −1)`), the same `θy = −∂w/∂x` flip `local_stiffness` carries.
 #[test]

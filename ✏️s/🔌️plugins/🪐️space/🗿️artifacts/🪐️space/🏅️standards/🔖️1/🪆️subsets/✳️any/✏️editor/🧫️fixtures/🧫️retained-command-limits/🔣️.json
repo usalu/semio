@@ -15,85 +15,85 @@
     {
       "toolId": "createArtifact",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ]
     },
     {
       "toolId": "deleteArtifact",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "renameArtifact",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "touchArtifact",
       "lanes": [
-        "artifact"
+        "Artifact"
       ]
     },
     {
       "toolId": "requestDeleteArtifact",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ]
     },
     {
       "toolId": "openArtifact",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ]
     },
     {
       "toolId": "openArtifactWith",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ]
     },
     {
       "toolId": "foldDirectoryEvents",
       "lanes": [
-        "config"
+        "Config"
       ]
     },
     {
       "toolId": "presenceHeartbeat",
       "lanes": [
-        "config"
+        "Config"
       ]
     },
     {
       "toolId": "inviteMember",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ]
     },
     {
       "toolId": "removeMember",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ]
     },
     {
       "toolId": "setVisibility",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ]
     },
     {
       "toolId": "copyInviteLink",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ]
     },
     {
       "toolId": "requestInviteMember",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ]
     }
   ],
@@ -101,85 +101,85 @@
     {
       "id": "createArtifact",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "append one artifact row through the installed artifact preparation factory"
     },
     {
       "id": "deleteArtifact",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "remove one artifact row through the installed artifact preparation factory"
     },
     {
       "id": "renameArtifact",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "rename one artifact row through the installed artifact preparation factory"
     },
     {
       "id": "touchArtifact",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "stamp one artifact row's updated-at through the installed artifact preparation factory"
     },
     {
       "id": "requestDeleteArtifact",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "open the delete-confirm dialog for one row, publishing nothing"
     },
     {
       "id": "openArtifact",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "relay one open-artifact shell command, publishing nothing"
     },
     {
       "id": "openArtifactWith",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "relay one open-artifact-with shell command, publishing nothing"
     },
     {
       "id": "foldDirectoryEvents",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "fold one directory event batch into the read model through the installed config preparation factory"
     },
     {
       "id": "presenceHeartbeat",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "publish one presence snapshot through the installed config preparation factory"
     },
     {
       "id": "inviteMember",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "relay one upsert-member directory command, publishing nothing"
     },
     {
       "id": "removeMember",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "relay one remove-member directory command, publishing nothing"
     },
     {
       "id": "setVisibility",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "relay one set-visibility directory command, publishing nothing"
     },
     {
       "id": "copyInviteLink",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "relay one share-link directory command, publishing nothing"
     },
     {
       "id": "requestInviteMember",
       "execution": "bounded",
-      "status": "migrated",
+      "status": "Migrated",
       "feature": "open the invite dialog, publishing nothing"
     }
   ],

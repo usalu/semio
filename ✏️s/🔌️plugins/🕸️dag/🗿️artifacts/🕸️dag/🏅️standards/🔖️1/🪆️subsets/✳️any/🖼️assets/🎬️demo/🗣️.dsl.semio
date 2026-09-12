@@ -1,5 +1,5 @@
 semio dag.dag.dsl v1
-schema=dag.fixture nodes=[ id=slider name=Amount abbreviation=Amount icon="emoji:🎚️" x=-400 y=-40 width=70 height=14 properties={
+schema=dag.dag nodes=[ id=slider name=Amount abbreviation=Amount icon="emoji:🎚️" x=-400 y=-40 width=70 height=14 properties={
 }
 slider min=0 max=10 step=0.5 value=5 output=id=out label=value code="" abbreviation="" full-name="" cardinality="!" shape=semicircle visible=true id=mode name=Mode abbreviation=Mode icon="emoji:📋️" x=-400 y=80 width=56 height=28 properties={
 }

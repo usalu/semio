@@ -1,7 +1,7 @@
 
 use super::*;
 use crate::Filters;
-use crate::editor::sourcing::testkit::{new_app, render as render_body};
+use crate::editor::sourcing::unit_tests::context::{new_app, render as render_body};
 
 /// 🎬️ Asserts through the packed scene, not the node JSON — see the preview window's sibling test
 /// for why `serde_json::to_string(&node)` can no longer carry any id.
@@ -10,7 +10,7 @@ async fn grid_instance_count_matches_filtered_stock_and_normalizes_scale() {
     let document = crate::schema::default_document();
     let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
     let node = render(&document, &cfg).expect("bounded grid");
-    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::testkit::built_surface_scene(&node).expect("assemble world3d scene");
+    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
     let filtered = filtered_stock(&document, &cfg.filters);
     assert!(!filtered.is_empty(), "the slabs module must contribute stock");
     for kind in &filtered {

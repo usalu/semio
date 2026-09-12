@@ -1,8 +1,9 @@
-//! 🎥️ CAD play app commands — the per-pane camera pose and its classical-projection configuration. All three are config-only: a camera move never records a VCS edit.
+//! 🎥️ CAD world-window camera and projection commands owned by the exact invoking window.
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_camera_runtime_mut, cad_pane_id_from_surface_id, cad_pane_suffix, runtime_of, snapshot_of};
+use crate::editor::cad::modes::edit::windows::config as window_config;
+use crate::editor::cad::cad_pane_id_from_surface_id;
 use crate::op::CadMutation;
 use crate::standards::v1::subsets::any::schema::inferences::{cad_camera_distance, cad_camera_projection_config, cad_camera_set_projection_config};
 use crate::CadSnapshot;
@@ -24,13 +25,11 @@ pub mod set_camera {
         pub camera: CadCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        // 🎥️ `pane` carries the FULL `surfaceId` (`"cad.play.scene3d/building"`), not a bare
-        // pane suffix — mirrors the pre-B1 `args.get("surfaceId")` resolution exactly.
-        let mut runtime = runtime_of(cfg);
-        let pane = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
-        *cad_pane_camera_runtime_mut(&mut runtime, pane) = payload.camera.clone();
-        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], format!("camera:{}", cad_pane_suffix(pane))))
+    pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let _surface = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
+        let mut config = window_config::current(cfg);
+        config.camera = payload.camera.clone();
+        Ok(Emit { window_config_mutations: vec![window_config::addressed_from_context(ctx, config)?], ..Default::default() })
     }
 }
 //#endregion 🔖️SetCamera
@@ -49,11 +48,10 @@ pub mod set_projection {
         pub param: Option<String>,
     }
 
-    pub fn handle(payload: &SetProjection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        // 🎥️ `pane` carries the full `surfaceId` — see `SetCamera`'s doc comment.
-        let mut runtime = runtime_of(cfg);
-        let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
-        let mut camera = cad_pane_camera_runtime(&runtime, pane_id).clone();
+    pub fn handle(payload: &SetProjection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let _surface = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
+        let mut config = window_config::current(cfg);
+        let mut camera = config.camera.clone();
         let mut projection_config = cad_camera_projection_config(&camera);
         // 🌉️ `world3d_projection_action_moves_pose`/`apply_world3d_projection_action` (framework
         // `🔌️plugin/🦀️.rs`) take `Option<&dsl::os_pack::json::Value>` — a genuine framework
@@ -69,8 +67,8 @@ pub mod set_projection {
             camera.position = position;
         }
         cad_camera_set_projection_config(&mut camera, &projection_config);
-        *cad_pane_camera_runtime_mut(&mut runtime, pane_id) = camera;
-        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], format!("projection:{}", cad_pane_suffix(pane_id))))
+        config.camera = camera;
+        Ok(Emit { window_config_mutations: vec![window_config::addressed_from_context(ctx, config)?], ..Default::default() })
     }
 }
 //#endregion 🔖️SetProjection
@@ -89,11 +87,10 @@ pub mod set_projection_param {
         pub param: Option<String>,
     }
 
-    pub fn handle(payload: &SetProjectionParam, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        // 🎥️ `pane` carries the full `surfaceId` — see `SetCamera`'s doc comment.
-        let mut runtime = runtime_of(cfg);
-        let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
-        let mut camera = cad_pane_camera_runtime(&runtime, pane_id).clone();
+    pub fn handle(payload: &SetProjectionParam, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let _surface = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
+        let mut config = window_config::current(cfg);
+        let mut camera = config.camera.clone();
         let mut projection_config = cad_camera_projection_config(&camera);
         // 🌉️ `world3d_projection_action_moves_pose`/`apply_world3d_projection_action` (framework
         // `🔌️plugin/🦀️.rs`) take `Option<&dsl::os_pack::json::Value>` — a genuine framework
@@ -109,8 +106,8 @@ pub mod set_projection_param {
             camera.position = position;
         }
         cad_camera_set_projection_config(&mut camera, &projection_config);
-        *cad_pane_camera_runtime_mut(&mut runtime, pane_id) = camera;
-        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], format!("projection:{}", cad_pane_suffix(pane_id))))
+        config.camera = camera;
+        Ok(Emit { window_config_mutations: vec![window_config::addressed_from_context(ctx, config)?], ..Default::default() })
     }
 }
 //#endregion 🔖️SetProjectionParam

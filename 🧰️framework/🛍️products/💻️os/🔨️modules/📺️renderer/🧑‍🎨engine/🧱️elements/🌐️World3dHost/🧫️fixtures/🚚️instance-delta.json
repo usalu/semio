@@ -1,0 +1,76 @@
+{
+  "$comment": "🚚️ The one language-neutral declaration of the world-3d instance DELTA lane (`instancesDeltaJson`). The producer half is pinned in Rust by `Puzzle3dInstanceResidency` (✏️s/🔌️plugins/🧩️puzzle/…/🪟️windows/🧊️main/🦀️.rs); the consumer half is pinned in TypeScript by `advanceWorldInstanceResidency` (🌐️World3dHost/🟦️.tsx). Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B44.",
+  "schema": "world-3d-instance-delta@1",
+  "lane": "instancesDelta",
+  "field": "instancesDeltaJson",
+  "bodyKey": "framework.scene.world3d.instancesDelta",
+  "contract": {
+    "$comment": "`instancesJson` stays AUTHORITATIVE on every publication: a consumer may ignore the delta entirely and still render the right scene. In-place application is admissible ONLY for pure updates of ids the consumer already retains, because `instancesJson` is index-addressed (a world pick resolves a hit by array position), so anything that can reorder — an addition or a removal — must fall back to the full set.",
+    "authoritativeField": "instancesJson",
+    "appliesInPlaceWhen": ["base matches the retained revision", "no removed ids", "count equals the retained length", "every changed id is already retained"],
+    "fallbackIsAlwaysCorrect": true
+  },
+  "cases": [
+    {
+      "name": "a cold consumer reads the full set",
+      "retained": null,
+      "instancesJson": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0]},{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]}]",
+      "instancesDeltaJson": "{\"base\":0,\"revision\":1,\"count\":2,\"changed\":[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0]},{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]}],\"removed\":[]}",
+      "expect": { "applied": false, "revision": 1, "ids": ["a", "b"], "positions": [[0, 0, 0], [1, 0, 0]], "reusedIds": [] }
+    },
+    {
+      "name": "one moved instance is substituted by id and every other record keeps its identity",
+      "retained": { "revision": 1, "instancesJson": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0]},{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]},{\"id\":\"c\",\"meshId\":\"box\",\"position\":[2,0,0]}]" },
+      "instancesJson": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0]},{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,9,0]},{\"id\":\"c\",\"meshId\":\"box\",\"position\":[2,0,0]}]",
+      "instancesDeltaJson": "{\"base\":1,\"revision\":2,\"count\":3,\"changed\":[{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,9,0]}],\"removed\":[]}",
+      "expect": { "applied": true, "revision": 2, "ids": ["a", "b", "c"], "positions": [[0, 0, 0], [1, 9, 0], [2, 0, 0]], "reusedIds": ["a", "c"] }
+    },
+    {
+      "name": "an empty delta at the matching base keeps the whole retained set",
+      "retained": { "revision": 2, "instancesJson": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0]},{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,9,0]}]" },
+      "instancesJson": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0]},{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,9,0]}]",
+      "instancesDeltaJson": "{\"base\":2,\"revision\":3,\"count\":2,\"changed\":[],\"removed\":[]}",
+      "expect": { "applied": true, "revision": 3, "ids": ["a", "b"], "positions": [[0, 0, 0], [1, 9, 0]], "reusedIds": ["a", "b"] }
+    },
+    {
+      "name": "a stale base falls back to the authoritative full set",
+      "retained": { "revision": 1, "instancesJson": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0]}]" },
+      "instancesJson": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[5,5,5]}]",
+      "instancesDeltaJson": "{\"base\":7,\"revision\":8,\"count\":1,\"changed\":[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[5,5,5]}],\"removed\":[]}",
+      "expect": { "applied": false, "revision": 8, "ids": ["a"], "positions": [[5, 5, 5]], "reusedIds": [] }
+    },
+    {
+      "name": "a removal falls back, because the full set is index-addressed",
+      "retained": { "revision": 3, "instancesJson": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0]},{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]}]" },
+      "instancesJson": "[{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]}]",
+      "instancesDeltaJson": "{\"base\":3,\"revision\":4,\"count\":1,\"changed\":[],\"removed\":[\"a\"]}",
+      "expect": { "applied": false, "revision": 4, "ids": ["b"], "positions": [[1, 0, 0]], "reusedIds": [] }
+    },
+    {
+      "name": "an addition falls back, because appending cannot be proven to match the producer's order",
+      "retained": { "revision": 4, "instancesJson": "[{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]}]" },
+      "instancesJson": "[{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]},{\"id\":\"d\",\"meshId\":\"box\",\"position\":[3,0,0]}]",
+      "instancesDeltaJson": "{\"base\":4,\"revision\":5,\"count\":2,\"changed\":[{\"id\":\"d\",\"meshId\":\"box\",\"position\":[3,0,0]}],\"removed\":[]}",
+      "expect": { "applied": false, "revision": 5, "ids": ["b", "d"], "positions": [[1, 0, 0], [3, 0, 0]], "reusedIds": [] }
+    },
+    {
+      "name": "no delta at all falls back, so a producer without an incremental residency stays correct",
+      "retained": { "revision": 5, "instancesJson": "[{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]}]" },
+      "instancesJson": "[{\"id\":\"b\",\"meshId\":\"box\",\"position\":[8,0,0]}]",
+      "instancesDeltaJson": null,
+      "expect": { "applied": false, "revision": -1, "ids": ["b"], "positions": [[8, 0, 0]], "reusedIds": [] }
+    },
+    {
+      "name": "a malformed delta falls back",
+      "retained": { "revision": 5, "instancesJson": "[{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]}]" },
+      "instancesJson": "[{\"id\":\"b\",\"meshId\":\"box\",\"position\":[8,0,0]}]",
+      "instancesDeltaJson": "{\"revision\":6}",
+      "expect": { "applied": false, "revision": -1, "ids": ["b"], "positions": [[8, 0, 0]], "reusedIds": [] }
+    }
+  ],
+  "producer": {
+    "$comment": "🦀️ What the guest's own residency must publish for a one-object pose edit on a large document — the shape the consumer cases above are written against.",
+    "deltaKeys": ["base", "revision", "count", "changed", "removed"],
+    "oneMovedObject": { "changedLength": 1, "removedLength": 0, "revisionAdvancesBy": 1 }
+  }
+}

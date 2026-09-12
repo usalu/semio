@@ -3,7 +3,7 @@
 //!
 //! Every scenario copies the real, committed `🎓️bachelor-thesis` asset into the case work directory
 //! first; the committed asset is never written to. `oracle` drives the registered `lopdf` reference
-//! implementation (`../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracle/🦀️.rs`'s own
+//! implementation (`../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
 //! `decode_pdf`/`encode_pdf`/`apply_pdf_mutation` over the full 18-kind `PdfMutation` vocabulary.
 //! Both results are read back by the SAME independent `project_pdf_1_7` (`lopdf`, augmented with
@@ -27,7 +27,7 @@
 //! No measured ratio is recorded here. A parity figure in source is a claim about one moment that
 //! silently becomes false when anything moves; the dated ticket record is where measurements live.
 //!
-//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law`
+//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
 //! module and under `semantic-pdf-v1`'s own tolerance, so a scenario cannot pass merely because
 //! `lopdf` declined to error: `mutate-<kind>` must MOVE the compared projection, `inverse-<kind>`
 //! must land back on the untouched document's projection, and `identity-round-trip` must both
@@ -53,7 +53,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 
 //#region 🔖️Profile
 /// 📏️ `semantic-pdf-v1`'s own declared freedom list and tolerance
-/// (`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as the profile
+/// (`✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as the profile
 /// the case is measured by — never stricter, which would invent a failure the comparison itself
 /// would forgive, and never looser, which would let a real one through.
 const PDF_WRITER_FREEDOM: &[&str] = &["objectNumber", "xrefOffset", "producer", "creationDate", "modificationDate", "documentId", "fileSize", "byteLength", "generation", "streamFilter", "streamLength"];

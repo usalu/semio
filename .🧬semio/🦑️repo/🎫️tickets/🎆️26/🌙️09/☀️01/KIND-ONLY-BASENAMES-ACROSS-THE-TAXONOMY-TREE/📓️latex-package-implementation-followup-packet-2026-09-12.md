@@ -1,0 +1,31 @@
+# LaTeX Package Implementation Coverage Packet
+
+The fixed-filename review exposed a remaining source-classification gap on 2026-09-12. The catalog groups .tex, .bib, .cls and .sty under one tex file kind with role documentation. It also exempts 97 exact owned print .sty/.cls paths as unconfigurable native package/class identities. All 97 files are present: 551,102 bytes and 12,034 text lines, with no read errors. Raw rows are 🗑️generated/coordinator/latex-package-source-screen.json. This is not 97 proven body defects: it includes a generated token projection and many small package leaves; it does establish that the earlier 16-source-kind screen is not exhaustive for executable macro definitions.
+
+## Concrete Authored Behavior
+
+The coordinator read print/🖋️latex/semio-graph.sty: 431 text lines, 18,726 bytes. Besides NeedsTeXFormat/ProvidesPackage/RequirePackage declarations, it defines graph dimensions, namespaced drawing styles, state vocabulary and diagnostics with actual TeX macros. It is implementation of the graph domain, not merely document prose or a tiny native package declaration. Other large candidates are semio-window.sty (3706 lines), semio-table.sty (1457), semio-viz-layout.sty (616), semio-tree.sty (609), semio-core.sty (655), semio-viz-mark.sty (364) and semio-components.sty (543). Their contents still need independent Terra inspection; size alone is not proof.
+
+A native package identity does not itself prove that its entire implementation must share that basename or live under a language-first print/latex container. Audit the actual Tectonic package lookup, relative input expansion, named package/class declarations and dependency graph. If a literal native loader file is required, constrain it to declarations/delegation and move authored behavior to an anonymous leaf under its real graph, tree, table, window or other print concern. If direct anonymous package loading is supported across the actual print workflow, close all loader consumers together. Do not invent a compatibility package, keep duplicate implementations or rely on a blanket .sty/.cls documentation exception.
+
+Keep authored report/template .tex and bibliography data distinct from implementation macros. Merely invoking a print command in a document is not evidence that all prose documents must become anonymous code files. The semantic source/file-kind contract needs a narrow, testable distinction, backed by native macro compilation and current owner manifests rather than a suffix-only assumption that all TeX is documentation.
+
+## Producer And Consumer Closure
+
+The generated semio-tokens.sty has a real owned producer at print/🔨️modules/🎨print-design-token-paints/🟦️.ts, command projection at that module's 📜️script.ts and pipeline tests under print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/🟦️.ts. Preserve generated token bytes/meaning, source schema authority and package declarations while changing physical ownership. Its generated status does not imply every adjacent authored package is generated.
+
+The actual registered compilation authority is print/📦️packages/🟦️typescript/📋️project.json; there is no print-root script. Compilation runs module-owned Tectonic complete/watch routes with a pinned toolchain and locked native bundle, explicit search paths, deterministic mode, output paths, timeout and cancellation. Inspect print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts, its catalog, bundle and toolchain concerns. Existing toolchain and bundle command scripts still export native preparation/runtime APIs, and the pipeline test dynamically imports the bundle script. Those are additional concrete executable-script ownership concerns; preserve native supply-chain/output contracts without introducing a second script implementation.
+
+Native controls should use the installed prepared compiler and cached bundle with private output roots. Prove unchanged macro meaning on representative graph/tree/table/window templates and source registration before broader PDF production. Do not publish or overwrite current report output just to validate a move. Preserve explicit styling values and user-authored visual behavior; taxonomy extraction is not authorization to adjust layout, opacity, language or typography.
+
+## Next Lane
+
+First use Terra Extra High read-only exploration to separate fixed native declaration glue, authored implementation, generated token output and document content, and to propose exact domain owners with native loading evidence. Then Sol Extra High should implement schema/portable boundary fixtures and native compiler oracles before moves, consumer/producer/launch rebases and exact context admission. No new external runtime dependencies, Git mutations, AGENTS edits, broad filename exceptions, live report publication or goal/ticket lifecycle changes. Keep scratch in the current ticket's generated subtree and retain detailed audit/execution Markdown plus exact changed-file lists.
+
+## Actual Normalizer Probe
+
+A later read-only exact-file inventory of semio-graph.sty completed in 11.520 seconds. It retained the four actual ancestor directories and the source, with zero violations. The source is fileKind null and packageRole not-package; the exact fixed-filename contract bypasses ordinary file-kind handling. Raw evidence is 🗑️generated/coordinator/latex-graph-inventory-probe.json. Thus this is an observed enforcement gap for the inspected authored graph implementation, not merely a concern inferred from its catalog label. This probe changes no source and does not validate native TeX loading.
+
+## Available Native Prerequisites
+
+The current owned preparedTectonic and preparedPrintBundle readers both validated their existing cache receipts and file checksums without acquisition. The compiler is the pinned 0.16.9 aarch64-apple-darwin executable, and the locked local bundle identity is 2f375cdacdf7f982138c778c3e12d8cd11e4aa3af3d854deb1467d560e8d71b0. Its native --help exits zero and exposes explicit --bundle, --only-cached, --format and --outdir options. Thus the native loading audit has local prerequisites available; it need not start by downloading a toolchain or bundle. No TeX document compilation has yet run in this coordinator probe. Raw prerequisite receipts and help text remain under generated/coordinator.

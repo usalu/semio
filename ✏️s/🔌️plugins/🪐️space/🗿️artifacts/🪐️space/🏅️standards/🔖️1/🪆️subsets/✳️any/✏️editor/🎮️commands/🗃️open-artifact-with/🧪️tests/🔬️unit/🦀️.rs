@@ -1,12 +1,12 @@
 
 use super::*;
-use crate::editor::space_index::{SpaceIndexCommand, testkit};
+use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn open_artifact_with_relays_the_explicit_choice() {
-    let (mut app, id) = testkit::new_app_with_indexed_artifact().await;
+    let (mut app, id) = context::new_app_with_indexed_artifact().await;
     let result = app
-        .dispatch_typed(SpaceIndexCommand::OpenArtifactWith(OpenArtifactWith { id: id.clone(), role: "viewer".into(), plugin_id: "draw".into(), app_id: "draw-play".into() }), &semio_framework_plugin::testkit::meta("local"))
+        .dispatch_typed(SpaceIndexCommand::OpenArtifactWith(OpenArtifactWith { id: id.clone(), role: "viewer".into(), plugin_id: "draw".into(), app_id: "draw-play".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"))
         .await
         .expect("open with");
     assert_eq!(result.requested_effects.len(), 1);

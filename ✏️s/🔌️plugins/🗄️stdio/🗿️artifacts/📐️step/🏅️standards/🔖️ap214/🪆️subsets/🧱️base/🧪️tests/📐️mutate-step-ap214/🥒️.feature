@@ -37,7 +37,7 @@ Feature: Apply every typed STEP AP214 mutation to a real-world exchange structur
   second PRODUCER of mutated bytes to diff the subject against. It is registered as the INDEPENDENT
   READER instead: every mutation this subset's own oracle dispatcher performs (`ruststep` parses the
   real input; this subset's own from-scratch Part-21 writer, in `../../🏅️standards/🔖️ap214/🪆️subsets/
-  🧱️base/🔮️oracle/🦀️component.rs`, re-serializes it, since ruststep has nothing to reuse for that half)
+  🧱️base/🔮️oracles/🦀️component.rs`, re-serializes it, since ruststep has nothing to reuse for that half)
   is read back through a FRESH, independent `ruststep::ast::Exchange::from_str` call
   (`project_step_ap214_any`) before `semantic-step-v1` compares it, and the identity round trip is
   checked the same way. That is real third-party evidence about the entity graph's structure, argument
@@ -58,7 +58,7 @@ Feature: Apply every typed STEP AP214 mutation to a real-world exchange structur
   between the apostrophes and decodes no control directive at all (its own doc comment quotes the
   production it does not implement) — so the projection was comparing ENCODINGS while calling them
   argument values. The oracle now decodes every string literal to the value it denotes, through a
-  from-scratch §6.4.2 reader in the shared `../../🏅️standards/🔖️ap214/🔮️oracle/🦀️component.rs`
+  from-scratch §6.4.2 reader in the shared `../../🏅️standards/🔖️ap214/🔮️oracles/🦀️component.rs`
   written independently of the production codec under test, pinned by
   `every_control_directive_decodes_to_the_value_it_denotes` and
   `a_malformed_or_unmappable_directive_is_refused`. A malformed directive is an ERROR, not a lexeme

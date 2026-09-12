@@ -1,6 +1,0 @@
-type SequenceConfig {
-  lastRunJson: String! @state(class: CONFIG)
-  orientation: String! @state(class: CONFIG)
-  camera: SequenceCamera! @state(class: CONFIG)
-}
-type SequenceCamera { x: Float! y: Float! zoom: Float! }

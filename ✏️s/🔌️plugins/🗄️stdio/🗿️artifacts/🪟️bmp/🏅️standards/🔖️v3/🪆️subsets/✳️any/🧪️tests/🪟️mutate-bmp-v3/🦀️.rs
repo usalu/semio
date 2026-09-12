@@ -9,7 +9,7 @@
 //! never parses Rust to check it itself).
 //!
 //! The oracle side never touches this repository's own codec: `oracle_apply_mutation`/
-//! `oracle_undo_mutation` (this subset's own `../../🔮️oracle/🦀️.rs`) perform every kind
+//! `oracle_undo_mutation` (this subset's own `../../🔮️oracles/🦀️.rs`) perform every kind
 //! independently against the registered `image` reference crate. The subject side fully parses the
 //! real document into the typed `BmpSnapshot` and re-serializes from it — never splices bytes.
 

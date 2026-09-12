@@ -14,5 +14,5 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn editor_and_viewer_share_one_dialect() {
-    semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Ifc2x3AnyEditor, crate::viewer::ifc2x3_any::Ifc2x3AnyViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<Ifc2x3AnyEditor, crate::viewer::ifc2x3_any::Ifc2x3AnyViewer>().await;
 }

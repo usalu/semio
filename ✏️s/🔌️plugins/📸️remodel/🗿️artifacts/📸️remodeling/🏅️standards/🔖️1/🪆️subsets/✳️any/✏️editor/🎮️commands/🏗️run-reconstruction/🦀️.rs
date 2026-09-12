@@ -1,6 +1,6 @@
 //! 🚀️ Remodeling reconstruction as a generation-tagged, bounded continuation.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::remodeling::engine::images::{BoundedDecodeProgress, BoundedStillDecoder, CompressedChunkRope};
 use crate::editor::remodeling::engine::{build_engine_params, camera_pose_preview, reconstruction as remodeling_engine, watertight_snapshot, RasterPngPreparation, RasterPngProgress};
 use crate::mutations::{commit_reconstruction, create_asset, replace_job, CommitReconstruction, CreateAsset, ReconstructionAssetCommit};
@@ -410,7 +410,7 @@ fn discard_session_staging(session: &ReconstructionSession) {
 
 /// 🛑️ Cancels every worker-portable continuation for the current document generation and
 /// emits replayable bounded cleanup for any privately staged mesh chunks.
-pub fn cancel_current_reconstruction(scene: &RemodelingSnapshot) -> Emit<RemodelingMutation, RemodelingConfigMutation> {
+pub fn cancel_current_reconstruction(scene: &RemodelingSnapshot) -> Emit<RemodelingMutation, NoConfigMutation> {
     let cancelled_sessions = {
         let mut sessions = sessions().lock().expect("remodeling reconstruction sessions lock");
         let cancelled = sessions.live.iter().filter_map(|(generation, session)| (session.job_id == scene.job.id).then_some(*generation)).collect::<Vec<_>>();
@@ -557,7 +557,7 @@ fn queue(payload: &AdvanceReconstruction) -> Effect {
     }
 }
 
-fn emit_step(job: ReconstructionJob, generation: u64, next: Option<&AdvanceReconstruction>) -> Emit<RemodelingMutation, RemodelingConfigMutation> {
+fn emit_step(job: ReconstructionJob, generation: u64, next: Option<&AdvanceReconstruction>) -> Emit<RemodelingMutation, NoConfigMutation> {
     Emit { artifact_mutations: vec![replace_job(job)], coalesce_key: Some(format!("reconstruction:{generation}")), effects: next.map(queue).into_iter().collect(), ui_scope: UiDirtyScope::Full, ..Default::default() }
 }
 
@@ -630,17 +630,17 @@ fn terminal_preparation(generation: u64, artifact_authority: &str) -> TerminalPr
 
 //#region 🔖️Run
 /// 🌱️ Starts a fresh generation and schedules ingestion; it performs no pipeline work itself.
-pub fn begin_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>) -> Emit<RemodelingMutation, RemodelingConfigMutation> {
+pub fn begin_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>) -> Emit<RemodelingMutation, NoConfigMutation> {
     begin_requested_reconstruction(doc, RequestedStage::Full)
 }
 
 /// 🎯️ Starts a fresh dependency-prefix generation ending at the requested pipeline stage.
-pub fn begin_stage_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>, requested_stage: &str) -> Emit<RemodelingMutation, RemodelingConfigMutation> {
+pub fn begin_stage_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>, requested_stage: &str) -> Emit<RemodelingMutation, NoConfigMutation> {
     let Some(requested_stage) = RequestedStage::parse(requested_stage) else { return Emit::default() };
     begin_requested_reconstruction(doc, requested_stage)
 }
 
-fn begin_requested_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>, requested_stage: RequestedStage) -> Emit<RemodelingMutation, RemodelingConfigMutation> {
+fn begin_requested_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>, requested_stage: RequestedStage) -> Emit<RemodelingMutation, NoConfigMutation> {
     let scene = doc.snapshot;
     if scene.streams.iter().all(|stream| stream.frames.is_empty()) {
         return Emit::default();
@@ -701,7 +701,7 @@ fn terminal_progress(phase: TerminalPhase) -> f32 {
     }
 }
 
-fn yield_terminal(generation: u64, session: ReconstructionSession, mutation: Option<RemodelingMutation>) -> Emit<RemodelingMutation, RemodelingConfigMutation> {
+fn yield_terminal(generation: u64, session: ReconstructionSession, mutation: Option<RemodelingMutation>) -> Emit<RemodelingMutation, NoConfigMutation> {
     let terminal = session.terminal.as_ref().expect("terminal preparation present");
     let job = ReconstructionJob {
         id: session.job_id.clone(),
@@ -720,7 +720,7 @@ fn yield_terminal(generation: u64, session: ReconstructionSession, mutation: Opt
     Emit { artifact_mutations, coalesce_key: Some(format!("reconstruction:{generation}")), effects: vec![queue(&next)], ui_scope: UiDirtyScope::Full, ..Default::default() }
 }
 
-fn advance_terminal(generation: u64, mut session: ReconstructionSession) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+fn advance_terminal(generation: u64, mut session: ReconstructionSession) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     let mut terminal = session.terminal.take().expect("terminal preparation present");
     let mut step_mutation = None;
     match terminal.phase {
@@ -892,7 +892,7 @@ fn advance_terminal(generation: u64, mut session: ReconstructionSession) -> Resu
 }
 
 /// ⏱️ Advances one ingestion cursor, one engine unit, or one terminal preparation phase.
-pub fn advance_reconstruction(payload: &AdvanceReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn advance_reconstruction(payload: &AdvanceReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     let scene = doc.snapshot;
     if scene.job.id != payload.job_id || scene.job.cancel_requested {
         cancel_session(payload.generation);
@@ -1015,11 +1015,11 @@ pub struct AdvanceReconstruction {
 }
 //#endregion 🔖️Payloads
 
-pub fn handle(_payload: &RunReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(_payload: &RunReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(begin_reconstruction(doc))
 }
 
-pub fn handle_advance(payload: &AdvanceReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle_advance(payload: &AdvanceReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     advance_reconstruction(payload, doc)
 }
 

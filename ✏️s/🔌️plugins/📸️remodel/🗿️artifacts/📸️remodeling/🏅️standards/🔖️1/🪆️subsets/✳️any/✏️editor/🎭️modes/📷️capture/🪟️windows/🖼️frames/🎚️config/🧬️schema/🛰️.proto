@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.window.remodel.remodeling.frames;
+
+message RemodelingFrameCursor {
+  optional string stream_id = 1;
+  uint32 frame_index = 2;
+}
+
+message RemodelingFramesWindowConfig {
+  RemodelingFrameCursor frame_cursor = 1;
+}

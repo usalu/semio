@@ -15,7 +15,7 @@
 //! 🎯️ Design choice: `PreviewStore` is scoped to a single document (mirrors `db_artifact`'s
 //! per-document actor model) and takes `now_ms`/produces ids deterministically from an internal
 //! monotonic sequence rather than touching a wall clock or a random source — keeps every law in
-//! this crate exactly reproducible in a unit test without a `db_testkit::SimClock` dependency.
+//! this crate exactly reproducible in a unit test without a `db_fault_testing::SimClock` dependency.
 //!
 //! 🎯️ Design choice: `reconcile`'s conflict check is expressed against the `ConflictOracle`
 //! extension seam (see `🔖️Reconcile`) rather than a hard-wired call, so the touched-region law can

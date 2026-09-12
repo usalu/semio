@@ -27,15 +27,15 @@ pub struct Process3dArtifact {
     #[state(artifact)]
     pub stock_payload: Stock,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.brep")]
+    #[child(kind = "s.stdio.semio")]
     pub stock_solid: store::ArtifactChild<SemioBrepSnapshot>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.flow")]
+    #[child(kind = "s.stdio.semio")]
     pub steps: store::ArtifactChild<SemioFlowSnapshot>,
     #[state(artifact)]
     pub step_payloads: Vec<ProcessStep>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.brep")]
+    #[child(kind = "s.stdio.semio")]
     pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
     #[state(artifact)]
     pub resolved_up_to: Option<usize>,

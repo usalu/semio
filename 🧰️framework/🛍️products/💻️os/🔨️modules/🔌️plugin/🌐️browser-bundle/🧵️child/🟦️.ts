@@ -55,7 +55,7 @@ class BrowserActorChild {
       this.port.onmessage = event => this.receive(event.data);
       this.port.onmessageerror = () => this.close("message decode");
       this.port.start();
-      this.worker = new Worker(new URL("./🧵️worker.ts", import.meta.url), { type: "module" });
+      this.worker = new Worker(new URL("./👷️worker/🟦️.ts", import.meta.url), { type: "module" });
       this.worker.onerror = event => { event.preventDefault(); this.close("worker error"); };
       this.worker.onmessageerror = () => this.close("worker message decode");
       signal?.addEventListener("abort", this.onAbort, { once: true });

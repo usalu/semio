@@ -67,7 +67,7 @@ crate::impl_serde_op_codec!(DwgMutation, "dwg-mutation");
 //#region 🔖️Kinds
 impl DwgMutation {
     /// 🏷️ Kebab-case kind spelling — the exact vocabulary BOTH DWG catalogs declare
-    /// (`../../🔣️oracle.json` and `../../../../4️⃣ac1018/🪆️subsets/✳️any/🔮️oracle/
+    /// (`../../🔣️oracle.json` and `../../../../4️⃣ac1018/🪆️subsets/✳️any/🔮️oracles/
     /// 🔣️.json`), and the row ids of both cases' Scenario Outlines. Hand-matched rather
     /// than derived, so [`KINDS`] is checked against something with its own reason to be right; and
     /// exhaustive, so a variant added to the enum is a COMPILE error here rather than a silently

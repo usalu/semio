@@ -59,8 +59,8 @@ impl UiBindingsCopy {
         !self.closing && (self.returned != 0 || self.owned.pending.is_none() && self.owned.source.len() == self.owned.candidate.len())
     }
 
-    pub fn advance(&mut self, items: usize, allocation_bytes: usize, copy_bytes: usize) -> Result<UiBindingsCopyProgress, UiFixedListAllocationError> {
-        let rejected = |reason| UiFixedListAllocationError { allocated_bytes: 0, reason };
+    pub fn advance(&mut self, items: usize, allocation_bytes: usize, copy_bytes: usize) -> Result<UiBindingsCopyProgress, PagedListAllocationError> {
+        let rejected = |reason| PagedListAllocationError { allocated_bytes: 0, reason };
         if self.closing {
             return Err(rejected("binding copy is closing"));
         }

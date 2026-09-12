@@ -12,7 +12,7 @@ message Puzzle5dSnapshot {
   optional string label = 3;
   // @state artifact
   Puzzle5dMeta meta = 4;
-  // @state artifact @child(kind: "s.stdio.semio.kit")
+  // @state artifact @child(kind: "s.stdio.semio")
   optional ArtifactChildHandle kind_catalogs = 5;
   // @state artifact
   optional Puzzle5dKindCatalogsExtra kind_catalogs_extra = 9;

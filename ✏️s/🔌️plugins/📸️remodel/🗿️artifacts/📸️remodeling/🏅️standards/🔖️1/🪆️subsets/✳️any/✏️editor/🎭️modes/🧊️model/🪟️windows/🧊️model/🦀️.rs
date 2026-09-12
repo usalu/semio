@@ -1,11 +1,11 @@
 //! 🧊️ Remodeling play app — the Model window: the World3d scene carrying the reconstructed mesh, the
 //! sparse/dense clouds, the recovered camera positions and the ground control points.
 
-use crate::editor::remodeling::config::RemodelingConfig;
+use crate::editor::remodeling::modes::model::windows::model::config::RemodelingModelWindowConfig;
 use crate::editor::remodeling::modes::model::windows::model::options::layers;
 use crate::editor::remodeling::terminology::RemodelingLabels;
 use crate::{PackedF32, RemodelingSnapshot};
-use semio_framework_plugin::{world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig};
+use semio_framework_plugin::{world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
@@ -41,7 +41,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// ☑️ The live chrome measures for this window, collected from its own `☑️options/*`.
-pub fn window_measures(config: &RemodelingConfig, labels: &RemodelingLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(config: &RemodelingModelWindowConfig, labels: &RemodelingLabels) -> Vec<WindowMeasure> {
     vec![layers::measure(&config.layers, labels)]
 }
 //#endregion 🔖️Definition
@@ -71,7 +71,7 @@ fn mesh_data_json(mesh: &semio_framework::MeshData) -> Value {
     })
 }
 
-fn world_instances_json(config: &RemodelingConfig) -> String {
+fn world_instances_json(config: &RemodelingModelWindowConfig) -> String {
     if !config.layers.mesh {
         return "[]".into();
     }
@@ -94,7 +94,7 @@ fn world_instances_json(config: &RemodelingConfig) -> String {
 /// layer: a synchronous run only ever publishes the FINAL sparse cloud, never an interior one.
 /// `PackedF32`/`PackedU8`'s inner string is already a base64 little-endian buffer, matching
 /// `positionsB64`/`colorsB64`'s wire shape byte-for-byte — no decode/re-encode round trip needed.
-fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> Option<String> {
+fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowConfig) -> Option<String> {
     let mut layers: Vec<Value> = Vec::new();
     if config.layers.sparse {
         if let Some(sparse) = &scene.results.sparse {
@@ -149,14 +149,14 @@ fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> O
     }
 }
 
-pub fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(scene: &RemodelingSnapshot, config: &RemodelingModelWindowConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     // 🕹️ The "assets" selection now lives in the framework-owned interaction domain (ticket
     // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `ArtifactEditor::render` carries no
     // `InteractionView`, so this scene payload can no longer embed a live selection; every
     // not-yet-migrated `world3d_selection_json` call site in this repo already passes an empty
     // selection for the same reason.
-    let mut world_scene =
-        world3d_scene(world3d_camera_json(config.camera.position, config.camera.target, config.camera.fov), world_meshes_json(scene), world_instances_json(config), world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
+    let camera_json = dsl::json::to_json_string(&dsl::ToValue::to_value(&config.camera));
+    let mut world_scene = world3d_scene(camera_json, world_meshes_json(scene), world_instances_json(config), world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
     world_scene.points_json = world_points_json(scene, config);
     semio_framework_plugin::scene_surface(REMODELING_PLAY_SURFACE_MAIN, ContractSurfaceKind::World3d, &world_scene)
 }

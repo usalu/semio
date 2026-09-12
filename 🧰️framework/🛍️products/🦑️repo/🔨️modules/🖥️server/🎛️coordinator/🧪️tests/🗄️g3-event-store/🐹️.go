@@ -972,14 +972,14 @@ func TestG3OwnedSourceHasNoExternalOrLegacyStoreFallback(t *testing.T) {
 	if _, err := os.Stat("go.sum"); !os.IsNotExist(err) {
 		t.Fatalf("go.sum must be naturally absent: %v", err)
 	}
-	windowsDurability, err := os.ReadFile("🪟️durability_windows.go")
+	windowsDurability, err := os.ReadFile("🪟️windows-durability/🐹️.go")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !bytes.Contains(windowsDurability, []byte("syscall.FlushFileBuffers")) || !bytes.Contains(windowsDurability, []byte("moveFileWriteThrough")) || bytes.Contains(windowsDurability, []byte("runtime.GOOS")) {
 		t.Fatal("Windows durability must write through replacements, flush metadata, or return its explicit error")
 	}
-	eventStoreSource, err := os.ReadFile("🗄️event_store.go")
+	eventStoreSource, err := os.ReadFile("🗄️event-store/🐹️.go")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -988,7 +988,7 @@ func TestG3OwnedSourceHasNoExternalOrLegacyStoreFallback(t *testing.T) {
 			t.Fatalf("event-store mutation escaped the owned operation boundary: %s", mutation)
 		}
 	}
-	repositorySource, err := os.ReadFile("📚️repository.go")
+	repositorySource, err := os.ReadFile("📚️repository/🐹️.go")
 	if err != nil {
 		t.Fatal(err)
 	}

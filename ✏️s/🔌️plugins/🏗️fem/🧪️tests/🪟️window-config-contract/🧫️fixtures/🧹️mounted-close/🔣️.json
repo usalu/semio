@@ -1,0 +1,43 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "closingInstanceId": 71,
+      "before": {
+        "pendingInstanceId": null
+      },
+      "patch": [],
+      "expected": {
+        "pendingInstanceId": null
+      }
+    },
+    {
+      "id": "own-pending",
+      "closingInstanceId": 71,
+      "before": {
+        "pendingInstanceId": 71
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/pendingInstanceId",
+          "value": null
+        }
+      ],
+      "expected": {
+        "pendingInstanceId": null
+      }
+    },
+    {
+      "id": "foreign-collision",
+      "closingInstanceId": 71,
+      "before": {
+        "pendingInstanceId": 87
+      },
+      "patch": [],
+      "expected": {
+        "pendingInstanceId": 87
+      }
+    }
+  ]
+}

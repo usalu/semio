@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::gis2d::testkit::{app, close, dispatch};
+use crate::editor::gis2d::unit_tests::context::{app, close, dispatch};
 use crate::editor::gis2d::Gis2dCommand;
 
 /// 💡️ Exactly one host-owned intent leaves the app, and it names nothing but the proposal kind.

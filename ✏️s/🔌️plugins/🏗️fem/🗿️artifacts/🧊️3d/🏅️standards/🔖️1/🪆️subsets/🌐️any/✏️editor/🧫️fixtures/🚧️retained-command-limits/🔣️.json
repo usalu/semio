@@ -7,157 +7,154 @@
   "limits": {
     "rawBytes": 65536,
     "checkpointBytes": 512,
-    "configValueBytes": 512,
-    "configBaseBytes": 512,
     "commandStepBytes": 262144,
-    "storeStepBytes": 4096,
     "artifactStoreBytes": 65536,
     "workItems": 4096,
     "decodedItems": 4096,
-    "preparationPhases": 3
+    "windowCommandValueBytes": 512
   },
   "routes": [
     {
       "id": "addNode",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addBar",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addFrame",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addMaterial",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addSection",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addSupport",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addNodalLoad",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addMemberUdl",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addAreaLoad",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addSolid",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addLoadCase",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addCombination",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "setSelfWeight",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "setAnalysisSettings",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "removeSelection",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "artifact"
+        "Artifact"
       ],
       "blocker": ""
     },
     {
       "id": "setActiveExample",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "config"
+        "HostOnly"
       ],
       "blocker": ""
     },
     {
       "id": "setCamera",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "config"
+        "WindowConfig"
       ],
       "blocker": ""
     },
     {
       "id": "setResultDisplay",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "config"
+        "WindowConfig"
       ],
       "blocker": ""
     }
@@ -169,12 +166,12 @@
       "accepted": true
     },
     {
-      "name": "config-value-limit",
+      "name": "window-command-value-limit",
       "bytes": 512,
       "accepted": true
     },
     {
-      "name": "config-value-overflow",
+      "name": "window-command-value-overflow",
       "bytes": 513,
       "accepted": false
     }

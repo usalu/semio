@@ -56,7 +56,7 @@ pub use drawing::*;
 // `os-kernel-host-crates-split.md`'s target-table shape. RUNTIME-DEPENDENCY-ELIMINATION ticket
 // 26/09/01.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-#[path = "../../🕸️wasm/🦀️component.rs"]
+#[path = "../../🕸️wasm/🦀️.rs"]
 pub mod wasm_session;
 
 #[path = "../../🌿️vcs/🦀️.rs"]

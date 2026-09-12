@@ -216,10 +216,10 @@ async fn raster_op_text_round_trips_every_variant() {
 async fn create_layer_satisfies_the_inverse_and_absorb_laws() {
     let base = empty_raster_snapshot();
     let mutation = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 1, layer: Box::new(pixel_layer("l2", "Second")) }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -227,10 +227,10 @@ async fn change_layer_opacity_satisfies_the_inverse_and_absorb_laws() {
     let mut base = empty_raster_snapshot();
     base.layers.push(pixel_layer("l1", "Base"));
     let mutation = RasterMutation::ChangeLayerOpacity(change_layer_opacity::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = RasterMutation::ChangeLayerVisible(change_layer_visible::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -239,10 +239,10 @@ async fn reorder_layers_satisfies_the_inverse_and_absorb_laws() {
     base.layers.push(pixel_layer("l1", "Base"));
     base.layers.push(pixel_layer("l2", "Second"));
     let mutation = RasterMutation::ReorderLayers(reorder_layers::ReorderLayers { layer_id: "l1".into(), parent_id: None, index: 1 });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "l2".into() }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws
 
@@ -253,13 +253,13 @@ async fn reorder_layers_satisfies_the_inverse_and_absorb_laws() {
 #[semio_framework_async_macros::async_test]
 async fn delete_missing_layer_is_a_target_missing_error() {
     let base = empty_raster_snapshot();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "does-not-exist".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "does-not-exist".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_missing_layer_is_a_target_missing_error() {
     let base = empty_raster_snapshot();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &RasterMutation::RenameLayer(rename_layer::RenameLayer { layer_id: "does-not-exist".into(), new_name: "New".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &RasterMutation::RenameLayer(rename_layer::RenameLayer { layer_id: "does-not-exist".into(), new_name: "New".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -267,27 +267,27 @@ async fn create_layer_duplicate_id_never_applies() {
     let mut base = empty_raster_snapshot();
     base.layers.push(pixel_layer("l1", "Base"));
     let duplicate = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
-    protocol::os_spr::testkit::assert_fatal_never_applies(&duplicate.diff(&base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_layer_outcome_obeys_the_policy_matrix() {
     let mut base = empty_raster_snapshot();
     base.layers.push(pixel_layer("l1", "Base"));
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "l1".into() })).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "l1".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_layer_outcome_obeys_the_policy_matrix() {
     let mut base = empty_raster_snapshot();
     base.layers.push(pixel_layer("l1", "Base"));
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &RasterMutation::RenameLayer(rename_layer::RenameLayer { layer_id: "l1".into(), new_name: "New".into() })).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &RasterMutation::RenameLayer(rename_layer::RenameLayer { layer_id: "l1".into(), new_name: "New".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_layer_outcome_obeys_the_policy_matrix() {
     let base = empty_raster_snapshot();
     let mutation = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 //#endregion 🧪️OutcomeLaws

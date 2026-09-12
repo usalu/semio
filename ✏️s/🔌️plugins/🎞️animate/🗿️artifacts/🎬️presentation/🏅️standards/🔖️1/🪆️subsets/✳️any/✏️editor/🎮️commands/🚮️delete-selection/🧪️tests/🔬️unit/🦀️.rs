@@ -1,7 +1,7 @@
 use super::*;
-use crate::editor::animate::testkit::{dispatch, presentation_app_with_registry};
+use crate::editor::animate::unit_tests::context::{dispatch, presentation_app_with_registry};
 use crate::editor::animate::{commands::add_tile, PresentationCommand, PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY};
-use semio_framework_plugin::testkit::meta;
+use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::{PluginApp, INTERACTION_SELECT_ACTION_ID};
 
 /// 🕹️ End-to-end proof the `tiles` domain's live selection actually drives `deleteSelection` —

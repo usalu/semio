@@ -13,7 +13,7 @@ fn kinds_match_the_enum_and_the_catalog() {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
     let manifests: Vec<serde_json::Value> =
-        [include_str!("../../../../../🎨️style/🔮️oracle/🔣️.json"), include_str!("../../../../../🏷️metadata/🔮️oracle/🔣️.json"), include_str!("../../../../../🔀️transform/🔮️oracle/🔣️.json"), include_str!("../../../../../🧱️structure/🔮️oracle/🔣️.json")]
+        [include_str!("../../../../../🎨️style/🔮️oracles/🔣️.json"), include_str!("../../../../../🏷️metadata/🔮️oracles/🔣️.json"), include_str!("../../../../../🔀️transform/🔮️oracles/🔣️.json"), include_str!("../../../../../🧱️structure/🔮️oracles/🔣️.json")]
             .into_iter()
             .map(|text| serde_json::from_str(text).expect("language-neutral subset oracle"))
             .collect();

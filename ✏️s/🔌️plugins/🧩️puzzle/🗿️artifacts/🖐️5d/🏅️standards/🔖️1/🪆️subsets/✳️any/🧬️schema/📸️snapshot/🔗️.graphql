@@ -7,7 +7,7 @@ type Puzzle5dSnapshot {
   domain: String! @state(class: ARTIFACT)
   label: String @state(class: ARTIFACT)
   meta: Puzzle5dMeta! @state(class: ARTIFACT)
-  kindCatalogs: ArtifactChildHandle @state(class: ARTIFACT) @child(kind: "s.stdio.semio.kit")
+  kindCatalogs: ArtifactChildHandle @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
   kindCatalogsExtra: Puzzle5dKindCatalogsExtra @state(class: ARTIFACT)
   kindCompatibility: [Puzzle5dKindCompatibility!]! @state(class: ARTIFACT)
   parts: [Puzzle5dPart!]! @state(class: ARTIFACT)

@@ -19,7 +19,7 @@
 // hand-encoded; the LZW data is Pillow's. The assembly asserts the source headers are byte-identical
 // first, because differing global palettes would silently re-attribute every frame's colours.
 //
-// The JUDGE is `gif` 0.13, which reads 87a completely — see `../🔬️probes/🦀️reader`.
+// The JUDGE is `gif` 0.13, which reads 87a completely — see `../🔬️probes/📖️reader/📦️packages/🦀️rust`.
 //
 //   bun 📜️script.ts generate [--out <dir>]   # writes every fixture pair
 //   bun 📜️script.ts manifests                 # prints the fixtureManifests entries
@@ -179,7 +179,7 @@ print('%s: before=%dB after=%dB' % (kind, len(before), len(after)))
 //#endregion 🐍️Writer
 
 //#region 🔨️Build
-const READER = join(HERE, "..", "🔬️probes", "🦀️reader");
+const READER = join(HERE, "..", "🔬️probes", "📖️reader", "📦️packages", "🦀️rust");
 
 function readerBinary(): string {
   const result = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(READER, "Cargo.toml")], { stdio: "inherit" });

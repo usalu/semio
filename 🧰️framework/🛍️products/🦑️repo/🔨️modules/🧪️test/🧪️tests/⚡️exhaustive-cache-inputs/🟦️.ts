@@ -24,7 +24,7 @@ function oracleContributionPaths(workspaceRoot: string, ownerRel: string): strin
   const paths: string[] = [];
   for (let depth = 0; depth <= segments.length; depth += 1) {
     const dir = segments.slice(0, depth).join("/");
-    const manifest = join(workspaceRoot, dir, "🔮️oracle", "🔣️.json");
+    const manifest = join(workspaceRoot, dir, "🔮️oracles", "🔣️.json");
     if (!existsSync(manifest)) continue;
     const parsed = JSON.parse(readFileSync(manifest, "utf8")) as { oracleHostPackages?: readonly { path?: string }[] };
     for (const entry of parsed.oracleHostPackages ?? []) if (typeof entry.path === "string") paths.push(entry.path);
@@ -76,7 +76,7 @@ describe("⚡️ test-exhaustive cache inputs cover the owner's real dependency 
     const caseRel = `${owner}/🧪️tests/🏔️mutate-gisterrain-1`;
     const inputs: string[] = internals.inputsFor(workspaceRoot, vocabulary, owner, caseRel, [`${caseRel}/🦀️.rs`]);
     expect(inputs).toContain(`{workspaceRoot}/${owner}/📦️packages/🦀️rust/**/*`);
-    expect(inputs).toContain(`{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/**/*`);
+    expect(inputs).toContain(`{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/**/*`);
   });
 
   test("inputsFor adds no rust crate root when the case has no rust adapter", async () => {

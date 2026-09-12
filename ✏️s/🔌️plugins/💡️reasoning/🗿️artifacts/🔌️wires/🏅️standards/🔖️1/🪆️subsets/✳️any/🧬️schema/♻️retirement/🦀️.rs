@@ -68,8 +68,8 @@ impl RetireOwned for WiresMutation {
 }
 
 /// 🗃️ Installs the document's concrete root and mutation retirement authorities.
-pub fn document_store_owners() -> store::MemberStoreOwners<WiresSnapshot, WiresMutation> {
-    store::MemberStoreOwners::new(
+pub fn document_store_owners() -> store::DocumentStoreOwners<WiresSnapshot, WiresMutation> {
+    store::DocumentStoreOwners::new(
         Arc::new(SharedValueRetirementFactory::<WiresSnapshot>::default()),
         Arc::new(OwnedValueRetirementFactory::<WiresSnapshot>::default()),
         Arc::new(OwnedValueRetirementFactory::<WiresMutation>::default()),

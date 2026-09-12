@@ -6,7 +6,6 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 
 /** 🧵️ Keeps compiler worker stacks bounded while retaining the native laws' deeper runtime stack. */
 function homeExactCargoEnvironment(): { env: NodeJS.ProcessEnv; nativeEnv: NodeJS.ProcessEnv } {
@@ -16,12 +15,12 @@ function homeExactCargoEnvironment(): { env: NodeJS.ProcessEnv; nativeEnv: NodeJ
   };
 }
 
-/** 🧫️ Compiles one scope-owned retained-command export against the shared `framework.ui` shape. */
+/** 🧫️ Compiles one scope-owned retained-command export against the shared plugin shape. */
 function compileRetainedCommandLimits(repoRoot: string, scopeRoot: string, exportId: string) {
-  const ui = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json"), "utf8"));
+  const retainedCommand = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json"), "utf8"));
   const module = JSON.parse(readFileSync(join(scopeRoot, "🧬️schema/🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: false, allErrors: true });
-  ajv.addSchema(ui);
+  ajv.addSchema(retainedCommand);
   ajv.addSchema(module);
   return ajv.compile({ $ref: `${module.$id}#/$defs/${exportId}` });
 }
@@ -135,7 +134,7 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
   const retainedFixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🧫️retained-command-limits/🔣️.json"), "utf8"));
   const validateRetained = compileRetainedCommandLimits(repoRoot, join(base, ".."), "HomeRetainedCommandLimits");
   assert(validateRetained(retainedFixture), JSON.stringify(validateRetained.errors));
-  assert.equal(retainedFixture.routes.find((route: any) => route.id === "applyDirectoryEventPage")?.lanes?.[0], "config");
+  assert.equal(retainedFixture.routes.find((route: any) => route.id === "applyDirectoryEventPage")?.lanes?.[0], "Config");
   const commandPath = join(base, "🎮️commands/📬️apply-directory-event-page/🦀️.rs");
   const command = existsSync(commandPath) ? readFileSync(commandPath, "utf8") : "";
   const receiptRoot = join(base, "🎮️commands/📬️apply-directory-event-page/🧬️receipt");
@@ -234,12 +233,12 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   ]);
   const spaceIndexController = readSources([
     "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️testkit/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
     "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
   ]);
   const spaceEngine = [
     "🧪️tests/🔬️unit/🦀️.rs",
-    "🧪️tests/🔬️testkit/🦀️.rs",
+    "🧪️tests/🔬️unit/🦀️.rs",
   ].map((path) => readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", path), "utf8")).join("\n");
   const homeCrateRoot = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home");
   const homeCrate = readFileSync(join(homeCrateRoot, "🦀️.rs"), "utf8");
@@ -323,11 +322,10 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     ...[...spaceIndexCrate.matchAll(/#\[path = "([^"]+)"\]/g)].map((match) => [spaceIndexCrateRoot, match[1]] as const),
   ].filter(([root, mount]) => !existsSync(join(root, mount)));
   assert.deepEqual(missingMounts, [], `Space artifact crates mount missing physical paths: ${missingMounts.map(([, mount]) => mount).join(", ")}`);
-  assert(homeOperations.includes("use protocol::os_spr::testkit::{") && spaceOperations.includes("use protocol::os_spr::testkit::{"), "Home or Space mutation laws import the Pack testkit instead of the current SPR testkit");
+  assert(homeOperations.includes("use protocol::os_spr::protocol_laws::{") && spaceOperations.includes("use protocol::os_spr::protocol_laws::{"), "Home or Space mutation laws import the Pack test context instead of the current SPR test context");
   const operationSources = `${homeOperations}\n${spaceOperations}`;
-  assert(!operationSources.includes("protocol::testkit::assert_"), "Home or Space mutation laws retain the removed Pack testkit path");
   const sprLawCalls = operationSources.split("\n").filter((line) => /\bassert_(?:fatal_never_applies|missing_target_is_error|mutation_diff_absorb_law|mutation_inverse_law|outcome_policy_matrix)\(/.test(line));
-  assert(sprLawCalls.length === 14 && sprLawCalls.every((call) => call.includes(".await;")), "Home or Space mutation laws do not await the current async SPR testkit");
+  assert(sprLawCalls.length === 14 && sprLawCalls.every((call) => call.includes(".await;")), "Home or Space mutation laws do not await the current async SPR test context");
   assert(homeBinary.includes("ArtifactStore::new(envelope).await") && homeBinary.includes(".dispatch(store::ArtifactCommand::Apply") && homeBinary.includes(" }).await.expect"), "Home document codec law does not await the current Store construction and dispatch boundary");
   assert(catalogGenerationSource.includes("dsl::from_dsl_value(pack::json_to_dsl_value(&json))") && !catalogGenerationSource.includes("serde_json::from_str(BEFORE)"), "Home snapshot fixture bypasses the first-party value codec");
   assert(!spaceEngine.includes("Some(&json!(") && !spaceEngine.includes("Some(&pack::json!(") && spaceEngine.match(/pack::json_to_dsl_value\(&pack::json!\(/g)?.length === 3, "Space checkpoint tests do not convert first-party JSON into the current DSL action boundary");
@@ -338,15 +336,15 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   assert(editor.includes("fn render_rows_wrapped(") && editorTests.includes("render_rows_wrapped(rows, &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)"), "Home production and injected-row composition do not share the current fallible node builder");
   assert(!editorTests.includes("async fn one_local_row()") && !editorTests.includes("async fn one_hub_row()"), "Pure Home row fixtures are needlessly async");
   assert(controller.includes("pub async fn create_home_app()"), "Home editor does not expose its async app-definition constructor");
-  assert(spaceEngine.includes("pub(crate) async fn app_with_registry()") && !spaceEngine.includes("new_app::<SpaceApp>()"), "Space testkit bypasses its registered async app constructor");
-  assert(spaceEngine.includes("new_registered_app::<SpaceApp, _>(create_space_app()).await"), "Space testkit does not await its async manifest through the registered constructor");
+  assert(spaceEngine.includes("pub(crate) async fn app_with_registry()") && !spaceEngine.includes("new_app::<SpaceApp>()"), "Space test context bypasses its registered async app constructor");
+  assert(spaceEngine.includes("new_registered_app::<SpaceApp, _>(create_space_app()).await"), "Space test context does not await its async manifest through the registered constructor");
   assert(spaceEngine.includes("SpaceApp::initial_snapshot().await.graph.nodes.is_empty()"), "Space snapshot fixture dereferences the current async initial snapshot before awaiting it");
-  assert(spaceEngine.match(/VcsArtifactApp::<SpaceApp>::new\(SpaceApp::default\(\)\)\.await/g)?.length === 2 && !spaceEngine.includes("pack::to_json_string(&SpaceApp::render(") && spaceEngine.match(/plugin_testkit::project_and_retire_fixture_tree\(/g)?.length === 4, "Space fixtures do not select the current member type or await and retire rendered component trees");
+  assert(spaceEngine.match(/VcsArtifactApp::<SpaceApp>::new\(SpaceApp::default\(\)\)\.await/g)?.length === 2 && !spaceEngine.includes("pack::to_json_string(&SpaceApp::render(") && spaceEngine.match(/plugin_laws::project_and_retire_fixture_tree\(/g)?.length === 4, "Space fixtures do not select the current member type or await and retire rendered component trees");
   assert(spaceEngine.includes("space_workflow_context_menu_items(&registry, labels, false, None, &selected_node_ids).await"), "Space context-menu fixture dereferences the current async projection before awaiting it");
   assert(spaceEngine.includes("pack::json_from_dsl_value(&dsl::ToValue::to_value(&base))") && spaceEngine.includes("let post_oracle: serde_json::Value = serde_json::from_str"), "Space config law bypasses the first-party value codec or independent JSON oracle");
   assert(!spaceEngine.includes("let projection = demo_space_projection();") && !spaceEngine.includes("let app = create_space_app();") && !spaceEngine.includes("let studio = create_space_app();"), "Space engine retains an unawaited async fixture");
-  assert(!spaceEngine.includes("VcsArtifactApp::new(SpaceApp::default());") && !spaceEngine.includes('testkit::test_surface_id("draw"),'), "Space engine retains an unawaited app or surface fixture");
-  assert(spaceIndexController.includes("pub async fn new_app() -> SpaceIndexApp") && spaceIndexController.includes("framework_new_app::<EditorApp<SpaceIndexEditor>>().await"), "Space index testkit does not await async app construction");
+  assert(!spaceEngine.includes("VcsArtifactApp::new(SpaceApp::default());") && !spaceEngine.includes('context::test_surface_id("draw"),'), "Space engine retains an unawaited app or surface fixture");
+  assert(spaceIndexController.includes("pub async fn new_app() -> SpaceIndexApp") && spaceIndexController.includes("framework_new_app::<EditorApp<SpaceIndexEditor>>().await"), "Space index test context does not await async app construction");
   assert(!/ActionRef::new\([^\n]+\)\?/.test(spaceIndexController), "Space index dialog fixtures retain fallibility from the current infallible action reference constructor");
   assert(!spaceIndexController.includes("pack::to_json_string(&<SpaceIndexEditor") && spaceIndexController.includes("project_and_retire_fixture_tree"), "Space index fixtures do not admit and retire the current fallible component tree");
   assert(spaceMembers.includes("wire_and_retire(render(") && !spaceMembers.includes("pack::to_json_string(&node)"), "Space members fixtures bypass the current fallible BuiltNode and retirement boundary");
@@ -360,7 +358,7 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   assert(!spaceAppFixtures.includes("VcsArtifactApp::new(crate::engine::space::SpaceApp::default())") && spaceAppFixtures.match(/VcsArtifactApp::<crate::engine::space::SpaceApp>::new/g)?.length === 4, "Space fixtures leave the current NoMembers app owner ambiguous");
   const fixedPanelFixtures = `${inspectionPanel}\n${parametersPanel}`;
   assert(!fixedPanelFixtures.includes("pack::to_json_string(&node)") && fixedPanelFixtures.match(/project_and_retire_fixture_tree\(semio_framework_plugin::ComponentTree \{ root: node \}\)/g)?.length === 3, "Space panel fixtures serialize retained BuiltNode owners instead of projecting and retiring them");
-  assert(spaceShared.match(/assert_(?:viewer_never_mutates|editor_and_viewer_share_dialect)::<[^;]+>\(\)\.await;/g)?.length === 4 && homeViewerApp.match(/assert_(?:viewer_never_mutates|editor_and_viewer_share_dialect)::<[^;]+>\(\)\.await;/g)?.length === 2, "Home or Space surface tests leave the async testkit future unpolled");
+  assert(spaceShared.match(/assert_(?:viewer_never_mutates|editor_and_viewer_share_dialect)::<[^;]+>\(\)\.await;/g)?.length === 4 && homeViewerApp.match(/assert_(?:viewer_never_mutates|editor_and_viewer_share_dialect)::<[^;]+>\(\)\.await;/g)?.length === 2, "Home or Space surface tests leave the async test context future unpolled");
   assert(createStudio.includes("resolve_ready(crate::register_studio_port(&entry.id, port))") && exportMedia.includes("resolve_ready(crate::ensure_space_fixtures_registered())") && setAppRegistrations.includes("resolve_ready(crate::engine::space::engine::apply_app_registrations(&payload.json))"), "Synchronous Space command handlers leave an async registry side effect unpolled");
   for (const law of [
     "editor::home::modes::explore::windows::main::component::tests::a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions",
@@ -471,11 +469,11 @@ export function spacePluginIdentityOracle(repoRoot: string): number {
     "deployment catalog and generated registry disagree on the public identity roster",
   );
 
-  const playgrounds = readFileSync(join(registryRoot, "🤖️generated/🎮️playgrounds.ts"), "utf8");
+  const playgrounds = readFileSync(join(registryRoot, "🤖️generated/🎮️playgrounds/🟦️.ts"), "utf8");
   assert(playgrounds.includes(`export const DEFAULT_HOST_VARIANT = ${JSON.stringify(fixture.playgroundVariant)}`), "DEFAULT_HOST_VARIANT is not the declared playground variant");
   assert(playgrounds.includes(`{ variant: ${JSON.stringify(fixture.playgroundVariant)}, pluginId: ${JSON.stringify(fixture.pluginId)},`), "the playground variant row does not resolve to the plugin identity");
 
-  const hosts = readFileSync(join(registryRoot, "🤖️generated/🖥️hosts.rs"), "utf8");
+  const hosts = readFileSync(join(registryRoot, "🤖️generated/🖥️hosts/🦀️.rs"), "utf8");
   assert(hosts.includes(`PluginHostConfig { plugin_id: ${JSON.stringify(fixture.pluginId)}, landing_app_id: ${JSON.stringify(fixture.host.landingAppId)}, host_app_id: ${JSON.stringify(fixture.host.hostAppId)} }`), "the generated Rust host table is not the fixture host config");
   return 11;
 }
@@ -500,7 +498,7 @@ export function interactiveJobCatalogOracle(repoRoot: string): number {
     const validate = compileRetainedCommandLimits(repoRoot, surface.scope, surface.export);
     assert(validate(fixture), `${surface.appId} fixture violates ${surface.export}: ${JSON.stringify(validate.errors)}`);
     checks += 1;
-    const migrated: string[] = fixture.routes.filter((route: any) => (surface.shape === "status" ? route.status === "migrated" : route.disposition === "migrated")).map((route: any) => route.id);
+    const migrated: string[] = fixture.routes.filter((route: any) => (surface.shape === "status" ? route.status === "Migrated" : route.disposition === "Migrated")).map((route: any) => route.id);
     const lanes = new Map<string, string[]>(
       surface.shape === "status" ? fixture.publicationContracts.map((entry: any) => [entry.toolId, entry.lanes]) : fixture.routes.map((route: any) => [route.id, route.lanes]),
     );
@@ -571,7 +569,8 @@ class InteractiveJobCatalogCheckScript extends BundleScript {
  * `🔣️.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
  * `📇️registry:check`'s own descriptor-gate warning tells a developer to run. */
 class DescribeScript extends BundleScript {
-  run(): void {
+  async run(): Promise<void> {
+    const { describePluginComponent } = await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts");
     process.exit(describePluginComponent(this.repoRoot, "semio-s-plugin-space", join(this.root, "..", "..")));
   }
 }

@@ -1,5 +1,5 @@
 use super::*;
 #[test]
 fn direct_fixture_leaf_contract() {
-    super::super::assert_fixture_descriptor::<RestoreN>(include_str!("../../🧪️testkit/🧬️mutations/⏱️timestamped/🧬️mutations/↩️restore-n/🔣️.json"));
+    super::super::assert_fixture_descriptor::<RestoreN>(include_str!("../../🧫️fixtures/🧬️mutations/⏱️timestamped/🧬️mutations/↩️restore-n/🔣️.json"));
 }

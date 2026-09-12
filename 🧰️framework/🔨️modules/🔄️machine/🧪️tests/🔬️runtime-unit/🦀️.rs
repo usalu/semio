@@ -1,6 +1,6 @@
 mod tests {
     use super::super::host::TestHost;
-    use super::super::testing::support::{UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
+    use super::super::testing::toggle_model::{UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
     use super::*;
 
     #[test]

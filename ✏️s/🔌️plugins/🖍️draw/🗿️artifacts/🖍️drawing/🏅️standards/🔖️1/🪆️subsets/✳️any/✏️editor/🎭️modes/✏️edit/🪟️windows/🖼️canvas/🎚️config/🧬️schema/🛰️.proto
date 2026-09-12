@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.app.drawing.drawing.canvas_window_config;
+import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🛰️.proto";
+message DrawingCanvasWindowConfig {
+  semio.framework.ui.viewport.Viewport2d viewport = 1;
+}

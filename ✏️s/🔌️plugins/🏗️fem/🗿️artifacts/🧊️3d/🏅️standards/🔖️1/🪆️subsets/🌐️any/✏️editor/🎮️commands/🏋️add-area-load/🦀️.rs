@@ -1,6 +1,6 @@
 //! 🏋️ 🏋️ FEM 3D app commands command — `add-area-load`.
 
-use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{add_load, create_load_case};
 use crate::{Fem3dSnapshot, FemLoad, FemLoadCase};
@@ -63,7 +63,7 @@ pub struct AddAreaLoad {
     pub case_id: Option<String>,
 }
 
-pub fn handle(payload: &AddAreaLoad, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+pub fn handle(payload: &AddAreaLoad, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let load_id = next_load_id(doc.snapshot, payload.case_id.as_deref());
     let load = FemLoad::Area { id: load_id, solid_id: payload.solid_id.clone(), pressure: payload.pressure };
     Ok(Emit::mutations(vec![add_load_mutation(doc.snapshot, payload.case_id.as_deref(), load)]))

@@ -4,7 +4,7 @@
  * remains a strict prebuilt-artifact seam; both paths require an executable before Vitest starts. */
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { requireMcpBinary } from "../../🟦️.ts";
-import { proveMcpInferenceBridgeFixture } from "./💡️inference-bridge.ts";
+import { proveMcpInferenceBridgeFixture } from "../../💡️inference-bridge/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {

@@ -12,11 +12,6 @@ type Fem2dArtifact {
   analysis: FemAnalysisSettings! @state(class: ARTIFACT)
 }
 
-type FemCamera {
-  x: Float!
-  y: Float!
-  zoom: Float!
-}
 
 type FemAnalysisSettings {
   modalCount: Int!

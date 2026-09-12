@@ -29,16 +29,44 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted DAG document snapshot — schema tag plus the composed `graph` content child.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.dag.dag")]
 pub struct DagSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.graph")]
+    #[child(kind = "s.stdio.semio")]
     pub content: DagContentChild,
 }
+
+impl dsl::FromValue for DagSnapshot {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let mut schema = None;
+        let mut content = None;
+        for (key, value) in dsl::DslValue::into_object(value)? {
+            match key.as_str() {
+                "schema" if schema.is_none() => schema = Some(dsl::FromValue::from_value(value)?),
+                "content" if content.is_none() => content = Some(dsl::FromValue::from_value(value)?),
+                _ => return Err(dsl::ValueError::new(format!("unknown or duplicate Dag field {key}"))),
+            }
+        }
+        let result = Self { schema: schema.ok_or_else(|| dsl::ValueError::new("missing Dag schema"))?, content: content.ok_or_else(|| dsl::ValueError::new("missing Dag content"))? };
+        result.validate().map_err(dsl::ValueError::new)?;
+        Ok(result)
+    }
+}
+
+impl DagSnapshot {
+    /// 🪆️ Enforces the document marker and exact owned-child coordinates.
+    pub fn validate(&self) -> Result<(), String> {
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity;
+        if self.schema != "dag.dag" { return Err("invalid Dag document marker".into()); }
+        validate_semio_child_identity(&self.content.child_id, &self.content.target, "graph")?;
+        Ok(())
+    }
+}
+
 
 impl Default for DagSnapshot {
     fn default() -> Self {
@@ -48,7 +76,7 @@ impl Default for DagSnapshot {
 
 /// 🌱 Canonical default document used by the play app and examples.
 pub fn default_snapshot() -> DagSnapshot {
-    crate::document_dsl::parse_dsl(crate::document_dsl::DAG_EXAMPLE_TEXT).expect("bundled dag example DSL must parse")
+    crate::document_dsl::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("bundled dag example DSL must parse")
 }
 //#endregion 🔖️Snapshot
 

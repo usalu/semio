@@ -25,15 +25,15 @@ import {
   cssAnimationScopeViolations,
   CSS_ANIMATION_SCOPE_LAWS,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { meshCollectionVitePlugin, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirVitePlugin, tileProxyVitePlugin, type PlaygroundAssetSpec } from "../../🟦️.ts";
-import { fontCatalogSources, parseFontCatalog, parseGoogleFontWoff2Map, resolveFontFaceUrl, resolveFontSource } from "../../📦️packages/🦀️rust/📜️script.ts";
-import type { OwnedBuildMiddleware } from "../../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🏗️build-tooling.ts";
+import { meshCollectionVitePlugin, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirVitePlugin, tileProxyVitePlugin, type PlaygroundAssetSpec } from "../../🏗️builder/🌐️vite/🟦️.ts";
+import { fontCatalogSources, parseFontCatalog, parseGoogleFontWoff2Map, resolveFontFaceUrl, resolveFontSource } from "../../🔤️fonts/🟦️.ts";
+import type { OwnedBuildMiddleware } from "../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { MESH_DELIVERY_CATALOG, parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
-import { assetPathFromRequest, assetTransportUrl, parseAssetDeliveryAuthority, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "../../../../🖼️assets/🔍️resolver/🌐️delivery.ts";
+import { assetPathFromRequest, assetTransportUrl, parseAssetDeliveryAuthority, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "../../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../..");
-const uiCss = readFileSync(resolve(import.meta.dir, "../../🖌️ui.css"), "utf8");
-const paletteCss = readFileSync(resolve(import.meta.dir, "../../🎨️palette.css"), "utf8");
+const uiCss = readFileSync(resolve(import.meta.dir, "../../🖌️ui/🎨️.css"), "utf8");
+const paletteCss = readFileSync(resolve(import.meta.dir, "../../🎨️palette/🎨️.css"), "utf8");
 
 describe("scrollbar selector", () => {
   it("uses the hovered owner for the WebKit thumb", () => {
@@ -49,7 +49,7 @@ describe("shared asset delivery", () => {
     parse(uiCss).walkDecls(declaration => {
       if (declaration.prop.startsWith("--cursor-")) for (const match of declaration.value.matchAll(/url\("([^\"]+)"\)/g)) cssUrls.push(match[1]!);
     });
-    const native = readFileSync(resolve(import.meta.dir, "../../../📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🖱️cursor.rs"), "utf8").split("pub fn semio_cursor_css")[1]!.split("pub fn apply_canvas_cursor")[0]!;
+    const native = readFileSync(resolve(import.meta.dir, "../../../🎯️targets/🧊️wgpu/👆️cursor/🦀️.rs"), "utf8").split("pub fn semio_cursor_css")[1]!.split("pub fn apply_canvas_cursor")[0]!;
     const nativeUrls = [...native.matchAll(/url\(([^)]+)\)/g)].map(match => match[1]!);
     expect(cssUrls.length).toBe(42);
     expect(nativeUrls.length).toBe(25);
@@ -111,7 +111,7 @@ describe("shared asset delivery", () => {
 describe("favicon delivery", () => {
   it("serves only the exact handpicked browser-icon routes with unchanged payloads", async () => {
     const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🌐️favicon-delivery.json"), "utf8"));
-    const authority = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌐️favicon.json"), "utf8"));
+    const authority = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌐️favicon/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
     const validate = new Ajv({ strict: true }).compile(schema);

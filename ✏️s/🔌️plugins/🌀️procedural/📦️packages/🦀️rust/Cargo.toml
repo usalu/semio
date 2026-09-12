@@ -64,6 +64,7 @@ semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-framework-trace = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-job = { workspace = true }

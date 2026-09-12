@@ -14,7 +14,7 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   oracle's and the subject's results are read back by the SAME independent `lopdf`-backed projection
   before comparison, never against each other's own writing.
 
-  ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law module
+  ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law module
   and under `semantic-pdf-v1`'s own tolerance, so no scenario can pass merely because `lopdf`
   declined to error. `mutate-<kind>` fails unless the mutation MOVES the compared projection — a
   kind that applies cleanly and changes nothing observable would otherwise report a green for a
@@ -74,7 +74,7 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
 
   All three laws are proven again at unit level, against the same real document and the same
   Examples rows, by `every_declared_kind_is_observable_and_its_inverse_restores_the_document` in
-  ../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracle/🦀️.rs, so the argument holds without the
+  ../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs, so the argument holds without the
   runner too.
 
   A SECOND, SMALLER DEFECT THE SAME LAW EXPOSED, AND IT WAS FIXED RATHER THAN EXEMPTED. This thesis

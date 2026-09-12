@@ -1,6 +1,7 @@
 //! ✏️ ✏️ Layout play app commands command — `add-frame`.
 
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use crate::editor::layout::modes::edit::windows::blueprint::config::current;
 use crate::mutations::create_frame::CreateFrame;
 use crate::mutations::LayoutMutation;
 use crate::{Frame, LayoutSnapshot};
@@ -14,10 +15,10 @@ pub struct AddFrame {
     pub y: Option<f64>,
 }
 
-pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let config = cfg.snapshot;
-    let page_id = config.active_page_id.clone();
+    let config = current(cfg);
+    let page_id = config.active_page_id;
     let Some(page) = document.pages.iter().find(|page| page.id == page_id) else {
         return Ok(Emit::default());
     };

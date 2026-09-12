@@ -1,7 +1,6 @@
 //! 🖼️ Drawing play app — the canvas window's render() (constitutional: was `ui`'s `Render` region).
 
 use crate::editor::drawing::commands::canvas_pointer_down::{draft_preview_segments, shape_preview_segments, DrawingGesturePreview, DrawingGesturePreviewPhase};
-use crate::editor::drawing::config::DrawingConfig;
 use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard};
 use crate::{DrawingArtboard, DrawingSnapshot, PathSegment};
 use dsl::DslValue;
@@ -10,6 +9,11 @@ use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, UiAssembly
 pub const DRAWING_PLAY_WINDOW_CANVAS: &str = "drawing-composite";
 pub const DRAWING_PLAY_SURFACE_ID: &str = "drawing.play.composite";
 pub const DRAWING_PLAY_BODY_COMPOSITE: &str = "drawing.play.composite";
+
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+#[path = "🫧️transient/🦀️.rs"]
+pub mod transient;
 
 const DRAWING_OVERLAY_SELECTION_STROKE: [f64; 4] = [0.98, 0.75, 0.14, 0.95];
 const DRAWING_OVERLAY_SELECTION_FILL: [f64; 4] = [0.98, 0.75, 0.14, 0.16];
@@ -81,7 +85,7 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
 /// and `ArtifactApp::render` is never given an `InteractionView`) — the selection/hover overlay
 /// records this function used to bake into `layersJson` are gone; the client renders that highlight
 /// itself from the framework's own interaction state now.
-pub fn render(document: &DrawingSnapshot, config: &DrawingConfig, preview: &DrawingGesturePreview, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
     let scene_nodes = flatten_drawing_document_to_scene_nodes(document);
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
@@ -110,6 +114,6 @@ pub fn render(document: &DrawingSnapshot, config: &DrawingConfig, preview: &Draw
     scene_surface(
         DRAWING_PLAY_SURFACE_ID,
         semio_framework_ui_contract::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None },
+        &Canvas2dScene { camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None },
     )
 }

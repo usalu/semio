@@ -40,9 +40,9 @@ export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly st
     return value;
   }
   const outputShared = Object.freeze({
-    rustRegistry: path(shared.rustRegistry, /^[^/.]+\.rs$/u),
+    rustRegistry: path(shared.rustRegistry, /^[^/.]+\/🦀️\.rs$/u),
     typescriptIndex: path(shared.typescriptIndex, /^[^/.]+\.ts$/u),
-    typescriptTypes: path(shared.typescriptTypes, /^[^/.]+\.ts$/u),
+    typescriptTypes: path(shared.typescriptTypes, /^[^/.]+\/🟦️\.ts$/u),
   });
   if (!Array.isArray(root.manifests) || root.manifests.length === 0) throw new Error("graph output manifests must be nonempty");
   const ids = new Set<string>();
@@ -315,7 +315,7 @@ export function renderGraphArtifacts(root: string, outDir: string, log = true): 
     });
     const registryRs =
       `// Generated manifest registry\n\n` +
-      rustModules.map((m) => `#[path = "${m.path}"]\npub mod ${m.modName};`).join("\n\n") +
+      rustModules.map((m) => `#[path = "${relative(dirname(outputs.shared.rustRegistry), m.path).replaceAll("\\", "/")}"]\npub mod ${m.modName};`).join("\n\n") +
       `\n\nuse crate::manifest::Manifest;\n\npub const MANIFEST_IDS: &[&str] = &[${docs.map((d) => rustStr(d.id)).join(", ")}];\n\n` +
       `pub fn manifest_by_id(id: &str) -> Option<Manifest> {\n    match id {\n` +
       docs.map((d) => `        ${rustStr(d.id)} => Some(${rustModName(d.id)}::${rustFnName(d.id)}()),`).join("\n") +

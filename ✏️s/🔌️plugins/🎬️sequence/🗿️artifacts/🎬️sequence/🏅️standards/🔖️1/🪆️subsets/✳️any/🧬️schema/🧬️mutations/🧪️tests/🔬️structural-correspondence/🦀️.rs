@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
-    let subsets_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets");
+    let subsets_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets");
     // 🪆️ The six step-node kinds and two dependency-edge kinds physically live under their own subset now
     // (ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION);
     // ✳️any no longer owns any mutation directory.
@@ -11,7 +11,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
     let step_mutation_root = step_subset_root.join("🧬️schema/🧬️mutations");
     let dependency_mutation_root = dependency_subset_root.join("🧬️schema/🧬️mutations");
     let catalogs: Vec<serde_json::Value> =
-        [step_subset_root, dependency_subset_root].into_iter().map(|subset_root| serde_json::from_str(&std::fs::read_to_string(subset_root.join("🔮️oracle/🔣️.json")).expect("language-neutral catalog")).expect("valid catalog")).collect();
+        [step_subset_root, dependency_subset_root].into_iter().map(|subset_root| serde_json::from_str(&std::fs::read_to_string(subset_root.join("🔮️oracles/🔣️.json")).expect("language-neutral catalog")).expect("valid catalog")).collect();
     let mutation_catalogs: Vec<_> = catalogs.iter().flat_map(|catalog| catalog["mutationCatalogs"].as_array().expect("mutation catalogs")).collect();
     let mut descriptor_kinds: Vec<_> = <SequenceMutation as protocol::SemanticMutation<SequenceSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
     let mut catalog_kinds: Vec<_> = mutation_catalogs.iter().flat_map(|catalog| catalog["kinds"].as_array().expect("catalog kinds")).map(|kind| kind.as_str().expect("string kind")).collect();

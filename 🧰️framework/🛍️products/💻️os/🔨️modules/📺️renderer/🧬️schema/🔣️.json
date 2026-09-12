@@ -1638,6 +1638,7 @@
         "kind",
         "ownerPath",
         "packageRelativePath",
+        "nodePackageRelativePath",
         "identity",
         "entryPaths",
         "artifacts"
@@ -1657,6 +1658,9 @@
         },
         "packageRelativePath": {
           "const": "📦️packages/🦀️rust"
+        },
+        "nodePackageRelativePath": {
+          "const": "📦️packages/🟦️typescript"
         },
         "identity": {
           "type": "object",

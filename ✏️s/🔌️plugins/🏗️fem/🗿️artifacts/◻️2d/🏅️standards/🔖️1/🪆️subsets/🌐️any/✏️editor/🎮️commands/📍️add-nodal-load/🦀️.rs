@@ -1,6 +1,6 @@
 //! 🏋️ 🏋️ Fem2d play app commands command — `add-nodal-load`.
 
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{add_load, create_load_case};
 use crate::{FemDof, FemLoad, FemLoadCase};
@@ -61,7 +61,7 @@ pub struct AddNodalLoad {
     pub case_id: Option<String>,
 }
 
-pub fn handle(payload: &AddNodalLoad, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub fn handle(payload: &AddNodalLoad, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let load_id = next_load_id(doc.snapshot, payload.case_id.as_deref());
     let load = FemLoad::Nodal { id: load_id, node_id: payload.node_id.clone(), dof: payload.dof, value: payload.value };
     Ok(Emit::mutations(vec![add_load_mutation(doc.snapshot, payload.case_id.as_deref(), load)]))

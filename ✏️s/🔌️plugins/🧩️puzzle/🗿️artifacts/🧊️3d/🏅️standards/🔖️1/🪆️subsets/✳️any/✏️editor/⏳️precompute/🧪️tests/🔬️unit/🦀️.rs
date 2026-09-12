@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::puzzle3d::precompute::fill::FillJobStage;
-use crate::standards::v1::subsets::any::schema::testkit::*;
+use crate::standards::v1::subsets::any::schema::precompute_model_tests::context::*;
 use crate::standards::v1::subsets::any::schema::{BrushHostRules, BrushKindWeights, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
 
 use std::time::{Duration, Instant};
@@ -517,17 +517,20 @@ fn close_until_fill_retirement(terminal: &mut FillEnvelopeTerminalHandle, reques
     panic!("the admitted fill must reach its retirement cursor within the declared close grants");
 }
 
+/// ♻️ Retires one abandoned envelope the way PRODUCTION does — through the process-wide reaper the
+/// framework's maintenance ladder grants one unit per turn — and states that the named slot came back
+/// and that nothing finished is left standing. A session's `Drop` only ASKS for the terminal (ticket
+/// 26/09/02/PUZZLE-3D-END-TO-END wave B42): draining a plan-sized ladder inside a `Drop` is the
+/// unyielding turn the host watchdog killed a shard over, so the drain is no longer the dying session's.
+///
+/// 🔓️ The registry lock is released before every assertion on purpose: an assert that fires while
+/// holding it POISONS the process-wide mutex, and one failing law then failed twelve more with
+/// `try_lock` errors instead of their own verdicts.
 fn drain_orphaned_fill_envelope(request: &FillJobRequest) {
-    let mut mounted = Puzzle3dPrecomputeSession::new();
-    for _ in 0..FILL_ENVELOPE_MAX_ITEMS {
-        mounted.poll_fill_job();
-        if fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_none() {
-            break;
-        }
-    }
-    let mut registry = fill_envelope_registry().lock().expect("registry");
-    assert!(registry.slots[usize::from(request.slot)].is_none(), "mounted close retires the exact orphan to terminal empty");
-    assert!(registry.take_closed().is_none(), "the same terminal intent cannot mount twice after readiness is cleared");
+    let grants = crate::editor::puzzle3d::precompute::reap_fill_envelopes_for_test();
+    let standing = fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_some();
+    assert!(!standing, "the granted reaper retires the exact orphan to terminal empty within {grants} grants");
+    assert!(crate::editor::puzzle3d::precompute::fill_envelope_terminal_is_empty(), "the same terminal intent cannot mount twice after readiness is cleared");
 }
 
 #[test]
@@ -798,16 +801,16 @@ fn fill_worker_completed_before_session_drop_is_reclassified_and_mounted_once() 
         authority.observation.done = true;
     }
     drop(session);
-    // ♻️ `Puzzle3dPrecomputeSession::drop` no longer only ASKS for the terminal: it drains the
-    // registry itself (see its own docstring — a session that merely asked and died leaked one of the
-    // four slots forever), so the dying session is the one caller that reclassifies the completed
-    // envelope to `closed` and mounts it, exactly once.
-    assert!(fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_none(), "the dying session's own drain reclassifies and returns the completed slot");
+    // ♻️ The dying session ASKS for the `Closed` terminal and stops there — draining the ladder inside
+    // a `Drop` is the unyielding turn of wave B42. What reclassifies the completed envelope and returns
+    // its slot is the granted reaper, exactly once, and a fresh session must not race it.
+    let standing = fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_some();
+    assert!(standing, "a dying session may only ASK for the terminal; the slot comes back on a granted turn");
+    drain_orphaned_fill_envelope(&request);
     let mut mounted = Puzzle3dPrecomputeSession::new();
     assert!(!mounted.poll_fill_job(), "the same terminal cannot mount a second time");
     assert!(mounted.fill_terminal.is_none());
     drop(mounted);
-    drain_orphaned_fill_envelope(&request);
 }
 
 #[test]
@@ -1556,6 +1559,55 @@ fn an_identity_this_guest_cannot_serve_becomes_a_request_for_the_bytes() {
     assert!(moved.has_mesh(url), "the answered request is live collision geometry");
     assert!(moved.mesh_reupload_requests().is_empty(), "an answered request retires the moment the geometry installs");
     assert!(shared_brush_mesh_installs() > installs_before, "a newly derived identity raises the residency counter the client watches");
+}
+
+/// 🚚️ Wave B48 LAW: residency is the authority, so a standing re-upload request retires on EVERY path
+/// that answers the announcement — not only on the one path that happens to write geometry.
+///
+/// 🐛️ The invariant `mesh_reupload_requests`' own field doc asserts ("an entry retires the instant that
+/// identity's geometry installs, so the set is empty in every steady state and a refusal can never
+/// become a standing request") was implemented by a single `retain` inside `place_collision_mesh`,
+/// BEHIND that function's already-resident bail. So the three exits that satisfy an announcement without
+/// writing geometry — `adopt_shared_mesh`'s resident fast return, `stage_mesh_page`'s page-0 short
+/// circuit, and the bail itself — all left the request standing, the world body published the id in
+/// `interactionJson.meshReuploadUrls` forever, and the client re-paged the whole 72-command run on every
+/// residency climb. Browser-measured at wasm #58 on the 180-object Nakagin document: 123 of 285 console
+/// lines were `registerBrushMesh`, seq 22 → 124 over 306 s, still arriving 8 minutes after the example
+/// switch (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B46 §5, wave B48 §1.2).
+///
+/// 🎯️ What this forbids, stated as the client sees it: a mesh this session can serve is never named in
+/// the world body's re-upload lane, however the client announced it and however often.
+#[test]
+fn a_resident_identity_never_stays_in_the_re_upload_request_set() {
+    // 🎲️ A seed no other law derives: the process-wide store outlives one test, and
+    // `an_uploaded_mesh_is_adopted_by_url_and_digest` asserts that seed 97 geometry is UNKNOWN to it.
+    let (positions, indices) = seeded_cube_mesh_buffers(149.0);
+    let digest = brush_mesh_digest(&positions, &indices);
+    let mut session = Puzzle3dPrecomputeSession::new();
+
+    let paged = "/test/b48-retire-paged.glb";
+    assert!(session.request_mesh_reupload(paged), "a first refusal records the request");
+    assert_eq!(session.stage_mesh_page(paged, &digest, 0, 1, &positions, &indices), Ok(None), "the client answers with the page run");
+    assert!(session.mesh_reupload_requests().is_empty(), "an installed identity retires its own request");
+
+    // 🪢️ Path 1 — the resident FAST RETURN: this identity is already non-fallback, so `adopt_shared_mesh`
+    // answers `true` without installing anything.
+    assert!(session.request_mesh_reupload(paged), "a client whose bookkeeping is stale re-announces a resident id");
+    assert!(session.adopt_shared_mesh(paged, Some(&digest)), "and this session can serve it");
+    assert!(session.mesh_reupload_requests().is_empty(), "so the request it answered must be gone, not left for the world body to republish");
+
+    // 🪢️ Path 2 — `stage_mesh_page`'s page-0 SHORT CIRCUIT over geometry the process already derived.
+    let aliased = "/test/b48-retire-aliased.glb";
+    assert!(session.request_mesh_reupload(aliased), "a sibling id over the same geometry is refused by id alone and recorded");
+    assert_eq!(session.stage_mesh_page(aliased, &digest, 0, 8, &positions, &indices), Ok(None), "its run closes on page 0 by digest");
+    assert!(session.has_mesh(aliased), "the short circuit still installs live collision geometry");
+    assert!(session.mesh_reupload_requests().is_empty(), "a run the guest closed early still answers its request");
+
+    // 🪢️ Path 3 — `place_collision_mesh`'s ALREADY-RESIDENT bail: real geometry is never overwritten, and
+    // the refusal to overwrite is not a reason to keep asking for bytes this session already holds.
+    assert!(session.request_mesh_reupload(paged), "the client asks once more");
+    session.register_mesh_fallback(paged, &positions, &indices);
+    assert!(session.mesh_reupload_requests().is_empty(), "a refused overwrite of resident geometry retires the request it cannot improve on");
 }
 
 /// 🔢️ Wave W-H: the residency counter is the client's ONLY evidence that its "already uploaded" map is

@@ -80,13 +80,17 @@ fn decode_forms_snapshot_binary(bytes: &[u8]) -> Result<FormsSnapshot, String> {
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    Ok(FormsSnapshot { schema: read_str_lp(&mut reader)?, id: read_str_lp(&mut reader)?, version: read_str_lp(&mut reader)?, title: read_opt_str_lp(&mut reader)?, structure: read_child(&mut reader)?, results: read_child(&mut reader)? })
+    let snapshot = FormsSnapshot { schema: read_str_lp(&mut reader)?, id: read_str_lp(&mut reader)?, version: read_str_lp(&mut reader)?, title: read_opt_str_lp(&mut reader)?, structure: read_child(&mut reader)?, results: read_child(&mut reader)? };
+    if reader.read_u8().is_ok() { return Err("trailing Forms snapshot bytes".into()); }
+    snapshot.validate()?;
+    Ok(snapshot)
 }
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔖️HandcraftedArtifactPack
 impl store::ArtifactPack for FormsSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        self.validate().map_err(PackError::Schema)?;
         let _ = options;
         let raw = encode_forms_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
@@ -94,8 +98,8 @@ impl store::ArtifactPack for FormsSnapshot {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let _ = options;
         decode_forms_snapshot_binary(&inner).map_err(PackError::Schema)

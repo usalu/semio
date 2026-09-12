@@ -1,7 +1,6 @@
 //! ❓️ ❓️ Forms play app commands command — `move-question`.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::reset_try_config_mutations;
 use crate::schema::{locate_question, update_block_operation, value_to_dsl};
 use crate::{forms_steps, op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
 use dsl::os_pack::json::{object, Value};
@@ -198,7 +197,6 @@ pub fn handle(payload: &MoveQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cf
             to_step_id: payload.to_step_id.clone(),
             index: resolved_index,
         })],
-        config_mutations: reset_try_config_mutations(),
         ..Default::default()
     })
 }

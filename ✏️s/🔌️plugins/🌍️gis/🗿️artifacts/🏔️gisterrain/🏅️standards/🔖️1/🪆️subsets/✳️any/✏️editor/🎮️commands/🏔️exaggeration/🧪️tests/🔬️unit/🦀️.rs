@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::gis3d::testkit::{app, close, dispatch};
+use crate::editor::gis3d::unit_tests::context::{app, close, dispatch};
 use crate::editor::gis3d::Gis3dCommand;
 use semio_framework_plugin::PluginApp;
 
@@ -19,7 +19,7 @@ async fn exaggeration_drag_coalesces_into_one_undo_step() {
         dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: value })).await;
     }
     assert_eq!(app.snapshot().expect("projection").exaggeration, 3.0);
-    app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     assert_eq!(app.snapshot().expect("projection").exaggeration, 1.5, "one coalesced edit: undo restores the fixture exaggeration");
     close(&mut app);
 }

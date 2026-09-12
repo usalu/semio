@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::flow::testkit::{dispatch, flow_app};
+use crate::editor::flow::unit_tests::context::{dispatch, flow_app};
 use crate::editor::flow::FlowCommand;
 use store::{ArtifactPack, SpaceMember};
 
@@ -115,7 +115,7 @@ fn child_add_widget_rejects_an_explicit_identity_collision() {
 #[semio_framework_async_macros::async_test]
 async fn add_widget_dispatches_one_typed_child_edit_without_repointing_parent_content() {
     use semio_framework_plugin::app::TypedOperationResultLane;
-    use semio_framework_plugin::testkit::{close_registered_fixture_app, meta, settle_registered_typed_operation};
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, settle_registered_typed_operation};
     use semio_framework_plugin::PluginApp;
 
     let mut app = flow_app().await;

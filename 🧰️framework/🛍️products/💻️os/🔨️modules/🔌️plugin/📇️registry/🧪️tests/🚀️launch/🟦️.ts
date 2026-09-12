@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { cargoProfileDir, getWorkspaceRoot, selectComponentWasmProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { publicationWasmPath } from "../../📜️script.ts";
-import { pluginWasmArtifactPath } from "../../../🖨️describe/📦️packages/🦀️rust/📜️script.ts";
+import { publicationWasmPath } from "../../🛂️descriptor-verification/🟦️.ts";
+import { pluginWasmArtifactPath } from "../../../🖨️describe/🏗️component-build/🟦️.ts";
 
 type GeneratorContract = { readonly previewTarget?: string };
 type LaunchEntry = {
@@ -29,6 +29,7 @@ describe("plugin registry generated preview launchers", () => {
       ["actor-typegen", 206.01], ["assets-build", 206.02], ["async-typegen", 206.03],
       ["dev-distribution-bundle", 206.035],
       ["framework-manifest", 206.04], ["graph-catalog", 206.05], ["jco-package-adapter", 206.055],
+      ["playground-session", 206.057],
       ["plugin-registry", 206.06], ["print-latex-tokens", 206.07], ["report-actor-network", 206.075], ["scale-fixture", 206.08],
       ["schema-entity-catalog", 206.09], ["shell-typegen", 206.1], ["styling-tokens", 206.11],
       ["ticket-important-fem-handoff", 206.115], ["ui-axes", 206.12], ["ui-contract", 206.13],
@@ -102,8 +103,8 @@ describe("WASI codegen profile policy", () => {
     const root = getWorkspaceRoot();
     for (const path of [
       "📜️script.ts",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🗿️artifacts.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🗿️artifacts/🦀️.rs",
       "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
     ]) {
       const source = readFileSync(join(root, path), "utf8");
@@ -111,9 +112,9 @@ describe("WASI codegen profile policy", () => {
       expect(declaration, path).toContain('["wasm-dev", "wasm-release"]');
       expect(declaration, path).not.toContain('"debug"');
     }
-    const describe = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts"), "utf8");
+    const describe = ["🏗️component-build", "🏭️fresh-component"].map((owner) => readFileSync(join(root, `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/${owner}/🟦️.ts`), "utf8")).join("\n");
     expect(describe.match(/"--target", "wasm32-wasip2", "--profile", "wasm-dev"/g)).toHaveLength(2);
-    const scale = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🧪️testkit/⚖️scale/📦️packages/🦀️rust/📜️script.ts"), "utf8");
+    const scale = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/📜️script.ts"), "utf8");
     expect(scale).toContain('"--target", "wasm32-wasip2", "--profile", "wasm-dev"');
   });
 

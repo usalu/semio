@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/ui-styling` task router: `bun ./📜️script.ts <generate|fonts>`. */
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runTestBudgeted } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { fetchElementsFonts } from "../../📦️packages/🦀️rust/📜️script.ts";
+import { fetchElementsFonts } from "../../🔤️fonts/🟦️.ts";
 
 class GenerateScript extends BundleScript {
   run(): void {

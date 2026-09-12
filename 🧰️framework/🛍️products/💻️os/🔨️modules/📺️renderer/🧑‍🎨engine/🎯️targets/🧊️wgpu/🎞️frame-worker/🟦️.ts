@@ -7,7 +7,7 @@ import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTa
 import { PLUGIN_CATALOG } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../🚚️browser-frame-transport/🟦️.ts";
 import { INTERACTIVE_WORKER_DESCRIPTORS, InteractiveWorkerScheduler } from "../📇️interactive-job-registry/🟦️.ts";
-import { loadPluginModule, pluginHandleForBridge, primeContributionManifest } from "../📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
+import { loadPluginModule, pluginHandleForBridge, primeContributionManifest } from "../🐚️plugin-bridge/🟦️.ts";
 import { meshAssetTransportUrl } from "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
 
 //#region 🔖️Bindings
@@ -39,9 +39,10 @@ type BrowserRendererBootStep = { readonly stage: string; readonly progress: numb
 
 type RendererBindings = {
   default?: (moduleOrPath?: WebAssembly.Module | RequestInfo | URL) => Promise<unknown>;
-  dumpStructure?: () => string;
-  dumpFrameStats?: () => string;
+  dumpStructure?: (windowId?: string) => string;
+  dumpFrameStats?: (windowId?: string) => string;
   semioWgpuSetAppRole?: (role: string) => void;
+  semioWgpuSetBootMode?: (mode: string) => void;
   semioWgpuSetHubEnv?: (hubUrl: string, user: string, dataDir: string) => void;
   semioWgpuWorkerBootstrap?: (
     canvas: OffscreenCanvas,
@@ -319,7 +320,7 @@ function answerIntrospection(message: Extract<BrowserFrameUiMessage, { kind: "in
   }
   const startedAt = performance.now();
   try {
-    const json = hook();
+    const json = hook(message.windowId);
     const duration = performance.now() - startedAt;
     respond(json, duration >= INTROSPECTION_STEP_BUDGET_MS ? `${message.probe} introspection took ${duration.toFixed(3)} ms` : undefined);
   } catch (error) {
@@ -476,6 +477,7 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     if (!loaded.semioWgpuWorkerBootstrap) throw new Error("renderer bindings missing semioWgpuWorkerBootstrap");
     ownedStep("runtime-environment", () => {
       loaded.semioWgpuSetAppRole?.(message.appRole);
+      loaded.semioWgpuSetBootMode?.(message.appMode ?? "");
       if (message.hub) loaded.semioWgpuSetHubEnv?.(message.hub.hubUrl, message.hub.user, message.hub.dataDir);
     }, suspensionLedger);
     progress("plugin-graph", 0.25);

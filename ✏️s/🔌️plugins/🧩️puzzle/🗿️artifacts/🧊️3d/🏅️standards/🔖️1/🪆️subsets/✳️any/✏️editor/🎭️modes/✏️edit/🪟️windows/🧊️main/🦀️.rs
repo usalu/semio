@@ -204,36 +204,268 @@ pub fn frame_unset_camera(scene: &mut Puzzle3dScene, window_id: &str) {
 /// `revealIndex` is omitted entirely for untagged objects rather than emitted as `null`: the host's reveal cutoff (`framework/renderer/react`'s `applyRevealCutoff`) only skips instances with no reveal index, and a JSON `null` would coerce to `0` and hide every ordinary object behind the boot cutoff.
 /// Selection/hover paint is driven by `selectionJson` on the host — never baked here so instance geometry stays stable across picks.
 pub fn world_instances_geometry_json(fixture: &Puzzle3dFixture) -> String {
-    let kind_meshes = Puzzle3dKindMeshIndex::of(&fixture.meta);
-    let instances: Vec<Value> = fixture
-        .objects
-        .iter()
-        .map(|object| {
+    let mut residency = Puzzle3dInstanceResidency::default();
+    residency.refresh(fixture);
+    residency.instances_json().to_string()
+}
+
+/// 🧱️ ONE instance record, exactly the shape [`world_instances_geometry_json`] publishes.
+fn instance_record_json(object: &Puzzle3dObject, mesh_id: &str) -> String {
+    let scale = if object.hidden { json!([0.0, 0.0, 0.0]) } else { json!(object_scale_json(object)) };
+    let mut instance = json!({
+        "id": object.id,
+        "meshId": mesh_id,
+        "position": [
+            object.origin.first().copied().unwrap_or(0.0),
+            object.origin.get(1).copied().unwrap_or(0.0),
+            object.origin.get(2).copied().unwrap_or(0.0),
+        ],
+        "rotation": object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
+        "scale": scale,
+        "label": object.label.clone().or_else(|| object.object_kind.clone()).unwrap_or_else(|| object.id.clone()),
+        "disabled": object.locked,
+    });
+    if let Some(kind) = &object.object_kind {
+        instance["objectKind"] = json!(kind);
+    }
+    if let Some(reveal_index) = object.reveal_index {
+        instance["revealIndex"] = json!(reveal_index);
+    }
+    serde_json::to_string(&instance).unwrap_or_else(|_| "{}".into())
+}
+
+/// 🔑️ The per-object change key for ONE instance record — every field [`instance_record_json`] reads
+/// and nothing else, hashed structurally. No JSON is materialized: this is the difference between a
+/// per-object key that costs a handful of `Hash::hash` calls and the whole-document
+/// `format!`-then-hash [`fixture_geometry_fingerprint`] used to be (measured 20 716 µs on the
+/// 180-object Nakagin document, ticket 26/09/02 wave B44 §1).
+fn instance_record_fingerprint(object: &Puzzle3dObject, mesh_id: &str) -> u64 {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    object.id.hash(&mut hasher);
+    mesh_id.hash(&mut hasher);
+    for axis in object.origin {
+        axis.to_bits().hash(&mut hasher);
+    }
+    object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]).map(f64::to_bits).hash(&mut hasher);
+    match &object.scale {
+        Some(scale) => hash_dsl_value(scale, &mut hasher),
+        None => 0_u8.hash(&mut hasher),
+    }
+    object.label.hash(&mut hasher);
+    object.object_kind.hash(&mut hasher);
+    object.hidden.hash(&mut hasher);
+    object.locked.hash(&mut hasher);
+    object.reveal_index.hash(&mut hasher);
+    hasher.finish()
+}
+
+/// 🧮️ Structural hash of one DSL value — the allocation-free replacement for hashing its JSON text.
+/// Floats go in by `to_bits`, so the key is exact rather than format-dependent, and an object's keys
+/// are hashed in their authored order (the order `ToValue` emits, which is what the previous JSON
+/// hash was sensitive to as well).
+pub fn hash_dsl_value<H: Hasher>(value: &dsl::DslValue, hasher: &mut H) {
+    match value {
+        dsl::DslValue::Null => 0_u8.hash(hasher),
+        dsl::DslValue::Bool(flag) => {
+            1_u8.hash(hasher);
+            flag.hash(hasher);
+        }
+        dsl::DslValue::Number(number) => {
+            2_u8.hash(hasher);
+            match number {
+                dsl::Number::UInt(value) => value.hash(hasher),
+                dsl::Number::Int(value) => value.hash(hasher),
+                dsl::Number::Float(value) => value.to_bits().hash(hasher),
+            }
+        }
+        dsl::DslValue::String(text) => {
+            3_u8.hash(hasher);
+            text.hash(hasher);
+        }
+        dsl::DslValue::Array(items) => {
+            4_u8.hash(hasher);
+            items.len().hash(hasher);
+            for item in items {
+                hash_dsl_value(item, hasher);
+            }
+        }
+        dsl::DslValue::Object(entries) => {
+            5_u8.hash(hasher);
+            entries.len().hash(hasher);
+            for (key, item) in entries {
+                key.hash(hasher);
+                hash_dsl_value(item, hasher);
+            }
+        }
+    }
+}
+
+/// 🚚️ Per-object residency for the world `instances` lane: the one place the published instance text
+/// is built, kept and invalidated PER OBJECT instead of per document.
+///
+/// ⏱️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B44. Before it, one viewport render of the 180-object
+/// Nakagin document paid 20 716 µs hashing the whole fixture's JSON plus 2 449 µs re-serializing all
+/// 180 records — for a gumball drag that moved ONE of them, and once per window and once more for the
+/// outliner. This walks the objects, re-serializes only the records whose own
+/// [`instance_record_fingerprint`] moved, and reports exactly which ids those were, so an intake that
+/// wants to update its instanced meshes in place has the id list to do it with ([`Self::delta_json`]).
+///
+/// 🧾️ `instances_json` stays the AUTHORITATIVE full set on every publication: a pose-only lane would
+/// be O(changed) bytes but would leave every consumer that does not merge deltas (the wgpu world
+/// target builds `World3dScene` directly) rendering a stale pose. The delta rides ALONGSIDE it.
+#[derive(Default)]
+pub struct Puzzle3dInstanceResidency {
+    entries: std::collections::HashMap<String, (u64, String)>,
+    order: Vec<String>,
+    assembled: String,
+    revision: u64,
+    changed: Vec<String>,
+    removed: Vec<String>,
+    delta: String,
+    rebuilt: u32,
+}
+
+impl Puzzle3dInstanceResidency {
+    /// 🔄️ Reconciles the residency against one fixture. Answers whether the published text changed —
+    /// `false` means every record and the order are bit-identical and no consumer owes any work.
+    pub fn refresh(&mut self, fixture: &Puzzle3dFixture) -> bool {
+        let kind_meshes = Puzzle3dKindMeshIndex::of(&fixture.meta);
+        let mut order = Vec::with_capacity(fixture.objects.len());
+        let mut changed = Vec::new();
+        let mut rebuilt = 0_u32;
+        for object in &fixture.objects {
             let mesh_id = kind_meshes.resolve(object).map_or_else(|| PUZZLE3D_FALLBACK_MESH_KIND.into(), world3d_mesh_id_from_url);
-            let scale = if object.hidden { json!([0.0, 0.0, 0.0]) } else { json!(object_scale_json(object)) };
-            let mut instance = json!({
-                "id": object.id,
-                "meshId": mesh_id,
-                "position": [
-                    object.origin.first().copied().unwrap_or(0.0),
-                    object.origin.get(1).copied().unwrap_or(0.0),
-                    object.origin.get(2).copied().unwrap_or(0.0),
-                ],
-                "rotation": object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
-                "scale": scale,
-                "label": object.label.clone().or_else(|| object.object_kind.clone()).unwrap_or_else(|| object.id.clone()),
-                "disabled": object.locked,
-            });
-            if let Some(kind) = &object.object_kind {
-                instance["objectKind"] = json!(kind);
+            let fingerprint = instance_record_fingerprint(object, &mesh_id);
+            if self.entries.get(&object.id).is_none_or(|(cached, _)| *cached != fingerprint) {
+                self.entries.insert(object.id.clone(), (fingerprint, instance_record_json(object, &mesh_id)));
+                changed.push(object.id.clone());
+                rebuilt += 1;
             }
-            if let Some(reveal_index) = object.reveal_index {
-                instance["revealIndex"] = json!(reveal_index);
+            order.push(object.id.clone());
+        }
+        let removed: Vec<String> = self.order.iter().filter(|id| order.iter().all(|live| live != *id)).cloned().collect();
+        for id in &removed {
+            self.entries.remove(id);
+        }
+        let reordered = self.order != order;
+        self.order = order;
+        // 🪟️ A no-op refresh leaves the LAST delta standing: two window instances of one document render
+        // off one session, so the second render must still be able to hand its own consumer the delta the
+        // first render produced (both carry the same `base`/`revision`, and a consumer whose retained set
+        // is not at `base` falls back to `instancesJson`).
+        if !reordered && changed.is_empty() && removed.is_empty() && !self.assembled.is_empty() {
+            self.rebuilt = 0;
+            return false;
+        }
+        self.changed = changed;
+        self.removed = removed;
+        self.rebuilt = rebuilt;
+        self.assembled = self.assemble();
+        self.revision = self.revision.saturating_add(1);
+        self.delta = if self.delta_is_worth_publishing() { self.assemble_delta() } else { String::new() };
+        true
+    }
+
+    /// ⚖️ Retained bytes, for the session registry's process-wide census.
+    pub fn bytes(&self) -> usize {
+        self.assembled.len().saturating_add(self.delta.len()).saturating_add(self.entries.values().map(|(_, record)| record.len() + 48).sum::<usize>())
+    }
+
+    fn assemble(&self) -> String {
+        let mut text = String::with_capacity(self.order.iter().filter_map(|id| self.entries.get(id)).map(|(_, record)| record.len() + 1).sum::<usize>() + 2);
+        text.push('[');
+        for id in &self.order {
+            if let Some((_, record)) = self.entries.get(id) {
+                if text.len() > 1 {
+                    text.push(',');
+                }
+                text.push_str(record);
             }
-            instance
-        })
-        .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+        }
+        text.push(']');
+        text
+    }
+
+    /// 🧾️ The authoritative full instance set, exactly what [`world_instances_geometry_json`] returns.
+    pub fn instances_json(&self) -> &str {
+        if self.assembled.is_empty() {
+            "[]"
+        } else {
+            &self.assembled
+        }
+    }
+
+    /// 🚚️ The last refresh's delta, keyed by instance id: the records that changed (whole records, so
+    /// an applying consumer never has to diff fields) and the ids that went away. `base` is the
+    /// revision the delta applies TO, `revision` the one it produces — a consumer whose retained set
+    /// is not at `base` must fall back to `instancesJson`.
+    pub fn delta_json(&self) -> Option<&str> {
+        if self.delta.is_empty() {
+            None
+        } else {
+            Some(&self.delta)
+        }
+    }
+
+    /// ⚖️ Whether a delta is worth publishing at all. A cold publication (nothing retained anywhere
+    /// yet) and one that names at least half the set buy a consumer nothing — it has to read
+    /// `instancesJson` either way — while costing a second copy of the same bytes on the wire and one
+    /// more lane carrier to page. Measured: publishing the cold 180-record delta alongside the
+    /// 55 154-byte full set put `openVortexSuggestions`'s worst turn at 4.56 ms against this
+    /// artifact's own 2 ms unoptimized ceiling.
+    fn delta_is_worth_publishing(&self) -> bool {
+        self.revision > 1 && self.changed.len() * 2 < self.order.len() && self.removed.len() * 2 < self.order.len().max(1)
+    }
+
+    /// 🚚️ Assembles the delta text ONCE per republication, by concatenating the record strings the
+    /// residency already holds. Never by `serde_json` round-tripping them: a cold Nakagin publication
+    /// names 180 changed records, and re-parsing them on every `delta_json` call (which every render
+    /// makes, republishing or not) cost more than the whole-set re-serialization this wave removed —
+    /// it broke `open_vortex_suggestions_every_step_stays_below_the_interactive_ceiling_for_nakagin`
+    /// before being caught.
+    fn assemble_delta(&self) -> String {
+        let mut text = String::with_capacity(self.changed.iter().filter_map(|id| self.entries.get(id)).map(|(_, record)| record.len() + 1).sum::<usize>() + 128);
+        text.push_str(r#"{"base":"#);
+        text.push_str(&self.revision.saturating_sub(1).to_string());
+        text.push_str(r#","revision":"#);
+        text.push_str(&self.revision.to_string());
+        text.push_str(r#","count":"#);
+        text.push_str(&self.order.len().to_string());
+        text.push_str(r#","changed":["#);
+        let mut first = true;
+        for id in &self.changed {
+            if let Some((_, record)) = self.entries.get(id) {
+                if !first {
+                    text.push(',');
+                }
+                text.push_str(record);
+                first = false;
+            }
+        }
+        text.push_str(r#"],"removed":"#);
+        text.push_str(&serde_json::to_string(&self.removed).unwrap_or_else(|_| "[]".into()));
+        text.push('}');
+        text
+    }
+
+    /// 🔬️ The ids whose record was re-serialized by the last refresh — the observable the O(changed)
+    /// laws read instead of inferring incrementality from timings.
+    pub fn changed_ids(&self) -> &[String] {
+        &self.changed
+    }
+
+    pub fn removed_ids(&self) -> &[String] {
+        &self.removed
+    }
+
+    /// 🔬️ How many records the last refresh genuinely re-serialized.
+    pub fn rebuilt_records(&self) -> u32 {
+        self.rebuilt
+    }
+
+    pub fn revision(&self) -> u64 {
+        self.revision
+    }
 }
 
 /// 🎯️ Padding `WorldAutoFit` frames a swapped document with — 1.25 leaves a quarter of the radius of
@@ -253,22 +485,87 @@ pub fn world_fit_revision(fixture: &Puzzle3dFixture) -> u32 {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     fixture.schema.hash(&mut hasher);
     fixture.domain.hash(&mut hasher);
-    dsl::os_pack::json::to_json_string(&fixture.meta).hash(&mut hasher);
+    hash_optional_dsl_value(fixture.meta.kind_catalogs.as_ref(), &mut hasher);
+    hash_optional_dsl_value(fixture.meta.kind_compatibility.as_ref(), &mut hasher);
     (hasher.finish() >> 32) as u32
 }
 
 /// 🗄️ Cheap change key for everything the instance/mesh payloads (and the document tree) derive from.
+///
+/// ⏱️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B44: hashed STRUCTURALLY, never through JSON text.
+/// The `format!` of four `to_json_string` calls this used to be materialized ~60 KiB per call on the
+/// 180-object Nakagin document and measured **20 716 µs** — 54 % of a cache-HIT viewport render, paid
+/// again per window and again for the outliner memo's key. The structural walk is the same O(n) key
+/// over the same four members with none of the allocation.
 pub fn fixture_geometry_fingerprint(fixture: &Puzzle3dFixture) -> u64 {
-    let payload = format!(
-        "{}{}{}{}",
-        dsl::os_pack::json::to_json_string(&fixture.objects),
-        dsl::os_pack::json::to_json_string(&fixture.references),
-        dsl::os_pack::json::to_json_string(&fixture.target_volumes),
-        dsl::os_pack::json::to_json_string(&fixture.meta),
-    );
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    payload.hash(&mut hasher);
+    fixture.objects.len().hash(&mut hasher);
+    for object in &fixture.objects {
+        hash_object(object, &mut hasher);
+    }
+    fixture.references.len().hash(&mut hasher);
+    for reference in &fixture.references {
+        reference.id.hash(&mut hasher);
+        reference.source.url.hash(&mut hasher);
+        reference.source.media_kind.hash(&mut hasher);
+        hash_axes(&reference.origin, &mut hasher);
+        reference.width_world.to_bits().hash(&mut hasher);
+        reference.locked.hash(&mut hasher);
+        reference.hidden.hash(&mut hasher);
+    }
+    fixture.target_volumes.len().hash(&mut hasher);
+    for volume in &fixture.target_volumes {
+        volume.id.hash(&mut hasher);
+        hash_axes(&volume.origin, &mut hasher);
+        volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]).map(f64::to_bits).hash(&mut hasher);
+        hash_optional_dsl_value(volume.scale.as_ref(), &mut hasher);
+        volume.hidden.hash(&mut hasher);
+        volume.locked.hash(&mut hasher);
+    }
+    hash_optional_dsl_value(fixture.meta.kind_catalogs.as_ref(), &mut hasher);
+    hash_optional_dsl_value(fixture.meta.kind_compatibility.as_ref(), &mut hasher);
     hasher.finish()
+}
+
+fn hash_axes<H: Hasher>(axes: &[f64], hasher: &mut H) {
+    axes.len().hash(hasher);
+    for axis in axes {
+        axis.to_bits().hash(hasher);
+    }
+}
+
+fn hash_optional_dsl_value<H: Hasher>(value: Option<&dsl::DslValue>, hasher: &mut H) {
+    match value {
+        Some(value) => {
+            1_u8.hash(hasher);
+            hash_dsl_value(value, hasher);
+        }
+        None => 0_u8.hash(hasher),
+    }
+}
+
+/// 🧱️ Every persisted field of ONE object, vortices included — the geometry key's per-object half.
+fn hash_object<H: Hasher>(object: &Puzzle3dObject, hasher: &mut H) {
+    object.id.hash(hasher);
+    object.label.hash(hasher);
+    object.object_kind.hash(hasher);
+    hash_axes(&object.origin, hasher);
+    object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]).map(f64::to_bits).hash(hasher);
+    hash_optional_dsl_value(object.scale.as_ref(), hasher);
+    object.mesh_url.hash(hasher);
+    object.hidden.hash(hasher);
+    object.locked.hash(hasher);
+    object.reveal_index.hash(hasher);
+    object.vortices.len().hash(hasher);
+    for vortex in &object.vortices {
+        vortex.id.hash(hasher);
+        vortex.vortex_kind.hash(hasher);
+        hash_axes(&vortex.position, hasher);
+        vortex.direction.unwrap_or([0.0, 0.0, 0.0]).map(f64::to_bits).hash(hasher);
+        vortex.radius.unwrap_or(0.0).to_bits().hash(hasher);
+        vortex.hidden.hash(hasher);
+        vortex.locked.hash(hasher);
+    }
 }
 
 pub fn world_meshes_json(fixture: &Puzzle3dFixture) -> String {
@@ -641,7 +938,15 @@ fn hovered_kind_id<'a>(fixture: &Puzzle3dFixture, interaction: &'a Puzzle3dInter
 //#region 🔖️Render
 /// 🖼️ The world-3d surface node for this window — `instances_json`/`meshes_json` come pre-computed
 /// from `Puzzle3dPlayApp`'s geometry cache (they only change with the fixture's geometry fingerprint).
-pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels, instances_json: String, meshes_json: String, interaction: &Puzzle3dInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(
+    envelope: &Puzzle3dScene,
+    precompute: &Puzzle3dPrecomputeSession,
+    labels: &Puzzle3dLabels,
+    instances_json: String,
+    meshes_json: String,
+    instances_delta_json: Option<String>,
+    interaction: &Puzzle3dInteractionSnapshot,
+) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let brush_preview = world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json(precompute, envelope, interaction));
     let vortices = world_vortices_json(&envelope.fixture, &envelope.runtime, interaction, envelope.active_utility.as_str());
     eprintln!(
@@ -652,6 +957,7 @@ pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, 
     );
     eprintln!("[DEBUG] puzzle3d.vortices.publish utility={} bytes={} brush_or_volume={}", envelope.active_utility, vortices.len(), matches!(envelope.active_utility.as_str(), "brush" | "volumeBrush"));
     let mut scene = World3dScene::base(camera_json(&envelope.runtime), meshes_json, instances_json, world_selection_json(envelope, interaction));
+    scene.instances_delta_json = instances_delta_json;
     scene.vortices_json = Some(vortices);
     scene.attractions_json = Some(world_attractions_json(&envelope.fixture));
     scene.target_volumes_json = Some(world_target_volumes_json(&envelope.fixture));
@@ -719,90 +1025,5 @@ fn engagement_session_active(active_utility: &str) -> bool {
 //#endregion 🔖️Render
 
 #[cfg(test)]
-mod vortex_payload_laws {
-    use super::*;
-    use crate::editor::puzzle3d::{empty_fixture, PUZZLE3D_VORTEX_SHOW_SELECTED};
-
-    fn forest_table_object() -> Puzzle3dObject {
-        let positions = [
-            [4.05001, 4.676537, 3.0],
-            [6.75001, 4.676537, 3.0],
-            [9.45001, 4.676537, 3.0],
-            [6.75001, 0.0, 3.0],
-            [4.05001, 0.0, 3.0],
-            [1.35001, 0.0, 3.0],
-            [9.45001, 2.338269, 3.0],
-            [2.70001, 2.338269, 0.0],
-            [2.70001, 2.338269, 3.0],
-            [8.10001, 2.338269, 0.0],
-            [8.10001, 2.338269, 3.0],
-        ];
-        Puzzle3dObject {
-            id: "seed-left-001".into(),
-            label: None,
-            object_kind: None,
-            origin: [0.0; 3],
-            orientation: None,
-            scale: None,
-            mesh_url: None,
-            vortices: positions
-                .iter()
-                .copied()
-                .enumerate()
-                .map(|(index, position)| Puzzle3dVortex { id: format!("seed-left-001:v{index}"), position, radius: Some(0.36), ..Default::default() })
-                .collect(),
-            hidden: false,
-            locked: false,
-            reveal_index: None,
-        }
-    }
-
-    fn forest_store() -> Puzzle3dFixture {
-        let mut fixture = empty_fixture();
-        fixture.objects.push(forest_table_object());
-        fixture
-    }
-
-    fn parse_records(json: &str) -> Vec<Value> {
-        serde_json::from_str(json).expect("vorticesJson")
-    }
-
-    #[test]
-    fn world_vortices_json_carries_store_vortices_when_show_is_always() {
-        let fixture = forest_store();
-        assert_eq!(fixture.objects[0].vortices.len(), 11, "Concrete Forest seed-left-001 ships 11 vortex records");
-        let mut runtime = Puzzle3dRuntime::default();
-        runtime.vortex_show = PUZZLE3D_VORTEX_SHOW_ALWAYS.into();
-        let records = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), ""));
-        assert_eq!(records.len(), 11);
-    }
-
-    #[test]
-    fn world_vortices_json_carries_store_vortices_when_brush_is_armed() {
-        let fixture = forest_store();
-        let runtime = Puzzle3dRuntime::default();
-        assert_eq!(runtime.vortex_show, PUZZLE3D_VORTEX_SHOW_SELECTED);
-        let brush = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), "brush"));
-        assert_eq!(brush.len(), 11);
-        let volume = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), "volumeBrush"));
-        assert_eq!(volume.len(), 11);
-    }
-
-    #[test]
-    fn world_vortices_json_stays_empty_in_selected_mode_without_a_touch_or_brush() {
-        let fixture = forest_store();
-        let runtime = Puzzle3dRuntime::default();
-        let idle = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), ""));
-        assert_eq!(idle.len(), 0);
-        let transform = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), "transform"));
-        assert_eq!(transform.len(), 0);
-    }
-
-    #[test]
-    fn brush_preview_target_falls_back_to_session_live_target() {
-        let mut session = Puzzle3dPrecomputeSession::new();
-        session.set_brush_live_target(Some("seed-left-001:v0".into()));
-        let envelope = Puzzle3dScene { fixture: forest_store(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::brush::UTILITY_ID.into() };
-        assert_eq!(world_brush_preview_target(&session, &envelope, &Puzzle3dInteractionSnapshot::default()).as_deref(), Some("seed-left-001:v0"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod vortex_payload_laws;

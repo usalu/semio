@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::animate::commands::clear_tiles;
-use crate::editor::animate::testkit::{dispatch, presentation_app};
+use crate::editor::animate::unit_tests::context::{dispatch, presentation_app};
 use crate::editor::animate::PresentationCommand;
 
 #[semio_framework_async_macros::async_test]

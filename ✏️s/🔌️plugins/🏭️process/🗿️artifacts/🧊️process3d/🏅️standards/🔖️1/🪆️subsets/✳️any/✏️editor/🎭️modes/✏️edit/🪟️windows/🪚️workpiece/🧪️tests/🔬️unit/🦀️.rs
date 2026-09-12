@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::process3d::testkit;
+use crate::editor::process3d::unit_tests::context;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_world3d_surface_and_body_key() {
@@ -18,7 +18,7 @@ async fn engagement_exposes_no_utility_switch_options() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_world_scene_contains_processed_mesh() {
-    let mut app = testkit::app();
-    let node = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
+    let mut app = context::app();
+    let node = context::render(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
     assert!(node.contains("processed"), "expected the processed mesh id in scene json: {node}");
 }

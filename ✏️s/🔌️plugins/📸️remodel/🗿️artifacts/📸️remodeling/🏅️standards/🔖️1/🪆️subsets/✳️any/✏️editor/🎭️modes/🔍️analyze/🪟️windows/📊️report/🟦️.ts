@@ -1,5 +1,5 @@
 /** 📊️ Remodeling editor — Report window: typed twin of `🦀️.rs`'s view-model. Mirrors the
- * pane's `render(scene: &RemodelingSnapshot, config: &RemodelingConfig)` boundary — a `TableScene` over
+ * pane's `render(scene: &RemodelingSnapshot, config: &RemodelingReportWindowConfig)` boundary — a `TableScene` over
  * whichever reconstruction dataset `config.report_table` selects (`report_table_json`'s own six
  * dataset shapes, camera/tracks/gcps/qcStages/matches/frames). The read-only viewer has no
  * mutation-capable twin for this window (the model window is the only one the viewer ports today). */

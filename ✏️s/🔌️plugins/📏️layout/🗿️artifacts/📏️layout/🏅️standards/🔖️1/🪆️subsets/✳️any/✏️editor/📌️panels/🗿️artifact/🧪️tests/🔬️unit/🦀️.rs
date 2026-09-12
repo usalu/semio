@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::layout::testkit::{layout_app, render as render_body};
+use crate::editor::layout::unit_tests::context::{layout_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_sample_pages() {

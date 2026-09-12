@@ -6,7 +6,7 @@
 /**
  * 🟦️ Independent TypeScript implementation of `os.config.identity`'s two-kind mutation vocabulary —
  * the second producer the recorded no-oracle decision `os-config-identity-mutation-semantics`
- * (`../../../../../🎚️config/🧪️oracle/🔣️.json`) claims via its `independent-implementations`
+ * (`../../../../../🎚️config/🔮️oracles/🔣️.json`) claims via its `independent-implementations`
  * substitute. `applyIdentityConfigMutation`/`inverseIdentityConfigMutation`
  * (`../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts`) are the authoritative direct TypeScript
  * leaves for `signIn`/`signOut` — written independently of `../../../🖥️host/📦️packages/🦀️rust`'s

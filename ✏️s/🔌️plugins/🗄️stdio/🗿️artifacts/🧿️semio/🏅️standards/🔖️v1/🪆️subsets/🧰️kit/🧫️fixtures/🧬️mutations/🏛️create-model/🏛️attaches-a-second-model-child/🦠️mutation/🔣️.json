@@ -2,7 +2,7 @@
   "CreateModel": {
     "child_id": "mod-2",
     "target": {
-      "artifactId": "roof-model",
+      "artifactId": "mod-2",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

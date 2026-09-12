@@ -1,6 +1,6 @@
 //! 🧹️ 🧹️ Remodeling play app commands command — `reset-placeholder-mesh`.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::replace_mesh_result;
 use crate::op::RemodelingMutation;
 use crate::{MeshSource, RemodelingMesh, RemodelingSnapshot};
@@ -39,7 +39,7 @@ fn placeholder_result() -> RemodelingMesh {
 #[dsl(keyword = "reset-placeholder-mesh")]
 pub struct ResetPlaceholderMesh {}
 
-pub fn handle(_payload: &ResetPlaceholderMesh, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(_payload: &ResetPlaceholderMesh, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![replace_mesh_result(Box::new(placeholder_result()))]))
 }
 

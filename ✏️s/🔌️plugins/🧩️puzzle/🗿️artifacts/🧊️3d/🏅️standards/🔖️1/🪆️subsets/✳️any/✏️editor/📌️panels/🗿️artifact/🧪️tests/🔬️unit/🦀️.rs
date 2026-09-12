@@ -177,6 +177,35 @@ fn the_outliner_renders_the_nakagin_example() {
     drain_retired_ui_owners();
 }
 
+/// 🏢️ The flagship example's OBJECT ROWS, not just its four sections: wave B44 §6.2 read
+/// `outliner entityRows=0` in the browser on this document and could establish no selection through it
+/// at all, so "the page was admitted" was green while the panel presented nothing selectable. Every
+/// materialised object row must carry the `interactionSelect` activation binding a click needs, and the
+/// truncated section must name what it left out with a continuation the next page can be reached by.
+#[test]
+fn the_nakagin_outliner_page_carries_selectable_object_rows() {
+    let _page = page_guard();
+    let native = labels_for(semio_framework_plugin::Terminology::Native);
+    drain_retired_ui_owners();
+    let fixture = crate::editor::puzzle3d::nakagin_fixture();
+    assert!(fixture.objects.len() >= 100, "the Nakagin fixture must be the large document: {} objects", fixture.objects.len());
+    let page = super::render(&fixture, native).expect("the Nakagin outliner page must be admitted");
+    let mut rows = Vec::new();
+    walk(&page, &mut rows);
+    let object_ids: std::collections::HashSet<&str> = fixture.objects.iter().map(|object| object.id.as_str()).collect();
+    let object_rows: Vec<_> = rows.iter().filter(|(key, _, _, _)| object_ids.contains(key.as_str())).collect();
+    eprintln!("[DEBUG] b46.outliner nakagin objects={} nodes={} objectRows={} continuations={}", fixture.objects.len(), rows.len(), object_rows.len(), rows.iter().filter(|(key, _, _, _)| key.ends_with(".more")).count());
+    assert!(!object_rows.is_empty(), "the Nakagin outliner presented no object row at all: {rows:?}");
+    for (key, _, bindings, row_actions) in &object_rows {
+        assert_eq!(*bindings, 1, "object row {key} lost its interactionSelect activation binding");
+        assert_eq!(*row_actions, 2, "object row {key} lost its hide/lock row actions");
+    }
+    let more = rows.iter().find(|(key, _, _, _)| key == &format!("{}.objects.more", super::ROOT)).expect("the truncated objects section must close with a continuation row");
+    assert!(more.2 > 0, "the Nakagin continuation row must advance setPanelPage: {more:?}");
+    drop(page);
+    drain_retired_ui_owners();
+}
+
 /// 🔁️ One row action's `setSelectionFlag` args, flattened to `(flag, value)` — the two entries the
 /// reducer reads (`🎮️commands/🔖️set-selection-flag/🦀️.rs`).
 fn flag_binding(row_action: &semio_framework_ui_contract::RowAction) -> (String, bool) {

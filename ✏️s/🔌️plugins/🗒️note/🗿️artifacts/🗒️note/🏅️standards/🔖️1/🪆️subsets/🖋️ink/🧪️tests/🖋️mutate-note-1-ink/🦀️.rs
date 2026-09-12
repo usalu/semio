@@ -6,7 +6,7 @@
 //! Recorded no-oracle decision superseded: this case carries `@oracle-note-python-independent`, so
 //! the runner DOES dispatch the oracle role — `🐍️.py` beside this file — and this file registers
 //! SUBJECT handlers only, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` module.
+//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module.
 //!
 //! The evidence rests on the committed `(before, mutation, after, outcome)` specification vector
 //! under each of this subset's `🧫️fixtures/🧬️mutations/<slug>/<fixture>/` leaves. Those files are read

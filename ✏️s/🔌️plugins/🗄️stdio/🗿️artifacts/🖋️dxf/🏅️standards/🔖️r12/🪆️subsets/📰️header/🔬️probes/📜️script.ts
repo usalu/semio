@@ -9,7 +9,7 @@
 //
 // Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should
 // produce. The actual DXF decode is performed by the sibling standalone engine binary
-// (`../🏭️generator/🦀️engine`, depends on nothing but `dxf` 0.6) via its `project` subcommand — this
+// (`../🏭️generator/🧫️fixtures/📦️packages/🦀️rust`, depends on nothing but `dxf` 0.6) via its `project` subcommand — this
 // file only shells out to it and performs the GATING structural comparison itself against
 // `semantic-dxf-r12-v1`'s own rules (LAYER/STYLE/LTYPE table rows are NAME-keyed; BLOCKS and
 // ENTITIES — including a block's own nested entity list — are ORDER-significant, matching the real
@@ -28,7 +28,7 @@
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../💬️avi/🏅️standards/🔖️1.0/🪆️subsets/📰️header/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch/compare shape is mirrored from
-// @see ../🏭️generator/🦀️engine/src/main.rs — the `project` subcommand this file calls
+// @see ../🏭️generator/🧫️fixtures/🦀️.rs — the `project` subcommand this file calls
 
 //#endregion 🧲️Header
 

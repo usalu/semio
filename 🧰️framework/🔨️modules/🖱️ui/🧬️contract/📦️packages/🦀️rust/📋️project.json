@@ -82,5 +82,11 @@
         "command": "bun ./📜️script.ts check"
       }
     }
+  },
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/**/*",
+      "sharedGlobals"
+    ]
   }
 }

@@ -4,7 +4,7 @@
 use crate::editor::architect::config::ArchitectConfig;
 use crate::standards::v1::subsets::any::schema::inferences::undirected_edges;
 use crate::ProgramSnapshot;
-use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, Viewport2d, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_GRAPH: &str = "architect-graph";
@@ -96,7 +96,7 @@ pub fn graph_media_json(program: &ProgramSnapshot, _camera: &GraphCamera) -> (Ve
 pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let camera = GraphCamera { x: cfg.graph_camera_x, y: cfg.graph_camera_y, zoom: cfg.graph_camera_zoom };
     let (nodes, edges) = graph_media_json(program, &camera);
-    let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
+    let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };
     let scene = NodeGraphScene { editable: Some(true), capabilities_json: Some(r#"{"directedness":"undirected"}"#.into()), ..NodeGraphScene::base(nodes, edges, viewport) };
     semio_framework_plugin::scene_surface(ARCHITECT_BODY_GRAPH, semio_framework_ui_contract::SurfaceKind::NodeGraph, &scene)
 }

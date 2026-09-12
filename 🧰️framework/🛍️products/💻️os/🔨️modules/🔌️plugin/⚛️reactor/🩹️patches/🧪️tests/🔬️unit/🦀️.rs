@@ -135,7 +135,7 @@ fn close_instance_to_empty(tracker: &PatchTracker, instance: u32) {
             return;
         }
     }
-    panic!("instance {instance} did not reach terminal empty");
+    panic!("instance {instance} did not reach terminal empty: {}", tracker.debug_state());
 }
 
 #[test]
@@ -1179,4 +1179,46 @@ fn a_deferred_surface_awaiting_the_hosts_acknowledgement_does_not_hold_more_work
     }
     assert!(tracker.has_publishable_work(), "an acknowledged deferred surface is re-admittable work");
     assert_eq!(tracker.take_deferred_ready().as_ref().map(AsRef::as_ref), Some("9:main"));
+}
+
+/// 🕹️ Wave B48 LAW: a render reservation that ends WITHOUT `cancel` releases exactly what `cancel`
+/// releases — so the surface it held is reservable again, and its reserved output is not leaked.
+///
+/// 🐛️ `MountedReconcileGrant`'s `Drop` used to release only the reconciler and the reservation, while
+/// `cancel` also cleared `slot.output_index` and closed the reserved `ready` output. Every
+/// `commit_source` failure exit takes the `Drop` path (it returns `Err(root)` without disarming), and
+/// `reserve_mounted_owned` refuses any slot whose `output_index.is_some()` — so ONE refused commit made
+/// that surface permanently un-reservable: every later dirty render was refused, only `defer`red,
+/// answered `deferred_surface_ready` (no producer, no job, reconciler restored, revision acknowledged),
+/// re-dirtied, and refused again, forever. The surface stays frozen at its last published revision while
+/// the actor answers `more-work` and publishes nothing — measured live on `:6013` at wasm #58 as a pick
+/// whose refresh asked for all three world bodies, dropped none, and got `changed:[]` with every
+/// retained surface still at revision 1 (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B46 §5/§8.1, wave
+/// B48 §3). The loop below runs past [`READY_PATCH_CAPACITY`] because each such exit also leaked one
+/// output slot, and once those are gone `reserve_mounted` refuses EVERY surface in the shell.
+#[test]
+fn a_dropped_render_reservation_releases_its_surface_slot_and_its_output() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let tracker = PatchTracker::new();
+    let key = NativeCloseKey::fixture(5, 1);
+    let surface = ui_contract::SurfaceId::try_from("5:window").expect("bounded surface");
+    for attempt in 0..(READY_PATCH_CAPACITY + 2) {
+        let grant = match tracker.reserve_mounted(surface.clone(), key) {
+            Ok(grant) => grant,
+            Err(_refused) => panic!("attempt {attempt} must still be reservable after {attempt} dropped reservations: {}", tracker.debug_state()),
+        };
+        drop(grant);
+        // 🧹️ A released output is CLOSED, not yet retired — retirement is incremental and a turn drives
+        // it, so the law drives it too. Without this the loop would only prove the surface slot is free;
+        // with it, it also proves the released output returns to the fixed `ready` pool.
+        for _ in 0..1_024 {
+            tracker.drive_one();
+            if tracker.close_step(1, 4_096) {
+                break;
+            }
+        }
+    }
+    let grant = tracker.reserve_mounted(surface.clone(), key).expect("a released slot reserves");
+    grant.cancel();
+    assert!(tracker.reserve_mounted(surface, key).is_ok(), "`cancel` and `Drop` must leave the slot in the same reservable state: {}", tracker.debug_state());
 }

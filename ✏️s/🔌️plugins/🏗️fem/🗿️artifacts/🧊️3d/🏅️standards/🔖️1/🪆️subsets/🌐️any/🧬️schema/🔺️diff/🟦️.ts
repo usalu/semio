@@ -100,11 +100,6 @@ export interface FemAnalysisSettings {
   deformationScale: number;
 }
 
-/** 🎥️ Opaque camera state string; the plugin layer owns and interprets its shape. Mirrors Rust
- * `FemCamera` (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemCamera {
-  json: string;
-}
 
 /** 🧬️ The full `Fem3dArtifact` shape, duplicated here for the sparse diff's `artifact` replacement
  * field. Mirrors `../🟦️.ts`'s `Fem3dArtifact`. */

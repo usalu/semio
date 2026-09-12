@@ -4,7 +4,7 @@
 **What is different about this case.** Every other fem2d case in this artifact judges the model
 DOCUMENT: it applies a typed mutation and compares nine collections. A document comparison is the
 only thing a second implementation of the mutation algebra can adjudicate, and the artifact's own
-`🌐️any/🔮️oracle/🔣️.json` says so — twenty-two of the twenty-five kinds were recorded there as
+`🌐️any/🔮️oracles/🔣️.json` says so — twenty-two of the twenty-five kinds were recorded there as
 owing a qualifying third-party reference, because "a finite-element solver computes displacements
 and forces FROM a model; none of them reads `.dsl.semio`".
 

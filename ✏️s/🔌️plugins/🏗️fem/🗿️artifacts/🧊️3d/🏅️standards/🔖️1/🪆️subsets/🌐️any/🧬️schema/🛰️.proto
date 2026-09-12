@@ -23,9 +23,6 @@ message Fem3dArtifact {
   FemAnalysisSettings analysis = 9;
 }
 
-message FemCamera {
-  string json = 1;
-}
 
 message FemAnalysisSettings {
   uint32 modal_count = 1;

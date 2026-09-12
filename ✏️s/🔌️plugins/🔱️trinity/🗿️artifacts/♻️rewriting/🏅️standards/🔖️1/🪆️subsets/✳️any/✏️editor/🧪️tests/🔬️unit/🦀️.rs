@@ -1,16 +1,16 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::Rhs;
 use protocol::{OpBinary, OpText};
-use semio_framework_plugin::{testkit, App, EditorApp, Locale, PluginApp, Terminology, VcsArtifactApp, ViewModel};
+use semio_framework_plugin::{artifact_app_laws, App, EditorApp, Locale, PluginApp, Terminology, VcsArtifactApp, ViewModel};
 
-/// 🎫️ See `jack`'s `trinity_jack_manifest_for_testkit` doc comment for why this wrapper exists
-/// (SDK gap, `testkit::new_app_with_registry`'s signature is still `fn(manifest: fn() -> App)`).
-fn trinity_rewriting_manifest_for_testkit() -> App {
+/// 🎫️ See `jack`'s `trinity_jack_manifest_for_tests` doc comment for why this wrapper exists
+/// (SDK gap, `artifact_app_laws::new_app_with_registry`'s signature is still `fn(manifest: fn() -> App)`).
+fn trinity_rewriting_manifest_for_tests() -> App {
     App { definition: create_rewriting_app(), examples: Vec::new() }
 }
 
 fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
-    testkit::meta(actor)
+    artifact_app_laws::meta(actor)
 }
 
 /// 🎫️ Permanent wire guard (TEMPLATE.md §7): every `TrinityRewritingCommand` variant round-trips
@@ -37,11 +37,11 @@ async fn trinity_rewriting_command_text_and_binary_round_trip() {
     }
 }
 
-/// 🕹️ Registry-backed (not the bare `testkit::new_app`): `interactionSelect`/`interactionHover`
+/// 🕹️ Registry-backed (not the bare `artifact_app_laws::new_app`): `interactionSelect`/`interactionHover`
 /// resolve the dispatching app's declared `AppActionRegistry.interactions`, so any test exercising
 /// domain "graph" selection needs the real manifest's `.interaction(...)` declaration present.
 async fn new_app() -> VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>> {
-    testkit::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(trinity_rewriting_manifest_for_testkit).await
+    artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(trinity_rewriting_manifest_for_tests).await
 }
 
 /// 🕹️ Dispatches the framework-injected `interactionSelect` verb against domain "graph" — the
@@ -54,7 +54,7 @@ async fn select_graph(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp
 
 #[semio_framework_async_macros::async_test]
 async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
-    let mut app = testkit::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(trinity_rewriting_manifest_for_testkit).await;
+    let mut app = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(trinity_rewriting_manifest_for_tests).await;
     let request = ContextMenuRequest {
         menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
         surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {

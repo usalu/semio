@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::binary::test_support::retire_raster_snapshot;
+use crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot;
 
 /// 📄️ The boot document is the committed Semio-logo carrier read through the artifact's own text
 /// codec — not the empty scaffold, and not a Rust restatement of the `.dsl.semio` bytes.

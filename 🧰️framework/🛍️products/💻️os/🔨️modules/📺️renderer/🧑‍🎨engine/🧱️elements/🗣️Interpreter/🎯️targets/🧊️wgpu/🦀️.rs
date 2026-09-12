@@ -1108,9 +1108,16 @@ enum UiDocumentFramePhase {
     Fault,
 }
 
+/// 📏️ Opportunities one document's PAINT phase may stay `Pending` before the stall is named. Well
+/// under `SHELL_WINDOW_PAINT_OPPORTUNITIES`, so the console says WHICH engine paint phase is parked
+/// long before the chrome walk gives up on the window.
+const UI_DOCUMENT_PAINT_STALL_NOTICE: u32 = 65_536;
+
 #[derive(Default)]
 pub struct UiDocumentFrameCursor {
     phase: UiDocumentFramePhase,
+    /// 🩺️ Consecutive `Pending` paint opportunities, reset whenever the phase changes.
+    stalled: u32,
 }
 
 impl UiDocumentFrameCursor {
@@ -1120,6 +1127,21 @@ impl UiDocumentFrameCursor {
 
     pub fn terminal_is_fault(&self) -> bool {
         matches!(self.phase, UiDocumentFramePhase::Fault)
+    }
+
+    /// 🩺️ Names the phase a per-frame document cursor is parked in, so a paint that burns its whole
+    /// opportunity budget reports WHICH of the six phases refused to advance instead of only that it
+    /// did (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn phase_name(&self) -> &'static str {
+        match self.phase {
+            UiDocumentFramePhase::Ingress => "ingress",
+            UiDocumentFramePhase::Reconcile => "reconcile",
+            UiDocumentFramePhase::Viewport => "viewport",
+            UiDocumentFramePhase::Layout => "layout",
+            UiDocumentFramePhase::Paint => "paint",
+            UiDocumentFramePhase::Complete => "complete",
+            UiDocumentFramePhase::Fault => "fault",
+        }
     }
 }
 
@@ -1224,9 +1246,20 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
                 engine.set_viewport(window_id, viewport_w, viewport_h);
                 cursor.phase = UiDocumentFramePhase::Layout;
             }
+            // 📐️ Advances on THIS window's own predicate, never on the layout queue's verdict.
+            //
+            // 🩸️ `step_layouts` answers for the queue: `Idle` means it was empty and `Ready { .. }`
+            // may name another surface. Reading either as "my layout is done" moved the cursor to
+            // `Paint` against a still-dirty root, where `frame_into_step` short-circuits `Pending`
+            // before it ever opens a paint frame — measured on 6118 as `procedural-main` burning all
+            // 1 048 576 window-paint opportunities, twice a minute, which starved every OTHER
+            // window's paint (the preview's World3d snapshot-apply cursor advanced three times in
+            // 120 s) (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             UiDocumentFramePhase::Layout => {
-                let layout = drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas);
-                if matches!(layout, ui_wgpu::wgpu::UiLayoutStep::Ready { .. } | ui_wgpu::wgpu::UiLayoutStep::Idle) {
+                let _ = drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas);
+                if engine.layout_is_dirty(window_id) {
+                    engine.request_layout(window_id);
+                } else {
                     cursor.phase = UiDocumentFramePhase::Paint;
                 }
             }
@@ -1242,8 +1275,23 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
                 };
                 let paint = engine.frame_into_step(window_id, ui_wgpu::wgpu::geometry::Rect { x: bounds.x, y: bounds.y, w: viewport_w, h: viewport_h }, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw);
                 match paint {
-                    ui_wgpu::wgpu::UiFrameStep::Ready | ui_wgpu::wgpu::UiFrameStep::Missing => cursor.phase = UiDocumentFramePhase::Complete,
-                    ui_wgpu::wgpu::UiFrameStep::Pending => {}
+                    ui_wgpu::wgpu::UiFrameStep::Ready | ui_wgpu::wgpu::UiFrameStep::Missing => {
+                        cursor.stalled = 0;
+                        cursor.phase = UiDocumentFramePhase::Complete;
+                    }
+                    // 🔁️ A paint that is waiting on a layout is not a paint step at all: the root
+                    // went dirty again (a viewport change, a theme propagation, a fresh reconcile),
+                    // and only the Layout phase can re-arm the lane that clears it.
+                    ui_wgpu::wgpu::UiFrameStep::Pending if engine.layout_is_dirty(window_id) => {
+                        cursor.stalled = 0;
+                        cursor.phase = UiDocumentFramePhase::Layout;
+                    }
+                    ui_wgpu::wgpu::UiFrameStep::Pending => {
+                        cursor.stalled = cursor.stalled.saturating_add(1);
+                        if cursor.stalled % UI_DOCUMENT_PAINT_STALL_NOTICE == 0 {
+                            document_debug_log(&format!("[DEBUG] ui-doc paint stalled window={window_id} opportunities={} {}", cursor.stalled, engine.paint_stall_census(window_id)));
+                        }
+                    }
                     ui_wgpu::wgpu::UiFrameStep::Fault => {
                         document_debug_log(&format!("[DEBUG] ui-doc paint fault window={window_id} phase={:?} nodes={:?}", engine.paint_frame_phase(window_id), engine.tree(window_id).map(|tree| tree.root.is_some())));
                         cursor.phase = UiDocumentFramePhase::Fault;
@@ -1668,6 +1716,11 @@ struct DumpNode {
 #[serde(rename_all = "camelCase")]
 struct DumpStructure {
     viewport: DumpViewport,
+    /// 🪟️ The window this dump answers for, and every window the engine could answer for — so a
+    /// caller reading a two-pane mode layout can see both panes rather than guessing which one the
+    /// zero-arg selection picked.
+    window_id: Option<String>,
+    window_ids: Vec<String>,
     focus_path: Option<String>,
     nodes: Vec<DumpNode>,
 }
@@ -1677,9 +1730,15 @@ struct DumpStructure {
 #[serde(rename_all = "camelCase")]
 struct DumpFrameStats {
     window_id: Option<String>,
+    window_ids: Vec<String>,
     draw_calls: usize,
     quad_count: usize,
     glyph_count: usize,
+    /// 🌍️ The 3d half — a `World3d` window paints `ScenePass3d`s and no quads at all, so these are
+    /// the only numbers that can say whether its solid reached the frame.
+    scene_passes: usize,
+    scene_draws: usize,
+    scene_instances: usize,
 }
 //#endregion 🔬️IntrospectionTypes
 
@@ -1899,27 +1958,36 @@ fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: 
 //#endregion 🔬️IntrospectionWalk
 
 //#region 🔬️IntrospectionWindowSelection
-/// 🪟️ KNOWN GAP: `UI_ENGINE` may track more than one window at once (a docked window body plus one
-/// or two floating side-panel tabs, each keyed by its own `window_id` — see `RetainedEngineCutover`'s
-/// doc comment for where each `window_id` comes from: `active_tab_id` for a floating panel, a
-/// dock-assigned window-kind id or `"spawned"` for the main docked content). There is no single
-/// caller-supplied "the" window id reaching this pass (`dumpStructure`/`dumpFrameStats` are zero-arg
-/// per this ticket's own spec), so this picks the window with the largest last-known viewport area
-/// as the most likely "main content" window — correct for every current playground fixture (a
-/// single docked window, no floating panels open), wrong in general once a test opens a floating
-/// panel too. Noted rather than guessed further; a real fix needs these two exports to grow an
-/// optional `windowId` JS argument, which this pass doesn't have sanction to add unasked.
+/// 🪟️ Which window a dump answers for. `UI_ENGINE` tracks one entry per live window — the dock's
+/// own panes (`procedural-main`, `procedural-preview`, …), `"spawned"` for a studio surface, and one
+/// per open floating panel tab — so an app whose authored mode layout places more than one window
+/// has more than one candidate. A caller that names a window gets exactly that window (and `None`
+/// when it is not live, so a probe can tell "not laid out" from "laid out and empty"); a caller that
+/// names none keeps the previous rule, the largest last-known viewport area. The optional argument
+/// is what makes the smaller pane of a two-pane mode layout measurable at all — the zero-arg export
+/// could only ever answer for the larger one (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[cfg(target_arch = "wasm32")]
-fn primary_window_id(engine: &ui_wgpu::wgpu::Ui) -> Option<String> {
-    engine.window_ids().filter_map(|id| engine.viewport(id).map(|(w, h)| (id.to_string(), w * h))).max_by(|a, b| a.1.total_cmp(&b.1)).map(|(id, _)| id)
+fn dump_window_id(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Option<String> {
+    match requested {
+        Some(id) if !id.is_empty() => engine.window_ids().find(|live| *live == id).map(str::to_string),
+        _ => engine.window_ids().filter_map(|id| engine.viewport(id).map(|(w, h)| (id.to_string(), w * h))).max_by(|a, b| a.1.total_cmp(&b.1)).map(|(id, _)| id),
+    }
+}
+
+/// 🪟️ Every window this engine currently tracks, so a dump that answers for one window can still
+/// name the others a caller could ask for.
+#[cfg(target_arch = "wasm32")]
+fn dump_window_ids(engine: &ui_wgpu::wgpu::Ui) -> Vec<String> {
+    engine.window_ids().map(str::to_string).collect()
 }
 //#endregion 🔬️IntrospectionWindowSelection
 
 //#region 🔬️IntrospectionBuilders
 #[cfg(target_arch = "wasm32")]
-fn build_structure_dump(engine: &ui_wgpu::wgpu::Ui, dpr: f32) -> DumpStructure {
-    let Some(window_id) = primary_window_id(engine) else {
-        return DumpStructure { viewport: DumpViewport { w: 0.0, h: 0.0, dpr }, focus_path: None, nodes: Vec::new() };
+fn build_structure_dump(engine: &ui_wgpu::wgpu::Ui, dpr: f32, requested: Option<&str>) -> DumpStructure {
+    let window_ids = dump_window_ids(engine);
+    let Some(window_id) = dump_window_id(engine, requested) else {
+        return DumpStructure { viewport: DumpViewport { w: 0.0, h: 0.0, dpr }, window_id: None, window_ids, focus_path: None, nodes: Vec::new() };
     };
     let (w, h) = engine.viewport(&window_id).unwrap_or((0.0, 0.0));
     let theme = engine.theme();
@@ -1930,7 +1998,7 @@ fn build_structure_dump(engine: &ui_wgpu::wgpu::Ui, dpr: f32) -> DumpStructure {
             walk_dump(tree, root, 0.0, 0.0, "", 0, &theme, &mut focus_path, &mut nodes);
         }
     }
-    DumpStructure { viewport: DumpViewport { w, h, dpr }, focus_path, nodes }
+    DumpStructure { viewport: DumpViewport { w, h, dpr }, window_id: Some(window_id), window_ids, focus_path, nodes }
 }
 
 /// 🖼️ `drawCalls` = number of non-empty `DrawLayer`s (a reasonable, documented proxy — the
@@ -1950,9 +2018,10 @@ fn is_glyph_instance(instance: &ui_wgpu::wgpu::draw::UiInstance) -> bool {
 }
 
 #[cfg(target_arch = "wasm32")]
-fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui) -> DumpFrameStats {
-    let Some(window_id) = primary_window_id(engine) else {
-        return DumpFrameStats { window_id: None, draw_calls: 0, quad_count: 0, glyph_count: 0 };
+fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpFrameStats {
+    let window_ids = dump_window_ids(engine);
+    let Some(window_id) = dump_window_id(engine, requested) else {
+        return DumpFrameStats { window_id: None, window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0 };
     };
     // 📊️ The production paint entry is `frame_into_step`, which appends into the CALLER's draw list
     // and never publishes into the window's own — so `draw_list` answers "empty" no matter how much
@@ -1960,10 +2029,19 @@ fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui) -> DumpFrameStats {
     // per-window paint census measures the delta that paint appended, for either entry; the retained
     // `draw_list` is still read when it carries one (the `frame_step` path).
     if let Some(census) = engine.paint_census(&window_id).filter(|census| census.layers > 0) {
-        return DumpFrameStats { window_id: Some(window_id), draw_calls: census.layers, quad_count: census.quads, glyph_count: census.glyphs };
+        return DumpFrameStats {
+            window_id: Some(window_id),
+            window_ids,
+            draw_calls: census.layers,
+            quad_count: census.quads,
+            glyph_count: census.glyphs,
+            scene_passes: census.scene_passes,
+            scene_draws: census.scene_draws,
+            scene_instances: census.scene_instances,
+        };
     }
     let Some(draw) = engine.draw_list(&window_id) else {
-        return DumpFrameStats { window_id: Some(window_id), draw_calls: 0, quad_count: 0, glyph_count: 0 };
+        return DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0 };
     };
     let draw_calls = draw.layers.iter().filter(|layer| layer_is_nonempty(layer)).count();
     let all_instances = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter()));
@@ -1975,7 +2053,14 @@ fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui) -> DumpFrameStats {
             glyph_count += 1;
         }
     }
-    DumpFrameStats { window_id: Some(window_id), draw_calls, quad_count, glyph_count }
+    let scene_passes = draw.scene_passes.len();
+    let scene_draws = draw.scene_passes.iter().map(|pass| pass.draws.len() + pass.translucent_draws.len() + pass.textured_draws.len() + pass.line_draws.len()).sum();
+    let scene_instances = draw
+        .scene_passes
+        .iter()
+        .map(|pass| pass.draws.iter().chain(pass.translucent_draws.iter()).map(|scene_draw| scene_draw.instances.len()).sum::<usize>() + pass.textured_draws.iter().map(|scene_draw| scene_draw.instances.len()).sum::<usize>())
+        .sum();
+    DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls, quad_count, glyph_count, scene_passes, scene_draws, scene_instances }
 }
 //#endregion 🔬️IntrospectionBuilders
 
@@ -1991,16 +2076,16 @@ use wasm_bindgen::prelude::wasm_bindgen;
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = dumpStructure)]
-pub fn dump_structure() -> String {
+pub fn dump_structure(window_id: Option<String>) -> String {
     let dpr = web_sys::window().map(|window| window.device_pixel_ratio() as f32).unwrap_or(1.0);
-    let dump = UI_ENGINE.with(|cell| build_structure_dump(&cell.borrow(), dpr));
+    let dump = UI_ENGINE.with(|cell| build_structure_dump(&cell.borrow(), dpr, window_id.as_deref()));
     serde_json::to_string(&dump).unwrap_or_else(|_| "{}".to_string())
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = dumpFrameStats)]
-pub fn dump_frame_stats() -> String {
-    let stats = UI_ENGINE.with(|cell| build_frame_stats(&cell.borrow()));
+pub fn dump_frame_stats(window_id: Option<String>) -> String {
+    let stats = UI_ENGINE.with(|cell| build_frame_stats(&cell.borrow(), window_id.as_deref()));
     serde_json::to_string(&stats).unwrap_or_else(|_| "{}".to_string())
 }
 //#endregion 🔬️IntrospectionExports

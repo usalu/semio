@@ -6,12 +6,56 @@ import { createHash } from "node:crypto";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020";
 
 const read = (path: string): string => readFileSync(path, "utf8");
 const sha = (text: string): string => createHash("sha256").update(text).digest("hex");
 const marker = "//#region 🔖️ExampleAssetDiscovery";
 const kernelPath = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust";
 const sourcePath = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧹️fixture-sweep";
+
+interface FixtureSweepReceipt {
+  readonly artifactDir: string;
+  readonly assertions: number;
+  readonly sha256: string;
+}
+
+interface FixtureSweepEvidence {
+  readonly summary: string;
+  readonly coverage: string;
+}
+
+interface FixtureSweepLawGroup {
+  readonly package: string;
+  readonly target: { readonly kind: "test"; readonly name: string };
+  readonly laws: readonly string[];
+}
+
+export function fixtureSweepLawGroup(): FixtureSweepLawGroup {
+  const fixture = JSON.parse(read(testFileUrlToPath(new URL("../../../🧹️fixture-sweep/🧫️fixtures/🔣️.json", import.meta.url))));
+  return { package: fixture.package, target: { kind: "test", name: fixture.target }, laws: fixture.laws };
+}
+
+function assertFixtureSweepOutput(output: string, assertions: number): FixtureSweepEvidence {
+  const sweep = [...output.matchAll(/\[dsl-fixture-sweep\] (\d+) example dir\(s\), (\d+) \.semio fixture file\(s\) found, (\d+) law-check\(s\) run across (\d+) registered app kind\(s\), (\d+) unmapped fixture\(s\)/gu)];
+  const coverage = [...output.matchAll(/example asset coverage: (\d+) slug\(s\) on new 🖼️assets layout, (\d+) soft-skipped mid-migration/gu)];
+  assert.equal(assertions, 2, "the native runner must execute both fixture-sweep laws");
+  assert.equal(sweep.length, 1, "one actual fleet sweep summary is required");
+  assert.equal(coverage.length, 1, "one actual asset coverage summary is required");
+  assert(Number(sweep[0]![1]) > 0 && Number(sweep[0]![2]) > 0 && Number(sweep[0]![3]) > 0, "an empty or all-unmapped fleet cannot pass");
+  assert.equal(Number(sweep[0]![4]), 54, "the native sweep must cover every registered app kind");
+  assert(Number(coverage[0]![1]) > 0, "all-soft-skipped asset coverage cannot pass");
+  return { summary: sweep[0]![0], coverage: coverage[0]![0] };
+}
+
+/** 🧭️ Verifies native law receipts without placing domain parsing inside the package command leaf. */
+export function assertFixtureSweepLawCoverage(receipts: readonly FixtureSweepReceipt[]): void {
+  assert.equal(receipts.length, 1, "one exact fixture-sweep receipt is required");
+  const receipt = receipts[0]!;
+  const output = [0, 1].map(index => [".stdout", ".stderr"].map(suffix => readFileSync(join(receipt.artifactDir, `law-${index}${suffix}`), "utf8")).join("\n")).join("\n");
+  const evidence = assertFixtureSweepOutput(output, receipt.assertions);
+  console.log(`[DEBUG] ${evidence.summary}; ${evidence.coverage}; exact assertions=2; executable=${receipt.sha256}; evidence=${receipt.artifactDir}`);
+}
 
 function repoRoot(): string {
   let root = testFileUrlToPath(new URL(".", testSourceUrl));
@@ -57,8 +101,18 @@ function exampleInventory(root: string): { directories: string[]; files: string[
   return { directories: directories.map(path => relative(root, path)).sort(), files };
 }
 
+export function testFixtureSweepReportContract(): void {
+  const reportFixture = JSON.parse(read(testFileUrlToPath(new URL("🧫️fixtures/🔣️.json", import.meta.url))));
+  const reportSchema = JSON.parse(read(testFileUrlToPath(new URL("🧬️schema/🔣️.json", import.meta.url))));
+  const reportAjv = new Ajv2020({ strict: true, allErrors: true });
+  assert(reportAjv.validate(reportSchema, reportFixture), JSON.stringify(reportAjv.errors));
+  assert.deepEqual(assertFixtureSweepOutput(reportFixture.valid.output, reportFixture.valid.assertions), reportFixture.valid.expected);
+  for (const hostile of reportFixture.hostile) assert.throws(() => assertFixtureSweepOutput(hostile.output, hostile.assertions), undefined, hostile.id);
+}
+
 export async function testFixtureSweepExtraction(): Promise<void> {
   const root = repoRoot();
+  testFixtureSweepReportContract();
   const fixture = JSON.parse(read(join(testFileUrlToPath(new URL(".", testSourceUrl)), "🧫️fixtures/🔣️.json")));
   const document = JSON.parse(read(join(testFileUrlToPath(new URL(".", testSourceUrl)), "🧬️schema/🔣️.json")));
   const sweepAjv = new Ajv({ strict: true, allErrors: true });

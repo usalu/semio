@@ -19,7 +19,7 @@ pub struct Puzzle5dArtifact {
     pub label: Option<String>,
     #[state(artifact)]
     pub meta: Puzzle5dMeta,
-    #[child(kind = "s.stdio.semio.kit")]
+    #[child(kind = "s.stdio.semio")]
     #[state(artifact)]
     pub kind_catalogs: Option<store::ArtifactChild<SemioKitSnapshot>>,
     #[state(artifact)]

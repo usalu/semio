@@ -1,7 +1,7 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `patch-layer`.
 
 use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
-use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::{drawing_op_for_layer_field, DrawingMutation};
 use crate::DrawingSnapshot;
 use dsl::{FromValue, ToValue};
@@ -25,7 +25,7 @@ pub struct PatchLayer {
     pub value: String,
 }
 
-pub fn handle(payload: &PatchLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, DrawingConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, DrawingConfigMutation>, Fault> {
+pub fn handle(payload: &PatchLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     let json_value = patch_value_json(&payload.value);
     match drawing_op_for_layer_field(document, &payload.layer_id, &payload.field, &json_value) {

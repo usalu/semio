@@ -92,7 +92,25 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 }
 
 export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { APP_CHANNEL_VERSION, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, applyBackboneMessage, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow } = dependencies;
+  const { APP_CHANNEL_VERSION, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, applyBackboneMessage, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow } = dependencies;
+  const documentArchive = {
+    parent_pack: [1, 2],
+    parent_spr: [3],
+    members: [
+      {
+        ordinal: 0,
+        reference: { artifact_id: "child-1", artifact_kind: "s.test.child", standard: "1", subset: "native" },
+        owner: { parent: { artifact_id: "root-1", artifact_kind: "s.test.root", standard: "1", subset: "*" }, slot: "children", child_id: "child-1" },
+        envelope_pack: [4, 5],
+      },
+      {
+        ordinal: 1,
+        reference: { artifact_id: "grandchild-1", artifact_kind: "s.test.child", standard: "1", subset: "native" },
+        owner: { parent: { artifact_id: "child-1", artifact_kind: "s.test.child", standard: "1", subset: "native" }, slot: "nested", child_id: "grandchild-1" },
+        envelope_pack: [6],
+      },
+    ],
+  } as const;
   type AppChannelHandle = any;
   type AppCommandValue = any;
   type AppFrameValue = any;
@@ -445,6 +463,11 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { ApplyEnvelopes: { seq: 7, envelopes: [] } },
       { LoadDocument: { seq: 8, pack: [1, 2, 3], spr: [4, 5, 6] } },
       { ReadDocument: { seq: 9 } },
+      { LoadDocumentArchive: { seq: 36, archive: documentArchive } },
+      { ReadDocumentArchive: { seq: 37 } },
+      { PollDocumentArchiveLoad: { seq: 38, operation: 36 } },
+      { CancelDocumentArchiveLoad: { seq: 39, operation: 36 } },
+      { AcknowledgeDocumentArchiveLoad: { seq: 40, operation: 36 } },
       { LoadConfig: { seq: 10, pack: [1], spr: [2] } },
       { ReadConfig: { seq: 11 } },
       { LoadWindowConfig: { seq: 12, entry: { window_id: "w1", window_kind_id: "graph", envelope_pack: [1, 2] } } },
@@ -479,6 +502,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { Invocation: { in_reply_to: 2, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [9], mutations: [10], inverse_group: [11] } },
       { DocumentChanged: { envelopes: [[1, 2]], origin: "remote" } },
       { Document: { in_reply_to: 6, pack: [1, 2], spr: [3, 4], ops: "op-log" } },
+      { DocumentArchive: { in_reply_to: 7, archive: documentArchive } },
+      { DocumentArchiveLoad: { in_reply_to: 8, status: { operation: 36, state: "running", completed: 1, total: 3, fault: [] } } },
       { WindowConfigs: { in_reply_to: 6, entries: [{ window_id: "w1", window_kind_id: "graph", envelope_pack: [1, 2] }] } },
       { ContextMenu: { in_reply_to: 7, items: [1, 2, 3] } },
       { Media: { in_reply_to: 8, port: "out-1", descriptor: [1], data: [2] } },
@@ -557,6 +582,11 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppCommand({ LocalInteractionQuery: { seq: 0, command: { kind: "read", requestId: 0 } } })[0]).toBe(29);
       expect(encodeAppCommand({ LoadWindowConfig: { seq: 0, entry: { window_id: "", window_kind_id: "", envelope_pack: [] } } })[0]).toBe(30);
       expect(encodeAppCommand({ ReadWindowConfigs: { seq: 0 } })[0]).toBe(31);
+      expect(encodeAppCommand({ LoadDocumentArchive: { seq: 0, archive: { parent_pack: [], parent_spr: [], members: [] } } })[0]).toBe(32);
+      expect(encodeAppCommand({ ReadDocumentArchive: { seq: 0 } })[0]).toBe(33);
+      expect(encodeAppCommand({ PollDocumentArchiveLoad: { seq: 0, operation: 1 } })[0]).toBe(34);
+      expect(encodeAppCommand({ CancelDocumentArchiveLoad: { seq: 0, operation: 1 } })[0]).toBe(35);
+      expect(encodeAppCommand({ AcknowledgeDocumentArchiveLoad: { seq: 0, operation: 1 } })[0]).toBe(36);
     });
 
     it("tags every AppFrame variant per the agreed contract order", () => {
@@ -574,6 +604,39 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppFrame({ UiPatch: { in_reply_to: null, surface: "", kind: "", revision: 0, base_revision: 0, ops: [] } })[0]).toBe(21);
       expect(encodeAppFrame({ UiSnapshotEnd: { revision: 0 } })[0]).toBe(22);
       expect(encodeAppFrame({ WindowConfigs: { in_reply_to: 0, entries: [] } })[0]).toBe(24);
+      expect(encodeAppFrame({ DocumentArchive: { in_reply_to: 0, archive: { parent_pack: [], parent_spr: [], members: [] } } })[0]).toBe(26);
+      expect(encodeAppFrame({ DocumentArchiveLoad: { in_reply_to: 0, status: { operation: 1, state: "ready", completed: 2, total: 2, fault: [] } } })[0]).toBe(27);
+    });
+
+    it("rejects recursive document archives beyond their fixed member authority", () => {
+      const oversized = {
+        parent_pack: [],
+        parent_spr: [],
+        members: Array.from({ length: 1_025 }, (_, ordinal) => ({
+          ordinal,
+          reference: { artifact_id: `child-${ordinal}`, artifact_kind: "s.test.child", standard: "1", subset: "*" },
+          owner: { parent: { artifact_id: "root-1", artifact_kind: "s.test.root", standard: "1", subset: "*" }, slot: "children", child_id: `child-${ordinal}` },
+          envelope_pack: [ordinal & 0xff],
+        })),
+      };
+      expect(() => encodeAppCommand({ LoadDocumentArchive: { seq: 1, archive: oversized } })).toThrow("1024-member authority");
+      expect(() => decodeAppCommand(Uint8Array.from([32, 1, 0, 0, 0x81, 0x08]))).toThrow("1024-member authority");
+    });
+
+    it("persists the complete recursive document archive as one exact versioned byte owner", () => {
+      const encoded = encodeDocumentArchiveBytes(documentArchive);
+      expect(decodeDocumentArchiveBytes(encoded)).toEqual(documentArchive);
+      expect(() => decodeDocumentArchiveBytes(Uint8Array.from([...encoded, 0]))).toThrow("trailing bytes");
+      expect(() => decodeDocumentArchiveBytes(Uint8Array.from([2]))).toThrow("unsupported or missing version");
+    });
+
+    it("carries one exact recursive document archive through actor request and event wires", () => {
+      const archive = Array.from(encodeDocumentArchiveBytes(documentArchive));
+      const clientInstanceId = "12345678-1234-4123-8123-123456789abc";
+      expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest({ kind: "send", documentId: "root-1", clientInstanceId, message: { kind: "localDocumentArchive", archive } }))).toEqual({ kind: "send", documentId: "root-1", clientInstanceId, message: { kind: "localDocumentArchive", archive } });
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse({ kind: "event", documentId: "root-1", clientInstanceId, event: { kind: "documentArchiveReplaced", archive } }))).toEqual({ kind: "event", documentId: "root-1", clientInstanceId, event: { kind: "documentArchiveReplaced", archive } });
+      expect(() => encodeBackboneWorkerRequest({ kind: "send", documentId: "root-1", clientInstanceId, message: { kind: "localDocumentArchive", archive: [2] } })).toThrow("unsupported or missing version");
+      expect(() => encodeBackboneWorkerResponse({ kind: "event", documentId: "root-1", clientInstanceId, event: { kind: "documentArchiveReplaced", archive: [2] } })).toThrow("unsupported or missing version");
     });
 
     /**
@@ -1128,6 +1191,50 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(seen[0]).toEqual({ ConfigCommand: { seq: 1, command: Array.from(encodePackValue({ locale: "en" })) } });
       expect(seen[1]).toEqual({ ReadDocument: { seq: 2 } });
       expect(seen[2]).toEqual({ LoadDocument: { seq: 3, pack: [1], spr: [2] } });
+    });
+
+    it("loadDocumentArchive()/readDocumentArchive() preserve the complete recursive closure and root cache", async () => {
+      const seen: AppCommandValue[] = [];
+      const handle = fakeHandle((_instanceId, commands) => {
+        seen.push(...commands);
+        const command = commands[0]!;
+        if ("ReadDocumentArchive" in command) return [{ DocumentArchive: { in_reply_to: command.ReadDocumentArchive.seq, archive: documentArchive } }];
+        if ("PollDocumentArchiveLoad" in command) return [{ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "ready", completed: 3, total: 3, fault: [] } } }];
+        return [{ Done: { in_reply_to: Object.values(command)[0]!.seq } }];
+      });
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
+      await client.loadDocumentArchive(documentArchive);
+      const actual = await client.readDocumentArchive();
+      expect(seen).toEqual([
+        { LoadDocumentArchive: { seq: 1, archive: documentArchive } },
+        { PollDocumentArchiveLoad: { seq: 2, operation: 1 } },
+        { AcknowledgeDocumentArchiveLoad: { seq: 3, operation: 1 } },
+        { ReadDocumentArchive: { seq: 4 } },
+      ]);
+      expect(actual).toEqual(documentArchive);
+      expect(client.documentPack()).toEqual({ pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) });
+    });
+
+    it("loadDocumentArchive() cancels and acknowledges the exact retained operation", async () => {
+      const seen: AppCommandValue[] = [];
+      const handle = fakeHandle((_instanceId, commands) => {
+        seen.push(...commands);
+        const command = commands[0]!;
+        if ("PollDocumentArchiveLoad" in command) {
+          return [{ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "cancelled", completed: 0, total: 3, fault: [] } } }];
+        }
+        return [{ Done: { in_reply_to: Object.values(command)[0]!.seq } }];
+      });
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
+      const controller = new AbortController();
+      controller.abort(new Error("caller cancelled archive"));
+      await expect(client.loadDocumentArchive(documentArchive, controller.signal)).rejects.toThrow("caller cancelled archive");
+      expect(seen).toEqual([
+        { LoadDocumentArchive: { seq: 1, archive: documentArchive } },
+        { CancelDocumentArchiveLoad: { seq: 2, operation: 1 } },
+        { PollDocumentArchiveLoad: { seq: 3, operation: 1 } },
+        { AcknowledgeDocumentArchiveLoad: { seq: 4, operation: 1 } },
+      ]);
     });
 
     it("loads and reads exact persisted-local window config envelopes", async () => {

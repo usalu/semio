@@ -2,7 +2,7 @@ use super::*;
 use crate::wfc_engine::bitset::PatternSet;
 use crate::wfc_engine::ids::RelationId;
 use crate::wfc_engine::model::ModelBuilder;
-use crate::wfc_engine::oracle::testgen;
+use crate::wfc_engine::model_vectors;
 use crate::wfc_engine::prop_ac3;
 use crate::wfc_engine::propagate::PropQueue;
 use crate::wfc_engine::topology::GraphTopologyBuilder;
@@ -85,7 +85,7 @@ fn odd_cycle_pin_propagates_to_wipeout() {
 
 /// A random model whose one relation is genuinely symmetric (`allowed(r,a,c) == allowed(r,c,a)`)
 /// and therefore self-consistent under its default self-inverse declaration (`model.validate()`
-/// passes). [`crate::wfc_engine::oracle::testgen::random_model`] does *not* guarantee this — it independently
+/// passes). [`crate::wfc_engine::model_vectors::random_model`] does *not* guarantee this — it independently
 /// coin-flips each ordered pair — which is fine for oracle-vs-search differential tests (the
 /// oracle checks whichever arcs are declared, symmetric or not, and a full backtracking search
 /// still converges to the true answer regardless of how tight any one propagator's fixed point
@@ -122,7 +122,7 @@ fn sequential_and_batch_seed_application_agree() {
         let pattern_count = 1 + rng.next_range(0, 4) as usize;
         let node_count = 1 + rng.next_range(0, 8) as usize;
         let (model, r) = random_symmetric_model(&mut rng, pattern_count, 0.5);
-        let arcs = testgen::random_arcs(&mut rng, node_count, r);
+        let arcs = model_vectors::random_arcs(&mut rng, node_count, r);
         let mut tb = GraphTopologyBuilder::new(node_count);
         for a in &arcs {
             tb.arc(a.from, a.to, a.relation);
@@ -190,7 +190,7 @@ mod quick {
     /// symmetric relation (see [`random_symmetric_model`]) — AC-3's forward-only restriction is
     /// only a full arc-consistency algorithm for well-formed models; comparing it against AC-4
     /// on a malformed one (e.g. a self-inverse relation with an asymmetric table, which
-    /// `oracle::testgen::random_model` can produce) would compare two *different*, each
+    /// `model_vectors::random_model` can produce) would compare two *different*, each
     /// internally-valid, propagation strengths rather than testing for a real disagreement.
     #[test]
     fn ac3_and_ac4_reach_identical_fixed_points_on_random_instances() {
@@ -199,7 +199,7 @@ mod quick {
             let pattern_count = 1 + rng.next_range(0, 4) as usize;
             let node_count = 1 + rng.next_range(0, 8) as usize;
             let (model, r) = random_symmetric_model(&mut rng, pattern_count, 0.5);
-            let arcs = testgen::random_arcs(&mut rng, node_count, r);
+            let arcs = model_vectors::random_arcs(&mut rng, node_count, r);
             let mut tb = GraphTopologyBuilder::new(node_count);
             for a in &arcs {
                 tb.arc(a.from, a.to, a.relation);

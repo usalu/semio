@@ -1,0 +1,13 @@
+syntax = "proto3";
+package semio.sequence.mainwindowconfig.v1;
+
+message SequenceWindowCamera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+
+message SequenceMainWindowConfig {
+  string orientation = 1;
+  SequenceWindowCamera camera = 2;
+}

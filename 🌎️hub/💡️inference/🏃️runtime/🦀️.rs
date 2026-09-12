@@ -2506,7 +2506,7 @@ struct RetainedInferenceRunOwnerV1 {
 }
 
 /// 🧪️ A bounded test-only pause placed inside the real GIS codec checkpoint callback.
-#[cfg(feature = "test-support")]
+#[cfg(feature = "integration-fixtures")]
 pub struct InferenceCheckpointTestGateV1 {
     entered: AtomicBool,
     entered_notify: tokio::sync::Notify,
@@ -2515,7 +2515,7 @@ pub struct InferenceCheckpointTestGateV1 {
     inherited: Option<Mutex<std::fs::File>>,
 }
 
-#[cfg(feature = "test-support")]
+#[cfg(feature = "integration-fixtures")]
 impl InferenceCheckpointTestGateV1 {
     pub fn new() -> Self {
         Self { entered: AtomicBool::new(false), entered_notify: tokio::sync::Notify::new(), released: Mutex::new(false), release_notify: std::sync::Condvar::new(), inherited: None }
@@ -2574,15 +2574,15 @@ impl InferenceCheckpointTestGateV1 {
     }
 }
 
-#[cfg(feature = "test-support")]
+#[cfg(feature = "integration-fixtures")]
 const INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES: usize = 256;
-#[cfg(feature = "test-support")]
+#[cfg(feature = "integration-fixtures")]
 const INHERITED_INFERENCE_CHECKPOINT_DESCRIPTOR: i32 = 4;
 
-#[cfg(feature = "test-support")]
+#[cfg(feature = "integration-fixtures")]
 use super::schema::GisInferenceCheckpointControlFrameV1;
 
-#[cfg(feature = "test-support")]
+#[cfg(feature = "integration-fixtures")]
 impl GisInferenceCheckpointControlFrameV1 {
     fn progress_persisted(job_id: &str, progress_cursor: u64, completed: u64, total: u64) -> Self {
         Self { schema: "semio.hub.gis-inference-checkpoint-control/v1".into(), version: 1, sequence: 1, kind: "progress-persisted".into(), job_id: job_id.into(), progress_cursor, completed, total }
@@ -2593,7 +2593,7 @@ impl GisInferenceCheckpointControlFrameV1 {
     }
 }
 
-#[cfg(feature = "test-support")]
+#[cfg(feature = "integration-fixtures")]
 fn write_inference_checkpoint_control_frame(endpoint: &mut std::fs::File, frame: &GisInferenceCheckpointControlFrameV1) -> Result<(), InferenceRouteErrorV1> {
     use std::io::Write as _;
     let bytes = serde_json::to_vec(frame).map_err(|_| InferenceRouteErrorV1::Storage)?;
@@ -2604,7 +2604,7 @@ fn write_inference_checkpoint_control_frame(endpoint: &mut std::fs::File, frame:
     endpoint.write_all(&length).and_then(|_| endpoint.write_all(&bytes)).and_then(|_| endpoint.flush()).map_err(|_| InferenceRouteErrorV1::Storage)
 }
 
-#[cfg(feature = "test-support")]
+#[cfg(feature = "integration-fixtures")]
 fn read_inference_checkpoint_control_frame(endpoint: &mut std::fs::File) -> Result<GisInferenceCheckpointControlFrameV1, InferenceRouteErrorV1> {
     use std::io::Read as _;
     let mut length = [0_u8; 4];
@@ -2625,7 +2625,7 @@ fn read_inference_checkpoint_control_frame(endpoint: &mut std::fs::File) -> Resu
     Ok(frame)
 }
 
-#[cfg(all(feature = "test-support", unix))]
+#[cfg(all(feature = "integration-fixtures", unix))]
 fn inherited_inference_checkpoint_file() -> Result<std::fs::File, InferenceRouteErrorV1> {
     use std::os::fd::FromRawFd as _;
     unsafe extern "C" {
@@ -2637,7 +2637,7 @@ fn inherited_inference_checkpoint_file() -> Result<std::fs::File, InferenceRoute
     Ok(unsafe { std::fs::File::from_raw_fd(INHERITED_INFERENCE_CHECKPOINT_DESCRIPTOR) })
 }
 
-#[cfg(all(feature = "test-support", windows))]
+#[cfg(all(feature = "integration-fixtures", windows))]
 fn inherited_inference_checkpoint_file() -> Result<std::fs::File, InferenceRouteErrorV1> {
     use std::os::windows::io::FromRawHandle as _;
     unsafe extern "C" {
@@ -2667,7 +2667,7 @@ pub struct HubInferenceRuntimeV1 {
     supervisor: RetainedInferenceRunSupervisorV1,
     document_gates: Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>,
     committer: Arc<dyn GisMapApprovalCommitterV1>,
-    #[cfg(feature = "test-support")]
+    #[cfg(feature = "integration-fixtures")]
     checkpoint_test_gate: Mutex<Option<Arc<InferenceCheckpointTestGateV1>>>,
 }
 
@@ -2680,7 +2680,7 @@ impl HubInferenceRuntimeV1 {
             supervisor: RetainedInferenceRunSupervisorV1::new(),
             document_gates: Mutex::new(HashMap::new()),
             committer,
-            #[cfg(feature = "test-support")]
+            #[cfg(feature = "integration-fixtures")]
             checkpoint_test_gate: Mutex::new(None),
         }
     }
@@ -2698,7 +2698,7 @@ impl HubInferenceRuntimeV1 {
     }
 
     /// 🧪️ Installs one exact pause at the real native codec checkpoint for physical race laws.
-    #[cfg(feature = "test-support")]
+    #[cfg(feature = "integration-fixtures")]
     pub fn install_checkpoint_test_gate(&self, gate: Arc<InferenceCheckpointTestGateV1>) -> Result<(), InferenceRouteErrorV1> {
         let mut selected = self.checkpoint_test_gate.lock().map_err(|_| InferenceRouteErrorV1::Storage)?;
         if selected.is_some() {
@@ -2709,7 +2709,7 @@ impl HubInferenceRuntimeV1 {
     }
 
     /// 🧪️ Reaps finished workers and returns the exact retained task count.
-    #[cfg(feature = "test-support")]
+    #[cfg(feature = "integration-fixtures")]
     pub async fn retained_operation_count_for_test(&self) -> Result<usize, InferenceRouteErrorV1> {
         self.reap_finished_operations().await?;
         self.supervisor.operations.lock().map(|operations| operations.len()).map_err(|_| InferenceRouteErrorV1::Storage)
@@ -3202,7 +3202,7 @@ async fn drive_retained_gis_map_job(owner: RetainedInferenceRunOwnerV1, ready: o
                 let progress_cursor = owner.runtime.ledger().heartbeat(&owner.job_id, &reader(&owner.identity), owner.claim.run_epoch, completed, total, now_ms)?;
                 appended += 1;
                 last = completed;
-                #[cfg(feature = "test-support")]
+                #[cfg(feature = "integration-fixtures")]
                 if let Some(gate) = owner.runtime.checkpoint_test_gate.lock().ok().and_then(|selected| selected.clone()) {
                     gate.checkpoint(&owner.control, &owner.job_id, progress_cursor, completed, total)?;
                 }

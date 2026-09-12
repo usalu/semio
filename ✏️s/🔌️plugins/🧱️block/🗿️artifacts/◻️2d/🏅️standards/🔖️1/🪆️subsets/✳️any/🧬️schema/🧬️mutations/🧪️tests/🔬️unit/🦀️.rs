@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::empty_block2d_snapshot;
 use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule};
 use protocol::MutationDiff;
 use protocol::SemanticMutation;
-use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
 fn round_trip(base: &Block2dSnapshot, mutation: &Block2dMutation) -> Block2dSnapshot {
     let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
@@ -180,10 +180,10 @@ async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
 // `assert_missing_target_is_error` per verb family present in this facet, plus one
 // `assert_fatal_never_applies` for the `create` family's duplicate-id path.
 // `assert_outcome_policy_matrix` (one per verb family) is NOT YET landed in
-// `📡️spr/🧪️testkit`'s `🔖️Laws` region (only `assert_missing_target_is_error`,
+// `📡️spr/🧪️tests/⚖️protocol-laws`'s `🔖️Laws` region (only `assert_missing_target_is_error`,
 // `assert_fatal_never_applies`, `assert_outcome_deterministic`, `assert_policy_matrix` exist as
 // of this lane's pass) — pending lane 1-D, tracked in `📓️w3-f-block-puzzle-report.md`.
-use semio_framework_os_kernel::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+use semio_framework_os_kernel::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
 
 #[semio_framework_async_macros::async_test]
 async fn missing_target_is_error_per_verb_family() {
@@ -224,7 +224,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

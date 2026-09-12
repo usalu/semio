@@ -1,6 +1,46 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::app::App;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    pub type ImperativeApp = VcsArtifactApp<EditorApp<ImperativePlayApp>>;
+    
+    /// ✏️ `ImperativePlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
+    /// `ArtifactApp` — `EditorApp<ImperativePlayApp>` (SDK adapter, contract §2.1) is the real
+    /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
+    /// `PluginBuilder::editor::<ImperativePlayApp>` builds it.
+    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    pub async fn imperative_app() -> ImperativeApp {
+        new_app::<EditorApp<ImperativePlayApp>>().await
+    }
+    
+    /// 🧪️ Adapts `create_imperative_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
+    /// examples }` shape `context::new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
+    /// still expect — framework test context gap (w2-cad-report "SDK gaps found" #3), not modifiable here
+    /// (`🧰️framework/**` is outside this packet's lease).
+    pub fn imperative_app_manifest_for_tests() -> App {
+        App { definition: create_imperative_app(), examples: Vec::new() }
+    }
+    
+    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline and materializes
+    /// declared action-arg defaults (e.g. `addStep`'s `kind`).
+    pub async fn imperative_app_with_registry() -> ImperativeApp {
+        new_app_with_registry::<EditorApp<ImperativePlayApp>>(imperative_app_manifest_for_tests).await
+    }
+    
+    pub async fn dispatch(app: &mut ImperativeApp, command: ImperativeCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut ImperativeApp, body_key: &str) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+    }
+}
+
 use super::*;
-use crate::editor::procedure::testkit::{dispatch, imperative_app, imperative_app_with_registry, render};
-use semio_framework_plugin::testkit::meta;
+use crate::editor::procedure::unit_tests::context::{dispatch, imperative_app, imperative_app_with_registry, render};
+use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::{EditorApp, PluginApp};
 use std::collections::BTreeMap;
 use store::{Backbone, BackboneMessage, MemoryBackbone};
@@ -16,7 +56,7 @@ fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
     let recorded: Vec<_> = routes.iter().map(|route| route.get("id").and_then(serde_json::Value::as_str).expect("route id")).collect();
     assert_eq!(recorded, ids);
     assert!(<ImperativePlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().is_empty());
-    assert!(routes.iter().all(|route| route.get("disposition").and_then(serde_json::Value::as_str) == Some("batch-only-pending-rewrite") && route.get("lanes").and_then(serde_json::Value::as_array).is_some_and(Vec::is_empty)));
+    assert!(routes.iter().all(|route| route.get("disposition").and_then(serde_json::Value::as_str) == Some("BatchOnlyPendingRewrite") && route.get("lanes").and_then(serde_json::Value::as_array).is_some_and(Vec::is_empty)));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -261,7 +301,7 @@ async fn remove_step_command_is_exact_inverse_of_add() {
 async fn two_instances_converge_disjoint_edits_via_backbone() {
     let mut params = BTreeMap::new();
     params.insert("key".to_string(), crate::document_dsl::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))));
-    let (mut instance_a, mut instance_b) = semio_framework_plugin::testkit::paired_apps::<EditorApp<ImperativePlayApp>>("mem://imperative-convergence").await;
+    let (mut instance_a, mut instance_b) = semio_framework_plugin::artifact_app_laws::paired_apps::<EditorApp<ImperativePlayApp>>("mem://imperative-convergence").await;
     instance_a.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), &meta("actor-a")).await.expect("a applies its edit");
     instance_b.dispatch_typed(ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }), &meta("actor-b")).await.expect("b applies its edit");
     instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");

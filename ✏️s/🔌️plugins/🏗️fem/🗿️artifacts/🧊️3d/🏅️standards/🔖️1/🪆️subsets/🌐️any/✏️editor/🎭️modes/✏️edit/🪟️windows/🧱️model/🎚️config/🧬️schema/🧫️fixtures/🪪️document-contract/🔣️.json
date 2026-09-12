@@ -1,0 +1,58 @@
+{
+  "valid": [
+    {
+      "camera": {
+        "position": [
+          4,
+          -4,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 1
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "kind": "unknown"
+    },
+    {
+      "kind": "camera-null"
+    },
+    {
+      "kind": "camera-unknown"
+    },
+    {
+      "kind": "camera-opaque"
+    },
+    {
+      "kind": "camera-short"
+    },
+    {
+      "kind": "camera-zero"
+    }
+  ],
+  "patch": [
+    {
+      "op": "replace",
+      "path": "/camera",
+      "value": {
+        "position": [
+          8,
+          -3,
+          5
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 1.25
+      }
+    }
+  ]
+}

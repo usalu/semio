@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::playbook::commands::move_block::MoveBlock;
 use crate::editor::playbook::commands::remove_block::RemoveBlock;
-use crate::editor::playbook::testkit::{dispatch, playbook_app, playbook_app_with_registry};
+use crate::editor::playbook::unit_tests::context::{dispatch, playbook_app, playbook_app_with_registry};
 use crate::editor::playbook::PlaybookCommand;
 use AddBlock;
 

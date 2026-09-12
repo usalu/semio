@@ -88,7 +88,7 @@ pub struct AssemblySnapshot {
     #[value(default)]
     pub edges: Vec<AssemblySlotEdge>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.kit")]
+    #[child(kind = "s.stdio.semio")]
     #[value(default)]
     pub modules: Vec<store::ArtifactChild<SemioKitSnapshot>>,
     #[state(artifact)]

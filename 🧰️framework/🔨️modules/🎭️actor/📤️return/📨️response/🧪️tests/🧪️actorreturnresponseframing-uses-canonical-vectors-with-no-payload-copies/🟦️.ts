@@ -104,9 +104,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       });
     };
     expect(variants("OutboundMessage")).toEqual(fixture.outbound); expect(variants("InboundMessage")).toEqual(fixture.inbound);
-    const producerPath = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", testSource.url);
+    const producerPath = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts", testSource.url);
     const producer = ts.createSourceFile(producerPath.pathname, readFileSync(producerPath, "utf8"), ts.ScriptTarget.Latest, true);
-    const producers = await import("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
+    const producers = await import("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts");
     // 🫀️ Inventoried from the EMITTED bytes, not the template's raw text: `shardWorkerSource` now
     // interpolates the schema-owned liveness policy, so its return is a template EXPRESSION and its
     // literal text no longer is the worker. The AST check still fences the shape (one returned
@@ -143,9 +143,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorWorkerInboxInventory executes generated heartbeat, ordinary reply and awaited effect traffic together", async () => {
     const { default: fixture } = await import("../../🎟️credit/📋️metadata/📥️inbox/🧫️fixtures/🔣️.json"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs"); const vm = await import("node:vm");
-    const path = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", testSource.url);
+    const path = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts", testSource.url);
     const source = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
-    const producers = await import("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
+    const producers = await import("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts");
     const generated = (name: "shardWorkerSource" | "hostShimSource") => {
       const declaration = source.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
       const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;

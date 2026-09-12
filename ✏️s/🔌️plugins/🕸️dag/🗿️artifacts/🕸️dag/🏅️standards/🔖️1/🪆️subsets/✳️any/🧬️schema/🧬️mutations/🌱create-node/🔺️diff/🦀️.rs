@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateNode` — a real append-only insert (never a whole-snapshot
 //! capture).
-use crate::diff::text::diff_replace_content;
+use crate::schema::diff::diff_replace_content;
 use crate::diff::DagDiff;
 use crate::{dag_working_scene, DagSnapshot};
 

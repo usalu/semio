@@ -479,7 +479,7 @@ async fn framework_schema_exports_match_the_modules_json_schema_defs_and_resolve
         }
     }
     assert_eq!(resolve_schema_export(FRAMEWORK_SCHEMA_SCOPE, "SchemaFormat", SchemaFormat::Rust), Ok(include_str!("../../📇️registry/🦀️.rs")));
-    assert_eq!(resolve_schema_export(FRAMEWORK_SCHEMA_SCOPE, "ValidationDiagnostic", SchemaFormat::Rust), Ok(include_str!("../../⚛️component.rs")));
+    assert_eq!(resolve_schema_export(FRAMEWORK_SCHEMA_SCOPE, "ValidationDiagnostic", SchemaFormat::Rust), Ok(include_str!("../../⚛️component/🦀️.rs")));
 }
 
 #[semio_framework_async_macros::async_test]

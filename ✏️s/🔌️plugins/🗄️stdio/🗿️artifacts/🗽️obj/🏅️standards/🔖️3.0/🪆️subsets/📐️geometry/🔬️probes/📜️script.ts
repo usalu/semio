@@ -9,7 +9,7 @@
 //
 // Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should
 // produce. The actual OBJ decode is performed by the sibling standalone `tobj-obj-reader` binary
-// (`../🏭️generator/📖️tobj-obj-reader`, depends on nothing but the real `tobj` 4 — the SAME crate
+// (`../🏭️generator/📖️reader/📦️packages/🦀️rust`, depends on nothing but the real `tobj` 4 — the SAME crate
 // registered as `tobj-obj-3-0-mutate-reader`) via its `project` subcommand — this file only shells
 // out to it and performs the GATING structural comparison itself. No OBJ semantics computed here,
 // only projection + compare, mirroring the sibling `avi`/`bcf` probe suites' identical division of
@@ -26,7 +26,7 @@ const objLoader = new OBJLoader();
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/📐️geometry/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch/compare shape is mirrored from
-// @see ../🏭️generator/📖️tobj-obj-reader/src/main.rs — the `project` subcommand this file calls, and
+// @see ../🏭️generator/📖️reader/🦀️.rs — the `project` subcommand this file calls, and
 //      the module doc there for exactly which 12 of the 22 declared mutation kinds `tobj` (a MESH
 //      reader) can witness at all
 
@@ -52,7 +52,7 @@ type ProbeReport = {
 
 const ENGINE = { family: "tobj", implementation: "tobj-obj-reader (tobj 4, single_index+triangulate)", version: "tobj@4" } as const;
 const PROBE_VERSION = "tobj@4";
-const READER_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "📖️tobj-obj-reader", "Cargo.toml");
+const READER_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "📖️reader", "📦️packages", "🦀️rust", "Cargo.toml");
 //#endregion 🧬️Contract
 
 //#region 📥️Model

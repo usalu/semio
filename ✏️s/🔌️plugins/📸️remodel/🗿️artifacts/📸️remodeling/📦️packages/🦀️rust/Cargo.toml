@@ -61,6 +61,8 @@ semio-framework-pixels = { path = "../../../../../../../🧰️framework/🔨️
 
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws"] }
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🔬️ Test oracle only (never `[dependencies]`): validates that our own encoded/decoded PNG bytes
 # are readable by/match the reference decoder/encoder — see 🖼️images/🦀️.rs's test module.

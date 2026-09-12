@@ -1,6 +1,44 @@
+pub(crate) mod context {
+    
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    /// ✏️ `Block5dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
+    /// `ArtifactApp` — `EditorApp<Block5dPlayApp>` (SDK adapter, contract §2.1) is the real
+    /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
+    /// `PluginBuilder::editor::<Block5dPlayApp>` builds it.
+    pub type Block5dApp = VcsArtifactApp<EditorApp<Block5dPlayApp>>;
+    
+    pub async fn new_app() -> Block5dApp {
+        app_with_registry().await
+    }
+    
+    /// ✏️ Adapts `create_block5d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
+    /// examples }` shape `context::assert_declared_actions_bridge_to_commands`/`new_app_with_registry`
+    /// still expect — framework test context gap, not modifiable here (`🧰️framework/**` is outside this
+    /// packet's lease).
+    pub fn block5d_app_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_block5d_app(), examples: Vec::new() }
+    }
+    
+    /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
+    pub async fn app_with_registry() -> Block5dApp {
+        new_app_with_registry::<EditorApp<Block5dPlayApp>>(block5d_app_manifest_for_tests).await
+    }
+    
+    pub async fn dispatch(app: &mut Block5dApp, command: Block5dCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut Block5dApp, body_key: &str) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+    }
+}
+
 
 use super::*;
-use crate::editor::block5d::testkit::{Block5dApp, new_app};
+use crate::editor::block5d::unit_tests::context::{Block5dApp, new_app};
 use semio_framework_plugin::PluginApp;
 
 //#region 🔖️CommandSurface
@@ -49,7 +87,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 /// `command_id`.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-    semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Block5dPlayApp>>(testkit::block5d_app_manifest_for_testkit).await;
+    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Block5dPlayApp>>(context::block5d_app_manifest_for_tests).await;
     assert!(<Block5dPlayApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err());
 }
 //#endregion 🔖️CommandSurface
@@ -85,8 +123,8 @@ async fn declares_the_grip_interaction_domain_scoped_to_both_windows() {
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_nests_grips_under_their_grip_kind() {
     let mut app: Block5dApp = new_app().await;
-    testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
-    testkit::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {})).await;
+    context::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
+    context::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {})).await;
     let snapshot = app.snapshot().expect("snapshot");
     let kind_id = snapshot.grip_kinds[0].id.clone();
     let grip_id = snapshot.grips[0].id.clone();
@@ -113,7 +151,7 @@ async fn block5d_io_declares_the_catalog_out_port() {
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
     let mut app = new_app().await;
-    assert!(testkit::render(&mut app, "block5d.play.nope").await.contains("Unknown body"));
+    assert!(context::render(&mut app, "block5d.play.nope").await.contains("Unknown body"));
 }
 //#endregion 🔖️Manifest
 
@@ -121,9 +159,9 @@ async fn an_unknown_body_key_falls_back_to_a_text_node() {
 #[semio_framework_async_macros::async_test]
 async fn renders_document_tree_board_and_world() {
     let mut app: Block5dApp = new_app().await;
-    assert!(testkit::render(&mut app, document_panel::BLOCK5D_BODY_DOCUMENT).await.contains("Grip Kinds"));
-    assert!(testkit::render(&mut app, board::BLOCK5D_BODY_BOARD).await.contains("2d grips"));
-    assert!(testkit::render(&mut app, world::BLOCK5D_BODY_WORLD).await.contains("mesh:"));
+    assert!(context::render(&mut app, document_panel::BLOCK5D_BODY_DOCUMENT).await.contains("Grip Kinds"));
+    assert!(context::render(&mut app, board::BLOCK5D_BODY_BOARD).await.contains("2d grips"));
+    assert!(context::render(&mut app, world::BLOCK5D_BODY_WORLD).await.contains("mesh:"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -132,13 +170,13 @@ async fn add_grip_kind_then_add_grip_then_remove_round_trips() {
     let booted = app.snapshot().expect("snapshot");
     let (kinds, grips) = (booted.grip_kinds.len(), booted.grips.len());
     let booted_ids: Vec<String> = booted.grips.iter().map(|grip| grip.id.clone()).collect();
-    testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
+    context::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
     assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
-    testkit::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {})).await;
+    context::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {})).await;
     let projection = app.snapshot().expect("snapshot");
     assert_eq!(projection.grips.len(), grips + 1);
     let grip_id = projection.grips.iter().map(|grip| grip.id.clone()).find(|id| !booted_ids.contains(id)).expect("the added grip");
-    testkit::dispatch(&mut app, Block5dCommand::RemoveGrip(remove_grip::RemoveGrip { id: grip_id })).await;
+    context::dispatch(&mut app, Block5dCommand::RemoveGrip(remove_grip::RemoveGrip { id: grip_id })).await;
     assert_eq!(app.snapshot().expect("snapshot").grips.len(), grips);
 }
 
@@ -151,14 +189,14 @@ async fn boots_on_the_forest_left_example_document() {
     assert_eq!(booted.part_kind.label, "Hexagonal Cut Concrete Forest Left");
     assert!(booted.representations.first().and_then(|representation| representation.mesh_url.as_deref()).is_some());
     assert!(!booted.grip_kinds.is_empty());
-    assert!(testkit::render(&mut app, board::BLOCK5D_BODY_BOARD).await.contains("Hexagonal Cut Concrete Forest Left"));
-    assert!(testkit::render(&mut app, world::BLOCK5D_BODY_WORLD).await.contains("hexagonal-cut-concrete-forest-left.glb"));
+    assert!(context::render(&mut app, board::BLOCK5D_BODY_BOARD).await.contains("Hexagonal Cut Concrete Forest Left"));
+    assert!(context::render(&mut app, world::BLOCK5D_BODY_WORLD).await.contains("hexagonal-cut-concrete-forest-left.glb"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_forest_left_fixture() {
     let mut app: Block5dApp = new_app().await;
-    testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() })).await;
+    context::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() })).await;
     let projection = app.snapshot().expect("snapshot");
     assert_eq!(projection.part_kind.id, "Hexagonal Cut Concrete Forest Left");
     assert_eq!(projection.grips.len(), 1);
@@ -168,11 +206,11 @@ async fn set_active_example_loads_forest_left_fixture() {
 async fn undo_redo_round_trips_through_the_wrapper() {
     let mut app: Block5dApp = new_app().await;
     let kinds = app.snapshot().expect("snapshot").grip_kinds.len();
-    testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
+    context::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
     assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
-    app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds);
-    app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("redo");
+    app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
     assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
 }
 
@@ -180,7 +218,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
     let mut app: Block5dApp = new_app().await;
-    testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() })).await;
+    context::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() })).await;
     let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
     assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
     match media.payload {
@@ -210,8 +248,8 @@ async fn command_from_action_bridges_set_active_example() {
 /// operations under the real, kind-discipline-enforcing registry.
 #[semio_framework_async_macros::async_test]
 async fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry() {
-    let mut app = testkit::app_with_registry().await;
-    let result = testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
+    let mut app = context::app_with_registry().await;
+    let result = context::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
     assert!(!result.mutations.is_empty(), "addGripKind is a mutation and must reach document operations under kind discipline");
 }
 //#endregion 🔖️Behavior

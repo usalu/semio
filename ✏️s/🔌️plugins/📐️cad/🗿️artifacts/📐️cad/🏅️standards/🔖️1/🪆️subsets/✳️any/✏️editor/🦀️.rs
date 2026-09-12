@@ -16,7 +16,7 @@ use crate::editor::cad::commands::reference::{patch_cad_play_reference, referenc
 use crate::editor::cad::commands::sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use crate::editor::cad::commands::transform::{apply_transformation, rotate_selection, scale_selection, translate_selection};
 use crate::editor::cad::commands::utility::set_dislocate_option;
-use crate::editor::cad::config::{cad_sun_config_from_world, cad_sun_config_to_world, deserialize_cad_preview_generation, CadConfig, CadConfigMutation, CadDislocateOptions, CAD_PREVIEW_GENERATION_MAX};
+use crate::editor::cad::config::{cad_sun_config_to_world, deserialize_cad_preview_generation, CadConfig, CadConfigMutation, CadDislocateOptions, CAD_PREVIEW_GENERATION_MAX};
 use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, commit_object, keyed_transitions, parse_repl_line, resolve_interaction_key, start_session, CadEngagementScratch};
 use crate::editor::cad::modes::edit;
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
@@ -210,12 +210,8 @@ fn json_string_to<T: protocol::FromValue>(json: &str) -> Option<T> {
     json::from_json_str::<T>(json).ok()
 }
 
-/// @emoji 🔀️ WORKFLOWS-END-TO-END-TYPED-PORTS config recipe boundary (in): unpacks `cfg.snapshot`
-/// (the persisted, VCS-tracked `CadConfig`) into the ergonomic `CadPlayRuntime` scratch shape every
-/// helper function below already works with — a pure, allocation-only conversion, never itself an
-/// operation. `dislocate_options_by_window_id` is seeded from the 4 fixed pane fields keyed by the 4
-/// constant window-kind ids (`CAD_PLAY_WINDOW_*`) — see `CadDislocateOptions`'s doc comment in
-/// `cad_document_engine` for why per-window-INSTANCE keying no longer applies.
+/// 🔀️ Unpacks artifact-wide `CadConfig` into the ergonomic runtime scratch record. Exact
+/// window-owned camera, sun, and Dislocate state is overlaid by `runtime_of`.
 pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
     CadPlayRuntime {
         selected_node_ids: cfg.selected_node_ids.clone(),
@@ -230,17 +226,12 @@ pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
         engagement_preview_operation_json: cfg.engagement_preview_operation_json.clone(),
         engagement_preview_generation: cfg.engagement_preview_generation,
         last_finalized_interaction_id: cfg.last_finalized_interaction_id.clone(),
-        sun: cad_sun_config_to_world(&cfg.sun),
-        camera: cfg.camera.clone(),
-        camera_building: cfg.camera_building.clone(),
-        camera_energy: cfg.camera_energy.clone(),
-        camera_structure_classic: cfg.camera_structure_classic.clone(),
-        dislocate_options_by_window_id: HashMap::from([
-            (shape::WINDOW_KIND_ID.to_string(), cfg.dislocate_shape),
-            (building::WINDOW_KIND_ID.to_string(), cfg.dislocate_building),
-            (energy::WINDOW_KIND_ID.to_string(), cfg.dislocate_energy),
-            (structure_classic::WINDOW_KIND_ID.to_string(), cfg.dislocate_structure_classic),
-        ]),
+        sun: WorldSunConfig::default(),
+        camera: CadCamera::default(),
+        camera_building: CadCamera::default(),
+        camera_energy: CadCamera::default(),
+        camera_structure_classic: CadCamera::default(),
+        dislocate_options_by_window_id: HashMap::new(),
     }
 }
 
@@ -262,15 +253,6 @@ fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadCon
         engagement_preview_operation_json: base.engagement_preview_operation_json.clone(),
         engagement_preview_generation: base.engagement_preview_generation,
         last_finalized_interaction_id: runtime.last_finalized_interaction_id.clone(),
-        sun: cad_sun_config_from_world(&runtime.sun),
-        camera: runtime.camera.clone(),
-        camera_building: runtime.camera_building.clone(),
-        camera_energy: runtime.camera_energy.clone(),
-        camera_structure_classic: runtime.camera_structure_classic.clone(),
-        dislocate_shape: runtime.dislocate_options(shape::WINDOW_KIND_ID),
-        dislocate_building: runtime.dislocate_options(building::WINDOW_KIND_ID),
-        dislocate_energy: runtime.dislocate_options(energy::WINDOW_KIND_ID),
-        dislocate_structure_classic: runtime.dislocate_options(structure_classic::WINDOW_KIND_ID),
     }
 }
 
@@ -439,7 +421,20 @@ pub fn cad_pane_from_view(view: &ViewModel) -> Result<CadPaneId, Fault> {
 
 /// 🔀️ The `CadConfig -> CadPlayRuntime` boundary every command handler opens with.
 pub fn runtime_of(cfg: &ConfigView<'_, CadConfig>) -> CadPlayRuntime {
-    cad_runtime_from_config(cfg.snapshot)
+    let mut runtime = cad_runtime_from_config(cfg.snapshot);
+    let window = edit::windows::config::current(cfg);
+    runtime.sun = cad_sun_config_to_world(&window.sun);
+    runtime.camera = window.camera.clone();
+    runtime.camera_building = window.camera.clone();
+    runtime.camera_energy = window.camera.clone();
+    runtime.camera_structure_classic = window.camera;
+    runtime.dislocate_options_by_window_id = HashMap::from([
+        (shape::WINDOW_KIND_ID.to_string(), window.dislocate_options),
+        (building::WINDOW_KIND_ID.to_string(), window.dislocate_options),
+        (energy::WINDOW_KIND_ID.to_string(), window.dislocate_options),
+        (structure_classic::WINDOW_KIND_ID.to_string(), window.dislocate_options),
+    ]);
+    runtime
 }
 
 /// 🔀️ Emits a non-session config snapshot and fails closed if a caller attempts to bypass the
@@ -899,7 +894,7 @@ semio_framework_plugin::app_commands! {
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
         "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
 
-        // 👁️ Config-only — emit `config_mutations`, never document operations.
+        // 👁️ Local configuration only — emit app or exact-window configuration, never document operations.
         "setCamera" as "camera" => set_camera::SetCamera,
         "setProjection" as "projection" => set_projection::SetProjection,
         "setProjectionParam" as "projection-param" => set_projection_param::SetProjectionParam,
@@ -1100,10 +1095,10 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "renameNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "patchCadPlayReference", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setProjection", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setProjectionParam", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setDislocateOption", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setProjection", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setProjectionParam", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setDislocateOption", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setNodeSelection", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setReferenceSelection", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "referenceHover", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -1112,10 +1107,10 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "engagementRepeatLast", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "worldPointerMove", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
@@ -1140,7 +1135,7 @@ fn cad_retained_reduce(
     operation: &AppOperationContext,
 ) -> Result<Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let cfg = ConfigView { snapshot: config, window: None };
+    let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
     let selection = interaction.selection.get(CAD_INTERACTION_DOMAIN).cloned().unwrap_or_default();
     let retained_interaction = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id };
     let mut ctx = CadDispatchCtx { interaction: retained_interaction, preview_operation: Some(CadPreviewOperationIdentity::from(operation)), view_state: context.and_then(|context| context.view_state.clone()) };
@@ -1228,22 +1223,6 @@ struct CadConfigStorePreparation {
     closing: bool,
 }
 
-fn cad_projection_retained_bytes(projection: &crate::CadProjectionDsl) -> usize {
-    projection
-        .kind
-        .len()
-        .saturating_add(projection.orthographic_view.len())
-        .saturating_add(projection.axonometric_variant.len())
-        .saturating_add(projection.axonometric_quadrant.len())
-        .saturating_add(projection.oblique_variant.len())
-        .saturating_add(projection.one_point_axis.len())
-        .saturating_add(projection.curvilinear_mapping.len())
-}
-
-fn cad_camera_retained_bytes(camera: &CadCamera) -> usize {
-    cad_projection_retained_bytes(&camera.projection)
-}
-
 fn cad_config_retained_bytes(config: &CadConfig) -> usize {
     let option_bytes = [
         config.hovered_reference_id.as_deref(),
@@ -1265,11 +1244,6 @@ fn cad_config_retained_bytes(config: &CadConfig) -> usize {
         .saturating_add(option_bytes)
         .saturating_add(config.engagement_input.len())
         .saturating_add(config.engagement_step.len())
-        .saturating_add(config.sun.color.len())
-        .saturating_add(cad_camera_retained_bytes(&config.camera))
-        .saturating_add(cad_camera_retained_bytes(&config.camera_building))
-        .saturating_add(cad_camera_retained_bytes(&config.camera_energy))
-        .saturating_add(cad_camera_retained_bytes(&config.camera_structure_classic))
         .saturating_add(config.contributions_json.len())
 }
 
@@ -1673,15 +1647,15 @@ impl ArtifactEditor for CadPlayApp {
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = CadCommand;
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
         assert_eq!(size_of::<NoDraft>(), 0);
         Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
     }
@@ -1712,6 +1686,13 @@ impl ArtifactEditor for CadPlayApp {
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(Box::new(crate::editor::cad::presence::retirement::CadPresenceStoreDisposer::new()))
+    }
+
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<shape::config::CadShapeWindowConfigOwner>()?;
+        registry.register::<building::config::CadBuildingWindowConfigOwner>()?;
+        registry.register::<energy::config::CadEnergyWindowConfigOwner>()?;
+        registry.register::<structure_classic::config::CadStructureClassicWindowConfigOwner>()
     }
 
     const DIALECT: Dialect = crate::CAD_DIALECT;
@@ -1908,7 +1889,7 @@ impl ArtifactEditor for CadPlayApp {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: cad_runtime_from_config(cfg.snapshot) };
+        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg) };
         let labels = cad_labels(view_state);
         let window_kind_id = match body_key {
             shape::BODY_KEY => shape::WINDOW_KIND_ID,
@@ -1932,7 +1913,7 @@ impl ArtifactEditor for CadPlayApp {
     }
 
     fn window_engagements(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: cad_runtime_from_config(cfg.snapshot) };
+        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg) };
         let labels = cad_labels(view_state);
         HashMap::from([
             (shape::WINDOW_KIND_ID.to_string(), shape::engagement(&view, labels)),
@@ -1942,17 +1923,20 @@ impl ArtifactEditor for CadPlayApp {
         ])
     }
 
-    /// 🪟️ Keyed by the 4 fixed window-KIND ids; each window collects its own measures from the edit
-    /// mode's `☑️options/*` components.
+    /// 🪟️ Resolves measures for the exact addressed world-window instance.
     fn window_measures(_doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        let runtime = cad_runtime_from_config(cfg.snapshot);
+        let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
+        let Some(kind) = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str()) else { return HashMap::new() };
+        let runtime = runtime_of(cfg);
         let is_de = cad_is_de_locale(view_state);
-        HashMap::from([
-            (shape::WINDOW_KIND_ID.to_string(), shape::window_measures(&runtime, is_de)),
-            (building::WINDOW_KIND_ID.to_string(), building::window_measures(&runtime, is_de)),
-            (energy::WINDOW_KIND_ID.to_string(), energy::window_measures(&runtime, is_de)),
-            (structure_classic::WINDOW_KIND_ID.to_string(), structure_classic::window_measures(&runtime, is_de)),
-        ])
+        let measures = match kind {
+            shape::WINDOW_KIND_ID => shape::window_measures(&runtime, is_de),
+            building::WINDOW_KIND_ID => building::window_measures(&runtime, is_de),
+            energy::WINDOW_KIND_ID => energy::window_measures(&runtime, is_de),
+            structure_classic::WINDOW_KIND_ID => structure_classic::window_measures(&runtime, is_de),
+            _ => return HashMap::new(),
+        };
+        HashMap::from([(window_id.to_string(), measures)])
     }
 
     /// 🖱️ Transform/duplicate/delete section for the World3d context menu. ⚠️ FIRST-CLASS-HOVER-
@@ -2178,10 +2162,7 @@ pub fn default_working_scene() -> CadWorkingScene {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-
-#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub(crate) mod unit_tests;
+
 //#endregion 🧪️Tests

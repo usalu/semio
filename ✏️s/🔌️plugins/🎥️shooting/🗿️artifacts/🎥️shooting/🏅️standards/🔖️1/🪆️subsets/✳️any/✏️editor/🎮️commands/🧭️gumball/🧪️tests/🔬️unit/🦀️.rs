@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::shooting::testkit::{dispatch, shooting_app};
+use crate::editor::shooting::unit_tests::context::{dispatch, shooting_app};
 use crate::editor::shooting::ShootingCommand;
 use semio_framework_plugin::PluginApp;
 
@@ -10,7 +10,7 @@ async fn gumball_transform_drag_coalesces_into_one_edit() {
     for dx in [1.0, 2.0, 3.0] {
         dispatch(&mut app, ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids: vec![asset_id.clone()], dx, dy: 0.0, dz: 0.0 })).await;
     }
-    app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     let restored = app.snapshot().expect("snapshot");
     let original = crate::standards::v1::subsets::any::schema::default_snapshot().assets.iter().find(|asset| asset.id == asset_id).map(|asset| asset.origin).expect("original origin");
     assert_eq!(restored.assets.iter().find(|asset| asset.id == asset_id).unwrap().origin, original, "undoing the coalesced drag restores the pre-drag origin");

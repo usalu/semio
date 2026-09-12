@@ -713,7 +713,9 @@ const FLOW_DIRECT_STORE_RAW_BYTES: usize = 16_384;
 fn flow_direct_store_emit(command: &FlowCommand, config: &FlowMainWindowConfig, view: &semio_framework_plugin::ViewModel) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let mut next = config.clone();
     match command {
-        FlowCommand::NodeGraphViewport(payload) => next.camera = payload.camera.clone(),
+        FlowCommand::NodeGraphViewport(payload) => {
+            next.camera = semio_framework_artifact_flow_flow::CameraJson { x: payload.viewport.x, y: payload.viewport.y, zoom: payload.viewport.zoom };
+        }
         FlowCommand::SetLodMode(payload) => {
             if payload.value == FLOW_LOD_MODE_AUTOMATIC || DagDrawLod::from_id(&payload.value).is_some() {
                 next.lod_mode = payload.value.clone();
@@ -2193,15 +2195,15 @@ impl ArtifactEditor for FlowPlayApp {
         Some(Arc::new(retained::artifact::preparation::PreparationFactory))
     }
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::retirement::store_owners())
     }
 
-    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::no_config_store_owners())
     }
 
-    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
     }
 
@@ -2689,18 +2691,15 @@ pub fn create_flow_app() -> AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
 /// able to drive the whole app without re-deriving the harness.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️interactive-job/🦀️.rs"]

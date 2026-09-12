@@ -42,6 +42,12 @@ pub use member_open::{
     MemberSnapshotOpenOperation, MemberSnapshotOpenStep, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen, MEMBER_OPEN_IDENTITY_BYTES,
 };
 
+#[path = "🧾️document/📜️history/💧️hydration/🦀️.rs"]
+mod persisted_document_hydration;
+pub use persisted_document_hydration::{
+    PersistedDocumentHydrationOutput, PersistedDocumentHydrationProgress, PersistedDocumentHydrationStep, PersistedDocumentHydrationTarget, RetainedPersistedDocumentHydration,
+};
+
 #[path = "🧩️composition/🗄️durable-group/🦀️.rs"]
 pub mod durable_group;
 
@@ -65,6 +71,10 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 //#region 🧬️OpaqueSnapshotRead
 const SNAPSHOT_READ_LEASE_CAPACITY: usize = 1_024;
+
+#[cfg(test)]
+#[path = "🧪️tests/♻️snapshot-read-retirement/🦀️.rs"]
+mod snapshot_read_retirement_tests;
 
 struct SnapshotReadLeaseSlot {
     generation: u64,
@@ -209,7 +219,17 @@ impl SnapshotReadLeaseRegistry {
             Err(std::sync::TryLockError::WouldBlock) => return Err("snapshot read lease registry is busy".into()),
             Err(std::sync::TryLockError::Poisoned(_)) => return Err("snapshot read lease registry is poisoned".into()),
         };
-        let index = state.cleanup_cursor;
+        let start = state.cleanup_cursor;
+        let Some(index) = (0..=state.occupied.len()).find_map(|offset| {
+            let word_index = (start / 64 + offset) % state.occupied.len();
+            let mut occupied = state.occupied[word_index];
+            if offset == 0 {
+                occupied &= u64::MAX << (start % 64);
+            } else if offset == state.occupied.len() {
+                occupied &= (1u64 << (start % 64)) - 1;
+            }
+            (occupied != 0).then(|| word_index * 64 + occupied.trailing_zeros() as usize)
+        }) else { return Ok(None) };
         state.cleanup_cursor = (index + 1) % SNAPSHOT_READ_LEASE_CAPACITY;
         let mask = 1 << (index % 64);
         if state.occupied[index / 64] & mask == 0 {
@@ -2133,7 +2153,7 @@ impl<P, Mutation> Drop for ArtifactStoreCursorDisposer<P, Mutation> {
     }
 }
 
-pub struct MemberStoreOwners<P, Mutation>
+pub struct DocumentStoreOwners<P, Mutation>
 where
     P: Clone + ToValue + FromValue,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
@@ -2146,7 +2166,7 @@ where
     one_item_wire_preparation: Option<Arc<dyn MemberStoreOneItemWirePreparationFactory<P, Mutation>>>,
 }
 
-impl<P, Mutation> MemberStoreOwners<P, Mutation>
+impl<P, Mutation> DocumentStoreOwners<P, Mutation>
 where
     P: Clone + ToValue + FromValue,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
@@ -2171,6 +2191,21 @@ where
         self.one_item_wire_preparation = Some(factory);
         self
     }
+
+    pub(crate) fn retire_decoded_edit(&self, edit: Edit<Mutation>) -> Box<dyn ErasedSnapshotRetirement>
+    where
+        Mutation: Send + 'static,
+    {
+        Box::new(ArtifactStoreDecodedEditRetirement::new(edit, self.mutation_retirement.clone()))
+    }
+
+    pub(crate) fn retire_decoded_envelope(&self, envelope: ArtifactEnvelope<P, Mutation>) -> Box<dyn ErasedSnapshotRetirement>
+    where
+        P: Send + 'static,
+        Mutation: Send + 'static,
+    {
+        retire_document_envelope(envelope, self.initial_snapshot_retirement.clone(), self.mutation_retirement.clone())
+    }
 }
 
 pub trait MemberStoreOwner<Mutation>: Sized
@@ -2179,7 +2214,7 @@ where
     Mutation: Clone + ToValue + FromValue + self::Mutation<Self>,
 {
     type SnapshotOpen: MemberSnapshotOpenOperation<Snapshot = Self>;
-    fn member_store_owners() -> MemberStoreOwners<Self, Mutation>;
+    fn member_store_owners() -> DocumentStoreOwners<Self, Mutation>;
 }
 //#endregion 🧬️OpaqueSnapshotRead
 
@@ -3274,7 +3309,7 @@ where
     let mut envelope = create_document_envelope::<P, Mutation>(schema, id, initial, None);
     envelope.dialect = Some(dialect.clone());
     let mut store = ArtifactStore::new(envelope).await?;
-    store.install_member_store_owners_exact(P::member_store_owners());
+    store.install_document_store_owners_exact(P::member_store_owners());
     Ok(store)
 }
 
@@ -3298,7 +3333,7 @@ where
     validate_member_history_identity(&history, schema, expected, owner)?;
     let parsed = parse_decoded_document_spr::<P, Mutation>(&pack, history).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let mut store = ArtifactStore::new(parsed.envelope).await?;
-    store.install_member_store_owners_exact(P::member_store_owners());
+    store.install_document_store_owners_exact(P::member_store_owners());
     Ok(store)
 }
 
@@ -11327,7 +11362,7 @@ async fn history_conflict_from_conflict(conflict: &crate::os_spr::Conflict) -> c
     }
 }
 
-async fn conflict_from_history_conflict(conflict: crate::os_spr::history::HistoryConflict) -> Result<crate::os_spr::Conflict, String> {
+fn conflict_from_history_conflict(conflict: crate::os_spr::history::HistoryConflict) -> Result<crate::os_spr::Conflict, String> {
     let kind = match conflict.kind {
         0 => {
             let mut envelopes = Vec::with_capacity(conflict.envelopes.len());
@@ -11367,7 +11402,12 @@ async fn conflict_from_history_conflict(conflict: crate::os_spr::history::Histor
 /// `parse_document_spr(pack, &empty_document_spr(id, schema))` recovers exactly `P::decode_pack(pack)`
 /// as both the initial and live snapshot, with zero edits.
 pub async fn empty_document_spr(doc_id: &str, schema: &str) -> Vec<u8> {
-    let log = crate::os_spr::HistoryLog { doc_id: doc_id.to_string(), schema: schema.to_string(), ..crate::os_spr::HistoryLog::default() };
+    let log = crate::os_spr::HistoryLog {
+        doc_id: doc_id.to_string(),
+        schema: schema.to_string(),
+        cursor: Some(crate::os_spr::HistoryCursor { applied_edit_ids: Vec::new(), redo_edit_ids: Vec::new(), checkpoint_id: None }),
+        ..crate::os_spr::HistoryLog::default()
+    };
     crate::os_spr::encode_history(&log, &crate::os_spr::EncodeOptions::default()).await.expect("encoding an edit-free HistoryLog is infallible")
 }
 
@@ -11510,7 +11550,7 @@ where
     parse_decoded_document_spr(pack, log).await
 }
 
-async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: crate::os_spr::HistoryLog) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+pub async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: crate::os_spr::HistoryLog) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + ArtifactPack,
     Mutation: OpText + OpBinary + self::Mutation<P>,
@@ -11587,7 +11627,7 @@ where
     // `Iterator::map`'s closure is sync (R10 shape 1), so it's hoisted into an explicit loop.
     let mut conflicts = Vec::with_capacity(log.conflicts.len());
     for conflict in std::mem::take(&mut log.conflicts) {
-        conflicts.push(conflict_from_history_conflict(conflict).await.map_err(|error| TextError::new(error, TextSpan::at(1, 1)))?);
+        conflicts.push(conflict_from_history_conflict(conflict).map_err(|error| TextError::new(error, TextSpan::at(1, 1)))?);
     }
     let edits = ArtifactHistoryLedger::try_from_preflighted(edits).map_err(|_| TextError::new("history edit capacity exceeded".to_string(), TextSpan::at(1, 1)))?;
     let changes = ArtifactHistoryLedger::try_from_preflighted(log.changes.into_iter().map(|change| Change { id: change.id, edit_ids: change.edit_ids, description: change.description, saved_at: change.saved_at }).collect())
@@ -12933,6 +12973,10 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         Ok(())
     }
 
+    pub fn push_applied_edit<Mutation: ToValue>(&mut self, edit: &Edit<Mutation>) -> Result<(), String> {
+        self.push_applied(edit.id.clone(), CursorRevisionAccumulator::edit_digest(edit))
+    }
+
     pub fn push_redo(&mut self, id: String, edit_digest: [u8; 32]) -> Result<(), String> {
         if self.redo_edit_ids.len() == crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY {
             return Err("artifact store redo ledger is saturated".into());
@@ -12942,6 +12986,10 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         self.cursor_redo_edit_ids.push(id.clone());
         self.redo_edit_ids.push(id);
         Ok(())
+    }
+
+    pub fn push_redo_edit<Mutation: ToValue>(&mut self, edit: &Edit<Mutation>) -> Result<(), String> {
+        self.push_redo(edit.id.clone(), CursorRevisionAccumulator::edit_digest(edit))
     }
 
     pub fn seed_mutation(&mut self, id: MutationId) -> Result<(), String> {
@@ -14835,7 +14883,7 @@ where
     /// @emoji 🏗️ Atomically adopts a domain-validated initialization runtime. Every
     /// history/reference/snapshot owner was prepared under the caller's StepContext before this
     /// non-suspending move; no validation or collection traversal occurs at publication.
-    pub fn from_initialized_runtime_with_owners(mut envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, owners: MemberStoreOwners<P, Mutation>) -> Self {
+    pub fn from_initialized_runtime_with_owners(mut envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, owners: DocumentStoreOwners<P, Mutation>) -> Self {
         let (current, applied_edit_ids, redo_edit_ids, cursor, local_actor_id, dag, edit_sequence, clock, initial_digest, revision_accumulator) = runtime.into_parts();
         let current_checkpoint_id = cursor.checkpoint_id.clone();
         envelope.cursor = Some(cursor);
@@ -15199,7 +15247,7 @@ where
 
     /// @emoji 🔐️ Installs the one domain-supplied owner catalog before a store can enter
     /// retained replacement or close. There is no default catalog and a second installation faults.
-    pub fn install_member_store_owners_exact(&mut self, owners: MemberStoreOwners<P, Mutation>) {
+    pub fn install_document_store_owners_exact(&mut self, owners: DocumentStoreOwners<P, Mutation>) {
         assert!(
             self.snapshot_retirement_factory.is_none() && self.initial_snapshot_retirement_factory.is_none() && self.mutation_retirement_factory.is_none() && self.owned_disposer.is_none() && !self.owned_disposer_terminal,
             "a freshly constructed member store must not carry preinstalled or terminal owner authority"
@@ -19051,12 +19099,12 @@ where
     }
 
     fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected> {
-        let Some(factory) = self.snapshot_retirement_factory.as_ref() else {
-            return Err(SnapshotRetirementRejected { snapshot, reason: "child snapshot retirement factory is not installed".into() });
+        let Some(factory) = (*self.initial_snapshot_retirement_factory).clone() else {
+            return Err(SnapshotRetirementRejected { snapshot, reason: "child snapshot owned-value retirement factory is not installed".into() });
         };
         let snapshot =
             snapshot.into_typed::<P>(&self.snapshot_read_leases).map_err(|snapshot| SnapshotRetirementRejected { snapshot, reason: "child snapshot retirement type, lease registry, or generation does not match its exact member".into() })?;
-        Ok(factory.retire(snapshot))
+        Ok(Box::new(ReturnedSnapshotReadRetirement::new(snapshot, factory)))
     }
 
     fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String> {
@@ -19486,11 +19534,11 @@ impl MemberFactory for NoMembers {
 macro_rules! space_members {
     (pub enum $enum_name:ident, $open_name:ident { $($variant:ident($kind:literal, $standard:literal, $subset:literal, $schema:literal) => ($snapshot:ty, $mutation:ty)),+ $(,)? }) => {
         pub enum $enum_name {
-            $($variant($crate::os_store::ArtifactStore<$snapshot, $mutation>)),+
+            $($variant(Box<$crate::os_store::ArtifactStore<$snapshot, $mutation>>)),+
         }
 
         pub enum $open_name {
-            $($variant($crate::os_store::InitialMemberStoreOpen<$enum_name, $snapshot, $mutation>)),+
+            $($variant(Box<$crate::os_store::InitialMemberStoreOpen<$enum_name, $snapshot, $mutation>>)),+
         }
 
         impl $crate::os_store::MemberOpenOperation for $open_name {
@@ -19507,143 +19555,143 @@ macro_rules! space_members {
             }
 
             fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<$crate::os_store::SnapshotRetirementStep, String> {
-                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::close_step(open, maximum_items, maximum_bytes)),+ }
+                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::close_step(open.as_mut(), maximum_items, maximum_bytes)),+ }
             }
 
             fn terminal_is_empty(&self) -> bool {
-                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::terminal_is_empty(open)),+ }
+                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::terminal_is_empty(open.as_ref())),+ }
             }
         }
 
         impl $crate::os_store::SpaceMember for $enum_name {
             async fn document_id(&self) -> &str {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_id(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_id(m.as_ref()).await),+ }
             }
             fn artifact_ref(&self) -> Option<$crate::os_io::ArtifactRef> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::artifact_ref(m)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::artifact_ref(m.as_ref())),+ }
             }
             fn owner_ref(&self) -> Option<$crate::os_store::OwnerRef> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::owner_ref(m)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::owner_ref(m.as_ref())),+ }
             }
             fn child_restore_projection(&self) -> Result<$crate::os_store::ChildRestoreProjection<'_>, $crate::os_store::ChildRestoreProjectionError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::child_restore_projection(m)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::child_restore_projection(m.as_ref())),+ }
             }
             fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_publication_identity(m)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_publication_identity(m.as_ref())),+ }
             }
             fn one_item_wire_publication_supported(&self) -> bool {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_wire_publication_supported(m)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_wire_publication_supported(m.as_ref())),+ }
             }
             fn begin_one_item_wire_publication(&self, request: $crate::os_store::MemberStoreOneItemWireRequest) -> Result<Box<dyn $crate::os_store::ErasedMemberStoreOneItemPublication>, $crate::os_store::ArtifactStoreBatchAdmissionRejected<$crate::os_store::MemberStoreOneItemWire>> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::begin_one_item_wire_publication(m, request)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::begin_one_item_wire_publication(m.as_ref(), request)),+ }
             }
             fn advance_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::ArtifactStoreOneItemAdvance, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::advance_one_item_publication(m, publication, grant)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::advance_one_item_publication(m.as_mut(), publication, grant)),+ }
             }
             fn prepare_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::ArtifactStoreOneItemPreparationStep, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::prepare_one_item_publication(m, publication, grant)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::prepare_one_item_publication(m.as_mut(), publication, grant)),+ }
             }
             fn abort_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::SnapshotRetirementStep, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::abort_one_item_publication(m, publication, grant)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::abort_one_item_publication(m.as_mut(), publication, grant)),+ }
             }
             fn snapshot_read_erased_now(&self) -> Result<$crate::os_store::ErasedSnapshotRead, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased_now(m)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased_now(m.as_ref())),+ }
             }
             async fn snapshot_read_erased(&self) -> Result<$crate::os_store::ErasedSnapshotRead, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased(m.as_ref()).await),+ }
             }
             fn retire_snapshot_read_erased(&mut self, snapshot: $crate::os_store::ErasedSnapshotRead) -> Result<Box<dyn $crate::os_store::ErasedSnapshotRetirement>, $crate::os_store::SnapshotRetirementRejected> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::retire_snapshot_read_erased(m, snapshot)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::retire_snapshot_read_erased(m.as_mut(), snapshot)),+ }
             }
             fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn $crate::os_store::ErasedSnapshotRetirement>>, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::take_returned_snapshot_read_retirement(m)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::take_returned_snapshot_read_retirement(m.as_mut())),+ }
             }
             fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_leases_terminal_is_empty(m)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_leases_terminal_is_empty(m.as_ref())),+ }
             }
             fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<$crate::os_store::SnapshotRetirementStep, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_step(m, maximum_items, maximum_bytes)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_step(m.as_mut(), maximum_items, maximum_bytes)),+ }
             }
             fn close_owned_terminal_is_empty(&self) -> bool {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_terminal_is_empty(m)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_terminal_is_empty(m.as_ref())),+ }
             }
             fn content_revision_now(&self) -> [u8; 32] {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::content_revision_now(m)),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::content_revision_now(m.as_ref())),+ }
             }
             async fn content_revision(&self) -> [u8; 32] {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::content_revision(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::content_revision(m.as_ref()).await),+ }
             }
             async fn is_dirty(&self) -> bool {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::is_dirty(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::is_dirty(m.as_ref()).await),+ }
             }
             async fn commit_checkpoint(&mut self, message: String, authors: Vec<$crate::os_store::Author>) -> Result<String, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::commit_checkpoint(m, message, authors).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::commit_checkpoint(m.as_mut(), message, authors).await),+ }
             }
             async fn current_checkpoint_id(&self) -> Option<String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::current_checkpoint_id(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::current_checkpoint_id(m.as_ref()).await),+ }
             }
             async fn current_alternative_id(&self) -> Option<String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::current_alternative_id(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::current_alternative_id(m.as_ref()).await),+ }
             }
             async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::checkout(m, checkpoint_id, alternative_id).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::checkout(m.as_mut(), checkpoint_id, alternative_id).await),+ }
             }
             async fn create_alternative(&mut self, name: String) -> Result<String, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::create_alternative(m, name).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::create_alternative(m.as_mut(), name).await),+ }
             }
             async fn last_local_edit_timestamp(&self) -> Option<$crate::os_spr::HybridLogicalTimestamp> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::last_local_edit_timestamp(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::last_local_edit_timestamp(m.as_ref()).await),+ }
             }
             async fn last_undone_local_edit_timestamp(&self) -> Option<$crate::os_spr::HybridLogicalTimestamp> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::last_undone_local_edit_timestamp(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::last_undone_local_edit_timestamp(m.as_ref()).await),+ }
             }
             async fn undo(&mut self) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::undo(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::undo(m.as_mut()).await),+ }
             }
             async fn redo(&mut self) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::redo(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::redo(m.as_mut()).await),+ }
             }
             async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::as_any_mut(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::as_any_mut(m.as_mut()).await),+ }
             }
             async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<$crate::os_spr::MutationMessage> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::preview_wire(m, ops).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::preview_wire(m.as_ref(), ops).await),+ }
             }
             async fn dispatch_wire(&mut self, cmd_bytes: &[u8]) -> Result<$crate::os_store::CommandReceipt, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::dispatch_wire(m, cmd_bytes).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::dispatch_wire(m.as_mut(), cmd_bytes).await),+ }
             }
             async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: $crate::os_spr::MergePolicy) -> Result<$crate::os_store::CommandReceipt, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::dispatch_wire_with_policy(m, cmd_bytes, policy).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::dispatch_wire_with_policy(m.as_mut(), cmd_bytes, policy).await),+ }
             }
             async fn tail_group_id(&self) -> Option<String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::tail_group_id(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::tail_group_id(m.as_ref()).await),+ }
             }
             async fn tail_edit_id(&self) -> Option<String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::tail_edit_id(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::tail_edit_id(m.as_ref()).await),+ }
             }
             async fn redo_tail(&self) -> Option<(String, Option<String>)> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::redo_tail(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::redo_tail(m.as_ref()).await),+ }
             }
             async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stamp_tail_group_id(m, group_id).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stamp_tail_group_id(m.as_mut(), group_id).await),+ }
             }
             async fn stamp_tail_origin(&mut self, origin: $crate::os_spr::MutationOrigin) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stamp_tail_origin(m, origin).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stamp_tail_origin(m.as_mut(), origin).await),+ }
             }
             async fn set_owner(&mut self, owner: Option<$crate::os_store::OwnerRef>) {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::set_owner(m, owner).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::set_owner(m.as_mut(), owner).await),+ }
             }
             async fn document_pack_bytes(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_pack_bytes(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_pack_bytes(m.as_ref()).await),+ }
             }
             async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::envelope_pack_bytes(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::envelope_pack_bytes(m.as_ref()).await),+ }
             }
             async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::pack_at_checkpoint(m, checkpoint_id).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::pack_at_checkpoint(m.as_ref(), checkpoint_id).await),+ }
             }
             async fn merge_policy(&self) -> $crate::os_spr::MergePolicy {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::merge_policy(m).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::merge_policy(m.as_ref()).await),+ }
             }
         }
 
@@ -19660,20 +19708,20 @@ macro_rules! space_members {
                     Err(diagnostic) => return Err($crate::os_store::MemberOpenAdmissionError { diagnostic, request }),
                 };
                 match (dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str()) {
-                    $(($kind, $standard, $subset) => $crate::os_store::InitialMemberStoreOpen::begin(request).map($open_name::$variant),)+
+                    $(($kind, $standard, $subset) => $crate::os_store::InitialMemberStoreOpen::begin(request).map(|open| $open_name::$variant(Box::new(open))),)+
                     _ => Err($crate::os_store::MemberOpenAdmissionError { diagnostic: $crate::os_store::MemberOpenDiagnostic::Identity, request }),
                 }
             }
 
             async fn create(id: &str, dialect: &$crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, $crate::os_store::VcsError> {
                 match (dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str()) {
-                    $(($kind, $standard, $subset) => Ok(Self::$variant($crate::os_store::create_member_store($schema, id, dialect, initial_pack).await?)),)+
+                    $(($kind, $standard, $subset) => Ok(Self::$variant(Box::new($crate::os_store::create_member_store($schema, id, dialect, initial_pack).await?))),)+
                     _ => Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", dialect.to_coordinate(), stringify!($enum_name)))),
                 }
             }
             async fn open(expected: &$crate::os_io::ArtifactRef, owner: Option<&$crate::os_store::OwnerRef>, envelope_pack: &[u8]) -> Result<Self, $crate::os_store::VcsError> {
                 match (expected.dialect.artifact_kind.as_str(), expected.dialect.standard.as_str(), expected.dialect.subset.as_str()) {
-                    $(($kind, $standard, $subset) => Ok(Self::$variant($crate::os_store::open_member_store($schema, expected, owner, envelope_pack).await?)),)+
+                    $(($kind, $standard, $subset) => Ok(Self::$variant(Box::new($crate::os_store::open_member_store($schema, expected, owner, envelope_pack).await?))),)+
                     _ => Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", expected.dialect.to_coordinate(), stringify!($enum_name)))),
                 }
             }
@@ -21569,7 +21617,7 @@ impl ArtifactPack for protocol::InteractionState {
 mod artifact_addressing_tests;
 
 #[cfg(test)]
-#[path = "🧪️testkit/🦀️.rs"]
+#[path = "🧫️fixtures/🦀️.rs"]
 mod fixture_mutations;
 
 #[cfg(test)]

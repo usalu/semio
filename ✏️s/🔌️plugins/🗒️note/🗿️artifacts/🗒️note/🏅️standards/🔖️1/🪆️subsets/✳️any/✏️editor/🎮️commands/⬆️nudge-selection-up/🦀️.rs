@@ -1,6 +1,5 @@
 //! 🕹️ 🕹️ Note play app commands command — `nudge-selection-up`.
 
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::op::NoteMutation;
 use crate::schema::{block_id, flatten_blocks};
 use crate::{NoteBlockNode, NoteSnapshot};
@@ -14,7 +13,7 @@ const NUDGE_STEP: f64 = 1.0;
 
 /// 🧬️ Offsets every unlocked selected block by `(dx, dy)` — one `drag-blocks` mutation for the
 /// whole gesture (real multi-select drag), never a whole-`blocks` vec swap.
-fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f64) -> Emit<NoteMutation, NoteConfigMutation> {
+fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f64) -> Emit<NoteMutation, semio_framework_plugin::NoConfigMutation> {
     if selected_ids.is_empty() {
         return Emit::default();
     }
@@ -46,7 +45,7 @@ fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f64) -> 
 #[dsl(keyword = "nudge-selection-up")]
 pub struct NudgeSelectionUp {}
 
-pub fn handle(_payload: &NudgeSelectionUp, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(_payload: &NudgeSelectionUp, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     Ok(nudge(doc.snapshot, &ctx.selected_block_ids, 0.0, -NUDGE_STEP))
 }
 

@@ -31,9 +31,9 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { HostReactFlow, HostReactFlowProvider } from "../🔌️Ports/🟦️.tsx";
-import { createDiagramLayoutPublication, diagramLayoutCredits, DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_UNIT, type DiagramLayoutOptions, type DiagramLayoutPublicationResult } from "./📐️layout.ts";
-export { DIAGRAM_UNIT, DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_INGRESS_ITEMS, DIAGRAM_LAYOUT_MAX_EDGE_BYTES, DIAGRAM_LAYOUT_MAX_ID_CHARACTERS, DIAGRAM_LAYOUT_MAX_INPUT_ITEMS, DIAGRAM_LAYOUT_MAX_NODE_BYTES, DIAGRAM_LAYOUT_MAX_RESERVED_BYTES, DIAGRAM_LAYOUT_OUTPUT_ITEMS } from "./📐️layout.ts";
-export type { DiagramLayoutDescriptor, DiagramLayoutDirection, DiagramLayoutEdgeWire, DiagramLayoutIngressPage, DiagramLayoutNodeWire, DiagramLayoutOptions, DiagramLayoutPosition, DiagramLayoutPositionPage, DiagramLayoutTerminal } from "./📐️layout.ts";
+import { createDiagramLayoutPublication, diagramLayoutCredits, DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_UNIT, type DiagramLayoutOptions, type DiagramLayoutPublicationResult } from "./📐️layout/🟦️.ts";
+export { DIAGRAM_UNIT, DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_INGRESS_ITEMS, DIAGRAM_LAYOUT_MAX_EDGE_BYTES, DIAGRAM_LAYOUT_MAX_ID_CHARACTERS, DIAGRAM_LAYOUT_MAX_INPUT_ITEMS, DIAGRAM_LAYOUT_MAX_NODE_BYTES, DIAGRAM_LAYOUT_MAX_RESERVED_BYTES, DIAGRAM_LAYOUT_OUTPUT_ITEMS } from "./📐️layout/🟦️.ts";
+export type { DiagramLayoutDescriptor, DiagramLayoutDirection, DiagramLayoutEdgeWire, DiagramLayoutIngressPage, DiagramLayoutNodeWire, DiagramLayoutOptions, DiagramLayoutPosition, DiagramLayoutPositionPage, DiagramLayoutTerminal } from "./📐️layout/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Diagram

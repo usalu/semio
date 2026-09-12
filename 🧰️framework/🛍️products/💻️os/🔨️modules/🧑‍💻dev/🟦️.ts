@@ -4,8 +4,8 @@
 
 import "./🎨️.css";
 
-export type { PluginBuildTarget } from "../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
-export { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PROGRAM_TARGETS, pluginModuleUrl, extensionModuleUrl } from "../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
+export type { PluginBuildTarget } from "../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+export { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PROGRAM_TARGETS, pluginModuleUrl, extensionModuleUrl } from "../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 export { PLAYGROUND_SESSION } from "virtual:semio-playground-session";
 
 import type { AppRole } from "@semio-tech/framework";

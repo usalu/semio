@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::gis2d::testkit::{app, assert_two_instances_converge, close, dispatch};
+use crate::editor::gis2d::unit_tests::context::{app, assert_two_instances_converge, close, dispatch};
 use crate::editor::gis2d::Gis2dCommand;
 
 const ROUTE_A: &str = "bg_holz_fassade_botanique:bw_institut_botanique_ulg:0";

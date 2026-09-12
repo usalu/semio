@@ -1,7 +1,6 @@
 //! 📸️ Remodeling editor — the `ArtifactEditor` impl (dispatch-only), the aggregated command enum and the
-//! manifest stitch. `RemodelingPlayApp` is a unit struct; every former `RemodelingPlayRuntime` field
-//! (camera/selection/layers/frame cursor/report table) lives in `crate::editor::remodeling::config`, written
-//! via `RemodelingConfigMutation`s (real `backwards`, no ad hoc runtime mutation); every action dispatches
+//! manifest stitch. `RemodelingPlayApp` is a unit struct; each former `RemodelingPlayRuntime` field
+//! lives in the exact Model, Frames, or Report window config; every action dispatches
 //! through the single typed `RemodelingCommand` channel via `ArtifactEditor::handle`.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window scenes in
@@ -11,21 +10,19 @@
 //! routing table: `handle` → `RemodelingCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::editor::remodeling::engine::images as remodeling_image;
 use crate::editor::remodeling::modes::{analyze, capture, model};
 use crate::editor::remodeling::panels::{calibration as calibration_panel, document, media, parameters, quality, results, tracks};
-use crate::editor::remodeling::presence::{RemodelingPresence, RemodelingPresenceMutation};
 use crate::editor::remodeling::terminology::remodeling_labels;
 use crate::op::RemodelingMutation;
 use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, REMODELING_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp,
     Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
+    MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use std::collections::HashMap;
 use store::ArtifactPack;
@@ -191,7 +188,7 @@ semio_framework_plugin::app_commands! {
     /// (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the
     /// kebab-case `#[dsl(key = ..)]` the codec uses) — genuinely different vocabularies:
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum RemodelingCommand for RemodelingSnapshot, RemodelingMutation, RemodelingConfig, RemodelingConfigMutation {
+    pub enum RemodelingCommand for RemodelingSnapshot, RemodelingMutation, NoConfig, NoConfigMutation {
         // 🚀️ Generation-tagged reconstruction; the hidden row is appended to preserve ordinals.
         "runReconstruction" as "run-reconstruction" => run_reconstruction::RunReconstruction,
         "retryStage" as "retry-stage" => retry_stage::RetryStage,
@@ -431,17 +428,16 @@ mod args_bridge {
             "clearTracks" => RemodelingCommand::ClearTracks(clear_tracks::ClearTracks {}),
             "clearGeoProducts" => RemodelingCommand::ClearGeoProducts(clear_geo_products::ClearGeoProducts {}),
             "clearResult" => RemodelingCommand::ClearResult(clear_result::ClearResult {}),
-            // 🎥️ The world-3d surface reports its orbit camera as flat `{position,target,fov}`; a
-            // `{camera:{…}}`-shaped payload (what `RemodelingWorldCamera` itself serializes to) is accepted too.
             "setCamera" => {
                 let nested = field(args, "camera");
                 let source = if nested.is_some() { nested } else { args };
-                let default = crate::editor::remodeling::config::RemodelingWorldCamera::default();
+                let default = crate::editor::remodeling::modes::model::windows::model::config::RemodelingModelWindowConfig::default().camera;
                 RemodelingCommand::SetCamera(set_camera::SetCamera {
-                    camera: crate::editor::remodeling::config::RemodelingWorldCamera {
+                    camera: store::Viewport3dOrbit {
                         position: vec3(source, "position").unwrap_or(default.position),
                         target: vec3(source, "target").unwrap_or(default.target),
-                        fov: number(source, "fov").unwrap_or(default.fov),
+                        zoom: number(source, "zoom").unwrap_or(default.zoom),
+                        up: vec3(source, "up").or(default.up),
                     },
                 })
             }
@@ -459,8 +455,7 @@ mod args_bridge {
 //#endregion 🔖️ActionBridge
 
 //#region 🔖️RemodelingPlayApp
-/// 🧪️ Unit struct — every former `RemodelingPlayRuntime` field now lives in
-/// `crate::editor::remodeling::config::RemodelingConfig` (see `ArtifactEditor::Config`).
+/// 🧪️ Unit struct — concrete Model, Frames, and Report windows own their local view state.
 #[derive(Default)]
 pub struct RemodelingPlayApp;
 
@@ -519,8 +514,7 @@ const REMODELING_RETAINED_WORK_ITEMS: usize = 4_096;
 /// 🛣️ One publication lane per route, read off each handler's own `Emit` in `🎮️commands/*/🦀️.rs`:
 /// every reconstruction, ingestion, calibration, parameter and clear verb builds
 /// `Emit::mutations(..)`/`Emit::amend(..)`/`Emit { artifact_mutations, .. }` over `RemodelingMutation`
-/// (`Artifact`); the six session verbs build `Emit::config(..)` over `RemodelingConfigMutation`
-/// (`Config`); the three shell verbs build `Emit::effect(..)` only — `RequestFileOpen`,
+/// (`Artifact`); the four view verbs publish to their exact concrete `WindowConfig` owner; the three shell verbs build `Emit::effect(..)` only — `RequestFileOpen`,
 /// `RequestMediaFrames`, `DownloadMediaExport` — and never touch a store (`HostOnly`). No remodeling
 /// handler emits two store lanes, a draft, a presence or a transient mutation, so no route declares
 /// more than one lane.
@@ -555,10 +549,10 @@ const REMODELING_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPu
     artifact_route("clearTracks"),
     artifact_route("clearGeoProducts"),
     artifact_route("clearResult"),
-    config_route("setCamera"),
-    config_route("setLayerVisibility"),
-    config_route("setFrameCursor"),
-    config_route("setReportTable"),
+    window_config_route("setCamera"),
+    window_config_route("setLayerVisibility"),
+    window_config_route("setFrameCursor"),
+    window_config_route("setReportTable"),
     host_route("importFrames"),
     host_route("importVideo"),
     host_route("exportQcReport"),
@@ -572,9 +566,9 @@ const fn artifact_route(tool_id: &'static str) -> semio_framework_plugin::Artifa
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] }
 }
 
-/// 👁️ One config-lane publication row.
-const fn config_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] }
+/// 👁️ One exact window-config publication row.
+const fn window_config_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] }
 }
 
 /// 🐚️ One shell-effect-only publication row.
@@ -600,21 +594,78 @@ fn remodeling_retained_extent(command: &RemodelingCommand, snapshot: &Remodeling
     (items <= REMODELING_RETAINED_WORK_ITEMS).then_some(1)
 }
 
-#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
-fn remodeling_retained_reduce(
+fn remodeling_window_config_mutation(
     command: &RemodelingCommand,
-    snapshot: &RemodelingSnapshot,
-    config: &RemodelingConfig,
-    history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RemodelingPlayApp>>>,
-    operation: &AppOperationContext,
-) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation, NoDraftMutation>, Fault> {
-    if !REMODELING_RETAINED_TOOL_IDS.contains(&command.command_id()) {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.route"), "the bounded Remodeling reducer rejects undeclared routes"));
+    snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>,
+    view: &semio_framework_plugin::ViewModel,
+) -> Result<Option<semio_framework_plugin::WindowConfigMutation>, Fault> {
+    match command {
+        RemodelingCommand::SetCamera(payload) => {
+            let mut config = model::windows::model::config::from_snapshot(snapshot);
+            config.camera = payload.camera.clone();
+            model::windows::model::config::addressed(view, config).map(Some)
+        }
+        RemodelingCommand::SetLayerVisibility(payload) => {
+            let mut config = model::windows::model::config::from_snapshot(snapshot);
+            match payload.layer.as_str() {
+                "mesh" => config.layers.mesh = payload.visible,
+                "dense" => config.layers.dense = payload.visible,
+                "sparse" => config.layers.sparse = payload.visible,
+                "cameras" => config.layers.cameras = payload.visible,
+                "gcps" => config.layers.gcps = payload.visible,
+                _ => {}
+            }
+            model::windows::model::config::addressed(view, config).map(Some)
+        }
+        RemodelingCommand::SetFrameCursor(payload) => {
+            let mut config = capture::windows::frames::config::from_snapshot(snapshot);
+            config.frame_cursor = capture::windows::frames::config::RemodelingFrameCursor { stream_id: payload.stream_id.clone(), frame_index: payload.frame_index };
+            capture::windows::frames::config::addressed(view, config).map(Some)
+        }
+        RemodelingCommand::SetReportTable(payload) => {
+            let mut config = analyze::windows::report::config::from_snapshot(snapshot);
+            config.report_table = payload.table.clone();
+            analyze::windows::report::config::addressed(view, config).map(Some)
+        }
+        _ => Ok(None),
     }
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
+}
+
+struct RemodelingWindowCommandWork { tool_id: &'static str, completed: bool }
+
+impl RemodelingWindowCommandWork {
+    fn new(tool_id: &'static str) -> Self { Self { tool_id, completed: false } }
+}
+
+impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowCommandWork {
+    fn tool_id(&self) -> &'static str { self.tool_id }
+    fn extent(
+        &self,
+        command: &RemodelingCommand,
+        snapshot: &RemodelingSnapshot,
+        interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RemodelingPlayApp>>>,
+    ) -> Option<usize> {
+        (!self.completed && command.command_id() == self.tool_id).then(|| remodeling_retained_extent(command, snapshot, interaction)).flatten()
+    }
+    fn step(
+        &mut self,
+        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<RemodelingPlayApp>>,
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<RemodelingPlayApp>>, Fault> {
+        if self.completed || input.command.command_id() != self.tool_id {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.route"), "the bounded Remodeling work rejects an undeclared or completed route"));
+        }
+        let window = input.context.and_then(|context| context.window_config.as_ref());
+        let config_view = ConfigView { snapshot: input.config, window };
+        let document = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        let mut emit = input.command.dispatch(&document, &config_view)?;
+        if matches!(input.command, RemodelingCommand::SetCamera(_) | RemodelingCommand::SetLayerVisibility(_) | RemodelingCommand::SetFrameCursor(_) | RemodelingCommand::SetReportTable(_)) {
+            let view = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("remodeling-window-view-required"))?;
+            if let Some(mutation) = remodeling_window_config_mutation(input.command, window, view)? { emit.window_config_mutations.push(mutation); }
+        }
+        self.completed = true;
+        Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))
+    }
 }
 
 /// 🏭️ The app-owned retained command job factory — `factory_type:` in the proof block below binds this
@@ -689,6 +740,7 @@ struct RemodelingStorePreparation {
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<RemodelingSnapshot, RemodelingMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    phase: u8,
     cancelled: bool,
     closing: bool,
 }
@@ -698,7 +750,9 @@ impl store::ArtifactStoreOneItemPreparationFactory<RemodelingSnapshot, Remodelin
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Remodeling Store preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(
+            store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES,
+        ))
     }
 
     fn begin(
@@ -724,6 +778,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<RemodelingSnapshot, Remodelin
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            phase: 0,
             cancelled: false,
             closing: false,
         }))
@@ -739,6 +794,9 @@ impl store::ArtifactStoreOneItemPreparation<RemodelingSnapshot, RemodelingMutati
         if self.prepared.is_some() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
         }
+        if self.phase >= 1 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
         let base = self.base.as_ref().ok_or_else(|| "Remodeling preparation lost its exact base root".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "Remodeling preparation lost its mutation owner".to_string())?;
         let inverse = mutation.inverse(base.get());
@@ -749,6 +807,7 @@ impl store::ArtifactStoreOneItemPreparation<RemodelingSnapshot, RemodelingMutati
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
+        self.phase = 1;
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
@@ -796,121 +855,7 @@ impl store::ArtifactStoreOneItemPreparation<RemodelingSnapshot, RemodelingMutati
     }
 }
 
-/// 📬️ The config lane's twin — remodeling's six session verbs (`setCamera`/`setLayerVisibility`/
-/// the runtime rejects a `Config` publication contract outright when this factory is absent.
-struct RemodelingConfigStorePreparationFactory;
-
-struct RemodelingConfigStorePreparation {
-    base: Option<store::SnapshotRead<RemodelingConfig>>,
-    mutation: Option<RemodelingConfigMutation>,
-    description: Option<String>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<RemodelingConfig, RemodelingConfigMutation>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
-    cancelled: bool,
-    closing: bool,
-}
-
-impl store::ArtifactStoreOneItemPreparationFactory<RemodelingConfig, RemodelingConfigMutation> for RemodelingConfigStorePreparationFactory {
-    fn preflight(&self, _mutation: &RemodelingConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Remodeling config preparation rejected its lane or description envelope".into());
-        }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
-    }
-
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<RemodelingConfig, RemodelingConfigMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<RemodelingConfig, RemodelingConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<RemodelingConfig, RemodelingConfigMutation>> {
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-        {
-            return Err(request);
-        }
-        Ok(Box::new(RemodelingConfigStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            description: request.description,
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            cancelled: false,
-            closing: false,
-        }))
-    }
-}
-
-impl store::ArtifactStoreOneItemPreparation<RemodelingConfig, RemodelingConfigMutation> for RemodelingConfigStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::Mutation as _;
-        if !grant.permits_one() || self.cancelled {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        let base = self.base.as_ref().ok_or_else(|| "Remodeling config preparation lost its exact base root".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "Remodeling config preparation lost its mutation owner".to_string())?;
-        let inverse = mutation.inverse(base.get());
-        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
-        let authority = self.authority.as_ref().ok_or_else(|| "Remodeling config preparation lost its Store authority".to_string())?;
-        let id = format!("remodeling-config-retained-{}", authority.next_sequence_number());
-        let edit = remodeling_retained_edit(id, authority, vec![mutation], inverse, self.description.take());
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-    }
-
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<RemodelingConfig, RemodelingConfigMutation>> {
-        self.prepared.as_ref()
-    }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<RemodelingConfig, RemodelingConfigMutation>> {
-        self.prepared.take()
-    }
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err("Remodeling config preparation could not return its exact base root".into());
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
-}
-
-/// 🧾️ The one `protocol::Edit` envelope both lanes above stage — identical field-for-field, so it is
+ /// 🧾️ The one `protocol::Edit` envelope both lanes above stage — identical field-for-field, so it is
 /// written once and parameterised by the mutation type rather than duplicated per lane.
 fn remodeling_retained_edit<M>(id: String, authority: &store::ArtifactStoreOneItemLiveAuthority, forwards: Vec<M>, inverse: Vec<M>, description: Option<String>) -> protocol::Edit<M> {
     let mutation_id = protocol::MutationId(format!("{id}#0"));
@@ -944,12 +889,12 @@ fn remodeling_retained_edit<M>(id: String, authority: &store::ArtifactStoreOneIt
 impl ArtifactEditor for RemodelingPlayApp {
     type Snapshot = RemodelingSnapshot;
     type Mutation = RemodelingMutation;
-    type Config = RemodelingConfig;
-    type ConfigMutation = RemodelingConfigMutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = RemodelingPresence;
-    type PresenceMutation = RemodelingPresenceMutation;
+    type Presence = semio_framework_plugin::NoPresence;
+    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
@@ -962,8 +907,54 @@ impl ArtifactEditor for RemodelingPlayApp {
         Some(std::sync::Arc::new(RemodelingStorePreparationFactory))
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(std::sync::Arc::new(RemodelingConfigStorePreparationFactory))
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_owners())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::no_config_store_disposer())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<model::windows::model::config::RemodelingModelWindowConfigOwner>()?;
+        registry.register::<capture::windows::frames::config::RemodelingFramesWindowConfigOwner>()?;
+        registry.register::<analyze::windows::report::config::RemodelingReportWindowConfigOwner>()
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -1002,7 +993,7 @@ impl ArtifactEditor for RemodelingPlayApp {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.extent"), "Remodeling bounded route exceeded its declared work extent"));
         }
         let tool_id = request.command.command_id();
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, remodeling_retained_reduce, remodeling_retained_extent));
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(RemodelingWindowCommandWork::new(tool_id));
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id,
@@ -1028,10 +1019,6 @@ impl ArtifactEditor for RemodelingPlayApp {
             work,
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
-    }
-
-    fn app_schema() -> Option<framework_schema::AppSchemaDescriptor> {
-        Some(crate::editor::remodeling::config::schema::app_schema_descriptor())
     }
 
     /// 🚀️ Boots on the registered boot example when its committed text parses, falling back to the
@@ -1075,7 +1062,7 @@ impl ArtifactEditor for RemodelingPlayApp {
     /// `document:in` stays `MediaError::NotImplemented`, unchanged from the inherited default: remodeling
     /// has no whole-document-replace `Mutation` variant to satisfy `whole_document_mutation`
     /// (`RemodelingMutation` is deliberately field-granular — see that enum's doc comment).
-    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RemodelingSnapshot>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RemodelingSnapshot>) -> Result<Emit<RemodelingMutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "photos:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -1128,23 +1115,26 @@ impl ArtifactEditor for RemodelingPlayApp {
     fn handle(
         command: &RemodelingCommand,
         doc: &ArtifactView<'_, RemodelingSnapshot>,
-        cfg: &ConfigView<'_, RemodelingConfig>,
+        cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+    ) -> Result<Emit<RemodelingMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
+        let mut emit = command.dispatch(doc, cfg)?;
+        if let Some(view) = _view_state {
+            if let Some(mutation) = remodeling_window_config_mutation(command, cfg.window, view)? { emit.window_config_mutations.push(mutation); }
+        }
+        Ok(emit)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let scene = doc.snapshot;
-        let config = cfg.snapshot;
         let labels = remodeling_labels(view_state);
         let built = match body_key {
-            model::windows::model::REMODELING_PLAY_BODY_MAIN => model::windows::model::render(scene, config),
-            capture::windows::frames::REMODELING_PLAY_BODY_FRAMES => capture::windows::frames::render(scene, config),
-            analyze::windows::report::REMODELING_PLAY_BODY_REPORT => analyze::windows::report::render(scene, config),
+            model::windows::model::REMODELING_PLAY_BODY_MAIN => model::windows::model::render(scene, &model::windows::model::config::current(cfg)),
+            capture::windows::frames::REMODELING_PLAY_BODY_FRAMES => capture::windows::frames::render(scene, &capture::windows::frames::config::current(cfg)),
+            analyze::windows::report::REMODELING_PLAY_BODY_REPORT => analyze::windows::report::render(scene, &analyze::windows::report::config::current(cfg)),
             media::REMODELING_PLAY_BODY_MEDIA => media::render(scene, labels),
             document::REMODELING_PLAY_BODY_PIPELINE => document::render(scene, view_state.active_utility_id.as_deref().unwrap_or("select"), labels),
             results::REMODELING_PLAY_BODY_RESULTS => results::render(scene, labels),
@@ -1159,8 +1149,8 @@ impl ArtifactEditor for RemodelingPlayApp {
 
     /// 👁️ Dynamic per-render window measures — the Model window's layer toggles must reflect the LIVE
     /// config, so they are supplied here rather than frozen into the manifest.
-    fn window_measures(_doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        HashMap::from([(model::windows::model::REMODELING_PLAY_WINDOW_MAIN.to_string(), model::windows::model::window_measures(cfg.snapshot, remodeling_labels(view_state)))])
+    fn window_measures(_doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        HashMap::from([(model::windows::model::REMODELING_PLAY_WINDOW_MAIN.to_string(), model::windows::model::window_measures(&model::windows::model::config::current(cfg), remodeling_labels(view_state)))])
     }
 }
 //#endregion 🔖️RemodelingPlayApp
@@ -1473,16 +1463,10 @@ pub fn create_remodeling_app() -> AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
 /// able to drive the whole app without re-deriving the harness.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
-#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests

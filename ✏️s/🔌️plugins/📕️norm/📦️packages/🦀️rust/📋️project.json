@@ -15,14 +15,14 @@
       "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts surface-render-test", "forwardAllArgs": true },
       "outputs": []
     },
-    "config-mutation-source": {
+    "results-window-config-source": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts config-mutation-source", "forwardAllArgs": true },
+      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts results-window-config-source", "forwardAllArgs": true },
       "outputs": []
     },
-    "config-mutation-test": {
+    "results-window-config-test": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts config-mutation-test", "forwardAllArgs": true },
+      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts results-window-config-test", "forwardAllArgs": true },
       "outputs": []
     },
     "check": {

@@ -53,7 +53,7 @@ async fn kinds_match_enum_variants_and_catalog() {
     let declared_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
     assert_eq!(variant_kinds, declared_kinds, "KINDS must list every DeflateMutation variant exactly once");
 
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

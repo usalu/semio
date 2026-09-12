@@ -45,7 +45,7 @@ pub fn plugin() -> Result<Plugin<ImperativeApps>, PluginAssemblyError> {
 }
 
 //#region 🧪️Tests
-/// 🧪️ Contract §2.5 surface-testkit assertions, canonical versions (framework SDK, w0-f gap 2
+/// 🧪️ Contract §2.5 surface-test context assertions, canonical versions (framework SDK, w0-f gap 2
 /// closure) — no local stand-ins needed, unlike the `📐️cad` pilot which predated their landing.
 #[cfg(test)]
 #[path = "🧪️tests/🔬️surface/🦀️.rs"]

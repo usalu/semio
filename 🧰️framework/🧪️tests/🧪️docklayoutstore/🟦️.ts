@@ -1392,3 +1392,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   //#endregion 🔖️WaitForEventTests
 
 }
+
+if (import.meta.vitest) {
+  const framework = await import("@semio-tech/framework");
+  await registerTests1(import.meta.vitest, framework, { directory: import.meta.dir, url: import.meta.url });
+}

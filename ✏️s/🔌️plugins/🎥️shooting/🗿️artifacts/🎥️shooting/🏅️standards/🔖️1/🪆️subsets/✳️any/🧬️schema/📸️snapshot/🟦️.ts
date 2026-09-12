@@ -17,7 +17,7 @@ export interface ShootingSnapshot {
   activeShotId: string;
   /** @state artifact */
   activeAssetId: string;
-  /** @state artifact @child kind=s.stdio.semio.image */
+  /** @state artifact @child kind=s.stdio.semio */
   emblem?: ArtifactChild;
 }
 

@@ -1,6 +1,6 @@
 """🐍️ Python oracle adapter for the PDF 1.4 text layer.
 
-The reference is `pypdf`, registered by this plugin's 🧪️oracle contribution and put on this host's
+The reference is `pypdf`, registered by this plugin's 🔮️oracles contribution and put on this host's
 import path by the `python` entry in its `oracleHostPackages`. Nothing in this file knows where the
 interpreter came from — the coordinator provisions it.
 """

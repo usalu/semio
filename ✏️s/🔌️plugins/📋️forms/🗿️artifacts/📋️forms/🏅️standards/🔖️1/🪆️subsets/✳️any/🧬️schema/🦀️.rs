@@ -15,7 +15,7 @@ use framework_schema::ArtifactSchema;
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`forms→C:value,table`): `steps: Vec<FormStep>` is
 /// replaced by the same `structure`/`results` composed-child slot pair as `FormsSnapshot` — read
 /// through `crate::forms_artifact_steps`, never a bare field.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms")]
 pub struct FormsArtifact {
@@ -29,12 +29,19 @@ pub struct FormsArtifact {
     #[value(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.value")]
+    #[child(kind = "s.stdio.semio")]
     pub structure: FormsStructureChild,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.table")]
+    #[child(kind = "s.stdio.semio")]
     pub results: FormsResultsChild,
 }
+
+impl dsl::FromValue for FormsArtifact {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        <crate::FormsSnapshot as dsl::FromValue>::from_value(value).map(Self::from_snapshot)
+    }
+}
+
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
@@ -270,3 +277,7 @@ pub use crate::FormQuestion;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::FormStep;
 //#endregion 🔁️Re-exports
+
+#[cfg(test)]
+#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
+mod document_contract_tests;

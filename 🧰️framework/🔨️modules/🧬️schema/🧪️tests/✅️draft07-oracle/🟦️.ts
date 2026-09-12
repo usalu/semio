@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
  * `../../🧫️fixtures/✅️draft07-validation-vectors.json` corpus that
  * `owned_validator_agrees_with_the_shared_draft07_vectors` drives must produce the same verdicts in
  * ajv. `ajv-formats` in its default "full" mode is the oracle for the seven asserted `format` values
- * pinned by `ASSERTED_STRING_FORMATS` in `✅️validator.rs`. Both are test-only oracles — no production
+ * pinned by `ASSERTED_STRING_FORMATS` in `✅️validator/🦀️.rs`. Both are test-only oracles — no production
  * code in this repo may depend on them.
  * @see https://ajv.js.org/json-schema.html */
 type Vector = {

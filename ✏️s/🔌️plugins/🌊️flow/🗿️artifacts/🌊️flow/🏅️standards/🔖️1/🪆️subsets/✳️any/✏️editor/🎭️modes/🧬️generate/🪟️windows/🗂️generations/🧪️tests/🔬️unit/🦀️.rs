@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::flow::testkit::{flow_app, render as render_body};
+use crate::editor::flow::unit_tests::context::{flow_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn the_empty_generation_list_still_offers_the_add_action() {

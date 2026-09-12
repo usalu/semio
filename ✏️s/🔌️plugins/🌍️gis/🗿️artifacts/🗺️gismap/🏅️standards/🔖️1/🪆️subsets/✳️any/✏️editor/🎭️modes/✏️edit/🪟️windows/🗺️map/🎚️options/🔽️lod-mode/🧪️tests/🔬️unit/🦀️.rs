@@ -10,7 +10,7 @@ async fn the_tier_list_always_starts_with_the_automatic_mode() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_measure_mirrors_the_config_value() {
-    let config = Gis2dConfig::default();
+    let config = MapWindowConfig::default();
     let WindowMeasure::Select { value, items, .. } = measure(&config, gis2d_labels(&semio_framework_plugin::ViewModel::default())) else {
         panic!("lod mode is a select measure");
     };

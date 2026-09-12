@@ -1,6 +1,6 @@
 use super::*;
 use crate::{NoteBlockNode, NoteImageAsset};
-use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 use protocol::SemanticMutation;
 
 fn sample_snapshot() -> NoteSnapshot {

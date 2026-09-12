@@ -3,7 +3,7 @@
 @comparison-semantic-fem2d-analysis-v1
 Feature: Solve real fem2d models, and every mutation of one, against a third-party structural solver
 
-  THE DEBT THIS CASE PAYS. `../../../🌐️any/🔮️oracle/🔣️.json` recorded, under
+  THE DEBT THIS CASE PAYS. `../../../🌐️any/🔮️oracles/🔣️.json` recorded, under
   `noOracleDecisions/fem2d-non-geometry-mutation-semantics`, that twenty-two of this artifact's
   twenty-five mutation kinds owed a qualifying third-party reference and had none. Its reasoning was
   that "code_aster, OpenSees, anastruct and PyNite compute displacements and forces FROM a model,

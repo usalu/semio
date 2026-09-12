@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "entrypoint": "📜️script.ts",
-  "deferredModule": "./.storybook/scopes.ts",
+  "deferredModule": "./.storybook/📖️stories/🧭️coordination/🟦️.ts",
   "catalogRoots": ["🧰️framework", "✏️s"],
   "consumers": [
     { "owner": "DevScript", "method": "parseStorybookSegments", "binding": "resolveActiveScopes", "caller": "runStorybook" },

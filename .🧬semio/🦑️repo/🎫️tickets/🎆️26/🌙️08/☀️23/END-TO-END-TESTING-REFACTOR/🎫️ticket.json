@@ -3,7 +3,7 @@
   "emoji": "🧪️",
   "status": "closed",
   "description": "Implement the end-to-end testing refactor plan: make the nearest language-neutral domain owner the unit of test ownership. Deliver a new repo test domain (🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test) owning taxonomy, Gherkin feature parsing, case discovery, scenario planning, oracle registry, native host protocols, result schemas, semantic comparison profiles, reporting, test-output cleanup and multi-ecosystem test dependency classification. Add Nx per-test-case project generation from **/🧪️tests/*/component.feature, native hosts for TypeScript/Rust/Go/Python/.NET, oracle-first development protocol, PDF pilots (pdf-writer creation oracle, lopdf editing oracle) on the ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf owner, safe `clean test`, taxonomy/testing policy breach families, multi-ecosystem dependency baseline with production reachability, CI gates, and launch.json entries. compose/** is a hard forbidden path for discovery, migration, cleaning, coverage and reports.",
-  "summary": "Canonicalized authored executable tests under their language-neutral semantic owners at \u003cparent\u003e/🧪️tests/\u003ctest-name\u003e/\u003cimplementation\u003e, removing legacy filenames, delivery-scoped cases, inline executable bodies, and nested test implementations. Updated runners, module mounts, imports, fixtures, and test-layout/source-evidence policies. The final public Bun/Nx scan completed at 2026-09-08T23:19:15.450Z with zero findings across 29,983 authored sources. Focused policy, compiler, browser, TypeScript, Go, Python, and Rust checks are recorded in 📓️test-layout-final-report-2026-09-08.md, including the late plugin/SPR laws, CI and Binaryen cases, renderer page, and two Rustdoc examples. The complete manifest retains all 9,689 attributed authored paths, including removed inputs and the restored ticket lifecycle marker. Existing unrelated failures and incomplete individual identity evidence for 154 historical Rust inputs are explicitly documented; this does not claim every repository test passed.",
+  "summary": "Canonicalized test ownership to \u003csemantic-owner\u003e/🧪️tests/\u003ccase\u003e/\u003cimplementation\u003e, with fixtures, examples and plural oracles as the only testing collections. Removed obsolete helpers and legacy paths, corrected callers and runner metadata, and added schema-first guard coverage. Verification and remaining unrelated runtime limits are recorded in 📓️testing-taxonomy-completion-2026-09-12.md; exact authored paths are retained in 📓️testing-taxonomy-complete-files-2026-09-12.md.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2585"
   },
@@ -15,6 +15,7 @@
     "⚪84235ede3dd64e3083c1f5efe70a7a13",
     "⚪90f94e5b85044615a070a85a2f3dd367",
     "⚪da54b976460c49ab8016613c29f37bda",
-    "⚪25ea106e18274a8588d0794478814566"
+    "⚪25ea106e18274a8588d0794478814566",
+    "⚪9acd8cf07b0b4613941ada6d2b137d8b"
   ]
 }

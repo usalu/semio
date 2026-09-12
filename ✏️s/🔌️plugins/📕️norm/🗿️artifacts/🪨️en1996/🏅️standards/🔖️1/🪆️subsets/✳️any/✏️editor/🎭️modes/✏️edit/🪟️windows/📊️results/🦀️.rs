@@ -6,6 +6,8 @@ use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_RESULTS: &str = "norm-en1996-results";
+crate::norm_results_window_config_owner!(ResultsWindowConfigOwner, WINDOW_RESULTS);
+
 pub const BODY_RESULTS: &str = "norm.en1996.play.results";
 //#endregion 🔖️Constants
 
@@ -26,4 +28,7 @@ pub fn render(host: &NormHost<En1996Family>) -> semio_framework_plugin::UiAssemb
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️window-ownership/🦀️.rs"]
+mod window_ownership_tests;
 //#endregion 🧪️Tests

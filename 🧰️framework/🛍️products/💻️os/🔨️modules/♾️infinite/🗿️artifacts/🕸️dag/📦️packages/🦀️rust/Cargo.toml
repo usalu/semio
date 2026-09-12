@@ -22,6 +22,6 @@ graph = { path = "../../../../../../../../🔨️modules/🕸️graph/📦️pac
 ui_styling = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["testkit"] }
+semio-framework-os-kernel = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 serde_json = "1"

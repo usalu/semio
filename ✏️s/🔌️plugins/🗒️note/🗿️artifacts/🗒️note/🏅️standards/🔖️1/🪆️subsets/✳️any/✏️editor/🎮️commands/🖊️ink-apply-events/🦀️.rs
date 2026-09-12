@@ -1,6 +1,5 @@
 //! 🖊️ 🖊️ Note play app command command — `ink-apply-events`.
 
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::op::NoteMutation;
 use crate::schema::mutations::{change_block_ink_width, change_block_locked, change_block_visible, create_asset, create_block, delete_block, edit_block_ink_stroke, move_block, rename_block, replace_asset_payload, resize_block};
 use crate::schema::{block_bounds, block_id, block_locked, block_name, block_visible, find_block, insert_block, remove_block_from_tree, update_block_in_tree};
@@ -144,7 +143,7 @@ pub struct InkApplyEvents {
 // `InteractionState` now, only ever mutated by the framework's own injected `interactionSelect`
 // handling, never by an app command's `Emit`; the field stays on the wire (the ink-canvas host still
 // sends it) but is no longer acted on.
-pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     let events: Vec<NoteCanvasEvent> = dsl::os_pack::from_json_str(&payload.events_json).unwrap_or_default();
     let mut window_config_mutations = Vec::new();

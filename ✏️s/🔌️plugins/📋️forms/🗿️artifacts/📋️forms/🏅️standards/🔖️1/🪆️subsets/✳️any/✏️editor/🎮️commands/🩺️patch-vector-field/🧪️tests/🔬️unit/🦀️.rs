@@ -1,11 +1,11 @@
 use super::*;
 use crate::editor::forms::commands::add_vector_field::AddVectorField;
 use crate::editor::forms::commands::remove_vector_field::RemoveVectorField;
-use crate::editor::forms::testkit::{dispatch, forms_app};
+use crate::editor::forms::unit_tests::context::{dispatch, forms_app};
 use crate::editor::forms::FormsCommand;
 use PatchVectorField;
 
-async fn vector_question_id(app: &mut crate::editor::forms::testkit::FormsApp) -> String {
+async fn vector_question_id(app: &mut crate::editor::forms::unit_tests::context::FormsApp) -> String {
     dispatch(app, FormsCommand::AddQuestion(crate::editor::forms::commands::add_question::AddQuestion { kind: "vector".into(), step_id: None })).await;
     crate::schema::flatten_questions(&app.snapshot().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "vector").expect("vector question").id
 }

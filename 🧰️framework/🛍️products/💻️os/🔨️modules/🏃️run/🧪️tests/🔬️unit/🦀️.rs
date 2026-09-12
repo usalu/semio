@@ -587,7 +587,7 @@ async fn register_builtin_converters_wires_vector_to_raster_through_convert_medi
 
 //#region 🔖️NativeManifestSmoke
 /// 🧭️ Walks up from `CARGO_MANIFEST_DIR` looking for `nx.json` — the SAME strategy
-/// `🚀️bin.rs`'s own `find_repo_root` uses, duplicated here (not `include!`d — the bin crate's
+/// `🏗️bootstrap/🦀️.rs`'s own `find_repo_root` uses, duplicated here (not `include!`d — the bin crate's
 /// own doc explains a `[[bin]]` target does not share the lib's module tree).
 fn test_repo_root() -> PathBuf {
     let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));

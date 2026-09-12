@@ -148,17 +148,38 @@ fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, entity
         },
     ])
 }
+/// 🪙️ Attaches a row's INLINE toggles, and keeps the row when the argument arena cannot afford them.
+///
+/// 🧾️ A row costs `UI_VALUE_ROW_COLLECTIONS` of the process-wide argument arena and four fifths of that
+/// is the two inline toggles (a map plus a nested id list each); the activation binding a click needs is
+/// the remaining fifth. The arena is process-global and holds `UI_VALUE_LIVE_PAGES` page — one — for
+/// every panel of every plugin at once, so on the flagship document the catalogue's own page could leave
+/// the outliner too little credit for the FIRST object row's toggles, and propagating that refusal ended
+/// the section at zero rows: four section headers and nothing selectable, measured in the browser as
+/// `outliner entityRows=0` (26/09/02/PUZZLE-3D-END-TO-END wave B44 §6.2). A row without its toggles is
+/// still selectable and still names its entity; a row that was never materialised is neither.
+fn with_hide_lock_actions(item: semio_framework_ui_contract::TreeItemBuilder, hidden: bool, locked: bool, labels: &Puzzle3dLabels, entity: &str, id: &str) -> semio_framework_ui_contract::TreeItemBuilder {
+    let Ok(actions) = hide_lock_actions(hidden, locked, labels, entity, id) else {
+        return item;
+    };
+    let mut item = item;
+    for row_action in actions {
+        match item.try_row_action(row_action) {
+            Ok(next) => item = next,
+            Err((refused, _)) => return refused,
+        }
+    }
+    item
+}
+
 fn object_row(object: &Puzzle3dObject, labels: &Puzzle3dLabels, budget: &mut RowBudget) -> UiAssemblyResult<BuiltNode> {
     let vortices = paged_section(&format!("{ROOT}.object.{}", object.id), &object.vortices, budget, |vortex, _| vortex_row(&object.id, vortex))?;
-    let mut item = selectable_item(&object.id, object.object_kind.clone().unwrap_or_else(|| object.id.clone()), "box", select_action(PUZZLE3D_GRANULARITY_OBJECT, &object.id))?
+    let item = selectable_item(&object.id, object.object_kind.clone().unwrap_or_else(|| object.id.clone()), "box", select_action(PUZZLE3D_GRANULARITY_OBJECT, &object.id))?
         .default_open(false)
         .dimmed(object.hidden)
         .try_children(vortices)
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object children admission failed"))?;
-    for row_action in hide_lock_actions(object.hidden, object.locked, labels, "object", &object.id)? {
-        item = item.try_row_action(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object row action admission failed"))?;
-    }
-    item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object row admission failed"))
+    with_hide_lock_actions(item, object.hidden, object.locked, labels, "object", &object.id).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object row admission failed"))
 }
 
 fn vortex_row(object_id: &str, vortex: &Puzzle3dVortex) -> UiAssemblyResult<BuiltNode> {
@@ -169,21 +190,15 @@ fn vortex_row(object_id: &str, vortex: &Puzzle3dVortex) -> UiAssemblyResult<Buil
 }
 
 fn reference_row(reference: &Puzzle3dReference, labels: &Puzzle3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let mut item = selectable_item(&reference.id, reference.id.clone(), "globe", select_action(PUZZLE3D_GRANULARITY_REFERENCE, &reference.id))?
+    let item = selectable_item(&reference.id, reference.id.clone(), "globe", select_action(PUZZLE3D_GRANULARITY_REFERENCE, &reference.id))?
         .description(UiText::try_from_str(&reference.source.url).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference description admission failed"))?)
         .dimmed(reference.hidden);
-    for row_action in hide_lock_actions(reference.hidden, reference.locked, labels, "reference", &reference.id)? {
-        item = item.try_row_action(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference row action admission failed"))?;
-    }
-    item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference row admission failed"))
+    with_hide_lock_actions(item, reference.hidden, reference.locked, labels, "reference", &reference.id).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference row admission failed"))
 }
 
 fn target_volume_row(volume: &Puzzle3dTargetVolume, labels: &Puzzle3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let mut item = selectable_item(&volume.id, volume.id.clone(), "cylinder", select_action(PUZZLE3D_GRANULARITY_TARGET_VOLUME, &volume.id))?.dimmed(volume.hidden);
-    for row_action in hide_lock_actions(volume.hidden, volume.locked, labels, "targetVolume", &volume.id)? {
-        item = item.try_row_action(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d target-volume row action admission failed"))?;
-    }
-    item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d target-volume row admission failed"))
+    let item = selectable_item(&volume.id, volume.id.clone(), "cylinder", select_action(PUZZLE3D_GRANULARITY_TARGET_VOLUME, &volume.id))?.dimmed(volume.hidden);
+    with_hide_lock_actions(item, volume.hidden, volume.locked, labels, "targetVolume", &volume.id).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d target-volume row admission failed"))
 }
 
 fn attraction_row(attraction: &Puzzle3dAttraction) -> UiAssemblyResult<BuiltNode> {
@@ -207,6 +222,12 @@ pub fn page_rows() -> usize {
 
 /// 🧱 Small documents keep the SDK page so nested vortices stay complete. A document past that
 /// page (Nakagin, 180 objects) uses the host reconcile envelope so the panel stays ≤16 nodes.
+///
+/// 🪙️ Both arms are clamped by [`semio_framework_plugin::panel_page_rows`], which reads what the
+/// process-wide argument arena still admits. The large-document arm used to return the reconcile quota
+/// FLAT, so under arena pressure the builder promised rows it could not admit and the section ended on
+/// its first refusal — at zero rows (wave B44 §6.2's `outliner entityRows=0`). A page must never be
+/// longer than the credit behind it.
 fn page_rows_for(fixture: &Puzzle3dFixture) -> usize {
     let entities = fixture.objects.len()
         + fixture.objects.iter().map(|object| object.vortices.len()).sum::<usize>()
@@ -216,7 +237,7 @@ fn page_rows_for(fixture: &Puzzle3dFixture) -> usize {
     if entities <= semio_framework_plugin::panel_page_rows() {
         semio_framework_plugin::panel_page_rows()
     } else {
-        PANEL_RECONCILE_NODE_BUDGET.saturating_sub(1 + SECTIONS)
+        PANEL_RECONCILE_NODE_BUDGET.saturating_sub(1 + SECTIONS).min(semio_framework_plugin::panel_page_rows())
     }
 }
 
@@ -240,9 +261,16 @@ fn page_action(section_id: &str, page: u32) -> UiAssemblyResult<(semio_framework
 }
 
 /// 📄 Continuation that names the omitted count and, when a next page exists, advances `setPanelPage`.
+/// 🪙️ An advancing continuation carries a `setPanelPage` argument map and therefore needs argument-arena
+/// credit; the plain one carries none. When the credit is gone the row falls back to the plain shape
+/// rather than vanishing — a section that shows neither its rows nor the `+N` that explains why reads as
+/// an empty document (wave B46).
 pub fn continuation_row_from(section_id: &str, omitted: usize, next_page: Option<u32>) -> UiAssemblyResult<BuiltNode> {
     match next_page {
-        Some(page) => selectable_item(format!("{section_id}.more"), format!("+{omitted}"), "ellipsis", page_action(section_id, page))?.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d continuation row admission failed")),
+        Some(page) => match selectable_item(format!("{section_id}.more"), format!("+{omitted}"), "ellipsis", page_action(section_id, page)) {
+            Ok(item) => item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d continuation row admission failed")),
+            Err(_) => semio_framework_plugin::panel_continuation_row(section_id, omitted),
+        },
         None => semio_framework_plugin::panel_continuation_row(section_id, omitted),
     }
 }

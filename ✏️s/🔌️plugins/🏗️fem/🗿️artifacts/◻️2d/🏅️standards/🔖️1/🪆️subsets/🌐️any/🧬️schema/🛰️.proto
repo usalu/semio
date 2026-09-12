@@ -24,11 +24,6 @@ message Fem2dArtifact {
   // @state config
 }
 
-message FemCamera {
-  double x = 1;
-  double y = 2;
-  double zoom = 3;
-}
 
 message FemAnalysisSettings {
   uint32 modal_count = 1;

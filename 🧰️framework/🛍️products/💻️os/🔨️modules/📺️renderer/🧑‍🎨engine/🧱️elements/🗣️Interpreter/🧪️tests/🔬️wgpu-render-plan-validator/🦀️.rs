@@ -27,6 +27,7 @@ fn validate_component_scene_rejects_oversized_mesh_count() {
             camera_json: "{}".into(),
             meshes_json,
             instances_json: "[]".into(),
+            instances_delta_json: None,
             selection_json: "{}".into(),
             vortices_json: None,
             attractions_json: None,

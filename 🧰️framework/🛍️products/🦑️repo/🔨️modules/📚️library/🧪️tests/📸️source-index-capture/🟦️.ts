@@ -23,7 +23,7 @@ const library = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️
 const runRoot = join(realpathSync(tmpdir()), "semio-source-index-capture");
 const descriptorRelative = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️.json";
 const taxonomyRelative = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
-const rootScriptPath = join(root, "📜️script.ts");
+const sourceIndexPath = join(library, "🧹️normalization/🧬️mutation/📇️index/🟦️.ts");
 const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/📸️source-index-capture/🔣️.json"), "utf8"));
 const vectors = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/📸️source-index-capture/🔣️.json"), "utf8")) as {
   readonly schemaVersion: 1;
@@ -68,9 +68,9 @@ function expectedDigest(roots: readonly string[], roster: readonly { readonly pa
   return sha256(body);
 }
 
-/** 🧭️ Resolves the actual root function using its current captured bytes. */
+/** 🧭️ Resolves the actual captured-source index function using its current captured bytes. */
 async function subject(): Promise<{ readonly mutationTaxonomySourceIndex: (repoRoot: string, options: Record<string, unknown>, injected: TaxonomySourceInventory) => { readonly files: readonly string[]; readonly bytes: ReadonlyMap<string, Buffer>; readonly contents: ReadonlyMap<string, string>; readonly sourceRoster: readonly { readonly path: string; readonly sha256: string; readonly role: string }[]; readonly sourceTreeDigest: string } }> {
-  const module = await import(`${pathToFileURL(rootScriptPath).href}?source-index-capture=${sha256(readFileSync(rootScriptPath))}`);
+  const module = await import(`${pathToFileURL(sourceIndexPath).href}?source-index-capture=${sha256(readFileSync(sourceIndexPath))}`);
   if (typeof module.mutationTaxonomySourceIndex !== "function") throw new Error("missing mutationTaxonomySourceIndex export");
   return module as Awaited<ReturnType<typeof subject>>;
 }

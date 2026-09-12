@@ -1,2 +1,0 @@
-[test] level=exhaustive cases=1 executed=4 passed=4 failed=0 errored=0 parity=2/2
-EXIT=0

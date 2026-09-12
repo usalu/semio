@@ -4,9 +4,9 @@
   "version": "1",
   "title": "Site Survey",
   "structure": {
-    "childId": "forms-scene-create-step-duplicate-id",
+    "childId": "forms-value-create-step-duplicate-id",
     "target": {
-      "artifactId": "forms-value",
+      "artifactId": "forms-value-create-step-duplicate-id",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -15,9 +15,9 @@
     }
   },
   "results": {
-    "childId": "forms-scene-create-step-duplicate-id",
+    "childId": "forms-table-create-step-duplicate-id",
     "target": {
-      "artifactId": "forms-table",
+      "artifactId": "forms-table-create-step-duplicate-id",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

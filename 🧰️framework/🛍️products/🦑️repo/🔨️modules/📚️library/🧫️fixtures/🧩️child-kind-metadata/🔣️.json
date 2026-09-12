@@ -1,0 +1,204 @@
+{
+  "cases": [
+    {
+      "name": "same-kind-distinct-subsets",
+      "declarations": [
+        {
+          "owner": "kit",
+          "format": "rs",
+          "kind": "s.stdio.semio"
+        },
+        {
+          "owner": "object",
+          "format": "rs",
+          "kind": "s.stdio.semio"
+        },
+        {
+          "owner": "mesh",
+          "format": "rs",
+          "kind": "s.stdio.semio"
+        }
+      ],
+      "rejectedKinds": []
+    },
+    {
+      "name": "rs-canonical",
+      "declarations": [
+        {
+          "owner": "kit",
+          "format": "rs",
+          "kind": "s.stdio.semio"
+        }
+      ],
+      "rejectedKinds": []
+    },
+    {
+      "name": "rs-subset-in-kind",
+      "declarations": [
+        {
+          "owner": "kit",
+          "format": "rs",
+          "kind": "s.stdio.semio.kit"
+        }
+      ],
+      "rejectedKinds": [
+        "s.stdio.semio.kit"
+      ]
+    },
+    {
+      "name": "ts-canonical",
+      "declarations": [
+        {
+          "owner": "kit",
+          "format": "ts",
+          "kind": "s.stdio.semio"
+        }
+      ],
+      "rejectedKinds": []
+    },
+    {
+      "name": "ts-subset-in-kind",
+      "declarations": [
+        {
+          "owner": "kit",
+          "format": "ts",
+          "kind": "s.stdio.semio.kit"
+        }
+      ],
+      "rejectedKinds": [
+        "s.stdio.semio.kit"
+      ]
+    },
+    {
+      "name": "json-canonical",
+      "declarations": [
+        {
+          "owner": "kit",
+          "format": "json",
+          "kind": "s.stdio.semio"
+        }
+      ],
+      "rejectedKinds": []
+    },
+    {
+      "name": "json-subset-in-kind",
+      "declarations": [
+        {
+          "owner": "kit",
+          "format": "json",
+          "kind": "s.stdio.semio.kit"
+        }
+      ],
+      "rejectedKinds": [
+        "s.stdio.semio.kit"
+      ]
+    },
+    {
+      "name": "graphql-canonical",
+      "declarations": [
+        {
+          "owner": "kit",
+          "format": "graphql",
+          "kind": "s.stdio.semio"
+        }
+      ],
+      "rejectedKinds": []
+    },
+    {
+      "name": "graphql-subset-in-kind",
+      "declarations": [
+        {
+          "owner": "kit",
+          "format": "graphql",
+          "kind": "s.stdio.semio.kit"
+        }
+      ],
+      "rejectedKinds": [
+        "s.stdio.semio.kit"
+      ]
+    },
+    {
+      "name": "proto-canonical",
+      "declarations": [
+        {
+          "owner": "kit",
+          "format": "proto",
+          "kind": "s.stdio.semio"
+        }
+      ],
+      "rejectedKinds": []
+    },
+    {
+      "name": "proto-subset-in-kind",
+      "declarations": [
+        {
+          "owner": "kit",
+          "format": "proto",
+          "kind": "s.stdio.semio.kit"
+        }
+      ],
+      "rejectedKinds": [
+        "s.stdio.semio.kit"
+      ]
+    },
+    {
+      "name": "canonical-grammar-boundaries",
+      "declarations": [
+        {
+          "owner": "owner0",
+          "format": "rs",
+          "kind": "s.probe-1.item-2"
+        },
+        {
+          "owner": "owner1",
+          "format": "rs",
+          "kind": "s.3d.mesh"
+        },
+        {
+          "owner": "owner2",
+          "format": "rs",
+          "kind": "s..mesh"
+        },
+        {
+          "owner": "owner3",
+          "format": "rs",
+          "kind": "s.probe--1.mesh"
+        },
+        {
+          "owner": "owner4",
+          "format": "rs",
+          "kind": "s.-probe.mesh"
+        },
+        {
+          "owner": "owner5",
+          "format": "rs",
+          "kind": "s.probe.mesh-"
+        },
+        {
+          "owner": "owner6",
+          "format": "rs",
+          "kind": "s.PROBE.mesh"
+        },
+        {
+          "owner": "owner7",
+          "format": "rs",
+          "kind": "s.probe.mésh"
+        },
+        {
+          "owner": "owner8",
+          "format": "rs",
+          "kind": "other.probe.mesh"
+        }
+      ],
+      "rejectedKinds": [
+        "s..mesh",
+        "s.probe--1.mesh",
+        "s.-probe.mesh",
+        "s.probe.mesh-",
+        "s.PROBE.mesh",
+        "s.probe.mésh",
+        "other.probe.mesh"
+      ]
+    }
+  ]
+}

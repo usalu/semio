@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::gis2d::testkit::{app, close, dispatch};
+use crate::editor::gis2d::unit_tests::context::{app, close, dispatch};
 use crate::editor::gis2d::Gis2dCommand;
 
 #[semio_framework_async_macros::async_test]

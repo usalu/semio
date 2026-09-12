@@ -131,7 +131,7 @@ pub(super) struct TrustedCatalogGenerationRoot {
 }
 
 impl TrustedCatalogGenerationRoot {
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(any(test, feature = "integration-fixtures"))]
     pub(super) fn open_fixture_owned(path: &Path) -> Result<Self, AuthorityError> {
         Ok(Self { directory: platform::open_server_owned(path).map_err(catalog_error)? })
     }

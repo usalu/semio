@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::animate::commands::{set_active_example, set_frame};
-use crate::editor::animate::testkit::{dispatch, presentation_app};
+use crate::editor::animate::unit_tests::context::{dispatch, presentation_app};
 use crate::editor::animate::PresentationCommand;
 use crate::{default_presentation_snapshot, FigureTileFrame};
 

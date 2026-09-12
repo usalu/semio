@@ -1,0 +1,6 @@
+type Fem2dResultsWindowConfig {
+  camera: Viewport2d!
+  resultSourceId: String
+  resultMode: FemResultMode!
+  resultModeIndex: Int!
+}

@@ -1,6 +1,6 @@
 //! 🧮️ 🧮️ FEM 3D app commands command — `set-analysis-settings`.
 
-use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 use crate::Fem3dSnapshot;
@@ -18,7 +18,7 @@ pub struct SetAnalysisSettings {
 
 /// ⚙️ Every field is optional and defaults to the document's current setting when omitted — a
 /// partial update, not a whole-record replace.
-pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let current = &doc.snapshot.analysis;
     let settings = crate::FemAnalysisSettings {
         modal_count: payload.modal_count.map_or(current.modal_count, |value| value as usize),

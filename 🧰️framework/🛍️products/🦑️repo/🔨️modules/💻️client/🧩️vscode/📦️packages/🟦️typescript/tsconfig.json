@@ -9,11 +9,12 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "paths": {
       "@semio-tech/assets/*": ["../../../../../../../../🧰️framework/🔨️modules/🖼️assets/*"],
       "@semio-tech/assets": ["../../../../../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts"]
     }
   },
-  "include": ["🟦️.ts", "../../🧪️tests/🧩️extension/🟦️.ts"],
+  "include": ["🟦️.ts", "../../🟦️.ts", "../../🧪️tests/🧩️extension/🟦️.ts"],
   "exclude": ["node_modules", "out", "test"]
 }

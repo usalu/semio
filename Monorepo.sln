@@ -1,18 +1,68 @@
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.3.11520.95
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Repo.Test", "🧰️framework\🛍️products\🦑️repo\🔨️modules\🧪️test\📦️packages\🔷️dotnet\🧪️Semio.Repo.Test.csproj", "{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "🧪️Semio.Repo.Test", "🧰️framework\🛍️products\🦑️repo\🔨️modules\🧪️test\📦️packages\🔷️dotnet\🧪️Semio.Repo.Test.csproj", "{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "🧰️framework", "🧰️framework", "{BE9CDF0C-4F59-A616-72B0-C3914F4AFCDA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "🔨️modules", "🔨️modules", "{57D62FCF-E171-AA3A-F2F4-2933CB502A3A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "🖱️ui", "🖱️ui", "{2D6A18A7-4939-ABEA-569E-DE20DF9E3A19}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "🎨️styling", "🎨️styling", "{3B8B264C-655F-C9E4-E9A0-BDB91885926F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "📦️packages", "📦️packages", "{415E85E0-D92F-4EAB-183F-CA2C7A8C8255}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "🔷️dotnet", "🔷️dotnet", "{2C14FC76-CA16-A468-6E83-6317AA867681}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "🔷️", "🧰️framework\🔨️modules\🖱️ui\🎨️styling\📦️packages\🔷️dotnet\🔷️.csproj", "{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}.Debug|x64.Build.0 = Debug|Any CPU
+		{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}.Debug|x86.Build.0 = Debug|Any CPU
 		{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}.Release|x64.ActiveCfg = Release|Any CPU
+		{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}.Release|x64.Build.0 = Release|Any CPU
+		{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}.Release|x86.ActiveCfg = Release|Any CPU
+		{F50B8DCE-3E1D-4A88-B736-4C66A3CA9249}.Release|x86.Build.0 = Release|Any CPU
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}.Debug|x64.Build.0 = Debug|Any CPU
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}.Debug|x86.Build.0 = Debug|Any CPU
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}.Release|x64.ActiveCfg = Release|Any CPU
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}.Release|x64.Build.0 = Release|Any CPU
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}.Release|x86.ActiveCfg = Release|Any CPU
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{57D62FCF-E171-AA3A-F2F4-2933CB502A3A} = {BE9CDF0C-4F59-A616-72B0-C3914F4AFCDA}
+		{2D6A18A7-4939-ABEA-569E-DE20DF9E3A19} = {57D62FCF-E171-AA3A-F2F4-2933CB502A3A}
+		{3B8B264C-655F-C9E4-E9A0-BDB91885926F} = {2D6A18A7-4939-ABEA-569E-DE20DF9E3A19}
+		{415E85E0-D92F-4EAB-183F-CA2C7A8C8255} = {3B8B264C-655F-C9E4-E9A0-BDB91885926F}
+		{2C14FC76-CA16-A468-6E83-6317AA867681} = {415E85E0-D92F-4EAB-183F-CA2C7A8C8255}
+		{1B0FFC4F-E85F-49C4-9CB3-6D92122AB664} = {2C14FC76-CA16-A468-6E83-6317AA867681}
 	EndGlobalSection
 EndGlobal

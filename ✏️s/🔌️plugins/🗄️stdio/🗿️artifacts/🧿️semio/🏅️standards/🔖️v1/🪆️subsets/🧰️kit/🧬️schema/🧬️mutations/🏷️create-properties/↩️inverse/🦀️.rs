@@ -5,10 +5,10 @@ use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(_payload: &super::CreateProperties, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
-    match &base.properties {
-        Some(existing) => vec![SemioKitMutation::CreateProperties(super::CreateProperties { child_id: existing.child_id.clone(), target: existing.target.clone() })],
-        None => vec![SemioKitMutation::DeleteProperties(delete_properties::DeleteProperties {})],
+pub fn inverse(payload: &super::CreateProperties, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
+    if base.properties.is_some() || crate::standards::v1::subsets::base::schema::child::validate_semio_child_identity(&payload.child_id, &payload.target, "value").is_err() {
+        return Vec::new();
     }
+    vec![SemioKitMutation::DeleteProperties(delete_properties::DeleteProperties {})]
 }
 //#endregion 🔖️Inverse

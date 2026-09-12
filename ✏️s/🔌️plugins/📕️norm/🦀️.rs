@@ -49,9 +49,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) replaces the deleted `register_norm_exports`
 /// `.setup()` fan-out with fifteen data declarations, one per norm family. `.editor(…)`/`.viewer(…)`
 /// (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) replace the retired `.document_app(…)`
-/// call per family with the role-split pair — the shared `NormConfig` schema every one of the fifteen
-/// `PlayApp`s uses is still registered idempotently by whichever
-/// editor binds first (`ArtifactEditor::app_schema()` override), mirroring the `🗒️note` exemplar.
+/// call per family with the role-split pair. Every editor publishes empty app config and presence
+/// facets, then registers its family-specific Results-window config owner explicitly.
 /// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
 /// crate's migration proof: one `OnArtifactKind` event per owned norm family, read live from each

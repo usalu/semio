@@ -27,11 +27,11 @@ export function interactivityDbIoSelfTests(): void {
     ["sqlite-whole-read", goodStorage, goodSqlite.replace("fn read_stage_step", "fn query_whole_blob"), goodEngine, "", goodHub],
     ["missing-max-fixture", goodStorage.replace("db_io_fixed_page_max_plus_one_and_zero_are_exact", "db_io_only_happy_path"), goodSqlite, goodEngine, "", goodHub],
     ["optional-engine-pool", goodStorage, goodSqlite, `${goodEngine} pool: Option<Arc<WorkerPool>>`, "", goodHub],
-    ["testkit-subsystem-pool", goodStorage, goodSqlite, goodEngine, "fn helper() { WorkerPool::new(); }", goodHub],
+    ["fault-testing-subsystem-pool", goodStorage, goodSqlite, goodEngine, "fn helper() { WorkerPool::new(); }", goodHub],
     ["hub-fs-pre-open", goodStorage, goodSqlite, goodEngine, "", goodHub.replace("Database::open_at(pool, &root, profile).await", "std::fs::create_dir_all(&root); Database::open_at(pool, &root, profile).await")],
   ] as const;
-  for (const [name, storage, sqlite, engine, testkit, hub] of mutations)
-    if (interactivityDbIoFailures(storage, sqlite, engine, testkit, hub).length === 0) throw new Error(`[verify interactivity] DB I/O self-test ${name} was falsely accepted.`);
+  for (const [name, storage, sqlite, engine, faultStorage, hub] of mutations)
+    if (interactivityDbIoFailures(storage, sqlite, engine, faultStorage, hub).length === 0) throw new Error(`[verify interactivity] DB I/O self-test ${name} was falsely accepted.`);
   if (interactivityDbIoFailures(goodStorage, goodSqlite, goodEngine, "", goodHub).length !== 0) throw new Error("[verify interactivity] DB I/O self-test typed retained authority was falsely rejected.");
   const goodSync = `enum DatabaseSyncHelloFollowUp { Snapshot { pages: db_storage::DbIoPages, chunk_bytes: usize, offset: usize, page: u8, page_offset: usize, seq: u32, chunk: Option<protocol::SnapshotChunkBytes>, done: bool } } impl DatabaseSyncHelloFollowUp { fn drive_one_with_grant( grant.check(cancelled, expired)? let unit_bytes = (*chunk_bytes).min(DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES) let fragment = pages.page(*page) let copied = remaining.min(fragment.len().saturating_sub(*page_offset)) target.try_extend_from_slice(&fragment[*page_offset..*page_offset + copied]) *page = page.checked_add(1) let bytes = chunk.take() return Ok(Some(Some(frame))) } struct DatabaseSyncHelloPrepared async fn database_sync_hello_execute { for page in 0..pages.page_count() { hash.update(fragment) database_sync_hello_opportunity(&cancelled, &expired).await } } type DatabaseSyncHelloExecutionFuture`;
   for (const [name, source] of [

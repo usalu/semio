@@ -963,13 +963,13 @@
       "what": "action",
       "detail": "setActiveExample",
       "code": "shell.surface-switch.sealed-instance",
-      "text": "[DEBUG] shell.surface-switch.sealed-instance dropped action for procedural#2 (setActiveExample)"
+      "text": "shell.surface-switch.sealed-instance dropped action for procedural#2 (setActiveExample)"
     },
     "dropWithoutDetail": {
       "pluginId": "procedural",
       "instanceId": 3,
       "what": "host effects",
-      "text": "[DEBUG] shell.surface-switch.sealed-instance dropped host effects for procedural#3"
+      "text": "shell.surface-switch.sealed-instance dropped host effects for procedural#3"
     },
     "unseal": {
       "note": "🔄️ The predecessor a failed switch KEEPS must not stay sealed — every later action on the surface the user still sees would be dropped forever.",

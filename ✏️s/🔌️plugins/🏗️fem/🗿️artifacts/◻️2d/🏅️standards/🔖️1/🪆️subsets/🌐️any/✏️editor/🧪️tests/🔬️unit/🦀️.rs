@@ -1,5 +1,48 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+
+    pub type Fem2dApp = VcsArtifactApp<EditorApp<Fem2dPlayApp>>;
+
+    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    fn view(kind: &str) -> ViewModel {
+        let id = if kind == crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID { "model-left" } else { "results-left" };
+        ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..Default::default() }
+    }
+
+    fn manifest() -> App { App { definition: create_fem2d_app(), examples: Vec::new() } }
+
+    pub fn fem2d_app() -> Fem2dApp {
+        semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem2dPlayApp>>(manifest))
+    }
+
+    pub async fn dispatch(app: &mut Fem2dApp, command: Fem2dCommand) -> InvocationResult {
+        let kind = match &command {
+            Fem2dCommand::SetCamera(_) => crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID,
+            Fem2dCommand::SetResultDisplay(_) => crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID,
+            _ => crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID,
+        };
+        let mut action = meta("local");
+        action.view_state = Some(view(kind));
+        let result = app.dispatch_typed(command, &action).await.expect("dispatch");
+        for effect in &result.requested_effects {
+            if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
+                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+            }
+        }
+        result
+    }
+
+    pub fn render(app: &mut Fem2dApp, body_key: &str) -> String {
+        let kind = if body_key == crate::editor::fem2d::modes::edit::windows::model::BODY_KEY { crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID } else { crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID };
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::resolve_ready(app.render(body_key, None, &view(kind))).expect("render")).expect("fixture projection")
+    }
+}
+
 use super::*;
-use crate::editor::fem2d::testkit::{fem2d_app, render};
+use crate::editor::fem2d::unit_tests::context::{fem2d_app, render};
 use semio_framework_plugin::{ArtifactEditor, EditorApp, PluginApp};
 use store::ArtifactDsl;
 
@@ -129,14 +172,22 @@ async fn every_route_declares_the_lane_its_handler_emits() {
     let snapshot = crate::standards::v1::subsets::any::schema::default_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
-    let config = Fem2dConfig::default();
+    let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     for command in every_command() {
         let tool_id = command.command_id();
-        let emit = command.dispatch(&doc, &cfg).unwrap_or_else(|error| panic!("{tool_id} dispatches: {error:?}"));
+        let view = |id: &str, kind: &str| semio_framework_plugin::ViewModel { window_id: Some(id.into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..Default::default() };
+        let emit = match &command {
+            Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
+            Fem2dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, &cfg, &view("results-law", results_window::WINDOW_KIND_ID)),
+            _ => command.dispatch(&doc, &cfg),
+        }
+        .unwrap_or_else(|error| panic!("{tool_id} dispatches: {error:?}"));
         let lanes = Fem2dRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == tool_id).expect("publication contract").lanes;
         assert!(emit.artifact_mutations.is_empty() || lanes.contains(&ArtifactToolPublicationLane::Artifact), "{tool_id} emits document mutations without the Artifact lane");
         assert!(emit.config_mutations.is_empty() || lanes.contains(&ArtifactToolPublicationLane::Config), "{tool_id} emits config mutations without the Config lane");
+        assert!(emit.window_config_mutations.is_empty() || lanes.contains(&ArtifactToolPublicationLane::WindowConfig), "{tool_id} emits window config mutations without the WindowConfig lane");
+        assert!(emit.effects.is_empty() || lanes.contains(&ArtifactToolPublicationLane::HostOnly), "{tool_id} emits host effects without the HostOnly lane");
     }
 }
 
@@ -236,7 +287,7 @@ async fn the_editor_boots_on_the_bundled_example_document() {
 async fn undo_restores_document_after_add_node() {
     let mut app = fem2d_app();
     let before = app.snapshot().expect("snapshot").nodes.len();
-    semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 1.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1).await;
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app, Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 1.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -247,14 +298,14 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_on_disjoint_edits() {
-    let (mut instance_a, mut instance_b) = semio_framework_plugin::resolve_ready(semio_framework_plugin::testkit::paired_apps::<EditorApp<Fem2dPlayApp>>("mem://fem2d-convergence"));
+    let (mut instance_a, mut instance_b) = semio_framework_plugin::resolve_ready(semio_framework_plugin::artifact_app_laws::paired_apps::<EditorApp<Fem2dPlayApp>>("mem://fem2d-convergence"));
 
-    instance_a.dispatch_typed(Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }), &semio_framework_plugin::testkit::meta("actor-a")).await.expect("a adds a material");
-    instance_b.dispatch_typed(Fem2dCommand::AddNode(add_node::AddNode { x: 5.0, y: 5.0 }), &semio_framework_plugin::testkit::meta("actor-b")).await.expect("b adds a node");
+    instance_a.dispatch_typed(Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }), &semio_framework_plugin::artifact_app_laws::meta("actor-a")).await.expect("a adds a material");
+    instance_b.dispatch_typed(Fem2dCommand::AddNode(add_node::AddNode { x: 5.0, y: 5.0 }), &semio_framework_plugin::artifact_app_laws::meta("actor-b")).await.expect("b adds a node");
 
     // A neutral history action always dispatches through the store, which pumps inbound operations first.
-    semio_framework_plugin::resolve_ready(instance_a.handle_action("commitCheckpoint", None, &semio_framework_plugin::testkit::meta("actor-a"))).expect("pump a");
-    semio_framework_plugin::resolve_ready(instance_b.handle_action("commitCheckpoint", None, &semio_framework_plugin::testkit::meta("actor-b"))).expect("pump b");
+    semio_framework_plugin::resolve_ready(instance_a.handle_action("commitCheckpoint", None, &semio_framework_plugin::artifact_app_laws::meta("actor-a"))).expect("pump a");
+    semio_framework_plugin::resolve_ready(instance_b.handle_action("commitCheckpoint", None, &semio_framework_plugin::artifact_app_laws::meta("actor-b"))).expect("pump b");
 
     let projection_a = instance_a.snapshot().expect("snapshot a");
     let projection_b = instance_b.snapshot().expect("snapshot b");

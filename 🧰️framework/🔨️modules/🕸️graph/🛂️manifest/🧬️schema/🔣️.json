@@ -102,7 +102,7 @@
           "properties": {
             "rustRegistry": {
               "type": "string",
-              "pattern": "^[^/\\\\.]+\\.rs$"
+              "pattern": "^[^/\\\\.]+/🦀️\\.rs$"
             },
             "typescriptIndex": {
               "type": "string",
@@ -110,7 +110,7 @@
             },
             "typescriptTypes": {
               "type": "string",
-              "pattern": "^[^/\\\\.]+\\.ts$"
+              "pattern": "^[^/\\\\.]+/🟦️\\.ts$"
             }
           }
         },

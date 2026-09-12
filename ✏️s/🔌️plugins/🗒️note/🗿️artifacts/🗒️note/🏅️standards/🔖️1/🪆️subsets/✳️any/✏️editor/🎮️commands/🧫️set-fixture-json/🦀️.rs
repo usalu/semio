@@ -1,6 +1,5 @@
 //! 🗃️ 🗃️ Note play app commands command — `set-fixture-json`.
 
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::op::NoteMutation;
 use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -13,7 +12,7 @@ pub struct SetFixtureJson {
     pub json: String,
 }
 
-pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     let next_document = if let Ok(document) = crate::document_dsl::parse_dsl(&payload.json) {
         document
     } else {

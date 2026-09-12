@@ -2,7 +2,7 @@
 //! `blocks` Vecs (one patch entry if `step_id == to_step_id`, two otherwise).
 
 use super::mutation::MoveBlockToStep;
-use crate::diff::text::forms_diff_from_delta;
+use crate::schema::diff::forms_diff_from_delta;
 use crate::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
 

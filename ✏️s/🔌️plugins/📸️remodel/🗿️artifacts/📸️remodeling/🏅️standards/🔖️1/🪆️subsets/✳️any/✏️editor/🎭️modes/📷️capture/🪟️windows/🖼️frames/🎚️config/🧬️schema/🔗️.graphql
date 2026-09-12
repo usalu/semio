@@ -1,0 +1,8 @@
+type RemodelingFrameCursor {
+  streamId: String @state(class: CONFIG)
+  frameIndex: Int! @state(class: CONFIG)
+}
+
+type RemodelingFramesWindowConfig {
+  frameCursor: RemodelingFrameCursor! @state(class: CONFIG)
+}

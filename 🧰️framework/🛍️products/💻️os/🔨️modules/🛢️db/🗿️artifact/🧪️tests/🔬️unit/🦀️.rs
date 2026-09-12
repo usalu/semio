@@ -403,8 +403,8 @@ async fn artifact_open_ignores_neutral_aborted_command_snapshot_and_cas() {
 #[semio_framework_async_macros::async_test]
 async fn artifact_engine_create_rejection_propagates_exact_wal_release_owner() {
     let inner = StdArc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
-    let fault = crate::db_testkit::FaultStorage::new(inner).await;
-    fault.set_script(crate::db_testkit::FaultScript { fail_nth_write: Some(1), ..crate::db_testkit::FaultScript::default() }).await;
+    let fault = crate::db_fault_testing::FaultStorage::new(inner).await;
+    fault.set_script(crate::db_fault_testing::FaultScript { fail_nth_write: Some(1), ..crate::db_fault_testing::FaultScript::default() }).await;
     let storage = StdArc::new(db_storage::DbBackend::Fault(Box::new(fault)));
     let document = document_id().await;
     let core_document = to_core_document_id(&document).await;
@@ -1227,7 +1227,7 @@ async fn committed_recovery_hash_store(id: &str, dialect: store::os_io::Artifact
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
     let mut store = store::ArtifactStore::new(envelope).await.expect("committed recovery fixture creates one exact Store");
-    store.install_member_store_owners_exact(crate::db_engine::vcs_integration::HashProjection::member_store_owners());
+    store.install_document_store_owners_exact(crate::db_engine::vcs_integration::HashProjection::member_store_owners());
     store
 }
 

@@ -1,0 +1,304 @@
+{
+  "document": {
+    "catalog": {
+      "childId": "curation-catalog",
+      "target": {
+        "artifactId": "curation-catalog",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "kit"
+        }
+      }
+    },
+    "stockExtra": [],
+    "curated": [
+      {
+        "objectId": "beam",
+        "count": 12
+      }
+    ]
+  },
+  "invalidChildren": [
+    {},
+    null,
+    {
+      "childId": "curation-catalog",
+      "target": {
+        "artifactId": "foreign-catalog",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "kit"
+        }
+      }
+    },
+    {
+      "childId": "curation-catalog",
+      "target": {
+        "artifactId": "curation-catalog",
+        "dialect": {
+          "artifactKind": "s.stdio.semio.kit",
+          "standard": "v1",
+          "subset": "kit"
+        }
+      }
+    },
+    {
+      "childId": "curation-catalog",
+      "target": {
+        "artifactId": "curation-catalog",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v2",
+          "subset": "kit"
+        }
+      }
+    },
+    {
+      "childId": "curation-catalog",
+      "target": {
+        "artifactId": "curation-catalog",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "mesh"
+        }
+      }
+    }
+  ],
+  "validDiffs": [
+    {},
+    {
+      "artifact": null,
+      "catalog": null,
+      "stockExtra": null,
+      "curated": null
+    },
+    {
+      "curated": {
+        "patched": [
+          {
+            "objectId": "beam",
+            "count": 20
+          }
+        ]
+      }
+    },
+    {
+      "curated": {
+        "added": [],
+        "removed": [],
+        "patched": [],
+        "reordered": null
+      }
+    }
+  ],
+  "invalidDiffs": [
+    {
+      "foreign": true
+    },
+    {
+      "catalog": {}
+    },
+    {
+      "catalog": []
+    },
+    {
+      "artifact": {}
+    },
+    {
+      "curated": {
+        "patched": [
+          {
+            "objectId": "beam",
+            "count": -1
+          }
+        ]
+      }
+    },
+    {
+      "curated": {
+        "removed": [
+          1
+        ]
+      }
+    },
+    {
+      "curated": {
+        "extra": true
+      }
+    }
+  ],
+  "geometryDocuments": [
+    {
+      "catalog": {
+        "childId": "curation-catalog",
+        "target": {
+          "artifactId": "curation-catalog",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "kit"
+          }
+        }
+      },
+      "stockExtra": [
+        {
+          "id": "beam",
+          "name": "Beam",
+          "moduleId": "timber",
+          "typologyPath": [
+            "beam"
+          ],
+          "availability": 12,
+          "geometry": {
+            "kind": "box",
+            "width": 2,
+            "height": 3,
+            "depth": 4
+          }
+        }
+      ],
+      "curated": [
+        {
+          "objectId": "beam",
+          "count": 12
+        }
+      ]
+    },
+    {
+      "catalog": {
+        "childId": "curation-catalog",
+        "target": {
+          "artifactId": "curation-catalog",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "kit"
+          }
+        }
+      },
+      "stockExtra": [
+        {
+          "id": "beam",
+          "name": "Beam",
+          "moduleId": "timber",
+          "typologyPath": [
+            "beam"
+          ],
+          "availability": 12,
+          "geometry": {
+            "kind": "frame",
+            "width": 2,
+            "height": 3,
+            "depth": 4,
+            "profile": 0.25
+          }
+        }
+      ],
+      "curated": [
+        {
+          "objectId": "beam",
+          "count": 12
+        }
+      ]
+    },
+    {
+      "catalog": {
+        "childId": "curation-catalog",
+        "target": {
+          "artifactId": "curation-catalog",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "kit"
+          }
+        }
+      },
+      "stockExtra": [
+        {
+          "id": "beam",
+          "name": "Beam",
+          "moduleId": "timber",
+          "typologyPath": [
+            "beam"
+          ],
+          "availability": 12,
+          "geometry": {
+            "kind": "slab",
+            "width": 2,
+            "depth": 4,
+            "thickness": 0.25
+          }
+        }
+      ],
+      "curated": [
+        {
+          "objectId": "beam",
+          "count": 12
+        }
+      ]
+    },
+    {
+      "catalog": {
+        "childId": "curation-catalog",
+        "target": {
+          "artifactId": "curation-catalog",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "kit"
+          }
+        }
+      },
+      "stockExtra": [
+        {
+          "id": "beam",
+          "name": "Beam",
+          "moduleId": "timber",
+          "typologyPath": [
+            "beam"
+          ],
+          "availability": 12,
+          "geometry": {
+            "kind": "mesh",
+            "positions": [
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              1,
+              0
+            ],
+            "normals": [
+              0,
+              0,
+              1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              1
+            ],
+            "indices": [
+              0,
+              1,
+              2
+            ]
+          }
+        }
+      ],
+      "curated": [
+        {
+          "objectId": "beam",
+          "count": 12
+        }
+      ]
+    }
+  ]
+}

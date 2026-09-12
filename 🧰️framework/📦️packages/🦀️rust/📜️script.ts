@@ -3,7 +3,7 @@
 import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runCmdStatus, runVitest, resolveTestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, join, relative } from "node:path";
+import { basename, dirname, join, relative } from "node:path";
 
 //#region 🧹️WireRetirement
 class WireRetirementSourceScript extends BundleScript {
@@ -63,7 +63,7 @@ class LintScript extends BundleScript {
 const TYPEGEN_TEST_FILTER = "exports_typescript_bindings";
 
 function generatedManifestPath(root: string): string {
-  return join(root, "..", "..", "🔨️modules", "🛂️manifest", "🤖️generated", "🪪️manifest.ts");
+  return join(root, "..", "..", "🔨️modules", "🛂️manifest", "🤖️generated", "🪪️manifest", "🟦️.ts");
 }
 
 /** 🧬️ Runs the owned framework schema export test, optionally writing its stable projection. */
@@ -83,7 +83,7 @@ function runTypegenExportTest(root: string, outPath?: string): void {
 class GenerateScript extends BundleScript {
   run(_segments: string[]): void {
     const outPath = generatedManifestPath(this.root);
-    mkdirSync(join(this.root, "..", "..", "🔨️modules", "🛂️manifest", "🤖️generated"), { recursive: true });
+    mkdirSync(dirname(outPath), { recursive: true });
     runTypegenExportTest(this.root, outPath);
     console.log(`framework typescript mirror refreshed -> ${outPath}`);
   }

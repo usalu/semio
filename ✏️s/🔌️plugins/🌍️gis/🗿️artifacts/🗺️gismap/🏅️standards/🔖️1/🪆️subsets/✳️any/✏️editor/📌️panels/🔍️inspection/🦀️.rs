@@ -1,6 +1,6 @@
 //! 🔍️ GIS 2D play app panel — the inspector: map-view settings plus the selected layer's fields.
 
-use crate::editor::gis2d::config::{layer_visible, Gis2dConfig};
+use crate::editor::gis2d::modes::edit::windows::map::config::{layer_visible, MapWindowConfig};
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use crate::editor::gis2d::{ui_label, ui_node_list, GIS_MAP_LAYER_IDS};
 use crate::GIS_MAP_SCHEMA;
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 /// tell which layer is currently selected and always shows the map-wide summary now — the
 /// per-selected-layer detail branch (id/label/visible-toggle) that used to read `cfg.selected_ids`
 /// is gone with it (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn render(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let visible_count = GIS_MAP_LAYER_IDS.iter().filter(|(id, _, _)| layer_visible(cfg, id)).count();
     let items = ui_node_list([
         tree_item_desc("gis2d-play-inspector.schema", ui_label(labels.schema.as_str())?, Some(GIS_MAP_SCHEMA.into())),

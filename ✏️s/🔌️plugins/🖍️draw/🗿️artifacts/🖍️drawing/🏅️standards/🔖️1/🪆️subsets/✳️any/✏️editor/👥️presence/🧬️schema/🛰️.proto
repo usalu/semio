@@ -1,11 +1,7 @@
 syntax = "proto3";
 package semio.app.drawing.drawing;
+import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🛰️.proto";
 message DrawingPresence {
-  // @state presence
   string engagement_input = 1;
-  // @state presence
-  DrawingCamera camera = 2;
-  // @state presence
-  string active_utility_id = 3;
+  semio.framework.ui.viewport.Viewport2d camera = 2;
 }
-message DrawingCamera { double x = 1; double y = 2; double zoom = 3; }

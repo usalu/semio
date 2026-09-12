@@ -9,17 +9,17 @@
 //
 // Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should
 // produce. The actual XML decode is performed by the sibling standalone `quick-xml-oracle-codec`
-// binary (`../🏭️generator/🦀️quick-xml-oracle-codec`, depends on nothing but `quick-xml` 0.42) via
+// binary (`../🏭️generator/🔁️codec/📦️packages/🦀️rust`, depends on nothing but `quick-xml` 0.42) via
 // its `project` subcommand — this file only shells out to it and performs the GATING structural
 // comparison itself, over the SAME JSON shape this subset's own `semantic-xml-v1` comparison profile
-// describes and this subset's own `../🔮️oracle/🦀️.rs::project_xml_1_0` independently produces
+// describes and this subset's own `../🔮️oracles/🦀️.rs::project_xml_1_0` independently produces
 // (declaration, doctype, prolog, and the full element tree with attributes as an unordered
 // name/value map) — no XML semantics computed here, only projection + compare.
 //
-// This subset ALSO carries `../🔮️oracle/🦀️.rs` registered `cross-semio-implementation` —
+// This subset ALSO carries `../🔮️oracles/🦀️.rs` registered `cross-semio-implementation` —
 // that module COMPUTES what a mutation should produce. This probe suite is a DIFFERENT mechanism:
 // the expected state is never computed, it is COMMITTED as the `after` half of a byte-reproducible
-// fixture, and `quick-xml` reads BOTH sides independently. See `../🔮️oracle/🔣️.json`'s own
+// fixture, and `quick-xml` reads BOTH sides independently. See `../🔮️oracles/🔣️.json`'s own
 // `quick-xml-1-0-mutate-reader` oracle rationale.
 //
 // Usage — one probe per invocation, one typed report on stdout:
@@ -31,7 +31,7 @@
 // @see ../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch/compare shape is mirrored from (both hand the
 //      structural equality itself to this file, never to a computed prediction)
-// @see ../🏭️generator/🦀️quick-xml-oracle-codec/src/main.rs — the `project` subcommand this file calls
+// @see ../🏭️generator/🔁️codec/🦀️.rs — the `project` subcommand this file calls
 
 //#endregion 🧲️Header
 
@@ -55,7 +55,7 @@ type ProbeReport = {
 
 const ENGINE = { family: "quick-xml", implementation: "quick-xml-oracle-codec (quick-xml 0.42 + this subset's own hand-rolled DOCTYPE-subset parser)", version: "quick-xml@0.42.0" } as const;
 const PROBE_VERSION = "quick-xml@0.42.0";
-const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🦀️quick-xml-oracle-codec", "Cargo.toml");
+const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 //#endregion 🧬️Contract
 
 //#region 📥️Model

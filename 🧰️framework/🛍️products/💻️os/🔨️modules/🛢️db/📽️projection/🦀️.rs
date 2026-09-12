@@ -211,7 +211,7 @@ pub trait ProjectionClass: Send + Sync {
 /// `🧪️Tests` module is the only one that does, repo-wide) declares its own small closed enum over
 /// exactly the `ErasedWrapper<P>` types it uses (R11: "closed set ⇒ `dyn_enum_close!`" — hand-written
 /// here per the `GuestRuntimes` precedent, since the variant set is `#[cfg(test)]`-only); a call site
-/// that uses exactly one `ProjectionClass` (`db_testkit`) just names `E = ErasedWrapper<ItsType>`
+/// that uses exactly one `ProjectionClass` (`db_fault_testing`) just names `E = ErasedWrapper<ItsType>`
 /// directly, no enum needed. Implemented automatically for any `ProjectionClass` via `erase`; not
 /// meant to be implemented by hand except for `NoProjections` below.
 pub trait ErasedProjection: Send + Sync {

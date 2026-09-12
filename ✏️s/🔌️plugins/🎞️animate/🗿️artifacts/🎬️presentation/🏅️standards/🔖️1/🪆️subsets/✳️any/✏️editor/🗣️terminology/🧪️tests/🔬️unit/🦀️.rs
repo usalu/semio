@@ -3,7 +3,7 @@
 /// resolution, unrelated to selection.
 #[semio_framework_async_macros::async_test]
 async fn animate_presentation_labels_resolve_native_by_default() {
-    use crate::editor::animate::testkit::{presentation_app, render};
+    use crate::editor::animate::unit_tests::context::{presentation_app, render};
     use crate::editor::animate::{PRESENTATION_PLAY_BODY_CATALOGUE, PRESENTATION_PLAY_BODY_DETAILS};
     let mut app = presentation_app().await;
     let catalogue = render(&mut app, PRESENTATION_PLAY_BODY_CATALOGUE).await;
@@ -16,7 +16,7 @@ async fn animate_presentation_labels_resolve_native_by_default() {
 
 #[semio_framework_async_macros::async_test]
 async fn animate_presentation_labels_translate_panels_in_german() {
-    use crate::editor::animate::testkit::{presentation_app, render};
+    use crate::editor::animate::unit_tests::context::{presentation_app, render};
     use crate::editor::animate::{PRESENTATION_PLAY_BODY_CATALOGUE, PRESENTATION_PLAY_BODY_DOCUMENT};
     let mut app = presentation_app().await;
     let catalogue_json = render(&mut app, PRESENTATION_PLAY_BODY_CATALOGUE).await;

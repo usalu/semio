@@ -46,7 +46,7 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
   footer/slide-number placeholders) and slide 6's real picture (the real `Diagrammnotation` photo,
   `blipRelId` `rId2`) among them — never a synthetic two-shape stand-in.
 
-  ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🔮️oracle/⚖️law module,
+  ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law module,
   so no scenario can pass merely because the reference composition declined to error.
   `mutate-<kind>` fails unless the mutation MOVES the very projection the case is compared through:
   a kind that applies cleanly and changes nothing observable would otherwise report a green for a
@@ -61,7 +61,7 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
   which is what gives `move-slide` real evidence rather than a shape census that a reorder leaves
   untouched. The same three laws are proven again at unit level over these very Examples rows by
   `every_declared_kind_is_observable_and_its_inverse_restores_the_presentation` in
-  ../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracle/🦀️component.rs, which READS this table rather
+  ../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🦀️component.rs, which READS this table rather
   than restating it, so the two can never drift apart.
 
   @id-mutate

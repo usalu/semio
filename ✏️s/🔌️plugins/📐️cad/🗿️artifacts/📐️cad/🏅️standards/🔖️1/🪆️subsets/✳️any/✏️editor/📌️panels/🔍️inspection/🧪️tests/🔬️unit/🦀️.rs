@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::cad::terminology::cad_labels;
-use crate::editor::cad::testkit::*;
+use crate::editor::cad::unit_tests::context::*;
 use crate::editor::cad::{make_object_for_typology, CadPlayRuntime};
 use crate::standards::v1::subsets::any::schema::inferences::default_document;
 use crate::CadPaneId;
@@ -8,7 +8,7 @@ use semio_framework_plugin::{ui_inspector_groups_to_tree, Locale, Terminology, V
 fn selected_box_panel(view_state: &ViewModel) -> String {
     let runtime = CadPlayRuntime::default();
     let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(view_state), None).expect("CAD properties panel assembly");
-    semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: panel }).expect("CAD panel projection")
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: panel }).expect("CAD panel projection")
 }
 
 #[semio_framework_async_macros::async_test]

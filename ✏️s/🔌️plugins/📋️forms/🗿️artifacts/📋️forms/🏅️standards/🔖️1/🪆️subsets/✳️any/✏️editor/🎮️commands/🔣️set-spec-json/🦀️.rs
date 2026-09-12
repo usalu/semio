@@ -1,7 +1,6 @@
 //! 📥️ 📥️ Forms play app commands command — `set-spec-json`.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::reset_try_config_mutations;
 use crate::{forms_steps, op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -46,7 +45,7 @@ pub fn handle(payload: &SetSpecJson, doc: &ArtifactView<'_, FormsSnapshot>, _cfg
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no longer clears a config-owned
     // selection here — swapping in a whole new document prunes every stale "fields" selection id
     // automatically via `revalidate_interaction_state_after_document_change`.
-    Ok(Emit { artifact_mutations: replace_spec_operations(doc.snapshot, &next), config_mutations: reset_try_config_mutations(), ..Default::default() })
+    Ok(Emit { artifact_mutations: replace_spec_operations(doc.snapshot, &next), ..Default::default() })
 }
 
 //#region 🧪️Tests

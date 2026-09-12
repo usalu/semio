@@ -1259,7 +1259,7 @@ impl<T: DirectoryTransport + Send + Sync> HubSocketGrantSource for DirectoryClie
 //#endregion 🔖️Client
 
 //#region 🔖️Stream
-/// ⏱️ Reconnect backoff floor/ceiling — same constants `🧵️backbone-worker.ts`'s
+/// ⏱️ Reconnect backoff floor/ceiling — same constants `🏪️store/👷️worker/🟦️.ts`'s
 /// `HUB_RECONNECT_MIN_MS`/`HUB_RECONNECT_MAX_MS` already use for the document WS.
 pub const HUB_RECONNECT_MIN_MS: u64 = 500;
 pub const HUB_RECONNECT_MAX_MS: u64 = 30_000;
@@ -1919,13 +1919,6 @@ pub mod browser {
 //#endregion 🔖️Native
 
 //#region 🧪️Tests
-/// 🧪️ Reused by `🪪️identity`'s own tests (`super::client::test_support::FakeTransport`) so the
-/// mint-vs-restore decision is exercised against the SAME double this module's stream/HTTP tests
-/// use, rather than a second hand-rolled copy.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️test-support/🦀️.rs"]
-pub mod test_support;
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

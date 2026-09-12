@@ -151,7 +151,7 @@ export function sealedInstanceDropV1(pluginId: string, instanceId: number, what:
 
 /** 🔇️ One line, one drop — the exact text the shell prints and the probe greps. */
 export function sealedInstanceDropTextV1(drop: SealedInstanceDropV1): string {
-  return `[DEBUG] ${drop.code} dropped ${drop.what} for ${drop.instance}${drop.detail === null ? "" : ` (${drop.detail})`}`;
+  return `${drop.code} dropped ${drop.what} for ${drop.instance}${drop.detail === null ? "" : ` (${drop.detail})`}`;
 }
 
 /** 🚦️ The refusal the user SEES when a switch is declined because the mounted surface is still busy

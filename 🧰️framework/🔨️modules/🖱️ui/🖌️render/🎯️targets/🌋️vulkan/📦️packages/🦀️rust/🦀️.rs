@@ -28,25 +28,25 @@
 //! the authoritative status, decisions, and registrar-requests.
 
 #[cfg(target_os = "linux")]
-#[path = "🌋️backend.rs"]
+#[path = "../../🌋️backend/🦀️.rs"]
 mod backend;
 #[cfg(target_os = "linux")]
-#[path = "🗺️descriptor_layout.rs"]
+#[path = "../../🗺️descriptor-layout/🦀️.rs"]
 mod descriptor_layout;
 #[cfg(target_os = "linux")]
-#[path = "💾️memory.rs"]
+#[path = "../../💾️memory/🦀️.rs"]
 mod memory;
 #[cfg(target_os = "linux")]
-#[path = "🗃️resources.rs"]
+#[path = "../../🗃️resources/🦀️.rs"]
 mod resources;
 #[cfg(target_os = "linux")]
-#[path = "🪟️surface.rs"]
+#[path = "../../🪟️surface/🦀️.rs"]
 mod surface;
 #[cfg(target_os = "linux")]
-#[path = "🔗️swapchain_support.rs"]
+#[path = "../../🔗️swapchain-support/🦀️.rs"]
 mod swapchain_support;
 #[cfg(target_os = "linux")]
-#[path = "⚠️vk_error.rs"]
+#[path = "../../⚠️vk-error/🦀️.rs"]
 mod vk_error;
 
 #[cfg(target_os = "linux")]

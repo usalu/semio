@@ -43,7 +43,7 @@ struct NodeGraphSyncCache {
     status_json: Option<String>,
     eval_json: Option<String>,
     lod_json: Option<String>,
-    viewport: Option<ui_wgpu::wgpu::NodeGraphViewport>,
+    viewport: Option<semio_framework_os_kernel::Viewport2d>,
     viewport_pixels: Option<(u32, u32)>,
     operator_ids: Option<Vec<String>>,
     hover: Option<(String, String)>,
@@ -1241,8 +1241,15 @@ impl EngineCanvasPresenter {
         if candidate_generation != expected {
             return Err("engine raster operation authority was stale before realization".to_string());
         }
+        // 🌱 A pending primary-metrics invalidation is THIS authority's own unfinished work, not a
+        // foreign fault: the surface-resize cursor arms the scan and drains it on a different cadence
+        // from the present cursor, so a frame that reaches the engine mid-scan used to quarantine the
+        // whole surface with `engine primary metrics invalidation is pending`. Drive one scan unit and
+        // answer "not yet" — the scan is bounded by `ENGINE_SURFACE_CAPACITY`
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         if self.metrics_invalidation_scan.is_some() {
-            return Err("engine primary metrics invalidation is pending".to_string());
+            self.invalidate_primary_metrics_step();
+            return Ok(false);
         }
         let primary_metrics_generation = self.primary_metrics_generation;
         let index = usize::from(packet.surface.token.slot);
@@ -2989,7 +2996,7 @@ fn clamp_label_font_px(atlas: &mut FontAtlas, text: &str, target_px: f32, max_h:
 
 /// ✂️ The wgpu shell's half of the shared caption law: clip by the GLYPH ATLAS's own measure. Its
 /// browser twin is `dagEllipsizeOverlayLabel` in `🕸️NodeGraph/🟦️.tsx`, and both are pinned to the
-/// rows of `♾️infinite/🖼️canvas/🧪️tests/🏷️label-fit/🔣️.json`.
+/// rows of `♾️infinite/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json`.
 fn fit_overlay_label_text(atlas: &mut FontAtlas, text: &str, font_px: f32, max_w: f32) -> String {
     canvas::text::ellipsize_by_measure(text, f64::from(max_w), |candidate| f64::from(atlas.measure_text(candidate, font_px).0))
 }

@@ -152,7 +152,7 @@ impl semio_framework_plugin::WindowConfigOwner for NoteCompositeWindowConfigOwne
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = NoteCompositeWindowConfig;
     type Mutation = NoteCompositeWindowConfigMutation;
-    fn build_store_owners() -> store::MemberStoreOwners<Self::State, Self::Mutation> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
+    fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
 }
@@ -178,7 +178,7 @@ impl semio_framework_plugin::WindowTransientOwner for NoteCompositeWindowTransie
 pub fn register_config(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> { registry.register::<NoteCompositeWindowConfigOwner>() }
 pub fn register_transient(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> { registry.register::<NoteCompositeWindowTransientOwner>() }
 
-pub fn config_from_view(view: &semio_framework_plugin::ConfigView<'_, crate::editor::note::config::NoteConfig>) -> NoteCompositeWindowConfig {
+pub fn config_from_view(view: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> NoteCompositeWindowConfig {
     view.window::<NoteCompositeWindowConfigOwner>().cloned().unwrap_or_default()
 }
 pub fn config_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> NoteCompositeWindowConfig {

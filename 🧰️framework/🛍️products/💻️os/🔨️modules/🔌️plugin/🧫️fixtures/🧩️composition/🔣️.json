@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "root": {
+    "artifactId": "replacement-parent",
+    "children": ["child-1"]
+  },
+  "historyCases": [
+    {
+      "id": "nonempty-parent-and-child-history",
+      "documents": [
+        {
+          "artifactId": "replacement-parent",
+          "edits": ["parent-edit-1"],
+          "changes": [{ "id": "parent-change-1", "edits": ["parent-edit-1"] }],
+          "applied": ["parent-edit-1"],
+          "redo": []
+        },
+        {
+          "artifactId": "child-1",
+          "edits": ["branch-edit-1"],
+          "changes": [{ "id": "branch-change-1", "edits": ["branch-edit-1"] }],
+          "applied": ["branch-edit-1"],
+          "redo": []
+        },
+        {
+          "artifactId": "grandchild-1",
+          "edits": ["leaf-edit-1"],
+          "changes": [{ "id": "leaf-change-1", "edits": ["leaf-edit-1"] }],
+          "applied": ["leaf-edit-1"],
+          "redo": []
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "crc-valid-child-missing-edit-after-prefix",
+      "documents": [
+        {
+          "artifactId": "replacement-parent",
+          "edits": ["parent-edit-1"],
+          "changes": [{ "id": "parent-change-1", "edits": ["parent-edit-1"] }],
+          "applied": ["parent-edit-1"],
+          "redo": []
+        },
+        {
+          "artifactId": "child-1",
+          "edits": ["branch-edit-1"],
+          "changes": [
+            { "id": "branch-change-1", "edits": ["branch-edit-1"] },
+            { "id": "malformed-after-valid-prefix", "edits": ["missing-edit-after-valid-prefix"] }
+          ],
+          "applied": ["branch-edit-1"],
+          "redo": []
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "duplicate-leaf-cursor-lane",
+      "documents": [
+        {
+          "artifactId": "grandchild-1",
+          "edits": ["leaf-edit-1"],
+          "changes": [{ "id": "leaf-change-1", "edits": ["leaf-edit-1"] }],
+          "applied": ["leaf-edit-1"],
+          "redo": ["leaf-edit-1"]
+        }
+      ],
+      "accepted": false
+    }
+  ],
+  "cases": [
+    {
+      "id": "recursive-unordered-success",
+      "mode": "complete",
+      "admissionOrder": [1, 0],
+      "members": [
+        { "artifactId": "child-1", "parentId": "replacement-parent", "slot": "slot", "children": ["grandchild-1"] },
+        { "artifactId": "grandchild-1", "parentId": "child-1", "slot": "nested", "children": [] }
+      ],
+      "cancelAt": null,
+      "staleAuthority": false,
+      "published": true
+    },
+    {
+      "id": "missing-grandchild",
+      "mode": "missing",
+      "admissionOrder": [0],
+      "members": [
+        { "artifactId": "child-1", "parentId": "replacement-parent", "slot": "slot", "children": ["grandchild-1"] }
+      ],
+      "cancelAt": null,
+      "staleAuthority": false,
+      "published": false
+    },
+    {
+      "id": "extra-unreachable-member",
+      "mode": "extra",
+      "admissionOrder": [2, 1, 0],
+      "members": [
+        { "artifactId": "child-1", "parentId": "replacement-parent", "slot": "slot", "children": ["grandchild-1"] },
+        { "artifactId": "grandchild-1", "parentId": "child-1", "slot": "nested", "children": [] },
+        { "artifactId": "orphan-1", "parentId": "replacement-parent", "slot": "orphan", "children": [] }
+      ],
+      "cancelAt": null,
+      "staleAuthority": false,
+      "published": false
+    },
+    {
+      "id": "duplicate-member",
+      "mode": "duplicate",
+      "admissionOrder": [1, 0],
+      "members": [
+        { "artifactId": "child-1", "parentId": "replacement-parent", "slot": "slot", "children": ["grandchild-1"] },
+        { "artifactId": "child-1", "parentId": "replacement-parent", "slot": "slot", "children": ["grandchild-1"] }
+      ],
+      "cancelAt": null,
+      "staleAuthority": false,
+      "published": false
+    },
+    {
+      "id": "cancel-member-open",
+      "mode": "complete",
+      "admissionOrder": [1, 0],
+      "members": [
+        { "artifactId": "child-1", "parentId": "replacement-parent", "slot": "slot", "children": ["grandchild-1"] },
+        { "artifactId": "grandchild-1", "parentId": "child-1", "slot": "nested", "children": [] }
+      ],
+      "cancelAt": "memberOpen",
+      "staleAuthority": false,
+      "published": false
+    },
+    {
+      "id": "cancel-closure",
+      "mode": "complete",
+      "admissionOrder": [1, 0],
+      "members": [
+        { "artifactId": "child-1", "parentId": "replacement-parent", "slot": "slot", "children": ["grandchild-1"] },
+        { "artifactId": "grandchild-1", "parentId": "child-1", "slot": "nested", "children": [] }
+      ],
+      "cancelAt": "closure",
+      "staleAuthority": false,
+      "published": false
+    },
+    {
+      "id": "cancel-view-preparation",
+      "mode": "complete",
+      "admissionOrder": [1, 0],
+      "members": [
+        { "artifactId": "child-1", "parentId": "replacement-parent", "slot": "slot", "children": ["grandchild-1"] },
+        { "artifactId": "grandchild-1", "parentId": "child-1", "slot": "nested", "children": [] }
+      ],
+      "cancelAt": "viewPreparation",
+      "staleAuthority": false,
+      "published": false
+    },
+    {
+      "id": "stale-child-content-authority",
+      "mode": "complete",
+      "admissionOrder": [1, 0],
+      "members": [
+        { "artifactId": "child-1", "parentId": "replacement-parent", "slot": "slot", "children": ["grandchild-1"] },
+        { "artifactId": "grandchild-1", "parentId": "child-1", "slot": "nested", "children": [] }
+      ],
+      "cancelAt": null,
+      "staleAuthority": true,
+      "published": false
+    }
+  ]
+}

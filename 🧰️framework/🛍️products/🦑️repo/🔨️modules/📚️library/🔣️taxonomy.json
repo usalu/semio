@@ -17,6 +17,33 @@
     "authoringExtension": "schema-ordered-primary",
     "runtimeLookup": "canonical-only"
   },
+  "implementationLeafPolicy": {
+    "roles": [
+      "source"
+    ],
+    "fileKindIds": [
+      "css",
+      "html"
+    ],
+    "ignoredPathPatterns": [
+      "**/.git",
+      "**/.pytest_cache",
+      "**/.venv",
+      "**/.🧬semio",
+      "**/__pycache__",
+      "**/coverage",
+      "**/dist",
+      "**/node_modules",
+      "**/storybook-static",
+      "**/target",
+      "**/📤️dist",
+      "**/🗑️generated",
+      "**/🔌️plugin-modules",
+      "**/📦️packages/🦀️rust/pkg",
+      "**/📦️packages/🟦️typescript/out",
+      "**/📦️packages/🔷️dotnet/obj"
+    ]
+  },
   "referenceClosure": {
     "scope": "repository-incoming-and-moved-outgoing",
     "candidateSource": "git-tracked-and-untracked-plus-explicit-ticket",
@@ -693,7 +720,7 @@
   "frozenCoordinateEvidenceContracts": {
     "readme-current-source-revision-input": {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🔖️readme-current-source-revision/🔣️.json",
-      "sha256": "1d9700f8bcdebaa4622373c85faa58bf5d626cee34fc19cf57310feba543f3d7",
+      "sha256": "5eb7fd808e24a1d95e065afd8f37a5990f30cc80b15e7e13ff59e629ccef44fa",
       "schemaVersion": 1,
       "coordinates": [
         {
@@ -708,7 +735,7 @@
     },
     "readme-reviewed-expectation-input": {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/👀️readme-reviewed-fixture-inputs/🎯️reviewed-expectations/🔣️.json",
-      "sha256": "b2a6129ad3abb7d1ea6140a7050c2200b0c29f5ab178bad7fe81f02cbcbdd0a3",
+      "sha256": "e821d6835b7bc0054ae7d0d3c4e7907692263b7ad947c3d7230a4c848c730320",
       "schemaVersion": 1,
       "coordinates": [
         {
@@ -1994,7 +2021,7 @@
       "extensionChains": [
         ".story.tsx"
       ],
-      "role": "documentation"
+      "role": "source"
     },
     "svg": {
       "emoji": "🔣️",
@@ -2049,7 +2076,9 @@
         ".tsx",
         ".mts",
         ".cts",
-        ".d.ts"
+        ".d.ts",
+        ".d.mts",
+        ".d.cts"
       ],
       "role": "source"
     },
@@ -2696,6 +2725,16 @@
       "fileKindId": "typescript-source",
       "priority": 0
     },
+    "physical-typescript-source-d-cts": {
+      "extensionChain": ".d.cts",
+      "fileKindId": "typescript-source",
+      "priority": 0
+    },
+    "physical-typescript-source-d-mts": {
+      "extensionChain": ".d.mts",
+      "fileKindId": "typescript-source",
+      "priority": 0
+    },
     "physical-typescript-source-mts": {
       "extensionChain": ".mts",
       "fileKindId": "typescript-source",
@@ -3169,7 +3208,8 @@
       "slugPattern": "^wire$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "content"
+        "content",
+        "wgpu-target"
       ]
     },
     "content-framing": {
@@ -3177,7 +3217,8 @@
       "slugPattern": "^framing$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "content"
+        "content",
+        "wgpu-target"
       ]
     },
     "content-dialects": {
@@ -3347,6 +3388,391 @@
         "members-of-modules"
       ]
     },
+    "ui-render-test-d3d12-backend-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^d3d12-backend-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-d3d12-frame-buffers-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^d3d12-frame-buffers-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-d3d12-pipelines-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^d3d12-pipelines-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-metal-backend-drawable-size": {
+      "emoji": "🔬️",
+      "slugPattern": "^metal-backend-drawable-size$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-metal-backend-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^metal-backend-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-metal-frame-buffers-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^metal-frame-buffers-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-metal-objective-c-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^metal-objective-c-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-vulkan-descriptor-layout-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^vulkan-descriptor-layout-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-vulkan-memory-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^vulkan-memory-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-vulkan-resources-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^vulkan-resources-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-vulkan-surface-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^vulkan-surface-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-vulkan-swapchain-support-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^vulkan-swapchain-support-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-vulkan-vk-error-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^vulkan-vk-error-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-webgpu-backend-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^webgpu-backend-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-webgpu-buffers-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^webgpu-buffers-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-webgpu-frame-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^webgpu-frame-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-webgpu-gpu-context-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^webgpu-gpu-context-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-webgpu-gpu-types-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^webgpu-gpu-types-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-webgpu-gpu-uniforms-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^webgpu-gpu-uniforms-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-webgpu-resources-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^webgpu-resources-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-webgpu-scene-target-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^webgpu-scene-target-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-webgpu-surface-adapter-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^webgpu-surface-adapter-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-render-test-webgpu-surface-state-unit": {
+      "emoji": "🔬️",
+      "slugPattern": "^webgpu-surface-state-unit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "ui-styling-builder-vite": {
+      "emoji": "🌐️",
+      "slugPattern": "^vite$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "builder"
+      ]
+    },
+    "ui-ports-interactive-jobs": {
+      "emoji": "📡️",
+      "slugPattern": "^interactive-jobs$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-elements"
+      ]
+    },
+    "ui-diagram-layout": {
+      "emoji": "📐️",
+      "slugPattern": "^layout$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-elements"
+      ]
+    },
+    "ui-contract-accessibility": {
+      "emoji": "♿️",
+      "slugPattern": "^accessibility$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "ui-contract-layout": {
+      "emoji": "📐️",
+      "slugPattern": "^layout$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "ui-contract-component": {
+      "emoji": "🧩️",
+      "slugPattern": "^component$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "ui-contract-text-edit": {
+      "emoji": "🪢️",
+      "slugPattern": "^text-edit$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "ui-contract-limits": {
+      "emoji": "🛡️",
+      "slugPattern": "^limits$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "ui-contract-typed-document": {
+      "emoji": "📃️",
+      "slugPattern": "^document$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "ui-contract-typed-retirement"
+      ]
+    },
+    "ui-contract-typed-component": {
+      "emoji": "🧱️",
+      "slugPattern": "^component$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "ui-contract-typed-retirement"
+      ]
+    },
+    "ui-class-name-slot": {
+      "emoji": "🪆️",
+      "slugPattern": "^slot$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "asset-resolver-delivery": {
+      "emoji": "🌐️",
+      "slugPattern": "^delivery$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-assets"
+      ]
+    },
+    "asset-builder-projection": {
+      "emoji": "📽️",
+      "slugPattern": "^projection$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "builder"
+      ]
+    },
+    "asset-builder-publication": {
+      "emoji": "📦️",
+      "slugPattern": "^publication$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "builder"
+      ]
+    },
+    "derive-expansion": {
+      "emoji": "⚙️",
+      "slugPattern": "^expansion$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-members-of-modules",
+        "members-of-schema"
+      ]
+    },
+    "schema-component": {
+      "emoji": "⚛️",
+      "slugPattern": "^component$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "ui-styling-favicon": {
+      "emoji": "🌐️",
+      "slugPattern": "^favicon$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "styling"
+      ]
+    },
+    "ui-styling-iframe": {
+      "emoji": "🌐️",
+      "slugPattern": "^iframe$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "styling"
+      ]
+    },
+    "ui-styling-mixing": {
+      "emoji": "🌗️",
+      "slugPattern": "^mixing$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "styling"
+      ]
+    },
+    "ui-styling-verification": {
+      "emoji": "🛡️",
+      "slugPattern": "^verification$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "styling"
+      ]
+    },
+    "ui-styling-ui": {
+      "emoji": "🖌️",
+      "slugPattern": "^ui$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "styling"
+      ]
+    },
+    "ui-host-backend": {
+      "emoji": "🔌️",
+      "slugPattern": "^backend$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-members-of-modules"
+      ]
+    },
+    "ui-host-window": {
+      "emoji": "🪟️",
+      "slugPattern": "^window$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-members-of-modules"
+      ]
+    },
+    "ui-runtime": {
+      "emoji": "🧠️",
+      "slugPattern": "^runtime$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "ui-scene": {
+      "emoji": "🎬️",
+      "slugPattern": "^scene$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
     "database-preview": {
       "emoji": "🔮️",
       "slugPattern": "^preview$",
@@ -3419,6 +3845,32 @@
     "examples": {
       "emoji": "📚️",
       "slugPattern": "^examples$",
+      "allowEmojiOnly": false
+    },
+    "stories": {
+      "emoji": "📖️",
+      "slugPattern": "^stories$",
+      "allowEmojiOnly": false
+    },
+    "story-case": {
+      "emoji": "🎭️",
+      "slugPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "stories"
+      ]
+    },
+    "story-coordination": {
+      "emoji": "🧭️",
+      "slugPattern": "^coordination$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "stories"
+      ]
+    },
+    "oracles": {
+      "emoji": "🔮️",
+      "slugPattern": "^oracles$",
       "allowEmojiOnly": false
     },
     "library": {
@@ -4122,6 +4574,198 @@
     "wgpu-target": {
       "emoji": "🧊️",
       "slugPattern": "^wgpu$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "targets"
+      ]
+    },
+    "wgpu-artifact-projection": {
+      "emoji": "📽️",
+      "slugPattern": "^projection$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "wgpu-target"
+      ]
+    },
+    "wgpu-artifact-publication": {
+      "emoji": "📦️",
+      "slugPattern": "^publication$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "wgpu-target"
+      ]
+    },
+    "repo-library-projection": {
+      "emoji": "📽️",
+      "slugPattern": "^projection$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-package-adapter-projection": {
+      "emoji": "🧩️",
+      "slugPattern": "^package-adapter$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-projection"
+      ]
+    },
+    "repo-package-adapter-publication": {
+      "emoji": "📦️",
+      "slugPattern": "^publication$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-package-adapter-projection"
+      ]
+    },
+    "repo-dependency-inventory": {
+      "emoji": "📇️",
+      "slugPattern": "^inventory$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-members-of-modules"
+      ]
+    },
+    "repo-dependency-truth": {
+      "emoji": "⚖️",
+      "slugPattern": "^truth$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-members-of-modules"
+      ]
+    },
+    "repo-normalization": {
+      "emoji": "🧹️",
+      "slugPattern": "^normalization$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-normalization-command-contract": {
+      "emoji": "🎮️",
+      "slugPattern": "^command-contract$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization"
+      ]
+    },
+    "repo-normalization-inventory": {
+      "emoji": "📇️",
+      "slugPattern": "^inventory$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization"
+      ]
+    },
+    "repo-inventory-serialization": {
+      "emoji": "🧾️",
+      "slugPattern": "^serialization$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization-inventory"
+      ]
+    },
+    "repo-inventory-shards": {
+      "emoji": "🧩️",
+      "slugPattern": "^shards$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization-inventory"
+      ]
+    },
+    "repo-inventory-publication": {
+      "emoji": "📦️",
+      "slugPattern": "^publication$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization-inventory"
+      ]
+    },
+    "repo-normalization-mutation": {
+      "emoji": "🧬️",
+      "slugPattern": "^mutation$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization"
+      ]
+    },
+    "repo-mutation-identity": {
+      "emoji": "🪪️",
+      "slugPattern": "^identity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization-mutation"
+      ]
+    },
+    "repo-mutation-captured-source": {
+      "emoji": "📸️",
+      "slugPattern": "^captured-source$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization-mutation"
+      ]
+    },
+    "repo-mutation-source-index": {
+      "emoji": "📇️",
+      "slugPattern": "^index$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization-mutation"
+      ]
+    },
+    "repo-mutation-workflow": {
+      "emoji": "🔁️",
+      "slugPattern": "^workflow$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization-mutation"
+      ]
+    },
+    "repo-mutation-structural-reachability": {
+      "emoji": "📐️",
+      "slugPattern": "^structural-reachability$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization-mutation"
+      ]
+    },
+    "repo-schema-subset-validation": {
+      "emoji": "✅️",
+      "slugPattern": "^validation$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "vulkan-target": {
+      "emoji": "🌋️",
+      "slugPattern": "^vulkan$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "targets"
+      ]
+    },
+    "metal-target": {
+      "emoji": "🍎️",
+      "slugPattern": "^metal$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "targets"
+      ]
+    },
+    "webgpu-target": {
+      "emoji": "🧊️",
+      "slugPattern": "^webgpu$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "targets"
+      ]
+    },
+    "d3d12-target": {
+      "emoji": "🪟️",
+      "slugPattern": "^d3d12$",
       "allowEmojiOnly": false,
       "parentKindIds": [
         "targets"
@@ -4873,7 +5517,8 @@
       "slugPattern": "^input$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "content"
+        "content",
+        "wgpu-target"
       ]
     },
     "font-subject": {
@@ -5381,13 +6026,27 @@
         "subset"
       ]
     },
-    "generator-crate": {
-      "emoji": "🦀️",
-      "slugPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+    "generator-codec": {
+      "emoji": "🔁️",
+      "slugPattern": "^codec$",
       "allowEmojiOnly": false,
       "parentKindIds": [
         "generator"
       ]
+    },
+    "generator-generate": {
+      "emoji": "🏗️",
+      "slugPattern": "^generate$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "generator-codec",
+        "json"
+      ]
+    },
+    "generated-source-topology": {
+      "emoji": "🏭️",
+      "slugPattern": "^generated-source-topology$",
+      "allowEmojiOnly": false
     },
     "probes": {
       "emoji": "🔬️",
@@ -5402,7 +6061,7 @@
       "slugPattern": "^dxf-codec$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "generator-crate"
+        "generator-codec"
       ]
     },
     "svg-codec": {
@@ -5410,7 +6069,7 @@
       "slugPattern": "^svg-codec$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "generator-crate"
+        "generator-codec"
       ]
     },
     "pdf-codec": {
@@ -5418,7 +6077,7 @@
       "slugPattern": "^pdf-codec$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "generator-crate"
+        "generator-codec"
       ]
     },
     "recipes": {
@@ -5426,7 +6085,7 @@
       "slugPattern": "^recipes$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "generator-crate"
+        "generator-codec"
       ]
     },
     "cli": {
@@ -5434,7 +6093,7 @@
       "slugPattern": "^cli$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "generator-crate"
+        "generator-codec"
       ]
     },
     "metadata": {
@@ -5600,6 +6259,14 @@
       "emoji": "🎮️",
       "slugPattern": "^commands$",
       "allowEmojiOnly": false
+    },
+    "story-lint": {
+      "emoji": "🧹️",
+      "slugPattern": "^linting$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "stories"
+      ]
     }
   },
   "semanticDirectoryMemberKinds": {
@@ -5971,6 +6638,217 @@
       ],
       "source": "registry"
     },
+    "framework-root-source-topology": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🧰️framework-root-source-topology"
+      ],
+      "source": "registry"
+    },
+    "framework-schema-projection": {
+      "ownerKindIds": [
+        "schema"
+      ],
+      "memberNames": [
+        "📽️projection"
+      ],
+      "source": "registry"
+    },
+    "framework-async-lease-pool": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "🎟️lease-pool"
+      ],
+      "source": "registry"
+    },
+    "framework-async-jittered-backoff": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "🔁️jittered-backoff"
+      ],
+      "source": "registry"
+    },
+    "framework-async-latest-wins": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "🥇️latest-wins"
+      ],
+      "source": "registry"
+    },
+    "framework-async-event-wait": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "🔔️event-wait"
+      ],
+      "source": "registry"
+    },
+    "framework-io-fetch-timeout": {
+      "ownerKindIds": [
+        "io"
+      ],
+      "memberNames": [
+        "🌐️fetch-timeout"
+      ],
+      "source": "registry"
+    },
+    "manifestless-source-closure": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🧱️manifestless-source-closure"
+      ],
+      "source": "registry"
+    },
+    "repo-server-library": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "📚️library"
+      ],
+      "source": "registry"
+    },
+    "repo-server-persistence": {
+      "ownerKindIds": [
+        "repo-server-library"
+      ],
+      "memberNames": [
+        "🗄️persistence"
+      ],
+      "source": "registry"
+    },
+    "repo-server-source-index": {
+      "ownerKindIds": [
+        "repo-server-library"
+      ],
+      "memberNames": [
+        "🔎️source-index"
+      ],
+      "source": "registry"
+    },
+    "repo-server-authentication": {
+      "ownerKindIds": [
+        "repo-server-library"
+      ],
+      "memberNames": [
+        "🔐️authentication"
+      ],
+      "source": "registry"
+    },
+    "repo-server-event": {
+      "ownerKindIds": [
+        "repo-server-library"
+      ],
+      "memberNames": [
+        "📡️event"
+      ],
+      "source": "registry"
+    },
+    "repo-server-worker": {
+      "ownerKindIds": [
+        "repo-server-library"
+      ],
+      "memberNames": [
+        "👷️worker"
+      ],
+      "source": "registry"
+    },
+    "repo-server-worker-execution": {
+      "ownerKindIds": [
+        "repo-server-worker"
+      ],
+      "memberNames": [
+        "🏃️execution"
+      ],
+      "source": "registry"
+    },
+    "plugin-browser-bundle": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "🌐️browser-bundle"
+      ],
+      "source": "registry"
+    },
+    "plugin-browser-materialization": {
+      "ownerKindIds": [
+        "plugin-browser-bundle"
+      ],
+      "memberNames": [
+        "🏗️materialization"
+      ],
+      "source": "registry"
+    },
+    "plugin-browser-materialization-commands": {
+      "ownerKindIds": [
+        "plugin-browser-materialization"
+      ],
+      "memberNames": [
+        "🚀️commands"
+      ],
+      "source": "registry"
+    },
+    "plugin-browser-distribution": {
+      "ownerKindIds": [
+        "plugin-browser-bundle"
+      ],
+      "memberNames": [
+        "📦️distribution"
+      ],
+      "source": "registry"
+    },
+    "plugin-browser-distribution-vite": {
+      "ownerKindIds": [
+        "plugin-browser-distribution"
+      ],
+      "memberNames": [
+        "⚡️vite"
+      ],
+      "source": "registry"
+    },
+    "plugin-browser-distribution-inventory": {
+      "ownerKindIds": [
+        "plugin-browser-distribution"
+      ],
+      "memberNames": [
+        "📋️inventory"
+      ],
+      "source": "registry"
+    },
+    "plugin-browser-imports": {
+      "ownerKindIds": [
+        "plugin-browser-bundle"
+      ],
+      "memberNames": [
+        "🕸️imports"
+      ],
+      "source": "registry"
+    },
+    "plugin-browser-descriptor": {
+      "ownerKindIds": [
+        "plugin-browser-bundle"
+      ],
+      "memberNames": [
+        "🛂️descriptor"
+      ],
+      "source": "registry"
+    },
     "dev-extension-install-root": {
       "ownerKindIds": [
         "members-of-modules"
@@ -6031,6 +6909,132 @@
       ],
       "memberNames": [
         "🧹️executable-source"
+      ],
+      "source": "registry"
+    },
+    "os-hub-integration-harness": {
+      "ownerKindIds": [
+        "hub"
+      ],
+      "memberNames": [
+        "🤝️integration-harness"
+      ],
+      "source": "registry"
+    },
+    "os-module-effect-backbone": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "⚡️effect-backbone"
+      ],
+      "source": "registry"
+    },
+    "os-canvas-icon-name-value": {
+      "ownerKindIds": [
+        "members-of-members-of-modules"
+      ],
+      "memberNames": [
+        "🌉️icon-name-value"
+      ],
+      "source": "registry"
+    },
+    "os-mcp-inference-bridge": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "💡️inference-bridge"
+      ],
+      "source": "registry"
+    },
+    "os-mcp-schema-validation": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "🧬️schema-validation"
+      ],
+      "source": "registry"
+    },
+    "os-renderer-artifact-creation": {
+      "ownerKindIds": [
+        "members-of-elements"
+      ],
+      "memberNames": [
+        "🌱️artifact-creation"
+      ],
+      "source": "registry"
+    },
+    "os-renderer-packed-text": {
+      "ownerKindIds": [
+        "members-of-elements"
+      ],
+      "memberNames": [
+        "🧳️packed-text"
+      ],
+      "source": "registry"
+    },
+    "os-plugin-installation": {
+      "ownerKindIds": [
+        "members-of-members-of-modules"
+      ],
+      "memberNames": [
+        "📥️installation"
+      ],
+      "source": "registry"
+    },
+    "os-registry-launch": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "🚀️launch"
+      ],
+      "source": "registry"
+    },
+    "os-descriptor-emission": {
+      "ownerKindIds": [
+        "plugin-descriptor-emitter"
+      ],
+      "memberNames": [
+        "🛂️descriptor-emission"
+      ],
+      "source": "registry"
+    },
+    "os-dev-bench-web-harness": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "📊️bench-web-harness"
+      ],
+      "source": "registry"
+    },
+    "os-dev-vite-plugins": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "🔌️vite-plugins"
+      ],
+      "source": "registry"
+    },
+    "os-dev-executable-source": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "🧹️executable-source"
+      ],
+      "source": "registry"
+    },
+    "os-hostile-batch-edge-fixture": {
+      "ownerKindIds": [
+        "fixtures"
+      ],
+      "memberNames": [
+        "🛡️hostile-batch-edge"
       ],
       "source": "registry"
     },
@@ -8494,7 +9498,9 @@
         "🔀️migrate",
         "🚚️process-transport",
         "🧬️mutation-plan",
-        "🧮️demo"
+        "🧮️demo",
+        "🔎️detail",
+        "🐙️github"
       ],
       "source": "registry"
     },
@@ -8540,6 +9546,7 @@
         "🗂️catalog",
         "🧊️mesh",
         "🧑‍🍳recipe",
+        "🧩️runtime",
         "🧪️fixtures",
         "🧪️schema-parity",
         "🧵️executor",
@@ -8550,7 +9557,30 @@
         "🪪️runtime",
         "🧵️send",
         "✂️detach",
-        "🧵️retained"
+        "🧵️retained",
+        "🐚️unix-durability",
+        "📚️repository",
+        "📜️protocol",
+        "📡️event",
+        "📤️event-export",
+        "🚚️transport",
+        "🖥️server",
+        "🗄️event-store",
+        "🗄️repository",
+        "🛡️durability",
+        "🧩️component",
+        "🪟️windows-durability",
+        "🏷️entity-kinds",
+        "⚠️warnings",
+        "🔐️authentication",
+        "🎫️ticket",
+        "🎯️scope",
+        "📊️dashboard",
+        "🖼️shell",
+        "🧾️diff",
+        "🪝️webhook",
+        "🦑️repo-source-ownership",
+        "🚨️breaches"
       ],
       "source": "registry"
     },
@@ -8682,6 +9712,7 @@
         "🔤️json",
         "🔤️text",
         "🔤️token",
+        "🕸️dependencies",
         "🕸️node-graph",
         "🕸️version-graph",
         "🖊️drawing",
@@ -8708,13 +9739,11 @@
         "🧠️interpreter",
         "🧠️lsp",
         "🧠️runtime",
-        "🧨️testkit",
         "🧩️extension_sdk",
         "🧩️vscode",
         "🧪️conformance",
         "🧹️fixture-sweep",
         "🧪️fixtures",
-        "🧪️testkit",
         "🧬️contract",
         "🧬️protocol",
         "🧭️protocol",
@@ -8729,7 +9758,10 @@
         "🪶️sqlite",
         "🫀️core",
         "📦️codec",
-        "🔗️backbone"
+        "🔗️backbone",
+        "👀️file-watcher",
+        "🚪️native-io",
+        "🚪️entrypoint"
       ],
       "source": "registry"
     },
@@ -8906,6 +9938,7 @@
         "📐️geometry",
         "📖️playbook",
         "📚️compiler",
+        "📚️library",
         "📜️procedure",
         "📝️form-control-presentation",
         "📝️markdown-html-compiler",
@@ -10718,40 +11751,41 @@
       ],
       "source": "registry"
     },
+    "generated-source-projections": {
+      "ownerKindIds": [
+        "generated"
+      ],
+      "memberNames": [
+        "⏳️async",
+        "🌓️palette-theme",
+        "🎚️ui-axes",
+        "🎭️actor",
+        "🎮️playground-session",
+        "🎮️playgrounds",
+        "🏗️framework",
+        "📜️ui-contract",
+        "🔠️types",
+        "🔤️palette-fonts",
+        "🔤️shortcodes",
+        "🔤️tokens",
+        "🖥️hosts",
+        "🖼️icons",
+        "🚦️palette-presence",
+        "🧩️plugins",
+        "🪪️icon-name",
+        "🪪️manifest"
+      ],
+      "source": "registry"
+    },
     "members-of-styling": {
       "ownerKindIds": [
         "styling"
       ],
       "memberNames": [
         "🌓️theme",
-        "💨️tailwind"
-      ],
-      "source": "registry"
-    },
-    "styling-dotnet": {
-      "ownerKindIds": [
-        "styling"
-      ],
-      "memberNames": [
-        "🔷️net"
-      ],
-      "source": "registry"
-    },
-    "styling-dotnet-namespace": {
-      "ownerKindIds": [
-        "styling-dotnet"
-      ],
-      "memberNames": [
-        "🖌️Elements.Styling"
-      ],
-      "source": "registry"
-    },
-    "styling-dotnet-generated": {
-      "ownerKindIds": [
-        "styling-dotnet-namespace"
-      ],
-      "memberNames": [
-        "🤖️Generated"
+        "🎨️palette",
+        "💨️tailwind",
+        "🔤️tokens"
       ],
       "source": "registry"
     },
@@ -11557,9 +12591,6 @@
         "🚫️removes-the-curve-kvs-flow-curve",
         "🔒️turns-strict-mode-on",
         "🏷️retitles-vlv-50-001-and-resyncs-its-index-tags",
-        "🧮️p7c1-energy-numerical-laws.json",
-        "🔗️p7c2-energy-retained-wire-laws.json",
-        "🦠️p7c2-energy-retained-wire-mutations.json",
         "🦠️mutate-gismap-1",
         "🧱️mutate-ply-1-0",
         "🫨️mutate-en1998-1",
@@ -12015,7 +13046,8 @@
         "🚨️dangling-node-d44469",
         "⛓️dead-in-combos-e73167",
         "🚨️no-such-member-3fe6e9",
-        "🧨️zero-modes-a27c74"
+        "🧨️zero-modes-a27c74",
+        "📦️package-boundary-classification"
       ],
       "source": "registry"
     },
@@ -12227,11 +13259,164 @@
       ],
       "source": "registry"
     },
+    "members-of-react-target": {
+      "ownerKindIds": [
+        "react-target"
+      ],
+      "memberNames": [
+        "🎠️runtime",
+        "🖌️render",
+        "🛠️build-tooling"
+      ],
+      "source": "registry"
+    },
+    "members-of-ui-runtime": {
+      "ownerKindIds": [
+        "ui-runtime"
+      ],
+      "memberNames": [
+        "♻️reconcile",
+        "🎛️context",
+        "🎭️present",
+        "🎯️dispatch",
+        "📮️gateway",
+        "🕸️tracking"
+      ],
+      "source": "registry"
+    },
+    "members-of-ui-scene": {
+      "ownerKindIds": [
+        "ui-scene"
+      ],
+      "memberNames": [
+        "🌉️surface",
+        "🌍️world3d-snapshot",
+        "📐️math",
+        "📦️pack",
+        "🖼️canvas2d-snapshot"
+      ],
+      "source": "registry"
+    },
+    "members-of-ui-render": {
+      "ownerKindIds": [
+        "ui-render"
+      ],
+      "memberNames": [
+        "⏱️schedule",
+        "✨️shader-contract",
+        "🎬️scene",
+        "📏️layout",
+        "📐️tessellate",
+        "🔌️backend",
+        "🖋️text",
+        "🖱️dispatch",
+        "🗃️resource",
+        "🗺️surface",
+        "🧱️element"
+      ],
+      "source": "registry"
+    },
+    "members-of-vulkan-target": {
+      "ownerKindIds": [
+        "vulkan-target"
+      ],
+      "memberNames": [
+        "⚠️vk-error",
+        "🌋️backend",
+        "🔗️swapchain-support",
+        "🗃️resources",
+        "🗺️descriptor-layout",
+        "🪟️surface"
+      ],
+      "source": "registry"
+    },
+    "members-of-metal-target": {
+      "ownerKindIds": [
+        "metal-target"
+      ],
+      "memberNames": [
+        "✨️msl",
+        "🌐️world3d",
+        "🌫️scene-target",
+        "🍎️backend",
+        "🏗️pipelines",
+        "📬️frame-buffers",
+        "🗃️resources",
+        "🧭️objective-c",
+        "🧱️types"
+      ],
+      "source": "registry"
+    },
+    "members-of-webgpu-target": {
+      "ownerKindIds": [
+        "webgpu-target"
+      ],
+      "memberNames": [
+        "🌆️scene-target",
+        "🌐️backend",
+        "🎞️frame",
+        "📈️buffers",
+        "🔌️gpu-context",
+        "🔤️gpu-types",
+        "🗃️resources",
+        "🚦️surface-state",
+        "🧊️surface-adapter",
+        "🧮️gpu-uniforms",
+        "🧵️pipelines"
+      ],
+      "source": "registry"
+    },
+    "members-of-d3d12-target": {
+      "ownerKindIds": [
+        "d3d12-target"
+      ],
+      "memberNames": [
+        "✨️hlsl",
+        "🌐️world3d",
+        "🌫️scene-target",
+        "🏗️pipelines",
+        "📬️frame-buffers",
+        "🗃️resources",
+        "🧱️types",
+        "🪟️backend"
+      ],
+      "source": "registry"
+    },
     "members-of-wgpu-target": {
       "ownerKindIds": [
         "wgpu-target"
       ],
       "memberNames": [
+        "⚡️events",
+        "⚙️engine",
+        "🌐️locale-terminology",
+        "🌳️tree",
+        "🎨️shaders",
+        "🎨️theme",
+        "🎬️action",
+        "🏃️host",
+        "🏟️arena",
+        "🏷️label",
+        "🐚️shell",
+        "📌️mounted_layout",
+        "📐️flex",
+        "📐️geometry",
+        "📥️input",
+        "📨️scene_slots",
+        "🔀️reconcile",
+        "🔣️icon-name",
+        "📝️text",
+        "🖍️draw",
+        "🖌️paint",
+        "🖥️chrome",
+        "🧊️gpu",
+        "🧩️component",
+        "🧮️layout",
+        "🗺️minimap",
+        "🪀️widgets",
+        "👆️cursor",
+        "🎟️prepared",
+        "🤖️generated",
         "⌨️native-entrypoint",
         "⏰️deadlines",
         "🎠️runtime",
@@ -12256,13 +13441,159 @@
         "🪟️winit-app"
       ],
       "source": "registry"
+    },
+    "plugin-publication-source-ownership": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "📣️plugin-publication-source-ownership"
+      ],
+      "source": "registry"
+    },
+    "os-describe-source-epoch": {
+      "ownerKindIds": [
+        "plugin-descriptor-emitter"
+      ],
+      "memberNames": [
+        "🧾️source-epoch"
+      ],
+      "source": "registry"
+    },
+    "os-describe-component-build": {
+      "ownerKindIds": [
+        "plugin-descriptor-emitter"
+      ],
+      "memberNames": [
+        "🏗️component-build"
+      ],
+      "source": "registry"
+    },
+    "os-describe-fresh-component": {
+      "ownerKindIds": [
+        "plugin-descriptor-emitter"
+      ],
+      "memberNames": [
+        "🏭️fresh-component"
+      ],
+      "source": "registry"
+    },
+    "os-registry-discovery": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "🔎️discovery"
+      ],
+      "source": "registry"
+    },
+    "os-registry-playground": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "🎮️playground"
+      ],
+      "source": "registry"
+    },
+    "os-registry-playground-discovery": {
+      "ownerKindIds": [
+        "os-registry-playground"
+      ],
+      "memberNames": [
+        "🔎️discovery"
+      ],
+      "source": "registry"
+    },
+    "os-registry-playground-session": {
+      "ownerKindIds": [
+        "os-registry-playground"
+      ],
+      "memberNames": [
+        "🧭️session"
+      ],
+      "source": "registry"
+    },
+    "os-registry-framework-catalog": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "🧰️framework-catalog"
+      ],
+      "source": "registry"
+    },
+    "os-registry-projection": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "📽️projection"
+      ],
+      "source": "registry"
+    },
+    "os-registry-catalog-view": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "📖️catalog-view"
+      ],
+      "source": "registry"
+    },
+    "os-registry-taxonomy-validation": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "🗿️taxonomy-validation"
+      ],
+      "source": "registry"
+    },
+    "os-registry-surface-scaffold": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "🌳️surface-scaffold"
+      ],
+      "source": "registry"
+    },
+    "os-registry-descriptor-verification": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "🛂️descriptor-verification"
+      ],
+      "source": "registry"
+    },
+    "os-registry-catalog-verification": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "✅️catalog-verification"
+      ],
+      "source": "registry"
+    },
+    "os-registry-trusted-stdio-catalog": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "✅️trusted-stdio-catalog"
+      ],
+      "source": "registry"
     }
   },
   "semanticPackageProjectionContracts": {
     "nested-cargo-packages-v1": {
       "contractKind": "exact-nested-cargo-package-catalog",
       "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/📽️nested-cargo-package-projection/🔣️.json",
-      "authorityCatalogSha256": "136f78b1002df27bc05863123c6197ea5b957ac0a030cb4afa6d1ba5e1215572",
+      "authorityCatalogSha256": "9445dea9437059bf41cbc40487e4e0c1b66b7ba5f79dfb0ada9af0c10bec38af",
       "packageIds": [
         "wgpu-renderer",
         "jcoprobe-guest"
@@ -13172,7 +14503,7 @@
     "readme-license-owner-leaves-v1": {
       "contractKind": "exact-owner-path-catalog",
       "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/⚖️readme-license-owner-authority/🔣️.json",
-      "authorityCatalogSha256": "2dcb31628412a9e95b4adfc8756d8fbe9dfa1b397742b3f8a47c603ad15ccc79",
+      "authorityCatalogSha256": "b60f16acbde34545d29abfeb50a55d5db6115b2d316b33011db07da34ca7afe9",
       "currentSourceRevisions": {
         "testing-readme-protocol-v2-reviewed": {
           "catalogCaseIndex": 31,
@@ -13190,7 +14521,7 @@
             "mode": "0644"
           },
           "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🗺️testing-readme-coordinates/🔣️.json",
-          "expectationsSha256": "b2a6129ad3abb7d1ea6140a7050c2200b0c29f5ab178bad7fe81f02cbcbdd0a3"
+          "expectationsSha256": "e821d6835b7bc0054ae7d0d3c4e7907692263b7ad947c3d7230a4c848c730320"
         }
       },
       "sourceFileKindId": "markdown",
@@ -17368,7 +18699,7 @@
       "expires": null
     },
     "jco-callback-module": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/jcoprobe.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact component-name JS and TypeScript declaration pairing",
       "configurability": "unconfigurable",
@@ -17379,7 +18710,7 @@
       "expires": null
     },
     "jco-callback-types": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/jcoprobe.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact component-name declaration paired with JavaScript",
       "configurability": "unconfigurable",
@@ -17390,7 +18721,7 @@
       "expires": null
     },
     "jco-callback-core": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/jcoprobe.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact core module filename emitted from the component name",
       "configurability": "unconfigurable",
@@ -17401,7 +18732,7 @@
       "expires": null
     },
     "jco-jspi-module": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/jcoprobe.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact component-name JS and TypeScript declaration pairing",
       "configurability": "unconfigurable",
@@ -17412,7 +18743,7 @@
       "expires": null
     },
     "jco-jspi-types": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/jcoprobe.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact component-name declaration paired with JavaScript",
       "configurability": "unconfigurable",
@@ -17423,7 +18754,7 @@
       "expires": null
     },
     "jco-jspi-core": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/jcoprobe.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact core module filename emitted from the component name",
       "configurability": "unconfigurable",
@@ -17434,7 +18765,7 @@
       "expires": null
     },
     "jco-callback-probe-host": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/semio-jcoprobe-probe-host.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/semio-jcoprobe-probe-host.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted probe-host interface name",
       "configurability": "unconfigurable",
@@ -17445,7 +18776,7 @@
       "expires": null
     },
     "jco-callback-probe": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/semio-jcoprobe-probe.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/semio-jcoprobe-probe.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted probe interface name",
       "configurability": "unconfigurable",
@@ -17456,7 +18787,7 @@
       "expires": null
     },
     "jco-callback-environment": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-cli-environment.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-cli-environment.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted WASI environment name",
       "configurability": "unconfigurable",
@@ -17467,7 +18798,7 @@
       "expires": null
     },
     "jco-callback-exit": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-cli-exit.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-cli-exit.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted WASI exit name",
       "configurability": "unconfigurable",
@@ -17478,7 +18809,7 @@
       "expires": null
     },
     "jco-callback-stderr": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-cli-stderr.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-cli-stderr.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted WASI stderr name",
       "configurability": "unconfigurable",
@@ -17489,7 +18820,7 @@
       "expires": null
     },
     "jco-callback-stdin": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-cli-stdin.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-cli-stdin.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted WASI stdin name",
       "configurability": "unconfigurable",
@@ -17500,7 +18831,7 @@
       "expires": null
     },
     "jco-callback-stdout": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-cli-stdout.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-cli-stdout.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted WASI stdout name",
       "configurability": "unconfigurable",
@@ -17511,7 +18842,7 @@
       "expires": null
     },
     "jco-callback-terminal-input": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-cli-terminal-input.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-cli-terminal-input.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted terminal input name",
       "configurability": "unconfigurable",
@@ -17522,7 +18853,7 @@
       "expires": null
     },
     "jco-callback-terminal-output": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-cli-terminal-output.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-cli-terminal-output.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted terminal output name",
       "configurability": "unconfigurable",
@@ -17533,7 +18864,7 @@
       "expires": null
     },
     "jco-callback-terminal-stderr": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-cli-terminal-stderr.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-cli-terminal-stderr.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted terminal stderr name",
       "configurability": "unconfigurable",
@@ -17544,7 +18875,7 @@
       "expires": null
     },
     "jco-callback-terminal-stdin": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-cli-terminal-stdin.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-cli-terminal-stdin.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted terminal stdin name",
       "configurability": "unconfigurable",
@@ -17555,7 +18886,7 @@
       "expires": null
     },
     "jco-callback-terminal-stdout": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-cli-terminal-stdout.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-cli-terminal-stdout.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted terminal stdout name",
       "configurability": "unconfigurable",
@@ -17566,7 +18897,7 @@
       "expires": null
     },
     "jco-callback-monotonic-clock": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-clocks-monotonic-clock.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-clocks-monotonic-clock.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted monotonic clock name",
       "configurability": "unconfigurable",
@@ -17577,7 +18908,7 @@
       "expires": null
     },
     "jco-callback-io-error": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-io-error.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-io-error.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted IO error name",
       "configurability": "unconfigurable",
@@ -17588,7 +18919,7 @@
       "expires": null
     },
     "jco-callback-io-poll": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-io-poll.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-io-poll.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted IO polling name",
       "configurability": "unconfigurable",
@@ -17599,7 +18930,7 @@
       "expires": null
     },
     "jco-callback-io-streams": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces/wasi-io-streams.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces/wasi-io-streams.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted IO streams name",
       "configurability": "unconfigurable",
@@ -17610,7 +18941,7 @@
       "expires": null
     },
     "jco-jspi-probe-host": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/semio-jcoprobe-probe-host.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/semio-jcoprobe-probe-host.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted probe-host interface name",
       "configurability": "unconfigurable",
@@ -17621,7 +18952,7 @@
       "expires": null
     },
     "jco-jspi-probe": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/semio-jcoprobe-probe.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/semio-jcoprobe-probe.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted probe interface name",
       "configurability": "unconfigurable",
@@ -17632,7 +18963,7 @@
       "expires": null
     },
     "jco-jspi-environment": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-cli-environment.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-cli-environment.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted WASI environment name",
       "configurability": "unconfigurable",
@@ -17643,7 +18974,7 @@
       "expires": null
     },
     "jco-jspi-exit": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-cli-exit.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-cli-exit.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted WASI exit name",
       "configurability": "unconfigurable",
@@ -17654,7 +18985,7 @@
       "expires": null
     },
     "jco-jspi-stderr": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-cli-stderr.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-cli-stderr.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted WASI stderr name",
       "configurability": "unconfigurable",
@@ -17665,7 +18996,7 @@
       "expires": null
     },
     "jco-jspi-stdin": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-cli-stdin.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-cli-stdin.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted WASI stdin name",
       "configurability": "unconfigurable",
@@ -17676,7 +19007,7 @@
       "expires": null
     },
     "jco-jspi-stdout": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-cli-stdout.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-cli-stdout.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted WASI stdout name",
       "configurability": "unconfigurable",
@@ -17687,7 +19018,7 @@
       "expires": null
     },
     "jco-jspi-terminal-input": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-cli-terminal-input.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-cli-terminal-input.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted terminal input name",
       "configurability": "unconfigurable",
@@ -17698,7 +19029,7 @@
       "expires": null
     },
     "jco-jspi-terminal-output": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-cli-terminal-output.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-cli-terminal-output.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted terminal output name",
       "configurability": "unconfigurable",
@@ -17709,7 +19040,7 @@
       "expires": null
     },
     "jco-jspi-terminal-stderr": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-cli-terminal-stderr.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-cli-terminal-stderr.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted terminal stderr name",
       "configurability": "unconfigurable",
@@ -17720,7 +19051,7 @@
       "expires": null
     },
     "jco-jspi-terminal-stdin": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-cli-terminal-stdin.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-cli-terminal-stdin.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted terminal stdin name",
       "configurability": "unconfigurable",
@@ -17731,7 +19062,7 @@
       "expires": null
     },
     "jco-jspi-terminal-stdout": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-cli-terminal-stdout.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-cli-terminal-stdout.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted terminal stdout name",
       "configurability": "unconfigurable",
@@ -17742,7 +19073,7 @@
       "expires": null
     },
     "jco-jspi-monotonic-clock": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-clocks-monotonic-clock.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-clocks-monotonic-clock.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted monotonic clock name",
       "configurability": "unconfigurable",
@@ -17753,7 +19084,7 @@
       "expires": null
     },
     "jco-jspi-io-error": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-io-error.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-io-error.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted IO error name",
       "configurability": "unconfigurable",
@@ -17764,7 +19095,7 @@
       "expires": null
     },
     "jco-jspi-io-poll": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-io-poll.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-io-poll.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted IO polling name",
       "configurability": "unconfigurable",
@@ -17775,7 +19106,7 @@
       "expires": null
     },
     "jco-jspi-io-streams": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces/wasi-io-streams.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces/wasi-io-streams.d.ts",
       "authority": "JCO WIT interface emitter",
       "reason": "Exact emitted IO streams name",
       "configurability": "unconfigurable",
@@ -17896,7 +19227,7 @@
       "expires": null
     },
     "jco-vendor-cli": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/cli.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/cli.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored CLI module",
       "configurability": "unconfigurable",
@@ -17907,7 +19238,7 @@
       "expires": null
     },
     "jco-vendor-clocks": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/clocks.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/clocks.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored clock module",
       "configurability": "unconfigurable",
@@ -17918,7 +19249,7 @@
       "expires": null
     },
     "jco-vendor-config": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/config.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/config.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored configuration module",
       "configurability": "unconfigurable",
@@ -17929,7 +19260,7 @@
       "expires": null
     },
     "jco-vendor-environment": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/environment.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/environment.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored environment module",
       "configurability": "unconfigurable",
@@ -17940,7 +19271,7 @@
       "expires": null
     },
     "jco-vendor-filesystem": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/filesystem.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/filesystem.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored filesystem module",
       "configurability": "unconfigurable",
@@ -17951,7 +19282,7 @@
       "expires": null
     },
     "jco-vendor-http": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/http.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/http.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored HTTP module",
       "configurability": "unconfigurable",
@@ -17962,7 +19293,7 @@
       "expires": null
     },
     "jco-vendor-index": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/index.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/index.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored public module",
       "configurability": "unconfigurable",
@@ -17973,7 +19304,7 @@
       "expires": null
     },
     "jco-vendor-io": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/io.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/io.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored IO module",
       "configurability": "unconfigurable",
@@ -17984,7 +19315,7 @@
       "expires": null
     },
     "jco-vendor-random": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/random.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/random.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored random module",
       "configurability": "unconfigurable",
@@ -17995,7 +19326,7 @@
       "expires": null
     },
     "jco-vendor-sockets": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/🧩️support/🪞️preview2-shim/sockets.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/sockets.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact byte-identical vendored sockets module",
       "configurability": "unconfigurable",
@@ -18135,28 +19466,6 @@
       "scope": {
         "kind": "package-root",
         "ecosystemId": "🦀️rust"
-      },
-      "verification": "cargo metadata",
-      "expires": null
-    },
-    "cargo-conventional-binary-entry": {
-      "pathPattern": "**/src/main.rs",
-      "authority": "Cargo conventional target discovery",
-      "reason": "Cargo discovers src/main.rs as the package binary target when no explicit bin path supersedes the convention",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "cargo metadata",
-      "expires": null
-    },
-    "cargo-conventional-library-entry": {
-      "pathPattern": "**/src/lib.rs",
-      "authority": "Cargo conventional target discovery",
-      "reason": "Cargo discovers src/lib.rs as the package library target when no explicit lib path supersedes the convention",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
       },
       "verification": "cargo metadata",
       "expires": null
@@ -20356,6 +21665,30 @@
       },
       "verification": "uv lock --check",
       "expires": null
+    },
+    "storybook-main": {
+      "pathPattern": ".storybook/main.ts",
+      "authority": "Storybook",
+      "reason": "Storybook configuration directory requires the literal main module basename",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": ".storybook/main.ts"
+      },
+      "verification": "storybook build configuration loading",
+      "expires": null
+    },
+    "storybook-preview": {
+      "pathPattern": ".storybook/preview.tsx",
+      "authority": "Storybook",
+      "reason": "Storybook configuration directory requires the literal preview module basename",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": ".storybook/preview.tsx"
+      },
+      "verification": "storybook preview configuration loading",
+      "expires": null
     }
   },
   "fixedFilenameRejectionContracts": {
@@ -20402,326 +21735,415 @@
     }
   },
   "fixedDirectoryContracts": {
-    "dev-plugin-interfaces-lowpoly": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💠️lowpoly/interfaces",
+    "agents-metadata": {
+      "pathPattern": ".agents",
+      "authority": "Semio agent tooling",
+      "reason": "Agent skill discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "agent skill inventory",
+      "expires": null
+    },
+    "cargo-integration-tests": {
+      "pathPattern": "**/📦️packages/🦀️rust/tests",
+      "authority": "cargo",
+      "reason": "Cargo integration-test directory discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "cargo test",
+      "expires": null
+    },
+    "cargo-metadata": {
+      "pathPattern": ".cargo",
+      "authority": "Cargo",
+      "reason": "Cargo workspace configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "cargo metadata",
+      "expires": null
+    },
+    "cargo-target-triple-wasm32-unknown-unknown": {
+      "pathPattern": "**/.🧬semio/🦑️repo/🎫️tickets/🎆️[0-9][0-9]/🌙️[0-9][0-9]/☀️[0-9][0-9]/*/**/wasm32-unknown-unknown",
+      "authority": "Cargo",
+      "reason": "Exact Cargo target triple beneath registered ticket-local target evidence",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "directory-kind",
+        "directoryKindId": "ticket-cargo-target-evidence"
+      },
+      "verification": "Cargo target directory layout",
+      "expires": null
+    },
+    "cargo-target-triple-wasm32-wasip2": {
+      "pathPattern": "**/.🧬semio/🦑️repo/🎫️tickets/🎆️[0-9][0-9]/🌙️[0-9][0-9]/☀️[0-9][0-9]/*/**/wasm32-wasip2",
+      "authority": "Cargo",
+      "reason": "Exact Cargo target triple beneath registered ticket-local target evidence",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "directory-kind",
+        "directoryKindId": "ticket-cargo-target-evidence"
+      },
+      "verification": "Cargo target directory layout",
+      "expires": null
+    },
+    "claude-metadata": {
+      "pathPattern": ".claude",
+      "authority": "Claude Code",
+      "reason": "Claude project configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "Claude project load",
+      "expires": null
+    },
+    "codex-metadata": {
+      "pathPattern": ".codex",
+      "authority": "Codex",
+      "reason": "Codex project configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "Codex project load",
+      "expires": null
+    },
+    "copilot-metadata": {
+      "pathPattern": ".copilot",
+      "authority": "GitHub Copilot",
+      "reason": "Copilot project configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "Copilot project load",
+      "expires": null
+    },
+    "cursor-metadata": {
+      "pathPattern": ".cursor",
+      "authority": "Cursor",
+      "reason": "Cursor project configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "Cursor workspace load",
+      "expires": null
+    },
+    "dev-extension-interfaces-cad-extension-aec-building": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏢️cad-extension-aec-building/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted low-poly component interface owner",
+      "reason": "Exact emitted interface owner for the building extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💠️lowpoly/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏢️cad-extension-aec-building/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-mathematical": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/➗️mathematical/interfaces",
+    "dev-extension-interfaces-cad-extension-aec-building-energy": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔥️cad-extension-aec-building-energy/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted mathematical component interface owner",
+      "reason": "Exact emitted interface owner for the building energy extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/➗️mathematical/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔥️cad-extension-aec-building-energy/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-norm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/📕️norm/interfaces",
+    "dev-extension-interfaces-cad-extension-aec-building-structure": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏟️cad-extension-aec-building-structure/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted norm component interface owner",
+      "reason": "Exact emitted interface owner for the building structure extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/📕️norm/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏟️cad-extension-aec-building-structure/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-note": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🗒️note/interfaces",
+    "dev-extension-interfaces-cad-extension-spatial-shape": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔷️cad-extension-spatial-shape/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted note component interface owner",
+      "reason": "Exact emitted interface owner for the spatial shape extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🗒️note/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔷️cad-extension-spatial-shape/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-playbook": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/📖️playbook/interfaces",
+    "dev-extension-interfaces-flow-extension-bim": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏘️flow-extension-bim/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted playbook component interface owner",
+      "reason": "Exact emitted interface owner for the Flow BIM extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/📖️playbook/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏘️flow-extension-bim/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-playbook-module-procedural": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/⚙️playbook-module-procedural/interfaces",
+    "dev-extension-interfaces-flow-extension-brep": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧊️flow-extension-brep/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted procedural playbook component interface owner",
+      "reason": "Exact emitted interface owner for the Flow BREP extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/⚙️playbook-module-procedural/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧊️flow-extension-brep/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-procedural": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🌀️procedural/interfaces",
+    "dev-extension-interfaces-flow-extension-dictionary": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📚️flow-extension-dictionary/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted procedural component interface owner",
+      "reason": "Exact emitted interface owner for the Flow dictionary extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🌀️procedural/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📚️flow-extension-dictionary/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-process": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🏭️process/interfaces",
+    "dev-extension-interfaces-flow-extension-draw": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎨️flow-extension-draw/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted process component interface owner",
+      "reason": "Exact emitted interface owner for the Flow draw extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🏭️process/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎨️flow-extension-draw/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-process-extension-concrete": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🏙️process-extension-concrete/interfaces",
+    "dev-extension-interfaces-flow-extension-list": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📃️flow-extension-list/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted concrete process component interface owner",
+      "reason": "Exact emitted interface owner for the Flow list extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🏙️process-extension-concrete/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📃️flow-extension-list/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-process-extension-metal": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🔩️process-extension-metal/interfaces",
+    "dev-extension-interfaces-flow-extension-logic": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔀️flow-extension-logic/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted metal process component interface owner",
+      "reason": "Exact emitted interface owner for the Flow logic extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🔩️process-extension-metal/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔀️flow-extension-logic/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-process-extension-robotic": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🤖️process-extension-robotic/interfaces",
+    "dev-extension-interfaces-flow-extension-math": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧮️flow-extension-math/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted robotic process component interface owner",
+      "reason": "Exact emitted interface owner for the Flow math extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🤖️process-extension-robotic/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧮️flow-extension-math/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-process-extension-wood": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪓️process-extension-wood/interfaces",
+    "dev-extension-interfaces-flow-extension-primitive": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔤️flow-extension-primitive/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted wood process component interface owner",
+      "reason": "Exact emitted interface owner for the Flow primitive extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪓️process-extension-wood/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔤️flow-extension-primitive/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-puzzle": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🧩️puzzle/interfaces",
+    "dev-extension-interfaces-flow-extension-text": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📝️flow-extension-text/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted Puzzle component interface owner",
+      "reason": "Exact emitted interface owner for the Flow text extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🧩️puzzle/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📝️flow-extension-text/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-raster": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🖨️raster/interfaces",
+    "dev-extension-interfaces-imperative-extension-control": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎮️imperative-extension-control/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted raster component interface owner",
+      "reason": "Exact emitted interface owner for the imperative control extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🖨️raster/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎮️imperative-extension-control/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-reasoning": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💡️reasoning/interfaces",
+    "dev-extension-interfaces-imperative-extension-effect": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📣️imperative-extension-effect/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted reasoning mind-map component interface owner",
+      "reason": "Exact emitted interface owner for the imperative effect extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💡️reasoning/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📣️imperative-extension-effect/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-remodel": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/📸️remodel/interfaces",
+    "dev-extension-interfaces-imperative-extension-logic": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚖️imperative-extension-logic/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted remodel component interface owner",
+      "reason": "Exact emitted interface owner for the imperative logic extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/📸️remodel/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚖️imperative-extension-logic/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-space": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪐️space/interfaces",
+    "dev-extension-interfaces-imperative-extension-math": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/➕️imperative-extension-math/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted space component interface owner",
+      "reason": "Exact emitted interface owner for the imperative math extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪐️space/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/➕️imperative-extension-math/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-sequence": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🎬️sequence/interfaces",
+    "dev-extension-interfaces-imperative-extension-text": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔡️imperative-extension-text/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted sequence component interface owner",
+      "reason": "Exact emitted interface owner for the imperative text extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🎬️sequence/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔡️imperative-extension-text/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-shooting": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🎥️shooting/interfaces",
+    "dev-extension-interfaces-playbook-module-procedural": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚙️playbook-module-procedural/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted shooting component interface owner",
+      "reason": "Exact emitted interface owner for the procedural playbook module",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🎥️shooting/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚙️playbook-module-procedural/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-sourcing": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪵️sourcing/interfaces",
+    "dev-extension-interfaces-process-extension-concrete": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏙️process-extension-concrete/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted sourcing component interface owner",
+      "reason": "Exact emitted interface owner for the concrete process extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪵️sourcing/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏙️process-extension-concrete/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-sourcing-module-beams": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪜️sourcing-module-beams/interfaces",
+    "dev-extension-interfaces-process-extension-metal": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔩️process-extension-metal/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted beam sourcing component interface owner",
+      "reason": "Exact emitted interface owner for the metal process extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪜️sourcing-module-beams/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔩️process-extension-metal/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-sourcing-module-slabs": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🧇️sourcing-module-slabs/interfaces",
+    "dev-extension-interfaces-process-extension-robotic": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🤖️process-extension-robotic/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted slab sourcing component interface owner",
+      "reason": "Exact emitted interface owner for the robotic process extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🧇️sourcing-module-slabs/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🤖️process-extension-robotic/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-sourcing-module-windows": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪟️sourcing-module-windows/interfaces",
+    "dev-extension-interfaces-process-extension-wood": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪓️process-extension-wood/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted window sourcing component interface owner",
+      "reason": "Exact emitted interface owner for the wood process extension",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪟️sourcing-module-windows/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪓️process-extension-wood/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-stdio": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🗄️stdio/interfaces",
+    "dev-extension-interfaces-sourcing-module-beams": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪜️sourcing-module-beams/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted stdio component interface owner",
+      "reason": "Exact emitted interface owner for the beam sourcing module",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🗄️stdio/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪜️sourcing-module-beams/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-trinity": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🔱️trinity/interfaces",
+    "dev-extension-interfaces-sourcing-module-slabs": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧇️sourcing-module-slabs/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted Trinity component interface owner",
+      "reason": "Exact emitted interface owner for the slab sourcing module",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🔱️trinity/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧇️sourcing-module-slabs/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-plugin-interfaces-vcs": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🌿️vcs/interfaces",
+    "dev-extension-interfaces-sourcing-module-windows": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪟️sourcing-module-windows/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted VCS component interface owner",
+      "reason": "Exact emitted interface owner for the window sourcing module",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🌿️vcs/interfaces"
-      },
-      "verification": "materialized JCO output boundaries: exact interface roster",
-      "expires": null
-    },
-    "dev-plugin-interfaces-writer": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/✒️writer/interfaces",
-      "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted writer component interface owner",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/✒️writer/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪟️sourcing-module-windows/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
@@ -21074,320 +22496,409 @@
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-cad-extension-aec-building": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏢️cad-extension-aec-building/interfaces",
+    "dev-plugin-interfaces-lowpoly": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💠️lowpoly/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the building extension",
+      "reason": "Exact emitted low-poly component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏢️cad-extension-aec-building/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💠️lowpoly/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-cad-extension-aec-building-energy": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔥️cad-extension-aec-building-energy/interfaces",
+    "dev-plugin-interfaces-mathematical": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/➗️mathematical/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the building energy extension",
+      "reason": "Exact emitted mathematical component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔥️cad-extension-aec-building-energy/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/➗️mathematical/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-cad-extension-aec-building-structure": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏟️cad-extension-aec-building-structure/interfaces",
+    "dev-plugin-interfaces-norm": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/📕️norm/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the building structure extension",
+      "reason": "Exact emitted norm component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏟️cad-extension-aec-building-structure/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/📕️norm/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-cad-extension-spatial-shape": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔷️cad-extension-spatial-shape/interfaces",
+    "dev-plugin-interfaces-note": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🗒️note/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the spatial shape extension",
+      "reason": "Exact emitted note component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔷️cad-extension-spatial-shape/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🗒️note/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-flow-extension-bim": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏘️flow-extension-bim/interfaces",
+    "dev-plugin-interfaces-playbook": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/📖️playbook/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the Flow BIM extension",
+      "reason": "Exact emitted playbook component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏘️flow-extension-bim/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/📖️playbook/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-flow-extension-brep": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧊️flow-extension-brep/interfaces",
+    "dev-plugin-interfaces-playbook-module-procedural": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/⚙️playbook-module-procedural/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the Flow BREP extension",
+      "reason": "Exact emitted procedural playbook component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧊️flow-extension-brep/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/⚙️playbook-module-procedural/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-flow-extension-dictionary": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📚️flow-extension-dictionary/interfaces",
+    "dev-plugin-interfaces-procedural": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🌀️procedural/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the Flow dictionary extension",
+      "reason": "Exact emitted procedural component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📚️flow-extension-dictionary/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🌀️procedural/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-flow-extension-draw": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎨️flow-extension-draw/interfaces",
+    "dev-plugin-interfaces-process": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🏭️process/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the Flow draw extension",
+      "reason": "Exact emitted process component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎨️flow-extension-draw/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🏭️process/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-flow-extension-list": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📃️flow-extension-list/interfaces",
+    "dev-plugin-interfaces-process-extension-concrete": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🏙️process-extension-concrete/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the Flow list extension",
+      "reason": "Exact emitted concrete process component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📃️flow-extension-list/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🏙️process-extension-concrete/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-flow-extension-logic": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔀️flow-extension-logic/interfaces",
+    "dev-plugin-interfaces-process-extension-metal": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🔩️process-extension-metal/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the Flow logic extension",
+      "reason": "Exact emitted metal process component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔀️flow-extension-logic/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🔩️process-extension-metal/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-flow-extension-math": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧮️flow-extension-math/interfaces",
+    "dev-plugin-interfaces-process-extension-robotic": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🤖️process-extension-robotic/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the Flow math extension",
+      "reason": "Exact emitted robotic process component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧮️flow-extension-math/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🤖️process-extension-robotic/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-flow-extension-primitive": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔤️flow-extension-primitive/interfaces",
+    "dev-plugin-interfaces-process-extension-wood": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪓️process-extension-wood/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the Flow primitive extension",
+      "reason": "Exact emitted wood process component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔤️flow-extension-primitive/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪓️process-extension-wood/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-flow-extension-text": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📝️flow-extension-text/interfaces",
+    "dev-plugin-interfaces-puzzle": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🧩️puzzle/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the Flow text extension",
+      "reason": "Exact emitted Puzzle component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📝️flow-extension-text/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🧩️puzzle/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-imperative-extension-control": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎮️imperative-extension-control/interfaces",
+    "dev-plugin-interfaces-raster": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🖨️raster/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the imperative control extension",
+      "reason": "Exact emitted raster component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎮️imperative-extension-control/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🖨️raster/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-imperative-extension-effect": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📣️imperative-extension-effect/interfaces",
+    "dev-plugin-interfaces-reasoning": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💡️reasoning/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the imperative effect extension",
+      "reason": "Exact emitted reasoning mind-map component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📣️imperative-extension-effect/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💡️reasoning/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-imperative-extension-logic": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚖️imperative-extension-logic/interfaces",
+    "dev-plugin-interfaces-remodel": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/📸️remodel/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the imperative logic extension",
+      "reason": "Exact emitted remodel component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚖️imperative-extension-logic/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/📸️remodel/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-imperative-extension-math": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/➕️imperative-extension-math/interfaces",
+    "dev-plugin-interfaces-sequence": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🎬️sequence/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the imperative math extension",
+      "reason": "Exact emitted sequence component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/➕️imperative-extension-math/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🎬️sequence/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-imperative-extension-text": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔡️imperative-extension-text/interfaces",
+    "dev-plugin-interfaces-shooting": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🎥️shooting/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the imperative text extension",
+      "reason": "Exact emitted shooting component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔡️imperative-extension-text/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🎥️shooting/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-playbook-module-procedural": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚙️playbook-module-procedural/interfaces",
+    "dev-plugin-interfaces-sourcing": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪵️sourcing/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the procedural playbook module",
+      "reason": "Exact emitted sourcing component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚙️playbook-module-procedural/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪵️sourcing/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-process-extension-concrete": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏙️process-extension-concrete/interfaces",
+    "dev-plugin-interfaces-sourcing-module-beams": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪜️sourcing-module-beams/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the concrete process extension",
+      "reason": "Exact emitted beam sourcing component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏙️process-extension-concrete/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪜️sourcing-module-beams/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-process-extension-metal": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔩️process-extension-metal/interfaces",
+    "dev-plugin-interfaces-sourcing-module-slabs": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🧇️sourcing-module-slabs/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the metal process extension",
+      "reason": "Exact emitted slab sourcing component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔩️process-extension-metal/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🧇️sourcing-module-slabs/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-process-extension-robotic": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🤖️process-extension-robotic/interfaces",
+    "dev-plugin-interfaces-sourcing-module-windows": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪟️sourcing-module-windows/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the robotic process extension",
+      "reason": "Exact emitted window sourcing component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🤖️process-extension-robotic/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪟️sourcing-module-windows/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-process-extension-wood": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪓️process-extension-wood/interfaces",
+    "dev-plugin-interfaces-space": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪐️space/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the wood process extension",
+      "reason": "Exact emitted space component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪓️process-extension-wood/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪐️space/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-sourcing-module-beams": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪜️sourcing-module-beams/interfaces",
+    "dev-plugin-interfaces-stdio": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🗄️stdio/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the beam sourcing module",
+      "reason": "Exact emitted stdio component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪜️sourcing-module-beams/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🗄️stdio/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-sourcing-module-slabs": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧇️sourcing-module-slabs/interfaces",
+    "dev-plugin-interfaces-trinity": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🔱️trinity/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the slab sourcing module",
+      "reason": "Exact emitted Trinity component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧇️sourcing-module-slabs/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🔱️trinity/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
-    "dev-extension-interfaces-sourcing-module-windows": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪟️sourcing-module-windows/interfaces",
+    "dev-plugin-interfaces-vcs": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🌿️vcs/interfaces",
       "authority": "Bytecode Alliance JCO",
-      "reason": "Exact emitted interface owner for the window sourcing module",
+      "reason": "Exact emitted VCS component interface owner",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪟️sourcing-module-windows/interfaces"
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🌿️vcs/interfaces"
       },
       "verification": "materialized JCO output boundaries: exact interface roster",
+      "expires": null
+    },
+    "dev-plugin-interfaces-writer": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/✒️writer/interfaces",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted writer component interface owner",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/✒️writer/interfaces"
+      },
+      "verification": "materialized JCO output boundaries: exact interface roster",
+      "expires": null
+    },
+    "devcontainer-metadata": {
+      "pathPattern": ".devcontainer",
+      "authority": "Development Containers specification",
+      "reason": "Dev container discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "devcontainer build",
+      "expires": null
+    },
+    "factory-metadata": {
+      "pathPattern": ".factory",
+      "authority": "Factory",
+      "reason": "Factory project configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "Factory project load",
+      "expires": null
+    },
+    "github-metadata": {
+      "pathPattern": ".github",
+      "authority": "GitHub",
+      "reason": "Repository automation discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "GitHub repository checks",
+      "expires": null
+    },
+    "go-command-root": {
+      "pathPattern": "**/⌨️cli/cmd",
+      "authority": "Go toolchain",
+      "reason": "Go executable discovery requires the ASCII cmd directory",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "go build",
+      "expires": null
+    },
+    "go-internal-package": {
+      "pathPattern": "**/⌨️cli/internal/*",
+      "authority": "Go import-path grammar",
+      "reason": "Imported Go package path segments must use the compiler-accepted ASCII package identity",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "go test",
+      "expires": null
+    },
+    "go-internal-root": {
+      "pathPattern": "**/⌨️cli/internal",
+      "authority": "Go import-path grammar",
+      "reason": "Go import paths reject emoji and reserve internal as a package visibility boundary",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "go test",
+      "expires": null
+    },
+    "goal-node": {
+      "pathPattern": ".🧬semio/🦑️repo/🎯️goals/**",
+      "authority": "Semio repo MCP",
+      "reason": "Arbitrary-depth goal identifiers are externally associated governance paths",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "repo goal inventory",
       "expires": null
     },
     "jco-callback-interfaces": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📞️out-callback/interfaces",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/interfaces",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact interface directory emitted and imported by this JCO component",
       "configurability": "unconfigurable",
@@ -21398,7 +22909,7 @@
       "expires": null
     },
     "jco-jspi-interfaces": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/⚡️out-jspi-explicit/interfaces",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/interfaces",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact interface directory emitted and imported by this JCO component",
       "configurability": "unconfigurable",
@@ -21408,48 +22919,26 @@
       "verification": "current JCO destination authority: interface resolution",
       "expires": null
     },
-    "cargo-source-directory": {
-      "pathPattern": "**/🏭️generator/*/src",
-      "authority": "Cargo",
-      "reason": "Cargo discovers conventional source targets below the package src directory",
+    "kiro-metadata": {
+      "pathPattern": ".kiro",
+      "authority": "Kiro",
+      "reason": "Kiro project configuration discovery",
       "configurability": "unconfigurable",
       "scope": {
-        "kind": "path-pattern"
+        "kind": "repository-root"
       },
-      "verification": "cargo metadata",
+      "verification": "Kiro workspace load",
       "expires": null
     },
-    "cargo-build-source-directory": {
-      "pathPattern": "**/🏗️generator/*/src",
-      "authority": "Cargo",
-      "reason": "Cargo discovers conventional source targets below build-generator package src directories",
+    "nested-git-metadata": {
+      "pathPattern": "**/.git",
+      "authority": "Git",
+      "reason": "Nested repository metadata retained as governed fixture evidence",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "path-pattern"
       },
-      "verification": "cargo metadata",
-      "expires": null
-    },
-    "cargo-probe-source-directory": {
-      "pathPattern": "**/🔬️probes/*/src",
-      "authority": "Cargo",
-      "reason": "Independent Cargo oracle probes retain compiler-conventional source-directory discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "cargo metadata",
-      "expires": null
-    },
-    "cargo-integration-tests": {
-      "pathPattern": "**/📦️packages/🦀️rust/tests",
-      "authority": "cargo",
-      "reason": "Cargo integration-test directory discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "cargo test",
+      "verification": "git rev-parse",
       "expires": null
     },
     "next-app-router-root": {
@@ -21463,6 +22952,50 @@
       "verification": "next build",
       "expires": null
     },
+    "nextest-metadata": {
+      "pathPattern": ".config",
+      "authority": "cargo-nextest",
+      "reason": "Nextest workspace configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "cargo nextest list",
+      "expires": null
+    },
+    "ralph-metadata": {
+      "pathPattern": ".ralph-tui",
+      "authority": "Ralph TUI",
+      "reason": "Ralph project state discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "Ralph project load",
+      "expires": null
+    },
+    "ralph-prd-identifier": {
+      "pathPattern": ".ralph-tui/prd/*",
+      "authority": "Ralph TUI",
+      "reason": "Ralph-owned dynamic PRD identifier directories",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "Ralph PRD inventory",
+      "expires": null
+    },
+    "ralph-prd-root": {
+      "pathPattern": ".ralph-tui/prd",
+      "authority": "Ralph TUI",
+      "reason": "Ralph PRD collection discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "Ralph PRD inventory",
+      "expires": null
+    },
     "repo-analyzer-path-fixture": {
       "pathPattern": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some",
       "authority": "Repo analyzer fixture contract",
@@ -21474,6 +23007,17 @@
       },
       "descendants": "reserved",
       "verification": "repo client analyzer fixture tests",
+      "expires": null
+    },
+    "repo-command-entry": {
+      "pathPattern": "**/⌨️cli/cmd/repo",
+      "authority": "Go import-path grammar",
+      "reason": "Go import paths reject emoji, so the executable package name is reserved ASCII",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "go build",
       "expires": null
     },
     "repo-coordinator-api-root": {
@@ -21499,41 +23043,6 @@
       "verification": "coordinator route contract tests",
       "expires": null
     },
-    "cargo-target-triple-wasm32-unknown-unknown": {
-      "pathPattern": "**/.🧬semio/🦑️repo/🎫️tickets/🎆️[0-9][0-9]/🌙️[0-9][0-9]/☀️[0-9][0-9]/*/**/wasm32-unknown-unknown",
-      "authority": "Cargo",
-      "reason": "Exact Cargo target triple beneath registered ticket-local target evidence",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "directory-kind",
-        "directoryKindId": "ticket-cargo-target-evidence"
-      },
-      "verification": "Cargo target directory layout",
-      "expires": null
-    },
-    "cargo-target-triple-wasm32-wasip2": {
-      "pathPattern": "**/.🧬semio/🦑️repo/🎫️tickets/🎆️[0-9][0-9]/🌙️[0-9][0-9]/☀️[0-9][0-9]/*/**/wasm32-wasip2",
-      "authority": "Cargo",
-      "reason": "Exact Cargo target triple beneath registered ticket-local target evidence",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "directory-kind",
-        "directoryKindId": "ticket-cargo-target-evidence"
-      },
-      "verification": "Cargo target directory layout",
-      "expires": null
-    },
-    "nested-git-metadata": {
-      "pathPattern": "**/.git",
-      "authority": "Git",
-      "reason": "Nested repository metadata retained as governed fixture evidence",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "git rev-parse",
-      "expires": null
-    },
     "semio-governance": {
       "pathPattern": "**/.🧬semio",
       "authority": "Semio repo MCP",
@@ -21556,180 +23065,16 @@
       "verification": "package metadata inventory",
       "expires": null
     },
-    "vscode-metadata": {
-      "pathPattern": "**/.vscode",
-      "authority": "VS Code",
-      "reason": "Workspace configuration discovery",
+    "storybook-config-directory": {
+      "pathPattern": ".storybook",
+      "authority": "Storybook",
+      "reason": "Storybook discovers its configuration from the literal .storybook directory",
       "configurability": "unconfigurable",
       "scope": {
-        "kind": "path-pattern"
+        "kind": "exact-path",
+        "path": ".storybook"
       },
-      "verification": "VS Code workspace load",
-      "expires": null
-    },
-    "github-metadata": {
-      "pathPattern": ".github",
-      "authority": "GitHub",
-      "reason": "Repository automation discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "GitHub repository checks",
-      "expires": null
-    },
-    "cursor-metadata": {
-      "pathPattern": ".cursor",
-      "authority": "Cursor",
-      "reason": "Cursor project configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "Cursor workspace load",
-      "expires": null
-    },
-    "claude-metadata": {
-      "pathPattern": ".claude",
-      "authority": "Claude Code",
-      "reason": "Claude project configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "Claude project load",
-      "expires": null
-    },
-    "agents-metadata": {
-      "pathPattern": ".agents",
-      "authority": "Semio agent tooling",
-      "reason": "Agent skill discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "agent skill inventory",
-      "expires": null
-    },
-    "devcontainer-metadata": {
-      "pathPattern": ".devcontainer",
-      "authority": "Development Containers specification",
-      "reason": "Dev container discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "devcontainer build",
-      "expires": null
-    },
-    "kiro-metadata": {
-      "pathPattern": ".kiro",
-      "authority": "Kiro",
-      "reason": "Kiro project configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "Kiro workspace load",
-      "expires": null
-    },
-    "codex-metadata": {
-      "pathPattern": ".codex",
-      "authority": "Codex",
-      "reason": "Codex project configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "Codex project load",
-      "expires": null
-    },
-    "windsurf-metadata": {
-      "pathPattern": ".windsurf",
-      "authority": "Windsurf",
-      "reason": "Windsurf project configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "Windsurf workspace load",
-      "expires": null
-    },
-    "copilot-metadata": {
-      "pathPattern": ".copilot",
-      "authority": "GitHub Copilot",
-      "reason": "Copilot project configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "Copilot project load",
-      "expires": null
-    },
-    "factory-metadata": {
-      "pathPattern": ".factory",
-      "authority": "Factory",
-      "reason": "Factory project configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "Factory project load",
-      "expires": null
-    },
-    "ralph-metadata": {
-      "pathPattern": ".ralph-tui",
-      "authority": "Ralph TUI",
-      "reason": "Ralph project state discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "Ralph project load",
-      "expires": null
-    },
-    "ralph-prd-root": {
-      "pathPattern": ".ralph-tui/prd",
-      "authority": "Ralph TUI",
-      "reason": "Ralph PRD collection discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "Ralph PRD inventory",
-      "expires": null
-    },
-    "ralph-prd-identifier": {
-      "pathPattern": ".ralph-tui/prd/*",
-      "authority": "Ralph TUI",
-      "reason": "Ralph-owned dynamic PRD identifier directories",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "Ralph PRD inventory",
-      "expires": null
-    },
-    "cargo-metadata": {
-      "pathPattern": ".cargo",
-      "authority": "Cargo",
-      "reason": "Cargo workspace configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "cargo metadata",
-      "expires": null
-    },
-    "nextest-metadata": {
-      "pathPattern": ".config",
-      "authority": "cargo-nextest",
-      "reason": "Nextest workspace configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "cargo nextest list",
+      "verification": "storybook build configuration loading",
       "expires": null
     },
     "ticket-slug": {
@@ -21743,59 +23088,26 @@
       "verification": "repo ticket inventory",
       "expires": null
     },
-    "goal-node": {
-      "pathPattern": ".🧬semio/🦑️repo/🎯️goals/**",
-      "authority": "Semio repo MCP",
-      "reason": "Arbitrary-depth goal identifiers are externally associated governance paths",
+    "vscode-metadata": {
+      "pathPattern": "**/.vscode",
+      "authority": "VS Code",
+      "reason": "Workspace configuration discovery",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "path-pattern"
       },
-      "verification": "repo goal inventory",
+      "verification": "VS Code workspace load",
       "expires": null
     },
-    "go-command-root": {
-      "pathPattern": "**/⌨️cli/cmd",
-      "authority": "Go toolchain",
-      "reason": "Go executable discovery requires the ASCII cmd directory",
+    "windsurf-metadata": {
+      "pathPattern": ".windsurf",
+      "authority": "Windsurf",
+      "reason": "Windsurf project configuration discovery",
       "configurability": "unconfigurable",
       "scope": {
-        "kind": "path-pattern"
+        "kind": "repository-root"
       },
-      "verification": "go build",
-      "expires": null
-    },
-    "go-internal-root": {
-      "pathPattern": "**/⌨️cli/internal",
-      "authority": "Go import-path grammar",
-      "reason": "Go import paths reject emoji and reserve internal as a package visibility boundary",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "go test",
-      "expires": null
-    },
-    "go-internal-package": {
-      "pathPattern": "**/⌨️cli/internal/*",
-      "authority": "Go import-path grammar",
-      "reason": "Imported Go package path segments must use the compiler-accepted ASCII package identity",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "go test",
-      "expires": null
-    },
-    "repo-command-entry": {
-      "pathPattern": "**/⌨️cli/cmd/repo",
-      "authority": "Go import-path grammar",
-      "reason": "Go import paths reject emoji, so the executable package name is reserved ASCII",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "go build",
+      "verification": "Windsurf workspace load",
       "expires": null
     }
   },
@@ -21945,9 +23257,7 @@
         "rust-source"
       ],
       "allowedDirectoryKindIds": [
-        "targets",
         "benchmarks",
-        "typescript-language",
         "library",
         "binary",
         "builder",
@@ -21970,7 +23280,18 @@
         "bun-package-license",
         "typescript-config",
         "nx-project-manifest",
-        "root-script"
+        "root-script",
+        "next-environment-declaration",
+        "next-typescript-config",
+        "vitest-config",
+        "tailwind-config",
+        "postcss-config",
+        "eslint-config",
+        "dependency-cruiser-config",
+        "vscode-test-cli-config",
+        "next-app-page",
+        "next-app-layout",
+        "next-app-route"
       ],
       "allowedFileKindIds": [
         "typescript-source",
@@ -21978,7 +23299,6 @@
         "html"
       ],
       "allowedDirectoryKindIds": [
-        "targets",
         "fixtures",
         "apps"
       ],
@@ -22016,7 +23336,6 @@
         "go-source"
       ],
       "allowedDirectoryKindIds": [
-        "targets",
         "fixtures"
       ],
       "glueGrammarId": "go",
@@ -22054,10 +23373,10 @@
         "root-script"
       ],
       "allowedFileKindIds": [
+        "dotnet-project",
         "dotnet-source"
       ],
       "allowedDirectoryKindIds": [
-        "targets",
         "fixtures"
       ],
       "glueGrammarId": "dotnet",
@@ -23987,22 +25306,9 @@
       "contractKind": "fixed",
       "disposition": "tool-metadata",
       "validator": "command-router",
+      "grammarId": "typescript",
       "authority": "Semio AGENTS command-router contract",
       "verification": "ScriptRouter and runBundleScriptMain structural validation"
-    },
-    "cargo-conventional-binary-entry": {
-      "contractKind": "fixed",
-      "disposition": "adapter-source",
-      "validator": "package-glue",
-      "authority": "Cargo conventional binary target discovery",
-      "verification": "cargo metadata"
-    },
-    "cargo-conventional-library-entry": {
-      "contractKind": "fixed",
-      "disposition": "adapter-source",
-      "validator": "package-glue",
-      "authority": "Cargo conventional library target discovery",
-      "verification": "cargo metadata"
     },
     "rust-library-entry": {
       "contractKind": "configurable",
@@ -24087,6 +25393,20 @@
       "validator": "tool-config-dependency-cruiser",
       "authority": "dependency-cruiser",
       "verification": "depcruise --config"
+    },
+    "storybook-main": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Storybook main configuration identity without package purity exemption",
+      "verification": "storybook build configuration loading"
+    },
+    "storybook-preview": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Storybook preview adapter identity without package purity exemption",
+      "verification": "storybook build configuration loading"
     }
   },
   "generatorContracts": {
@@ -24116,11 +25436,14 @@
       "previewTarget": "@semio-tech/assets:preview-generated",
       "checkTarget": "@semio-tech/assets:check-generated",
       "inputPatterns": [
+        "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🏗️builder/📽️projection/🟦️.ts",
         "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/*.svg",
         "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/*/*/*.svg",
+        "🧰️framework/🔨️modules/🖼️assets/🏗️builder/📦️publication/🟦️.ts",
         "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
         "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts",
         "🧰️framework/🔨️modules/🖼️assets/🔣️icons/*/*.svg",
+        "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🏗️builder/📽️projection/🟦️.ts",
         "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔣️shortcodes.json"
       ],
       "outputRoots": [
@@ -24133,15 +25456,7 @@
           "inclusion": "ignored"
         },
         {
-          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🐍️icons.py",
-          "inclusion": "ignored"
-        },
-        {
-          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes.ts",
-          "inclusion": "ignored"
-        },
-        {
-          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔷️Icons.cs",
+          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🟦️.ts",
           "inclusion": "ignored"
         },
         {
@@ -24149,11 +25464,19 @@
           "inclusion": "ignored"
         },
         {
-          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🟦️icons.ts",
+          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icons/🐍️.py",
           "inclusion": "ignored"
         },
         {
-          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs",
+          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icons/🔷️.cs",
+          "inclusion": "ignored"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icons/🟦️.ts",
+          "inclusion": "ignored"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs",
           "inclusion": "ignored"
         }
       ],
@@ -24196,7 +25519,7 @@
         "bun.lock",
         "package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts",
-        "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏗️build-tooling.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
@@ -24241,7 +25564,7 @@
           "inclusion": "tracked"
         },
         {
-          "path": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
+          "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
           "inclusion": "tracked"
         }
       ],
@@ -24331,7 +25654,7 @@
       ],
       "outputRoots": [
         {
-          "path": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🪪️manifest.ts",
+          "path": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts",
           "inclusion": "ignored"
         }
       ],
@@ -24368,13 +25691,13 @@
       "currentPackageDestination": {
         "kind": "jco-canonical-package-v1",
         "packageId": "jcoprobe-guest",
-        "semanticOwnerRoot": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest",
-        "packageRoot": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust",
-        "cargoManifestPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
-        "cargoLockPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
-        "componentPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
-        "witPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
-        "adapterPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs"
+        "semanticOwnerRoot": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest",
+        "packageRoot": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust",
+        "cargoManifestPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
+        "cargoLockPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
+        "componentPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
+        "witPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
+        "adapterPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs"
       },
       "ownerPath": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
       "target": "@semio-tech/framework-os-kernel:generate-jco-package-adapter",
@@ -24384,20 +25707,52 @@
         "📜️script.ts",
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
-        "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
-        "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/📽️nested-cargo-package-projection/🔣️.json"
       ],
       "outputRoots": [
         {
-          "path": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs",
+          "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs",
           "inclusion": "tracked"
         }
       ],
       "reason": "The exact standalone JCO workspace owns one digest-locked Cargo library adapter; no implementation bytes are generated"
+    },
+    "playground-session": {
+      "ownership": "owned",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+      "target": "@semio-tech/framework-os-dev:generate-playground-session",
+      "previewTarget": "@semio-tech/framework-os-dev:preview-playground-session",
+      "previewArguments": [
+        "generate",
+        "playground-session",
+        "preview"
+      ],
+      "checkTarget": "@semio-tech/framework-os-dev:check-playground-session",
+      "inputPatterns": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ],
+      "outputRoots": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "The dev session target exclusively owns the deterministic default registry projection and its byte freshness check"
     },
     "plugin-registry": {
       "ownership": "owned",
@@ -24409,9 +25764,21 @@
         ".vscode/🧩️launch.seed.jsonc",
         "nx.json",
         "package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️trusted-stdio-catalog/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌳️surface-scaffold/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/📐️schema.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧰️framework-catalog/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/📐️directory.schema.json",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
@@ -24543,11 +25910,11 @@
           "inclusion": "ignored"
         },
         {
-          "path": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🟦️entity-kinds.ts",
+          "path": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🟦️.ts",
           "inclusion": "ignored"
         },
         {
-          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🐹️entity_kinds.g.go",
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🏷️entity-kinds/🐹️.go",
           "inclusion": "ignored"
         }
       ],
@@ -24623,30 +25990,32 @@
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📽️projection/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️fonts/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛂️adapters.manifest.json",
         "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/📇️catalog.json",
-        "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧬️catalog.schema.json"
+        "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧬️schema/🔣️.json"
       ],
       "outputRoots": [
         {
-          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette.css",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css",
           "inclusion": "tracked"
         },
         {
-          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/🎨️styling/🤖️generated.py",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🔷️.cs",
           "inclusion": "ignored"
         },
         {
-          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔷️net/🖌️Elements.Styling/🤖️Generated/🎨️Palette.g.cs",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🐍️.py",
+          "inclusion": "ignored"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs",
           "inclusion": "ignored"
         },
         {
           "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated",
-          "inclusion": "ignored"
-        },
-        {
-          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🦀️tokens.generated.rs",
           "inclusion": "ignored"
         }
       ],
@@ -24688,11 +26057,11 @@
       ],
       "outputRoots": [
         {
-          "path": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🤖️generated.rs",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🤖️generated/🦀️.rs",
           "inclusion": "ignored"
         },
         {
-          "path": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes.ts",
+          "path": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts",
           "inclusion": "ignored"
         }
       ],
@@ -24712,7 +26081,7 @@
       ],
       "outputRoots": [
         {
-          "path": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract.ts",
+          "path": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts",
           "inclusion": "ignored"
         }
       ],
@@ -24727,7 +26096,7 @@
       "packageGeneration": {
         "kind": "wgpu-package-artifacts",
         "catalogPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪪️package-catalog.json",
-        "catalogSha256": "36ff0f02d3e491dfd5cd1df5b14270ee220d55b05ad8bf1ca9c21074fcf23fe3",
+        "catalogSha256": "5a4c510292d2c1f56aad20fe33adfde7b4313dc118e30ae5eb3087919c43b7da",
         "previewInput": {
           "protocol": "package-projected-inputs-v1",
           "maxBytes": 67108864,
@@ -24768,6 +26137,11 @@
           },
           "sourceModulePaths": [
             "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+            "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts",
+            "🧰️framework/🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts",
+            "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+            "🧰️framework/🔨️modules/⏳️async/🔔️event-wait/🟦️.ts",
+            "🧰️framework/🔨️modules/⏳️async/🥇️latest-wins/🟦️.ts",
             "🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️.ts",
             "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
@@ -24776,13 +26150,15 @@
             "🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts",
-            "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts",
             "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
             "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
@@ -24791,8 +26167,9 @@
             "🧰️framework/🔨️modules/📡️replication/🟦️.ts",
             "🧰️framework/🔨️modules/🔄️machine/🟦️.ts",
             "🧰️framework/🔨️modules/🔏️hash/🟦️.ts",
-            "🧰️framework/🔨️modules/🔺️mesh/🟦️.ts",
             "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🗂️index/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts",
@@ -24815,36 +26192,47 @@
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts",
-            "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs.ts",
-            "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/🟦️.ts",
             "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json",
             "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json",
             "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts",
+            "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+            "🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
             "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
-            "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes.ts",
+            "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts",
+            "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
             "🧰️framework/🔨️modules/🧩️action-argument-resolution/🟦️.ts",
             "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🚪️opening/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📇️interactive-job-registry/🟦️.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔌️browser-interactive-job-port/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/💾️resident/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/📐️schema.json",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🛣️routes.json",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/📐️directory.schema.json",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🧬️schema/🔣️.json",
             "🧰️framework/🛍️products/💻️os/🟦️.ts"
           ]
         }
@@ -24854,9 +26242,13 @@
         "nx.json",
         "package.json",
         "📋️project.json",
-        "📜️script.ts",
         "🧰️framework/📦️packages/🟦️typescript/package.json",
         "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+        "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts",
+        "🧰️framework/🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts",
+        "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+        "🧰️framework/🔨️modules/⏳️async/🔔️event-wait/🟦️.ts",
+        "🧰️framework/🔨️modules/⏳️async/🥇️latest-wins/🟦️.ts",
         "🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️.ts",
         "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
@@ -24864,13 +26256,15 @@
         "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts",
-        "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts",
         "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
         "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
@@ -24879,8 +26273,9 @@
         "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/🔨️modules/📡️replication/🟦️.ts",
         "🧰️framework/🔨️modules/🔄️machine/🟦️.ts",
-        "🧰️framework/🔨️modules/🔺️mesh/🟦️.ts",
         "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🗂️index/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts",
@@ -24903,23 +26298,29 @@
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts",
-        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs.ts",
-        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/🟦️.ts",
         "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json",
         "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json",
         "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts",
+        "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+        "🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
         "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
-        "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes.ts",
+        "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts",
+        "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
         "🧰️framework/🔨️modules/🧩️action-argument-resolution/🟦️.ts",
         "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📋️project.json",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🚪️opening/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏰️deadlines/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎠️runtime/🦀️.rs",
@@ -24929,47 +26330,57 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📇️interactive-job-registry/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📐️surface-lane/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Trunk.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/build.rs",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🌐️.html",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📚️library/🦀️.rs",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🧪️test/🟦️s.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📮️runtime-mailbox-core/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📽️projection/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔌️browser-interactive-job-port/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🎮️browser-interactive-job-port.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/📨️browser-frame-transport.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🧩️package-integration.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧬️package-catalog.schema.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪢️kernel-seam/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪪️package-catalog.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/💾️resident/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/📐️schema.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🛣️routes.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/📐️directory.schema.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts"
       ],
       "outputRoots": [
         {
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js",
+          "inclusion": "tracked"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📚️library/🟦️.ts",
           "inclusion": "tracked"
         },
         {
@@ -24978,10 +26389,6 @@
         },
         {
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/💾️binary/🦀️.rs",
-          "inclusion": "tracked"
-        },
-        {
-          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/📚️library/🟦️.ts",
           "inclusion": "tracked"
         },
         {
@@ -25163,7 +26570,6 @@
     "hub",
     "s-module",
     "extension",
-    "testkit",
     "tool"
   ],
   "langs": [
@@ -25196,8 +26602,7 @@
         "rust-build-entry"
       ],
       "packagingDirectoryKindIds": [
-        "benchmarks",
-        "typescript-language"
+        "benchmarks"
       ]
     },
     "🟦️typescript": {
@@ -25299,6 +26704,14 @@
       ]
     },
     "⚛️react": {
+      "lang": "🟦️typescript",
+      "componentFileKindId": "typescript-source",
+      "entryContractIds": [
+        "typescript-library-entry",
+        "typescript-react-entry"
+      ]
+    },
+    "⚛️5d-react": {
       "lang": "🟦️typescript",
       "componentFileKindId": "typescript-source",
       "entryContractIds": [
@@ -25732,6 +27145,42 @@
   "_testTaxonomyComment": "🧪️ Tests belong to the nearest language-neutral owner and use file-kind identifiers; no language-neutral test filename is exempt from normalization.",
   "testsDirName": "🧪️tests",
   "testFixturesDirName": "🧫️fixtures",
+  "testExamplesDirName": "📚️examples",
+  "testOraclesDirName": "🔮️oracles",
+  "testObsoleteCategoryStems": [
+    "oracle",
+    "test-bench",
+    "test-harness",
+    "test-helper",
+    "test-helpers",
+    "test-kit",
+    "test-support",
+    "testbench",
+    "testkit",
+    "testing",
+    "testing-harness",
+    "testing-helper",
+    "testing-helpers",
+    "testing-support",
+    "tests-support"
+  ],
+  "testObsoleteTestEmojiCategoryStems": [
+    "example",
+    "examples",
+    "fixture",
+    "fixtures",
+    "harness",
+    "helper",
+    "helpers",
+    "mock",
+    "mocks",
+    "oracle",
+    "oracles",
+    "stub",
+    "stubs",
+    "support",
+    "testkit"
+  ],
   "testFixtureLegacyDirectoryNames": [
     "fixture",
     "fixtures",
@@ -25884,12 +27333,7 @@
     "diagnostic-v1",
     "event-stream-v1"
   ],
-  "_testContributionComment": "🧩️ Open/closed extension point. An owner that needs a reference implementation, an oracle crate or a format-specific comparison profile declares them in `<owner>/🔣️oracle.json`. The framework test domain DISCOVERS those manifests; it never names an owner, a plugin or a format. Adding PDF, PNG or any future artifact therefore requires zero framework edits.",
-  "testContributionDirName": "🔮️oracle",
-  "testContributionDirectoryOverrides": {
-    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program": "⚖️oracle",
-    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any": "⚖️oracle"
-  },
+  "_testContributionComment": "🧩️ Open/closed extension point. An owner that needs a reference implementation, an oracle package or a format-specific comparison profile declares it below the single canonical `<owner>/🔮️oracles` collection. The framework test domain discovers those manifests; it never names an owner, plugin or format.",
   "_testMutationVocabularyComment": "🦠️ The directory an implementation puts a mutation vocabulary in. Named here as VOCABULARY so the contract can ask 'is this declared vocabulary claimed by a catalog?' without the framework learning any format, language or plugin. A subset that declares a vocabulary and no catalog is invisible to the completeness gate — that gap let two subsets ship handcrafted mutations with no test at all.",
   "testMutationVocabularyDirName": "🧬️mutations",
   "testContributionFileKindId": "json",
@@ -26875,7 +28319,7 @@
   ],
   "_stateLaneComment": "🫧️ Ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION wave A0: exactly four state mechanisms exist, enforced by API and policy — 🗿️artifacts = persisted shared, 🎚️config = persisted local-only, 👥️presence = ephemeral shared, 🫧️transient = ephemeral local-only UI state. Every state-owning scope (app, mode, window) carries the same three non-artifact lanes as sibling facet dirs, each shaped by configChildDirs/presenceChildDirs/transientChildDirs. modeChildDirs did not exist before this wave: modes had no declared children at all, so a mode-scoped config/presence/transient facet had nowhere legal to live. Draftness is a LANE property (which store a record lives in), never a field annotation, so `preview` folded into the artifact lane; `effect` was deleted (effects are Emit.effects, not state); and `inferred` left the state axis entirely for the orthogonal `#[derived]` / `x-semio-derived` marker.",
   "_stdioFacetComment": "Stdio IO: io/{import/🧩️deserializers,export/🧵️serializers}/artifacts/<stdio>/.",
-  "_testComparisonProfilesComment": "⚖️ The DOMAIN-NEUTRAL profiles the framework itself owns. A profile that knows a file format (semantic-pdf-v1, semantic-raster-v1, …) belongs to the owner of that format and is contributed through its `testContributionDirName` manifest — the framework supplies the comparison MECHANISM, never the per-format policy.",
+  "_testComparisonProfilesComment": "⚖️ The DOMAIN-NEUTRAL profiles the framework itself owns. A profile that knows a file format (semantic-pdf-v1, semantic-raster-v1, …) belongs to the owner of that format and is contributed through its `testOraclesDirName` manifest — the framework supplies the comparison MECHANISM, never the per-format policy.",
   "_layeringGeneratedContractsComment": "🏛️ Generated layering inputs may use only exact contract IDs; generated banners remain content evidence.",
   "layeringGeneratedContractIds": [],
   "layeringGeneratedBanners": [

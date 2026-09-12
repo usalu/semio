@@ -14,7 +14,7 @@ async fn renders_canvas_scene_for_the_empty_document() {
     let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
     let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
     let json = scene.layers_json;
-    semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire viewer tree");
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire viewer tree");
     assert!(serde_json::from_str::<serde_json::Value>(&json).expect("layer oracle").is_array());
 }
 
@@ -25,7 +25,7 @@ async fn renders_canvas_scene_for_the_metabolism_example() {
     let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
     let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
     let json = scene.layers_json;
-    semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire viewer tree");
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire viewer tree");
     assert!(serde_json::from_str::<serde_json::Value>(&json).expect("layer oracle").is_array());
     assert!(json.contains("Demo") || json.contains("Metabolism") || json.contains("Topic"));
 }

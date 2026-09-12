@@ -1,7 +1,42 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    pub type PlaybookApp = VcsArtifactApp<EditorApp<PlaybookPlayApp>>;
+    
+    /// 🧪️ An app instance with its concrete command registry and retained job proofs.
+    pub async fn playbook_app() -> PlaybookApp {
+        new_app_with_registry::<EditorApp<PlaybookPlayApp>>(playbook_manifest_for_tests).await
+    }
+    
+    /// 🧪️ Adapts `create_playbook_play_app`'s `AppDefinition` (contract §2.4) into the `App {
+    /// definition, examples }` shape `new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
+    /// still expect — framework test context gap, not modifiable here (`🧰️framework/**` is outside this
+    /// packet's lease).
+    pub fn playbook_manifest_for_tests() -> App {
+        App { definition: create_playbook_play_app(), examples: Vec::new() }
+    }
+    
+    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline, and the
+    /// `kind` default declared on `addBlock` materializes host-side.
+    pub async fn playbook_app_with_registry() -> PlaybookApp {
+        new_app_with_registry::<EditorApp<PlaybookPlayApp>>(playbook_manifest_for_tests).await
+    }
+    
+    pub async fn dispatch(app: &mut PlaybookApp, command: PlaybookCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut PlaybookApp, body_key: &str) -> String {
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render").root).expect("render json")
+    }
+}
+
 use super::*;
-use crate::editor::playbook::testkit::{dispatch, playbook_app};
+use crate::editor::playbook::unit_tests::context::{dispatch, playbook_app};
 use crate::op::AddBlock;
-use semio_framework_plugin::testkit;
+use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::{MediaClass, MediaForm};
 
 //#region 🔖️CommandSurface
@@ -130,12 +165,12 @@ async fn interaction_topology_covers_every_step_and_block() {
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = playbook_app().await;
-    testkit::assert_undo_redo_round_trip(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}), |app| app.snapshot().expect("materialize projection").steps().len(), 1, 2).await;
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}), |app| app.snapshot().expect("materialize projection").steps().len(), 1, 2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-    use crate::editor::playbook::testkit::render;
+    use crate::editor::playbook::unit_tests::context::render;
     let mut app = playbook_app().await;
     assert!(render(&mut app, "playbook.play.nope").await.contains("Unknown body"));
 }
@@ -146,7 +181,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 /// `setDocument` snapshots, where one side's write would clobber the other's.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    testkit::assert_two_instances_converge::<EditorApp<PlaybookPlayApp>, (usize, usize)>(
+    artifact_app_laws::assert_two_instances_converge::<EditorApp<PlaybookPlayApp>, (usize, usize)>(
         "mem://playbook-convergence",
         PlaybookCommand::AddStep(add_step::AddStep {}),
         PlaybookCommand::AddBlock(add_block::AddBlock { kind: "number".into(), step_id: None }),

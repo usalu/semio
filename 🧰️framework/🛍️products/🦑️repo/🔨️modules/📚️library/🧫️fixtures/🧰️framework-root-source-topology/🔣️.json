@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "moves": [
+    {
+      "source": "🧰️framework/📦️packages/🦀️rust/🦀️.rs",
+      "owner": "🧰️framework/🔨️modules/🧬️schema/📽️projection/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pub struct SchemaMetadata",
+      "consumer": "🧰️framework/📦️packages/🦀️rust/🦀️.rs"
+    },
+    {
+      "source": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "owner": "🧰️framework/🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "export function createLeasePool",
+      "consumer": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "source": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "owner": "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "export async function retryWithJitteredBackoff",
+      "consumer": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "source": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "owner": "🧰️framework/🔨️modules/⏳️async/🥇️latest-wins/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "export function latestWins",
+      "consumer": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "source": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "owner": "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "export async function fetchWithTimeout",
+      "consumer": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "source": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "owner": "🧰️framework/🔨️modules/⏳️async/🔔️event-wait/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "export function waitForEvent",
+      "consumer": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+    }
+  ],
+  "packages": {
+    "rust": {
+      "manifest": "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🧰️framework/📦️packages/🦀️rust/🦀️.rs",
+      "name": "semio-framework",
+      "feature": "typegen",
+      "maximumEntryLines": 250
+    },
+    "typescript": {
+      "manifest": "🧰️framework/📦️packages/🟦️typescript/package.json",
+      "entry": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "name": "@semio-tech/framework",
+      "maximumEntryLines": 40,
+      "testOwner": "🧰️framework/🧪️tests/🧪️docklayoutstore/🟦️.ts",
+      "vitestConfig": "🧰️framework/📦️packages/🟦️typescript/vitest.config.ts"
+    }
+  },
+  "directoryContexts": [
+    {
+      "name": "📽️projection",
+      "parentKind": "schema",
+      "kind": "framework-schema-projection"
+    },
+    {
+      "name": "🎟️lease-pool",
+      "parentKind": "members-of-modules",
+      "kind": "framework-async-lease-pool"
+    },
+    {
+      "name": "🔁️jittered-backoff",
+      "parentKind": "members-of-modules",
+      "kind": "framework-async-jittered-backoff"
+    },
+    {
+      "name": "🥇️latest-wins",
+      "parentKind": "members-of-modules",
+      "kind": "framework-async-latest-wins"
+    },
+    {
+      "name": "🔔️event-wait",
+      "parentKind": "members-of-modules",
+      "kind": "framework-async-event-wait"
+    },
+    {
+      "name": "🌐️fetch-timeout",
+      "parentKind": "io",
+      "kind": "framework-io-fetch-timeout"
+    },
+    {
+      "name": "🧰️framework-root-source-topology",
+      "parentKind": "schema",
+      "kind": "framework-root-source-topology"
+    },
+    {
+      "name": "🧰️framework-root-source-topology",
+      "parentKind": "fixtures",
+      "kind": "framework-root-source-topology"
+    },
+    {
+      "name": "🧰️framework-root-source-topology",
+      "parentKind": "tests",
+      "kind": "framework-root-source-topology"
+    }
+  ]
+}

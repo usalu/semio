@@ -1,6 +1,7 @@
 //! 👁️ 👁️ FEM 3D app commands command — `set-result-display`.
 
-use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use crate::editor::fem3d::modes::edit::windows::results;
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
 use crate::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -15,8 +16,16 @@ pub struct SetResultDisplay {
     pub mode_index: u32,
 }
 
-pub fn handle(payload: &SetResultDisplay, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-    Ok(Emit::config(vec![Fem3dConfigMutation::SetResultDisplay { source_id: payload.source_id.clone(), mode: payload.mode.clone(), mode_index: payload.mode_index }]))
+pub fn handle(_payload: &SetResultDisplay, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+    Err(Fault::from("fem3d.results.window-context-required"))
+}
+
+pub fn handle_window(payload: &SetResultDisplay, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+    let mut next = results::config::current(cfg);
+    next.result_source_id = payload.source_id.clone();
+    next.result_mode = crate::app_surface::ResultMode::try_from(payload.mode.as_str()).map_err(Fault::from)?;
+    next.result_mode_index = payload.mode_index;
+    Ok(Emit { window_config_mutations: vec![results::config::addressed(view, next)?], ..Default::default() })
 }
 
 #[cfg(test)]

@@ -186,7 +186,7 @@ impl OsHost {
         // took seconds, during which `admit_next_frame` refuses to build the next frame at all, so
         // the shell advanced roughly one frame every two seconds. Every prepared GPU opportunity
         // inside the loop is still priced by its own two-millisecond ceiling
-        // (`🖱️ui/…/🎯️targets/🧊️wgpu/🖥️gpu.rs` `admit_prepared_gpu_opportunity`), so the loop cannot
+        // (`🖱️ui/🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs` `admit_prepared_gpu_opportunity`), so the loop cannot
         // hide an over-ceiling submit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         #[cfg(target_arch = "wasm32")]
         let present_deadline_us = semio_framework_job::default_now_us().map(|now| now.saturating_add(semio_framework_job::INTERACTIVE_STEP_CEILING_US / 2));

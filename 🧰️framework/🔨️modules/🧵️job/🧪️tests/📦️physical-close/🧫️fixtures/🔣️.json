@@ -1,0 +1,34 @@
+{
+  "pageBytes": 16384,
+  "cases": [
+    {
+      "name": "empty-page",
+      "logicalBytes": 0,
+      "insufficientGrant": 16383
+    },
+    {
+      "name": "one-byte",
+      "logicalBytes": 1,
+      "insufficientGrant": 16383
+    },
+    {
+      "name": "short-record",
+      "logicalBytes": 20,
+      "insufficientGrant": 16383
+    },
+    {
+      "name": "full-page",
+      "logicalBytes": 16384,
+      "insufficientGrant": 16383
+    }
+  ],
+  "expected": {
+    "refusedItems": 0,
+    "refusedBytes": 0,
+    "retainedPointer": true,
+    "releasedItems": 1,
+    "releasedBytes": 16384,
+    "remainingLogicalBytes": 0,
+    "remainingPages": 0
+  }
+}

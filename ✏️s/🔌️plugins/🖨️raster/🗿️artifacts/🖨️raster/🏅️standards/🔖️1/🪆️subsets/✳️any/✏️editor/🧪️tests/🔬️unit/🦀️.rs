@@ -1,8 +1,48 @@
-use super::testkit::*;
+pub(crate) mod context {
+    //! 🧪️ Shared harness for every `editor::raster` node's tests — mirrors TEMPLATE.md §7.
+    use super::super::*;
+    use semio_framework_plugin::{artifact_app_laws as artifact_laws, InvocationResult, VcsArtifactApp, ViewModel};
+    
+    pub type RasterApp = VcsArtifactApp<EditorApp<RasterPlayApp>>;
+    
+    use semio_framework_plugin::PluginApp;
+    
+    pub async fn app() -> RasterApp {
+        artifact_laws::new_app::<EditorApp<RasterPlayApp>>().await
+    }
+    
+    pub async fn dispatch(app: &mut RasterApp, command: RasterCommand) -> InvocationResult {
+        app.dispatch_typed(command, &artifact_laws::meta("local")).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut RasterApp, body_key: &str) -> String {
+        render_with_view(app, body_key, &ViewModel::default()).await
+    }
+    
+    pub async fn render_with_view(app: &mut RasterApp, body_key: &str, view_state: &ViewModel) -> String {
+        let tree = app.render(body_key, None, view_state).await.expect("render");
+        artifact_laws::project_and_retire_fixture_tree(tree).expect("rendered fixture observation and retirement")
+    }
+    
+    pub async fn main_window_measures(app: &mut RasterApp) -> Vec<WindowMeasure> {
+        app.window_measures(&ViewModel::default()).await.remove(composite::RASTER_PLAY_WINDOW_COMPOSITE).unwrap_or_default()
+    }
+    
+    pub async fn semio_app() -> RasterApp {
+        let mut app = artifact_laws::new_app::<EditorApp<RasterPlayApp>>().await;
+        let document = crate::standards::v1::subsets::any::schema::semio_example_document();
+        let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None);
+        let files = store::print_document_pack(&envelope).await.expect("print document pack");
+        app.load_document_pack(&files).await.expect("load semio");
+        app
+    }
+}
+
+use context::*;
 use super::*;
 use crate::editor::raster::panels::{catalogue, document, inspection, masks};
 use crate::standards::v1::subsets::any::schema::{empty_raster_document, layer_name, layer_visible};
-use semio_framework_plugin::{testkit, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
+use semio_framework_plugin::{artifact_app_laws, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
 use store::MemoryBackbone;
 
 //#region 🔖️RetainedEnvelopeIngress
@@ -292,7 +332,7 @@ async fn add_layer_action_appends_and_undo_removes() {
     let projection = app.snapshot().expect("snapshot");
     assert_eq!(projection.layers.len(), before + 1);
     assert!(matches!(projection.layers.last().unwrap(), RasterLayerNode::Group { .. }));
-    app.handle_action("undo", None, &testkit::meta("local")).await.expect("undo");
+    app.handle_action("undo", None, &artifact_app_laws::meta("local")).await.expect("undo");
     assert_eq!(app.snapshot().expect("snapshot").layers.len(), before);
 }
 
@@ -304,7 +344,7 @@ async fn patch_layer_renames_and_toggles_visibility_round_trip() {
     assert_eq!(layer_name(&app.snapshot().expect("snapshot").layers[0]), "Renamed");
     dispatch(&mut app, RasterCommand::ToggleLayerVisible(toggle_layer_visible::ToggleLayerVisible { layer_id })).await;
     assert!(!layer_visible(&app.snapshot().expect("snapshot").layers[0]));
-    app.handle_action("undo", None, &testkit::meta("local")).await.expect("undo toggle");
+    app.handle_action("undo", None, &artifact_app_laws::meta("local")).await.expect("undo toggle");
     assert!(layer_visible(&app.snapshot().expect("snapshot").layers[0]));
 }
 
@@ -361,8 +401,8 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     dispatch(&mut instance_a, RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() })).await;
     dispatch(&mut instance_b, RasterCommand::PatchLayer(patch_layer::PatchLayer { layer_id: background_id, field: "name".into(), value: "Renamed By B".into() })).await;
 
-    instance_a.handle_action("commitCheckpoint", None, &testkit::meta("actor-a")).await.expect("pump a");
-    instance_b.handle_action("commitCheckpoint", None, &testkit::meta("actor-b")).await.expect("pump b");
+    instance_a.handle_action("commitCheckpoint", None, &artifact_app_laws::meta("actor-a")).await.expect("pump a");
+    instance_b.handle_action("commitCheckpoint", None, &artifact_app_laws::meta("actor-b")).await.expect("pump b");
 
     let projection_a = instance_a.snapshot().expect("projection a");
     let projection_b = instance_b.snapshot().expect("projection b");
@@ -374,7 +414,7 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
 
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent() {
-    testkit::assert_ingest_idempotent::<EditorApp<RasterPlayApp>, usize>(RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() }), |app| app.snapshot().unwrap().layers.len()).await;
+    artifact_app_laws::assert_ingest_idempotent::<EditorApp<RasterPlayApp>, usize>(RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() }), |app| app.snapshot().unwrap().layers.len()).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -410,7 +450,7 @@ async fn raster_import_media_appends_layer_from_incoming_image() {
     let mut app = app().await;
     let before = app.snapshot().expect("snapshot").layers.len();
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: "aGVsbG8=".into() } };
-    let result = app.import_media("image:in", media, &testkit::meta("local")).await.expect("import image:in");
+    let result = app.import_media("image:in", media, &artifact_app_laws::meta("local")).await.expect("import image:in");
     assert!(!result.mutations.is_empty(), "image:in import must emit a real document operation");
     assert_eq!(app.snapshot().expect("snapshot").layers.len(), before + 1);
 }

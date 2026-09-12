@@ -11,9 +11,9 @@
   ],
   "properties": {
     "catalog": {
-      "type": "object",
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/kit",
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio.kit"
+      "x-semio-child": "s.stdio.semio"
     },
     "stockExtra": {
       "type": "array",

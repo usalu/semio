@@ -1,6 +1,51 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    pub type LowpolyApp = VcsArtifactApp<EditorApp<LowpolyPlayApp>>;
+    
+    /// 🧪️ `new_app_with_registry`/`assert_declared_actions_bridge_to_commands` (framework test context,
+    /// unchanged for this ticket) still take `fn() -> App` — `create_lowpoly_app` now returns
+    /// `AppDefinition` (contract §2.4). This tiny local wrapper is the documented bridge (pilot report
+    /// `📓️w2-cad-report.md` recipe step 7), not a framework fix owed by this packet.
+    fn lowpoly_manifest_for_tests() -> App {
+        App { definition: create_lowpoly_app(), examples: Vec::new() }
+    }
+    
+    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    pub async fn app() -> LowpolyApp {
+        new_app::<EditorApp<LowpolyPlayApp>>().await
+    }
+    
+    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
+    pub async fn app_with_registry() -> LowpolyApp {
+        new_app_with_registry::<EditorApp<LowpolyPlayApp>>(lowpoly_manifest_for_tests).await
+    }
+    
+    pub async fn dispatch(app: &mut LowpolyApp, command: LowpolyCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut LowpolyApp, body_key: &str) -> String {
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render").root).expect("render json")
+    }
+    
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
+    /// injected `interactionSelect` verb, dispatched against the "mesh" domain declared on this app —
+    /// requires `app_with_registry().await` (a bare `app().await` has no declared interaction domains to select
+    /// against). `object_id`/`face_id` address the same row id the Document panel tree renders (see
+    /// `🧭️view/🦀️.rs`'s `🔖️MeshDomain` region).
+    pub async fn select_face(app: &mut LowpolyApp, object_id: &str, face_id: u32) {
+        let target_id = crate::editor::lowpoly::view::document_target_row_id(object_id, 0, "face", face_id);
+        let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "face", "id": target_id }])).expect("targets json");
+        app.handle_action("interactionSelect", Some(&protocol::DslValue::from(&serde_json::json!({ "domainId": MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" }))), &meta("test")).await.expect("interactionSelect");
+    }
+}
+
 use super::*;
-use crate::editor::lowpoly::testkit::{app, app_with_registry, LowpolyApp};
-use semio_framework_plugin::{testkit, EditorApp, PluginApp};
+use crate::editor::lowpoly::unit_tests::context::{app, app_with_registry, LowpolyApp};
+use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
 fn retained_operation() -> AppOperationContext {
     AppOperationContext { app_instance_id: 7, parent_document_id: "lowpoly-retained-test".into(), operation_id: 11, generation: 13, canonical_base_revision: [17; 32] }
@@ -304,7 +349,7 @@ async fn the_mesh_interaction_domain_is_declared_and_scoped_to_the_model_window(
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    testkit::assert_two_instances_converge::<EditorApp<LowpolyPlayApp>, _>(
+    artifact_app_laws::assert_two_instances_converge::<EditorApp<LowpolyPlayApp>, _>(
         "mem://lowpoly-convergence",
         LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Renamed By A").unwrap()) }),
         LowpolyCommand::AddPrimitive(add_primitive::AddPrimitive { kind: Some("box".into()) }),
@@ -315,7 +360,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent() {
-    testkit::assert_ingest_idempotent::<EditorApp<LowpolyPlayApp>, _>(LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Hero").unwrap()) }), |app| {
+    artifact_app_laws::assert_ingest_idempotent::<EditorApp<LowpolyPlayApp>, _>(LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Hero").unwrap()) }), |app| {
         app.snapshot().expect("projection")
     })
     .await;
@@ -323,7 +368,7 @@ async fn ingest_operations_is_idempotent() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-    use crate::editor::lowpoly::testkit::render;
+    use crate::editor::lowpoly::unit_tests::context::render;
     let mut a = app().await;
     assert!(render(&mut a, "lowpoly.play.nope").await.contains("Unknown body"));
 }
@@ -367,7 +412,7 @@ async fn import_media_mesh_in_round_trips_into_a_reset_document_effect() {
 #[semio_framework_async_macros::async_test]
 async fn registry_wired_app_dispatches_add_primitive() {
     let mut a = app_with_registry().await;
-    crate::editor::lowpoly::testkit::dispatch(&mut a, LowpolyCommand::AddPrimitive(add_primitive::AddPrimitive { kind: Some("plane".into()) })).await;
+    crate::editor::lowpoly::unit_tests::context::dispatch(&mut a, LowpolyCommand::AddPrimitive(add_primitive::AddPrimitive { kind: Some("plane".into()) })).await;
     assert_eq!(a.snapshot().expect("projection").objects.len(), 2);
 }
 //#endregion 🔖️ContextMenuRegistry

@@ -37,7 +37,7 @@ Feature: Apply every typed CommonMark mutation to a real-world document
 
   Writer freedom vs. real information loss: the oracle and subject are compared on parsed BLOCK
   STRUCTURE (the semantic tree), never rendered text — `project_md`
-  (`../../🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🔮️oracle/🦀️component.rs`) only ever emits the
+  (`../../🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🔮️oracles/🦀️component.rs`) only ever emits the
   fields `MdBlock`/`MdInline` themselves carry, so bullet marker character, ordered-list delimiter,
   emphasis delimiter, code-fence character/length, indented-vs-fenced code block source form, and
   hard-break encoding (backslash vs. trailing spaces) are all dropped by construction — genuine

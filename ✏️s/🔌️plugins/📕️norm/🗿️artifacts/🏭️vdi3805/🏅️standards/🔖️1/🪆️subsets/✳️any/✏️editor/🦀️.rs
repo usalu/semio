@@ -6,7 +6,7 @@
 //! the sibling command/panel/window nodes moved here too, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
-use crate::config::{NormConfig, NormConfigMutation, NormHost};
+use crate::document::NormHost;
 use crate::editor::vdi3805::commands::{evaluate, selected_check, set_snapshot};
 use crate::editor::vdi3805::modes::edit as edit_mode;
 use crate::editor::vdi3805::modes::edit::windows::{inputs, results};
@@ -15,7 +15,7 @@ use crate::op::Vdi3805Mutation;
 use crate::Vdi3805Snapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::{AppIo, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, LocalizedLabel, Media, MediaError, NoDraft, NoDraftMutation};
+use semio_framework_plugin::{AppIo, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, LocalizedLabel, Media, MediaError, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation};
 use semio_framework_plugin::{NoPresence, NoPresenceMutation};
 // 🚧️ SDK GAP: `Dialect` is not in `semio_framework_plugin`'s curated crate-root re-export list
 // (only `ArtifactEditor`/`ArtifactViewer`/`Editor`/`Viewer`/`EditorApp`/`ViewerApp`/`ViewEmit` are,
@@ -29,7 +29,6 @@ pub const LABEL: &str = "VDI 3805";
 /// ðï¸ The playground/registry variant key â every body key, window id and schema is derived from it.
 pub const VARIANT: &str = "vdi3805";
 pub const DOCUMENT_SCHEMA: &str = "semio.norm.vdi3805/v1";
-pub const CONFIG_SCHEMA: &str = "config.norm.vdi3805";
 //#endregion ðï¸Constants
 
 //#region ðï¸Commands
@@ -39,7 +38,7 @@ semio_framework_plugin::app_commands! {
     /// reordering is a wire-format break) and each row's two literals are the camelCase manifest action
     /// id and the kebab `#[dsl(key)]` wire keyword respectively â both copied verbatim off the
     /// pre-migration enum, never derived from one another.
-    pub enum Vdi3805Command for Vdi3805Snapshot, Vdi3805Mutation, NormConfig, NormConfigMutation {
+    pub enum Vdi3805Command for Vdi3805Snapshot, Vdi3805Mutation, NoConfig, NoConfigMutation {
         "setSnapshot" as "set-snapshot" => set_snapshot::ReplaceSnapshot,
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
@@ -54,8 +53,8 @@ pub struct Vdi3805PlayApp;
 impl ArtifactEditor for Vdi3805PlayApp {
     type Snapshot = Vdi3805Snapshot;
     type Mutation = Vdi3805Mutation;
-    type Config = NormConfig;
-    type ConfigMutation = NormConfigMutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
     type Presence = NoPresence;
@@ -72,9 +71,8 @@ impl ArtifactEditor for Vdi3805PlayApp {
         crate::app_surface::norm_artifact_store_preparation::<Self>()
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        crate::app_surface::norm_config_store_preparation::<Self>()
-    }
+    semio_s_artifact_norm_contract::norm_exact_store_ownership!();
+
 
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         Vdi3805BoundedCommandJobFactory::register(registry)
@@ -95,14 +93,14 @@ impl ArtifactEditor for Vdi3805PlayApp {
         tools: ["setSnapshot", "evaluate", "setSelectedCheckIndex"]
     }
 
-    fn config_schema() -> &'static str {
-        CONFIG_SCHEMA
+
+    /// 📎️ Norm application config and presence facets are both empty; Results windows register their own config.
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
+        Some(crate::app_surface::app_schema_descriptor())
     }
 
-    /// 📎️ All fifteen norm apps share NormConfig (see crate::config::schema doc) — one
-    /// AppSchemaDescriptor for all fifteen, registered idempotently by whichever app binds first.
-    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
-        Some(crate::config::schema::app_schema_descriptor())
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<results::ResultsWindowConfigOwner>()
     }
 
     fn initial_snapshot() -> Vdi3805Snapshot {
@@ -120,23 +118,23 @@ impl ArtifactEditor for Vdi3805PlayApp {
     fn handle(
         command: &Vdi3805Command,
         doc: &ArtifactView<'_, Vdi3805Snapshot>,
-        cfg: &ConfigView<'_, NormConfig>,
+        cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<Vdi3805Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+    ) -> Result<Emit<Vdi3805Mutation, NoConfigMutation, Self::DraftMutation>, Fault> {
+        crate::app_surface::dispatch_norm_command::<Self>(command, doc, cfg, view_state)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Vdi3805Snapshot>, cfg: &ConfigView<'_, NormConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Vdi3805Snapshot>, cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let host = NormHost::<Vdi3805Family>::from_document(doc.snapshot.clone());
         match body_key {
             inputs::BODY_INPUTS => inputs::render(doc.snapshot),
             results::BODY_RESULTS => results::render(&host),
             document_panel::BODY_DOCUMENT => document_panel::render(&host),
             catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(),
-            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, cfg.snapshot.selected_check_index),
+            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, crate::results_window_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index),
             _ => crate::app_surface::render_unknown_body(body_key),
         }
         .map(semio_framework_plugin::built_to_component_tree)
@@ -151,7 +149,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
     }
 
     /// ðï¸ `"model:in"`/`"document:in"` â see `crate::app_surface::import_media`.
-    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Vdi3805Snapshot>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Vdi3805Snapshot>) -> Result<Emit<Vdi3805Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         let base = doc.snapshot.clone();
         crate::app_surface::import_media(port, media, move |snapshot: Vdi3805Snapshot| Vdi3805Mutation::from_snapshot(&base, &snapshot))
     }
@@ -163,7 +161,16 @@ impl ArtifactEditor for Vdi3805PlayApp {
 crate::norm_owned_tool_job_factory!(Vdi3805BoundedCommandJobFactory, Vdi3805PlayApp);
 
 impl crate::app_surface::NormRetainedEditor for Vdi3805PlayApp {
-    fn dispatch_retained(command: &Vdi3805Command, doc: &ArtifactView<'_, Vdi3805Snapshot>, cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation, NoDraftMutation>, Fault> {
+    type ResultsWindowConfigOwner = results::ResultsWindowConfigOwner;
+
+    fn selected_check_window_mutation(command: &Vdi3805Command) -> Option<crate::results_window_config::NormResultsWindowConfigMutation> {
+        match command {
+            Vdi3805Command::SetSelectedCheckIndex(payload) => Some(selected_check::window_mutation(payload)),
+            _ => None,
+        }
+    }
+
+    fn dispatch_retained(command: &Vdi3805Command, doc: &ArtifactView<'_, Vdi3805Snapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Vdi3805Mutation, NoConfigMutation, NoDraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 }
@@ -222,14 +229,9 @@ pub fn create_vdi3805_app() -> semio_framework_plugin::AppDefinition {
 }
 //#endregion ðï¸Manifest
 
-//#region ð§ªï¸Testkit
-#[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion ð§ªï¸Testkit
-
-//#region ð§ªï¸Tests
+//#region ð§ªï¸UnitTests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion ð§ªï¸Tests
+pub(crate) mod unit_tests;
+//#endregion ð§ªï¸UnitTests
+

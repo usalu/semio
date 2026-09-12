@@ -1259,7 +1259,7 @@ async function main(argv: readonly string[]): Promise<number> {
   const onlyIndex = rest.indexOf("--only");
   const only = onlyIndex >= 0 ? rest[onlyIndex + 1] : undefined;
   const outRoot = process.env.SEMIO_FIXTURE_OUT;
-  const catalogDir = join(import.meta.dir, "..", "🧪️oracle");
+  const catalogDir = join(import.meta.dir, "..", "🔮️oracles");
   const catalog = JSON.parse(readFileSync(join(catalogDir, "🔣️.json"), "utf8"));
   const selected = only ? RECIPES.filter((r) => `${r.mutationId}-applied` === only) : RECIPES;
   if (selected.length === 0) {

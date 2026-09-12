@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import laws from "./laws.json";
+import laws from "../../🧫️fixtures/🔢️wgpu-u64-seam/🔣️.json";
 
 const engineRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const rustText = readFileSync(join(engineRoot, laws.rustSource), "utf8");
@@ -53,7 +53,8 @@ describe("wgpu u64 seam", () => {
   });
 
   it("a number in a widened slot is a runtime TypeError — the engine itself is the oracle", () => {
-    expect(() => BigInt.asUintN(64, laws.firstBatch.generation as unknown as bigint)).toThrowError(laws.numberLoweringFault);
+    expect(TypeError.name).toBe(laws.numberLoweringFaultType);
+    expect(() => BigInt.asUintN(64, laws.firstBatch.generation as unknown as bigint)).toThrowError(TypeError);
     expect(BigInt.asUintN(64, BigInt(laws.firstBatch.generation))).toBe(BigInt(laws.firstBatch.generation));
     expect(BigInt.asUintN(64, BigInt(laws.firstBatch.sequence))).toBe(BigInt(laws.firstBatch.sequence));
   });

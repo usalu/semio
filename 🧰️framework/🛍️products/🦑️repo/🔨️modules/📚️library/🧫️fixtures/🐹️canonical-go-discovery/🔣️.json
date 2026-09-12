@@ -1,21 +1,39 @@
 {
-  "contract": "canonical-go-test-discovery-v1",
+  "contract": "canonical-go-input-projection-v2",
   "layout": {
     "testsDirectory": "🧪️tests",
     "implementationFilename": "🐹️.go",
-    "opaqueDirectoryNames": ["🧫️fixtures"]
+    "opaqueDirectoryNames": ["🧫️fixtures"],
+    "sourceDirectoryNames": ["🧮️addition", "🔠️uppercase", "🎯️offset"]
   },
   "module": "example.com/semio/canonical-go-tests",
+  "dependency": {
+    "directory": "dependency",
+    "module": "example.com/semio/canonical-go-offset",
+    "domain": "🎯️offset",
+    "package": "offset",
+    "production": "func Zero() int { return 0 }"
+  },
+  "nativePackages": [
+    {
+      "owner": "internal/direct",
+      "package": "direct",
+      "production": "func Value() int { return 1 }"
+    }
+  ],
   "cases": [
     {
       "owner": ".",
+      "domain": "🧮️addition",
       "case": "🧮️private-addition",
       "package": "proof",
-      "production": "func add(left, right int) int { return left + right }",
+      "production": "func add(left, right int) int { return left + right + offset.Zero() }",
+      "productionImports": ["example.com/semio/canonical-go-offset"],
       "test": "func TestPrivateAddition(t *testing.T) { if add(2, 3) != 5 { t.Fatal(\"addition\") } }"
     },
     {
       "owner": "internal/text",
+      "domain": "🔠️uppercase",
       "case": "🔠️private-uppercase",
       "package": "text",
       "production": "func upper(value string) string { return strings.ToUpper(value) }",
@@ -26,6 +44,7 @@
   "opaqueCases": [
     {
       "owner": "🧫️fixtures/opaque-go-repository",
+      "domain": "🧮️addition",
       "case": "🧪️must-not-run",
       "package": "fixture",
       "production": "func fixtureValue() int { return 1 }",
@@ -34,7 +53,13 @@
   ],
   "expectedPackages": [
     ".",
+    "./internal/direct",
     "./internal/text"
+  ],
+  "expectedSources": [
+    "dependency/🎯️offset/🐹️.go",
+    "🧮️addition/🐹️.go",
+    "internal/text/🔠️uppercase/🐹️.go"
   ],
   "expectedTests": [
     "TestPrivateAddition",

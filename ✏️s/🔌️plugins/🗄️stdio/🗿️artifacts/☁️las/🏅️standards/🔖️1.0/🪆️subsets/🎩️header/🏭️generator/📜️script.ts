@@ -8,7 +8,7 @@
 // 🏭️ Third-party fixture generator for `s.stdio.las@1.0/🎩️header`.
 //
 // The bytes this file produces are written entirely by the real `las` 0.11 crate's byte-exact
-// `las::raw::{Header, Vlr, Point}` types (`🦀️engine/src/main.rs`) — the SAME crate registered as
+// `las::raw::{Header, Vlr, Point}` types (`🧫️fixtures/🦀️.rs`) — the SAME crate registered as
 // `las-1-0-any-mutate` in `../🔣️oracle.json` — never by this repository's own `encode_las`. This
 // script only marshals: it builds and invokes the Rust binary and reports what it wrote; it
 // computes no LAS bytes itself.
@@ -34,7 +34,7 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const ENGINE_DIR = join(HERE, "🦀️engine");
+const ENGINE_DIR = join(HERE, "🧫️fixtures", "📦️packages", "🦀️rust");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 const RECIPE = "survey-strip";

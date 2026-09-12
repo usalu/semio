@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "closingInstanceId",
+          "before",
+          "patch",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "closingInstanceId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "before": {
+            "$ref": "#/$defs/pending"
+          },
+          "patch": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "op",
+                "path",
+                "value"
+              ],
+              "properties": {
+                "op": {
+                  "const": "replace"
+                },
+                "path": {
+                  "const": "/pendingInstanceId"
+                },
+                "value": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          "expected": {
+            "$ref": "#/$defs/pending"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "pending": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pendingInstanceId"
+      ],
+      "properties": {
+        "pendingInstanceId": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 4294967295
+        }
+      }
+    }
+  }
+}

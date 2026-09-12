@@ -2319,6 +2319,15 @@ impl DomainTopology {
         self.index_of(id).await.is_some()
     }
 
+    /// 🗂️ One membership set over this whole topology, so a caller checking MANY ids pays the `n` walk
+    /// once instead of once per id. [`validate_state`] prunes every selected and every hovered id against
+    /// the same topology, and the flagship puzzle3d document carries ~900 nodes: at one linear
+    /// [`Self::contains`] per id a marquee selection was quadratic, and even a single pick walked the
+    /// whole forest twice (26/09/02/PUZZLE-3D-END-TO-END wave B46).
+    pub async fn membership(&self) -> std::collections::BTreeSet<&str> {
+        self.ordered.iter().map(|node| node.id.as_str()).collect()
+    }
+
     async fn children_by_parent(&self) -> BTreeMap<String, Vec<String>> {
         let mut children: BTreeMap<String, Vec<String>> = BTreeMap::new();
         for node in &self.ordered {
@@ -2659,18 +2668,16 @@ pub async fn validate_state(defs: &[InteractionOutline], topo: &InteractionTopol
         let granularity = state.active_granularity.get(&def.id).cloned().filter(|granularity| declared_granularities.contains(&granularity.as_str())).unwrap_or_else(|| default_granularity.clone());
         result.active_granularity.insert(def.id.clone(), granularity);
 
+        // 🗂️ ONE membership walk per domain, reused by both the selection and the hover prune below — see
+        // `DomainTopology::membership`. A `None` topology means "no membership information, keep every id".
+        let members = match domain_topo {
+            Some(topo) => Some(topo.membership().await),
+            None => None,
+        };
+        let keeps = |id: &String| members.as_ref().is_none_or(|members| members.contains(id.as_str()));
         if let Some(selection) = state.selection.get(&def.id) {
             let selection_granularity = if declared_granularities.contains(&selection.granularity.as_str()) { selection.granularity.clone() } else { default_granularity.clone() };
-            let mut ids: Vec<String> = Vec::new();
-            for id in &selection.ids {
-                let keep = match domain_topo {
-                    Some(topo) => topo.contains(id).await,
-                    None => true,
-                };
-                if keep {
-                    ids.push(id.clone());
-                }
-            }
+            let mut ids: Vec<String> = selection.ids.iter().filter(|id| keeps(id)).cloned().collect();
             if mode == SelectionMode::Single && ids.len() > 1 {
                 ids.truncate(1);
             }
@@ -2679,16 +2686,7 @@ pub async fn validate_state(defs: &[InteractionOutline], topo: &InteractionTopol
         }
 
         if let Some(hover) = state.hover.get(&def.id) {
-            let mut ids: Vec<String> = Vec::new();
-            for id in &hover.ids {
-                let keep = match domain_topo {
-                    Some(topo) => topo.contains(id).await,
-                    None => true,
-                };
-                if keep {
-                    ids.push(id.clone());
-                }
-            }
+            let ids: Vec<String> = hover.ids.iter().filter(|id| keeps(id)).cloned().collect();
             result.hover.insert(def.id.clone(), DomainHover { channel: hover.channel.clone(), ids });
         }
     }

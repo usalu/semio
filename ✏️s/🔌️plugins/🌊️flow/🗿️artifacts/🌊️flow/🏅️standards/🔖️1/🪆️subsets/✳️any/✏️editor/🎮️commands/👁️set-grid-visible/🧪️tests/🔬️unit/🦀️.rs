@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::flow::testkit::{dispatch, flow_app, main_window_measures, FlowApp};
+use crate::editor::flow::unit_tests::context::{dispatch, flow_app, main_window_measures, FlowApp};
 use crate::editor::flow::FlowCommand;
 use semio_framework_plugin::WindowMeasure;
 

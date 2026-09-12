@@ -1226,6 +1226,65 @@ function parseInstances(instancesJson: string): WorldInstanceRecord[] {
   }
 }
 
+/** 🚚️ The `instancesDeltaJson` lane's declared shape — see the Rust `World3dScene::instances_delta_json`. */
+export type WorldInstanceDeltaV1 = {
+  readonly base: number;
+  readonly revision: number;
+  readonly count: number;
+  readonly changed: readonly WorldInstanceRecord[];
+  readonly removed: readonly string[];
+};
+
+/** 🧾️ One consumer's retained instance set and the delta revision it stands at. */
+export type WorldInstanceResidencyV1 = {
+  readonly revision: number;
+  readonly records: readonly WorldInstanceRecord[];
+};
+
+export function parseWorldInstanceDelta(deltaJson: string | null | undefined): WorldInstanceDeltaV1 | null {
+  if (!deltaJson) return null;
+  try {
+    const parsed = JSON.parse(deltaJson) as Partial<WorldInstanceDeltaV1>;
+    if (typeof parsed?.revision !== "number" || typeof parsed?.base !== "number" || !Array.isArray(parsed.changed)) return null;
+    return { base: parsed.base, revision: parsed.revision, count: typeof parsed.count === "number" ? parsed.count : parsed.changed.length, changed: parsed.changed, removed: Array.isArray(parsed.removed) ? parsed.removed : [] };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * @emoji 🚚️ Advances one consumer's retained instance set by the publication it just received.
+ *
+ * ⏱️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B44. A pose edit on a large document republishes the
+ * whole `instancesJson` lane — 55 KiB / 180 records on Nakagin — and every consumer used to re-parse
+ * all of it to learn that ONE instance moved. When the producer also publishes
+ * `instancesDeltaJson` and this consumer's retained set is exactly at that delta's `base`, the
+ * changed records are substituted BY ID and every untouched record keeps its object identity, so the
+ * downstream instanced-mesh memos see only the instances that actually moved.
+ *
+ * 🧯️ In-place application is deliberately restricted to pure UPDATES of ids already retained.
+ * `instancesJson` is index-addressed (`worldPick` resolves a hit by array position, which is why a
+ * hidden instance stays in the array at zero scale), so an addition or a removal — anything that can
+ * reorder — falls back to the authoritative full parse. Same for a delta whose `base` does not match,
+ * a `count` that disagrees with the result, or a producer that publishes no delta at all: the full
+ * lane is always correct, so ignoring the delta can only cost time, never correctness.
+ */
+export function advanceWorldInstanceResidency(previous: WorldInstanceResidencyV1 | null, instancesJson: string, deltaJson: string | null | undefined): WorldInstanceResidencyV1 {
+  const delta = parseWorldInstanceDelta(deltaJson);
+  const retained = previous?.records ?? null;
+  const applicable =
+    delta !== null &&
+    retained !== null &&
+    previous?.revision === delta.base &&
+    delta.removed.length === 0 &&
+    delta.count === retained.length &&
+    delta.changed.every((record) => retained.some((existing) => existing.id === record.id));
+  if (!applicable) return { revision: delta?.revision ?? -1, records: parseInstances(instancesJson) };
+  if (delta.changed.length === 0) return { revision: delta.revision, records: retained };
+  const replacements = new Map(delta.changed.map((record) => [record.id, record]));
+  return { revision: delta.revision, records: retained.map((existing) => replacements.get(existing.id) ?? existing) };
+}
+
 function parseSelection(selectionJson: string): WorldSelectionRecord {
   try {
     return JSON.parse(selectionJson) as WorldSelectionRecord;
@@ -1396,7 +1455,15 @@ export function mergeWorldSelectionWithLeftoverV1(base: WorldSelectionRecord, le
   const pose = leftoverWorldGumballPoseV1(leftover, instances);
   return {
     ...base,
-    ...(leftover.ids.length > 0 ? { ids: leftover.ids } : {}),
+    // 🎯️ `activeObjectId` travels WITH the ids it belongs to. The overlay exists to make a pick visible
+    // before the guest's own lane answers, and `ids` alone only covers the readers that take a list:
+    // the gumball target, Inspection's focus and `data-selection-json`'s own `activeObjectId` all read
+    // this single field, so an overlay that replaced the list and left this null published
+    // `{selectedIds:[picked], activeObjectId:null}` for the whole window it was covering — measured on
+    // the 180-object Nakagin document, every sample of a 12-minute run
+    // (26/09/02/PUZZLE-3D-END-TO-END wave B46). The base's own active id is kept when the overlay still
+    // names it, so a re-pick of the same object does not move the active one.
+    ...(leftover.ids.length > 0 ? { ids: leftover.ids, activeObjectId: base.activeObjectId && leftover.ids.includes(base.activeObjectId) ? base.activeObjectId : leftover.ids[0] } : {}),
     hoveredId: leftover.hoveredId ?? base.hoveredId,
     gumballActive: leftover.gumballActive || Boolean(base.gumballActive),
     gumballTarget: pose.gumballTarget ?? base.gumballTarget,
@@ -1963,6 +2030,78 @@ function PaintTexturedMesh({
   );
 }
 
+//#region GlbMeshBounds
+/** @emoji 📦️ Local-space extents of every GLB the scene has loaded, keyed by the mesh record's own
+ * `url` and already carrying the {@link GLB_MESH_FRAME_ROTATION_X} frame rotation the instance group
+ * applies — so an entry is exactly the eight local corners a pick or a marquee has to project.
+ *
+ * 🎯️ A URL-backed mesh record carries NO inline `data` (the guest publishes `{id, url}` for every
+ * catalogue representation), so every screen-space hit test over it used to fall back to a unit cube —
+ * or, in the marquee's case, to the single point `[0,0,0]`. Measured on the 180-object Nakagin tower,
+ * fully rendered: `candidates=180 containing=0 hit=none boxes=["28x30@427,394", …]` on 20 of 20 clicks
+ * spread over the whole pane, while R3F's own raycast against the same GLB geometry resolved an
+ * instance on 14 of them (26/09/02/PUZZLE-3D-END-TO-END wave B46). The loader is the only place that
+ * knows a GLB's real size, so it is the place that records it. */
+const GLB_MESH_LOCAL_BOUNDS = new Map<string, readonly (readonly [number, number, number])[]>();
+
+/** 📦️ The eight corners of one loaded GLB's frame-rotated AABB, in the instance group's local space. */
+function glbMeshFrameCorners(scene: Object3D): readonly (readonly [number, number, number])[] {
+  const frame = new Object3D();
+  frame.rotation.x = GLB_MESH_FRAME_ROTATION_X;
+  frame.updateMatrixWorld(true);
+  scene.updateMatrixWorld(true);
+  const box = new Box3().setFromObject(scene);
+  if (box.isEmpty()) return [];
+  const scratch = new Vector3();
+  const rotated = new Box3().makeEmpty();
+  for (const corner of [
+    [box.min.x, box.min.y, box.min.z],
+    [box.max.x, box.min.y, box.min.z],
+    [box.min.x, box.max.y, box.min.z],
+    [box.max.x, box.max.y, box.min.z],
+    [box.min.x, box.min.y, box.max.z],
+    [box.max.x, box.min.y, box.max.z],
+    [box.min.x, box.max.y, box.max.z],
+    [box.max.x, box.max.y, box.max.z],
+  ] as const) {
+    rotated.expandByPoint(scratch.set(corner[0], corner[1], corner[2]).applyMatrix4(frame.matrixWorld));
+  }
+  return [
+    [rotated.min.x, rotated.min.y, rotated.min.z],
+    [rotated.max.x, rotated.min.y, rotated.min.z],
+    [rotated.min.x, rotated.max.y, rotated.min.z],
+    [rotated.max.x, rotated.max.y, rotated.min.z],
+    [rotated.min.x, rotated.min.y, rotated.max.z],
+    [rotated.max.x, rotated.min.y, rotated.max.z],
+    [rotated.min.x, rotated.max.y, rotated.max.z],
+    [rotated.max.x, rotated.max.y, rotated.max.z],
+  ];
+}
+
+/** 📦️ The local corners a screen-space hit test must use for one instance's mesh: the mesh's own inline
+ * geometry when it has some, else the loaded GLB's recorded extents, else — only while a GLB is still
+ * loading — the unit cube. */
+export function world3dInstanceLocalCorners(
+  meshData: WorldMeshData | undefined,
+  meshUrl: string | undefined,
+  bounds: ReadonlyMap<string, readonly (readonly [number, number, number])[]> = GLB_MESH_LOCAL_BOUNDS,
+): readonly (readonly [number, number, number])[] {
+  if (meshData && (meshData.positions.length >= 3 || (meshData.edgePositions?.length ?? 0) >= 3)) return meshBoundsCorners(meshData);
+  const recorded = meshUrl ? bounds.get(meshUrl) : undefined;
+  if (recorded && recorded.length === 8) return recorded;
+  return [
+    [-0.5, -0.5, -0.5],
+    [0.5, -0.5, -0.5],
+    [-0.5, 0.5, -0.5],
+    [0.5, 0.5, -0.5],
+    [-0.5, -0.5, 0.5],
+    [0.5, -0.5, 0.5],
+    [-0.5, 0.5, 0.5],
+    [0.5, 0.5, 0.5],
+  ];
+}
+//#endregion GlbMeshBounds
+
 //#region GlbMeshStyling
 /** 🎨️ EdgesGeometry cache keyed by source BufferGeometry — `gltf.scene.clone(true)` shares geometries across every per-instance clone of the same GLB, so this dedupes edge computation across instances. */
 const GLB_EDGE_GEOMETRY_CACHE = new WeakMap<BufferGeometry, EdgesGeometry>();
@@ -2019,6 +2158,10 @@ function GlbInstanceMesh({
 }) {
   const gltf = useLoader(GLTFLoader, meshAssetTransportUrl(url));
   const invalidate = useThree((state) => state.invalidate);
+  if (!GLB_MESH_LOCAL_BOUNDS.has(url)) {
+    const corners = glbMeshFrameCorners(gltf.scene);
+    if (corners.length === 8) GLB_MESH_LOCAL_BOUNDS.set(url, corners);
+  }
   const celebrating = revision === "celebrated";
   // 🎨️ Bake selection/hover paint into the clone itself. Imperative `color.set` after deselect was leaving
   // the previous selected tint until a later hover remounted materials — style deps must recreate the tree.
@@ -3818,7 +3961,7 @@ function resolveMarqueeInstanceIds(
     const scale = (instance.scale ?? [1, 1, 1]) as [number, number, number];
     const rotation = instance.rotation;
     const quaternion = rotation ? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]) : undefined;
-    const localCorners = meshData ? meshBoundsCorners(meshData) : [[0, 0, 0] as const];
+    const localCorners = world3dInstanceLocalCorners(meshData, meshById.get(meshId)?.url);
     const worldCorners = localCorners.map((corner) => {
       const v = new Vector3(corner[0] * scale[0], corner[1] * scale[1], corner[2] * scale[2]);
       if (quaternion) v.applyQuaternion(quaternion);
@@ -3888,9 +4031,7 @@ function resolveClickInstanceId(
     const scale = (instance.scale ?? [1, 1, 1]) as [number, number, number];
     const rotation = instance.rotation;
     const quaternion = rotation ? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]) : undefined;
-    const localCorners = meshData && (meshData.positions.length >= 3 || (meshData.edgePositions?.length ?? 0) >= 3)
-      ? meshBoundsCorners(meshData)
-      : ([[-0.5, -0.5, -0.5], [0.5, -0.5, -0.5], [-0.5, 0.5, -0.5], [0.5, 0.5, -0.5], [-0.5, -0.5, 0.5], [0.5, -0.5, 0.5], [-0.5, 0.5, 0.5], [0.5, 0.5, 0.5]] as const);
+    const localCorners = world3dInstanceLocalCorners(meshData, meshById.get(meshId)?.url);
     const worldCorners = localCorners.map((corner) => {
       const v = new Vector3(corner[0] * scale[0], corner[1] * scale[1], corner[2] * scale[2]);
       if (quaternion) v.applyQuaternion(quaternion);
@@ -4786,7 +4927,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const colors = useMemo(() => semanticColorsFromPalette(meshStylePalette), [meshStylePalette]);
   const sceneCameraJson = scene?.cameraJson ?? "{}";
   const parsedCamera = useMemo(() => parseCameraState(sceneCameraJson), [sceneCameraJson]);
-  const instances = useMemo(() => parseInstances(scene?.instancesJson ?? "[]"), [scene?.instancesJson]);
+  // 🚚️ B44: the retained instance set advances by the producer's own per-object delta when it can, so a
+  // pose edit on a 180-object document substitutes the moved records by id instead of re-parsing 55 KiB.
+  const instanceResidencyRef = useRef<WorldInstanceResidencyV1 | null>(null);
+  const instances = useMemo(() => {
+    const advanced = advanceWorldInstanceResidency(instanceResidencyRef.current, scene?.instancesJson ?? "[]", scene?.instancesDeltaJson ?? null);
+    instanceResidencyRef.current = advanced;
+    return advanced.records as WorldInstanceRecord[];
+  }, [scene?.instancesJson, scene?.instancesDeltaJson]);
   const references = useMemo(() => parseJsonArray<WorldReferenceRecord>(scene?.referencesJson), [scene?.referencesJson]);
   const sceneCamera = useMemo(() => {
     if (sceneCameraJson.includes('"position"')) return parsedCamera;
@@ -4874,9 +5022,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     const published = leftoverPreview || scene?.brushPreviewJson || interaction.brushPreviewJson;
     const decided = retainWorldBrushPreviewJsonV1(published, hover, retainedBrushPreviewByVortexRef.current);
     retainedBrushPreviewByVortexRef.current = decided.retained;
-    if (typeof console !== "undefined") {
-      console.log("[DEBUG] puzzle3d.brushPreview.bind", { published: published?.length ?? 0, spine: scene?.brushPreviewJson?.length ?? 0, interaction: interaction.brushPreviewJson?.length ?? 0, hover, decided: decided.json.length, windowInstanceId });
-    }
     return decided.json;
   }, [leftoverSelectionEpoch, scene?.brushPreviewJson, scene?.interactionJson, windowInstanceId]);
   const brushPreview = useMemo(() => parseWorldBrushPreview(brushPreviewJson || undefined), [brushPreviewJson]);
@@ -5288,7 +5433,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   useEffect(() => {
     if (meshResidency === undefined) return;
     const restarted = puzzle3dBrushMeshRegistry.observeResidency(meshResidency);
-    const claimed = (meshReuploadUrls ?? []).filter((url) => puzzle3dBrushMeshRegistry.claimReupload(url, meshResidency));
+    const claimed = (meshReuploadUrls ?? []).filter((url) => puzzle3dBrushMeshRegistry.claimReupload(url));
     if (!restarted && claimed.length === 0) return;
     setBrushMeshRevisions((previous) => {
       const urls: Record<string, number> = { ...previous.urls };
@@ -5513,7 +5658,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const fillBuildShouldTick = worldFillBuildShouldTick(activeUtility, interaction.fillBuild, leftoverArmedToolId);
   useEffect(() => {
     if (!fillBuildShouldTick) return;
-    console.warn(`[DEBUG] fillBuildTick hop armed utility=${activeUtility} tool=${leftoverArmedToolId ?? "none"} count=${interaction.fillBuild?.count ?? 0} done=${interaction.fillBuild?.done ?? false}`);
     return createInFlightSkippingInterval(() => {
       if (interactivePluginActionInFlight()) return undefined;
       if (!worldFillBuildHostTickAllowed(true, isolatedJobDriveIsActive(), takeIsolatedJobUiPoll())) return undefined;
@@ -5905,9 +6049,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         // 🧯️ A drag whose pose did not move commits NOTHING. It used to synthesize a fixed 0.5 translate
         // along the handle's axis instead — a document edit the user never made, minted precisely when the
         // gesture failed to say anything (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B31). The record below
-        // is what a zero-delta drag owes: the numbers that produced it, so the cause is read off the
-        // gesture rather than covered by a fabricated move.
-        console.info("[DEBUG] gumball pose delta skipped", {
+        // is PERMANENT, not a `[DEBUG]` trace: it is what a zero-delta drag owes, so the cause is read off
+        // the gesture rather than covered by a fabricated move.
+        console.info("gumball pose delta skipped", {
           transformMode: selection.transformMode,
           kind,
           dx: after.position[0] - before.position[0],

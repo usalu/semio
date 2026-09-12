@@ -115,7 +115,7 @@ mod subject {
     use crate::STDIO_GIF_DOCUMENT_SCHEMA;
 
     //#region 🔖️JsonBridge
-    /// 🌉️ Mirrors the oracle's own JSON bridge (`../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔮️oracle/
+    /// 🌉️ Mirrors the oracle's own JSON bridge (`../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔮️oracles/
     /// 🦀️.rs`) but builds the REAL `GifMutation`/`GifSnapshot` this repository's own codec
     /// consumes, independently of that mirror — the two are never allowed to call into each other.
     fn num(json: &Json, key: &str) -> Option<f64> {

@@ -7,8 +7,8 @@
 //! window, this never runs the layered-layout/ghost/selection machinery `SequenceHost` (an editor-only
 //! type) provides, since a viewer never needs to lay anything out interactively.
 
-use crate::{SequenceSnapshot, SequenceStep};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use crate::{SequenceStep, SequenceWorkingScene};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphScene, Viewport2d, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const SEQUENCE_VIEW_WINDOW_MAIN: &str = "sequence-view-main";
@@ -63,12 +63,11 @@ fn step_node(step: &SequenceStep) -> NodeGraphNodeRecord {
 /// 👁️ Pure `SequenceSnapshot -> UiAssemblyResult<BuiltNode>` read: default viewport (a viewer has no persisted
 /// per-session camera), no selection/drag overlay, `editable: Some(false)` (contract §2.2's
 /// structural read-only guarantee, mirrored here at the scene level too).
-pub fn render(document: &SequenceSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let fixture = document.to_fixture();
-    let nodes: Vec<NodeGraphNodeRecord> = fixture.steps.iter().map(step_node).collect();
+pub fn render(scene: &SequenceWorkingScene) -> UiAssemblyResult<BuiltNode> {
+    let nodes: Vec<NodeGraphNodeRecord> = scene.steps.iter().map(step_node).collect();
     let edges: Vec<NodeGraphEdgeRecord> =
-        fixture.edges.iter().map(|edge| NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id: edge.from.clone(), source_port_id: String::new(), target_node_id: edge.to.clone(), target_port_id: String::new(), label: None }).collect();
-    let viewport = NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 };
+        scene.edges.iter().map(|edge| NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id: edge.from.clone(), source_port_id: String::new(), target_node_id: edge.to.clone(), target_port_id: String::new(), label: None }).collect();
+    let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
     semio_framework_plugin::scene_surface(SEQUENCE_VIEW_SURFACE_MAIN, semio_framework_ui_contract::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render

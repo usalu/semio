@@ -1,3 +1,0 @@
-type Gis2dPresence {
-  cameraJson: String! @state(class: PRESENCE)
-}

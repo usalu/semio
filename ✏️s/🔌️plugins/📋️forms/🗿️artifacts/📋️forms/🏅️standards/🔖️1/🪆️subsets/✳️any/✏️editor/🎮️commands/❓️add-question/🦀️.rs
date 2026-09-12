@@ -1,7 +1,6 @@
 //! ❓️ ❓️ Forms play app commands command — `add-question`.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::reset_try_config_mutations;
 use crate::schema::{create_form_id, update_block_operation, value_to_dsl};
 use crate::{forms_steps, op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
 use dsl::os_pack::json::{object, Value};
@@ -175,7 +174,7 @@ pub fn handle(payload: &AddQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cfg
         return Ok(Emit::default());
     };
     let question = default_question_for_kind(&payload.kind, create_form_id("q"));
-    Ok(Emit { artifact_mutations: vec![FormMutation::CreateBlock(crate::mutations::create_block::mutation::CreateBlock { step_id, block: question, index: None })], config_mutations: reset_try_config_mutations(), ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![FormMutation::CreateBlock(crate::mutations::create_block::mutation::CreateBlock { step_id, block: question, index: None })], ..Default::default() })
 }
 
 //#region 🧪️Tests

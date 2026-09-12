@@ -2347,7 +2347,7 @@ it("OwnedResidentReaderRevocation preserves the original read alias and parent c
      * `PluginRuntime.projectOwnedUiSurface` does. */
     it("OwnedIntake publishes a packed scene-lane leaf whose data-attribute slices all survive the wire", async () => {
       const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
-      const { default: contract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os"); const { packedTextLeaf } = await import("../../../🔌️PluginRuntime/packed-text.ts");
+      const { default: contract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os"); const { packedTextLeaf } = await import("../../../🔌️PluginRuntime/🧳️packed-text/🟦️.ts");
       const { leafBytes, packChunks, packBytes } = contract.carrier; expect(packBytes).toBe(leafBytes * packChunks);
       const lane = contract.lanes.find((entry) => entry.lane === "instances")!;
       const payload = `[${Array.from({ length: 512 }, (_, index) => `{"id":"capsule-${String(index).padStart(4, "0")}","meshId":"mesh:box","position":[${index},0,0]}`).join(",")}]`;

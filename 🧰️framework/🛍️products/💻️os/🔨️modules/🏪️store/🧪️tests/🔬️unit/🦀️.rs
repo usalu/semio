@@ -1585,8 +1585,8 @@ impl ArtifactPack for DemoSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         MEMBER_SNAPSHOT_DECODE_COUNT.with(|count| count.set(count.get() + 1));
         let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
-            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
+            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
@@ -1744,7 +1744,7 @@ fn drive_retirement_terminal(mut retirement: Box<dyn ErasedSnapshotRetirement>) 
 async fn artifact_store_snapshot_roots_and_final_envelope_transfer_in_exact_close_order() {
     let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "root-close", DemoSnapshot { n: Some(7) }, None);
     let mut store = super::ArtifactStore::new(envelope).await.expect("valid empty-history store");
-    store.install_member_store_owners_exact(DemoSnapshot::member_store_owners());
+    store.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
     *store.tail_undo_cache = Some(("tail-owner".repeat(64), Arc::clone(&*store.current)));
 
     let tail_id = store.close_take_runtime_string_retirement(ArtifactStoreCloseStringLane::TailUndoEditId).expect("tail id retires before its snapshot");
@@ -1791,7 +1791,7 @@ where
 impl MemberStoreOwner<DemoMutation> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
-    fn member_store_owners() -> MemberStoreOwners<Self, DemoMutation> {
+    fn member_store_owners() -> DocumentStoreOwners<Self, DemoMutation> {
         demo_closable_store_owners()
     }
 }
@@ -2060,7 +2060,7 @@ fn close_erased_member_publication(publication: &mut dyn ErasedMemberStoreOneIte
     panic!("member publication did not retire its exact owners");
 }
 
-fn retained_demo_member_owners() -> MemberStoreOwners<DemoSnapshot, DemoMutation> {
+fn retained_demo_member_owners() -> DocumentStoreOwners<DemoSnapshot, DemoMutation> {
     demo_closable_store_owners().with_one_item_preparation(Arc::new(DemoOneItemPreparationFactory::admissible())).with_one_item_wire_preparation(Arc::new(DemoMemberWirePreparationFactory))
 }
 
@@ -2102,7 +2102,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
     for row in fixture["retention"].as_array().unwrap() {
         let snapshots = Arc::new(AtomicUsize::new(0));
         let mutations = Arc::new(AtomicUsize::new(0));
-        let owners = MemberStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(SnapshotFactory(snapshots.clone())), Arc::new(MutationFactory(mutations.clone())), Box::new(ArtifactStoreCursorDisposer::new()));
+        let owners = DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(SnapshotFactory(snapshots.clone())), Arc::new(MutationFactory(mutations.clone())), Box::new(ArtifactStoreCursorDisposer::new()));
         let mut pages = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: 3 }).unwrap();
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(&[1, 97, 83]).unwrap()).unwrap();
         pages.seal().unwrap();
@@ -2387,9 +2387,9 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
     let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize };
     let mut first = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "first", DemoSnapshot { n: Some(0) }, None)).await;
     let mut second = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "second", DemoSnapshot { n: Some(0) }, None)).await;
-    first.install_member_store_owners_exact(retained_demo_member_owners());
-    second.install_member_store_owners_exact(retained_demo_member_owners());
-    let mut members = [RetainedTestMembers::First(first.0), RetainedTestMembers::Second(second.0)];
+    first.install_document_store_owners_exact(retained_demo_member_owners());
+    second.install_document_store_owners_exact(retained_demo_member_owners());
+    let mut members = [RetainedTestMembers::First(Box::new(first.0)), RetainedTestMembers::Second(Box::new(second.0))];
     let mut observed = Vec::new();
     for (sequence, row) in fixture["orderedMembers"].as_array().unwrap().iter().enumerate() {
         let index = usize::from(row["id"] == "second");
@@ -2456,8 +2456,8 @@ async fn retained_member_publication_rejects_wrong_owner_staleness_and_cancels_w
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 };
     let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None)).await;
     let mut wrong = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None)).await;
-    member.install_member_store_owners_exact(retained_demo_member_owners());
-    wrong.install_member_store_owners_exact(demo_closable_store_owners());
+    member.install_document_store_owners_exact(retained_demo_member_owners());
+    wrong.install_document_store_owners_exact(demo_closable_store_owners());
     let request = |generation, revision| MemberStoreOneItemWireRequest {
         operation: semio_framework_job::OperationId(800),
         expected_generation: generation,
@@ -2508,7 +2508,7 @@ async fn retained_member_group_preparation_reserves_real_history_without_partial
         ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-second", DemoSnapshot { n: Some(0) }, None)).await,
     ];
     for member in &mut members {
-        member.install_member_store_owners_exact(retained_demo_member_owners());
+        member.install_document_store_owners_exact(retained_demo_member_owners());
     }
     let roots = [members[0].snapshot_root(), members[1].snapshot_root()];
     let before = [members[0].one_item_publication_identity(), members[1].one_item_publication_identity()];
@@ -2874,7 +2874,7 @@ fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutatio
 async fn apply_undo_redo_transfers_each_snapshot_root_to_one_exact_retirement_owner() {
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "exact-tail-transfer", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_member_store_owners_exact(MemberStoreOwners::new(
+    store.install_document_store_owners_exact(DocumentStoreOwners::new(
         Arc::new(ExactDemoSnapshotRetirementFactory(Arc::clone(&completed))),
         Arc::new(DemoInitialSnapshotRetirementFactory),
         Arc::new(DemoMutationRetirementFactory),
@@ -2891,7 +2891,7 @@ async fn apply_undo_redo_transfers_each_snapshot_root_to_one_exact_retirement_ow
 #[semio_framework_async_macros::async_test]
 async fn store_close_waits_for_a_live_snapshot_read_then_retires_its_returned_owner() {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "live-reader-close", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_member_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners());
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], description: None }).await.expect("apply");
     let read = store.snapshot_read().expect("exact live snapshot read");
     let mut blocked = false;
@@ -2932,7 +2932,7 @@ fn returned_snapshot_read_releases_an_alias_before_the_displaced_root_and_retire
 async fn store_close_releases_a_returned_read_before_its_displaced_root() {
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "returned-before-displaced", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_member_store_owners_exact(MemberStoreOwners::new(
+    store.install_document_store_owners_exact(DocumentStoreOwners::new(
         Arc::new(ExactDemoSnapshotRetirementFactory(Arc::clone(&completed))),
         Arc::new(DemoInitialSnapshotRetirementFactory),
         Arc::new(DemoMutationRetirementFactory),
@@ -2945,8 +2945,27 @@ async fn store_close_releases_a_returned_read_before_its_displaced_root() {
     assert_eq!(completed.load(std::sync::atomic::Ordering::SeqCst), 2, "the displaced and current roots retire exactly once each");
 }
 
-pub(super) fn demo_closable_store_owners() -> MemberStoreOwners<DemoSnapshot, DemoMutation> {
-    MemberStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()))
+#[semio_framework_async_macros::async_test]
+async fn erased_member_snapshot_read_releases_its_alias_before_the_live_current_root() {
+    let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "erased-live-reader", DemoSnapshot { n: Some(3) }, None)).await;
+    store.install_document_store_owners_exact(DocumentStoreOwners::new(
+        Arc::new(ExactDemoSnapshotRetirementFactory(Arc::clone(&completed))),
+        Arc::new(DemoInitialSnapshotRetirementFactory),
+        Arc::new(DemoMutationRetirementFactory),
+        Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()),
+    ));
+    let read = SpaceMember::snapshot_read_erased_now(&store).expect("erased member read");
+    let mut retirement = SpaceMember::retire_snapshot_read_erased(&mut store, read).unwrap_or_else(|rejected| panic!("{}", rejected.reason));
+    assert_eq!(retirement.close_step(1, 512).expect("erased read releases its alias"), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+    assert!(retirement.terminal_is_empty());
+    drop(retirement);
+    close_demo_artifact_store(&mut store);
+    assert_eq!(completed.load(std::sync::atomic::Ordering::SeqCst), 1, "the live member current root remains owned until store close");
+}
+
+pub(super) fn demo_closable_store_owners() -> DocumentStoreOwners<DemoSnapshot, DemoMutation> {
+    DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()))
 }
 
 fn close_ephemeral_publication(publication: &mut ArtifactEphemeralOneItemPublication<DemoSnapshot, DemoMutation>) {
@@ -2963,7 +2982,7 @@ fn close_ephemeral_publication(publication: &mut ArtifactEphemeralOneItemPublica
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_one_item_single_retry_ack_and_move_only_root_preserve_generation_revision_and_history() {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-single", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_member_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners());
     let generation = store.generation_now();
     let revision = store.content_revision_now();
     let factory = Arc::new(DemoOneItemPreparationFactory::admissible());
@@ -3036,7 +3055,7 @@ async fn artifact_store_reset_preserves_capacity_for_retained_batch_publication(
         let after = row["after"].as_i64().unwrap() as i32;
         let fresh = || create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "reset-publication", DemoSnapshot { n: Some(initial) }, None);
         let mut store = ArtifactStore::new(fresh()).await;
-        store.install_member_store_owners_exact(demo_closable_store_owners());
+        store.install_document_store_owners_exact(demo_closable_store_owners());
         store.reset(fresh(), Vec::new(), Vec::new()).await.expect("empty-history reset");
         let (mut publication, receipt) = publish_demo_batch(&mut store, 41, vec![DemoMutation::SetN(SetN { n: after })], None).await;
         assert!(publication.acknowledge() || receipt.is_err());
@@ -3062,7 +3081,7 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
     // of the staged edit, and the oracle below must apply the very same list.
     let mutations = (0..ITEMS).map(|index| DemoMutation::SetN(SetN { n: index as i32 + 1 })).collect::<Vec<_>>();
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-gesture", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_member_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners());
     let generation = store.generation_now();
     let (mut publication, receipt) = publish_demo_batch(&mut store, 1, mutations.clone(), Some("one gesture".into())).await;
     let receipt = receipt.expect("a two-hundred item gesture publishes once");
@@ -3079,7 +3098,7 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
     close_durable_publication(&mut publication);
 
     let mut oracle = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-oracle", DemoSnapshot { n: Some(0) }, None)).await;
-    oracle.install_member_store_owners_exact(demo_closable_store_owners());
+    oracle.install_document_store_owners_exact(demo_closable_store_owners());
     oracle.dispatch(ArtifactCommand::Apply { mutations, description: Some("one gesture".into()) }).await.expect("the batched command oracle applies the same list");
     let expected = oracle.envelope.vcs.edits.last().expect("oracle edit");
     assert_eq!(staged.forwards, expected.forwards, "a staged gesture records the same forwards ArtifactCommand::Apply does");
@@ -3112,7 +3131,7 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_publication_of_one_mutation_is_the_single_item_case() {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-single", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_member_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners());
     let (mut publication, receipt) = publish_demo_batch(&mut store, 2, vec![DemoMutation::SetN(SetN { n: 7 })], None).await;
     receipt.expect("a single-item gesture publishes");
     assert_eq!(publication.admitted_items(), 1);
@@ -3139,7 +3158,7 @@ async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accep
     assert_eq!(ArtifactStoreOneItemFootprint::for_one_item(3, 512), ArtifactStoreOneItemFootprint { work_items: 4, retained_bytes: 512 });
 
     let mut under = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-under-declared", DemoSnapshot { n: Some(0) }, None)).await;
-    under.install_member_store_owners_exact(demo_closable_store_owners());
+    under.install_document_store_owners_exact(demo_closable_store_owners());
     let generation = under.generation_now();
     let (mut publication, receipt) = publish_demo_batch_with(&mut under, 7, vec![DemoMutation::SetN(SetN { n: 9 })], None, DemoOneItemPreparationFactory::under_declared()).await;
     assert_eq!(receipt.expect_err("a one-work-item declaration cannot carry a point-invertible item"), VcsError::ValidationFailed("batched item candidate failed its exact fixed fold contract".into()));
@@ -3151,7 +3170,7 @@ async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accep
     close_demo_artifact_store(&mut under);
 
     let mut exact = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-invertible", DemoSnapshot { n: Some(0) }, None)).await;
-    exact.install_member_store_owners_exact(demo_closable_store_owners());
+    exact.install_document_store_owners_exact(demo_closable_store_owners());
     let (mut publication, receipt) = publish_demo_batch_with(&mut exact, 8, vec![DemoMutation::SetN(SetN { n: 9 })], None, DemoOneItemPreparationFactory::admissible()).await;
     receipt.expect("the invertible declaration carries the same item");
     assert_eq!(exact.snapshot_ref().n, Some(9));
@@ -3183,7 +3202,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
     );
 
     let mut under = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-batch-under-declared", DemoSnapshot { n: Some(0) }, None)).await;
-    under.install_member_store_owners_exact(demo_closable_store_owners());
+    under.install_document_store_owners_exact(demo_closable_store_owners());
     let generation = under.generation_now();
     let (mut publication, receipt) = publish_demo_batch_with(&mut under, 9, mutations(), Some("under-declared gesture".into()), DemoOneItemPreparationFactory::under_declared()).await;
     assert_eq!(
@@ -3200,7 +3219,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
     close_demo_artifact_store(&mut under);
 
     let mut exact = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-batch-invertible", DemoSnapshot { n: Some(0) }, None)).await;
-    exact.install_member_store_owners_exact(demo_closable_store_owners());
+    exact.install_document_store_owners_exact(demo_closable_store_owners());
     let (mut publication, receipt) = publish_demo_batch_with(&mut exact, 10, mutations(), Some("under-declared gesture".into()), DemoOneItemPreparationFactory::admissible()).await;
     receipt.expect("the invertible declaration carries the same gesture");
     assert_eq!(exact.snapshot_ref().n, Some(ITEMS as i32));
@@ -3224,7 +3243,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_rejection_mid_batch_leaves_no_partial_edit_and_still_retires_exactly() {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-rejection", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_member_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners());
     let generation = store.generation_now();
     let revision = store.content_revision_now();
     let root = store.snapshot_root();
@@ -3248,7 +3267,7 @@ async fn artifact_store_batch_rejection_mid_batch_leaves_no_partial_edit_and_sti
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_without_publishing() {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-cancel", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_member_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners());
     let generation = store.generation_now();
     let root = store.snapshot_root();
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::admissible());
@@ -3273,7 +3292,7 @@ async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_witho
 async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for_next_publication() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔌️plugin/🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "cold-retained-rebase", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_member_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners());
     let capacity = store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity();
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 13 })], description: None }).await.unwrap();
     assert_eq!(store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity(), capacity);
@@ -3299,7 +3318,7 @@ async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_forged_cursor_history() {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-digest-authority", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_member_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners());
     let generation = store.generation_now();
     let revision = store.content_revision_now();
     let root = store.snapshot_root();
@@ -3332,7 +3351,7 @@ async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_fo
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_one_item_stale_saturation_and_cancel_leave_root_generation_and_revision_unchanged() {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-rejections", DemoSnapshot { n: Some(3) }, None)).await;
-    store.install_member_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners());
     let generation = store.generation_now();
     let revision = store.content_revision_now();
     let root = store.snapshot_root();
@@ -3514,7 +3533,7 @@ async fn presence_and_transient_one_item_publications_are_retained_stale_safe_ca
 #[should_panic(expected = "terminal-empty witness")]
 async fn artifact_store_one_item_drop_rejects_an_unclosed_publication_owner() {
     let store = Box::leak(Box::new(ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-drop", DemoSnapshot { n: Some(0) }, None)).await));
-    store.install_member_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners());
     let publication = store
         .begin_apply_batch(
             semio_framework_job::OperationId(10),
@@ -3804,7 +3823,7 @@ async fn canonical_runtime_seed_retains_duplicate_owners_and_preflights_before_b
 #[semio_framework_async_macros::async_test]
 async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
     let mut original = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "revision-aba", DemoSnapshot { n: Some(0) }, None)).await;
-    original.install_member_store_owners_exact(demo_closable_store_owners());
+    original.install_document_store_owners_exact(demo_closable_store_owners());
     for n in [1, 2, 3] {
         original.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], description: None }).await.expect("seed revision edit");
     }
@@ -3816,7 +3835,7 @@ async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
     changed.cursor = Some(ArtifactCursor::new(applied.clone(), Vec::new(), None));
 
     let mut loaded = ArtifactStore::new(changed).await;
-    loaded.install_member_store_owners_exact(demo_closable_store_owners());
+    loaded.install_document_store_owners_exact(demo_closable_store_owners());
     assert_eq!(original.snapshot().expect("original snapshot").n, loaded.snapshot().expect("loaded snapshot").n, "interior ABA keeps the same materialized endpoint");
     assert_ne!(original_revision, loaded.content_revision().await, "canonical identity must cover the changed interior edit, not only cursor endpoints");
 
@@ -3938,7 +3957,7 @@ async fn checkpoint_after_ingesting_a_remote_edit_stays_valid_once_the_sender_s_
 //#region 🔖️MergePolicyTests
 // 🎯️ `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6 acceptance —
 // two-peer merge-policy/conflict tests, written standalone (not depending on 1-D's
-// `📡️spr/🧪️testkit` `🔖️Laws` helpers landing first).
+// `📡️spr/🧫️fixtures` `🔖️Laws` helpers landing first).
 
 /// 🛰️ Builds a `MutationEnvelope` with an explicit HLC (bypassing wall-clock timing) so arrival
 /// order and HLC order can be controlled independently — the two-peer tests below need both.
@@ -4236,7 +4255,7 @@ async fn applied_edit_ids_stay_sorted_by_hlc_after_a_backdated_remote_insert() {
 //#region 🔖️TestkitLawWiring
 // 🎯️ G2 verification barrier (26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
 // CONFLICTS) — the tests above assert the same scenarios by hand; these route the SAME
-// scenarios through the frozen `📡️spr/🧪️testkit` `🔖️Merge`/`🔖️Conflict` law helpers so the
+// scenarios through the frozen `📡️spr/🧫️fixtures` `🔖️Merge`/`🔖️Conflict` law helpers so the
 // laws are proven to hold against this store's real `ingest_remote`/`resolve_conflict`/
 // `messages_for_edit`/`.spr` codec, not only against testkit's own synthetic self-tests.
 
@@ -4250,7 +4269,7 @@ async fn testkit_law_modify_vs_delete_holds_under_normal_and_vigilant() {
         let pre_merge = store.snapshot().expect("pre-merge snapshot");
         let report = store.ingest_remote(modify).await.expect("a policy rejection is a MergeReport, not an Err");
         let post_merge = store.snapshot().expect("post-merge snapshot");
-        crate::os_spr::testkit::assert_modify_vs_delete(policy, &pre_merge, &post_merge, &report, store.conflicts(), |snapshot: &DemoSnapshot| snapshot.n.is_some()).await;
+        crate::os_spr::protocol_laws::assert_modify_vs_delete(policy, &pre_merge, &post_merge, &report, store.conflicts(), |snapshot: &DemoSnapshot| snapshot.n.is_some()).await;
     }
 }
 
@@ -4263,14 +4282,14 @@ async fn testkit_law_modify_vs_delete_holds_under_laissez_faire() {
     let pre_merge = store.snapshot().expect("pre-merge snapshot");
     let report = store.ingest_remote(modify).await.expect("LaissezFaire only rejects Fatal");
     let post_merge = store.snapshot().expect("post-merge snapshot");
-    crate::os_spr::testkit::assert_modify_vs_delete(crate::os_spr::MergePolicy::LaissezFaire, &pre_merge, &post_merge, &report, store.conflicts(), |snapshot: &DemoSnapshot| snapshot.n.is_some()).await;
+    crate::os_spr::protocol_laws::assert_modify_vs_delete(crate::os_spr::MergePolicy::LaissezFaire, &pre_merge, &post_merge, &report, store.conflicts(), |snapshot: &DemoSnapshot| snapshot.n.is_some()).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn testkit_law_chronological_determinism_holds_for_a_real_modify_vs_delete_batch() {
     let (delete, modify) = modify_vs_delete_envelopes().await;
     let envelopes = [delete, modify];
-    crate::os_spr::testkit::assert_chronological_determinism(envelopes.len(), 7, 6, async |order| {
+    crate::os_spr::protocol_laws::assert_chronological_determinism(envelopes.len(), 7, 6, async |order| {
         let mut store = fresh_demo_store().await;
         for &index in order {
             store.ingest_remote(envelopes[index].clone()).await.expect("real store ingest must not hard-error even when the batch ends up quarantined");
@@ -4300,7 +4319,7 @@ async fn testkit_law_quarantine_accept_equals_laissez_faire_via_real_store() {
 
     let accepted_state = quarantined.snapshot().expect("accepted snapshot");
     let laissez_faire_state = laissez_faire.snapshot().expect("laissez-faire snapshot");
-    crate::os_spr::testkit::assert_quarantine_accept_equals_laissez_faire(&accepted_state, &laissez_faire_state).await;
+    crate::os_spr::protocol_laws::assert_quarantine_accept_equals_laissez_faire(&accepted_state, &laissez_faire_state).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -4319,7 +4338,7 @@ async fn testkit_law_quarantine_discard_preserves_state_via_real_store() {
     // applied` on the dag, never added to `applied_edit_ids`/`vcs.edits`, so it can never appear
     // here; this is the real set flush_outbound draws from, not a fabricated stand-in.
     let relayed = store.applied_edit_ids().to_vec();
-    crate::os_spr::testkit::assert_quarantine_discard_preserves_state(&pre_discard, &post_discard, std::slice::from_ref(&modify.mutation_id.0), &relayed).await;
+    crate::os_spr::protocol_laws::assert_quarantine_discard_preserves_state(&pre_discard, &post_discard, std::slice::from_ref(&modify.mutation_id.0), &relayed).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -4343,7 +4362,7 @@ async fn testkit_law_ledger_matches_replay_via_real_store() {
     replayed.insert(modify_edit_id.clone(), replay.messages_for_edit(&modify_edit_id).to_vec());
     assert!(!ledger[&modify_edit_id].is_empty(), "the modify edit must have raised a message for this law to be meaningful");
 
-    crate::os_spr::testkit::assert_ledger_matches_replay(&ledger, &replayed).await;
+    crate::os_spr::protocol_laws::assert_ledger_matches_replay(&ledger, &replayed).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -4366,7 +4385,7 @@ async fn testkit_law_conflict_spr_round_trip_via_real_store() {
         let parsed = parse_document_spr::<DemoSnapshot, DemoMutation>(&pack_bytes, bytes).await.expect("decode conflict via the real .spr codec");
         parsed.envelope.conflicts.first().cloned().expect("one conflict round-tripped")
     };
-    crate::os_spr::testkit::assert_conflict_spr_round_trip(&conflict, encode, decode).await;
+    crate::os_spr::protocol_laws::assert_conflict_spr_round_trip(&conflict, encode, decode).await;
 }
 //#endregion 🔖️TestkitLawWiring
 //#endregion 🔖️MergePolicyTests
@@ -5933,8 +5952,8 @@ impl OpBinary for SeverityMutation {
 impl MemberStoreOwner<SeverityMutation> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
-    fn member_store_owners() -> MemberStoreOwners<Self, SeverityMutation> {
-        MemberStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(DemoStoreOwnedDisposer::<SeverityMutation>(PhantomData)))
+    fn member_store_owners() -> DocumentStoreOwners<Self, SeverityMutation> {
+        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(DemoStoreOwnedDisposer::<SeverityMutation>(PhantomData)))
     }
 }
 
@@ -6972,8 +6991,8 @@ impl OpBinary for ValidatedMutation {
 impl MemberStoreOwner<ValidatedMutation> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
-    fn member_store_owners() -> MemberStoreOwners<Self, ValidatedMutation> {
-        MemberStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(DemoStoreOwnedDisposer::<ValidatedMutation>(PhantomData)))
+    fn member_store_owners() -> DocumentStoreOwners<Self, ValidatedMutation> {
+        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(DemoStoreOwnedDisposer::<ValidatedMutation>(PhantomData)))
     }
 }
 
@@ -7102,7 +7121,7 @@ async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer
     let mut missing = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: Some(1) }, None)).await;
     assert!(matches!(SpaceMember::close_owned_step(&mut missing, 1, 4_096), Err(reason) if reason.contains("no owner-supplied bounded disposer")));
 
-    missing.install_member_store_owners_exact(DemoSnapshot::member_store_owners());
+    missing.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
     assert!(matches!(SpaceMember::close_owned_step(&mut missing, 1, 4_096), Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= 4_096));
     assert!(missing.owned_disposer_installed(), "the admitted owner remains retained until terminal close");
     assert!(!SpaceMember::close_owned_terminal_is_empty(&missing));

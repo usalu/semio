@@ -3,11 +3,11 @@ use protocol::SemanticMutation;
 
 /// 🧭️ Every declared kind owns a leaf directory whose descriptor, payload schema and behaviour
 /// facets agree with the aggregate enum AND with the subset's language-neutral oracle catalog —
-/// which lives at `✳️any/🔮️oracle/🔣️.json`, never at a flat `🔣️oracle.json`.
+/// which lives at `✳️any/🔮️oracles/🔣️.json`, never at a flat `🔣️oracle.json`.
 #[test]
 fn direct_owner_descriptors_and_catalog_correspond() {
-    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
-    let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracle/🔣️.json")).expect("language-neutral oracle catalog");
+    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+    let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
     let catalog: pack::json::Value = pack::json::parse(&catalog_source).expect("language-neutral oracle catalog must be valid JSON");
     let catalog_kinds: Vec<String> = catalog["mutationCatalogs"][0]["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("catalog kind is a string").to_string()).collect();
     let descriptors = EnergyModelMutation::kinds();

@@ -23,7 +23,7 @@
 //! `WAL_MIGRATION` record via `db::wal::ArtifactWal` (force-flushed durably); `profile` submits `N`
 //! real commands sequentially through `ArtifactHandle::submit` and reports wall-clock throughput —
 //! both self-contained (bootstrap their own document/WAL if it doesn't exist yet), needing nothing
-//! from `db_testkit` (a separate, non-`db`-facade sibling crate this one deliberately does not
+//! from `db_fault_testing` (a separate, non-`db`-facade sibling crate this one deliberately does not
 //! depend on, to keep the "facade only" dependency footprint honest). `conflict-simulate` runs the
 //! genuine `db::conflict::ConflictDetector` over two hand-built `CommandTouch`es (no storage
 //! touched); `replica-simulate` runs the genuine `db::cluster::replicate_document` primitive between
@@ -1384,8 +1384,8 @@ async fn cmd_migrate(rest: &[String]) -> i32 {
 /// (`ArtifactHandle::submit`, actor-mediated, WAL group-commit and all) and reports wall-clock
 /// throughput/latency. Opens `document` if it already exists, else creates it first —
 /// self-contained, no separate seeding step required. Deliberately hand-timed with
-/// `std::time::Instant` rather than pulling in `db_testkit`'s `WorkloadGen`/criterion harness:
-/// `db_testkit` is a sibling crate, not part of the `db` facade's own re-export surface, and this
+/// `std::time::Instant` rather than pulling in `db_fault_testing`'s `WorkloadGen`/criterion harness:
+/// `db_fault_testing` is a sibling crate, not part of the `db` facade's own re-export surface, and this
 /// crate's dependency footprint is the `db` facade alone (see module doc).
 async fn cmd_profile(rest: &[String]) -> i32 {
     let (positional, flags) = parse_args(rest).await;

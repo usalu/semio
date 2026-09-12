@@ -1,7 +1,7 @@
 //! 🔗️ Sequence play app commands — connect/disconnect steps.
 
-use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
-use crate::editor::sequence::ops_from_host_mutation;
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use crate::editor::sequence::sequence_child_emit_from_host_mutation;
 use crate::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -18,10 +18,10 @@ pub mod connect_steps {
         pub target_node_id: String,
     }
 
-    pub fn handle(payload: &ConnectSteps, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        Ok(Emit::mutations(ops_from_host_mutation(doc.snapshot, |host| {
+    pub fn handle(payload: &ConnectSteps, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
+        sequence_child_emit_from_host_mutation(doc, |host| {
             let _ = host.connect_steps(&payload.source_node_id, &payload.target_node_id);
-        })))
+        })
     }
 }
 //#endregion 🔖️ConnectSteps
@@ -37,10 +37,10 @@ pub mod disconnect_steps {
         pub to_id: String,
     }
 
-    pub fn handle(payload: &DisconnectSteps, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        Ok(Emit::mutations(ops_from_host_mutation(doc.snapshot, |host| {
+    pub fn handle(payload: &DisconnectSteps, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
+        sequence_child_emit_from_host_mutation(doc, |host| {
             host.disconnect_steps(&payload.from_id, &payload.to_id);
-        })))
+        })
     }
 }
 //#endregion 🔖️DisconnectSteps

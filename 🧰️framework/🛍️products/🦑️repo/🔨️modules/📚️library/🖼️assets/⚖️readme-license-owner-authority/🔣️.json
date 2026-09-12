@@ -166,7 +166,7 @@
     "bun-public-package-ui-react": {
       "kind": "package-publication",
       "evidencePaths": [
-        "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
+        "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "expectedPackageName": "@semio-tech/ui-react",
       "private": false
@@ -798,10 +798,10 @@
       }
     },
     {
-      "sourcePath": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/README.md",
+      "sourcePath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/README.md",
       "ownerEvidenceId": "bun-public-package-ui-react",
       "disposition": "fixed",
-      "destinationPath": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/README.md",
+      "destinationPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/README.md",
       "fixedContractId": "bun-package-readme",
       "projectionContractId": null,
       "referenceOwnerIds": [
@@ -1266,10 +1266,10 @@
       }
     },
     {
-      "sourcePath": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/LICENSE.md",
+      "sourcePath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/LICENSE.md",
       "ownerEvidenceId": "bun-public-package-ui-react",
       "disposition": "fixed",
-      "destinationPath": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/LICENSE.md",
+      "destinationPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/LICENSE.md",
       "fixedContractId": "bun-package-license",
       "projectionContractId": null,
       "referenceOwnerIds": [

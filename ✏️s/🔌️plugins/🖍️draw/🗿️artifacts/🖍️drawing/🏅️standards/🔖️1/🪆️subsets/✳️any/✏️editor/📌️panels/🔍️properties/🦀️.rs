@@ -22,7 +22,7 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 /// ⚠️ Ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the per-selected-layer field
 /// groups (kind/orientation/appearance/layer, patchable via `patchLayers`) this panel used to build
-/// from `DrawingConfig::selected_ids` are deleted along with that field — selection is framework-owned
+/// from the removed app-config selection are deleted with that field — selection is framework-owned
 /// state now and the editor's `render(body_key, doc, cfg)` is never given an `InteractionView` (only
 /// `handle`/`copy_fragment`/`cut_operations` are). Documented reduced-fidelity gap, same shape as
 /// `📐️cad`'s `build_properties_panel` object/primitive branches

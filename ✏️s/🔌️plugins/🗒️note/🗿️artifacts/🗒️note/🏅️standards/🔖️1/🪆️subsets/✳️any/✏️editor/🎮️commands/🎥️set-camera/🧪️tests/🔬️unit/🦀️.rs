@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::note::commands::set_camera_zoom;
-use crate::editor::note::testkit::{dispatch, note_app, render};
+use crate::editor::note::unit_tests::context::{dispatch, note_app, render};
 use crate::editor::note::{NoteCommand, NOTE_PLAY_BODY_COMPOSITE};
 use crate::NoteCamera;
 
@@ -41,6 +41,6 @@ async fn camera_drag_never_creates_a_document_undo_step() {
         dispatch(&mut app, NoteCommand::SetCamera(SetCamera { camera: NoteCamera { x, y: 0.0, zoom: 1.0 } })).await;
     }
     assert!(render(&mut app, NOTE_PLAY_BODY_COMPOSITE).await.contains(r#"\"x\":3.0"#));
-    app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo (no-op: nothing on the document store to undo)");
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo (no-op: nothing on the document store to undo)");
     assert!(render(&mut app, NOTE_PLAY_BODY_COMPOSITE).await.contains(r#"\"x\":3.0"#), "document undo has nothing to revert — the drag never touched the document");
 }

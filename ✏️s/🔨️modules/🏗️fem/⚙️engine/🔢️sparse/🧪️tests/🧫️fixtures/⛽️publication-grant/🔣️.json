@@ -1,0 +1,116 @@
+{
+  "oracle": {
+    "package": "fast-json-patch",
+    "version": "3.1.1"
+  },
+  "cases": [
+    {
+      "kind": "checkpoint",
+      "fuel": 0,
+      "deadline": 1,
+      "expected": {
+        "pending": true,
+        "cursor": 0,
+        "fuelRemaining": 0,
+        "outcome": "yield",
+        "terminalEmpty": true
+      }
+    },
+    {
+      "kind": "checkpoint",
+      "fuel": 1,
+      "deadline": 0,
+      "expected": {
+        "pending": true,
+        "cursor": 0,
+        "fuelRemaining": 1,
+        "outcome": "yield",
+        "terminalEmpty": true
+      }
+    },
+    {
+      "kind": "checkpoint",
+      "fuel": 1,
+      "deadline": 1,
+      "expected": {
+        "pending": false,
+        "cursor": 0,
+        "fuelRemaining": 0,
+        "outcome": "checkpoint",
+        "terminalEmpty": true
+      }
+    },
+    {
+      "kind": "preview",
+      "fuel": 0,
+      "deadline": 1,
+      "expected": {
+        "pending": true,
+        "cursor": 0,
+        "fuelRemaining": 0,
+        "outcome": "yield",
+        "terminalEmpty": true
+      }
+    },
+    {
+      "kind": "preview",
+      "fuel": 1,
+      "deadline": 0,
+      "expected": {
+        "pending": true,
+        "cursor": 0,
+        "fuelRemaining": 1,
+        "outcome": "yield",
+        "terminalEmpty": true
+      }
+    },
+    {
+      "kind": "preview",
+      "fuel": 1,
+      "deadline": 1,
+      "expected": {
+        "pending": false,
+        "cursor": 0,
+        "fuelRemaining": 0,
+        "outcome": "preview",
+        "terminalEmpty": true
+      }
+    },
+    {
+      "kind": "complete",
+      "fuel": 0,
+      "deadline": 1,
+      "expected": {
+        "pending": true,
+        "cursor": 0,
+        "fuelRemaining": 0,
+        "outcome": "yield",
+        "terminalEmpty": true
+      }
+    },
+    {
+      "kind": "complete",
+      "fuel": 1,
+      "deadline": 0,
+      "expected": {
+        "pending": true,
+        "cursor": 0,
+        "fuelRemaining": 1,
+        "outcome": "yield",
+        "terminalEmpty": true
+      }
+    },
+    {
+      "kind": "complete",
+      "fuel": 1,
+      "deadline": 1,
+      "expected": {
+        "pending": true,
+        "cursor": 0,
+        "fuelRemaining": 0,
+        "outcome": "complete",
+        "terminalEmpty": true
+      }
+    }
+  ]
+}

@@ -55,6 +55,10 @@ test("the producer writes exactly declared nested paths and refuses symlink trav
 });
 
 test("the actual generated registry loads every declared manifest through its current paths", async () => {
+  const rustRegistry = new URL(`../../🤖️generated/${current.shared.rustRegistry}`, import.meta.url);
+  const rustReferences = [...readFileSync(rustRegistry, "utf8").matchAll(/#\[path = "([^"]+)"\]/gu)].map((match) => new URL(match[1]!, rustRegistry));
+  expect(rustReferences.map((url) => url.href).sort()).toEqual(current.manifests.map((row) => new URL(`../../🤖️generated/${row.rust}`, import.meta.url).href).sort());
+  for (const url of rustReferences) expect(readFileSync(url, "utf8").length).toBeGreaterThan(0);
   const registry = await import("../../🤖️generated/🟦️.ts");
   expect([...registry.MANIFEST_IDS].sort()).toEqual(current.manifests.map((row) => row.id).sort());
   for (const row of current.manifests) {

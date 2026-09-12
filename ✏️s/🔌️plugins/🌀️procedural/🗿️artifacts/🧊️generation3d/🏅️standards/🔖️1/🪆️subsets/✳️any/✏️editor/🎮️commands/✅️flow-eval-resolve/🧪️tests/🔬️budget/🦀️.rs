@@ -7,7 +7,7 @@
 //! (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`).
 
 use super::*;
-use crate::editor::generation3d::testkit::{empty_history_view, retire_flow_eval_session};
+use crate::editor::generation3d::unit_tests::context::{empty_history_view, retire_flow_eval_session};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect};
 
 const EVALUATE_BUDGET_FIXTURE_JSON: &str = include_str!("../../../../../🧫️fixtures/⏱️evaluate-budget.json");
@@ -87,7 +87,7 @@ fn observed_status(session: &FlowEvalSession) -> serde_json::Value {
 /// it arms, and the exact status the preview window publishes afterwards.
 #[test]
 fn the_evaluate_budget_envelope_obeys_its_fixture_end_to_end() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let fixture = fixture();
     assert_eq!(fixture.capability, "evaluate", "the budgeted capability");
     assert_eq!(fixture.cancel_capability, "evaluateCancel", "the door a cancel reaches a parked evaluation through");
@@ -183,7 +183,7 @@ fn every_declared_job_phase_tag_projects_to_its_declared_surface_phase() {
 /// monotonicity is a property of the sequence, not of any one answer.
 #[test]
 fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let fixture = fixture();
     let snapshot = Generation3dSnapshot::default();
     let history = empty_history_view();
@@ -257,7 +257,7 @@ fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
 /// mid-validation lives only in the first.
 #[test]
 fn the_cancel_gesture_reaches_the_evaluation_registry_too() {
-    let _serial = crate::editor::generation3d::test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let fixture = fixture();
     let mut session = FlowEvalSession::new();
     let payload = crate::preview_eval::CancelPreviewEval { window_id: BUDGET_WINDOW_ID.into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() };

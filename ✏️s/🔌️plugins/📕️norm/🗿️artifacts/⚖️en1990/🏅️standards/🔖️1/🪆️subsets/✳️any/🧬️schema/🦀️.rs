@@ -641,8 +641,8 @@ pub fn check_seismic_situation<A: NationalAnnex>(annex: &A, actions: &ActionSet,
 }
 //#endregion 🔖️ComplianceHelpers
 
-//#region 🧪️ComplianceHelpersTests
+//#region 🧪️ComplianceTests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️compliance-helpers/🦀️.rs"]
-mod compliance_helpers_tests;
-//#endregion 🧪️ComplianceHelpersTests
+#[path = "🧪️tests/⚖️compliance/🦀️.rs"]
+mod compliance_tests;
+//#endregion 🧪️ComplianceTests

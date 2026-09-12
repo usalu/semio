@@ -4641,8 +4641,8 @@ impl Drop for DrawingMutationCandidateAuthority {
     }
 }
 
-pub fn drawing_document_store_owners() -> store::MemberStoreOwners<DrawingSnapshot, DrawingMutation> {
-    store::MemberStoreOwners::new(
+pub fn drawing_document_store_owners() -> store::DocumentStoreOwners<DrawingSnapshot, DrawingMutation> {
+    store::DocumentStoreOwners::new(
         std::sync::Arc::new(DrawingSnapshotRetirementFactory),
         std::sync::Arc::new(DrawingSnapshotRetirementFactory),
         std::sync::Arc::new(DrawingMutationRetirementFactory),

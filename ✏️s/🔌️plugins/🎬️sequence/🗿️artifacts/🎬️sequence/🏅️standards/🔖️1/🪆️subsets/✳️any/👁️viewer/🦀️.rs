@@ -6,7 +6,7 @@
 
 use crate::viewer::sequence::modes::view;
 use crate::viewer::sequence::modes::view::windows::main;
-use crate::{default_snapshot, SequenceSnapshot, SEQUENCE_DIALECT, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::{SequenceSnapshot, SEQUENCE_DIALECT, SEQUENCE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     app::InteractionView, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ViewEmit, Viewer,
 };
@@ -50,8 +50,12 @@ impl ArtifactViewer for SequenceViewer {
     const DIALECT: Dialect = SEQUENCE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
 
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.child-projection"), error.to_string()))
+    }
+
     fn initial_snapshot() -> SequenceSnapshot {
-        default_snapshot()
+        crate::snapshot::schema::default_persisted_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `SequenceViewCommand::Noop` variant never carries a config
@@ -70,8 +74,17 @@ impl ArtifactViewer for SequenceViewer {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+        let child_id = &doc.snapshot.content.child_id;
+        let dialect = doc.children.dialect("content", child_id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("sequence.child-content", "published Sequence child dialect is missing"))?;
+        if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
+            return Err(semio_framework_plugin::PluginAssemblyError::new("sequence.child-content", "published Sequence child dialect is not s.stdio.semio@v1/flow"));
+        }
+        let content = doc.children.typed_read::<semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot>("content", child_id)
+            .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("sequence.child-content", format!("{error:?}")))?;
+        let (steps, edges) = crate::working_from_sequence_content_snapshot(&content);
+        let scene = neural_engine::ColdOwner::new(crate::SequenceWorkingScene { steps, edges });
         match body_key {
-            main::SEQUENCE_VIEW_BODY_MAIN => main::render(doc.snapshot),
+            main::SEQUENCE_VIEW_BODY_MAIN => main::render(&scene),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence viewer diagnostic admission failed")),
         }
         .map(semio_framework_plugin::built_to_component_tree)

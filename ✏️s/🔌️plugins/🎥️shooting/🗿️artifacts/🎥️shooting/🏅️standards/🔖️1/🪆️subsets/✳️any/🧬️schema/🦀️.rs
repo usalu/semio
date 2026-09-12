@@ -31,7 +31,7 @@ pub struct ShootingArtifact {
     pub active_asset_id: String,
     /// 🕸️ Composed `s.stdio.semio.image` child mirror — see `ShootingSnapshot::emblem`'s doc comment.
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.image")]
+    #[child(kind = "s.stdio.semio")]
     pub emblem: Option<ShootingEmblemChild>,
 }
 //#endregion 🔖️Artifact

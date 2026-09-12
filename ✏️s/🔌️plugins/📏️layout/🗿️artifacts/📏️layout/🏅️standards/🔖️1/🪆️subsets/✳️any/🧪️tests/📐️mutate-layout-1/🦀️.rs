@@ -12,7 +12,7 @@
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
 //! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none —
 //! so every law this case claims is asserted INSIDE the subject handler, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` module: `law::divergence` names the first divergence by
+//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module: `law::divergence` names the first divergence by
 //! JSON path, `law::mutation_is_observable` refuses a kind that moved nothing it is compared
 //! through, `law::inverse_restores` is the inverse law itself, and `law::round_trip_preserves` plus
 //! `law::carrier_is_exact` are the identity law's two halves. A handler that merely returned `Ok`

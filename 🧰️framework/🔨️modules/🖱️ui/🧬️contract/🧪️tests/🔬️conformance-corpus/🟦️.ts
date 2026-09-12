@@ -9,7 +9,7 @@ const packageRoot = fileURLToPath(new URL("../../📦️packages/🦀️rust/", 
 
 /** 🔍️ Validates the language-neutral corpus catalog with Ajv and exact filesystem ownership. */
 export function conformanceCorpusSelfTests(): number {
-  const root = join(packageRoot, "../../📚️examples/🧪️conformance");
+  const root = join(packageRoot, "../../🧫️fixtures/🧪️conformance");
   const catalog = JSON.parse(readFileSync(join(root, "📇️catalog.json"), "utf8")) as { version: number; roles: { snapshot: string; expect: string; patch: string }; groups: Record<string, { patch: boolean; cases: Record<string, string> }> };
   const Ajv = createRequire(import.meta.url)("ajv");
   const contractModule = JSON.parse(readFileSync(join(packageRoot, "../../🧬️schema/🔣️.json"), "utf8"));

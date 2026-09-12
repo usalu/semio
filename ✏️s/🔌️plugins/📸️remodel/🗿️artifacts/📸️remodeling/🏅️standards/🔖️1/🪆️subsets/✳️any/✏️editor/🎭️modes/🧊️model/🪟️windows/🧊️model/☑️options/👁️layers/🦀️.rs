@@ -3,7 +3,7 @@
 //! `ArtifactEditor::window_measures`, never frozen into the manifest (a manifest-frozen snapshot could not
 //! reflect a toggle the user just flipped).
 
-use crate::editor::remodeling::config::RemodelingLayerVisibility;
+use crate::editor::remodeling::modes::model::windows::model::config::RemodelingLayerVisibility;
 use crate::editor::remodeling::remodeling_window_action;
 use crate::editor::remodeling::terminology::RemodelingLabels;
 use semio_framework_plugin::{LabelText, WindowMeasure};

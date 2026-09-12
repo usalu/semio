@@ -14,13 +14,13 @@ use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValu
 #[artifact_schema(id = "s.mathematical.equation")]
 pub struct EquationArtifact {
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.text")]
+    #[child(kind = "s.stdio.semio")]
     pub notation: EquationNotationChild,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.table")]
+    #[child(kind = "s.stdio.semio")]
     pub results: EquationResultsChild,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.value")]
+    #[child(kind = "s.stdio.semio")]
     pub computed: EquationComputedChild,
     #[state(artifact)]
     pub equation: EquationExprSnapshot,

@@ -1,11 +1,17 @@
 syntax = "proto3";
 package semio.s.forms.forms.diff;
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+message FormsTitleChange {
+  oneof operation {
+    string value = 1;
+    bool clear = 2;
+  }
+}
 message FormsDiff {
   optional string schema = 1;
   optional string id = 2;
   optional string version = 3;
-  optional string title = 4;
+  FormsTitleChange title = 4;
   semio.os.store.ArtifactChild structure = 5;
   semio.os.store.ArtifactChild results = 6;
 }

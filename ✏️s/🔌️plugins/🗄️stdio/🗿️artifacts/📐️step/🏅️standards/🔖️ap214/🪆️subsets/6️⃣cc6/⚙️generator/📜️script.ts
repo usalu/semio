@@ -16,7 +16,7 @@
 // reviewed before it is committed.
 //
 //   bun 📜️script.ts generate [--out <dir>] [--only <fixture-id>]
-//   bun 📜️script.ts manifests                      # emit the fixtureManifests block for 🔮️oracle
+//   bun 📜️script.ts manifests                      # emit the fixtureManifests block for 🔮️oracles
 //
 // @see ../🔬️probes/📜️script.ts — the probes that measure what this generator produced
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️w4-brepjs-qualification.md

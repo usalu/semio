@@ -6,9 +6,13 @@
 //! projected problems and as the correctness oracle in this module's tests.
 
 use crate::algebra::{MatD, VecD};
+use replication::value::list::PagedList;
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, JobPayloadAdmissionFault, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter, StepBudget, StepContext, StepOutcome};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{BTreeMap, VecDeque};
+
+const SPARSE_INDEX_SPACE: usize = usize::MAX;
+const SPARSE_PAGE_BYTES: usize = 4096;
 
 fn encode_value<T: dsl::ToValue>(value: &T) -> Vec<u8> {
     store::pack_rt::encode_wire_value(&value.to_value())
@@ -32,6 +36,33 @@ fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<O
     }
     *owner = Vec::new();
     Ok(Some((1, bytes)))
+}
+
+fn close_paged_owner_step<T, const N: usize>(owner: &mut PagedList<T, N>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
+    if owner.pop().is_some() {
+        return Ok(Some((1, 0)));
+    }
+    let progress = owner.release_empty_page(maximum_bytes).map_err(|_| ())?;
+    if progress.progressed {
+        return Ok(Some((0, progress.released_allocation_bytes)));
+    }
+    if owner.terminal_is_empty() {
+        Ok(None)
+    } else {
+        Err(())
+    }
+}
+
+fn paged_from_values<T>(values: Vec<T>) -> PagedList<T, SPARSE_INDEX_SPACE> {
+    let target = values.len();
+    let mut owner = PagedList::default();
+    while owner.capacity() < target {
+        owner.reserve_capacity_one(target, SPARSE_PAGE_BYTES).expect("cold CSR page allocation");
+    }
+    for value in values {
+        owner.push_reserved(value).unwrap_or_else(|_| unreachable!("cold CSR reserved exact slot"));
+    }
+    owner
 }
 
 fn close_nested_vec_owner_step<T>(owner: &mut Vec<Vec<T>>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
@@ -111,7 +142,7 @@ impl Coo {
                 vals.push(v);
             }
         }
-        Csr { n, indptr, indices, vals }
+        Csr::from_owned_parts(n, indptr, indices, vals)
     }
 
     /// 🔺️ Keeps only entries where `col >= row` (upper triangle), grouped by the SMALLER index `j`
@@ -153,29 +184,72 @@ impl Coo {
 // #endregion 🔖️Coo
 
 // #region 🔖️Csr
-/// 🧮️ General compressed-sparse-row matrix — used for SpMV (PCG, residual checks).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-pub struct Csr {
-    pub n: usize,
+/// 🧮️ General compressed-sparse-row matrix with independent fixed physical pages for SpMV.
+#[derive(Clone, ToValue, FromValue)]
+struct CsrWire {
+    n: usize,
     indptr: Vec<u32>,
     indices: Vec<u32>,
     vals: Vec<f64>,
 }
 
+#[derive(Clone)]
+pub struct Csr {
+    pub n: usize,
+    indptr: PagedList<u32, SPARSE_INDEX_SPACE>,
+    indices: PagedList<u32, SPARSE_INDEX_SPACE>,
+    vals: PagedList<f64, SPARSE_INDEX_SPACE>,
+}
+
 impl Csr {
-    /// 🧵️ Adopts arrays prepared by the retained assembly cursor without another scan.
+    /// 🧊️ Moves cold contiguous inputs into fixed physical pages.
     pub(crate) fn from_owned_parts(n: usize, indptr: Vec<u32>, indices: Vec<u32>, vals: Vec<f64>) -> Self {
+        Self { n, indptr: paged_from_values(indptr), indices: paged_from_values(indices), vals: paged_from_values(vals) }
+    }
+
+    /// 📚️ Transfers retained paged arrays without a contiguous intermediate owner.
+    pub(crate) fn from_paged_parts(n: usize, indptr: PagedList<u32, SPARSE_INDEX_SPACE>, indices: PagedList<u32, SPARSE_INDEX_SPACE>, vals: PagedList<f64, SPARSE_INDEX_SPACE>) -> Self {
         Self { n, indptr, indices, vals }
     }
 
+    fn indptr(&self, index: usize) -> Option<u32> {
+        self.indptr.get(index).copied()
+    }
+
+    fn index(&self, index: usize) -> Option<u32> {
+        self.indices.get(index).copied()
+    }
+
+    fn value(&self, index: usize) -> Option<f64> {
+        self.vals.get(index).copied()
+    }
+
+    /// 🧮️ Returns the exact initialized compressed-entry count.
+    pub(crate) fn entries_len(&self) -> usize {
+        self.vals.len()
+    }
+
+    /// 🧱️ Reports row-pointer, column-index, and scalar physical backing independently.
+    pub(crate) fn physical_backing_bytes(&self) -> [usize; 3] {
+        [self.indptr.allocated_bytes(), self.indices.allocated_bytes(), self.vals.allocated_bytes()]
+    }
+
+    fn ownership_is_valid(&self) -> bool {
+        self.n.checked_add(1).is_some_and(|rows| self.indptr.len() == rows) && self.indices.len() == self.vals.len() && self.indptr(self.n) == u32::try_from(self.entries_len()).ok()
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.indptr.terminal_is_empty() && self.indices.terminal_is_empty() && self.vals.terminal_is_empty()
+    }
+
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        match close_vec_owner_step(&mut self.vals, maximum_bytes) {
+        match close_paged_owner_step(&mut self.vals, maximum_bytes) {
             Ok(Some((items, bytes))) => return (false, items, bytes),
             Err(()) => return (false, 0, 0),
             Ok(None) => {}
         }
         for owner in [&mut self.indices, &mut self.indptr] {
-            match close_vec_owner_step(owner, maximum_bytes) {
+            match close_paged_owner_step(owner, maximum_bytes) {
                 Ok(Some((items, bytes))) => return (false, items, bytes),
                 Err(()) => return (false, 0, 0),
                 Ok(None) => {}
@@ -187,11 +261,11 @@ impl Csr {
     pub fn mul_vec(&self, x: &VecD) -> VecD {
         let mut out = VecD::zeros(self.n);
         for row in 0..self.n {
-            let start = self.indptr[row] as usize;
-            let end = self.indptr[row + 1] as usize;
+            let start = self.indptr(row).expect("CSR row start") as usize;
+            let end = self.indptr(row + 1).expect("CSR row end") as usize;
             let mut sum = 0.0;
             for idx in start..end {
-                sum += self.vals[idx] * x.get(self.indices[idx] as usize);
+                sum += self.value(idx).expect("CSR value") * x.get(self.index(idx).expect("CSR column") as usize);
             }
             out.set(row, sum);
         }
@@ -201,15 +275,46 @@ impl Csr {
     pub fn diag(&self) -> VecD {
         let mut out = VecD::zeros(self.n);
         for row in 0..self.n {
-            let start = self.indptr[row] as usize;
-            let end = self.indptr[row + 1] as usize;
+            let start = self.indptr(row).expect("CSR row start") as usize;
+            let end = self.indptr(row + 1).expect("CSR row end") as usize;
             for idx in start..end {
-                if self.indices[idx] as usize == row {
-                    out.set(row, self.vals[idx]);
+                if self.index(idx).expect("CSR column") as usize == row {
+                    out.set(row, self.value(idx).expect("CSR value"));
                 }
             }
         }
         out
+    }
+}
+
+impl std::fmt::Debug for Csr {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("Csr")
+            .field("n", &self.n)
+            .field("indptr", &self.indptr.iter().copied().collect::<Vec<_>>())
+            .field("indices", &self.indices.iter().copied().collect::<Vec<_>>())
+            .field("vals", &self.vals.iter().copied().collect::<Vec<_>>())
+            .finish()
+    }
+}
+
+impl PartialEq for Csr {
+    fn eq(&self, other: &Self) -> bool {
+        self.n == other.n && self.indptr.iter().eq(other.indptr.iter()) && self.indices.iter().eq(other.indices.iter()) && self.vals.iter().eq(other.vals.iter())
+    }
+}
+
+impl dsl::ToValue for Csr {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::ToValue::to_value(&CsrWire { n: self.n, indptr: self.indptr.iter().copied().collect(), indices: self.indices.iter().copied().collect(), vals: self.vals.iter().copied().collect() })
+    }
+}
+
+impl dsl::FromValue for Csr {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let wire = <CsrWire as dsl::FromValue>::from_value(value)?;
+        Ok(Self::from_owned_parts(wire.n, wire.indptr, wire.indices, wire.vals))
     }
 }
 // #endregion 🔖️Csr
@@ -605,6 +710,30 @@ fn advance_u64_values(writer: &mut RetainedJobPayloadWriter, values: &[u64], cur
 }
 
 fn advance_f64_owner(writer: &mut RetainedJobPayloadWriter, values: &[f64], cursor: &mut NumericalPageCursor) -> Result<bool, JobPayloadAdmissionFault> {
+    if !advance_owner_length(writer, values.len(), cursor)? {
+        return Ok(false);
+    }
+    if let Some(value) = values.get(cursor.item) {
+        writer.write_staged(&value.to_bits().to_le_bytes())?;
+        cursor.item += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn advance_paged_u32_owner<const N: usize>(writer: &mut RetainedJobPayloadWriter, values: &PagedList<u32, N>, cursor: &mut NumericalPageCursor) -> Result<bool, JobPayloadAdmissionFault> {
+    if !advance_owner_length(writer, values.len(), cursor)? {
+        return Ok(false);
+    }
+    if let Some(value) = values.get(cursor.item) {
+        writer.write_staged(&value.to_le_bytes())?;
+        cursor.item += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn advance_paged_f64_owner<const N: usize>(writer: &mut RetainedJobPayloadWriter, values: &PagedList<f64, N>, cursor: &mut NumericalPageCursor) -> Result<bool, JobPayloadAdmissionFault> {
     if !advance_owner_length(writer, values.len(), cursor)? {
         return Ok(false);
     }
@@ -1247,6 +1376,62 @@ fn restore_f64_entry(owner: &mut Vec<f64>, page: &NumericalPageView<'_>, maximum
     }
     if item < length {
         owner.push(f64::from_bits(read_checkpoint_u64(page.bytes, 8 + item * 8)?));
+        *entry += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn restore_paged_u32_entry<const N: usize>(owner: &mut PagedList<u32, N>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
+    let length = declared_owner_length(page, maximum)?;
+    if page.item != 0 || page.bytes.len() != 8usize.saturating_add(length.saturating_mul(4)) {
+        return Err(NumericalCheckpointFault::Truncated);
+    }
+    if *entry == 0 {
+        if !owner.is_empty() {
+            return Err(NumericalCheckpointFault::Field);
+        }
+        owner.reserve_capacity_one(length, SPARSE_PAGE_BYTES).map_err(|_| NumericalCheckpointFault::Admission)?;
+        if owner.capacity() < length {
+            return Ok(false);
+        }
+        *entry = 1;
+        return Ok(false);
+    }
+    let item = *entry - 1;
+    if owner.len() != item {
+        return Err(NumericalCheckpointFault::Field);
+    }
+    if item < length {
+        owner.push_reserved(read_checkpoint_u32(page.bytes, 8 + item * 4)?).map_err(|_| NumericalCheckpointFault::Admission)?;
+        *entry += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn restore_paged_f64_entry<const N: usize>(owner: &mut PagedList<f64, N>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
+    let length = declared_owner_length(page, maximum)?;
+    if page.item != 0 || page.bytes.len() != 8usize.saturating_add(length.saturating_mul(8)) {
+        return Err(NumericalCheckpointFault::Truncated);
+    }
+    if *entry == 0 {
+        if !owner.is_empty() {
+            return Err(NumericalCheckpointFault::Field);
+        }
+        owner.reserve_capacity_one(length, SPARSE_PAGE_BYTES).map_err(|_| NumericalCheckpointFault::Admission)?;
+        if owner.capacity() < length {
+            return Ok(false);
+        }
+        *entry = 1;
+        return Ok(false);
+    }
+    let item = *entry - 1;
+    if owner.len() != item {
+        return Err(NumericalCheckpointFault::Field);
+    }
+    if item < length {
+        owner.push_reserved(f64::from_bits(read_checkpoint_u64(page.bytes, 8 + item * 8)?)).map_err(|_| NumericalCheckpointFault::Admission)?;
         *entry += 1;
         return Ok(false);
     }
@@ -1922,17 +2107,22 @@ impl PcgJob {
     /// 🧹️ Retires one matrix/vector scalar owner per governed close opportunity.
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         loop {
+            if self.close_lane == 0 {
+                let (terminal, items, bytes) = self.state.a.close_step(maximum_bytes);
+                if !terminal {
+                    return (false, items, bytes);
+                }
+                self.close_lane = 1;
+                continue;
+            }
             let step = match self.close_lane {
-                0 => close_vec_owner_step(&mut self.state.a.vals, maximum_bytes),
-                1 => close_vec_owner_step(&mut self.state.a.indices, maximum_bytes),
-                2 => close_vec_owner_step(&mut self.state.a.indptr, maximum_bytes),
-                3 => close_vec_owner_step(&mut self.state.b.0, maximum_bytes),
-                4 => close_vec_owner_step(&mut self.state.x.0, maximum_bytes),
-                5 => close_vec_owner_step(&mut self.state.diag.0, maximum_bytes),
-                6 => close_vec_owner_step(&mut self.state.r.0, maximum_bytes),
-                7 => close_vec_owner_step(&mut self.state.z.0, maximum_bytes),
-                8 => close_vec_owner_step(&mut self.state.p.0, maximum_bytes),
-                9 => close_vec_owner_step(&mut self.state.ap.0, maximum_bytes),
+                1 => close_vec_owner_step(&mut self.state.b.0, maximum_bytes),
+                2 => close_vec_owner_step(&mut self.state.x.0, maximum_bytes),
+                3 => close_vec_owner_step(&mut self.state.diag.0, maximum_bytes),
+                4 => close_vec_owner_step(&mut self.state.r.0, maximum_bytes),
+                5 => close_vec_owner_step(&mut self.state.z.0, maximum_bytes),
+                6 => close_vec_owner_step(&mut self.state.p.0, maximum_bytes),
+                7 => close_vec_owner_step(&mut self.state.ap.0, maximum_bytes),
                 _ => return (true, 0, 0),
             };
             match step {
@@ -1946,7 +2136,7 @@ impl PcgJob {
     fn reset_spmv(&mut self, stage: PcgStage) {
         self.state.stage = stage;
         self.state.row_cursor = 0;
-        self.state.entry_cursor = self.state.a.indptr.first().copied().unwrap_or(0) as usize;
+        self.state.entry_cursor = self.state.a.indptr(0).unwrap_or(0) as usize;
         self.state.row_sum = 0.0;
         self.state.dot_accum = 0.0;
     }
@@ -1959,16 +2149,16 @@ impl PcgJob {
     fn step_diagonal(&mut self, context: &mut StepContext<'_>, units: &mut usize) {
         while self.state.row_cursor < self.state.a.n && *units < self.state.batch_units && !context.should_yield() && !context.is_cancelled() {
             let row = self.state.row_cursor;
-            let end = self.state.a.indptr[row + 1] as usize;
+            let end = self.state.a.indptr(row + 1).expect("PCG diagonal row end") as usize;
             if self.state.entry_cursor < end {
                 let entry = self.state.entry_cursor;
-                if self.state.a.indices[entry] as usize == row {
-                    self.state.diag.set(row, self.state.a.vals[entry]);
+                if self.state.a.index(entry).expect("PCG diagonal column") as usize == row {
+                    self.state.diag.set(row, self.state.a.value(entry).expect("PCG diagonal value"));
                 }
                 self.state.entry_cursor += 1;
             } else {
                 self.state.row_cursor += 1;
-                self.state.entry_cursor = self.state.a.indptr[self.state.row_cursor.min(self.state.a.n)] as usize;
+                self.state.entry_cursor = self.state.a.indptr(self.state.row_cursor.min(self.state.a.n)).expect("PCG diagonal next row") as usize;
             }
             *units += 1;
             context.consume_fuel(1);
@@ -1981,12 +2171,12 @@ impl PcgJob {
     fn step_spmv(&mut self, context: &mut StepContext<'_>, units: &mut usize, initial: bool) {
         while self.state.row_cursor < self.state.a.n && *units < self.state.batch_units && !context.should_yield() && !context.is_cancelled() {
             let row = self.state.row_cursor;
-            let end = self.state.a.indptr[row + 1] as usize;
+            let end = self.state.a.indptr(row + 1).expect("PCG SpMV row end") as usize;
             if self.state.entry_cursor < end {
                 let entry = self.state.entry_cursor;
-                let col = self.state.a.indices[entry] as usize;
+                let col = self.state.a.index(entry).expect("PCG SpMV column") as usize;
                 let value = if initial { self.state.x.get(col) } else { self.state.p.get(col) };
-                self.state.row_sum += self.state.a.vals[entry] * value;
+                self.state.row_sum += self.state.a.value(entry).expect("PCG SpMV value") * value;
                 self.state.entry_cursor += 1;
             } else {
                 self.state.ap.set(row, self.state.row_sum);
@@ -1995,7 +2185,7 @@ impl PcgJob {
                 }
                 self.state.row_sum = 0.0;
                 self.state.row_cursor += 1;
-                self.state.entry_cursor = self.state.a.indptr[self.state.row_cursor.min(self.state.a.n)] as usize;
+                self.state.entry_cursor = self.state.a.indptr(self.state.row_cursor.min(self.state.a.n)).expect("PCG SpMV next row") as usize;
             }
             *units += 1;
             context.consume_fuel(1);
@@ -2204,15 +2394,15 @@ impl ModalInputConstruction {
                 if self.row == n {
                     self.stage = ModalInputStage::ReserveColptr;
                 } else {
-                    let end = matrix.indptr[self.row + 1] as usize;
+                    let end = matrix.indptr(self.row + 1).ok_or(b"modal-input-row-end" as &'static [u8])? as usize;
                     if self.entry < end {
-                        if matrix.indices[self.entry] as usize >= self.row {
+                        if matrix.index(self.entry).ok_or(b"modal-input-column" as &'static [u8])? as usize >= self.row {
                             self.upper_count = self.upper_count.checked_add(1).ok_or(b"modal-input-upper-overflow" as &'static [u8])?;
                         }
                         self.entry += 1;
                     } else {
                         self.row += 1;
-                        self.entry = matrix.indptr.get(self.row).copied().unwrap_or(0) as usize;
+                        self.entry = matrix.indptr(self.row).unwrap_or(0) as usize;
                     }
                 }
             }
@@ -2235,18 +2425,18 @@ impl ModalInputConstruction {
                 if self.row == n {
                     self.stage = ModalInputStage::ReserveMassIndptr;
                 } else {
-                    let end = matrix.indptr[self.row + 1] as usize;
+                    let end = matrix.indptr(self.row + 1).ok_or(b"modal-input-row-end" as &'static [u8])? as usize;
                     if self.entry < end {
-                        let column = matrix.indices[self.entry] as usize;
+                        let column = matrix.index(self.entry).ok_or(b"modal-input-column" as &'static [u8])? as usize;
                         if column >= self.row {
                             self.rowind.push(column as u32);
-                            self.values.push(matrix.vals[self.entry]);
+                            self.values.push(matrix.value(self.entry).ok_or(b"modal-input-value" as &'static [u8])?);
                         }
                         self.entry += 1;
                     } else {
                         self.colptr.push(self.rowind.len() as u32);
                         self.row += 1;
-                        self.entry = matrix.indptr.get(self.row).copied().unwrap_or(0) as usize;
+                        self.entry = matrix.indptr(self.row).unwrap_or(0) as usize;
                     }
                 }
             }
@@ -2592,22 +2782,11 @@ impl InteractiveJob for PcgJob {
             return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
         }
         context.set_stage("fem.pcg");
-        let mut units = 0;
-        while units < self.state.batch_units && !context.should_yield() && self.state.stage != PcgStage::Complete {
-            match self.state.stage {
-                PcgStage::InitializeDiagonal => self.step_diagonal(context, &mut units),
-                PcgStage::InitialSpmv => self.step_spmv(context, &mut units, true),
-                PcgStage::InitialResidual => self.step_initial_residual(context, &mut units),
-                PcgStage::InitialPrecondition => self.step_precondition(context, &mut units, true),
-                PcgStage::IterationSpmv => self.step_spmv(context, &mut units, false),
-                PcgStage::IterationUpdate => self.step_update(context, &mut units),
-                PcgStage::IterationPrecondition => self.step_precondition(context, &mut units, false),
-                PcgStage::IterationDirection => self.step_direction(context, &mut units),
-                PcgStage::Complete => {}
-            }
-            if context.is_cancelled() {
-                return StepOutcome::Cancelled;
-            }
+        if context.should_yield() {
+            return StepOutcome::Yield;
+        }
+        if self.state.stage == PcgStage::Complete || self.state.preview_due || self.state.checkpoint_due {
+            context.consume_fuel(1);
         }
         if self.state.stage == PcgStage::Complete {
             let bytes = encode_value(&self.preview());
@@ -2632,6 +2811,23 @@ impl InteractiveJob for PcgJob {
                 Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
             };
         }
+        let mut units = 0;
+        while units < self.state.batch_units && !context.should_yield() && self.state.stage != PcgStage::Complete && !self.state.preview_due && !self.state.checkpoint_due {
+            match self.state.stage {
+                PcgStage::InitializeDiagonal => self.step_diagonal(context, &mut units),
+                PcgStage::InitialSpmv => self.step_spmv(context, &mut units, true),
+                PcgStage::InitialResidual => self.step_initial_residual(context, &mut units),
+                PcgStage::InitialPrecondition => self.step_precondition(context, &mut units, true),
+                PcgStage::IterationSpmv => self.step_spmv(context, &mut units, false),
+                PcgStage::IterationUpdate => self.step_update(context, &mut units),
+                PcgStage::IterationPrecondition => self.step_precondition(context, &mut units, false),
+                PcgStage::IterationDirection => self.step_direction(context, &mut units),
+                PcgStage::Complete => {}
+            }
+            if context.is_cancelled() {
+                return StepOutcome::Cancelled;
+            }
+        }
         StepOutcome::Yield
     }
 
@@ -2650,7 +2846,7 @@ impl InteractiveJob for PcgJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.close_lane > 9
+        self.close_lane == 8
     }
 }
 
@@ -2662,10 +2858,27 @@ pub fn pcg(a: &Csr, b: &VecD, x0: &mut VecD, tol_rel: f64, max_iter: usize) -> P
     let mut preview_sequence = 0;
     loop {
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut preview_sequence);
-        if matches!(job.step(&mut context), StepOutcome::Complete(_)) {
-            let (solution, stats) = job.solution();
-            *x0 = solution.clone();
-            return stats;
+        match job.step(&mut context) {
+            StepOutcome::Complete(candidate) => {
+                close_batch_payload(candidate.state);
+                close_batch_payload(candidate.output);
+                let (solution, stats) = job.solution();
+                *x0 = solution.clone();
+                while !job.terminal_is_empty() { let _ = job.close_step(usize::MAX); }
+                return stats;
+            }
+            StepOutcome::CheckpointReady(checkpoint) => close_batch_payload(checkpoint.state),
+            StepOutcome::PreviewReady(preview) => close_batch_payload(preview),
+            StepOutcome::Fault(fault) => {
+                close_batch_payload(fault.detail);
+                while !job.terminal_is_empty() { let _ = job.close_step(usize::MAX); }
+                panic!("PCG batch execution faulted");
+            }
+            StepOutcome::Cancelled => {
+                while !job.terminal_is_empty() { let _ = job.close_step(usize::MAX); }
+                panic!("PCG batch execution cancelled");
+            }
+            StepOutcome::Yield => {}
         }
     }
 }
@@ -2939,10 +3152,7 @@ pub struct SubspaceIterationJob {
 impl SubspaceIterationJob {
     pub fn new(operation: Operation, k_factor: LdltFactor, b: Csr, n: usize, p: usize, max_iter: usize) -> Self {
         let factor_pages_valid = k_factor.l_cols.capacity().saturating_mul(size_of::<Vec<(u32, f64)>>()) <= NUMERICAL_OWNER_PAGE_BYTES;
-        let sparse_pages_valid = b.indptr.capacity().saturating_mul(size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
-            && b.indices.capacity().saturating_mul(size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
-            && b.vals.capacity().saturating_mul(size_of::<f64>()) <= NUMERICAL_OWNER_PAGE_BYTES;
-        let admission_fault = n == 0 || p == 0 || p > n || b.n != n || k_factor.n != n || n > SUBSPACE_MAXIMUM_ORDER || !factor_pages_valid || !sparse_pages_valid;
+        let admission_fault = n == 0 || p == 0 || p > n || b.n != n || k_factor.n != n || n > SUBSPACE_MAXIMUM_ORDER || !factor_pages_valid || !b.ownership_is_valid();
         let m = if admission_fault { 0 } else { (p + 8).max(2 * p).min(n).max(1) };
         Self {
             operation,
@@ -3086,9 +3296,9 @@ impl SubspaceIterationJob {
             1 => advance_owner_length(writer, state.k_factor.l_cols.len(), cursor)?,
             field if field >= 2 && field < 2 + state.n as u16 => advance_pair_owner(writer, &state.k_factor.l_cols[(field - 2) as usize], cursor)?,
             514 => advance_f64_owner(writer, &state.k_factor.d, cursor)?,
-            515 => advance_u32_owner(writer, &state.b.indptr, cursor)?,
-            516 => advance_u32_owner(writer, &state.b.indices, cursor)?,
-            517 => advance_f64_owner(writer, &state.b.vals, cursor)?,
+            515 => advance_paged_u32_owner(writer, &state.b.indptr, cursor)?,
+            516 => advance_paged_u32_owner(writer, &state.b.indices, cursor)?,
+            517 => advance_paged_f64_owner(writer, &state.b.vals, cursor)?,
             518 => advance_matrix_owner(writer, &state.x, cursor)?,
             519 => advance_f64_owner(writer, &state.prev_theta, cursor)?,
             520 => advance_f64_owner(writer, &state.final_theta, cursor)?,
@@ -3348,13 +3558,13 @@ impl SubspaceIterationJob {
             return;
         }
         let row = work.second;
-        let start = self.state.b.indptr[row] as usize;
-        let end = self.state.b.indptr[row + 1] as usize;
+        let start = self.state.b.indptr(row).expect("subspace row start") as usize;
+        let end = self.state.b.indptr(row + 1).expect("subspace row end") as usize;
         if work.third < end.saturating_sub(start) {
             let index = start + work.third;
-            let source_row = self.state.b.indices[index] as usize;
+            let source_row = self.state.b.index(index).expect("subspace column") as usize;
             let source = if using_basis { work.solved.get(source_row, work.first) } else { self.state.x.get(source_row, work.first) };
-            work.scalar += self.state.b.vals[index] * source;
+            work.scalar += self.state.b.value(index).expect("subspace value") * source;
             work.third += 1;
             return;
         }
@@ -3999,19 +4209,16 @@ impl SubspaceIterationJob {
             Err(()) => return (false, 0, 0),
             Ok(None) => {}
         }
-        for owner in [&mut self.state.k_factor.d, &mut self.state.b.vals, &mut self.state.x.data, &mut self.state.prev_theta, &mut self.state.final_theta, &mut self.state.residuals] {
+        for owner in [&mut self.state.k_factor.d, &mut self.state.x.data, &mut self.state.prev_theta, &mut self.state.final_theta, &mut self.state.residuals] {
             match close_vec_owner_step(owner, maximum_bytes) {
                 Ok(Some((items, bytes))) => return (false, items, bytes),
                 Err(()) => return (false, 0, 0),
                 Ok(None) => {}
             }
         }
-        for owner in [&mut self.state.b.indices, &mut self.state.b.indptr] {
-            match close_vec_owner_step(owner, maximum_bytes) {
-                Ok(Some((items, bytes))) => return (false, items, bytes),
-                Err(()) => return (false, 0, 0),
-                Ok(None) => {}
-            }
+        let (matrix_terminal, matrix_items, matrix_bytes) = self.state.b.close_step(maximum_bytes);
+        if !matrix_terminal {
+            return (false, matrix_items, matrix_bytes);
         }
         let (terminal, items, bytes) = self.state.work.close_step(maximum_bytes);
         if !terminal {
@@ -4031,9 +4238,7 @@ impl SubspaceIterationJob {
     fn close_terminal_is_empty(&self) -> bool {
         self.state.k_factor.l_cols.capacity() == 0
             && self.state.k_factor.d.capacity() == 0
-            && self.state.b.vals.capacity() == 0
-            && self.state.b.indices.capacity() == 0
-            && self.state.b.indptr.capacity() == 0
+            && self.state.b.terminal_is_empty()
             && self.state.x.data.capacity() == 0
             && self.state.prev_theta.capacity() == 0
             && self.state.final_theta.capacity() == 0
@@ -4204,7 +4409,7 @@ impl SubspaceRestoreCursor {
             self.state = Some(SubspaceCheckpoint {
                 identity,
                 k_factor: LdltFactor { n, l_cols: Vec::new(), d: Vec::new() },
-                b: Csr { n, indptr: Vec::new(), indices: Vec::new(), vals: Vec::new() },
+                b: Csr::from_owned_parts(n, Vec::new(), Vec::new(), Vec::new()),
                 n,
                 p,
                 max_iter: value(6) as usize,
@@ -4255,9 +4460,9 @@ impl SubspaceRestoreCursor {
             }
             field if field >= 2 && field < 2 + n as u16 => restore_pair_entry(&mut state.k_factor.l_cols[(field - 2) as usize], &page, n, &mut self.page_entry)?,
             514 => restore_f64_entry(&mut state.k_factor.d, &page, n, &mut self.page_entry)?,
-            515 => restore_u32_entry(&mut state.b.indptr, &page, n + 1, &mut self.page_entry)?,
-            516 => restore_u32_entry(&mut state.b.indices, &page, n.saturating_mul(n), &mut self.page_entry)?,
-            517 => restore_f64_entry(&mut state.b.vals, &page, n.saturating_mul(n), &mut self.page_entry)?,
+            515 => restore_paged_u32_entry(&mut state.b.indptr, &page, n + 1, &mut self.page_entry)?,
+            516 => restore_paged_u32_entry(&mut state.b.indices, &page, n.saturating_mul(n), &mut self.page_entry)?,
+            517 => restore_paged_f64_entry(&mut state.b.vals, &page, n.saturating_mul(n), &mut self.page_entry)?,
             518 => restore_matrix_entry(&mut state.x, &page, n.saturating_mul(m), &mut self.page_entry)?,
             519 => restore_f64_entry(&mut state.prev_theta, &page, state.p, &mut self.page_entry)?,
             520 => restore_f64_entry(&mut state.final_theta, &page, m, &mut self.page_entry)?,
@@ -4396,15 +4601,14 @@ impl SubspaceRestoreCursor {
         if let Ok(Some((released_items, released_bytes))) = close_nested_vec_owner_step(&mut state.k_factor.l_cols, maximum_bytes) {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
         }
-        for owner in [&mut state.k_factor.d, &mut state.b.vals, &mut state.x.data, &mut state.prev_theta, &mut state.final_theta, &mut state.residuals] {
+        for owner in [&mut state.k_factor.d, &mut state.x.data, &mut state.prev_theta, &mut state.final_theta, &mut state.residuals] {
             if let Ok(Some((released_items, released_bytes))) = close_vec_owner_step(owner, maximum_bytes) {
                 return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
             }
         }
-        for owner in [&mut state.b.indices, &mut state.b.indptr] {
-            if let Ok(Some((released_items, released_bytes))) = close_vec_owner_step(owner, maximum_bytes) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-            }
+        let (matrix_terminal, released_items, released_bytes) = state.b.close_step(maximum_bytes);
+        if !matrix_terminal {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
         }
         self.state = None;
         semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
@@ -4611,11 +4815,11 @@ impl InteractiveJob for SubspaceIterationJob {
             SubspaceStage::OrthogonalizePairElement => {
                 self.advance_orthogonalize();
                 Ok(())
-            },
+            }
             SubspaceStage::NormalizeColumnElement => {
                 self.advance_normalize();
                 Ok(())
-            },
+            }
             SubspaceStage::ProjectedMatrixCellEntry => {
                 self.advance_projected();
                 Ok(())

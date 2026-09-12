@@ -4,7 +4,7 @@
 //! surface crate's scale table, and reused by the inspector panel's matching field and by the
 //! manifest's `setLodMode` arg schema.
 
-use crate::editor::gis2d::config::Gis2dConfig;
+use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use crate::editor::gis2d::gis2d_window_action;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use semio_framework_plugin::{ActionArgOption, LocalizedLabel, MeasureSelectItem, WindowMeasure};
@@ -39,7 +39,7 @@ pub fn lod_arg_options() -> Vec<ActionArgOption> {
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Option
-pub fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
+pub fn measure(cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
     WindowMeasure::Select {
         id: GIS2D_LOD_MODE_MEASURE_ID.into(),
         label: Some(labels.lod_mode.into()),

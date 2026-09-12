@@ -149,6 +149,9 @@ impl MemberOpenRequest {
     pub fn generation(&self) -> Generation {
         self.generation
     }
+    pub fn expires_at_us(&self) -> u64 {
+        self.expires_at_us
+    }
     pub fn retained_input_bytes(&self) -> usize {
         self.pages.as_ref().map_or(0, OwnedSchemaDecodePages::byte_count) + self.closing_bytes
     }
@@ -353,6 +356,22 @@ crate::artifact_retire_struct!(crate::os_spr::HistoryChange { id, saved_at, edit
 crate::artifact_retire_struct!(crate::os_spr::HistoryCheckpoint { id, timestamp, change_ids, parent_id, authors, message });
 crate::artifact_retire_struct!(crate::os_spr::HistoryAuthor { id, name });
 crate::artifact_retire_struct!(crate::os_spr::HistoryAlternative { id, name, checkpoint_ids });
+crate::artifact_retire_leaf!(crate::os_dsl::Severity);
+impl super::retirement::RetireOwned for crate::os_dsl::FaultCode {
+    fn retirement(self) -> Box<dyn super::retirement::RetirementCursor> {
+        super::retirement::RetireOwned::retirement(self.0)
+    }
+}
+crate::artifact_retire_struct!(crate::os_spr::MutationMessage { level, code, message, target, op_index });
+crate::artifact_retire_struct!(crate::os_spr::EditMessages { edit_id, messages });
+
+fn decode_history_mutation_meta(meta: crate::os_spr::HistoryOpMeta) -> Result<(crate::MutationMeta, Vec<crate::MutationMessage>), String> {
+    super::mutation_meta_from_history_op_meta(meta)
+}
+
+fn decode_history_conflict(conflict: crate::os_spr::history::HistoryConflict) -> Result<crate::os_spr::Conflict, String> {
+    super::conflict_from_history_conflict(conflict)
+}
 
 impl super::retirement::RetireOwned for crate::os_spr::MutationOrigin {
     fn retirement(self) -> Box<dyn super::retirement::RetirementCursor> {
@@ -370,7 +389,7 @@ where
     M: Clone + super::ToValue + super::FromValue + super::Mutation<P>,
 {
     request: ManuallyDrop<Option<MemberOpenRequest>>,
-    owners: ManuallyDrop<Option<super::MemberStoreOwners<P, M>>>,
+    owners: ManuallyDrop<Option<super::DocumentStoreOwners<P, M>>>,
     history: ManuallyDrop<Option<crate::os_spr::HistoryLog>>,
     initial: ManuallyDrop<Option<P>>,
     pending_edit: ManuallyDrop<Option<super::Edit<M>>>,
@@ -386,7 +405,7 @@ where
     P: Clone + super::ToValue + super::FromValue + Send + 'static,
     M: Clone + super::ToValue + super::FromValue + super::Mutation<P> + Send + 'static,
 {
-    pub(super) fn new(request: MemberOpenRequest, owners: super::MemberStoreOwners<P, M>) -> Self {
+    pub(super) fn new(request: MemberOpenRequest, owners: super::DocumentStoreOwners<P, M>) -> Self {
         Self {
             request: ManuallyDrop::new(Some(request)),
             owners: ManuallyDrop::new(Some(owners)),

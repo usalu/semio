@@ -17,13 +17,13 @@ pub struct SemioKitArtifact {
     #[state(artifact)]
     pub designs: Vec<SemioKitDesign>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.object")]
+    #[child(kind = "s.stdio.semio")]
     pub objects: Vec<store::ArtifactChild<SemioObjectSnapshot>>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.model")]
+    #[child(kind = "s.stdio.semio")]
     pub models: Vec<store::ArtifactChild<SemioModelSnapshot>>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.value")]
+    #[child(kind = "s.stdio.semio")]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
     #[state(artifact)]
     #[link_slot(roles("representation"))]

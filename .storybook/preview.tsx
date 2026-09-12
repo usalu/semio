@@ -1,5 +1,5 @@
 // #region 🧲️Header
-// 💻️ .storybook/preview.ts
+// 💻️ .storybook/preview.tsx
 // Specs: Reuse the shared UI appearance and level decorators for the root monorepo Storybook.
 // Summary: Defines global Storybook preview parameters; loads CSS stacks only when any scope is active; provides the decorator toolkit (level, appearance, locale, terminology, theme, renderer-port swap, wasm gate).
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -13,7 +13,7 @@ declare const __STORYBOOK_ACTIVE_SCOPES__: string[];
 
 //#region 🔖️ScopeStyles
 if (__STORYBOOK_ACTIVE_SCOPES__.length > 0) {
-  await import("./globals.css");
+  await import("./🎨️styling/🎨️.css");
 }
 /** @emoji 🎯️ True when `prefix` is (a prefix of) an active `STORYBOOK_SCOPE` — for stories/decorators that gate behavior by scope. */
 export function storybookScopeActive(prefix: string): boolean {

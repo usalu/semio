@@ -25,7 +25,7 @@
 //! `apply(inverse(m), apply(m, base)) == base` stays with the production `inverse()` implementation
 //! and the per-leaf fixture tests that already exercise it.
 //!
-//! @see ../../../../../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs — the shared law helpers.
+//! @see ../../../../../../../../../🗄️stdio/🔮️oracles/⚖️law/🦀️.rs — the shared law helpers.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
@@ -37,7 +37,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 /// implicit `🦀️component/` child directory.
 #[path = "."]
 mod shared {
-    #[path = "../../../../../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs"]
+    #[path = "../../../../../../../../../🗄️stdio/🔮️oracles/⚖️law/🦀️.rs"]
     pub mod law;
 }
 use shared::law;

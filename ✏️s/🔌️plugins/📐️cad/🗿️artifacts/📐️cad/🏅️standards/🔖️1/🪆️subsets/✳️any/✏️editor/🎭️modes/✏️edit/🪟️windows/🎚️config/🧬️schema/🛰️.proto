@@ -1,0 +1,47 @@
+syntax = "proto3";
+package semio.app.cad.cad.world_window_config;
+
+message CadWorldProjection {
+  string kind = 1;
+  string orthographic_view = 2;
+  string axonometric_variant = 3;
+  double axonometric_angle_a = 4;
+  double axonometric_angle_b = 5;
+  string axonometric_quadrant = 6;
+  string oblique_variant = 7;
+  double oblique_angle = 8;
+  double oblique_depth = 9;
+  string one_point_axis = 10;
+  double fov = 11;
+  double two_point_shift = 12;
+  double curvilinear_fov = 13;
+  double curvilinear_strength = 14;
+  string curvilinear_mapping = 15;
+}
+
+message CadWorldCamera {
+  repeated double position = 1;
+  repeated double target = 2;
+  double zoom = 3;
+  double fov = 4;
+  CadWorldProjection projection = 5;
+}
+
+message CadWorldSun {
+  bool enabled = 1;
+  double azimuth = 2;
+  double elevation = 3;
+  double intensity = 4;
+  string color = 5;
+}
+
+message CadWorldDislocateOptions {
+  bool move_enabled = 1;
+  bool rotate_enabled = 2;
+}
+
+message CadWorldWindowConfig {
+  CadWorldCamera camera = 1;
+  CadWorldSun sun = 2;
+  CadWorldDislocateOptions dislocate_options = 3;
+}

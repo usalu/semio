@@ -1,6 +1,4 @@
 type DrawingPresence {
   engagementInput: String! @state(class: PRESENCE)
-  camera: DrawingCamera! @state(class: PRESENCE)
-  activeUtilityId: String! @state(class: PRESENCE)
+  camera: Viewport2d! @state(class: PRESENCE)
 }
-type DrawingCamera { x: Float! y: Float! zoom: Float! }

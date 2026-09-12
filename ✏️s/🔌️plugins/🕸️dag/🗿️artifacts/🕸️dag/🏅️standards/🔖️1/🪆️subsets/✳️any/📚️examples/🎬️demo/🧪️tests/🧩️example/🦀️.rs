@@ -1,6 +1,6 @@
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = semio_framework_artifact_infinite_dag::DAG_DEMO_TEXT;
+    let text = crate::examples::demo::PRIMARY_TEXT;
     assert!(text.len() > 8);
 }
 
@@ -8,7 +8,7 @@ async fn primary_asset_is_nonempty() {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     use protocol::Inference;
-    let text = semio_framework_artifact_infinite_dag::DAG_DEMO_TEXT;
+    let text = crate::examples::demo::PRIMARY_TEXT;
     let snapshot = <crate::DagSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::DagInference::infer(&snapshot);
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::DagInference::infer(&snapshot));

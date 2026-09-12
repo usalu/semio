@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/cad/cad/world-window-config/schema.json",
+  "$ref": "#/$defs/CadWorldWindowConfig",
+  "$defs": {
+    "CadWorldProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "orthographicView", "axonometricVariant", "axonometricAngleA", "axonometricAngleB", "axonometricQuadrant", "obliqueVariant", "obliqueAngle", "obliqueDepth", "onePointAxis", "fov", "twoPointShift", "curvilinearFov", "curvilinearStrength", "curvilinearMapping"],
+      "properties": {
+        "kind": { "type": "string" },
+        "orthographicView": { "type": "string" },
+        "axonometricVariant": { "type": "string" },
+        "axonometricAngleA": { "type": "number" },
+        "axonometricAngleB": { "type": "number" },
+        "axonometricQuadrant": { "type": "string" },
+        "obliqueVariant": { "type": "string" },
+        "obliqueAngle": { "type": "number" },
+        "obliqueDepth": { "type": "number" },
+        "onePointAxis": { "type": "string" },
+        "fov": { "type": "number" },
+        "twoPointShift": { "type": "number" },
+        "curvilinearFov": { "type": "number" },
+        "curvilinearStrength": { "type": "number" },
+        "curvilinearMapping": { "type": "string" }
+      }
+    },
+    "CadWorldCamera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["position", "target", "zoom", "fov", "projection"],
+      "properties": {
+        "position": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
+        "target": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
+        "zoom": { "type": "number" },
+        "fov": { "type": "number" },
+        "projection": { "$ref": "#/$defs/CadWorldProjection" }
+      }
+    },
+    "CadWorldSun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "azimuth", "elevation", "intensity", "color"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "azimuth": { "type": "number" },
+        "elevation": { "type": "number" },
+        "intensity": { "type": "number" },
+        "color": { "type": "string" }
+      }
+    },
+    "CadWorldDislocateOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["moveEnabled", "rotateEnabled"],
+      "properties": {
+        "moveEnabled": { "type": "boolean" },
+        "rotateEnabled": { "type": "boolean" }
+      }
+    },
+    "CadWorldWindowConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["camera", "sun", "dislocateOptions"],
+      "properties": {
+        "camera": { "$ref": "#/$defs/CadWorldCamera" },
+        "sun": { "$ref": "#/$defs/CadWorldSun" },
+        "dislocateOptions": { "$ref": "#/$defs/CadWorldDislocateOptions" }
+      }
+    }
+  }
+}

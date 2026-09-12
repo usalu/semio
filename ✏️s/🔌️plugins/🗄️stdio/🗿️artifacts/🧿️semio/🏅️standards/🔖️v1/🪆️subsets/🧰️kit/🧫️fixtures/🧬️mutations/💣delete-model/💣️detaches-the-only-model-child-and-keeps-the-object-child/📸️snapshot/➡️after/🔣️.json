@@ -47,7 +47,7 @@
     {
       "childId": "obj-1",
       "target": {
-        "artifactId": "frame-beam-object",
+        "artifactId": "obj-1",
         "dialect": {
           "artifactKind": "s.stdio.semio",
           "standard": "v1",

@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ChangeNodeName`.
-use crate::diff::text::diff_replace_content;
+use crate::schema::diff::diff_replace_content;
 use crate::diff::DagDiff;
 use crate::{dag_working_scene, DagSnapshot};
 

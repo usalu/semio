@@ -1,12 +1,12 @@
 
 use super::*;
-use crate::editor::space_index::{SpaceIndexCommand, testkit};
+use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn create_artifact_relays_only_the_catalog_choice_and_name_without_local_publication() {
-    let mut app = testkit::new_app().await;
+    let mut app = artifact_app_laws::new_app().await;
     let kind_choice = "{\"kindId\":\"s.gis.gismap\",\"schema\":\"gis.map\"}";
-    let result = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: " First ".into(), kind_choice: kind_choice.into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("create artifact");
+    let result = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: " First ".into(), kind_choice: kind_choice.into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("create artifact");
     let snapshot = app.snapshot().expect("projection");
     assert!(snapshot.artifacts.is_empty(), "the guest must not mint or publish a document identity");
     assert_eq!(result.requested_effects.len(), 1);
@@ -24,8 +24,8 @@ async fn create_artifact_relays_only_the_catalog_choice_and_name_without_local_p
 
 #[semio_framework_async_macros::async_test]
 async fn empty_name_and_kind_open_the_dialog_instead_of_failing() {
-    let mut app = testkit::new_app().await;
-    let result = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: String::new(), kind_choice: String::new() }), &semio_framework_plugin::testkit::meta("local")).await.expect("empty args must open the dialog, not fail");
+    let mut app = artifact_app_laws::new_app().await;
+    let result = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: String::new(), kind_choice: String::new() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("empty args must open the dialog, not fail");
     assert_eq!(result.requested_effects.len(), 1);
     match &result.requested_effects[0] {
         Effect::OpenDialog { dialog_id, args, .. } => {

@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
 /** @emoji 🧭️ `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
-import { ACTOR_COMPONENT_EXPORTS, assertActorComponentExports, artifactFiles, finalizePluginDescriptor, PLUGIN_DESCRIPTOR_PROBE_SOURCE } from "../../../🔌️plugin/📦️packages/🟦️typescript/📜️script.ts";
-import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, newestComponentSourceMtime, nextActivationReceipt, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../♻️activation/🟦️.ts";
+import { ACTOR_COMPONENT_EXPORTS, assertActorComponentExports, finalizePluginDescriptor, PLUGIN_DESCRIPTOR_PROBE_SOURCE } from "../../../🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts";
+import { artifactFiles } from "../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, newestComponentSourceMtime, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../♻️activation/🟦️.ts";
 import { closeTestBrowserHostStagingV1, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, prepareTestBrowserHostRootsV1, resolveTestBrowserHostRootsV1, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, type TestBrowserHostRootsV1, writeTestBrowserGisMaterializationReceiptV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import { stageArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { cargoTargetDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { FONT_ASSET, validateFontAsset } from "../../../♾️infinite/📦️packages/🦀️rust/📜️script.ts";
-import { SCALE_COMPONENT_ARTIFACT } from "../../../../🧪️testkit/⚖️scale/🟦️.ts";
+import { FONT_ASSET, validateFontAsset } from "../../../♾️infinite/🖼️canvas/🔤️fonts/🟦️.ts";
+const SCALE_COMPONENT_ARTIFACT = "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { EventEmitter } from "node:events";
@@ -47,7 +48,7 @@ import {
   semioBuildMode,
   semioShipEnv,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { decodeDocumentPackBytes, decodePackValue, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, encodeDocumentPackBytes, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
+import { decodeDocumentPackBytes, decodePackValue, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, encodeDocumentArchiveBytes, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 import type { PackValue } from "@semio-tech/framework-os";
 import {
   CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BYTES,
@@ -62,12 +63,14 @@ import {
   stageCanonicalBootstrapFolderMirror,
   writeBackbonePayload,
   type CanonicalBootstrapFolderMirrorReserveV1,
-} from "./🔌️vite-plugins.ts";
+} from "../../🔌️vite-plugins/🟦️.ts";
 import type { PluginSourceEvent } from "@semio-tech/framework";
-import { filterProjectedPluginRegistry, generatePluginRegistry, readGeneratedCatalogProjection, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
+import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import { generatePluginRegistry, type PluginRegistryEntry } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+import { renderPlaygroundSessionTypeScript } from "../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
-import { DEFAULT_HOST_VARIANT } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
-import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
+import { DEFAULT_HOST_VARIANT } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import {
   ensurePreview2ShimVendorAt,
   hostShimSource,
@@ -83,8 +86,8 @@ import {
   rewritePreview2ShimImports,
   transpilePluginComponentAsync,
   type PluginWebMaterializeContext,
-} from "../../../🔌️plugin/📦️packages/🟦️typescript/🟦️.ts";
-import { defaultExtensionInstallRoot, EXTENSION_INSTALL_META, EXTENSION_WATCH_MARKER } from "../../../🔌️plugin/🏪️store/📥️store.ts";
+} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
+import { defaultExtensionInstallRoot, EXTENSION_INSTALL_META, EXTENSION_WATCH_MARKER } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { DISTRIBUTION_LAYOUT, distributionOutputOwner, parseDistributionManifest, parseDistributionStaticInputs, type DistributionInput, type DistributionLayout, type DistributionManifest } from "../../🚚️distribution/🟦️.ts";
 
@@ -106,7 +109,35 @@ function publishShardWorker(): void {
   writeFileSync(join(shardDir, SHARD_WORKER_FILE), shardWorkerSource());
 }
 const extensionOutRoot = defaultExtensionInstallRoot(repoRoot);
-const playgroundSessionPath = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🟦️session.ts");
+const configuredPlaygroundSessionOutputRoot = process.env[PLAYGROUND_SESSION_OUTPUT_ROOT_ENV];
+const playgroundSessionOutputRoot = configuredPlaygroundSessionOutputRoot ? resolve(repoRoot, configuredPlaygroundSessionOutputRoot) : join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated");
+const playgroundSessionPath = playgroundSessionOutputPath(playgroundSessionOutputRoot);
+
+class PlaygroundSessionGenerateScript extends BundleScript {
+  run(segments: string[]): void {
+    const expected = renderPlaygroundSessionTypeScript(DEFAULT_HOST_VARIANT);
+    if (segments[0] === "check") {
+      if (!existsSync(playgroundSessionPath) || readFileSync(playgroundSessionPath, "utf8") !== expected) throw new Error("Generated playground session is stale");
+      console.log("playground session generated source is fresh.");
+      return;
+    }
+    mkdirSync(dirname(playgroundSessionPath), { recursive: true });
+    writeFileSync(playgroundSessionPath, expected);
+    console.log(`playground session generated source refreshed -> ${playgroundSessionPath}`);
+  }
+}
+
+class PlaygroundSessionPreviewScript extends BundleScript {
+  run(): void {
+    const rootPath = relative(this.repoRoot, dirname(playgroundSessionPath)).replaceAll("\\", "/").normalize("NFC");
+    const nodes = [
+      { bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: rootPath },
+      { bytesBase64: Buffer.from(renderPlaygroundSessionTypeScript(DEFAULT_HOST_VARIANT)).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: `${rootPath}/${basename(playgroundSessionPath).normalize("NFC")}` },
+    ].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
+    const staleRemovals = (existsSync(dirname(playgroundSessionPath)) ? readdirSync(dirname(playgroundSessionPath)) : []).filter((name) => name !== basename(playgroundSessionPath)).map((name) => `${rootPath}/${name.normalize("NFC")}`).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+    process.stdout.write(`${JSON.stringify({ contractId: "playground-session", nodes, schemaVersion: 1, staleRemovals })}\n`);
+  }
+}
 /** @emoji 🧊️ The one wgpu renderer package the dev router delegates `serve`/`wasm`/`native` to — a single
  * constant so the ship, dev and bench call sites can never drift onto different (or extinct) paths. */
 const WGPU_PACKAGE_ROOT = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust");
@@ -142,7 +173,7 @@ function pluginCargoArgs(packageName: string, profile: string): string[] {
 }
 
 //#region 🔖️PlaygroundVariantResolution
-/** @emoji 📚️ Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/🟦️playgrounds.ts`). */
+/** @emoji 📚️ Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/🎮️playgrounds/🟦️.ts`). */
 const playgroundCatalog = loadFrameworkOsPlaygroundCatalog();
 
 /** @emoji 🧭️ A resolved playground filter: the crate pluginId to build/load, plus the app id and shell brand id to inject when the filter matched a catalog variant row. */
@@ -644,10 +675,8 @@ function assertPluginCatalogComplete(failedPluginIds: readonly string[]): void {
 export async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
   const registryScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts");
   if (runCmdStatus("bun", [registryScript, "generate"], { cwd: repoRoot }) !== 0) throw new Error("plugin registry generation failed");
-  const variant = filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
   const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
   syncBuiltPluginDescriptors(filterProjectedPluginRegistry(readGeneratedCatalogProjection(), filterPluginId));
-  writePlaygroundSession(variant, playgroundSessionPath);
 }
 
 function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filterPlugin?: string): readonly PluginRegistryEntry[] {
@@ -1368,7 +1397,7 @@ class PreparationScript extends BundleScript {
     const playground = playgroundCatalog.find((row) => row.variant === variant);
     if (!playground) throw new Error(`Missing generated playground ${variant}`);
     const moduleRoot = pluginModulesRoot(profile as "dev" | "release"), registry = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
-    const session = (await import(pathToFileURL(join(registry, "dist/sessions", variant, "🟦️session.ts")).href)).PLAYGROUND_SESSION;
+    const session = (await import(pathToFileURL(join(registry, "dist/sessions", variant, "🎮️playground-session", "🟦️.ts")).href)).PLAYGROUND_SESSION;
     if (session.variant !== variant || session.registryPluginId !== playground.pluginId) throw new Error("Prepared session identity mismatch");
     for (const plugin of session.plugins) {
       const directory = join(moduleRoot, moduleDirectoryName(plugin.pluginId));
@@ -1431,7 +1460,7 @@ class ActivationScript extends BundleScript {
       return;
     }
     const runtime = developmentRuntimeRoot(this.root, variant, profile), receiptRoot = join(runtime, "activation"), moduleRoot = pluginModulesRoot(profile);
-    const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🟦️session.ts");
+    const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session", "🟦️.ts");
     const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
     const catalog = new Map(readGeneratedCatalogProjection().entries.map((entry) => [entry.pluginId, entry]));
     const controller = new AbortController(), cancel = (): void => controller.abort();
@@ -2668,7 +2697,7 @@ async function collabStartHub(port: number, dataDir: string, logPath: string): P
 }
 
 /** 🎯️ The ONLY plugin crates this scenario touches: every host plugin id the generated catalog
- * declares (`🤖️generated/🧩️plugins.ts`'s `PLUGIN_HOST_CONFIGS` — the `space` crate hosting Home and
+ * declares (`🤖️generated/🧩️plugins/🟦️.ts`'s `PLUGIN_HOST_CONFIGS` — the `space` crate hosting Home and
  * Studio, never the `s` playground VARIANT that merely selects it) plus `"writer"`, the stdio-free
  * artifact kind this scenario creates (the brief's other suggestion, `"note"`, is a confirmed
  * pre-existing break — see `collabPrebuildPlugins`'s own doc comment). Building only these (not the
@@ -3293,7 +3322,7 @@ class VerifyScript extends BundleScript {
       const packageName = await readPackageName(target.cratePath);
       if (runCmdStatus("cargo", ["test", "--lib", "-p", packageName], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`${packageName} tests failed`);
     }
-    if (runBunxStatus(["vitest", "run"], join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react")) !== 0) throw new Error("framework-renderer-react tests failed");
+    if (runBunxStatus(["vitest", "run"], join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript")) !== 0) throw new Error("framework-renderer-react tests failed");
     await runStudioE2eVerify(studioUrl, timeoutMs);
     await new PluginCapabilityLintScript(this.root).run([]);
     console.log(`s studio verify passed (${studioUrl})`);
@@ -5158,7 +5187,7 @@ class ScaleFixtureCheckScript extends BundleScript {
  * NOT `🔬️ParityScript`'s `🔖️ServerPool` (that machinery boots the FULL app against one real plugin
  * variant, a different app than the scale fixture, and needs real fleet wasm this session doesn't have
  * either) — instead the real `ShardClient` runs inside a real headless-Chromium page
- * (`📊️bench-web-harness.ts`, bundled with `Bun.build`) against real browser `Worker`s running a protocol
+ * (`📊️bench-web-harness/🟦️.ts`, bundled with `Bun.build`) against real browser `Worker`s running a protocol
  * STUB in place of the not-yet-compiled guest SDK's real worker. Budgets 3/4/6/7/8 are genuine passes of
  * `ShardClient`'s own sharding/heartbeat-trap/checkpoint logic at 100-actor scale; budgets 2/5 are
  * stub-worker timings reported as `pass-stub-worker`/`fail-stub-worker`, never plain `pass`/`fail`,
@@ -5231,7 +5260,7 @@ function benchWebSkippedRow(budget: BenchBudgetDefinition, renderer: string, rea
 }
 
 //#region 🧪️BenchWebRows
-/** 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (bench-web-rows): bundles `📊️bench-web-harness.ts` for
+/** 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (bench-web-rows): bundles `📊️bench-web-harness/🟦️.ts` for
  * the BROWSER with Bun's own bundler (no external bundler dependency), runs it inside a real headless
  * Chromium page via `playwright` (already a repo dependency — the SAME dynamic-import pattern this file's
  * own collab/studio-e2e scripts already use), and merges the raw per-budget measurements back onto
@@ -5244,7 +5273,7 @@ function benchWebSkippedRow(budget: BenchBudgetDefinition, renderer: string, rea
  * and wgpu(web) share — it does NOT exercise either renderer's own paint/patch path. That gap is stated
  * here rather than silently implied by a `react`/`wgpu`-labelled row. */
 async function buildBenchWebHarnessBundle(): Promise<string> {
-  const entry = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📊️bench-web-harness.ts");
+  const entry = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️bench-web-harness/🟦️.ts");
   const result = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm" });
   if (!result.success) throw new Error(`bench-web harness bundle failed: ${result.logs.map((log) => log.message).join("; ")}`);
   const output = result.outputs[0];
@@ -5286,7 +5315,7 @@ const BENCH_WEB_STUB_STATUS: Readonly<Record<number, { readonly passLabel: strin
 function benchWebMeasuredRow(budget: BenchBudgetDefinition, renderer: string, raw: { readonly id: number; readonly ok: boolean; readonly measured: unknown; readonly note: string }): Record<string, unknown> {
   const stubLabels = BENCH_WEB_STUB_STATUS[budget.id];
   const status = stubLabels ? (raw.ok ? stubLabels.passLabel : stubLabels.failLabel) : raw.ok ? "pass" : "fail";
-  return { id: budget.id, description: budget.description, status, measured: raw.measured, threshold: budget.webThreshold ?? null, note: `[${renderer}, harness-driven, see 📊️bench-web-harness.ts header] ${raw.note}` };
+  return { id: budget.id, description: budget.description, status, measured: raw.measured, threshold: budget.webThreshold ?? null, note: `[${renderer}, harness-driven, see 📊️bench-web-harness/🟦️.ts header] ${raw.note}` };
 }
 
 /** ▶️ Runs budgets 2-8 for `react`/`wgpu` through the real `ShardClient` + headless-Chromium harness.
@@ -5344,7 +5373,7 @@ class BenchPluginsScript extends BundleScript {
       const nativeReport = JSON.parse(readFileSync(nativeReportPath, "utf8")) as { budgets: Record<string, unknown>[] };
       rows.push(...nativeReport.budgets);
     } else if (renderer === "react" || renderer === "wgpu") {
-      console.log(`bench: running web scale-bench (renderer=${renderer}, shards=${shardCount}) via headless Chromium — see 📊️bench-web-harness.ts for real-vs-stub scope`);
+      console.log(`bench: running web scale-bench (renderer=${renderer}, shards=${shardCount}) via headless Chromium — see 📊️bench-web-harness/🟦️.ts for real-vs-stub scope`);
       rows.push(...(await benchWebRows(BENCH_BUDGETS.slice(1), renderer, registry, shardCount)));
     } else {
       throw new Error(`bench plugins: unknown --renderer ${renderer} (expected native|react|wgpu)`);
@@ -5441,11 +5470,11 @@ class CanonicalBootstrapFolderMirrorCheckScript extends BundleScript {
     if (!validateCanonicalPairSelection(canonicalPairCorpus.selection)) throw new Error(`canonical pair selection: ${JSON.stringify(validateCanonicalPairSelection.errors)}`);
     for (const { id, accepted, ...frontier } of canonicalPairCorpus.frontierCases)
       if (!validateCanonicalPairBaseline(frontier)) throw new Error(`canonical pair frontier ${id}: ${JSON.stringify(validateCanonicalPairBaseline.errors)}`);
-    const own = readFileSync(join(this.root, "🔌️vite-plugins.ts"), "utf8");
-    const worker = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+    const own = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts"), "utf8");
+    const worker = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
     const markers = [
       "canonical_bootstrap_owner",
-      "canonical_bootstrap_stage",
+      "canonical_bootstrap_archive_stage",
       "reserveCanonicalBootstrapFolderMirror",
       "stageCanonicalBootstrapFolderMirror",
       "publishCanonicalBootstrapFolderMirror",
@@ -5467,7 +5496,7 @@ class CanonicalBootstrapFolderMirrorCheckScript extends BundleScript {
       const row = corpus.pairs.find((candidate) => candidate.name === name);
       if (!row) throw new Error(`canonical bootstrap folder mirror fixture pair ${name} missing`);
       const pack = Buffer.from(row.packHex, "hex"), spr = Buffer.from(row.sprHex, "hex");
-      return { row, pack, spr, bundle: encodeDocumentPackBytes(pack, spr) };
+      return { row, pack, spr, bundle: encodeDocumentArchiveBytes({ parent_pack: Array.from(pack), parent_spr: Array.from(spr), members: [] }) };
     };
     const a = pair("a"), b = pair("b");
     for (const item of [a, b]) {
@@ -5577,8 +5606,9 @@ const router = new ScriptRouter(import.meta.dir)
     class extends BundleScript {
       run(segments: string[]): void {
         const sub = segments[0];
+        if (sub === "playground-session") return segments[1] === "preview" ? new PlaygroundSessionPreviewScript(this.root).run() : new PlaygroundSessionGenerateScript(this.root).run(segments.slice(1));
         if (sub === "scale-fixture") return new ScaleFixtureGenerateScript(this.root, this.repoRoot).run(segments.slice(1));
-        throw new Error(`unknown generate subcommand: ${sub} (expected scale-fixture)`);
+        throw new Error(`unknown generate subcommand: ${sub} (expected playground-session|scale-fixture)`);
       }
     },
   )

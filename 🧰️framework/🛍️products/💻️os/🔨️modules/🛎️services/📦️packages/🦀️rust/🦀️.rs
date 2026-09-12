@@ -3,11 +3,11 @@
 //! here because this crate has no wasm target — it is a native host-process crate by construction
 //! (tokio's multi-thread runtime never targets wasm32).
 
-#[path = "../../🦀️component.rs"]
+#[path = "../../🦀️.rs"]
 mod component;
-#[path = "../../👀️file_watcher.rs"]
+#[path = "../../👀️file-watcher/🦀️.rs"]
 mod file_watcher;
-#[path = "../../🚪️native_io.rs"]
+#[path = "../../🚪️native-io/🦀️.rs"]
 mod native_io;
 pub use component::*;
 pub use file_watcher::*;

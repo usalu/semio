@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::puzzle2d::testkit::*;
+use crate::editor::puzzle2d::unit_tests::context::*;
 
 #[semio_framework_async_macros::async_test]
 async fn document_panel_lists_nodes_section() {

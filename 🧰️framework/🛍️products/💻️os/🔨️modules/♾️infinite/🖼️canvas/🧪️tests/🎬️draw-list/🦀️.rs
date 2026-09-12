@@ -13,8 +13,8 @@ use super::{Circle, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRect
 use geometry::CubicBez;
 use serde_json::Value;
 
-const DRAW_LIST_FIXTURE: &str = include_str!("🔣️.json");
-const DRAW_LIST_EXPECTATION: &str = include_str!("📐️expected-draw-list.json");
+const DRAW_LIST_FIXTURE: &str = include_str!("../../🧫️fixtures/🎬️draw-list/🔣️.json");
+const DRAW_LIST_EXPECTATION: &str = include_str!("../../🧫️fixtures/🎬️draw-list/📐️expected-draw-list.json");
 
 fn number(value: &Value) -> f64 {
     value.as_f64().expect("fixture number")

@@ -22,6 +22,21 @@ mod artifact_fixed_registry_tests {
     sentinel_drop!(SnapshotRetentionSentinel);
     sentinel_drop!(SegmentedDownloadSentinel);
 
+    #[test]
+    fn oversized_owner_construction_reserves_heap_slots_with_zero_occupancy() {
+        type OversizedOwner = [u8; 128 * 1024];
+
+        let registry = ArtifactFixedRegistry::<OversizedOwner>::new();
+        assert!(registry.allocation_admitted);
+        assert_eq!(registry.slots.len(), ARTIFACT_LIVE_OUTPUT_SLOTS);
+        assert_eq!(registry.occupied, 0);
+        assert!(registry.has_capacity());
+        assert!(registry.is_empty());
+        for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+            assert_eq!(registry.id_at(index), None);
+        }
+    }
+
     fn reject_duplicate<T: std::fmt::Debug>(first: T, duplicate: T, drops: &std::sync::Arc<std::sync::atomic::AtomicUsize>) {
         let mut registry = ArtifactFixedRegistry::new();
         let mut close_registry = ArtifactFixedRegistry::new();

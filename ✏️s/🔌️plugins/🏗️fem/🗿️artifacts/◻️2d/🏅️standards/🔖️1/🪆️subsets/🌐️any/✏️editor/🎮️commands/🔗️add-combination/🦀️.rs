@@ -1,6 +1,6 @@
 //! 🏋️ 🏋️ Fem2d play app commands command — `add-combination`.
 
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::create_combination;
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::FemCombination;
@@ -34,7 +34,7 @@ pub struct AddCombination {
     pub terms: Vec<crate::FemCombinationTerm>,
 }
 
-pub fn handle(payload: &AddCombination, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub fn handle(payload: &AddCombination, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.combinations.iter().map(|c| c.id.clone()), "c");
     Ok(Emit::mutations(vec![Fem2dMutation::CreateCombination(create_combination::CreateCombination { combination: FemCombination { id, name: payload.name.clone(), terms: payload.terms.clone() } })]))

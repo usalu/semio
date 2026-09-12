@@ -1,6 +1,6 @@
 //! 🐚️ 🐚️ Layout play app commands command — `engagement-submit`.
 
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
 use semio_framework::kernel::Effect;
@@ -14,7 +14,7 @@ pub struct EngagementSubmit {
 }
 
 /// 🐚️ Redispatches typed export intents so the exact public action enters its resumable job.
-pub fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
     let typed = payload.value.trim();
     let action = if engagement_token_matches(typed, "export png") || engagement_token_matches(typed, "png") {
         Some(("exportPng", Some(serde_json::json!({ "pageId": null }))))

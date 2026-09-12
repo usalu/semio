@@ -1,3 +1,45 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    pub type PresentationApp = VcsArtifactApp<EditorApp<AnimatePresentationPlayApp>>;
+    
+    /// ✏️ `AnimatePresentationPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
+    /// `ArtifactApp` — `EditorApp<AnimatePresentationPlayApp>` (SDK adapter, contract §2.1) is the real
+    /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<E>`
+    /// builds it.
+    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    pub async fn presentation_app() -> PresentationApp {
+        new_app::<EditorApp<AnimatePresentationPlayApp>>().await
+    }
+    
+    /// 🧪️ Adapts `create_animate_presentation_app`'s `AppDefinition` (contract §2.4) into the
+    /// `App { definition, examples }` shape `new_app_with_registry`/
+    /// `context::assert_declared_actions_bridge_to_commands` still expect — framework test context gap, not
+    /// modifiable here (`🧰️framework/**` is outside this packet's lease).
+    fn animate_presentation_app_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_animate_presentation_app(), examples: Vec::new() }
+    }
+    
+    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
+    pub async fn presentation_app_with_registry() -> PresentationApp {
+        new_app_with_registry::<EditorApp<AnimatePresentationPlayApp>>(animate_presentation_app_manifest_for_tests).await
+    }
+    
+    pub async fn dispatch(app: &mut PresentationApp, command: PresentationCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut PresentationApp, body_key: &str) -> String {
+        // 🌱️ `BuiltNode` deliberately has no `ToValue`/`FromValue` (framework `🦀️builder.rs`'s own
+        // "DslValue-free exception" for `UiValue`-embedding types), so every caller here reads
+        // rendered content back off the `Debug` rendering instead of round-tripping through JSON —
+        // every call site below only substring-searches the result, never parses it as JSON.
+        format!("{:?}", app.render(body_key, None, &ViewModel::default()).await.expect("render"))
+    }
+}
+
 use super::*;
 
 //#region 🧪️RetainedCommandEnvelope
@@ -53,9 +95,9 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
 }
 //#endregion 🧪️RetainedCommandEnvelope
 
-use crate::editor::animate::testkit::presentation_app;
+use crate::editor::animate::unit_tests::context::presentation_app;
 use protocol::OpText;
-use semio_framework_plugin::testkit::meta;
+use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::PluginApp;
 
 #[semio_framework_async_macros::async_test]
@@ -167,7 +209,7 @@ async fn presentation_io_declares_frames_in_and_document_ports() {
 #[semio_framework_async_macros::async_test]
 async fn import_media_frames_in_inserts_a_new_tile() {
     use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
-    let mut app = testkit::presentation_app_with_registry().await;
+    let mut app = context::presentation_app_with_registry().await;
     let before = crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len();
     let frame_json = dsl::os_pack::json::to_string(&dsl::os_pack::json::object([("name".to_string(), dsl::os_pack::json::Value::from("hero-frame")), ("src".to_string(), dsl::os_pack::json::Value::from("/frames/hero.png"))]));
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: frame_json } };
@@ -180,7 +222,7 @@ async fn import_media_frames_in_inserts_a_new_tile() {
 #[semio_framework_async_macros::async_test]
 async fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
     use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
-    let mut app = testkit::presentation_app_with_registry().await;
+    let mut app = context::presentation_app_with_registry().await;
     for _ in 0..2 {
         let frame_json = dsl::os_pack::json::to_string(&dsl::os_pack::json::object([("name".to_string(), dsl::os_pack::json::Value::from("frame"))]));
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: frame_json } };
@@ -194,7 +236,7 @@ async fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
 #[semio_framework_async_macros::async_test]
 async fn import_media_rejects_unknown_port() {
     use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
-    let mut app = testkit::presentation_app_with_registry().await;
+    let mut app = context::presentation_app_with_registry().await;
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: "{}".into() } };
     assert!(app.import_media("not-a-port", media, &meta("local")).await.is_err());
 }

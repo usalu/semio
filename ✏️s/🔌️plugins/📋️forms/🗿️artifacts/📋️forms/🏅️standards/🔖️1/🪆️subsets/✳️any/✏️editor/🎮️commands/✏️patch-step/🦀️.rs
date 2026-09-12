@@ -1,7 +1,6 @@
 //! 📃️ 📃️ Forms play app commands command — `patch-step`.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::reset_try_config_mutations;
 use crate::{forms_steps, op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -30,5 +29,5 @@ pub fn handle(payload: &PatchStep, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: 
         }
         _ => return Ok(Emit::default()),
     };
-    Ok(Emit { artifact_mutations: vec![mutation], config_mutations: reset_try_config_mutations(), coalesce_key: Some(format!("patch-step:{}:{}", payload.step_id, payload.field)), ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![mutation], coalesce_key: Some(format!("patch-step:{}:{}", payload.step_id, payload.field)), ..Default::default() })
 }

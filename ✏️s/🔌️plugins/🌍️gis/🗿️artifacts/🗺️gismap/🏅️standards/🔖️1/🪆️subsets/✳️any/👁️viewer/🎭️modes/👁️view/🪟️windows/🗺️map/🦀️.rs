@@ -14,7 +14,7 @@ use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKi
 pub const WINDOW_KIND_ID: &str = "gis2d-view-map";
 pub const BODY_KEY: &str = "gis2d.view.map";
 const SURFACE_ID: &str = "gis2d.view.composite";
-/// 👁️ Matches the editor's `Gis2dConfig::default()` camera — a viewer has no persisted per-session
+/// 👁️ Matches the editor's `MapWindowConfig::default()` camera — a viewer has no persisted per-session
 /// camera (`Config = NoConfig`), so this is a hardcoded default, not a bug.
 const GIS_MAP_VIEW_DEFAULT_CAMERA_JSON: &str = r#"{"x":0,"y":0,"zoom":1}"#;
 //#endregion 🔖️Constants
@@ -43,7 +43,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 👁️ Pure `GisMapSnapshot -> UiNode` read: default camera/render mode (`TiledMapScene::base`'s own
-/// defaults already match `Gis2dConfig::default()`'s render/vector/LOD mode — "combined"/"colored"/
+/// defaults already match `MapWindowConfig::default()`'s render/vector/LOD mode — "combined"/"colored"/
 /// "automatic"), every layer visible, nothing selected/hovered.
 pub fn render(document: &GisMapSnapshot) -> UiAssemblyResult<BuiltNode> {
     let scene = TiledMapScene::base(gis_map_descriptor_json(document), GIS_MAP_VIEW_DEFAULT_CAMERA_JSON.into());

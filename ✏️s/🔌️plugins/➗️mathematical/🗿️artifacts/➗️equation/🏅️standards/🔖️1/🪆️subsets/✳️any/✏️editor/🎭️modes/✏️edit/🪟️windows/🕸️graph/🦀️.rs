@@ -2,7 +2,7 @@
 
 use crate::editor::equation::workflow_json;
 use crate::EquationGraph;
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, Viewport2d, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -38,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 pub fn render(graph: &EquationGraph, camera: &EquationCamera) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges) = workflow_json(graph);
-    let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
+    let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };
     semio_framework_plugin::scene_surface(MATH_PLAY_BODY_GRAPH, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render

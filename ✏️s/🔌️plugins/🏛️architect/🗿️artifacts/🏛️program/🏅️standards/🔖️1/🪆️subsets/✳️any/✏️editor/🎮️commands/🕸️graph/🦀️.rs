@@ -56,26 +56,24 @@ pub mod node_graph_edit {
 
 pub mod node_graph_viewport {
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
-    use crate::editor::architect::modes::edit::windows::graph::GraphCamera;
     use crate::op::ProgramMutation;
     use crate::ProgramSnapshot;
     use dsl::{FromValue, ToValue};
+    use semio_framework::Viewport2d;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "node-graph-viewport")]
     pub struct NodeGraphViewport {
-        pub viewport_json: String,
+        #[dsl(block)]
+        pub viewport: Viewport2d,
     }
 
     pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let Ok(camera) = dsl::json::from_json_str::<GraphCamera>(&payload.viewport_json) else {
-            return Ok(Emit::default());
-        };
         let mut next = cfg.snapshot.clone();
-        next.graph_camera_x = camera.x;
-        next.graph_camera_y = camera.y;
-        next.graph_camera_zoom = camera.zoom;
+        next.graph_camera_x = payload.viewport.x;
+        next.graph_camera_y = payload.viewport.y;
+        next.graph_camera_zoom = payload.viewport.zoom;
         Ok(Emit::config(snapshot(next)))
     }
 }

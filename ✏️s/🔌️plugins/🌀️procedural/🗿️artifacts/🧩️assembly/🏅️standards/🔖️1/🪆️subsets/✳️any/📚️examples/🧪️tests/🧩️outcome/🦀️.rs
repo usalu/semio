@@ -26,8 +26,8 @@ struct Committed {
 
 fn committed() -> Vec<Committed> {
     vec![
-        Committed { example: super::two_room_corridor::ID, json: include_str!("../../🚪️two-room-corridor/🧪️tests/🧩️example/🔣️.json"), snapshot: super::two_room_corridor::snapshot },
-        Committed { example: super::wall_roof_facade_strip::ID, json: include_str!("../../🧱️wall-roof-facade-strip/🧪️tests/🧩️example/🔣️.json"), snapshot: super::wall_roof_facade_strip::snapshot },
+        Committed { example: super::two_room_corridor::ID, json: include_str!("../../🚪️two-room-corridor/🧫️fixtures/🧩️example/🔣️.json"), snapshot: super::two_room_corridor::snapshot },
+        Committed { example: super::wall_roof_facade_strip::ID, json: include_str!("../../🧱️wall-roof-facade-strip/🧫️fixtures/🧩️example/🔣️.json"), snapshot: super::wall_roof_facade_strip::snapshot },
     ]
 }
 

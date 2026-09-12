@@ -23,13 +23,13 @@
     "identity": { "surfaceId": "panel:puzzle3d-play-document", "controllerId": "7", "paneId": null }
   },
   "selectionPublication": {
-    "why": "selection is per DOCUMENT (both panes carry the same selectedIds), hover is per WINDOW (each pane publishes its own hoverTarget), and the armed utility is per window instance (wave B9).",
+    "why": "selection is per DOCUMENT (both panes carry the same selectedIds), hover is per WINDOW (each pane publishes its own hoverTarget), and the armed utility is per window instance (wave B9). The overlay that supplies the ids supplies the ACTIVE one too: the gumball target, Inspection's focus and `data-selection-json` all read the single `activeObjectId` field instead of the list, so an overlay that replaced the list and left it null published `{selectedIds:[picked], activeObjectId:null}` for the whole window it was covering — measured on the 180-object Nakagin document, every sample of a 12-minute run (wave B46).",
     "guestSelectionJson": { "method": "rectangle", "ids": [], "granularity": "mesh", "gumballActive": false },
     "leftoverOverlay": { "ids": ["seed-left-001"], "hoveredId": "seed-left-001:v0", "hoveredDomain": "vortex", "gumballActive": true, "gumballAnchorId": "seed-left-001", "activeUtility": "brush" },
     "guestInteractionJson": { "activeUtility": "select" },
     "published": {
       "selectedIds": ["seed-left-001"],
-      "activeObjectId": null,
+      "activeObjectId": "seed-left-001",
       "targetVolumeIds": [],
       "referenceSelectedId": null,
       "hoverTarget": { "domain": "vortex", "id": "seed-left-001:v0" },

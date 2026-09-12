@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, goLevelTestArgs, resolveTestLevel, runBundleScriptMain, runCanonicalGoTests, runCmd } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, goLevelTestArgs, resolveTestLevel, runBundleScriptMain, runCanonicalGoBuild, runCanonicalGoTests, runCmd } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class BuildScript extends BundleScript {
   run(): void {
     const output = join(this.root, "../../..", process.platform === "win32" ? "mcp.exe" : "mcp");
-    runCmd("go", ["build", "-trimpath", "-o", output, "."], { cwd: join(this.root, "../..") });
+    runCanonicalGoBuild(join(this.root, "../.."), ["-trimpath", "-o", output, "."]);
   }
 }
 

@@ -257,8 +257,8 @@ impl RetireOwned for Block3dMutation {
 }
 
 /// 🗃️ Installs Block3d's exact document root and retained mutation retirement authorities.
-pub fn document_store_owners() -> store::MemberStoreOwners<Block3dSnapshot, Block3dMutation> {
-    store::MemberStoreOwners::new(
+pub fn document_store_owners() -> store::DocumentStoreOwners<Block3dSnapshot, Block3dMutation> {
+    store::DocumentStoreOwners::new(
         Arc::new(SharedValueRetirementFactory::<Block3dSnapshot>::default()),
         Arc::new(OwnedValueRetirementFactory::<Block3dSnapshot>::default()),
         Arc::new(OwnedValueRetirementFactory::<Block3dMutation>::default()),

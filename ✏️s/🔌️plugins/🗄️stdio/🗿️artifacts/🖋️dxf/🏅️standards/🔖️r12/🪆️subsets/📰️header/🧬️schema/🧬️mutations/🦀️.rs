@@ -176,7 +176,7 @@ pub enum DxfMutation {
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `DxfMutation` variant, declaration order — the single source of
-/// truth `../../🔮️oracle/🔣️.json`'s `mutationCatalogs[].kinds` and every test-case adapter
+/// truth `../../🔮️oracles/🔣️.json`'s `mutationCatalogs[].kinds` and every test-case adapter
 /// duplicate against (per ticket 26/08/23/END-TO-END-TESTING-REFACTOR wave 7's registration rule:
 /// the framework never parses Rust, so this constant plus `kinds_const_matches_enum_variants` below
 /// is what keeps the manifest honest).

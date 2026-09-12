@@ -4,7 +4,7 @@ use crate::{
     ReconstructionStage, RemodelingMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
 };
 use protocol::SemanticMutation;
-use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
 //#region 🔖️Fixture
 /// 🏗️ Shared fixture — a scene that exercises every optional/collection field at least once

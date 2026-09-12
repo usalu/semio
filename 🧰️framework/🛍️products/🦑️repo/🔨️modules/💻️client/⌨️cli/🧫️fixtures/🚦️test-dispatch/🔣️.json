@@ -1,0 +1,30 @@
+{
+  "contract": "canonical-go-test-dispatch-v1",
+  "module": "example.com/semio/dispatch-fixture",
+  "dependency": {
+    "directory": "dependency",
+    "module": "example.com/semio/dispatch-offset",
+    "package": "offset",
+    "content": "func Value() int { return 2 }"
+  },
+  "source": {
+    "directory": "🧩️component",
+    "module": "example.com/semio/dispatch-offset",
+    "package": "dispatchfixture",
+    "content": "func value() int { return offset.Value() + 3 }"
+  },
+  "tests": {
+    "directory": "🧪️tests/🧮️addition",
+    "package": "dispatchfixture",
+    "file": "🐹️.go",
+    "content": "func mark(t *testing.T, name string) { t.Helper(); root := os.Getenv(\"SEMIO_GO_DISPATCH_MARKERS\"); if root == \"\" { t.Fatal(\"marker root\") }; if err := os.WriteFile(filepath.Join(root, name), []byte(name), 0o644); err != nil { t.Fatal(err) } }\nfunc TestSelectedDefinition(t *testing.T) { if value() != 5 { t.Fatal(\"value\") }; mark(t, \"selected\") }\nfunc TestBundlePeer(t *testing.T) { mark(t, \"peer\") }"
+  },
+  "cancellation": {
+    "testName": "TestCancellationProbe",
+    "ready": "ready",
+    "marker": "ticks",
+    "content": "func TestCancellationProbe(t *testing.T) { root := os.Getenv(\"SEMIO_GO_CANCELLATION_ROOT\"); if root == \"\" { t.Skip(\"cancellation probe inactive\") }; if err := os.MkdirAll(root, 0o755); err != nil { t.Fatal(err) }; if err := os.WriteFile(filepath.Join(root, \"ready\"), []byte(strconv.Itoa(os.Getpid())), 0o644); err != nil { t.Fatal(err) }; for tick := 0; ; tick++ { if err := os.WriteFile(filepath.Join(root, \"ticks\"), []byte(strconv.Itoa(tick)), 0o644); err != nil { t.Fatal(err) }; time.Sleep(20 * time.Millisecond) } }"
+  },
+  "expectedBundle": ["selected", "peer"],
+  "expectedDefinition": ["selected"]
+}

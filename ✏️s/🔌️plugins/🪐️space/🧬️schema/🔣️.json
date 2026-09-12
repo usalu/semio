@@ -69,7 +69,7 @@
     "SpacePlayRetainedCommandLimits": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandLimits"
+          "$ref": "https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/RetainedCommandLimits"
         },
         {
           "type": "object",
@@ -158,7 +158,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "config"
+                        "Config"
                       ]
                     }
                   },
@@ -176,7 +176,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "config"
+                        "Config"
                       ]
                     }
                   },
@@ -194,7 +194,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "config"
+                        "Config"
                       ]
                     }
                   },
@@ -212,7 +212,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "config"
+                        "Config"
                       ]
                     }
                   },
@@ -230,7 +230,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "config"
+                        "Config"
                       ]
                     }
                   },
@@ -248,7 +248,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "config"
+                        "Config"
                       ]
                     }
                   },
@@ -266,7 +266,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "host-only"
+                        "HostOnly"
                       ]
                     }
                   },
@@ -284,7 +284,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "host-only"
+                        "HostOnly"
                       ]
                     }
                   },
@@ -302,7 +302,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "host-only"
+                        "HostOnly"
                       ]
                     }
                   },
@@ -320,7 +320,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "host-only"
+                        "HostOnly"
                       ]
                     }
                   },
@@ -338,8 +338,8 @@
                     },
                     "lanes": {
                       "const": [
-                        "artifact",
-                        "config"
+                        "Artifact",
+                        "Config"
                       ]
                     }
                   },
@@ -357,7 +357,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "config"
+                        "Config"
                       ]
                     }
                   },
@@ -375,7 +375,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "config"
+                        "Config"
                       ]
                     }
                   },
@@ -393,7 +393,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "host-only"
+                        "HostOnly"
                       ]
                     }
                   },
@@ -411,7 +411,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "host-only"
+                        "HostOnly"
                       ]
                     }
                   },
@@ -425,7 +425,7 @@
             "routes": {
               "allOf": [
                 {
-                  "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes"
+                  "$ref": "https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutes"
                 },
                 {
                   "type": "array",
@@ -452,8 +452,8 @@
                       },
                       "status": {
                         "enum": [
-                          "migrated",
-                          "batch-only-pending-rewrite"
+                          "Migrated",
+                          "BatchOnlyPendingRewrite"
                         ]
                       },
                       "feature": {

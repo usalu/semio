@@ -1,0 +1,10 @@
+syntax = "proto3";
+import "✏️s/🔌️plugins/🏗️fem/⚙️engine/🖥️app-surface/🧬️schema/👁️result-mode/🛰️.proto";
+package semio.app.fem.fem2d.results_window_config;
+import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🛰️.proto";
+message Fem2dResultsWindowConfig {
+  semio.framework.ui.viewport.Viewport2d camera = 1;
+  optional string result_source_id = 2;
+  semio.fem.result_mode.ResultMode result_mode = 3;
+  uint32 result_mode_index = 4;
+}

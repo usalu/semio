@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::gis2d::testkit::{app, close, dispatch};
+use crate::editor::gis2d::unit_tests::context::{app, close, dispatch};
 use crate::editor::gis2d::Gis2dCommand;
 use semio_framework_plugin::PluginApp;
 
@@ -11,7 +11,7 @@ async fn set_active_example_empty_then_reuse_round_trips_document() {
     assert!(app.snapshot().expect("projection").positions.is_empty());
     dispatch(&mut app, Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "reuse-map".into() })).await;
     assert!(!app.snapshot().expect("projection").positions.is_empty());
-    app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     assert!(app.snapshot().expect("projection").positions.is_empty(), "undo returns to the empty document");
     close(&mut app);
 }

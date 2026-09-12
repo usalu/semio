@@ -34,16 +34,16 @@ pub struct Process3dSnapshot {
     #[state(artifact)]
     pub stock_payload: Stock,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.brep")]
+    #[child(kind = "s.stdio.semio")]
     pub stock_solid: store::ArtifactChild<SemioBrepSnapshot>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.flow")]
+    #[child(kind = "s.stdio.semio")]
     pub steps: store::ArtifactChild<SemioFlowSnapshot>,
     #[state(artifact)]
     #[value(default)]
     pub step_payloads: Vec<ProcessStep>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.brep")]
+    #[child(kind = "s.stdio.semio")]
     #[value(default)]
     pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
     #[state(artifact)]
@@ -1616,8 +1616,8 @@ impl store::ArtifactPack for Process3dSnapshot {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let _ = options;
         decode_process3d_snapshot_binary(&inner).map_err(store::PackError::Schema)

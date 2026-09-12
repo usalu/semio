@@ -2,7 +2,8 @@
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{cad_pane_id_from_suffix, cad_window_id_for_pane, runtime_of, snapshot_of};
+use crate::editor::cad::modes::edit::windows::config as window_config;
+use crate::editor::cad::cad_pane_id_from_suffix;
 use crate::op::CadMutation;
 use crate::CadPaneId;
 use crate::CadSnapshot;
@@ -21,17 +22,16 @@ pub mod set_dislocate_option {
         pub pressed: Option<bool>,
     }
 
-    pub fn handle(payload: &SetDislocateOption, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let mut runtime = runtime_of(cfg);
-        let pane = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
-        let window_id = cad_window_id_for_pane(pane);
-        let options = runtime.dislocate_options_by_window_id.entry(window_id.into()).or_default();
+    pub fn handle(payload: &SetDislocateOption, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let _surface = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
+        let mut config = window_config::current(cfg);
+        let options = &mut config.dislocate_options;
         match payload.option.as_str() {
             "move" => options.move_enabled = payload.pressed.unwrap_or(!options.move_enabled),
             "rotate" => options.rotate_enabled = payload.pressed.unwrap_or(!options.rotate_enabled),
             _ => {}
         }
-        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)?]))
+        Ok(Emit { window_config_mutations: vec![window_config::addressed_from_context(ctx, config)?], ..Default::default() })
     }
 }
 //#endregion 🔖️SetDislocateOption

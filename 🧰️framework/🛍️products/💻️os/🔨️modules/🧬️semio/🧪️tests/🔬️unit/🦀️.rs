@@ -1,6 +1,23 @@
 use super::*;
 
 #[test]
+fn semio_envelope_identity_matches_independent_neutral_vectors() {
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️envelope-identity/🔣️.json")).expect("neutral envelope vectors");
+    let expected = &vectors["expected"];
+    for case in vectors["cases"].as_array().unwrap() {
+        let item = &case["envelope"];
+        let envelope = SemioEnvelope {
+            plugin: item["plugin"].as_str().unwrap().into(),
+            artifact: item["artifact"].as_str().unwrap().into(),
+            component: Component::parse(item["component"].as_str().unwrap()).unwrap(),
+            version: item["version"].as_u64().unwrap() as u16,
+        };
+        assert_eq!(envelope.matches_identity(expected["id"].as_str().unwrap(), Component::parse(expected["component"].as_str().unwrap()).unwrap(), expected["version"].as_u64().unwrap() as u16), case["matches"].as_bool().unwrap(), "{}", case["name"]);
+    }
+    println!("[DEBUG] Semio native envelope identity matches eleven neutral vectors validated independently by Ajv");
+}
+
+#[test]
 fn text_preamble_round_trip() {
     let env = SemioEnvelope { plugin: "gis".into(), artifact: "gismap".into(), component: Component::Dsl, version: 1 };
     let wrapped = wrap_text(&env, "positions [id:TEXT] { }");

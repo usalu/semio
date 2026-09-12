@@ -16,7 +16,7 @@ pub struct SequenceSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.flow")]
+    #[child(kind = "s.stdio.semio")]
     pub content: SequenceContentChild,
 }
 
@@ -52,6 +52,15 @@ pub fn default_snapshot() -> SequenceSnapshot {
         ],
         edges: vec![SequenceEdge { id: "edge-1".into(), from: "step-1".into(), to: "step-2".into() }],
     })
+}
+
+/// 📦️ Canonical parent snapshot for the concrete app; content lives only in the registered child member.
+pub fn default_persisted_snapshot() -> SequenceSnapshot {
+    let materialized = neural_engine::ColdOwner::new(default_snapshot());
+    SequenceSnapshot {
+        schema: materialized.schema.clone(),
+        content: store::ArtifactChild::new(materialized.content.child_id.clone(), materialized.content.target.clone()),
+    }
 }
 //#endregion 🔖️Snapshot
 

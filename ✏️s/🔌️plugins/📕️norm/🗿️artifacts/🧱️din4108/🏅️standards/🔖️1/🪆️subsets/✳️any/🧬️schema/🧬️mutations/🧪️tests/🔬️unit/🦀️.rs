@@ -94,7 +94,7 @@ async fn remove_layer_of_an_out_of_range_index_is_rejected() {
     let base = Din4108Snapshot::default();
     let remove = Din4108Mutation::RemoveLayer(remove_layer::RemoveLayer { index: 99 });
     assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &remove).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &remove).await;
 }
 
 #[semio_framework_async_macros::async_test]

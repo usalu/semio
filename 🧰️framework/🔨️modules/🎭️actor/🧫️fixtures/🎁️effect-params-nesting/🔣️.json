@@ -1,0 +1,46 @@
+{
+  "why": "W0 extracted every `req`-bearing effect's payload into its own `…-params` record (`🔌️plugin/🧬️schema/📜️.wit`), but `wireEffectToFriendly` kept reading `dispatch-action`, `open-window` and `spawn-plugin-instance` FLAT. The host therefore received a `dispatchAction` whose `action` was the empty string: on wgpu the guest's re-armed `flowEvalTick` reached the action door nameless, faulted, and — through `flush_deferred_actions` — took the whole shell boot with it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A WIT `option<T>` crosses as `{tag, val}` and must be unwrapped before the payload is read, or a `some` wrapper reaches the pack decoder as if it were the pack.",
+  "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit",
+  "nested": {
+    "rule": "an effect record whose first field is `req: request-id` carries its payload under `params`",
+    "records": {
+      "dispatch-action": ["action", "args", "delay-ms"],
+      "open-window": ["kind", "params"],
+      "spawn-plugin-instance": ["plugin-id", "app-id", "os-instance-id", "label", "document-json"]
+    }
+  },
+  "flat": ["notify", "navigate", "open-external-url", "set-panel", "set-active-utility", "close-window", "open-plugin-instance"],
+  "cases": [
+    {
+      "id": "dispatch-action-reads-its-params-record",
+      "effect": { "tag": "dispatch-action", "val": { "req": 105, "params": { "action": "flowEvalTick", "args": { "tag": "some", "val": [7, 7] }, "delayMs": 0 } } },
+      "friendly": { "dispatchAction": { "req": 105, "action": "flowEvalTick", "args": [7, 7], "delayMs": 0 } }
+    },
+    {
+      "id": "dispatch-action-without-args",
+      "effect": { "tag": "dispatch-action", "val": { "req": 3, "params": { "action": "advanceReconstruction", "args": { "tag": "none" }, "delayMs": 250 } } },
+      "friendly": { "dispatchAction": { "req": 3, "action": "advanceReconstruction", "delayMs": 250 } },
+      "note": "a WIT `none` is an ABSENT field on the friendly effect, never a `null` — JSON cannot spell `undefined`, so the expectation omits it"
+    },
+    {
+      "id": "open-window-reads-its-params-record",
+      "effect": { "tag": "open-window", "val": { "req": 9, "params": { "kind": "procedural-preview", "params": [1] } } },
+      "friendly": { "openWindow": { "req": 9, "kind": "procedural-preview", "params": [1] } }
+    },
+    {
+      "id": "spawn-plugin-instance-reads-its-params-record",
+      "effect": { "tag": "spawn-plugin-instance", "val": { "req": 4, "params": { "pluginId": "procedural", "appId": "editor", "osInstanceId": { "tag": "some", "val": "os-1" }, "label": { "tag": "none" }, "documentJson": { "tag": "none" } } } },
+      "friendly": { "spawnPluginInstance": { "req": 4, "pluginId": "procedural", "appId": "editor", "osInstanceId": "os-1" } }
+    },
+    {
+      "id": "a-flat-record-is-still-read-flat",
+      "effect": { "tag": "set-active-utility", "val": { "windowId": "procedural-main", "utilityId": "inspector" } },
+      "friendly": { "setActiveUtility": { "windowId": "procedural-main", "utilityId": "inspector" } }
+    },
+    {
+      "id": "a-flat-record-with-one-field",
+      "effect": { "tag": "navigate", "val": { "uri": "semio://a" } },
+      "friendly": { "navigate": { "uri": "semio://a" } }
+    }
+  ]
+}

@@ -5,9 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/ui-styling` (inline `import.meta.vitest` in `🟦️.ts`:
- * `tileProxyVitePlugin`/`staticDirVitePlugin`/`meshCollectionVitePlugin`/`playgroundAssetVitePlugins`,
- * every other in-source `describe` block in that file, and `script.ts`'s 🌓️Levels generator tests). */
+/** @emoji 🧪️ Vitest for the styling projection's inline `import.meta.vitest` contract. */
 export default {
   root,
   resolve: {
@@ -19,9 +17,9 @@ export default {
     name: "@semio-tech/ui-styling",
     mode: "test",
     environment: "node",
-    include: ["🟦️.ts", "📦️packages/🦀️rust/📜️script.ts"],
-    coverage: { include: ["🟦️.ts", "📦️packages/🦀️rust/📜️script.ts"] },
-    includeSource: ["🟦️.ts", "📦️packages/🦀️rust/📜️script.ts"],
+    include: ["📽️projection/🟦️.ts"],
+    coverage: { include: ["📽️projection/🟦️.ts"] },
+    includeSource: ["📽️projection/🟦️.ts"],
     passWithNoTests: false,
   },
 };

@@ -1,7 +1,7 @@
 use super::*;
 
 fn project(node: BuiltNode) -> serde_json::Value {
-    let text = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire inspected semantic tree");
+    let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire inspected semantic tree");
     serde_json::from_str(&text).expect("independent semantic JSON oracle")
 }
 
@@ -35,7 +35,7 @@ fn shooting_semantic_panels_match_the_json_oracle() {
         }
     }
     for node in [crate::editor::shooting::modes::edit::windows::scene::render(&snapshot, &cfg, "select").expect("editor scene"), crate::viewer::shooting::modes::view::windows::scene::render(&snapshot).expect("viewer scene")] {
-        let scene: semio_framework_plugin::World3dScene = semio_framework_plugin::testkit::built_surface_scene(&node).expect("assembled scene");
+        let scene: semio_framework_plugin::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assembled scene");
         let frame: serde_json::Value = serde_json::from_str(scene.frame_json.as_deref().expect("active frame")).expect("independent frame oracle");
         assert_eq!(frame, vectors["frame"]);
         project(node);

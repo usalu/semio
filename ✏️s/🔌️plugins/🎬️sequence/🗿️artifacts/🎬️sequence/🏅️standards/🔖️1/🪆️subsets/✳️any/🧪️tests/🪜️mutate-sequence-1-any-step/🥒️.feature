@@ -17,7 +17,7 @@ Feature: Apply every typed SEQUENCE step mutation through the shared envelope-le
   genuinely test that one capability, from two different owners.
 
   This case carries the same recorded no-oracle decision (`sequence-step-graph-mutation-semantics`,
-  in `../🔮️oracle/🔣️.json`) as `🪜️step`'s own case, for the identical reason: `s.sequence.sequence`
+  in `../🔮️oracles/🔣️.json`) as `🪜️step`'s own case, for the identical reason: `s.sequence.sequence`
   is semio-native, so no third-party reader or writer exists for the aggregate wrapper either.
 
   📄️ The base document is real and committed. `shared://🪜️mutate-sequence-1-any-step/🗣️.dsl.semio` is parsed by production's own

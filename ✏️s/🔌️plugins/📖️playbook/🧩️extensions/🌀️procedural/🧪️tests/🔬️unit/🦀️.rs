@@ -70,7 +70,7 @@ fn procedural_parameter_controls_match_the_json_oracle() {
         if let Some(expected) = row.get("expectedValue") {
             assert_eq!(&actual["component"]["value"], expected);
         }
-        testkit::project_and_retire_fixture_tree(built_to_component_tree(node)).expect("retire control tree");
+        artifact_app_laws::project_and_retire_fixture_tree(built_to_component_tree(node)).expect("retire control tree");
     }
 }
 
@@ -115,7 +115,7 @@ async fn preview_body_emits_world_scene() {
     let mut app = new_app().await;
     let document = payload_json(pack::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
     let node = app.render(BODY_PREVIEW, Some(&document), &ViewModel::default()).await.expect("render");
-    let json = testkit::project_and_retire_fixture_tree(node).expect("preview projection");
+    let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("preview projection");
     assert!(json.contains("world-3d"));
 }
 
@@ -123,7 +123,7 @@ async fn preview_body_emits_world_scene() {
 async fn params_body_lists_flow_inputs() {
     let mut app = new_app().await;
     let node = app.render(BODY_PARAMS, None, &ViewModel::default()).await.expect("render");
-    let json = testkit::project_and_retire_fixture_tree(node).expect("params projection");
+    let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("params projection");
     assert!(json.contains("stack"));
 }
 
@@ -131,7 +131,7 @@ async fn params_body_lists_flow_inputs() {
 async fn params_body_includes_media_export_buttons() {
     let mut app = new_app().await;
     let node = app.render(BODY_PARAMS, None, &ViewModel::default()).await.expect("render");
-    let json = testkit::project_and_retire_fixture_tree(node).expect("params projection");
+    let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("params projection");
     let tree: serde_json::Value = serde_json::from_str(&json).expect("independent JSON parser");
     let button_count = tree["children"].as_array().expect("column children").iter().filter(|child| child["type"] == "button").count();
     assert_eq!(button_count, SOLID_MEDIA_FORMATS.len() * 2);
@@ -199,7 +199,7 @@ async fn module_labels_resolve_native_english_by_default() {
     assert_eq!(labels.no_flow_inputs.as_str(), "No flow inputs.");
     assert_eq!(labels.no_procedural_parameters.as_str(), "No procedural parameters.");
     let node = text_node(labels.no_procedural_parameters.as_str()).expect("label node");
-    let rendered = testkit::project_and_retire_fixture_tree(built_to_component_tree(node)).expect("label projection");
+    let rendered = artifact_app_laws::project_and_retire_fixture_tree(built_to_component_tree(node)).expect("label projection");
     assert!(rendered.contains("No procedural parameters."));
 }
 
@@ -209,7 +209,7 @@ async fn module_labels_resolve_german_locale() {
     assert_eq!(labels.no_flow_inputs.as_str(), "Keine Flow-Eingaben.");
     assert_eq!(labels.no_procedural_parameters.as_str(), "Keine prozeduralen Parameter.");
     let node = text_node(labels.no_procedural_parameters.as_str()).expect("label node");
-    let rendered = testkit::project_and_retire_fixture_tree(built_to_component_tree(node)).expect("label projection");
+    let rendered = artifact_app_laws::project_and_retire_fixture_tree(built_to_component_tree(node)).expect("label projection");
     assert!(rendered.contains("Keine prozeduralen Parameter."));
     assert!(!rendered.contains("No procedural parameters."));
 }

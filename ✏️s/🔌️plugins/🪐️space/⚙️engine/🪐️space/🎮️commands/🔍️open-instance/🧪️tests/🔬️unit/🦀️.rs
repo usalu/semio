@@ -2,7 +2,7 @@
 use super::*;
 use crate::demo_space_projection;
 use crate::engine::space::SpaceCommand;
-use crate::engine::space::testkit::{apply_config, seed_draw_plugin, studio_emit};
+use crate::engine::space::unit_tests::context::{apply_config, seed_draw_plugin, studio_emit};
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {

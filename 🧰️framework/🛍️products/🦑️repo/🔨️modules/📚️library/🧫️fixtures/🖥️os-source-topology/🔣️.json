@@ -1,0 +1,315 @@
+{
+  "version": 1,
+  "moves": [
+    {
+      "source": "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs",
+      "owner": "🌎️hub/🏗️bootstrap/🦀️.rs",
+      "kind": "rust",
+      "anchor": "fn main",
+      "consumers": [
+        "🌎️hub/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/🚪️index.tsx",
+      "owner": "🌎️hub/🔨️modules/🛡️admin/🟦️.tsx",
+      "kind": "typescript-jsx",
+      "anchor": "createRoot",
+      "consumers": [
+        "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/🌐️.html"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/⚡️effect-backbone.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "EffectBackbone",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🟦️.ts"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🌉️icon-name-value-bridge.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🌉️icon-name-value/🦀️.rs",
+      "kind": "rust",
+      "anchor": "impl dsl::ToValue for IconName",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🦀️.rs"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔨️bin/📤️dump_guestslim_typst_fonts.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/🦀️.rs",
+      "kind": "rust",
+      "anchor": "pack_asset_blobs",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/💡️inference-bridge.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference-bridge/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "proveMcpInferenceBridgeFixture",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧬️schema-validation.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧬️schema-validation/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "isValidJsonSchema2020_12",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🚀️bin.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏗️bootstrap/🦀️.rs",
+      "kind": "rust",
+      "anchor": "parse_stdio_args",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⌨️cli/📦️main.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⌨️cli/💾️binary/🦀️.rs",
+      "kind": "rust",
+      "anchor": "fn main",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🚀️bin.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🏗️bootstrap/🦀️.rs",
+      "kind": "rust",
+      "anchor": "FileMediaCache",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/⌨️cli/📦️main.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/⌨️cli/💾️binary/🦀️.rs",
+      "kind": "rust",
+      "anchor": "fn main",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🌱️artifact-creation/🏦️.tsx",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🌱️artifact-creation/🟦️.tsx",
+      "kind": "typescript-jsx",
+      "anchor": "artifactCreationProgress",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/packed-text.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧳️packed-text/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "packedTextLeaf",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧵️worker.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/👷️worker/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "wasiPort",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "EXTENSION_INSTALL_PATH",
+      "consumers": [
+        "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📋️project.json"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🖥️launch.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "generateLaunchJson",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📦️main.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/💾️binary/🦀️.rs",
+      "kind": "rust",
+      "anchor": "fn main",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📊️bench-web-harness.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️bench-web-harness/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "runBenchWebBudgets",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "semioBackboneVitePlugin",
+      "consumers": [
+        "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📦️bin.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🏗️bootstrap/🦀️.rs",
+      "kind": "rust",
+      "anchor": "fn main",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🖥️associations/🪟️windows/🔗️register-semio.ps1",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🖥️associations/🪟️windows/🔵️.ps1",
+      "kind": "powershell",
+      "anchor": "Semio.Document",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🖥️host/🧫️fixtures/🛡️hostile-batch-edge.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🖥️host/🧫️fixtures/🛡️hostile-batch-edge/🦀️.rs",
+      "kind": "rust",
+      "anchor": "hostile_inject_batch_edge",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🖥️host-shim.js",
+      "owner": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🟨️.js",
+      "kind": "javascript",
+      "anchor": "slowEcho",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🌐️.html"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "BackboneWorkerRequest",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🟦️.ts"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/📚️library/🟦️.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📚️library/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "Renderer package adapter",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧬️session.d.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.d.ts",
+      "kind": "typescript-declaration",
+      "anchor": "virtual:semio-playground-session",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🌎️hub/📦️packages/🟦️typescript/🟦️.ts",
+      "owner": "🌎️hub/🤝️integration-harness/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "startHub",
+      "consumers": [
+        "🌎️hub/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "sourceDisposition": "package-glue"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/🦀️.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🦀️.rs",
+      "kind": "rust",
+      "anchor": "describe_component",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/🦀️.rs",
+      "kind": "rust",
+      "anchor": "link_roundtrip",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "sourceDisposition": "removed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🧹️executable-source/🟦️.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧹️executable-source/🟦️.ts",
+      "kind": "typescript",
+      "anchor": "stripExecutableShebang",
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/vitest.config.ts"
+      ],
+      "sourceDisposition": "removed"
+    }
+  ],
+  "packageBoundary": {
+    "cargoRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+    "nodeRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+    "nodeManifest": "package.json",
+    "nxManifest": "📋️project.json",
+    "nodeEntry": "📚️library/🟦️.ts",
+    "name": "@semio-tech/framework-renderer-wgpu"
+  }
+}

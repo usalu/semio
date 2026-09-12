@@ -1,6 +1,7 @@
 //! ✏️ ✏️ Layout play app commands command — `patch-page`.
 
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use crate::editor::layout::modes::edit::windows::blueprint::config::current;
 use crate::mutations::change_page_height::ChangePageHeight;
 use crate::mutations::change_page_width::ChangePageWidth;
 use crate::mutations::rename_page::RenamePage;
@@ -53,8 +54,8 @@ pub struct PatchPage {
     pub value: String,
 }
 
-pub fn handle(payload: &PatchPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
-    let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
+pub fn handle(payload: &PatchPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
+    let page_id = payload.page_id.clone().unwrap_or_else(|| current(cfg).active_page_id);
     match doc.snapshot.pages.iter().find(|page| page.id == page_id).and_then(|page| page_field_mutation(page, &payload.field, &payload.value)) {
         Some(mutation) => Ok(Emit::mutations(vec![mutation])),
         None => Ok(Emit::default()),

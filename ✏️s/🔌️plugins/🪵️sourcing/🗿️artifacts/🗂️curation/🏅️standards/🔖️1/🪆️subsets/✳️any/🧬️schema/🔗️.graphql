@@ -1,22 +1,5 @@
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 # 🧬️ Curation artifact schema — every field with its state class.
-
-enum SortDirection {
-  ASC
-  DESC
-}
-
-type TableSort {
-  columnId: String!
-  direction: SortDirection!
-}
-
-type Filters {
-  query: String!
-  moduleIds: [String!]!
-  typologyPath: [String!]!
-  minAvailability: Int!
-  sort: TableSort
-}
 
 union GeometryRecipe =
   | GeometryRecipeBox
@@ -77,7 +60,7 @@ type CuratedItem {
 }
 
 type CurationArtifact {
-  catalog: ArtifactLink! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.kit")
+  catalog: ArtifactChild! @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
   stockExtra: [ObjectKindExtra!]! @state(class: ARTIFACT)
   curated: [CuratedItem!]! @state(class: ARTIFACT)
 }

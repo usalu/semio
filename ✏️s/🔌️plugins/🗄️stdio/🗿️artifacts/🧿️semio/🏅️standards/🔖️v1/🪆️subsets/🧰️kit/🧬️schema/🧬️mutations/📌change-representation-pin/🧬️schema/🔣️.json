@@ -4,88 +4,9 @@
   "title": "ChangeRepresentationPin",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "index",
-    "pin"
-  ],
+  "required": ["index", "pin"],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "pin": {
-      "$ref": "#/$defs/LinkPin"
-    }
-  },
-  "$defs": {
-    "LinkPin": {
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "const": "head"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "id"
-          ],
-          "properties": {
-            "kind": {
-              "const": "checkpoint"
-            },
-            "id": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "blob"
-          ],
-          "properties": {
-            "kind": {
-              "const": "snapshot"
-            },
-            "blob": {
-              "$ref": "#/$defs/BlobRef"
-            }
-          }
-        }
-      ]
-    },
-    "BlobRef": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "hash",
-        "size",
-        "mediaType"
-      ],
-      "properties": {
-        "hash": {
-          "type": "string"
-        },
-        "size": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "mediaType": {
-          "type": "string"
-        }
-      }
-    }
+    "index": { "type": "integer", "minimum": 0 },
+    "pin": { "$ref": "https://semio.tech/schema/os/store/link.json#/$defs/LinkPin" }
   }
 }

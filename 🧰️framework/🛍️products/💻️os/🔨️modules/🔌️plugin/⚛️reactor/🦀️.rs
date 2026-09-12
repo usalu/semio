@@ -39,7 +39,7 @@ use semio_framework::kernel::{ActorInstanceLifecycleReceipt, ActorUiPatchReceipt
 // 🧬️ Same gating rationale as the `kernel` import above: only the WIT-boundary code below names the
 // semantic-UI contract types (`UiIntent`, `UiRevision`, `Activity`), so an ungated alias warns as
 // unused on native. ALSO enabled under `cfg(test)` (M2, ticket 26/08/17 `design-unified.md`): the
-// native `test_support` module below (behind its own `#[cfg(test)]`) exercises `PATCHES`/`PRESENCE`
+// native `reactor_driver` module below (behind its own `#[cfg(test)]`) exercises `PATCHES`/`PRESENCE`
 // directly with real `ui_contract` values — `wit_bridge` still cannot run under `cargo test`
 // (wasm32-wasip2-only), but its own type vocabulary can be reused for a native fixture.
 use semio_framework_ui_contract as ui_contract;
@@ -721,7 +721,7 @@ pub(crate) fn queue_extension_invocation(instance: u32, invocation: &crate::app:
 /// 📤️ Drains this actor's queued outbound effects — exactly what `poll` folds into
 /// `turn-result.effects` once per turn. A fixture that drives a `PluginApp` without a live
 /// `PluginRuntime` has no `poll`, so this is its only way to observe a minted
-/// `Effect::InvokeExtension` (`🔌️plugin/🦀️.rs`'s `testkit::settle_extension_invocations`).
+/// `Effect::InvokeExtension` (`🔌️plugin/🦀️.rs`'s `artifact_app_laws::settle_extension_invocations`).
 pub(crate) fn drain_queued_effects(instance: u32) -> Vec<Effect> {
     REGISTRY.with(|registry| registry.for_instance(instance).drain())
 }
@@ -1750,14 +1750,14 @@ mod wit_bridge {
 /// park, get resolved by an injected completion, resume — is exercised end-to-end without needing
 /// a wasm32-wasip2 build. `pub(crate)`, `#[cfg(test)]`-gated: never part of the real API surface.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️test-support/🦀️.rs"]
-pub(crate) mod test_support;
+#[path = "🧪️tests/⚛️reactor-driver/🦀️.rs"]
+pub(crate) mod reactor_driver;
 
 //#region 🧪️M1M2ReactorTests
-/// 🎯️👥️ M1/M2 (ticket 26/08/17 `design-unified.md`) acceptance, driven through `test_support`'s
+/// 🎯️👥️ M1/M2 (ticket 26/08/17 `design-unified.md`) acceptance, driven through `reactor_driver`'s
 /// direct hooks into `PATCHES`/`PRESENCE` — the same two thread-locals `poll`'s real intent-batching
 /// and dirty-render loops touch, exercised without needing a wasm32-wasip2 build (`poll` itself,
-/// gated to `wit_bridge`, cannot run under a native `cargo test` — see `test_support`'s own doc).
+/// gated to `wit_bridge`, cannot run under a native `cargo test` — see `reactor_driver`'s own doc).
 #[cfg(test)]
 #[path = "🧪️tests/🔬️m1-m2-reactor/🦀️.rs"]
 mod m1_m2_reactor_tests;

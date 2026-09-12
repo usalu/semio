@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://fem/engine/sparse/paged-csr",
+  "title": "FEM paged CSR numerical reference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["oracle", "order", "entryCount", "indptrTail", "physicalPageBytes", "vectorRule", "actionSamples", "actionL1", "indicesSha256", "valuesSha256"],
+  "properties": {
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package", "version", "implementation"],
+      "properties": {
+        "package": { "const": "numpy" },
+        "version": { "type": "string", "minLength": 1 },
+        "implementation": { "type": "string", "minLength": 1 }
+      }
+    },
+    "order": { "type": "integer", "minimum": 2 },
+    "entryCount": { "type": "integer", "minimum": 4 },
+    "indptrTail": { "type": "integer", "minimum": 4 },
+    "physicalPageBytes": { "const": 4096 },
+    "vectorRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["multiplier", "modulus", "offset", "divisor"],
+      "properties": {
+        "multiplier": { "type": "integer" },
+        "modulus": { "type": "integer", "minimum": 1 },
+        "offset": { "type": "integer" },
+        "divisor": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "actionSamples": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["index", "value"],
+        "properties": {
+          "index": { "type": "integer", "minimum": 0 },
+          "value": { "type": "number" }
+        }
+      }
+    },
+    "actionL1": { "type": "number", "minimum": 0 },
+    "indicesSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "valuesSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

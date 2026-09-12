@@ -1,10 +1,10 @@
 //! 🦀️ glTF 2.0 `🎥️camera` subset mutation case — Rust adapter. Covers the 4 kinds
-//! `../../🔮️oracle/🔣️.json`'s `gltf-2-0-camera` catalog declares: `create-camera`, `delete-camera`,
+//! `../../🔮️oracles/🔣️.json`'s `gltf-2-0-camera` catalog declares: `create-camera`, `delete-camera`,
 //! `move-camera`, `reorder-cameras`. Every leaf's own `apply()` (`../../../♾️any/🧬️schema/
 //! 🧬️mutations/🎥️camera/{🌱️create,🗑️delete,🚚️move,🔀️reorder}/🦀️.rs`) stays physically owned by
 //! `♾️any` — `validate_mutation_leaf_source` requires the exact registered domain/operation owner
 //! beneath its aggregate mutation root, so this case reaches it by import. The oracle performs every kind by independent GLB/JSON-tree
-//! manipulation (`../../../♾️any/🔮️oracle/🦀️.rs`, extended with these 4 kinds by this same change,
+//! manipulation (`../../../♾️any/🔮️oracles/🦀️.rs`, extended with these 4 kinds by this same change,
 //! using `json` 0.12 as the JSON layer only, never this subset's own codec); the subject fully parses
 //! each kind's own committed fixture into `GltfSnapshot` via `parse_gltf_document` and re-serializes
 //! with `serialize_gltf_document` alone, dispatching through each leaf's own typed `apply()` function
@@ -67,7 +67,7 @@ const GLTF_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "generator", "c
 /// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair against the
 /// kind's own committed `⬅️before.gltf` fixture selected by `mutable_input`, computed
 /// independently here since the oracle role must not link the subject crate. Mirrors
-/// `../../../♾️any/🔮️oracle/🦀️.rs`'s own `apply_camera_change`/remap arithmetic by construction
+/// `../../../♾️any/🔮️oracles/🦀️.rs`'s own `apply_camera_change`/remap arithmetic by construction
 /// (each spec below was derived from the committed fixture's own before/after diff, documented in
 /// the feature file).
 fn inverse_spec(kind: &str) -> Json {

@@ -7,7 +7,7 @@
 
 use crate::schema::document_to_workflow;
 use crate::DagSnapshot;
-use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, NodeGraphScene, Viewport2d, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const DAG_VIEW_WINDOW_MAIN: &str = "dag-view-main";
@@ -45,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 /// the editor's own main-window render.
 pub fn render(document: &DagSnapshot) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges) = document_to_workflow(document);
-    let viewport = NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 };
+    let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
     scene_surface(DAG_VIEW_SURFACE_MAIN, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render

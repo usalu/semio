@@ -2,7 +2,7 @@
 //! queries on `SemioBrepSnapshot`'s arena `Body`. `oracle` (below) is a closed-form ground
 //! truth used only by tests — deliberately independent of this module's own algorithms.
 //!
-//! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/{📏️measure,🔮️oracle}/🦀️.rs` in ticket
+//! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/{📏️measure,🔮️oracles}/🦀️.rs` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL2.
 
 // 📏 Divergence-theorem mass properties, axis-aligned bounds, and solid distance queries on [`crate::standards::v1::subsets::brep::schema::snapshot::topology::Body`].

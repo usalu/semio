@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/app/fem/2d/model-window-config/schema.json",
+  "$ref": "#/$defs/Fem2dModelWindowConfig",
+  "$defs": {
+    "Fem2dModelWindowConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "camera"
+      ],
+      "properties": {
+        "camera": {
+          "$ref": "https://semio.tech/schema/framework/ui/viewport/2d"
+        }
+      }
+    }
+  }
+}

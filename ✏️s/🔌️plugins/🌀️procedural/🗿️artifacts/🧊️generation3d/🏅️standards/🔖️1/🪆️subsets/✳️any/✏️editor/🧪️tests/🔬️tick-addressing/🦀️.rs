@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::generation3d::testkit::{self, app_with_registry};
+use crate::editor::generation3d::unit_tests::context::{self, app_with_registry};
 use crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_RECT_EXTRUDE;
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstance};
@@ -78,10 +78,10 @@ fn armed_window_ids(effects: &[Effect]) -> Vec<String> {
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[semio_framework_async_macros::async_test]
 async fn every_armed_tick_names_a_preview_window_that_is_actually_attached() {
-    let _serial = test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let fixture = fixture();
     let mut app = app_with_registry().await;
-    testkit::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCEDURAL_EXAMPLE_RECT_EXTRUDE.into() })).await;
+    context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCEDURAL_EXAMPLE_RECT_EXTRUDE.into() })).await;
     for case in fixture.arming.iter().filter(|case| case.surface == "editor") {
         let view = roster(&fixture, &case.attached);
         let armed = armed_window_ids(&app.pending_effects(Some(&view)).await);
@@ -90,7 +90,7 @@ async fn every_armed_tick_names_a_preview_window_that_is_actually_attached() {
     }
     let empty = armed_window_ids(&app.pending_effects(None).await);
     assert!(empty.is_empty(), "no roster at all must arm nothing, got {empty:?}");
-    semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
 /// ⚖️ LAW: which of those addresses the REAL retained route admits, driven through
@@ -98,16 +98,16 @@ async fn every_armed_tick_names_a_preview_window_that_is_actually_attached() {
 /// served app's shell is focused on the flow window throughout, exactly as it is on a boot.
 #[semio_framework_async_macros::async_test]
 async fn only_a_preview_addressed_tick_passes_the_retained_preflight() {
-    let _serial = test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let fixture = fixture();
     for case in fixture.dispatch.iter().filter(|case| case.surface == "editor") {
         let mut app = app_with_registry().await;
         let view = roster(&fixture, &case.attached).for_window_instance(&case.current_window_id).expect("the current window is attached");
         let kind = fixture.window_kinds.get(&case.payload_window_kind).cloned().unwrap_or_default();
         let args = flow_eval_tick::window_args(&case.payload_window_id, &kind);
-        let action_meta = ActionMeta { view_state: Some(view), ..semio_framework_plugin::testkit::meta("local") };
-        let outcome = match testkit::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await {
-            Ok(()) => match semio_framework_plugin::testkit::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await {
+        let action_meta = ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
+        let outcome = match context::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await {
+            Ok(()) => match semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await {
                 Ok(receipt) => receipt.lanes.contains(&TypedOperationResultLane::Fault).then(|| format!("retained publication faulted: {:?}", receipt.lanes)),
                 Err(fault) => Some(format!("{fault:?}")),
             },
@@ -118,7 +118,7 @@ async fn only_a_preview_addressed_tick_passes_the_retained_preflight() {
         if let Some(detail) = outcome {
             assert!(!detail.contains("exceeds semantic work capacity"), "dispatch case {}: an addressing refusal must not be reported as a work-capacity fault: {detail}", case.id);
         }
-        semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 }
 
@@ -134,53 +134,53 @@ async fn only_a_preview_addressed_tick_passes_the_retained_preflight() {
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_drives_the_self_dispatched_tick_chain_to_a_rendered_mesh() {
-    let _serial = test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let (flow_view, preview_view) = testkit::shell_views("procedural-main", "procedural-preview");
-    let action_meta = ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::testkit::meta("local") };
+    let (flow_view, preview_view) = context::shell_views("procedural-main", "procedural-preview");
+    let action_meta = ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta).await.expect("setActiveExample dispatches from the flow window");
-    let receipt = testkit::settle(&mut app).await;
+    let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted: {:?}", receipt.lanes);
 
     // 🔒️ The switch arms the chain from its OWN emit, and the shell feeds those `requestedEffects`
     // back — exactly what is replayed here. The refresh poll adds nothing on top because the
     // retained session's per-window latch already holds one pending tick for that window.
-    let ticks = testkit::drain_armed_flow_eval_ticks_from(&mut app, &flow_view, &receipt.effects).await;
+    let ticks = context::drain_armed_flow_eval_ticks_from(&mut app, &flow_view, &receipt.effects).await;
     assert!(ticks > 0, "setActiveExample must arm at least one addressed flowEvalTick");
 
-    let graph = testkit::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await;
-    let scene = semio_framework_plugin::testkit::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&graph).expect("node-graph scene decodes off the rendered flow surface");
+    let graph = context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await;
+    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&graph).expect("node-graph scene decodes off the rendered flow surface");
     let status_json = scene.status_json.clone().expect("the flow window publishes a per-widget evaluation status");
     for widget_id in ["width", "height", "distance", "rect", "vector", "extrude", "volume"] {
-        assert_eq!(super::tests::node_eval_status(&status_json, widget_id), "ok", "{widget_id} never finished evaluating: {status_json}");
+        assert_eq!(super::unit_tests::node_eval_status(&status_json, widget_id), "ok", "{widget_id} never finished evaluating: {status_json}");
     }
 
-    let preview = testkit::render_with_view(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await;
-    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::testkit::decode_fixture_scene_with_lanes(&preview).expect("projected preview body must decode as an assembled world-3d scene");
+    let preview = context::render_with_view(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await;
+    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("projected preview body must decode as an assembled world-3d scene");
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("preview meshes json");
     let mesh_count = meshes.as_array().map_or(0, Vec::len);
     assert!(mesh_count >= 1, "the extruded volume must reach the preview as at least one mesh, got {mesh_count}: {}", world.meshes_json);
     eprintln!("[DEBUG] self-dispatched tick chain finished: ticks={ticks} status={status_json} meshes={mesh_count}");
-    semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
 /// ⚖️ LAW: generate-mode preview evaluation is the SAME addressed tick chain as edit preview, never
 /// a dead synchronous `FlowEvalSession::tick` inside `Generation3dPreviewCommandWork`.
 #[semio_framework_async_macros::async_test]
 async fn generate_preview_eval_emits_extension_or_rearms_flow_eval_tick() {
-    let _serial = test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let (generations_view, preview_view) = testkit::generate_shell_views("generation3d-generations", "generation3d-generate-form", "generation3d-generate-preview");
-    let action_meta = ActionMeta { view_state: Some(generations_view.clone()), ..semio_framework_plugin::testkit::meta("local") };
+    let (generations_view, preview_view) = context::generate_shell_views("generation3d-generations", "generation3d-generate-form", "generation3d-generate-preview");
+    let action_meta = ActionMeta { view_state: Some(generations_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta).await.expect("setActiveExample");
-    let receipt = testkit::settle(&mut app).await;
+    let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted: {:?}", receipt.lanes);
     // 🔒️ Drain the chain the example switch itself armed first: while a tick is still pending for
     // that window the latch (correctly) refuses a second one, and this law is about what
     // `addGeneration` owes a SETTLED window.
-    testkit::drain_armed_flow_eval_ticks_from(&mut app, &generations_view, &receipt.effects).await;
+    context::drain_armed_flow_eval_ticks_from(&mut app, &generations_view, &receipt.effects).await;
     app.handle_action("addGeneration", None, &action_meta).await.expect("addGeneration");
-    let receipt = testkit::settle(&mut app).await;
+    let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "addGeneration faulted: {:?}", receipt.lanes);
     let armed = armed_window_ids(&receipt.effects);
     let pending = armed_window_ids(&app.pending_effects(Some(&generations_view)).await);
@@ -189,15 +189,15 @@ async fn generate_preview_eval_emits_extension_or_rearms_flow_eval_tick() {
         "addGeneration / pending_effects must re-arm flowEvalTick at the generate preview window, armed={armed:?} pending={pending:?}"
     );
     let args = flow_eval_tick::window_args("generation3d-generate-preview", generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW);
-    testkit::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await.expect("generate preview tick");
-    let tick = testkit::settle(&mut app).await;
+    context::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await.expect("generate preview tick");
+    let tick = context::settle(&mut app).await;
     assert!(!tick.lanes.contains(&TypedOperationResultLane::Fault), "generate preview tick faulted: {:?}", tick.lanes);
     let answered = crate::brep_extension::settle(&mut *app, action_meta.instance_id).await;
     let rearmed = armed_window_ids(&tick.effects);
     eprintln!("[DEBUG] generate preview tick: rearmed={rearmed:?} answered={answered}");
     assert!(answered > 0 || rearmed.iter().any(|id| id == "generation3d-generate-preview"), "generate preview eval must emit ExtensionInvocation or re-arm flowEvalTick, not a dead sync tick");
     let _ = preview_view;
-    semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
 /// ⚖️ LAW: generate mode's ENTRY state and the `addGeneration` affordance that leaves it, end to end.
@@ -211,13 +211,13 @@ async fn generate_preview_eval_emits_extension_or_rearms_flow_eval_tick() {
 ///    real tessellated geometry: `meshes > 0` in the generate preview, not just a re-armed tick.
 #[semio_framework_async_macros::async_test]
 async fn add_generation_from_the_generations_window_drives_the_generate_preview_to_a_rendered_mesh() {
-    let _serial = test_support::lock();
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let (generations_view, preview_view) = testkit::generate_shell_views("generation3d-generations", "generation3d-generate-form", "generation3d-generate-preview");
-    let action_meta = ActionMeta { view_state: Some(generations_view.clone()), ..semio_framework_plugin::testkit::meta("local") };
+    let (generations_view, preview_view) = context::generate_shell_views("generation3d-generations", "generation3d-generate-form", "generation3d-generate-preview");
+    let action_meta = ActionMeta { view_state: Some(generations_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
 
-    let entry = testkit::render_with_view(&mut app, generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW, &preview_view).await;
-    let entry_scene: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::testkit::decode_fixture_scene_with_lanes(&entry).expect("the generate-mode entry preview is a world-3d status host");
+    let entry = context::render_with_view(&mut app, generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW, &preview_view).await;
+    let entry_scene: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&entry).expect("the generate-mode entry preview is a world-3d status host");
     let entry_status = entry_scene.status_json.clone().expect("the generate preview publishes a status host before anything is generated");
     let entry_json: serde_json::Value = serde_json::from_str(&entry_status).expect("entry status json");
     // 🪪️ With the geometry extension actually contributed the entry phase is IDLE — nothing is
@@ -228,23 +228,23 @@ async fn add_generation_from_the_generations_window_drives_the_generate_preview_
     assert_eq!(entry_scene.instances_json, "[]", "entry state draws no instances: {}", entry_scene.instances_json);
 
     app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta).await.expect("setActiveExample");
-    let receipt = testkit::settle(&mut app).await;
+    let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted: {:?}", receipt.lanes);
-    testkit::drain_armed_flow_eval_ticks_from(&mut app, &generations_view, &receipt.effects).await;
+    context::drain_armed_flow_eval_ticks_from(&mut app, &generations_view, &receipt.effects).await;
 
     app.handle_action("addGeneration", None, &action_meta).await.expect("addGeneration dispatches from the generations window");
-    let added = testkit::settle(&mut app).await;
+    let added = context::settle(&mut app).await;
     assert!(!added.lanes.contains(&TypedOperationResultLane::Fault), "addGeneration faulted: {:?}", added.lanes);
-    let ticks = testkit::drain_armed_flow_eval_ticks_from(&mut app, &generations_view, &added.effects).await;
+    let ticks = context::drain_armed_flow_eval_ticks_from(&mut app, &generations_view, &added.effects).await;
     assert!(ticks > 0, "addGeneration must arm at least one addressed flowEvalTick");
 
-    let preview = testkit::render_with_view(&mut app, generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW, &preview_view).await;
-    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::testkit::decode_fixture_scene_with_lanes(&preview).expect("the generate preview stays a world-3d surface once a generation exists");
+    let preview = context::render_with_view(&mut app, generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW, &preview_view).await;
+    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("the generate preview stays a world-3d surface once a generation exists");
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("generate preview meshes json");
     let mesh_count = meshes.as_array().map_or(0, Vec::len);
     let status = world.status_json.clone().unwrap_or_default();
     eprintln!("[DEBUG] addGeneration generate-preview chain: ticks={ticks} meshes={mesh_count} status={status}");
     assert!(mesh_count >= 1, "the generation the UI added must reach the generate preview as at least one mesh, got {mesh_count}: {}", world.meshes_json);
     assert!(!status.contains("\"hint\""), "a preview with evaluated geometry must drop the entry hint: {status}");
-    semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }

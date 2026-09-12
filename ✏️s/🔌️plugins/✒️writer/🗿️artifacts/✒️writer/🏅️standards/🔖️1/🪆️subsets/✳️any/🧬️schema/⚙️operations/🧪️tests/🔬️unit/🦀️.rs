@@ -35,23 +35,23 @@ async fn change_uri_and_change_language_obey_the_inverse_and_diff_absorb_laws() 
     let base = WriterSnapshot { uri: "writer://a".into(), language_id: "plaintext".into(), ..schema::empty_writer_snapshot() };
 
     let uri_mutation = WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://b".into() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &uri_mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &uri_mutation).await;
     let d1 = uri_mutation.diff(&base).diff().clone();
     let d2 = WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://c".into() }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 
     let language_mutation = WriterMutation::ChangeLanguage(ChangeLanguage { new_language_id: "jack".into() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &language_mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &language_mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn edit_text_obeys_the_inverse_and_diff_absorb_laws() {
     let base = WriterSnapshot { document: crate::document_child_handle_with_text("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
     let mutation = WriterMutation::EditText(EditText { text: "second".into() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = WriterMutation::EditText(EditText { text: "third".into() }).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🔖️MutationLaws
 
@@ -64,25 +64,25 @@ async fn edit_text_obeys_the_inverse_and_diff_absorb_laws() {
 async fn edit_text_outcome_is_deterministic() {
     let base = WriterSnapshot { document: crate::document_child_handle_with_text("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
     let mutation = WriterMutation::EditText(EditText { text: "second".into() });
-    protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_outcome_deterministic(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_writer_outcome_obeys_the_policy_matrix() {
     let snapshot = WriterSnapshot { id: "old-id".into(), document: crate::document_child_handle_with_text("old-id", "old text", "plaintext"), ..schema::empty_writer_snapshot() };
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&snapshot, &WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() })).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&snapshot, &WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn change_uri_and_change_language_outcomes_obey_the_policy_matrix() {
     let base = WriterSnapshot { uri: "writer://a".into(), language_id: "plaintext".into(), ..schema::empty_writer_snapshot() };
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://b".into() })).await;
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &WriterMutation::ChangeLanguage(ChangeLanguage { new_language_id: "jack".into() })).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://b".into() })).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &WriterMutation::ChangeLanguage(ChangeLanguage { new_language_id: "jack".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn edit_text_outcome_obeys_the_policy_matrix() {
     let base = WriterSnapshot { document: crate::document_child_handle_with_text("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &WriterMutation::EditText(EditText { text: "second".into() })).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &WriterMutation::EditText(EditText { text: "second".into() })).await;
 }
 //#endregion 🧪️OutcomeLaws

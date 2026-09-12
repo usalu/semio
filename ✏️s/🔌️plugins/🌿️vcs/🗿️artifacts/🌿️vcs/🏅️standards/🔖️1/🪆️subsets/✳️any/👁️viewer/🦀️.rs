@@ -18,7 +18,7 @@ use store::EngineHandles;
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert, `Default`-deriving variant — real per-command payload modules the way
 /// `✏️editor/🎮️commands/*` carries them would be pure ceremony for a surface that never dispatches
-/// anything through `handle`. `Default` is required by `testkit::assert_viewer_never_mutates::<V>()`
+/// anything through `handle`. `Default` is required by `artifact_app_laws::assert_viewer_never_mutates::<V>()`
 /// (contract §2.5) to synthesize a representative command with no caller-supplied value.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum VcsViewCommand {

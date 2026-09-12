@@ -1,7 +1,7 @@
 /** 🧪️ CAD document facets compose exact model and drawing child identities. */
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
-import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧪️testkit/🪪️document-contract/🟦️.ts";
+import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document-contract/🟦️.ts";
 import ioSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
@@ -11,11 +11,13 @@ import { parseCadArtifact } from "../../🟦️.ts";
 import { parseCadSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseCadDiff } from "../../🔺️diff/🟦️.ts";
 import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
+import { testCadWorldWindowConfigContract } from "../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts";
 
 type InvalidDocument = { kind: string; field?: string; value: unknown };
 
 /** 🪪️ Compares production parsers with Ajv and the complete committed CAD mutation corpus. */
 export function testCadDocumentContractOracle(): void {
+  testCadWorldWindowConfigContract();
   const document = structuredClone(vectors.document) as Record<string, unknown>;
   const invalidRows = vectors.invalidDocuments as InvalidDocument[];
   const invalidDocuments = invalidRows.filter((row) => row.kind !== "shapeChildId").map((row) => {

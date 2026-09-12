@@ -1,60 +1,55 @@
 {
+  "why": "The one neutral oracle for the typed-operation result exchange: the lane discriminants `TypedOperationResultPage::renderer_exchange_bytes` writes at byte 25 of a page, the fixed page layout around them, and a shell-message stream that mixes those pages with ordinary `AppFrame` replies on the SAME `Effect::SendMessage{Shell{instance}}` endpoint. Every host that reads that endpoint — the native wgpu renderer's `apply_turn_result`, the browser bridge's `shellFrameBytes`/`scanTypedOperationPages` — must agree on which bytes are which, or a page reaches an `AppFrame` decoder and its magic's first byte reads as a frame tag.",
+  "page": {
+    "pageMagic": "semio.typed-operation-page.v1\u0000",
+    "ackMagic": "semio.typed-operation-ack.v1\u0000",
+    "headerBytes": 30,
+    "tokenBytes": 25,
+    "laneOffset": 25,
+    "lengthOffset": 26,
+    "maxPayloadBytes": 4096,
+    "pageMagicFirstByte": 115,
+    "why": "`pageMagicFirstByte` is the `'s'` an `AppFrame` decoder reports as `unknown tag 115` when the discrimination is missing — the defect this fixture exists to keep closed."
+  },
   "lanes": [
-    {
-      "name": "artifact",
-      "tag": 0
-    },
-    {
-      "name": "config",
-      "tag": 1
-    },
-    {
-      "name": "draft",
-      "tag": 2
-    },
-    {
-      "name": "presence",
-      "tag": 3
-    },
-    {
-      "name": "transient",
-      "tag": 4
-    },
-    {
-      "name": "child",
-      "tag": 5
-    },
-    {
-      "name": "effect",
-      "tag": 6
-    },
-    {
-      "name": "event",
-      "tag": 7
-    },
-    {
-      "name": "ui",
-      "tag": 8
-    },
-    {
-      "name": "download",
-      "tag": 9
-    },
-    {
-      "name": "terminal",
-      "tag": 10
-    },
-    {
-      "name": "fault",
-      "tag": 11
-    },
-    {
-      "name": "interaction",
-      "tag": 12
-    }
+    { "name": "artifact", "tag": 0 },
+    { "name": "config", "tag": 1 },
+    { "name": "draft", "tag": 2 },
+    { "name": "presence", "tag": 3 },
+    { "name": "transient", "tag": 4 },
+    { "name": "child", "tag": 5 },
+    { "name": "effect", "tag": 6 },
+    { "name": "event", "tag": 7 },
+    { "name": "ui", "tag": 8 },
+    { "name": "download", "tag": 9 },
+    { "name": "terminal", "tag": 10 },
+    { "name": "fault", "tag": 11 },
+    { "name": "interaction", "tag": 12 },
+    { "name": "windowTransient", "tag": 13 },
+    { "name": "windowConfig", "tag": 14 }
   ],
-  "invalidTags": [
-    13,
-    255
-  ]
+  "invalidTags": [15, 255],
+  "terminalTag": 10,
+  "faultTag": 11,
+  "shellMessageStream": {
+    "why": "One preview chain's own turn, as `route_exchange_output` emits it: the mounted `flowEvalTick` operation publishes its result pages onto the shell endpoint beside the command's own `AppFrame` replies. `windowTransient` is the mesh publication lane, and it is the row that a host capping its lane check at 12 silently drops.",
+    "instanceId": 1,
+    "token": { "receiver": 1, "operation": 7, "generation": 2, "sequence": 0, "attempt": 0 },
+    "messages": [
+      { "name": "invocation-reply", "kind": "appFrame", "appFrameTag": 1 },
+      { "name": "window-transient-meshes", "kind": "page", "lane": 13, "payload": "{\"meshes\":3}" },
+      { "name": "interaction-progress", "kind": "page", "lane": 12, "payload": "{\"ratio\":0.5}" },
+      { "name": "done-reply", "kind": "appFrame", "appFrameTag": 0 },
+      { "name": "terminal", "kind": "page", "lane": 10, "payload": "{}" },
+      { "name": "foreign-instance-frame", "kind": "appFrame", "appFrameTag": 0, "instanceId": 2 }
+    ],
+    "expect": {
+      "appFrames": 2,
+      "pages": 3,
+      "acknowledgements": 3,
+      "terminal": true,
+      "faults": 0,
+      "why": "`foreign-instance-frame` is addressed at another instance, so instance 1's demux owes it nothing: two app frames, not three."
+    }
+  }
 }

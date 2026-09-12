@@ -3417,11 +3417,11 @@ async fn create_document_twice_errs_already_exists() {
 #[semio_framework_async_macros::async_test]
 async fn database_document_mount_failure_terminalizes_authority_builder_wal_owner_before_fanout() {
     let inner = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(test_worker_pool()).await.unwrap()));
-    let fault = db_testkit::FaultStorage::new(inner).await;
+    let fault = db_fault_testing::FaultStorage::new(inner).await;
     let storage = Arc::new(db_storage::DbBackend::Fault(Box::new(fault)));
     let mut database = Database::open(test_worker_pool(), DbConfig::for_profile(Profile::Test), storage.clone()).await.unwrap();
     let db_storage::DbBackend::Fault(fault) = storage.as_ref() else { unreachable!() };
-    fault.set_script(db_testkit::FaultScript { fail_nth_write: Some(1), ..db_testkit::FaultScript::default() }).await;
+    fault.set_script(db_fault_testing::FaultScript { fail_nth_write: Some(1), ..db_fault_testing::FaultScript::default() }).await;
     let document = protocol::ArtifactId("database-retained-open-rejection".to_string());
     let rejected = match database.create_document(ArtifactSpec::new(document.clone()).await).await {
         Err(rejected) => rejected,
@@ -3443,11 +3443,11 @@ async fn database_document_mount_failure_terminalizes_authority_builder_wal_owne
 async fn database_document_mount_failure_waiters_share_terminal_cleanup_and_retry_generation() {
     let pool = test_worker_pool();
     let inner = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
-    let fault = db_testkit::FaultStorage::new(inner).await;
+    let fault = db_fault_testing::FaultStorage::new(inner).await;
     let storage = Arc::new(db_storage::DbBackend::Fault(Box::new(fault)));
     let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage.clone()).await.unwrap();
     let db_storage::DbBackend::Fault(fault) = storage.as_ref() else { unreachable!() };
-    fault.set_script(db_testkit::FaultScript { fail_nth_sync: Some(1), ..db_testkit::FaultScript::default() }).await;
+    fault.set_script(db_fault_testing::FaultScript { fail_nth_sync: Some(1), ..db_fault_testing::FaultScript::default() }).await;
     let document = protocol::ArtifactId(String::from("single-flight-retained-failure"));
     let mut first_future = Box::pin(database.ensure_document(&document));
     let mut second_future = Box::pin(database.ensure_document(&document));
@@ -3490,7 +3490,7 @@ async fn database_document_mount_failure_waiters_share_terminal_cleanup_and_retr
     assert!(database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
     let core = to_core_document_id(&document).await;
     storage.wal().await.acquire_writer(&core).await.unwrap().release().await.unwrap();
-    fault.set_script(db_testkit::FaultScript::default()).await;
+    fault.set_script(db_fault_testing::FaultScript::default()).await;
     let handle = database.ensure_document(&document).await.unwrap();
     assert_eq!(database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).ready_count(), 1);
     drop(handle);
@@ -3504,11 +3504,11 @@ async fn database_document_mount_unlock_fault_parks_exact_owner_until_controlled
     let memory = db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
     memory.fail_next_writer_release();
     let inner = Arc::new(db_storage::DbBackend::Memory(memory));
-    let fault = db_testkit::FaultStorage::new(inner).await;
+    let fault = db_fault_testing::FaultStorage::new(inner).await;
     let storage = Arc::new(db_storage::DbBackend::Fault(Box::new(fault)));
     let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage.clone()).await.unwrap();
     let db_storage::DbBackend::Fault(fault) = storage.as_ref() else { unreachable!() };
-    fault.set_script(db_testkit::FaultScript { fail_nth_sync: Some(1), ..db_testkit::FaultScript::default() }).await;
+    fault.set_script(db_fault_testing::FaultScript { fail_nth_sync: Some(1), ..db_fault_testing::FaultScript::default() }).await;
     let document = protocol::ArtifactId(String::from("single-flight-unlock-fault"));
     let (parked_tx, parked_rx) = std::sync::mpsc::sync_channel(1);
     *database.mount_parked_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move || parked_tx.send(()).unwrap()));
@@ -3552,7 +3552,7 @@ async fn database_document_mount_unlock_fault_parks_exact_owner_until_controlled
     assert!(database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
     let core = to_core_document_id(&document).await;
     storage.wal().await.acquire_writer(&core).await.unwrap().release().await.unwrap();
-    fault.set_script(db_testkit::FaultScript::default()).await;
+    fault.set_script(db_fault_testing::FaultScript::default()).await;
     let handle = database.ensure_document(&document).await.unwrap();
     drop(handle);
     if let Err(error) = database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await {
@@ -3630,11 +3630,11 @@ async fn database_document_mount_cleanup_fault_consumes_racing_resume_request_ex
     let memory = db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
     memory.fail_next_writer_release();
     let inner = Arc::new(db_storage::DbBackend::Memory(memory));
-    let fault = db_testkit::FaultStorage::new(inner).await;
+    let fault = db_fault_testing::FaultStorage::new(inner).await;
     let storage = Arc::new(db_storage::DbBackend::Fault(Box::new(fault)));
     let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage.clone()).await.unwrap();
     let db_storage::DbBackend::Fault(fault) = storage.as_ref() else { unreachable!() };
-    fault.set_script(db_testkit::FaultScript { fail_nth_sync: Some(1), ..db_testkit::FaultScript::default() }).await;
+    fault.set_script(db_fault_testing::FaultScript { fail_nth_sync: Some(1), ..db_fault_testing::FaultScript::default() }).await;
     let document = protocol::ArtifactId(String::from("single-flight-racing-cleanup-resume"));
     let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
     let (fault_tx, fault_rx) = std::sync::mpsc::sync_channel(1);

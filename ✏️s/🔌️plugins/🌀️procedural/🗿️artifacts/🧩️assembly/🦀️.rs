@@ -441,5 +441,5 @@ pub use crate::standards::v1::subsets::any::schema::mutations::AssemblyMutation;
 pub use crate::standards::v1::subsets::any::schema::snapshot::AssemblySnapshot;
 
 #[cfg(all(test, feature = "component-app-assembly"))]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/mount-contract/🦀️.rs"]
+#[path = "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mount-contract/🦀️.rs"]
 mod mount_contract;

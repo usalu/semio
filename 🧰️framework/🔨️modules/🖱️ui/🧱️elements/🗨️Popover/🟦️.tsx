@@ -10,7 +10,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { useDialogLayer } from "../💬️Dialog/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️slot.tsx";
+import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️slot/🟦️.tsx";
 import { glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { SurfaceScope } from "../🌈️Surface/🟦️.tsx";

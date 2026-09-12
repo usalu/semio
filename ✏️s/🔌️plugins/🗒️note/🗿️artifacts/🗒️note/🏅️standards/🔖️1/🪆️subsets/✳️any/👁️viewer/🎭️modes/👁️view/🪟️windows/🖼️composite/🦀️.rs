@@ -38,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `NoteSnapshot -> UiAssemblyResult<BuiltNode>` read: a hardcoded default camera (a viewer needs no persisted
 /// per-session camera state — real block content renders exactly as the document stands, not through
-/// any live pan/zoom the editor's own `NoteConfig.camera` carries; the same intentional
+/// any live pan/zoom the editor's composite-window config carries; the same intentional
 /// simplification the cad pilot's viewer documented for its own camera/environment defaults), no
 /// active drawing utility (nothing is drawable), `InkCanvasScene.interactive: false`.
 pub fn render(document: &NoteSnapshot) -> UiAssemblyResult<BuiltNode> {

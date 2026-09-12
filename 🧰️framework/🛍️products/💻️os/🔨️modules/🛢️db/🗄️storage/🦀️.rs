@@ -5241,7 +5241,8 @@ pub enum DbBackend {
     Postgres(crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(crate::db_storage_neo4j::Neo4jStorage),
-    Fault(Box<db_testkit::FaultStorage>),
+    #[cfg(test)]
+    Fault(Box<db_fault_testing::FaultStorage>),
 }
 
 impl DbBackend {
@@ -5257,6 +5258,7 @@ impl DbBackend {
             Self::Postgres(s) => WalRef::Postgres(s),
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => WalRef::Neo4j(s),
+            #[cfg(test)]
             Self::Fault(s) => WalRef::Fault(&**s),
         }
     }
@@ -5273,6 +5275,7 @@ impl DbBackend {
             Self::Postgres(s) => SnapshotRef::Postgres(s),
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => SnapshotRef::Neo4j(s),
+            #[cfg(test)]
             Self::Fault(s) => SnapshotRef::Fault(&**s),
         }
     }
@@ -5289,6 +5292,7 @@ impl DbBackend {
             Self::Postgres(s) => PayloadRef::Postgres(s),
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => PayloadRef::Neo4j(s),
+            #[cfg(test)]
             Self::Fault(s) => PayloadRef::Fault(&**s),
         }
     }
@@ -5305,6 +5309,7 @@ impl DbBackend {
             Self::Postgres(s) => CatalogRef::Postgres(s),
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => CatalogRef::Neo4j(s),
+            #[cfg(test)]
             Self::Fault(s) => CatalogRef::Fault(&**s),
         }
     }
@@ -5321,6 +5326,7 @@ impl DbBackend {
             Self::Postgres(s) => IndexRef::Postgres(s),
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => IndexRef::Neo4j(s),
+            #[cfg(test)]
             Self::Fault(s) => IndexRef::Fault(&**s),
         }
     }
@@ -5337,6 +5343,7 @@ impl DbBackend {
             Self::Postgres(s) => LeaseRef::Postgres(s),
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => LeaseRef::Neo4j(s),
+            #[cfg(test)]
             Self::Fault(s) => LeaseRef::Fault(&**s),
         }
     }
@@ -5354,8 +5361,9 @@ impl DbBackend {
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.capabilities().await,
             // 🔀️ `FaultStorage::capabilities` calls back through `self.inner: DbBackend`
-            // (`🧪️testkit`), so this arm is mutually recursive with this very fn — `Box::pin`
+            // (fault-storage tests), so this arm is mutually recursive with this very fn — `Box::pin`
             // breaks the otherwise-infinitely-sized future (E0733).
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.capabilities()).await,
         }
     }
@@ -5375,7 +5383,8 @@ pub enum WalRef<'a> {
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
-    Fault(&'a db_testkit::FaultStorage),
+    #[cfg(test)]
+    Fault(&'a db_fault_testing::FaultStorage),
 }
 
 impl<'a> WalStorage for WalRef<'a> {
@@ -5390,6 +5399,7 @@ impl<'a> WalStorage for WalRef<'a> {
             Self::Postgres(s) => s.acquire_writer(document).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.acquire_writer(document).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.acquire_writer(document)).await,
         }
     }
@@ -5405,6 +5415,7 @@ impl<'a> WalStorage for WalRef<'a> {
             Self::Postgres(s) => s.create_segment(writer, index).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.create_segment(writer, index).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.create_segment(writer, index)).await,
         }
     }
@@ -5420,6 +5431,7 @@ impl<'a> WalStorage for WalRef<'a> {
             Self::Postgres(s) => s.append(writer, index, bytes).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.append(writer, index, bytes).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.append(writer, index, bytes)).await,
         }
     }
@@ -5435,6 +5447,7 @@ impl<'a> WalStorage for WalRef<'a> {
             Self::Postgres(s) => s.sync(writer, index, class).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.sync(writer, index, class).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.sync(writer, index, class)).await,
         }
     }
@@ -5450,6 +5463,7 @@ impl<'a> WalStorage for WalRef<'a> {
             Self::Postgres(s) => s.seal(writer, index).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.seal(writer, index).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.seal(writer, index)).await,
         }
     }
@@ -5465,6 +5479,7 @@ impl<'a> WalStorage for WalRef<'a> {
             Self::Postgres(s) => s.read(document, index, range).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.read(document, index, range).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.read(document, index, range)).await,
         }
     }
@@ -5480,6 +5495,7 @@ impl<'a> WalStorage for WalRef<'a> {
             Self::Postgres(s) => s.segment_len(document, index).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.segment_len(document, index).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.segment_len(document, index)).await,
         }
     }
@@ -5495,6 +5511,7 @@ impl<'a> WalStorage for WalRef<'a> {
             Self::Postgres(s) => s.segment_state(document, index).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.segment_state(document, index).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.segment_state(document, index)).await,
         }
     }
@@ -5510,6 +5527,7 @@ impl<'a> WalStorage for WalRef<'a> {
             Self::Postgres(s) => s.list_segments(document).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.list_segments(document).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.list_segments(document)).await,
         }
     }
@@ -5525,6 +5543,7 @@ impl<'a> WalStorage for WalRef<'a> {
             Self::Postgres(s) => s.truncate_tail(writer, index, new_len).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.truncate_tail(writer, index, new_len).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.truncate_tail(writer, index, new_len)).await,
         }
     }
@@ -5540,6 +5559,7 @@ impl<'a> WalStorage for WalRef<'a> {
             Self::Postgres(s) => s.delete_segment(writer, index).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.delete_segment(writer, index).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.delete_segment(writer, index)).await,
         }
     }
@@ -5559,7 +5579,8 @@ pub enum SnapshotRef<'a> {
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
-    Fault(&'a db_testkit::FaultStorage),
+    #[cfg(test)]
+    Fault(&'a db_fault_testing::FaultStorage),
 }
 
 impl<'a> SnapshotStorage for SnapshotRef<'a> {
@@ -5574,6 +5595,7 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
             Self::Postgres(s) => s.write_generation(document, generation, bytes).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.write_generation(document, generation, bytes).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.write_generation(document, generation, bytes)).await,
         }
     }
@@ -5589,6 +5611,7 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
             Self::Postgres(s) => s.read_generation(document, generation).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.read_generation(document, generation).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.read_generation(document, generation)).await,
         }
     }
@@ -5604,6 +5627,7 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
             Self::Postgres(s) => s.latest_generation(document).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.latest_generation(document).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.latest_generation(document)).await,
         }
     }
@@ -5619,6 +5643,7 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
             Self::Postgres(s) => s.list_generations(document).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.list_generations(document).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.list_generations(document)).await,
         }
     }
@@ -5634,6 +5659,7 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
             Self::Postgres(s) => s.delete_generation(document, generation).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.delete_generation(document, generation).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.delete_generation(document, generation)).await,
         }
     }
@@ -5653,7 +5679,8 @@ pub enum PayloadRef<'a> {
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
-    Fault(&'a db_testkit::FaultStorage),
+    #[cfg(test)]
+    Fault(&'a db_fault_testing::FaultStorage),
 }
 
 impl<'a> PayloadStorage for PayloadRef<'a> {
@@ -5668,6 +5695,7 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
             Self::Postgres(s) => s.put(bytes).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.put(bytes).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.put(bytes)).await,
         }
     }
@@ -5683,6 +5711,7 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
             Self::Postgres(s) => s.get(hash).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.get(hash).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.get(hash)).await,
         }
     }
@@ -5698,6 +5727,7 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
             Self::Postgres(s) => s.contains(hash).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.contains(hash).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.contains(hash)).await,
         }
     }
@@ -5713,6 +5743,7 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
             Self::Postgres(s) => s.delete(hash).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.delete(hash).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.delete(hash)).await,
         }
     }
@@ -5728,6 +5759,7 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
             Self::Postgres(s) => s.len(hash).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.len(hash).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.len(hash)).await,
         }
     }
@@ -5747,7 +5779,8 @@ pub enum CatalogRef<'a> {
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
-    Fault(&'a db_testkit::FaultStorage),
+    #[cfg(test)]
+    Fault(&'a db_fault_testing::FaultStorage),
 }
 
 impl<'a> CatalogStorage for CatalogRef<'a> {
@@ -5765,6 +5798,7 @@ impl<'a> CatalogStorage for CatalogRef<'a> {
             // 🔀️ `FaultStorage::read_root` calls back through `self.inner: DbBackend`, so this
             // arm is mutually recursive with this very fn — `Box::pin` breaks the otherwise-
             // infinitely-sized future (E0733), same as `DbBackend::capabilities`'s `Fault` arm.
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.read_root()).await,
         }
     }
@@ -5780,6 +5814,7 @@ impl<'a> CatalogStorage for CatalogRef<'a> {
             Self::Postgres(s) => s.cas_root(expected, new_bytes).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.cas_root(expected, new_bytes).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.cas_root(expected, new_bytes)).await,
         }
     }
@@ -5799,7 +5834,8 @@ pub enum IndexRef<'a> {
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
-    Fault(&'a db_testkit::FaultStorage),
+    #[cfg(test)]
+    Fault(&'a db_fault_testing::FaultStorage),
 }
 
 impl<'a> IndexStorage for IndexRef<'a> {
@@ -5814,6 +5850,7 @@ impl<'a> IndexStorage for IndexRef<'a> {
             Self::Postgres(s) => s.write_run(document, run_id, bytes).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.write_run(document, run_id, bytes).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.write_run(document, run_id, bytes)).await,
         }
     }
@@ -5829,6 +5866,7 @@ impl<'a> IndexStorage for IndexRef<'a> {
             Self::Postgres(s) => s.read_run(document, run_id).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.read_run(document, run_id).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.read_run(document, run_id)).await,
         }
     }
@@ -5844,6 +5882,7 @@ impl<'a> IndexStorage for IndexRef<'a> {
             Self::Postgres(s) => s.list_runs(document).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.list_runs(document).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.list_runs(document)).await,
         }
     }
@@ -5859,6 +5898,7 @@ impl<'a> IndexStorage for IndexRef<'a> {
             Self::Postgres(s) => s.delete_run(document, run_id).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.delete_run(document, run_id).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.delete_run(document, run_id)).await,
         }
     }
@@ -5878,7 +5918,8 @@ pub enum LeaseRef<'a> {
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
-    Fault(&'a db_testkit::FaultStorage),
+    #[cfg(test)]
+    Fault(&'a db_fault_testing::FaultStorage),
 }
 
 impl<'a> LeaseStorage for LeaseRef<'a> {
@@ -5893,6 +5934,7 @@ impl<'a> LeaseStorage for LeaseRef<'a> {
             Self::Postgres(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.acquire(resource, holder, ttl_ms, now_ms)).await,
         }
     }
@@ -5908,6 +5950,7 @@ impl<'a> LeaseStorage for LeaseRef<'a> {
             Self::Postgres(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.renew(resource, holder, fence, ttl_ms, now_ms)).await,
         }
     }
@@ -5923,6 +5966,7 @@ impl<'a> LeaseStorage for LeaseRef<'a> {
             Self::Postgres(s) => s.release(resource, holder, fence).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.release(resource, holder, fence).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.release(resource, holder, fence)).await,
         }
     }
@@ -5938,6 +5982,7 @@ impl<'a> LeaseStorage for LeaseRef<'a> {
             Self::Postgres(s) => s.current(resource, now_ms).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.current(resource, now_ms).await,
+            #[cfg(test)]
             Self::Fault(s) => Box::pin(s.current(resource, now_ms)).await,
         }
     }
@@ -5961,7 +6006,7 @@ impl MemWalSegment {
 
 /// @emoji 🧠️ A pure in-memory `DbStorage`: every store is a `Mutex`-guarded map, nothing ever
 /// touches a filesystem. Not durable (`capabilities().durable == false`) — the backend for unit
-/// tests and `db_testkit`'s deterministic simulation runtime, never for a real deployment. Every
+/// tests and `db_fault_testing`'s deterministic simulation runtime, never for a real deployment. Every
 /// trait method body below is synchronous (no real I/O to await), so it is simply wrapped in an
 /// already-`Ready` `{ .. }` per the module doc's "Async-first" section.
 const DB_IO_MEMORY_OWNERS: usize = DB_IO_OPERATION_ITEMS;

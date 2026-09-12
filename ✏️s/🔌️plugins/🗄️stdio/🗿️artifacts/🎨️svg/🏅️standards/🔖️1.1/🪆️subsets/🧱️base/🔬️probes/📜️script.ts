@@ -10,7 +10,7 @@
 //
 // Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one
 // should produce. The actual XML decode is performed by the sibling standalone
-// `quick-xml-svg-codec` binary (`../🏭️generator/🦀️quick-xml-svg-codec`, depends on nothing but
+// `quick-xml-svg-codec` binary (`../🏭️generator/🔁️codec/📦️packages/🦀️rust`, depends on nothing but
 // `quick-xml` 0.42) via its `project` subcommand — this file only shells out to it, sorts each
 // element's attributes by name (per this oracle's own `svg-1-1-quick-xml-reader-v1`
 // comparisonProfile — SVG attribute order is real writer freedom, never source-order-significant)
@@ -30,7 +30,7 @@
 // @see ../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch/compare shape is mirrored from (both hand the
 //      structural equality itself to this file, never to a computed prediction)
-// @see ../🏭️generator/🦀️quick-xml-svg-codec/src/main.rs — the `project` subcommand this file calls
+// @see ../🏭️generator/🔁️codec/🦀️.rs — the `project` subcommand this file calls
 
 //#endregion 🧲️Header
 
@@ -54,7 +54,7 @@ type ProbeReport = {
 
 const ENGINE = { family: "quick-xml", implementation: "quick-xml-svg-codec (quick-xml 0.42 + a generic element/text/cdata/comment/pi tree — no SVG semantics)", version: "quick-xml@0.42.0" } as const;
 const PROBE_VERSION = "quick-xml@0.42.0";
-const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🦀️quick-xml-svg-codec", "Cargo.toml");
+const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 //#endregion 🧬️Contract
 
 //#region 📥️Model

@@ -9,7 +9,8 @@ use flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_artifact_infinite_dag::DagFixture;
 use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport};
+use semio_framework::Viewport2d;
+use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene};
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_WINDOW_MAIN: &str = "flow-main";
@@ -84,7 +85,7 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, V
 pub fn render(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
     let host = host_from_snapshot(fixture, config, session);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
-    let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
+    let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     let fixture_json = Some(dsl::json::to_json_string(&fixture.to_fixture()));
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "graph" domain's live selection
     // is framework-owned `InteractionState` now, and `ArtifactApp::render` is not threaded an

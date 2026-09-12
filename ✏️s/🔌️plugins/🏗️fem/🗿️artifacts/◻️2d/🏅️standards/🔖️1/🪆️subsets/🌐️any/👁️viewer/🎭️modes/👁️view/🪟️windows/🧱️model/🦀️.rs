@@ -3,10 +3,10 @@
 //! editor's model window. This file itself imports nothing from the sibling editor module
 //! (`policyViewerPurityBreaches` forbids it outright): the pure geometry draw helpers it needs are
 //! duplicated here rather than imported, per contract §2.2/§2.9. No selection, no camera persistence
-//! (a viewer has no `Config`, so the camera is always `FemCamera::default()`), no results overlay —
+//! (a viewer has no `Config`, so the camera is always `Viewport2d::default()`), no results overlay —
 //! that lives in the editor's separate results window, which this viewer does not (yet) mirror.
 
-use crate::{element_id, Fem2dSnapshot, FemCamera, FemElement};
+use crate::{element_id, Fem2dSnapshot, Viewport2d, FemElement};
 use semio_framework_plugin::{BuiltNode, Canvas2dScene};
 
 //#region 🔖️Constants
@@ -87,11 +87,11 @@ fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])>
 
 //#region 🔖️Render
 /// 👁️ Pure `Fem2dSnapshot -> UiNode` read: the undeformed structure plus the mesh-edge preview
-/// overlay, hardcoded `FemCamera::default()` (a viewer has no persisted per-session camera —
+/// overlay, hardcoded `Viewport2d::default()` (a viewer has no persisted per-session camera —
 /// `Config = NoConfig`). No results overlay, no selection, no gumball — a viewer has no utilities
 /// that edit and emits no mutations by construction (`ViewEmit`).
 pub fn render(doc: &Fem2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let camera = FemCamera::default();
+    let camera = Viewport2d::default();
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
         let [(x0, y0), (x1, y1), (x2, y2)] = *tri;

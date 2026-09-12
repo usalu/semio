@@ -1,6 +1,7 @@
 //! ✏️ ✏️ Layout play app commands command — `patch-frame`.
 
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use crate::editor::layout::modes::edit::windows::blueprint::config::current;
 use crate::mutations::change_frame_columns::ChangeFrameColumns;
 use crate::mutations::change_frame_fill::ChangeFrameFill;
 use crate::mutations::change_frame_stroke::ChangeFrameStroke;
@@ -24,9 +25,9 @@ pub struct PatchFrame {
     pub value: String,
 }
 
-pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
+    let page_id = payload.page_id.clone().unwrap_or_else(|| current(cfg).active_page_id);
     if payload.frame_id.is_empty() {
         return Ok(Emit::default());
     }

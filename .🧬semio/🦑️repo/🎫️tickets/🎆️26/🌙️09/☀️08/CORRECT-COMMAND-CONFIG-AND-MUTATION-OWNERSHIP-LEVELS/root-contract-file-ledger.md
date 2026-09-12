@@ -332,3 +332,7 @@ The shared inspector's three changed files and red/green/integrated evidence are
 Terrain's parent-edit preservation changes, removed snapshot-remint helper, exact fixture decoding and expanded Rust/Python comparison are listed with exact paths in terrain-document-contract-ownership.md. First-party TypeScript diff application agrees with independent JSON Patch; native proof is pending. Shared closure count-fence vectors and native/TS tests are recorded in recursive-document-closure-ownership.md.
 
 Stdio geometry/Object source and fixture ownership: [stdio-object-kit-ownership.md](stdio-object-kit-ownership.md), [stdio-object-fixture-ledger.md](stdio-object-fixture-ledger.md). Shared OwnerRef admission correction and native retry: [recursive-document-closure-ownership.md](recursive-document-closure-ownership.md).
+
+## FEM Result-Window Native Admission
+
+Exact touched paths and verification are recorded in [the FEM checkpoint ledger](fem-window-schema-and-runtime-file-ledger.md) and [the native admission report](fem-native-window-admission.md). The shared framework empty-state contract is recorded separately in framework-empty-state-admission.md.

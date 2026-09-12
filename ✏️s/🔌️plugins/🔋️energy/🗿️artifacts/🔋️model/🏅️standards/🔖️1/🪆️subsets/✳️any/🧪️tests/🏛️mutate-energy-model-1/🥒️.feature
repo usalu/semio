@@ -5,7 +5,7 @@
 Feature: Apply every typed s.energy.model mutation against an independent Python implementation
 
   `s.energy.model` is a semio-NATIVE artifact and no third party reads or writes `.dsl.semio` — the
-  recorded survey (kept verbatim in `🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracle/🔣️.json`'s history)
+  recorded survey (kept verbatim in `🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`'s history)
   named and DECLINED EnergyPlus and OpenStudio, and the `energyplus` weather reader already
   registered under `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset is deliberately NOT reused here. The
   second producer a differential comparison needs is therefore a second IMPLEMENTATION, and
@@ -30,7 +30,7 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
   role (this repository's own `energy_model_mutation_report_json`), each independently asserting the
   forward/inverse laws in role before the two are compared byte for byte.
   `identity-round-trip` keeps asserting through the shared law module
-  `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` that the stdio subsets use.
+  `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` that the stdio subsets use.
 
   @id-mutate
   @level-exhaustive

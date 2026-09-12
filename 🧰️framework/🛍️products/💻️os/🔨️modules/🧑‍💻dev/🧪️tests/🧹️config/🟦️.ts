@@ -13,8 +13,8 @@ import { fileURLToPath } from "node:url";
 import { build, type Plugin } from "esbuild";
 import picomatch from "picomatch";
 import { describe, expect, it } from "vitest";
-import { stripExecutableShebang } from "../../📦️packages/🟦️typescript/🧹️executable-source/🟦️.ts";
-import { UNWATCHED_REPOSITORY_SEGMENTS, repositorySourceWatchRoots, semioSourceWatchVitePlugin, unwatchedRepositoryPathMatcher } from "../../📦️packages/🟦️typescript/🔌️vite-plugins.ts";
+import { stripExecutableShebang } from "../../🧹️executable-source/🟦️.ts";
+import { UNWATCHED_REPOSITORY_SEGMENTS, repositorySourceWatchRoots, semioSourceWatchVitePlugin, unwatchedRepositoryPathMatcher } from "../../🔌️vite-plugins/🟦️.ts";
 
 describe("executable source transformation", () => {
   it.each([

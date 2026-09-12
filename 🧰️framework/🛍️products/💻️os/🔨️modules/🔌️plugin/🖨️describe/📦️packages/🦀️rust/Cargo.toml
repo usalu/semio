@@ -13,11 +13,11 @@ id = "plugin-describe"
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🛂️descriptor-emission/🦀️.rs"
 
 [[bin]]
 name = "semio-framework-plugin-describe"
-path = "📦️main.rs"
+path = "💾️binary/🦀️.rs"
 
 [dependencies]
 # 🛂️ `PackageDescriptor`/`ContributionSet`/`PackageHashes` (packet A3, this crate = `🛂️manifest`
@@ -40,7 +40,7 @@ semio-framework-plugin-host = { path = "../../../🖥️host/📦️packages/�
 wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
 wasmtime-wasi = "47.0.3"
 semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-# ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `block_on` for `📦️main.rs`, the
+# ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `block_on` for `💾️binary/🦀️.rs`, the
 # process entry point — R4 allow-list clause 1 (binary / `main` executor entry points).
 semio-framework-async = { workspace = true }
 

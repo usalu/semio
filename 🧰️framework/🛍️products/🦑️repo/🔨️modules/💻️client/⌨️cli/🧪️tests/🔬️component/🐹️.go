@@ -605,27 +605,27 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 			},
 		},
 		{
-			name: "native shell bootstrap builds the repo client from its canonical source",
+			name: "native shell bootstrap uses the canonical compiler route",
 			path: filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🐚️.sh"),
 			requiredFragments: []string{
-				`🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client`,
-				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp`,
+				"bun nx run @semio-tech/repo-client:build",
 				"bun nx run workspace:setup",
 			},
 			forbiddenFragments: []string{
+				"go build",
 				"repo/client/client",
 				"./repo/client/mcp/go",
 			},
 		},
 		{
-			name: "native windows bootstrap builds the repo client from its canonical source",
+			name: "native windows bootstrap uses the canonical compiler route",
 			path: filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🔵️.ps1"),
 			requiredFragments: []string{
-				`🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client.exe`,
-				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp`,
+				`@("nx", "run", "@semio-tech/repo-client:build")`,
 				`@("nx", "run", "workspace:setup")`,
 			},
 			forbiddenFragments: []string{
+				`@("build",`,
 				"repo/client/client.exe",
 				"./repo/client/mcp/go",
 			},

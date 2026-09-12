@@ -6,7 +6,7 @@
 //! `RemodelingMutation`'s own doc), so the whole load stays inside the retained bounded-first-step
 //! envelope every other route uses.
 
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::remodeling::decode_still_image;
 use crate::editor::remodeling::examples::example_text;
 use crate::mutations::{
@@ -31,7 +31,7 @@ pub struct SetActiveExample {
 /// 🎬️ Replaces the document's declared state with the named example's. An unknown id, or an example
 /// whose committed text no longer parses, is a no-op rather than a fault: the picker is a navigation
 /// affordance, not a destructive verb.
-pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     let Some(text) = example_text(&payload.example_id) else { return Ok(Emit::default()) };
     let Ok(next) = crate::snapshot::text::parse_dsl(text) else { return Ok(Emit::default()) };
     let mut mutations = example_media_operations(&payload.example_id, doc.snapshot);

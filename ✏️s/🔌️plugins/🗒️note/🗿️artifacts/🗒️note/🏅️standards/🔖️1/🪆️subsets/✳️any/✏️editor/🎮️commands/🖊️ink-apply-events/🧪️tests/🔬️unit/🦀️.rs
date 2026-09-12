@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::note::testkit::{dispatch, note_app};
+use crate::editor::note::unit_tests::context::{dispatch, note_app};
 use crate::editor::note::NoteCommand;
 use crate::schema::{block_id, create_block_by_kind};
 use semio_framework_plugin::PluginApp;
@@ -38,7 +38,7 @@ async fn gesture_begin_live_commit_produces_single_undo_step() {
     assert_eq!(app.snapshot().expect("snapshot").blocks.len(), 1);
 
     // The whole begin+live gesture coalesced into ONE undoable edit.
-    app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     assert!(app.snapshot().expect("snapshot").blocks.is_empty(), "a single undo should erase the whole gesture");
 }
 
@@ -47,6 +47,6 @@ async fn gesture_with_no_changes_creates_no_edit() {
     let mut app = note_app().await;
     dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: "[]".into(), phase: "begin".into(), select_ids: None })).await;
     dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: "[]".into(), phase: "commit".into(), select_ids: None })).await;
-    let undo = app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
+    let undo = app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     assert!(undo.events.is_empty(), "no gesture edit should exist to undo");
 }

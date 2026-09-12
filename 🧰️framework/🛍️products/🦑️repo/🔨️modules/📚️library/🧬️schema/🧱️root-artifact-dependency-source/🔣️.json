@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/root-artifact-dependency-source.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "owners", "directoryContexts", "wgpuOutputRoots", "wgpuGeneratorImplementationInputs", "goOracle"],
+  "properties": {
+    "version": { "const": 1 },
+    "owners": {
+      "type": "array", "minItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["owner", "exports", "consumers"],
+        "properties": {
+          "owner": { "type": "string", "pattern": "/🟦️\\.ts$" },
+          "exports": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "consumers": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "directoryContexts": {
+      "type": "array", "minItems": 7,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "parentKind", "kind"],
+        "properties": {
+          "name": { "type": "string", "minLength": 2 },
+          "parentKind": { "type": "string", "minLength": 1 },
+          "ancestorKinds": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "kind": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "wgpuOutputRoots": {
+      "type": "array", "minItems": 6, "maxItems": 6, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "inclusion"],
+        "properties": { "path": { "type": "string", "minLength": 1 }, "inclusion": { "enum": ["tracked", "ignored"] } }
+      }
+    },
+    "wgpuGeneratorImplementationInputs": {
+      "type": "array", "minItems": 5, "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "goOracle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["module", "requirement", "localReplacement"],
+      "properties": {
+        "module": { "type": "string", "minLength": 1 },
+        "requirement": { "type": "string", "minLength": 1 },
+        "localReplacement": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

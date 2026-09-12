@@ -15,8 +15,8 @@ const equal = (actual, expected, law) => {
   if (actual !== expected) throw new Error(`${law}: ${actual} !== ${expected}`);
 };
 
-const fixtureUrl = new URL("../../../../♾️infinite/🖼️canvas/🧪️tests/🎬️draw-list/🔣️.json", import.meta.url);
-const expectationUrl = new URL("../../../../♾️infinite/🖼️canvas/🧪️tests/🎬️draw-list/📐️expected-draw-list.json", import.meta.url);
+const fixtureUrl = new URL("../../../../♾️infinite/🖼️canvas/🧫️fixtures/🎬️draw-list/🔣️.json", import.meta.url);
+const expectationUrl = new URL("../../../../♾️infinite/🖼️canvas/🧫️fixtures/🎬️draw-list/📐️expected-draw-list.json", import.meta.url);
 const fixture = JSON.parse(await readFile(fixtureUrl, "utf8"));
 const drawList = JSON.parse(await readFile(expectationUrl, "utf8"));
 

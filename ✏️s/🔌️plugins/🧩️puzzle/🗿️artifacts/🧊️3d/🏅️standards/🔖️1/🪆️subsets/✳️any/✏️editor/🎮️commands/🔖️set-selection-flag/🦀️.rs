@@ -12,7 +12,9 @@ pub fn set_selection_flag(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>)
     let entity = args.and_then(|value| value.get("entity")).and_then(|value| value.as_str());
     let explicit_ids: Option<Vec<String>> = args.and_then(|value| value.get("ids")).and_then(|value| dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(value)).ok());
     match (entity, explicit_ids) {
-        (Some(entity), Some(ids)) => apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, entity, &ids, flag, value),
+        (Some(entity), Some(ids)) => {
+            apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, entity, &ids, flag, value);
+        }
         _ => {
             let object_ids = ctx.selected_object_ids();
             let vortex_ids = ctx.selected_vortex_ids();

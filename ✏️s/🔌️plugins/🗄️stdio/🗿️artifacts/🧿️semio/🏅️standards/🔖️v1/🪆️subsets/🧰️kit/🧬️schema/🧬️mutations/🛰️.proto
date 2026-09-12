@@ -1,3 +1,43 @@
 syntax = "proto3";
-package semio.s_stdio_semio_kit.mutations;
-message SemioKitMutation { string mutation = 1; bytes payload_wire = 2; }
+package semio.s.stdio.semio.v1.kit.mutations;
+import "🧰️framework/🔨️modules/🚪️io/🧬️schema/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🛰️.proto";
+message CreateObject { string child_id = 1 [json_name = "child_id"]; semio.framework.io.ArtifactRef target = 2; }
+message DeleteObject { string child_id = 1 [json_name = "child_id"]; }
+message CreateModel { string child_id = 1 [json_name = "child_id"]; semio.framework.io.ArtifactRef target = 2; }
+message DeleteModel { string child_id = 1 [json_name = "child_id"]; }
+message CreateProperties { string child_id = 1 [json_name = "child_id"]; semio.framework.io.ArtifactRef target = 2; }
+message DeleteProperties {}
+message BindRepresentation { semio.framework.io.ArtifactRef target = 1; semio.os.store.LinkPin pin = 2; string role = 3; }
+message UnbindRepresentation { uint64 index = 1; }
+message ChangeRepresentationPin { uint64 index = 1; semio.os.store.LinkPin pin = 2; }
+message AddType { string id = 1; string name = 2; string category = 3; }
+message RemoveType { string id = 1; }
+message RenameType { string id = 1; string new_name = 2 [json_name = "new_name"]; }
+message AddDesign { string id = 1; string name = 2; }
+message RemoveDesign { string id = 1; }
+message EditDesign {
+  string id = 1;
+  repeated semio.s.stdio.semio.v1.kit.snapshot.SemioKitPiece pieces = 2;
+  repeated semio.s.stdio.semio.v1.kit.snapshot.SemioKitConnection connections = 3;
+}
+message SemioKitMutation {
+  oneof mutation {
+    CreateObject createObject = 1 [json_name = "CreateObject"];
+    DeleteObject deleteObject = 2 [json_name = "DeleteObject"];
+    CreateModel createModel = 3 [json_name = "CreateModel"];
+    DeleteModel deleteModel = 4 [json_name = "DeleteModel"];
+    CreateProperties createProperties = 5 [json_name = "CreateProperties"];
+    DeleteProperties deleteProperties = 6 [json_name = "DeleteProperties"];
+    BindRepresentation bindRepresentation = 7 [json_name = "BindRepresentation"];
+    UnbindRepresentation unbindRepresentation = 8 [json_name = "UnbindRepresentation"];
+    ChangeRepresentationPin changeRepresentationPin = 9 [json_name = "ChangeRepresentationPin"];
+    AddType addType = 10 [json_name = "AddType"];
+    RemoveType removeType = 11 [json_name = "RemoveType"];
+    RenameType renameType = 12 [json_name = "RenameType"];
+    AddDesign addDesign = 13 [json_name = "AddDesign"];
+    RemoveDesign removeDesign = 14 [json_name = "RemoveDesign"];
+    EditDesign editDesign = 15 [json_name = "EditDesign"];
+  }
+}

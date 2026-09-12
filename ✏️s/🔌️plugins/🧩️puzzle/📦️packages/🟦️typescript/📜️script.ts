@@ -179,7 +179,7 @@ function puzzle3dHostileSources(source: string): Map<string, string> {
 }
 
 function ownerOracle(owner: PublicationOwner, source: string): boolean {
-  const production = source.split("//#region 🧪️Testkit")[0]!;
+  const production = source.split("//#region 🧪️UnitTests")[0]!;
   const pairs = manifestPairs(production);
   const appGroups = owner.groups.map((group) => ({ ...group, routes: group.routes.filter((route) => (owner.owner !== "Puzzle5dPlayApp" || !reserved5d.has(route)) && (owner.owner !== "Puzzle2dPlayApp" || !reserved2d.has(route))) }));
   const appRoutes = appGroups.flatMap((group) => group.routes);

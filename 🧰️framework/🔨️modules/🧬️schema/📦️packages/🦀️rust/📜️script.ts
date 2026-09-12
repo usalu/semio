@@ -155,8 +155,8 @@ type GeneratedTarget = { readonly path: string; readonly content: string };
 
 function generatedTargets(repoRoot: string, source: EntityCatalogSource): GeneratedTarget[] {
   return [
-    { path: join(ownerRoot, "🤖️generated", "🟦️entity-kinds.ts"), content: emitTypeScript(source) },
-    { path: join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🐹️entity_kinds.g.go"), content: emitGo(source) },
+    { path: join(ownerRoot, "🤖️generated", "🏷️entity-kinds", "🟦️.ts"), content: emitTypeScript(source) },
+    { path: join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🏷️entity-kinds/🐹️.go"), content: emitGo(source) },
     { path: join(ownerRoot, "🤖️generated.rs"), content: emitRust(source) },
   ];
 }
@@ -184,7 +184,7 @@ class GenerateScript extends BundleScript {
       writeGeneratedFileIfChanged(target.path, target.content);
     }
     const shadowed = source.kinds.length - entityKindIndexByEmoji(source.kinds).size;
-    console.log(`entity catalog refreshed (${source.kinds.length} entity kinds, ${shadowed} emoji-shadowed, sha256 ${source.sha256}) -> 🤖️generated/🟦️entity-kinds.ts, ⌨️cli/🐹️entity_kinds.g.go, 🤖️generated.rs`);
+    console.log(`entity catalog refreshed (${source.kinds.length} entity kinds, ${shadowed} emoji-shadowed, sha256 ${source.sha256}) -> 🤖️generated/🏷️entity-kinds/🟦️.ts, ⌨️cli/🏷️entity-kinds/🐹️.go, 🤖️generated.rs`);
   }
 }
 //#endregion 🔖️generate

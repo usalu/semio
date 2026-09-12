@@ -40,10 +40,10 @@ pub struct EnergyModelArtifact {
     #[state(artifact)]
     pub model: crate::model::Model,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.value")]
+    #[child(kind = "s.stdio.semio")]
     pub structure: EnergyStructureChild,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.table")]
+    #[child(kind = "s.stdio.semio")]
     pub zones: EnergyZonesChild,
     #[state(artifact)]
     #[link_slot(roles("model"))]

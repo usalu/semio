@@ -2,12 +2,12 @@
 use super::*;
 use crate::engine::space::SpaceCommand;
 use crate::engine::space::commands::spawn_app;
-use crate::engine::space::testkit::{app_with_registry, dispatch, seed_draw_plugin, test_surface_id};
-use semio_framework_plugin::{INTERACTION_SELECT_ACTION_ID, InteractionTarget, PluginApp, testkit::meta};
+use crate::engine::space::unit_tests::context::{app_with_registry, dispatch, seed_draw_plugin, test_surface_id};
+use semio_framework_plugin::{INTERACTION_SELECT_ACTION_ID, InteractionTarget, PluginApp, artifact_app_laws::meta};
 
 /// 🕹️ End-to-end proof the `graph` domain's live selection actually drives `deleteSelection` —
 /// spawns a node, selects it via the framework's real `interactionSelect` action (the only way a
-/// downstream crate can populate a genuine `InteractionView`, see `testkit::app`'s own doc
+/// downstream crate can populate a genuine `InteractionView`, see `context::app`'s own doc
 /// comment), then confirms `deleteSelection` removes exactly that node.
 #[semio_framework_async_macros::async_test]
 async fn delete_selection_removes_the_live_selected_node() {

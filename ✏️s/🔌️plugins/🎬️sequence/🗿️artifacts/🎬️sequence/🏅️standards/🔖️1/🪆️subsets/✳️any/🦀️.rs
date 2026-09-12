@@ -7,7 +7,7 @@ use crate::editor::sequence as editor;
 use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::sequence as viewer;
 use crate::SEQUENCE_DIALECT;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_framework_plugin::app::declarations::{editor_surface_with_members, viewer_surface_with_members, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
@@ -27,8 +27,8 @@ pub fn subset<A: crate::SequenceApplication>() -> SubsetDeclaration<A> {
         dialect: SEQUENCE_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::sequence_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::SequenceViewer, A>(viewer::create_sequence_viewer()),
-        editor: editor_surface::<editor::SequencePlayApp, A>(editor::create_sequence_app()),
+        viewer: viewer_surface_with_members::<viewer::SequenceViewer, semio_s_artifact_stdio_semio::SemioMembers, A>(viewer::create_sequence_viewer()),
+        editor: editor_surface_with_members::<editor::SequencePlayApp, semio_s_artifact_stdio_semio::SemioMembers, A>(editor::create_sequence_app()),
         examples: examples(),
     }
 }

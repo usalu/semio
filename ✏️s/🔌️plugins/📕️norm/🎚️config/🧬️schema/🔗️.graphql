@@ -1,3 +1,0 @@
-type NormConfig {
-  selectedCheckIndex: Int @state(class: CONFIG)
-}

@@ -1,0 +1,2312 @@
+{
+  "version": 1,
+  "stories": [
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/📖️stories/🎭️presentation-deck/🧪️.story.tsx",
+      "title": "🎬️animate",
+      "stories": [
+        {
+          "exportName": "ThreeSlideDeck",
+          "id": "🎬️animate--three-slide-deck",
+          "name": "Three Slide Deck"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️2d-model/🧪️.story.tsx",
+      "title": "🏗️fem◻️2d/Model",
+      "stories": [
+        {
+          "exportName": "DemoEnglish",
+          "id": "🏗️fem◻️2d-model--demo-english",
+          "name": "Demo English"
+        },
+        {
+          "exportName": "DemoGerman",
+          "id": "🏗️fem◻️2d-model--demo-german",
+          "name": "Demo German"
+        },
+        {
+          "exportName": "ClearedDocument",
+          "id": "🏗️fem◻️2d-model--cleared-document",
+          "name": "Cleared Document"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️2d-results/🧪️.story.tsx",
+      "title": "🏗️fem◻️2d/Results",
+      "stories": [
+        {
+          "exportName": "StaticEnglish",
+          "id": "🏗️fem◻️2d-results--static-english",
+          "name": "Static English"
+        },
+        {
+          "exportName": "ModalGerman",
+          "id": "🏗️fem◻️2d-results--modal-german",
+          "name": "Modal German"
+        },
+        {
+          "exportName": "NoLoadCase",
+          "id": "🏗️fem◻️2d-results--no-load-case",
+          "name": "No Load Case"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️2d-viewer/🧪️.story.tsx",
+      "title": "🏗️fem◻️2d/Viewer",
+      "stories": [
+        {
+          "exportName": "DemoEnglish",
+          "id": "🏗️fem◻️2d-viewer--demo-english",
+          "name": "Demo English"
+        },
+        {
+          "exportName": "DemoGerman",
+          "id": "🏗️fem◻️2d-viewer--demo-german",
+          "name": "Demo German"
+        },
+        {
+          "exportName": "EmptyDocument",
+          "id": "🏗️fem◻️2d-viewer--empty-document",
+          "name": "Empty Document"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️3d-model/🧪️.story.tsx",
+      "title": "🏗️fem🧊️3d/Model",
+      "stories": [
+        {
+          "exportName": "DefaultExampleEnglish",
+          "id": "🏗️fem🧊️3d-model--default-example-english",
+          "name": "Default Example English"
+        },
+        {
+          "exportName": "DefaultExampleGerman",
+          "id": "🏗️fem🧊️3d-model--default-example-german",
+          "name": "Default Example German"
+        },
+        {
+          "exportName": "ShippedExampleId",
+          "id": "🏗️fem🧊️3d-model--shipped-example-id",
+          "name": "Shipped Example Id"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️3d-results/🧪️.story.tsx",
+      "title": "🏗️fem🧊️3d/Results",
+      "stories": [
+        {
+          "exportName": "StaticEnglish",
+          "id": "🏗️fem🧊️3d-results--static-english",
+          "name": "Static English"
+        },
+        {
+          "exportName": "BucklingGerman",
+          "id": "🏗️fem🧊️3d-results--buckling-german",
+          "name": "Buckling German"
+        },
+        {
+          "exportName": "NoLoadCase",
+          "id": "🏗️fem🧊️3d-results--no-load-case",
+          "name": "No Load Case"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️3d-viewer/🧪️.story.tsx",
+      "title": "🏗️fem🧊️3d/Viewer",
+      "stories": [
+        {
+          "exportName": "DefaultExampleEnglish",
+          "id": "🏗️fem🧊️3d-viewer--default-example-english",
+          "name": "Default Example English"
+        },
+        {
+          "exportName": "DefaultExampleGerman",
+          "id": "🏗️fem🧊️3d-viewer--default-example-german",
+          "name": "Default Example German"
+        },
+        {
+          "exportName": "EmptyDocument",
+          "id": "🏗️fem🧊️3d-viewer--empty-document",
+          "name": "Empty Document"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/📖️stories/🎭️renderer/🧪️.story.tsx",
+      "title": "📐️cad",
+      "stories": [
+        {
+          "exportName": "Idle",
+          "id": "📐️cad--idle",
+          "name": "Idle"
+        },
+        {
+          "exportName": "CommittedBox",
+          "id": "📐️cad--committed-box",
+          "name": "Committed Box"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️frames/🧪️.story.tsx",
+      "title": "📸️remodel🖼️Frames",
+      "stories": [
+        {
+          "exportName": "PluginPayloadUnsetCursor",
+          "id": "📸️remodel🖼️frames--plugin-payload-unset-cursor",
+          "name": "Plugin Payload Unset Cursor"
+        },
+        {
+          "exportName": "PluginPayloadCursoredFrame",
+          "id": "📸️remodel🖼️frames--plugin-payload-cursored-frame",
+          "name": "Plugin Payload Cursored Frame"
+        },
+        {
+          "exportName": "HostShapedLayers",
+          "id": "📸️remodel🖼️frames--host-shaped-layers",
+          "name": "Host Shaped Layers"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️model/🧪️.story.tsx",
+      "title": "📸️remodel🧊️Model",
+      "stories": [
+        {
+          "exportName": "PopulatedScene",
+          "id": "📸️remodel🧊️model--populated-scene",
+          "name": "Populated Scene"
+        },
+        {
+          "exportName": "BootDocument",
+          "id": "📸️remodel🧊️model--boot-document",
+          "name": "Boot Document"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️modes/🧪️.story.tsx",
+      "title": "📸️remodel🕒️Modes",
+      "stories": [
+        {
+          "exportName": "Capture",
+          "id": "📸️remodel🕒️modes--capture",
+          "name": "Capture"
+        },
+        {
+          "exportName": "Model",
+          "id": "📸️remodel🕒️modes--model",
+          "name": "Model"
+        },
+        {
+          "exportName": "Analyze",
+          "id": "📸️remodel🕒️modes--analyze",
+          "name": "Analyze"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️panels/🧪️.story.tsx",
+      "title": "📸️remodel📌️Panels",
+      "stories": [
+        {
+          "exportName": "DocumentPipeline",
+          "id": "📸️remodel📌️panels--document-pipeline",
+          "name": "Document Pipeline"
+        },
+        {
+          "exportName": "Media",
+          "id": "📸️remodel📌️panels--media",
+          "name": "Media"
+        },
+        {
+          "exportName": "Results",
+          "id": "📸️remodel📌️panels--results",
+          "name": "Results"
+        },
+        {
+          "exportName": "Parameters",
+          "id": "📸️remodel📌️panels--parameters",
+          "name": "Parameters"
+        },
+        {
+          "exportName": "Calibration",
+          "id": "📸️remodel📌️panels--calibration",
+          "name": "Calibration"
+        },
+        {
+          "exportName": "Tracks",
+          "id": "📸️remodel📌️panels--tracks",
+          "name": "Tracks"
+        },
+        {
+          "exportName": "Quality",
+          "id": "📸️remodel📌️panels--quality",
+          "name": "Quality"
+        },
+        {
+          "exportName": "QualityGerman",
+          "id": "📸️remodel📌️panels--quality-german",
+          "name": "Quality German"
+        },
+        {
+          "exportName": "TracksEmptyState",
+          "id": "📸️remodel📌️panels--tracks-empty-state",
+          "name": "Tracks Empty State"
+        },
+        {
+          "exportName": "QualityEmptyState",
+          "id": "📸️remodel📌️panels--quality-empty-state",
+          "name": "Quality Empty State"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️report/🧪️.story.tsx",
+      "title": "📸️remodel📊️Report",
+      "stories": [
+        {
+          "exportName": "FrameList",
+          "id": "📸️remodel📊️report--frame-list",
+          "name": "Frame List"
+        },
+        {
+          "exportName": "Cameras",
+          "id": "📸️remodel📊️report--cameras",
+          "name": "Cameras"
+        },
+        {
+          "exportName": "GroundControlPoints",
+          "id": "📸️remodel📊️report--ground-control-points",
+          "name": "Ground Control Points"
+        },
+        {
+          "exportName": "Tracks",
+          "id": "📸️remodel📊️report--tracks",
+          "name": "Tracks"
+        },
+        {
+          "exportName": "QcStages",
+          "id": "📸️remodel📊️report--qc-stages",
+          "name": "Qc Stages"
+        },
+        {
+          "exportName": "Matches",
+          "id": "📸️remodel📊️report--matches",
+          "name": "Matches"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️viewer/🧪️.story.tsx",
+      "title": "📸️remodel👁️Viewer",
+      "stories": [
+        {
+          "exportName": "PopulatedScene",
+          "id": "📸️remodel👁️viewer--populated-scene",
+          "name": "Populated Scene"
+        },
+        {
+          "exportName": "BootDocument",
+          "id": "📸️remodel👁️viewer--boot-document",
+          "name": "Boot Document"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/📖️stories/🎭️2d-board/🧪️.story.tsx",
+      "title": "🧩️puzzle🩻️2d",
+      "stories": [
+        {
+          "exportName": "OverviewSelect",
+          "id": "🧩️puzzle🩻️2d--overview-select",
+          "name": "Overview Select"
+        },
+        {
+          "exportName": "LassoSelect",
+          "id": "🧩️puzzle🩻️2d--lasso-select",
+          "name": "Lasso Select"
+        },
+        {
+          "exportName": "BrushUtility",
+          "id": "🧩️puzzle🩻️2d--brush-utility",
+          "name": "Brush Utility"
+        },
+        {
+          "exportName": "BrushPlacement",
+          "id": "🧩️puzzle🩻️2d--brush-placement",
+          "name": "Brush Placement"
+        },
+        {
+          "exportName": "ForcedLodPane",
+          "id": "🧩️puzzle🩻️2d--forced-lod-pane",
+          "name": "Forced Lod Pane"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
+      "title": "🧩️puzzle🩻️2d/Fixtures",
+      "stories": [
+        {
+          "exportName": "NakaginCapsuleTower",
+          "id": "🧩️puzzle🩻️2d-fixtures--nakagin-capsule-tower",
+          "name": "Nakagin Capsule Tower"
+        },
+        {
+          "exportName": "ConcreteForest",
+          "id": "🧩️puzzle🩻️2d-fixtures--concrete-forest",
+          "name": "Concrete Forest"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/📖️stories/🎭️3d-world/🧪️.story.tsx",
+      "title": "🧩️puzzle🧊️3d",
+      "stories": [
+        {
+          "exportName": "ConcreteForest",
+          "id": "🧩️puzzle🧊️3d--concrete-forest",
+          "name": "Concrete Forest"
+        },
+        {
+          "exportName": "NakaginCapsuleTower",
+          "id": "🧩️puzzle🧊️3d--nakagin-capsule-tower",
+          "name": "Nakagin Capsule Tower"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx",
+      "title": "🧩️puzzle🕐️5d",
+      "stories": [
+        {
+          "exportName": "ConcreteForest",
+          "id": "🧩️puzzle🕐️5d--concrete-forest",
+          "name": "Concrete Forest"
+        },
+        {
+          "exportName": "NakaginCapsuleTower",
+          "id": "🧩️puzzle🕐️5d--nakagin-capsule-tower",
+          "name": "Nakagin Capsule Tower"
+        },
+        {
+          "exportName": "CapsuleDream",
+          "id": "🧩️puzzle🕐️5d--capsule-dream",
+          "name": "Capsule Dream"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/📖️stories/🎭️2d-board/🧪️.story.tsx",
+      "title": "🧱️block◻️2d",
+      "stories": [
+        {
+          "exportName": "HexagonalCutConcreteForestLeft",
+          "id": "🧱️block◻️2d--hexagonal-cut-concrete-forest-left",
+          "name": "Hexagonal Cut Concrete Forest Left"
+        },
+        {
+          "exportName": "HexagonalCutConcreteForestRight",
+          "id": "🧱️block◻️2d--hexagonal-cut-concrete-forest-right",
+          "name": "Hexagonal Cut Concrete Forest Right"
+        },
+        {
+          "exportName": "ReadOnlyViewerBoard",
+          "id": "🧱️block◻️2d--read-only-viewer-board",
+          "name": "Read Only Viewer Board"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
+      "title": "🧱️block◻️2d/Fixtures",
+      "stories": [
+        {
+          "exportName": "AllExamples",
+          "id": "🧱️block◻️2d-fixtures--all-examples",
+          "name": "All Examples"
+        },
+        {
+          "exportName": "HexagonalCutConcreteForestLeft",
+          "id": "🧱️block◻️2d-fixtures--hexagonal-cut-concrete-forest-left",
+          "name": "Hexagonal Cut Concrete Forest Left"
+        },
+        {
+          "exportName": "HexagonalCutConcreteForestRight",
+          "id": "🧱️block◻️2d-fixtures--hexagonal-cut-concrete-forest-right",
+          "name": "Hexagonal Cut Concrete Forest Right"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/📖️stories/🎭️3d-world/🧪️.story.tsx",
+      "title": "🧱️block🧊️3d",
+      "stories": [
+        {
+          "exportName": "HexagonalCutConcreteForestLeft",
+          "id": "🧱️block🧊️3d--hexagonal-cut-concrete-forest-left",
+          "name": "Hexagonal Cut Concrete Forest Left"
+        },
+        {
+          "exportName": "NakaginCapsule",
+          "id": "🧱️block🧊️3d--nakagin-capsule",
+          "name": "Nakagin Capsule"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/📖️stories/🎭️5d-board/🧪️.story.tsx",
+      "title": "🧱️block🖐️5d/Board",
+      "stories": [
+        {
+          "exportName": "HexagonalCutConcreteForestLeft",
+          "id": "🧱️block🖐️5d-board--hexagonal-cut-concrete-forest-left",
+          "name": "Hexagonal Cut Concrete Forest Left"
+        },
+        {
+          "exportName": "NakaginCapsule",
+          "id": "🧱️block🖐️5d-board--nakagin-capsule",
+          "name": "Nakagin Capsule"
+        },
+        {
+          "exportName": "ReadOnlyBoard",
+          "id": "🧱️block🖐️5d-board--read-only-board",
+          "name": "Read Only Board"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/📖️stories/🎭️5d-world/🧪️.story.tsx",
+      "title": "🧱️block🖐️5d/World",
+      "stories": [
+        {
+          "exportName": "HexagonalCutConcreteForestLeft",
+          "id": "🧱️block🖐️5d-world--hexagonal-cut-concrete-forest-left",
+          "name": "Hexagonal Cut Concrete Forest Left"
+        },
+        {
+          "exportName": "NakaginCapsule",
+          "id": "🧱️block🖐️5d-world--nakagin-capsule",
+          "name": "Nakagin Capsule"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📖️stories/🎭️glass/🧪️.story.tsx",
+      "title": "🎨️styling/Glass",
+      "stories": [
+        {
+          "exportName": "AllLevels",
+          "id": "🎨️styling-glass--all-levels",
+          "name": "All Levels"
+        },
+        {
+          "exportName": "PanelLevel",
+          "id": "🎨️styling-glass--panel-level",
+          "name": "Panel Level"
+        },
+        {
+          "exportName": "PaneLevel",
+          "id": "🎨️styling-glass--pane-level",
+          "name": "Pane Level"
+        },
+        {
+          "exportName": "DefaultLevelFallback",
+          "id": "🎨️styling-glass--default-level-fallback",
+          "name": "Default Level Fallback"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📖️stories/🎭️theme-roundtrip/🧪️.story.tsx",
+      "title": "🎨️styling/ThemeRoundtrip",
+      "stories": [
+        {
+          "exportName": "SemioTheme",
+          "id": "🎨️styling-themeroundtrip--semio-theme",
+          "name": "Semio Theme"
+        },
+        {
+          "exportName": "MonoTheme",
+          "id": "🎨️styling-themeroundtrip--mono-theme",
+          "name": "Mono Theme"
+        },
+        {
+          "exportName": "BrokenTokenReference",
+          "id": "🎨️styling-themeroundtrip--broken-token-reference",
+          "name": "Broken Token Reference"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📖️stories/🎭️theme/🧪️.story.tsx",
+      "title": "🎨️styling/Theme",
+      "stories": [
+        {
+          "exportName": "AllThemes",
+          "id": "🎨️styling-theme--all-themes",
+          "name": "All Themes"
+        },
+        {
+          "exportName": "SemioOnly",
+          "id": "🎨️styling-theme--semio-only",
+          "name": "Semio Only"
+        },
+        {
+          "exportName": "BoardGroupAcrossThemes",
+          "id": "🎨️styling-theme--board-group-across-themes",
+          "name": "Board Group Across Themes"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📖️stories/🎭️tokens/🧪️.story.tsx",
+      "title": "🎨️styling/Tokens",
+      "stories": [
+        {
+          "exportName": "Colors",
+          "id": "🎨️styling-tokens--colors",
+          "name": "Colors"
+        },
+        {
+          "exportName": "Spacing",
+          "id": "🎨️styling-tokens--spacing",
+          "name": "Spacing"
+        },
+        {
+          "exportName": "Radii",
+          "id": "🎨️styling-tokens--radii",
+          "name": "Radii"
+        },
+        {
+          "exportName": "Strokes",
+          "id": "🎨️styling-tokens--strokes",
+          "name": "Strokes"
+        },
+        {
+          "exportName": "Opacities",
+          "id": "🎨️styling-tokens--opacities",
+          "name": "Opacities"
+        },
+        {
+          "exportName": "AllTokens",
+          "id": "🎨️styling-tokens--all-tokens",
+          "name": "All Tokens"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️action-dropdown/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/ActionDropdown",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-actiondropdown--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "WithTransaction",
+          "id": "🖱️ui⚛️react-actiondropdown--with-transaction",
+          "name": "With start/finalize transaction hooks"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️app/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/App",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-app--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️basic-chat-panel/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/BasicChatPanel",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-basicchatpanel--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "Narrow",
+          "id": "🖱️ui⚛️react-basicchatpanel--narrow",
+          "name": "Narrow Panel"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️canvas-pick-menu/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/CanvasPickMenu",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-canvaspickmenu--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "Dismissed",
+          "id": "🖱️ui⚛️react-canvaspickmenu--dismissed",
+          "name": "Dismissed"
+        },
+        {
+          "exportName": "PointerInteraction",
+          "id": "🖱️ui⚛️react-canvaspickmenu--pointer-interaction",
+          "name": "useCanvasPickInteraction"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️drag-and-drop/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/DragAndDrop",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-draganddrop--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "Emphasized",
+          "id": "🖱️ui⚛️react-draganddrop--emphasized",
+          "name": "Emphasized"
+        },
+        {
+          "exportName": "Transfer",
+          "id": "🖱️ui⚛️react-draganddrop--transfer",
+          "name": "Transfer"
+        },
+        {
+          "exportName": "ReorderableRows",
+          "id": "🖱️ui⚛️react-draganddrop--reorderable-rows",
+          "name": "Reorderable Rows"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️engagement/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Engagement",
+      "stories": [
+        {
+          "exportName": "SearchStandalone",
+          "id": "🖱️ui⚛️react-engagement--search-standalone",
+          "name": "Search Standalone"
+        },
+        {
+          "exportName": "Standalone",
+          "id": "🖱️ui⚛️react-engagement--standalone",
+          "name": "Standalone"
+        },
+        {
+          "exportName": "WithControl",
+          "id": "🖱️ui⚛️react-engagement--with-control",
+          "name": "With Control"
+        },
+        {
+          "exportName": "InWindow",
+          "id": "🖱️ui⚛️react-engagement--in-window",
+          "name": "In Window"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️file-tree/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/FileTree",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-filetree--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "WithCurrentPath",
+          "id": "🖱️ui⚛️react-filetree--with-current-path",
+          "name": "Current Path Highlighted"
+        },
+        {
+          "exportName": "Navigable",
+          "id": "🖱️ui⚛️react-filetree--navigable",
+          "name": "Navigable"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️geometry/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Geometry",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-geometry--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "SelectedAndHovered",
+          "id": "🖱️ui⚛️react-geometry--selected-and-hovered",
+          "name": "Selected & Hovered"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️icon-shot-frame/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/IconShotFrame",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-iconshotframe--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "EllipseShape",
+          "id": "🖱️ui⚛️react-iconshotframe--ellipse-shape",
+          "name": "Ellipse Shape"
+        },
+        {
+          "exportName": "LandscapeNoBadge",
+          "id": "🖱️ui⚛️react-iconshotframe--landscape-no-badge",
+          "name": "Landscape, No Badge"
+        },
+        {
+          "exportName": "ClipIconSvgMarkupToEllipseStory",
+          "id": "🖱️ui⚛️react-iconshotframe--clip-icon-svg-markup-to-ellipse-story",
+          "name": "clipIconSvgMarkupToEllipse"
+        },
+        {
+          "exportName": "IconShotFrameStyleStory",
+          "id": "🖱️ui⚛️react-iconshotframe--icon-shot-frame-style-story",
+          "name": "iconShotFrameStyle"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️label/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Label",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-label--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "TreeGroupHeader",
+          "id": "🖱️ui⚛️react-label--tree-group-header",
+          "name": "Tree Group Header"
+        },
+        {
+          "exportName": "FallbackFromId",
+          "id": "🖱️ui⚛️react-label--fallback-from-id",
+          "name": "Fallback From Id"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️mode/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Mode",
+      "stories": [
+        {
+          "exportName": "QuadLayout",
+          "id": "🖱️ui⚛️react-mode--quad-layout",
+          "name": "Quad Layout"
+        },
+        {
+          "exportName": "TabStack",
+          "id": "🖱️ui⚛️react-mode--tab-stack",
+          "name": "Tab Stack"
+        },
+        {
+          "exportName": "MaximizeStack",
+          "id": "🖱️ui⚛️react-mode--maximize-stack",
+          "name": "Maximize Stack"
+        },
+        {
+          "exportName": "EvenSplit",
+          "id": "🖱️ui⚛️react-mode--even-split",
+          "name": "Even Split"
+        },
+        {
+          "exportName": "ContentThroughGlass",
+          "id": "🖱️ui⚛️react-mode--content-through-glass",
+          "name": "Content Through Glass"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️navbar-example-select/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/NavbarExampleSelect",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-navbarexampleselect--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "WithoutNoExampleOption",
+          "id": "🖱️ui⚛️react-navbarexampleselect--without-no-example-option",
+          "name": "includeNoExample={false}"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️panel-tab-bar/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/PanelTabBar",
+      "stories": [
+        {
+          "exportName": "PanelVariant",
+          "id": "🖱️ui⚛️react-paneltabbar--panel-variant",
+          "name": "variant=panel (nested rows stack downward)"
+        },
+        {
+          "exportName": "MobileVariant",
+          "id": "🖱️ui⚛️react-paneltabbar--mobile-variant",
+          "name": "variant=mobile (single flat row)"
+        },
+        {
+          "exportName": "ChromeHosted",
+          "id": "🖱️ui⚛️react-paneltabbar--chrome-hosted",
+          "name": "PanelChromeTabBar — hosted inline in navbar chrome"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️providers/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Providers",
+      "stories": [
+        {
+          "exportName": "Ghost",
+          "id": "🖱️ui⚛️react-providers--ghost",
+          "name": "GhostProvider"
+        },
+        {
+          "exportName": "Interaction",
+          "id": "🖱️ui⚛️react-providers--interaction",
+          "name": "InteractionProvider"
+        },
+        {
+          "exportName": "PanelDockStory",
+          "id": "🖱️ui⚛️react-providers--panel-dock-story",
+          "name": "PanelDockProvider (drag a tab between the two panels)"
+        },
+        {
+          "exportName": "TreeState",
+          "id": "🖱️ui⚛️react-providers--tree-state",
+          "name": "TreeStateProvider"
+        },
+        {
+          "exportName": "Driver",
+          "id": "🖱️ui⚛️react-providers--driver",
+          "name": "UiDriverProvider"
+        },
+        {
+          "exportName": "Flow",
+          "id": "🖱️ui⚛️react-providers--flow",
+          "name": "FlowProvider (nesting overrides only what it passes)"
+        },
+        {
+          "exportName": "LevelStory",
+          "id": "🖱️ui⚛️react-providers--level-story",
+          "name": "LevelProvider"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️selection-marquee/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/SelectionMarquee",
+      "stories": [
+        {
+          "exportName": "RectFull",
+          "id": "🖱️ui⚛️react-selectionmarquee--rect-full",
+          "name": "shape=\"rect\", coverage=\"full\" (drag left-to-right)"
+        },
+        {
+          "exportName": "RectPartial",
+          "id": "🖱️ui⚛️react-selectionmarquee--rect-partial",
+          "name": "shape=\"rect\", coverage=\"partial\" (drag right-to-left — dashed)"
+        },
+        {
+          "exportName": "Polygon",
+          "id": "🖱️ui⚛️react-selectionmarquee--polygon",
+          "name": "shape=\"polygon\" (lasso gesture)"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️sortable-tree-items/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/SortableTreeItems",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-sortabletreeitems--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "SingleItem",
+          "id": "🖱️ui⚛️react-sortabletreeitems--single-item",
+          "name": "Single item (drag handle still renders)"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️ui/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Ui",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-ui--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️uiintroduction/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/UIIntroduction",
+      "stories": [
+        {
+          "exportName": "FirstStep",
+          "id": "🖱️ui⚛️react-uiintroduction--first-step",
+          "name": "First Step"
+        },
+        {
+          "exportName": "LastStep",
+          "id": "🖱️ui⚛️react-uiintroduction--last-step",
+          "name": "Last step (Next → Done)"
+        },
+        {
+          "exportName": "WithInteractions",
+          "id": "🖱️ui⚛️react-uiintroduction--with-interactions",
+          "name": "Interaction checklist"
+        },
+        {
+          "exportName": "GestureGallery",
+          "id": "🖱️ui⚛️react-uiintroduction--gesture-gallery",
+          "name": "Gesture gallery"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️unified-gumball/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/UnifiedGumball",
+      "stories": [
+        {
+          "exportName": "MoveRotateScale",
+          "id": "🖱️ui⚛️react-unifiedgumball--move-rotate-scale",
+          "name": "Full gumball (move / rotate / scale)"
+        },
+        {
+          "exportName": "MoveOnly",
+          "id": "🖱️ui⚛️react-unifiedgumball--move-only",
+          "name": "Move Only"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/↔️Resizable/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Resizable",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-resizable--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/↕️Collapsible/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Collapsible",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-collapsible--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "SectionDefault",
+          "id": "🖱️ui⚛️react-collapsible--section-default",
+          "name": "Section Default"
+        },
+        {
+          "exportName": "StepsDefault",
+          "id": "🖱️ui⚛️react-collapsible--steps-default",
+          "name": "Steps Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⌨️Command/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Command",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-command--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/☑️Checkbox/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Checkbox",
+      "stories": [
+        {
+          "exportName": "StateMatrix",
+          "id": "🖱️ui⚛️react-checkbox--state-matrix",
+          "name": "State Matrix"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/VirtualFileSystem",
+      "stories": [
+        {
+          "exportName": "Collapsed",
+          "id": "🖱️ui⚛️react-virtualfilesystem--collapsed",
+          "name": "Collapsed"
+        },
+        {
+          "exportName": "Expanded",
+          "id": "🖱️ui⚛️react-virtualfilesystem--expanded",
+          "name": "Expanded"
+        },
+        {
+          "exportName": "StaticRows",
+          "id": "🖱️ui⚛️react-virtualfilesystem--static-rows",
+          "name": "Static Rows"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚡️ActionGroup/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/ActionGroup",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-actiongroup--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Input",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-input--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "OverflowCollapsed",
+          "id": "🖱️ui⚛️react-input--overflow-collapsed",
+          "name": "Overflow Collapsed"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⭕️Ring/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Ring",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-ring--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Tree",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-tree--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "ControlTreeStory",
+          "id": "🖱️ui⚛️react-tree--control-tree-story",
+          "name": "Control Tree Story"
+        },
+        {
+          "exportName": "Alternatives",
+          "id": "🖱️ui⚛️react-tree--alternatives",
+          "name": "Alternatives"
+        },
+        {
+          "exportName": "DragAndDrop",
+          "id": "🖱️ui⚛️react-tree--drag-and-drop",
+          "name": "Drag And Drop"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎀️Ribbon/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Ribbon",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-ribbon--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "WithUndoRedo",
+          "id": "🖱️ui⚛️react-ribbon--with-undo-redo",
+          "name": "With Undo Redo"
+        },
+        {
+          "exportName": "MultipleZones",
+          "id": "🖱️ui⚛️react-ribbon--multiple-zones",
+          "name": "Multiple Zones"
+        },
+        {
+          "exportName": "RibbonLevels",
+          "id": "🖱️ui⚛️react-ribbon--ribbon-levels",
+          "name": "Ribbon Levels (inline vs. up)"
+        },
+        {
+          "exportName": "RecursiveCategoryGroups",
+          "id": "🖱️ui⚛️react-ribbon--recursive-category-groups",
+          "name": "Window Panel: Recursive Category Groups (selection / utilities)"
+        },
+        {
+          "exportName": "ModeWideFooterCategories",
+          "id": "🖱️ui⚛️react-ribbon--mode-wide-footer-categories",
+          "name": "Footer: Mode-Wide Categories (actions / history / sync)"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Slider",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-slider--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "ReadyExtent",
+          "id": "🖱️ui⚛️react-slider--ready-extent",
+          "name": "Ready Extent"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎛️ToggleGroup/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/ToggleGroup",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-togglegroup--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "Multiple",
+          "id": "🖱️ui⚛️react-togglegroup--multiple",
+          "name": "Multiple"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Canvas",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-canvas--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "DiagramSkeletonDefault",
+          "id": "🖱️ui⚛️react-canvas--diagram-skeleton-default",
+          "name": "Diagram Skeleton Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Scene",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-scene--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "Orthographic",
+          "id": "🖱️ui⚛️react-scene--orthographic",
+          "name": "Orthographic"
+        },
+        {
+          "exportName": "WithoutChrome",
+          "id": "🖱️ui⚛️react-scene--without-chrome",
+          "name": "No grid / gizmo (bare canvas)"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎴️IconSelector/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/IconSelector",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-iconselector--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "Emoji",
+          "id": "🖱️ui⚛️react-iconselector--emoji",
+          "name": "Emoji"
+        },
+        {
+          "exportName": "Disabled",
+          "id": "🖱️ui⚛️react-iconselector--disabled",
+          "name": "Disabled"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/👥️PresenceBar/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/PresenceBar",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-presencebar--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "Overflow",
+          "id": "🖱️ui⚛️react-presencebar--overflow",
+          "name": "Overflow"
+        },
+        {
+          "exportName": "Empty",
+          "id": "🖱️ui⚛️react-presencebar--empty",
+          "name": "Empty"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Dialog",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-dialog--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Table",
+      "stories": [
+        {
+          "exportName": "WithAvatars",
+          "id": "🖱️ui⚛️react-table--with-avatars",
+          "name": "With Avatars"
+        },
+        {
+          "exportName": "SelectableWithAvatars",
+          "id": "🖱️ui⚛️react-table--selectable-with-avatars",
+          "name": "Selectable With Avatars"
+        },
+        {
+          "exportName": "CompactWithAvatars",
+          "id": "🖱️ui⚛️react-table--compact-with-avatars",
+          "name": "Compact With Avatars"
+        },
+        {
+          "exportName": "WithIconAvatars",
+          "id": "🖱️ui⚛️react-table--with-icon-avatars",
+          "name": "With Icon Avatars"
+        },
+        {
+          "exportName": "SkeletonDefault",
+          "id": "🖱️ui⚛️react-table--skeleton-default",
+          "name": "Skeleton Default"
+        },
+        {
+          "exportName": "SkeletonMinimal",
+          "id": "🖱️ui⚛️react-table--skeleton-minimal",
+          "name": "Skeleton Minimal"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📋️MenuItem/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/MenuItem",
+      "stories": [
+        {
+          "exportName": "StateMatrix",
+          "id": "🖱️ui⚛️react-menuitem--state-matrix",
+          "name": "State Matrix"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Layout",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-layout--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "Mobile",
+          "id": "🖱️ui⚛️react-layout--mobile",
+          "name": "Mobile"
+        },
+        {
+          "exportName": "PanelDefault",
+          "id": "🖱️ui⚛️react-layout--panel-default",
+          "name": "Panel Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Tabs",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-tabs--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📜️Scrollable/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Scrollable",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-scrollable--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📝️Field/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Field",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-field--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "WithDescriptionAndError",
+          "id": "🖱️ui⚛️react-field--with-description-and-error",
+          "name": "Description & Error"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/UIDialog",
+      "stories": [
+        {
+          "exportName": "StagedForm",
+          "id": "🖱️ui⚛️react-uidialog--staged-form",
+          "name": "Staged form (quantity / label / toggle)"
+        },
+        {
+          "exportName": "ConfirmOnly",
+          "id": "🖱️ui⚛️react-uidialog--confirm-only",
+          "name": "Message/confirm (no args)"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📻️TableAvatar/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/TableAvatar",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-tableavatar--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Toggle",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-toggle--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "WithAction",
+          "id": "🖱️ui⚛️react-toggle--with-action",
+          "name": "With Action"
+        },
+        {
+          "exportName": "Dropdown",
+          "id": "🖱️ui⚛️react-toggle--dropdown",
+          "name": "Dropdown"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔘️Button/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Button",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-button--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔚️Footer/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Footer",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-footer--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Navbar",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-navbar--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "RibbonDefault",
+          "id": "🖱️ui⚛️react-navbar--ribbon-default",
+          "name": "Ribbon Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Icons",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-icons--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "IconAnimations",
+          "id": "🖱️ui⚛️react-icons--icon-animations",
+          "name": "Icon Animations"
+        },
+        {
+          "exportName": "Concepts",
+          "id": "🖱️ui⚛️react-icons--concepts",
+          "name": "Concepts"
+        },
+        {
+          "exportName": "SpinnerSizes",
+          "id": "🖱️ui⚛️react-icons--spinner-sizes",
+          "name": "Spinner Sizes"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔤️Textarea/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Textarea",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-textarea--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔳️ButtonGroup/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/ButtonGroup",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-buttongroup--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Select",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-select--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕰️HistoryTable/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/HistoryTable",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-historytable--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "Empty",
+          "id": "🖱️ui⚛️react-historytable--empty",
+          "name": "Empty"
+        },
+        {
+          "exportName": "Selectable",
+          "id": "🖱️ui⚛️react-historytable--selectable",
+          "name": "Selectable"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Diagram",
+      "stories": [
+        {
+          "exportName": "Skeleton",
+          "id": "🖱️ui⚛️react-diagram--skeleton",
+          "name": "Skeleton"
+        },
+        {
+          "exportName": "LargeSkeleton",
+          "id": "🖱️ui⚛️react-diagram--large-skeleton",
+          "name": "Large Skeleton"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/ContextMenu",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-contextmenu--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "Grouped",
+          "id": "🖱️ui⚛️react-contextmenu--grouped",
+          "name": "Grouped (Header + Submenus + Destructive)"
+        },
+        {
+          "exportName": "NoItems",
+          "id": "🖱️ui⚛️react-contextmenu--no-items",
+          "name": "No Items (Native Menu Suppressed)"
+        },
+        {
+          "exportName": "TextSelection",
+          "id": "🖱️ui⚛️react-contextmenu--text-selection",
+          "name": "Text Selection (Copy Menu)"
+        },
+        {
+          "exportName": "Controlled",
+          "id": "🖱️ui⚛️react-contextmenu--controlled",
+          "name": "ContextMenuController"
+        },
+        {
+          "exportName": "NumberedPreview",
+          "id": "🖱️ui⚛️react-contextmenu--numbered-preview",
+          "name": "Numbered Preview (Digit + Enter)"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Panel",
+      "stories": [
+        {
+          "exportName": "PanelTopLeft",
+          "id": "🖱️ui⚛️react-panel--panel-top-left",
+          "name": "Panel — Top Left"
+        },
+        {
+          "exportName": "PanelTopRight",
+          "id": "🖱️ui⚛️react-panel--panel-top-right",
+          "name": "Panel — Top Right"
+        },
+        {
+          "exportName": "PanelBottomRight",
+          "id": "🖱️ui⚛️react-panel--panel-bottom-right",
+          "name": "Panel — Bottom Right (stacks upward)"
+        },
+        {
+          "exportName": "PanelFolded",
+          "id": "🖱️ui⚛️react-panel--panel-folded",
+          "name": "Panel — Folded (toggle only)"
+        },
+        {
+          "exportName": "PanelNestedTabs",
+          "id": "🖱️ui⚛️react-panel--panel-nested-tabs",
+          "name": "Panel — Nested Tabs (Ribbon Levels)"
+        },
+        {
+          "exportName": "PanelTopMiddle",
+          "id": "🖱️ui⚛️react-panel--panel-top-middle",
+          "name": "Panel — Top Middle (centered, dual resize handles)"
+        },
+        {
+          "exportName": "PanelBottomMiddle",
+          "id": "🖱️ui⚛️react-panel--panel-bottom-middle",
+          "name": "Panel — Bottom Middle (centered, stacks upward)"
+        },
+        {
+          "exportName": "PanelChromeHostedTopMiddle",
+          "id": "🖱️ui⚛️react-panel--panel-chrome-hosted-top-middle",
+          "name": "Panel — Chrome Hosted Top Middle"
+        },
+        {
+          "exportName": "PanelChromeHostedBottomMiddle",
+          "id": "🖱️ui⚛️react-panel--panel-chrome-hosted-bottom-middle",
+          "name": "Panel — Chrome Hosted Bottom Middle (nested tabs)"
+        },
+        {
+          "exportName": "PanelChromeHostedBottomRight",
+          "id": "🖱️ui⚛️react-panel--panel-chrome-hosted-bottom-right",
+          "name": "Panel — Chrome Hosted Bottom Right"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗨️Popover/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Popover",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-popover--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Skeletons",
+      "stories": [
+        {
+          "exportName": "Table",
+          "id": "🖱️ui⚛️react-skeletons--table",
+          "name": "TableSkeleton"
+        },
+        {
+          "exportName": "Diagram",
+          "id": "🖱️ui⚛️react-skeletons--diagram",
+          "name": "DiagramSkeleton"
+        },
+        {
+          "exportName": "Scene",
+          "id": "🖱️ui⚛️react-skeletons--scene",
+          "name": "SceneSkeleton"
+        },
+        {
+          "exportName": "Canvas",
+          "id": "🖱️ui⚛️react-skeletons--canvas",
+          "name": "CanvasSkeleton"
+        },
+        {
+          "exportName": "WindowBody",
+          "id": "🖱️ui⚛️react-skeletons--window-body",
+          "name": "WindowBodySkeleton"
+        },
+        {
+          "exportName": "ElementMatrix",
+          "id": "🖱️ui⚛️react-skeletons--element-matrix",
+          "name": "ElementSkeletonKinds"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧾️Form/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Form",
+      "stories": [
+        {
+          "exportName": "NativeSubmission",
+          "id": "🖱️ui⚛️react-form--native-submission",
+          "name": "Native Submission"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Stepper",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-stepper--default",
+          "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/Window",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "🖱️ui⚛️react-window--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "WithControls",
+          "id": "🖱️ui⚛️react-window--with-controls",
+          "name": "With Controls"
+        },
+        {
+          "exportName": "Loading",
+          "id": "🖱️ui⚛️react-window--loading",
+          "name": "Loading"
+        },
+        {
+          "exportName": "WithError",
+          "id": "🖱️ui⚛️react-window--with-error",
+          "name": "With Error"
+        },
+        {
+          "exportName": "WithEngagement",
+          "id": "🖱️ui⚛️react-window--with-engagement",
+          "name": "With Engagement"
+        },
+        {
+          "exportName": "WithUtilityBar",
+          "id": "🖱️ui⚛️react-window--with-utility-bar",
+          "name": "With Utility Bar"
+        },
+        {
+          "exportName": "NoUtilities",
+          "id": "🖱️ui⚛️react-window--no-utilities",
+          "name": "No Utilities (bottom-left chrome still present, disabled)"
+        },
+        {
+          "exportName": "WithRecursiveCategoryUtilityBar",
+          "id": "🖱️ui⚛️react-window--with-recursive-category-utility-bar",
+          "name": "With Recursive Category Utility Bar (selection / utilities)"
+        },
+        {
+          "exportName": "WithControlsMeasuresEngagementAndUtilityBar",
+          "id": "🖱️ui⚛️react-window--with-controls-measures-engagement-and-utility-bar",
+          "name": "With Controls Measures Engagement And Utility Bar"
+        },
+        {
+          "exportName": "HorizontalLayout",
+          "id": "🖱️ui⚛️react-window--horizontal-layout",
+          "name": "Horizontal Layout"
+        },
+        {
+          "exportName": "VerticalLayout",
+          "id": "🖱️ui⚛️react-window--vertical-layout",
+          "name": "Vertical Layout"
+        },
+        {
+          "exportName": "NestedLayout",
+          "id": "🖱️ui⚛️react-window--nested-layout",
+          "name": "Nested Layout"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📖️stories/🎭️plugins/🧪️.story.tsx",
+      "title": "🛠️framework🖥️os/Plugins",
+      "stories": [
+        {
+          "exportName": "Animate",
+          "id": "🛠️framework🖥️os-plugins--animate",
+          "name": "Animate"
+        },
+        {
+          "exportName": "Architect",
+          "id": "🛠️framework🖥️os-plugins--architect",
+          "name": "Architect"
+        },
+        {
+          "exportName": "Block",
+          "id": "🛠️framework🖥️os-plugins--block",
+          "name": "Block"
+        },
+        {
+          "exportName": "Cad",
+          "id": "🛠️framework🖥️os-plugins--cad",
+          "name": "Cad"
+        },
+        {
+          "exportName": "Dag",
+          "id": "🛠️framework🖥️os-plugins--dag",
+          "name": "Dag"
+        },
+        {
+          "exportName": "Demonstrator",
+          "id": "🛠️framework🖥️os-plugins--demonstrator",
+          "name": "Demonstrator"
+        },
+        {
+          "exportName": "Draw",
+          "id": "🛠️framework🖥️os-plugins--draw",
+          "name": "Draw"
+        },
+        {
+          "exportName": "Energy",
+          "id": "🛠️framework🖥️os-plugins--energy",
+          "name": "Energy"
+        },
+        {
+          "exportName": "Fem",
+          "id": "🛠️framework🖥️os-plugins--fem",
+          "name": "Fem"
+        },
+        {
+          "exportName": "Flow",
+          "id": "🛠️framework🖥️os-plugins--flow",
+          "name": "Flow"
+        },
+        {
+          "exportName": "Forms",
+          "id": "🛠️framework🖥️os-plugins--forms",
+          "name": "Forms"
+        },
+        {
+          "exportName": "Gis",
+          "id": "🛠️framework🖥️os-plugins--gis",
+          "name": "Gis"
+        },
+        {
+          "exportName": "Imperative",
+          "id": "🛠️framework🖥️os-plugins--imperative",
+          "name": "Imperative"
+        },
+        {
+          "exportName": "Layout",
+          "id": "🛠️framework🖥️os-plugins--layout",
+          "name": "Layout"
+        },
+        {
+          "exportName": "Lowpoly",
+          "id": "🛠️framework🖥️os-plugins--lowpoly",
+          "name": "Lowpoly"
+        },
+        {
+          "exportName": "Mathematical",
+          "id": "🛠️framework🖥️os-plugins--mathematical",
+          "name": "Mathematical"
+        },
+        {
+          "exportName": "Norm",
+          "id": "🛠️framework🖥️os-plugins--norm",
+          "name": "Norm"
+        },
+        {
+          "exportName": "Note",
+          "id": "🛠️framework🖥️os-plugins--note",
+          "name": "Note"
+        },
+        {
+          "exportName": "Playbook",
+          "id": "🛠️framework🖥️os-plugins--playbook",
+          "name": "Playbook"
+        },
+        {
+          "exportName": "Procedural",
+          "id": "🛠️framework🖥️os-plugins--procedural",
+          "name": "Procedural"
+        },
+        {
+          "exportName": "Process",
+          "id": "🛠️framework🖥️os-plugins--process",
+          "name": "Process"
+        },
+        {
+          "exportName": "Puzzle",
+          "id": "🛠️framework🖥️os-plugins--puzzle",
+          "name": "Puzzle"
+        },
+        {
+          "exportName": "Raster",
+          "id": "🛠️framework🖥️os-plugins--raster",
+          "name": "Raster"
+        },
+        {
+          "exportName": "Reasoning",
+          "id": "🛠️framework🖥️os-plugins--reasoning",
+          "name": "Reasoning"
+        },
+        {
+          "exportName": "Remodel",
+          "id": "🛠️framework🖥️os-plugins--remodel",
+          "name": "Remodel"
+        },
+        {
+          "exportName": "Sequence",
+          "id": "🛠️framework🖥️os-plugins--sequence",
+          "name": "Sequence"
+        },
+        {
+          "exportName": "Shooting",
+          "id": "🛠️framework🖥️os-plugins--shooting",
+          "name": "Shooting"
+        },
+        {
+          "exportName": "Sourcing",
+          "id": "🛠️framework🖥️os-plugins--sourcing",
+          "name": "Sourcing"
+        },
+        {
+          "exportName": "Space",
+          "id": "🛠️framework🖥️os-plugins--space",
+          "name": "Space"
+        },
+        {
+          "exportName": "Stdio",
+          "id": "🛠️framework🖥️os-plugins--stdio",
+          "name": "Stdio"
+        },
+        {
+          "exportName": "Trinity",
+          "id": "🛠️framework🖥️os-plugins--trinity",
+          "name": "Trinity"
+        },
+        {
+          "exportName": "Vcs",
+          "id": "🛠️framework🖥️os-plugins--vcs",
+          "name": "Vcs"
+        },
+        {
+          "exportName": "Writer",
+          "id": "🛠️framework🖥️os-plugins--writer",
+          "name": "Writer"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📖️stories/🎭️shell/🧪️.story.tsx",
+      "title": "🛠️framework🖥️os/Shell",
+      "stories": [
+        {
+          "exportName": "Studio",
+          "id": "🛠️framework🖥️os-shell--studio",
+          "name": "Studio"
+        },
+        {
+          "exportName": "Puzzle",
+          "id": "🛠️framework🖥️os-shell--puzzle",
+          "name": "Puzzle"
+        },
+        {
+          "exportName": "ArtifactMissing",
+          "id": "🛠️framework🖥️os-shell--artifact-missing",
+          "name": "Artifact Missing"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📖️stories/🎭️wgpu/🧪️.story.tsx",
+      "title": "🛠️framework🖥️os/Wgpu",
+      "stories": [
+        {
+          "exportName": "Studio",
+          "id": "🛠️framework🖥️os-wgpu--studio",
+          "name": "Studio"
+        },
+        {
+          "exportName": "Puzzle",
+          "id": "🛠️framework🖥️os-wgpu--puzzle",
+          "name": "Puzzle"
+        },
+        {
+          "exportName": "ArtifactMissing",
+          "id": "🛠️framework🖥️os-wgpu--artifact-missing",
+          "name": "Artifact Missing"
+        },
+        {
+          "exportName": "GlassContent",
+          "id": "🛠️framework🖥️os-wgpu--glass-content",
+          "name": "Glass Content"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/🎭️graph-wasm-canvas/🧪️.story.tsx",
+      "title": "♾️infinite/GraphWasmCanvas",
+      "stories": [
+        {
+          "exportName": "MockSession",
+          "id": "♾️infinite-graphwasmcanvas--mock-session",
+          "name": "Mock Session"
+        },
+        {
+          "exportName": "PointerDisabled",
+          "id": "♾️infinite-graphwasmcanvas--pointer-disabled",
+          "name": "Pointer Disabled"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/🎭️reference-media/🧪️.story.tsx",
+      "title": "♾️infinite/ReferenceMedia",
+      "stories": [
+        {
+          "exportName": "AllFixtures",
+          "id": "♾️infinite-referencemedia--all-fixtures",
+          "name": "All Fixtures"
+        },
+        {
+          "exportName": "PdfOnly",
+          "id": "♾️infinite-referencemedia--pdf-only",
+          "name": "Pdf Only"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/🎭️world-r3f/🧪️.story.tsx",
+      "title": "♾️infinite/WorldR3f",
+      "stories": [
+        {
+          "exportName": "ChunkedField",
+          "id": "♾️infinite-worldr3f--chunked-field",
+          "name": "Chunked Field"
+        },
+        {
+          "exportName": "CulledField",
+          "id": "♾️infinite-worldr3f--culled-field",
+          "name": "Culled Field"
+        },
+        {
+          "exportName": "OrderedLayers",
+          "id": "♾️infinite-worldr3f--ordered-layers",
+          "name": "Ordered Layers"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/TextEditorHost",
+      "stories": [
+        {
+          "exportName": "JackDocument",
+          "id": "🛠️framework🔌️hosts-texteditorhost--jack-document",
+          "name": "Jack Document"
+        },
+        {
+          "exportName": "WithDiagnostics",
+          "id": "🛠️framework🔌️hosts-texteditorhost--with-diagnostics",
+          "name": "With Diagnostics"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/World3dHost",
+      "stories": [
+        {
+          "exportName": "MinimalViewport",
+          "id": "🛠️framework🔌️hosts-world3dhost--minimal-viewport",
+          "name": "Minimal Viewport"
+        },
+        {
+          "exportName": "TerrainViewport",
+          "id": "🛠️framework🔌️hosts-world3dhost--terrain-viewport",
+          "name": "Terrain Viewport"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌳️GraphTimelineHost/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/GraphTimelineHost",
+      "stories": [
+        {
+          "exportName": "Branching",
+          "id": "🛠️framework🔌️hosts-graphtimelinehost--branching",
+          "name": "Branching"
+        },
+        {
+          "exportName": "Linear",
+          "id": "🛠️framework🔌️hosts-graphtimelinehost--linear",
+          "name": "Linear"
+        },
+        {
+          "exportName": "Empty",
+          "id": "🛠️framework🔌️hosts-graphtimelinehost--empty",
+          "name": "Empty"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📊️Table/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/TableHost",
+      "stories": [
+        {
+          "exportName": "SortableWithActions",
+          "id": "🛠️framework🔌️hosts-tablehost--sortable-with-actions",
+          "name": "Sortable With Actions"
+        },
+        {
+          "exportName": "EmptyScene",
+          "id": "🛠️framework🔌️hosts-tablehost--empty-scene",
+          "name": "Empty Scene"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/Canvas2dHost",
+      "stories": [
+        {
+          "exportName": "Scene",
+          "id": "🛠️framework🔌️hosts-canvas2dhost--scene",
+          "name": "Scene"
+        },
+        {
+          "exportName": "EmptyCanvas",
+          "id": "🛠️framework🔌️hosts-canvas2dhost--empty-canvas",
+          "name": "Empty Canvas"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/NodeGraphHost",
+      "stories": [
+        {
+          "exportName": "Workflow",
+          "id": "🛠️framework🔌️hosts-nodegraphhost--workflow",
+          "name": "Workflow"
+        },
+        {
+          "exportName": "FlowGraph",
+          "id": "🛠️framework🔌️hosts-nodegraphhost--flow-graph",
+          "name": "Flow Graph"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/InkCanvasHost",
+      "stories": [
+        {
+          "exportName": "Editable",
+          "id": "🛠️framework🔌️hosts-inkcanvashost--editable",
+          "name": "Editable"
+        },
+        {
+          "exportName": "NavigatorPreview",
+          "id": "🛠️framework🔌️hosts-inkcanvashost--navigator-preview",
+          "name": "Navigator Preview"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/Paint2dHost",
+      "stories": [
+        {
+          "exportName": "CompositeView",
+          "id": "🛠️framework🔌️hosts-paint2dhost--composite-view",
+          "name": "Composite View"
+        },
+        {
+          "exportName": "NavigatorView",
+          "id": "🛠️framework🔌️hosts-paint2dhost--navigator-view",
+          "name": "Navigator View"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/IconRenderHost",
+      "stories": [
+        {
+          "exportName": "ToolbarFormat",
+          "id": "🛠️framework🔌️hosts-iconrenderhost--toolbar-format",
+          "name": "Toolbar Format"
+        },
+        {
+          "exportName": "SvgFixed",
+          "id": "🛠️framework🔌️hosts-iconrenderhost--svg-fixed",
+          "name": "Svg Fixed"
+        },
+        {
+          "exportName": "PngFixed",
+          "id": "🛠️framework🔌️hosts-iconrenderhost--png-fixed",
+          "name": "Png Fixed"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/UiInterpreter",
+      "stories": [
+        {
+          "exportName": "Button",
+          "id": "🛠️framework🔌️hosts-uiinterpreter--button",
+          "name": "Button"
+        },
+        {
+          "exportName": "Tree",
+          "id": "🛠️framework🔌️hosts-uiinterpreter--tree",
+          "name": "Tree"
+        },
+        {
+          "exportName": "Panel",
+          "id": "🛠️framework🔌️hosts-uiinterpreter--panel",
+          "name": "Panel"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/WorldTerrainLayer",
+      "stories": [
+        {
+          "exportName": "HypsometricRamp",
+          "id": "🛠️framework🔌️hosts-worldterrainlayer--hypsometric-ramp",
+          "name": "Hypsometric Ramp"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧩️BlockListHost/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/BlockListHost",
+      "stories": [
+        {
+          "exportName": "Editable",
+          "id": "🛠️framework🔌️hosts-blocklisthost--editable",
+          "name": "Editable"
+        },
+        {
+          "exportName": "EmptyScene",
+          "id": "🛠️framework🔌️hosts-blocklisthost--empty-scene",
+          "name": "Empty Scene"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧭️TiledMapHost/📖️stories/🧪️.story.tsx",
+      "title": "🛠️framework🔌️hosts/TiledMapHost",
+      "stories": [
+        {
+          "exportName": "VectorRender",
+          "id": "🛠️framework🔌️hosts-tiledmaphost--vector-render",
+          "name": "Vector Render"
+        },
+        {
+          "exportName": "ImageRender",
+          "id": "🛠️framework🔌️hosts-tiledmaphost--image-render",
+          "name": "Image Render"
+        }
+      ]
+    }
+  ]
+}

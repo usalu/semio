@@ -75,5 +75,9 @@ impl DictReader {
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
+
+    pub fn take_entries(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.entries)
+    }
 }
 //#endregion 🔖️Dictionary

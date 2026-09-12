@@ -1,53 +1,1286 @@
 {
+  "schemaVersion": 1,
   "glueRoleCases": [
     {
-      "id": "rust-nested-declarative-module-block-classifies-declaration",
+      "id": "typescript-import-export-wiring",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import type { Ticket } from \"../../🎫️ticket/🟦️.ts\";\nexport type { Ticket };\nexport { handleTicket as GET } from \"../../🎫️ticket/🟦️.ts\";\n",
+      "expectedRole": "declaration",
+      "expectedEvidence": "import, export, or type wiring only",
+      "oracle": "typescript-compiler"
+    },
+    {
+      "id": "typescript-local-domain-interface",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "export interface Ticket { readonly id: string; readonly state: \"open\" | \"closed\"; }\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "domain type declaration is owned inside the package",
+      "oracle": "typescript-compiler"
+    },
+    {
+      "id": "typescript-domain-literal-table",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "export const ticketTransitions = { open: [\"closed\"], closed: [] } as const;\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime declaration or computation remains",
+      "oracle": "typescript-compiler"
+    },
+    {
+      "id": "typescript-tool-config-does-not-admit-exported-domain",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { defineConfig } from \"vitest/config\";\nexport interface OwnedConfig { readonly test: { readonly include: readonly string[] } }\nconst config: OwnedConfig = { test: { include: [\"../class-function.test.ts\"] } };\nexport default defineConfig(config);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "domain type declaration is owned inside the package",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "tool-config-vitest",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-tool-config-with-private-selection-logic",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { defineConfig } from \"vitest/config\";\nfunction suites() { if (process.env.SEMIO_TEST_LEVEL === \"long\") return [\"long.test.ts\"]; return [\"quick.test.ts\"]; }\nexport default defineConfig({ test: { include: suites() } });\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "function body performs non-delegating work",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "tool-config-vitest",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-tool-config-with-reachable-multiline-arrow",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { defineConfig } from \"vitest/config\";\nconst suites = (name: string, extension = \"ts\") =>\n  `./${name}/x.${extension}`;\nexport default defineConfig({ test: { include: [suites(\"x\")] } });\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime declaration or computation remains",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "tool-config-vitest",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-tool-config-multiline-arrow-with-unrelated-domain-function",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { defineConfig } from \"vitest/config\";\nconst suites = (name: string, extension = \"ts\") =>\n  `./${name}/x.${extension}`;\nfunction calculateDomainTotal() { return 40 + 2; }\nexport default defineConfig({ test: { include: [suites(\"x\")] } });\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "function body performs non-delegating work",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "tool-config-vitest",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-next-delegated-page",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { Dashboard } from \"../../🎛️dashboard/🟦️.tsx\";\nexport default function Page() { return <Dashboard />; }\n",
+      "expectedRole": "thin-delegation",
+      "expectedEvidence": "functions only forward to imported owners",
+      "oracle": "typescript-compiler"
+    },
+    {
+      "id": "typescript-next-domain-route",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { publishTicket } from \"../../🎫️ticket/🟦️.ts\";\nexport async function POST(request: Request) { const payload = await request.json(); if (!payload.title) throw new Error(\"title\"); return publishTicket({ ...payload, id: crypto.randomUUID() }); }\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "function body performs non-delegating work",
+      "oracle": "typescript-compiler"
+    },
+    {
+      "id": "typescript-registration-with-hidden-domain-body",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { registerAdapter } from \"../../🧩️adapter/🟦️.ts\";\nregisterAdapter(adapter);\nexport function price(value: number) { return value * 1.2; }\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "function body performs non-delegating work",
+      "oracle": "typescript-compiler"
+    },
+    {
+      "id": "typescript-misleading-comment-and-string",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { defineConfig } from \"vitest/config\";\n// class Domain { function compute() {} }\nconst label = \"class function register\";\nexport default defineConfig({ label });\n",
+      "expectedRole": "thin-delegation",
+      "expectedEvidence": "data-only default export module",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "tool-config-vitest",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-tool-config-hidden-private-class",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { defineConfig } from \"vitest/config\";\nclass Domain { compute() { return 42; } }\nexport default defineConfig({ test: { include: [] } });\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "tool-config-vitest",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-tool-config-unreferenced-computation",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { defineConfig } from \"vitest/config\";\nconst domainTotal = [20, 22].reduce((sum, value) => sum + value, 0);\nexport default defineConfig({ test: { include: [] } });\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime declaration or computation remains",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "tool-config-vitest",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-tool-config-top-level-side-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { writeFileSync } from \"node:fs\";\nimport { defineConfig } from \"vitest/config\";\nwriteFileSync(\"domain.txt\", \"42\");\nexport default defineConfig({ test: { include: [] } });\n",
+      "expectedRole": "thin-delegation",
+      "expectedEvidence": "top-level delegation to imported owners",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "tool-config-vitest",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-thin-entry",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { runBundleScriptMain } from \"@semio/process\";\nawait runBundleScriptMain(import.meta);\n",
+      "expectedRole": "thin-delegation",
+      "expectedEvidence": "top-level delegation to imported owners",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-bundle-delegation",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo } from \"@semio/process\";\nclass TestScript extends BundleScript { async run(segments: string[]): Promise<void> { await runCargo([\"test\", ...segments], this.repoRoot); } }\nawait runBundleScriptMain(new ScriptRouter(import.meta.dir).register(\"test\", TestScript), import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-argument-plumbing",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from \"@semio/process\";\nclass TestScript extends BundleScript { run(segments: string[]): void { const { rest } = resolveTestLevel(segments); runCargoTestBudgeted([\"semio-fixture\"], this.repoRoot, rest); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-hidden-private-class",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { runBundleScriptMain } from \"@semio/process\";\nclass Domain { compute() { return 42; } }\nawait runBundleScriptMain(import.meta);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-guard",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo } from \"@semio/process\";\nclass CheckScript extends BundleScript { run(segments: string[]): void { if (segments.length) throw new Error(\"check accepts no arguments\"); runCargo([\"check\"], this.root); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"check\", CheckScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-literal-target-loop",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from \"@semio/process\";\nclass CheckScript extends BundleScript { run(): void { for (const target of [\"one\", \"two\"]) { runCmd(\"tool\", [target], { cwd: this.root }); } } }\nconst router = new ScriptRouter(import.meta.dir).register(\"check\", CheckScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-local-command-closure",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from \"@semio/process\";\nclass CheckScript extends BundleScript { run(): void { const check = (args: string[]) => runCmd(\"tool\", args, { cwd: this.root }); check([\"one\"]); check([\"two\"]); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"check\", CheckScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-literal-path-map",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from \"@semio/process\";\nimport { join } from \"node:path\";\nclass TestScript extends BundleScript { run(): void { const cases = [\"one\", \"two\"]; runCmd(process.execPath, [\"test\", ...cases.map(path => join(this.repoRoot, path))]); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-imported-result-status",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, proveFixture } from \"@semio/process\";\nclass TestScript extends BundleScript { run(): void { const report = proveFixture(this.repoRoot); console.log(`fixture routes=${report.routes} limits=${report.limits}`); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-finite-path-flat-map",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { join } from \"node:path\";\nimport { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from \"@semio/process\";\nclass TestScript extends BundleScript { run(): void { const tests = [\"one\", \"two\"].flatMap((artifact) => { const subset = join(this.repoRoot, artifact); return [join(subset, \"a.test.ts\"), join(subset, \"b.test.ts\")]; }); runCmd(process.execPath, [\"test\", ...tests]); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-finite-path-flat-map-hidden-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { join } from \"node:path\";\nimport { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from \"@semio/process\";\nclass TestScript extends BundleScript { run(): void { const tests = [\"one\", \"two\"].flatMap((artifact) => { domainAudit(artifact); const subset = join(this.repoRoot, artifact); return [join(subset, \"a.test.ts\")]; }); runCmd(process.execPath, [\"test\", ...tests]); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-regex-argument-guard",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from \"@semio/process\";\nclass BuildScript extends BundleScript { run(segments: string[]): void { if (segments.some((arg) => /^(?:--outDir|--config|--root)(?:=|$)/.test(arg))) throw new Error(\"owned arguments\"); runCmd(\"tool\", segments); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", BuildScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-regex-argument-guard-hidden-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from \"@semio/process\";\nclass BuildScript extends BundleScript { run(segments: string[]): void { if (segments.some((arg) => { domainAudit(arg); return /--root/.test(arg); })) throw new Error(\"owned arguments\"); runCmd(\"tool\", segments); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", BuildScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-process-exit-delegation",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, describeComponent } from \"@semio/process\";\nclass DescribeScript extends BundleScript { run(): void { process.exit(describeComponent(this.repoRoot)); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"describe\", DescribeScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-literal-test-import",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"@semio/process\";\nclass TestScript extends BundleScript { async run(): Promise<void> { await import(\"../../🧪️tests/🔬️source/🟦️.ts\"); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-exact-task-environment",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { runArtifactRustPackageMain } from \"@semio/process\";\nif (process.argv[2] === \"test\") process.env.RUST_MIN_STACK ??= \"268435456\";\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime declaration or computation remains",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-guard-hidden-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo } from \"@semio/process\";\nclass CheckScript extends BundleScript { run(segments: string[]): void { if (segments.length) { globalThis.domainState = 42; throw new Error(\"invalid\"); } runCargo([\"check\"], this.root); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"check\", CheckScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-loop-hidden-accumulator",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from \"@semio/process\";\nclass CheckScript extends BundleScript { run(): void { let total = 0; for (const target of [1, 2]) { total += target; runCmd(\"tool\", [String(target)]); } } }\nconst router = new ScriptRouter(import.meta.dir).register(\"check\", CheckScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-closure-hidden-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from \"@semio/process\";\nclass CheckScript extends BundleScript { run(): void { const check = (args: string[]) => { domainAudit(args); return runCmd(\"tool\", args); }; check([\"one\"]); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"check\", CheckScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-path-map-hidden-calculation",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from \"@semio/process\";\nclass TestScript extends BundleScript { run(): void { const cases = [1, 2]; runCmd(\"tool\", cases.map(value => value * 2)); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-imported-result-hidden-reduction",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, runChecks } from \"@semio/process\";\nclass TestScript extends BundleScript { async run(): Promise<void> { const receipts = await runChecks(); console.log(receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-computed-test-import",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"@semio/process\";\nclass TestScript extends BundleScript { async run(segments: string[]): Promise<void> { await import(segments[0]!); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-computed-environment",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { runArtifactRustPackageMain } from \"@semio/process\";\nprocess.env.RUST_MIN_STACK ??= String(128 * 1024 * 1024);\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime declaration or computation remains",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-delegate",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute } from \"./owner/🟦️.ts\";\n\nclass Build extends BundleScript { async run(args: string[]) {await execute(args);} }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata"
+    },
+    {
+      "id": "typescript-command-router-argument-argument-member-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute } from \"./owner/🟦️.ts\";\n\nclass Build extends BundleScript { async run(args: string[]) {await execute(globalThis.sideEffect());} }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-console-member-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute } from \"./owner/🟦️.ts\";\n\nclass Build extends BundleScript { async run(args: string[]) {console.log(globalThis.sideEffect()); await execute(args);} }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-array-member-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute } from \"./owner/🟦️.ts\";\n\nclass Build extends BundleScript { async run(args: string[]) {const jobs = [globalThis.sideEffect()]; await execute(jobs);} }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-object-member-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute } from \"./owner/🟦️.ts\";\n\nclass Build extends BundleScript { async run(args: string[]) {const value = { payload: globalThis.sideEffect() }; await execute(value);} }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-condition-member-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute } from \"./owner/🟦️.ts\";\n\nclass Build extends BundleScript { async run(args: string[]) {if (globalThis.sideEffect()) { await execute(args); }} }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-unbounded-imported-iterable",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute } from \"./owner/🟦️.ts\";\nimport { jobs } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { for (const job of jobs) { await execute(job); } } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-terminal-argument-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute } from \"./owner/🟦️.ts\";\nawait runBundleScriptMain(import.meta, globalThis.sideEffect());",
+      "expectedRole": "thin-delegation",
+      "expectedEvidence": "top-level delegation to imported owners",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-registration-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute } from \"./owner/🟦️.ts\";\n\nclass Build extends BundleScript { async run(args: string[]) {await execute(args);} }\nconst router = new ScriptRouter([Build, globalThis.sideEffect()]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-closure-argument-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute } from \"./owner/🟦️.ts\";\n\nclass Build extends BundleScript { async run(args: string[]) {const invoke = () => execute(globalThis.sideEffect()); await invoke();} }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-nested-member-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, wrap, jobs } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { await execute(wrap(globalThis.sideEffect())); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-arithmetic-argument-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, wrap, jobs } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { await execute(args.length * 2); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-computed-index-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, wrap, jobs } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { await execute(args[globalThis.sideEffect()]); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-computed-property-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, wrap, jobs } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { await execute({ [globalThis.sideEffect()]: args }); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-template-member-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, wrap, jobs } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { await execute(`${globalThis.sideEffect()}`); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-parameter-default-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, wrap, jobs } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[] = globalThis.sideEffect()) { await execute(args); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-decorator-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, wrap, jobs } from \"./owner/🟦️.ts\";\n@globalThis.sideEffect()\nclass Build extends BundleScript { async run(args: string[]) { await execute(args); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-destructuring-default-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, wrap, jobs } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: { payload?: string }) { const { payload = globalThis.sideEffect() } = args; await execute(payload); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-shadowed-import-binding",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, wrap, jobs } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { const execute = () => globalThis.sideEffect(); await execute(); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-terminal-imported-call-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, wrap, jobs } from \"./owner/🟦️.ts\";\nawait runBundleScriptMain(import.meta, execute([]));\n",
+      "expectedRole": "thin-delegation",
+      "expectedEvidence": "top-level delegation to imported owners",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-registration-imported-call-effect",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, wrap, jobs } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { await execute(args); } }\nconst router = new ScriptRouter([Build, execute([])]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-argument-local-imported-iterable",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, wrap, jobs } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { const localJobs = jobs; for (const job of localJobs) { await execute(job); } } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved"
+    },
+    {
+      "id": "typescript-command-router-scope-value-import-delegate",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { await execute(args); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-type-only-delegate",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport type { execute } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { await execute(args); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": [
+        1361
+      ]
+    },
+    {
+      "id": "typescript-command-router-scope-type-specifier-alias",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { type execute as delegated } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { await delegated(args); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": [
+        1361
+      ]
+    },
+    {
+      "id": "typescript-command-router-scope-value-import-terminal",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { runBundleScriptMain } from \"./📜️script.ts\";\nawait runBundleScriptMain(import.meta);\n",
+      "expectedRole": "thin-delegation",
+      "expectedEvidence": "top-level delegation to imported owners",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-type-only-terminal",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import type { runBundleScriptMain } from \"./📜️script.ts\";\nawait runBundleScriptMain(import.meta);\n",
+      "expectedRole": "thin-delegation",
+      "expectedEvidence": "top-level delegation to imported owners",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": [
+        1361
+      ]
+    },
+    {
+      "id": "typescript-command-router-scope-type-only-router-base",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import type { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { await execute(args); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": [
+        1361
+      ]
+    },
+    {
+      "id": "typescript-command-router-scope-value-import-aliases",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript as Base, ScriptRouter as Router, runBundleScriptMain as terminal } from \"./📜️script.ts\";\nimport { execute as delegate } from \"./owner/🟦️.ts\";\nclass Build extends Base { async run(args: string[]) { await delegate(args); } }\nconst router = new Router([Build]);\nawait terminal(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-ambient-console",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { console.log(args); await execute(args); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-parameter-console-shadow",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(console: any) { console.log([]); await execute([]); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-parameter-output-receiver",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(output: any) { output.log([]); await execute([]); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-block-console-shadow",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { if (args.length) { const console: any = args; console.log(args); } await execute(args); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-ambient-process",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { process.exit(await execute(args)); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-parameter-process-shadow",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(process: any) { process.exit([]); await execute([]); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-parameter-lifecycle-receiver",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(lifecycle: any) { lifecycle.exit([]); await execute([]); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-block-process-shadow",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { if (args.length) { const process: any = args; process.exit([]); } await execute(args); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-opaque-composition",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { await execute(prepare(args)); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-immutable-receipt-forwarding",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { const receipt = prepare(args); await execute(receipt); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-closure-capture-forwarding",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { const receipt = prepare(args); const invoke = () => execute(receipt); await invoke(); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedSemanticDiagnostics": [],
+      "expectedExecuteBinding": "import"
+    },
+    {
+      "id": "typescript-command-router-scope-closure-parameter-shadow",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { const invoke = (execute: any) => execute(args); await invoke(args); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-harmless-computed-index",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"./📜️script.ts\";\nimport { execute, prepare } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { await execute(args[args.length]); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "typescript-command-router-scope-later-console-binding",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { console.log(args); const console: any = args; await execute(args); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": [
+        2448
+      ]
+    },
+    {
+      "id": "typescript-command-router-scope-later-process-binding",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { process.exit(await execute(args)); const process: any = args; } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": [
+        2448
+      ]
+    },
+    {
+      "id": "typescript-command-router-scope-later-local-delegate-capture",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { BundleScript, ScriptRouter, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nclass Build extends BundleScript { async run(args: string[]) { const invoke = () => execute(args); const execute: any = args; await invoke(); } }\nconst router = new ScriptRouter([Build]);\nawait runBundleScriptMain(import.meta, router);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime type or namespace declaration",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "unresolved",
+      "expectedSemanticDiagnostics": [],
+      "expectedExecuteBinding": "local"
+    },
+    {
+      "id": "typescript-command-router-scope-imported-path-receipt",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { dirname } from \"node:path\";\nimport { fileURLToPath } from \"node:url\";\nimport { MaterializeScript, ScriptRouter, runBundleScriptMain, SupportScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(dirname(fileURLToPath(import.meta.url))).register(\"support\", SupportScript).register(\"materialize\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime declaration or computation remains",
+      "oracle": "typescript-compiler",
+      "dispositionValidator": "command-router",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "javascript-export-wiring",
+      "analyzer": "javascript",
+      "maxDelegationStatements": 32,
+      "content": "export { start as default } from \"../../🚀️runtime/🟨️.js\";\n",
+      "expectedRole": "declaration",
+      "expectedEvidence": "import, export, or type wiring only",
+      "oracle": "typescript-compiler"
+    },
+    {
+      "id": "javascript-short-domain-computation",
+      "analyzer": "javascript",
+      "maxDelegationStatements": 32,
+      "content": "export function normalizeTicket(value) { return value.trim().toLowerCase(); }\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "function body performs non-delegating work",
+      "oracle": "typescript-compiler"
+    },
+    {
+      "id": "rust-module-include-reexport-wiring",
       "analyzer": "rust",
       "maxDelegationStatements": 32,
-      "content": "#[path = \".\"]\npub mod codec {\n    #[path = \"../../wire/component.rs\"]\n    mod frames;\n    pub use frames::*;\n\n    #[path = \"../../wire/local-interaction/component.rs\"]\n    pub mod local_interaction;\n    pub use local_interaction::*;\n\n    pub use super::crypto::*;\n}\n\npub mod format;\n\nmod component;\npub use component::*;\n\npub use crate::codec::*;\n",
-      "expectedRole": "declaration"
+      "content": "#[path = \"../../🎫️ticket/🦀️.rs\"]\nmod ticket;\npub use ticket::*;\ninclude!(\"../../📇️registry/🦀️.rs\");\n",
+      "expectedRole": "declaration",
+      "expectedEvidence": "module, include, re-export, or type wiring only",
+      "oracle": "rust-syn"
     },
     {
-      "id": "rust-cfg-gated-type-alias-classifies-declaration",
+      "id": "rust-cfg-backend-alias-wiring",
       "analyzer": "rust",
       "maxDelegationStatements": 32,
-      "content": "#[cfg(target_arch = \"wasm32\")]\npub type ActiveBackend = backend_webgpu::WebGpuBackend;\n\n#[cfg(target_os = \"macos\")]\npub type ActiveBackend = backend_metal::MetalBackend;\n\n#[cfg(target_os = \"windows\")]\npub type ActiveBackend = backend_d3d12::D3d12Backend;\n",
-      "expectedRole": "declaration"
+      "content": "#[cfg(target_os = \"macos\")]\npub type ActiveBackend = metal::Backend;\n#[cfg(not(target_os = \"macos\"))]\npub type ActiveBackend = wgpu::Backend;\n",
+      "expectedRole": "declaration",
+      "expectedEvidence": "module, include, re-export, or type wiring only",
+      "oracle": "rust-syn"
     },
     {
-      "id": "rust-real-struct-inside-a-module-block-still-classifies-implementation",
+      "id": "rust-domain-type-alias",
       "analyzer": "rust",
       "maxDelegationStatements": 32,
-      "content": "pub mod codec {\n    pub struct Frame {\n        pub bytes: Vec<u8>,\n    }\n}\n",
-      "expectedRole": "implementation"
+      "content": "pub type TicketQueue = Vec<Ticket>;\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "domain type alias is owned inside the package",
+      "oracle": "rust-syn"
     },
     {
-      "id": "typescript-object-literal-default-export-classifies-thin-delegation",
-      "analyzer": "typescript",
+      "id": "rust-proc-macro-registration-wrapper",
+      "analyzer": "rust",
       "maxDelegationStatements": 32,
-      "content": "export interface OwnedPostcssConfig {\n  readonly plugins: Readonly<Record<string, Readonly<Record<string, never>>>>;\n}\n\nconst config: OwnedPostcssConfig = {\n  plugins: {\n    \"@tailwindcss/postcss\": {},\n  },\n};\n\nexport default config;\n",
-      "expectedRole": "thin-delegation"
+      "content": "use proc_macro::TokenStream;\n#[proc_macro_attribute]\npub fn wire(attr: TokenStream, item: TokenStream) -> TokenStream { component::wire(attr.into(), item.into()).unwrap().into() }\n",
+      "expectedRole": "registration",
+      "expectedEvidence": "compiler registration functions only delegate to semantic owner",
+      "oracle": "rust-syn"
     },
     {
-      "id": "typescript-call-expression-default-export-classifies-thin-delegation",
-      "analyzer": "typescript",
+      "id": "rust-registration-macro",
+      "analyzer": "rust",
       "maxDelegationStatements": 32,
-      "content": "import { createUiReactLintConfig } from \"./lint-tooling.ts\";\n\nexport default createUiReactLintConfig();\n",
-      "expectedRole": "thin-delegation"
+      "content": "mod component;\npub use component::*;\nsemio_framework_plugin::plugin_exports!(plugin::plugin, plugin::Apps);\n",
+      "expectedRole": "registration",
+      "expectedEvidence": "registration macro invocations only",
+      "oracle": "rust-syn"
     },
     {
-      "id": "typescript-wrapped-config-object-with-string-literal-keyword-substring-classifies-thin-delegation",
-      "analyzer": "typescript",
+      "id": "rust-compiler-registration",
+      "analyzer": "rust",
       "maxDelegationStatements": 32,
-      "content": "import { defineConfig } from \"vitest/config\";\n\nconst root = \".\";\n\nexport default defineConfig({\n  root,\n  test: {\n    include: [\"../class-name-composition/component.test.ts\"],\n  },\n});\n",
-      "expectedRole": "thin-delegation"
+      "content": "inventory::submit! { AdapterRegistration::new(adapter) }\n",
+      "expectedRole": "registration",
+      "expectedEvidence": "registration macro invocations only",
+      "oracle": "rust-syn"
     },
     {
-      "id": "typescript-exported-function-implementation-classifies-implementation",
-      "analyzer": "typescript",
+      "id": "rust-registration-macro-with-hidden-computation",
+      "analyzer": "rust",
       "maxDelegationStatements": 32,
-      "content": "export interface UiRef<Value> {\n  current: Value;\n}\n\nexport function mountUiRoot(container: Element): void {\n  const root = container;\n  if (root) {\n    root.textContent = \"mounted\";\n  }\n}\n",
-      "expectedRole": "implementation"
+      "content": "semio::register! { let value = 40 + 2; value }\n",
+      "expectedRole": "unresolved",
+      "expectedEvidence": "unregistered macro invocation",
+      "oracle": "rust-syn"
+    },
+    {
+      "id": "rust-registration-macro-with-hidden-call",
+      "analyzer": "rust",
+      "maxDelegationStatements": 32,
+      "content": "semio::register! { execute(); }\n",
+      "expectedRole": "unresolved",
+      "expectedEvidence": "unregistered macro invocation",
+      "oracle": "rust-syn"
+    },
+    {
+      "id": "rust-known-registration-macro-with-hidden-call",
+      "analyzer": "rust",
+      "maxDelegationStatements": 32,
+      "content": "semio_framework_plugin::plugin_exports! { execute() }\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "registration macro contains an unowned executable body",
+      "oracle": "rust-syn"
+    },
+    {
+      "id": "rust-bootstrap-delegation",
+      "analyzer": "rust",
+      "maxDelegationStatements": 32,
+      "content": "fn main() { semio_runtime::run(); }\n",
+      "expectedRole": "bootstrap",
+      "expectedEvidence": "Rust functions only delegate to mounted owners",
+      "oracle": "rust-syn"
+    },
+    {
+      "id": "rust-short-domain-computation",
+      "analyzer": "rust",
+      "maxDelegationStatements": 32,
+      "content": "fn main() { let price = subtotal * tax; semio_runtime::run(price); }\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "Rust function body performs non-delegating work",
+      "oracle": "rust-syn"
+    },
+    {
+      "id": "rust-misleading-comment-and-path",
+      "analyzer": "rust",
+      "maxDelegationStatements": 32,
+      "content": "// struct Domain { fn compute() {} }\n#[path = \"../../function-class.rs\"]\nmod adapter;\npub use adapter::*;\n",
+      "expectedRole": "declaration",
+      "expectedEvidence": "module, include, re-export, or type wiring only",
+      "oracle": "rust-syn"
+    },
+    {
+      "id": "go-bootstrap-delegation",
+      "analyzer": "go",
+      "maxDelegationStatements": 8,
+      "content": "package main\n\nimport \"semio/runtime\"\n\nfunc main() { runtime.Run() }\n",
+      "expectedRole": "bootstrap",
+      "expectedEvidence": "main or init only delegates to imported owner",
+      "oracle": "go-parser"
+    },
+    {
+      "id": "go-short-domain-computation",
+      "analyzer": "go",
+      "maxDelegationStatements": 8,
+      "content": "package main\n\nimport \"semio/runtime\"\n\nfunc main() { value := 1 + 2; runtime.Run(value) }\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "Go function body performs non-bootstrap work",
+      "oracle": "go-parser"
+    },
+    {
+      "id": "go-domain-struct",
+      "analyzer": "go",
+      "maxDelegationStatements": 8,
+      "content": "package adapter\n\ntype Ticket struct { ID string }\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "Go runtime declaration remains",
+      "oracle": "go-parser"
+    },
+    {
+      "id": "go-misleading-comment-and-string",
+      "analyzer": "go",
+      "maxDelegationStatements": 8,
+      "content": "package main\n\nimport \"semio/runtime\"\n\n// type Domain struct { Value string }\nfunc main() { runtime.Run(\"type struct function\") }\n",
+      "expectedRole": "bootstrap",
+      "expectedEvidence": "main or init only delegates to imported owner",
+      "oracle": "go-parser"
+    },
+    {
+      "id": "python-import-export-wiring",
+      "analyzer": "python",
+      "maxDelegationStatements": 32,
+      "content": "from owner.api import Command\nfrom owner.events import Event as OwnerEvent\n__all__ = [\"Command\", \"OwnerEvent\"]\n",
+      "expectedRole": "declaration",
+      "expectedEvidence": "Python import or export declarations only",
+      "oracle": "python-parser"
+    },
+    {
+      "id": "python-import-with-hidden-domain-def-and-class",
+      "analyzer": "python",
+      "maxDelegationStatements": 32,
+      "content": "from owner.api import Command\n\ndef calculate_total(values):\n    return sum(values)\n\nclass Domain:\n    pass\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "Python function or class declaration",
+      "oracle": "python-parser"
+    },
+    {
+      "id": "c-include-declaration",
+      "analyzer": "c-cpp",
+      "maxDelegationStatements": 32,
+      "content": "#include <stddef.h>\n",
+      "expectedRole": "declaration",
+      "expectedEvidence": "C or C++ declarations only",
+      "oracle": "c-compiler"
+    },
+    {
+      "id": "c-function-like-macro-computation",
+      "analyzer": "c-cpp",
+      "maxDelegationStatements": 32,
+      "content": "#define COMPUTE(x) ((x) + 1)\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "C or C++ function-like macro definition",
+      "oracle": "c-compiler"
+    },
+    {
+      "id": "c-function-like-macro-domain-call",
+      "analyzer": "c-cpp",
+      "maxDelegationStatements": 32,
+      "content": "#define COMPUTE(x) domain(x)\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "C or C++ function-like macro definition",
+      "oracle": "c-compiler"
+    },
+    {
+      "id": "c-type-alias-declaration",
+      "analyzer": "c-cpp",
+      "maxDelegationStatements": 32,
+      "content": "typedef unsigned long semio_handle;\n",
+      "expectedRole": "declaration",
+      "expectedEvidence": "C or C++ declarations only",
+      "oracle": "c-compiler"
+    }
+  ],
+  "fixedScriptCases": [
+    {
+      "id": "root-workspace-script-router",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { execute, Script, ScriptRouter, runWorkspaceScriptMain } from \"./owner/🟦️.ts\";\nclass Verify extends Script { async run(args: string[]): Promise<void> { await execute(args); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"verify\", Verify);\nawait runWorkspaceScriptMain(router);\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null,
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "root-workspace-script-type-only-base",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import type { Script } from \"./owner/🟦️.ts\";\nimport { execute, ScriptRouter, runWorkspaceScriptMain } from \"./owner/🟦️.ts\";\nclass Verify extends Script { async run(args: string[]): Promise<void> { await execute(args); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"verify\", Verify);\nawait runWorkspaceScriptMain(router);\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved",
+      "expectedSemanticDiagnostics": [1361]
+    },
+    {
+      "id": "root-workspace-script-type-only-terminal",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import type { runWorkspaceScriptMain } from \"./owner/🟦️.ts\";\nimport { ScriptRouter } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir);\nawait runWorkspaceScriptMain(router);\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved",
+      "expectedSemanticDiagnostics": [1361]
+    },
+    {
+      "id": "root-workspace-script-hidden-io",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, runWorkspaceScriptMain } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir);\nawait Bun.write(\"state.json\", \"{}\");\nawait runWorkspaceScriptMain(router);\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "domain-bundle-script-router",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { BundleScript, execute, ScriptRouter, runBundleScriptMain } from \"./owner/🟦️.ts\";\nclass Verify extends BundleScript { async run(args: string[]): Promise<void> { await execute(args); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"verify\", Verify);\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null
+    },
+    {
+      "id": "domain-bundle-script-hidden-io",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, runBundleScriptMain } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir);\nawait fetch(\"https://example.invalid\");\nawait runBundleScriptMain(router, import.meta.url);\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "package-manifest-present-router",
+      "placement": "package",
+      "manifest": "present",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📦️packages/🟦️typescript/📜️script.ts",
+      "content": "import { runArtifactTypeScriptPackageMain } from \"./owner/🟦️.ts\";\nawait runArtifactTypeScriptPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null
+    },
+    {
+      "id": "package-manifest-present-hidden-io",
+      "placement": "package",
+      "manifest": "present",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📦️packages/🟦️typescript/📜️script.ts",
+      "content": "import { runArtifactTypeScriptPackageMain } from \"./owner/🟦️.ts\";\nprocess.stdout.write(\"hidden\");\nawait runArtifactTypeScriptPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "package-manifest-absent-router",
+      "placement": "package",
+      "manifest": "absent",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📦️packages/🟦️typescript/📜️script.ts",
+      "content": "import { runArtifactTypeScriptPackageMain } from \"./owner/🟦️.ts\";\nawait runArtifactTypeScriptPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null
+    },
+    {
+      "id": "package-manifest-absent-hidden-io",
+      "placement": "package",
+      "manifest": "absent",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📦️packages/🟦️typescript/📜️script.ts",
+      "content": "import { runArtifactTypeScriptPackageMain } from \"./owner/🟦️.ts\";\nawait fetch(\"https://example.invalid\");\nawait runArtifactTypeScriptPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    }
+  ],
+  "fixedScriptReadFailureCases": [
+    {
+      "id": "ticket-root-script-captured-read-failure",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, runWorkspaceScriptMain } from \"./owner/🟦️.ts\";\nawait runWorkspaceScriptMain(new ScriptRouter(import.meta.dir));\n",
+      "expectedFixedContractId": "root-script",
+      "expectedFileKind": null,
+      "expectedPackageRole": "not-package",
+      "expectedViolations": ["fixed-source-content-unreadable", "path-read-failed"]
+    }
+  ],
+  "manifestPresenceCases": [
+    {
+      "id": "manifest-present-domain-body",
+      "manifest": "present",
+      "content": "export class DomainEngine { compute(): number { return 42; } }\n",
+      "expectedProblem": "package-implementation"
+    },
+    {
+      "id": "manifest-absent-domain-body",
+      "manifest": "absent",
+      "content": "export class DomainEngine { compute(): number { return 42; } }\n",
+      "expectedProblem": "package-implementation"
+    },
+    {
+      "id": "manifest-absent-declaration",
+      "manifest": "absent",
+      "content": "export type { DomainEngine } from \"../../../⚙️engine/🟦️.ts\";\n",
+      "expectedProblem": null
     }
   ],
   "scopeSpecificityOrder": [

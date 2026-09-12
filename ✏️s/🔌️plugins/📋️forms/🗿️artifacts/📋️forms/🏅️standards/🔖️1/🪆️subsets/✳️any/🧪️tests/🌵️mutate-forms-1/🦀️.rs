@@ -8,7 +8,7 @@
 //! therefore never dispatched for it. Registering an oracle handler here would be dead code that
 //! reads as coverage in every listing, so there is none; every law this case claims is asserted
 //! inside the subject handlers, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` module.
+//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module.
 //!
 //! ⚠️ What this case can and cannot prove is set by the vectors it has. Nine of the ten pin a
 //! rejection or a no-op branch, because `FormsSnapshot` keeps its steps tree behind

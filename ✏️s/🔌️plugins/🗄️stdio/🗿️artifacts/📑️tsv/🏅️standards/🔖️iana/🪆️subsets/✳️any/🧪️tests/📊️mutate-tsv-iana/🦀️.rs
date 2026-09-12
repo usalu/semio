@@ -2,7 +2,7 @@
 //!
 //! Every scenario copies the immutable real fixture into the case work directory first; the
 //! committed file is never written to. `oracle` handlers drive the registered `csv` reference
-//! implementation (reconfigured for IANA TSV via this subset's own `🔮️oracle/🦀️.rs`),
+//! implementation (reconfigured for IANA TSV via this subset's own `🔮️oracles/🦀️.rs`),
 //! `subject` handlers drive this repository's own decode/mutate/encode round trip, and both results
 //! are read back by the SAME independent reader (`project_tsv_grid`) before the
 //! `semantic-tabular-mutate-v1` profile compares them. The subject half is gated behind the

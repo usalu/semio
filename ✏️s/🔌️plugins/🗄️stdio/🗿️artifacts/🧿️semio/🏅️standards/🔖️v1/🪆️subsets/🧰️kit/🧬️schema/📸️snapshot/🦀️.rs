@@ -90,13 +90,13 @@ pub struct SemioKitSnapshot {
     #[state(artifact)]
     pub designs: Vec<SemioKitDesign>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.object")]
+    #[child(kind = "s.stdio.semio")]
     pub objects: Vec<store::ArtifactChild<SemioObjectSnapshot>>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.model")]
+    #[child(kind = "s.stdio.semio")]
     pub models: Vec<store::ArtifactChild<SemioModelSnapshot>>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.value")]
+    #[child(kind = "s.stdio.semio")]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
     #[state(artifact)]
     #[link_slot(roles("representation"))]
@@ -662,8 +662,8 @@ impl store::ArtifactPack for SemioKitSnapshot {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let _ = options;
         decode_kit_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -741,9 +741,9 @@ pub(crate) fn demo_kit_snapshot() -> SemioKitSnapshot {
             pieces: vec![SemioKitPiece { id: "piece-1".into(), type_id: "chair".into(), transform: SemioTransform::identity() }, SemioKitPiece { id: "piece-2".into(), type_id: "chair".into(), transform: SemioTransform::identity() }],
             connections: vec![SemioKitConnection { id: "conn-1".into(), connecting_piece_id: "piece-1".into(), connecting_port: "left".into(), connected_piece_id: "piece-2".into(), connected_port: "right".into() }],
         }],
-        objects: vec![store::ArtifactChild::new("obj-01".into(), store::os_io::ArtifactRef { artifact_id: "chair-instance".into(), dialect: dialect("object") })],
-        models: vec![store::ArtifactChild::new("model-01".into(), store::os_io::ArtifactRef { artifact_id: "chair-bim".into(), dialect: dialect("model") })],
-        properties: Some(store::ArtifactChild::new("props-01".into(), store::os_io::ArtifactRef { artifact_id: "kit-props".into(), dialect: dialect("value") })),
+        objects: vec![store::ArtifactChild::new("obj-01".into(), store::os_io::ArtifactRef { artifact_id: "obj-01".into(), dialect: dialect("object") })],
+        models: vec![store::ArtifactChild::new("model-01".into(), store::os_io::ArtifactRef { artifact_id: "model-01".into(), dialect: dialect("model") })],
+        properties: Some(store::ArtifactChild::new("props-01".into(), store::os_io::ArtifactRef { artifact_id: "props-01".into(), dialect: dialect("value") })),
         representations: vec![store::ArtifactLink { target: store::os_io::ArtifactRef { artifact_id: "chair-repr".into(), dialect: dialect("mesh") }, pin: store::LinkPin::Head, role: "chair".into() }],
     }
 }

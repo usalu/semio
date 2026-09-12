@@ -21,8 +21,8 @@ export default {
     // `includeSource`. Listing the same file in BOTH keys made vitest collect it twice and report
     // double the real test count. Add new in-source files to `includeSource`/`coverage.include` only.
     include: [],
-    coverage: { include: ["🟦️.ts", "../../🔨️modules/🎠️kernel/🟦️.ts"] },
-    includeSource: ["🟦️.ts", "../../🔨️modules/🎠️kernel/🟦️.ts"],
+    coverage: { include: ["🟦️.ts", "../../🔨️modules/🎠️kernel/🟦️.ts", "../../🧪️tests/🧪️docklayoutstore/🟦️.ts"] },
+    includeSource: ["../../🔨️modules/🎠️kernel/🟦️.ts", "../../🧪️tests/🧪️docklayoutstore/🟦️.ts"],
     passWithNoTests: false,
   },
 };

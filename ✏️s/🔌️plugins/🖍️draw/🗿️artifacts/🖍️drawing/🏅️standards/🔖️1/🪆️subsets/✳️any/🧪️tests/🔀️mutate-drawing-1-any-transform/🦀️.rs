@@ -3,7 +3,7 @@
 //! `mutate-drawing-1` case in ticket
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! this subset's own kinds have a subset-owned test. Recorded no-oracle decision
-//! `drawing-mutation-semantics` (`../../🔮️oracle/🔣️.json`): `s.draw.drawing` is a
+//! `drawing-mutation-semantics` (`../../🔮️oracles/🔣️.json`): `s.draw.drawing` is a
 //! semio-NATIVE format with no third-party reader or writer, so `oracle` here reads the committed,
 //! independently handcrafted per-kind specification vectors literally — no recomputation, no second
 //! implementation of drawing semantics — and `subject` drives this repository's own vocabulary over
@@ -12,7 +12,7 @@
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
 //! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none —
 //! so every law this case claims is asserted INSIDE the subject handler, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` module.
+//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::law;

@@ -10,7 +10,7 @@ import {
   loadFirstPartyStdioNativeCodecReceipts,
   publishTrustedStdioCatalogV1,
   verifyStdioNativeCodecReceipts,
-} from "../../📜️script.ts";
+} from "../../✅️trusted-stdio-catalog/🟦️.ts";
 
 const fixtureRoot = join(import.meta.dirname, "../../🧫️fixtures/🧬️trusted-stdio-catalog");
 const schemaRoot = join(import.meta.dirname, "../../🧬️schema/🧬️trusted-stdio-catalog");

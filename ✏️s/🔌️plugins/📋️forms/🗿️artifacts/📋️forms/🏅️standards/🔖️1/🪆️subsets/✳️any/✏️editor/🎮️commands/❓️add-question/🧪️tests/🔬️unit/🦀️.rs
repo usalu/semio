@@ -3,7 +3,7 @@ use crate::editor::forms::commands::drop_question_kind::DropQuestionKind;
 use crate::editor::forms::commands::move_question::MoveQuestion;
 use crate::editor::forms::commands::patch_questions::PatchQuestions;
 use crate::editor::forms::commands::remove_question::RemoveQuestion;
-use crate::editor::forms::testkit::{dispatch, forms_app};
+use crate::editor::forms::unit_tests::context::{dispatch, forms_app};
 use crate::editor::forms::FormsCommand;
 use AddQuestion;
 
@@ -18,7 +18,7 @@ async fn add_question_action_appends_question() {
 async fn add_question_undo_redo_round_trip() {
     let mut app = forms_app().await;
     let before = crate::schema::flatten_questions(&app.snapshot().expect("projection")).len();
-    semio_framework_plugin::testkit::assert_undo_redo_round_trip(
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
         &mut app,
         FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }),
         |app| crate::schema::flatten_questions(&app.snapshot().expect("projection")).len(),

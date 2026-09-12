@@ -3,7 +3,7 @@ use semio_framework_job::InteractiveJob as _;
 
 #[test]
 fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch() {
-    let mut emit: Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation> = Emit::default();
+    let mut emit: Emit<DrawingMutation, NoConfigMutation, NoDraftMutation> = Emit::default();
     emit.child_emits.push(semio_framework_plugin::app::ChildEmit::of::<DrawingSnapshot, DrawingMutation>("member", "drawing-child", &[]));
     let rejected = semio_framework_plugin::app::ArtifactToolCompletionRejection::<semio_framework_plugin::EditorApp<DrawingPlayApp>> {
         emit: Ok(emit),

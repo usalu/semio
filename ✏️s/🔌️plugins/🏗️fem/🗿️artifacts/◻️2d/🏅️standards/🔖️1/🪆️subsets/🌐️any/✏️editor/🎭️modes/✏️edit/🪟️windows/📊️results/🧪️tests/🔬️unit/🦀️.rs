@@ -1,8 +1,8 @@
 use super::*;
-use crate::editor::fem2d::testkit::{dispatch, fem2d_app, render as render_body};
+use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_app, render as render_body};
 use crate::editor::fem2d::Fem2dCommand;
 
-async fn load_default_example(app: &mut crate::editor::fem2d::testkit::Fem2dApp) {
+async fn load_default_example(app: &mut crate::editor::fem2d::unit_tests::context::Fem2dApp) {
     dispatch(app, Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
 }
 
@@ -23,8 +23,8 @@ async fn results_window_surfaces_solver_error_without_panicking_2d() {
 async fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
     let doc = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
     let display = ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) };
-    let camera = FemCamera::default();
-    let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&doc, &display, &camera).expect("fixture surface admission"))).expect("fixture projection");
+    let camera = Viewport2d::default();
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&doc, &display, &camera).expect("fixture surface admission"))).expect("fixture projection");
     assert!(json.contains("No load case defined"), "{json}");
 }
 
@@ -33,7 +33,7 @@ async fn results_window_renders_contour_for_region() {
     let mut app = fem2d_app();
     load_default_example(&mut app).await;
     let snapshot = app.snapshot().expect("snapshot");
-    let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &FemCamera::default()).expect("fixture surface admission");
+    let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &Viewport2d::default()).expect("fixture surface admission");
     let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
     let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
     assert!(scene.layers_json.contains("fill"), "expected filled-path contour layers for the region's Tri3Cst elements: {}", scene.layers_json);
@@ -45,7 +45,7 @@ async fn results_window_renders_reaction_labels_2d() {
     let mut app = fem2d_app();
     load_default_example(&mut app).await;
     let snapshot = app.snapshot().expect("snapshot");
-    let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &FemCamera::default()).expect("fixture surface admission");
+    let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &Viewport2d::default()).expect("fixture surface admission");
     let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
     let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
     assert!(scene.layers_json.contains("reaction-"), "expected reaction-prefixed text label layers: {}", scene.layers_json);

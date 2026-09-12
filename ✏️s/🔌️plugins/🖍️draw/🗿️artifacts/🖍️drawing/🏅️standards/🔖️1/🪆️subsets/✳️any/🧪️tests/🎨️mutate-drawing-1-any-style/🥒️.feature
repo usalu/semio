@@ -7,7 +7,7 @@ Feature: Apply every typed drawing-document style mutation to its committed spec
 
   `s.draw.drawing` is a semio-NATIVE artifact: no third party reads or writes `.dsl.semio`/
   `.pack.semio`, so no reference LIBRARY is registered. That is recorded as the
-  `drawing-mutation-semantics` no-oracle decision in `../../🔮️oracle/🔣️.json`, and its
+  `drawing-mutation-semantics` no-oracle decision in `../../🔮️oracles/🔣️.json`, and its
   substitutes are the committed per-kind specification vectors plus the inverse law. This case
   re-exercises those SAME committed bytes end-to-end through
   `apply_drawing_mutation_json`/`undo_drawing_mutation_json`.

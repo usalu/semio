@@ -1,0 +1,105 @@
+{
+  "name": "@semio-tech/energy-oracle-py",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "oracle-setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts setup",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ]
+    },
+    "oracle-status": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts status",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ]
+    },
+    "oracle-run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts run",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ]
+    },
+    "oracle-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts native",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ]
+    },
+    "oracle-epjson": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts epjson",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ]
+    },
+    "oracle-emit": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts emit",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ]
+    },
+    "deps": {
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts deps"
+      },
+      "parallelism": false
+    }
+  }
+}

@@ -52,7 +52,7 @@ import artifactCreationCatalogAuthorityFixture from "../../🧱️elements/🏛�
 import artifactCreationReadyOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🔣️.json";
 import { runArtifactCreationReadyOpeningV1 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import { runDocumentOpeningAttemptV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
-import { ARTIFACT_CREATION_PROGRESS_CAPACITY, ARTIFACT_CREATION_PROGRESS_TEXT_V1, ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, artifactCreationProgressLocaleV1, artifactCreationProgressRoleV1, artifactCreationProgressTerminalV1, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🏦️.tsx";
+import { ARTIFACT_CREATION_PROGRESS_CAPACITY, ARTIFACT_CREATION_PROGRESS_TEXT_V1, ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, artifactCreationProgressLocaleV1, artifactCreationProgressRoleV1, artifactCreationProgressTerminalV1, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🟦️.tsx";
 import { OwnedShellDialog, type OwnedShellDialogProps } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🌐️browser/🟦️.tsx";
 import tutorialRunFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/🔣️.json";
 import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
@@ -1112,7 +1112,7 @@ describe("mounted GIS map probe", () => {
  * library's `bun:sqlite` lease store, which a jsdom bundle refuses), so it is located by walking up
  * from the runner's cwd — the same shape the world3d-host law above uses. */
 function readGeneratedShardWorkerOwnerSource(): string {
-  const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts";
+  const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
   let root = process.cwd();
   for (let hop = 0; hop < 12 && !existsSync(`${root}/${relative}`); hop += 1) root = `${root}/..`;
   expect(existsSync(`${root}/${relative}`)).toBe(true);
@@ -1136,7 +1136,7 @@ describe("shell runtime diagnostics switch", () => {
   // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-guest-tick-cost-2026-09-12.md` §4 rank 1).
   it("spells the same diagnostics key in every realm that resolves it", () => {
     expect(SHARD_RUNTIME_DIAGNOSTICS_KEY).toBe(RUNTIME_DIAGNOSTICS_KEY);
-    // 🔌️ The generated shard worker's own copy lives in `🔌️plugin/📦️packages/🟦️typescript/🟦️.ts`,
+    // 🔌️ The generated shard worker's own copy lives in `🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts`,
     // which this jsdom suite cannot import (it reaches the repo library's `bun:sqlite` lease store),
     // so it is read as text — the same shape `⏱️wgpu-ui-turn-budget` uses for `ShellHost`.
     const pluginPackage = readGeneratedShardWorkerOwnerSource();
@@ -1282,7 +1282,9 @@ describe("extension invocation completion ownership", () => {
     const complete = vi.fn(async () => {});
     const invoke = vi.fn(async () => { if (answer === undefined) throw new Error(row.fault); return extensionAnswerBytes(answer); });
     await runInvokeExtensionEffect(entry(completionHandle(complete)), entry({ invoke }), fixture.instanceId, fixture.extensionId, extensionInvocationWireFixture.capability, row.requestJson, BigInt(fixture.requestId));
-    expect(invoke).toHaveBeenCalledExactlyOnceWith(extensionInvocationWireFixture.capability, row.requestJson, { originInstanceId: fixture.instanceId });
+    // 🛑️ The shell hands every extension request an `AbortSignal` so a surface's declared cancel
+    // can retire it from outside the per-actor queue (`📓️preview-eval-cancellation-2026-09-12.md`).
+    expect(invoke).toHaveBeenCalledExactlyOnceWith(extensionInvocationWireFixture.capability, row.requestJson, { originInstanceId: fixture.instanceId, signal: expect.any(AbortSignal) });
     const [, , outcome] = complete.mock.calls[0] as unknown as [number, bigint, { ok?: Uint8Array; fault?: Uint8Array }];
     expect("ok" in outcome ? "ok" : "fault").toBe(row.outcome);
     if (row.outcome === "ok") expect(decodePackValue(outcome.ok!)).toEqual(answer);
@@ -1297,7 +1299,9 @@ describe("extension invocation completion ownership", () => {
     const requestJson = JSON.stringify(request);
     const publish = vi.fn(async () => {});
     await dispatchInvokeExtensionEffect([requester, extension], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability, requestJson }, publish);
-    expect(invoke).toHaveBeenCalledExactlyOnceWith(capability, requestJson, { originInstanceId: fixture.instanceId });
+    // 🛑️ The shell hands every extension request an `AbortSignal` so a surface's declared cancel
+    // can retire it from outside the per-actor queue (`📓️preview-eval-cancellation-2026-09-12.md`).
+    expect(invoke).toHaveBeenCalledExactlyOnceWith(capability, requestJson, { originInstanceId: fixture.instanceId, signal: expect.any(AbortSignal) });
     expect(complete).toHaveBeenCalledOnce();
     expect(publish).toHaveBeenCalledExactlyOnceWith(requester, await complete.mock.results[0]!.value);
   });
@@ -1944,6 +1948,7 @@ import {
   resolveBootExampleId,
   resolveShellDefaults,
   resolveShellLocks,
+  shouldAutoStartIntroduction,
   shouldPersistIntroductionSeen,
   shouldReplayIntroductionOnLoad,
   isEphemeralShellBrand,
@@ -2003,7 +2008,7 @@ import {
   peerIdsSelecting,
   peerIdsHovering,
   SyncAttachCard,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+} from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, browserActorDispatchUiScopeV1, browserActorWindowConfigDispatchUiScopeV1, captureTutorialUiSnapshot, clipboardWriteFragmentFromEffect, createUiRefreshCoalescerV1, hostEffectRefreshScopeV1, mergeUiDirtyScopeV1, pasteActionWithRetainedFragment, pasteArgsFragment, programArmedToolRevealV1, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
@@ -4271,9 +4276,12 @@ describe("framework renderer hosts", () => {
   });
 
   it("uses the live session camera for node graph wheel viewport actions", () => {
-    expect(nodeGraphViewportActionArgs('{"x":12,"y":24,"zoom":1.75}')).toEqual({
-      viewportJson: '{"x":12,"y":24,"zoom":1.75}',
+    expect(nodeGraphViewportActionArgs({ x: 12, y: 24, zoom: 1.75 })).toEqual({
+      viewport: { x: 12, y: 24, zoom: 1.75 },
     });
+    expect(() => nodeGraphViewportActionArgs({ x: 0, y: 0, zoom: 0 })).toThrow();
+    expect(() => nodeGraphViewportActionArgs({ x: 0, y: 0, zoom: Number.NaN })).toThrow();
+    expect(() => nodeGraphViewportActionArgs({ x: 0, y: 0, zoom: 1, extra: true } as never)).toThrow();
   });
 
   it("encodes node graph selection and hover with framework interaction actions", () => {
@@ -7368,6 +7376,81 @@ describe("s workflow flow routing", () => {
     expect(uiIntentToActionDescriptor(intent)).toEqual({ controllerId: "puzzle3d-play", action: "setSpacing", args: { axis: "x", value: 2 } });
   });
 
+  it("names a scalar intent payload after its trigger and keeps the authored arguments", () => {
+    // 🪜️ A `NumberStepper`'s `onChange` reports the number itself, and the node's authored args carry the
+    // window the panel is tuning. The scalar must arrive UNDER `value` — every guest command reads named
+    // arguments — and must not evict `windowId` on the way (ticket 26/09/02/PUZZLE-3D-END-TO-END B47 §2).
+    const base = { surface: "panel:puzzle3d-play-settings", revision: 1, node: 7, nodeKey: "puzzle3d-play-settings.grid-spacing", action: { scope: "puzzle3d-play", name: "setGridSpacing", version: 1 }, args: { windowId: "puzzle3d-main-top" }, seq: 1n };
+    expect(uiIntentToActionDescriptor({ ...base, trigger: "change", input: 10.5 } as UiIntent)).toEqual({
+      controllerId: "puzzle3d-play",
+      action: "setGridSpacing",
+      args: { windowId: "puzzle3d-main-top", value: 10.5 },
+    });
+    // ➕️➖️ …and a relative bump under `delta`, which is the other half of `puzzle3d_absolute_or_delta`.
+    expect(uiIntentToActionDescriptor({ ...base, trigger: "delta", input: -0.5 } as UiIntent)).toEqual({
+      controllerId: "puzzle3d-play",
+      action: "setGridSpacing",
+      args: { windowId: "puzzle3d-main-top", delta: -0.5 },
+    });
+    // 🧾️ A scalar with no authored args is still named, never a bare primitive.
+    expect(uiIntentToActionDescriptor({ ...base, args: null, trigger: "commit", input: "fill 12" } as UiIntent)).toEqual({
+      controllerId: "puzzle3d-play",
+      action: "setGridSpacing",
+      args: { value: "fill 12" },
+    });
+  });
+
+  it("carries an outliner row action's explicit ids to the action channel whatever else is selected", () => {
+    // 🙈️ `with_hide_lock_actions` (`📌️panels/🗿️artifact/🦀️.rs:131-150`) authors each inline toggle with its
+    // OWN `{entity, flag, ids, value}` — the row names the entity it flags, so the guest's explicit branch
+    // never consults the live selection. Battery #59 measured `outliner-hide-applies` FAIL with the row's
+    // object selected (`historyUpserts: 0, effects: 0`) and PASS with nothing selected, which made "the
+    // host dropped the args under a selection" a live candidate (26/09/02/PUZZLE-3D-END-TO-END B47 §6).
+    // This pins the host half: the same authored map reaches `ActionDescriptor` with and without a
+    // selection overlay, so a future red here means the HOST lost them and a red only in the browser
+    // means the guest did.
+    const flagArgs = { entity: "object", flag: "hidden", ids: ["seed-left-001"], value: true };
+    const documentNode = buildContractNode({
+      key: "puzzle3d-play-document",
+      component: { type: "tree", interactionDomain: "puzzle3d" },
+      children: [
+        {
+          key: "puzzle3d-play-document.objects",
+          component: { type: "treeSection", label: "Objects", defaultOpen: true },
+          children: [
+            {
+              key: "seed-left-001",
+              component: {
+                type: "treeItem",
+                label: "Hexagonal Cut Concrete Forest Left",
+                description: null,
+                icon: "box",
+                defaultOpen: null,
+                draggable: null,
+                dragData: null,
+                dimmed: null,
+                rowActions: [{ icon: "eye", label: "Hide", action: { trigger: "activate", action: { scope: "puzzle3d-play", name: "setSelectionFlag", version: 1 }, args: flagArgs, capability: null }, placement: "row" }],
+              },
+              bindings: [{ trigger: "activate", action: { scope: "puzzle3d-play", name: "interactionSelect", version: 1 }, args: { domainId: "puzzle3d" }, capability: null }],
+            },
+          ],
+        },
+      ],
+    });
+    const expected = { controllerId: "puzzle3d-play", action: "setSelectionFlag", args: flagArgs };
+    for (const presence of [undefined, { "seed-left-001": { selected: true }, "object-1": { selected: true } }]) {
+      const dispatched: ActionDescriptor[] = [];
+      const config = uiNodeToTreePanelConfig(documentNode, (action) => dispatched.push(action));
+      const control = config.sections[0]?.items?.[0]?.control as ReactElement;
+      const rendered = render(presence ? createElement(UiPresenceOverlayContext.Provider, { value: { byKey: new Map(Object.entries(presence)) as ReadonlyMap<string, UiPresenceOverlayEntry> } }, control) : control);
+      const hide = Array.from(rendered.container.querySelectorAll('[data-slot="action"]')).find((candidate) => (candidate.textContent ?? "").includes("Hide"));
+      expect(hide).toBeTruthy();
+      fireEvent.click(hide as Element);
+      expect(dispatched).toEqual([expected]);
+      cleanup();
+    }
+  });
+
   it("resolves a fixture widget id to its workflow instance id, independent of selection state", () => {
     const fixtureJson = JSON.stringify({
       widgets: [
@@ -7966,7 +8049,7 @@ describe("registry-derived utilities and activation (P5)", () => {
     const start = source.indexOf("const dispatchGumballPoseDelta");
     expect(start).toBeGreaterThan(0);
     const branch = source.slice(start, source.indexOf("[dispatch, selection.transformMode, selectionArgs]", start));
-    const skipped = branch.indexOf('"[DEBUG] gumball pose delta skipped"');
+    const skipped = branch.indexOf('"gumball pose delta skipped"');
     expect(skipped).toBeGreaterThan(0);
     const zeroDelta = branch.slice(skipped);
     // 🧯️ Wave B31: the zero-delta branch used to mint `translateSelection` with a hardcoded 0.5 step along
@@ -8947,6 +9030,31 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(shouldPersistIntroductionSeen({ id: "plain", windowTitle: "Plain" })).toBe(true);
     expect(shouldPersistIntroductionSeen({ id: "entwerfen-mit-bestand-aggregator", windowTitle: "Entwerfen mit Bestand · Aggregator", replayIntroductionOnLoad: true })).toBe(false);
     expect(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND.replayIntroductionOnLoad).toBe(true);
+  });
+
+  it("shouldAutoStartIntroduction offers an app's tour once per session and never re-arms a veil the user dismissed", () => {
+    const base = { appId: "puzzle-3d-play", hasIntroduction: true, tutorialActive: false, suppressed: false, replayOnLoad: false, seenOnDevice: false, dismissedAppIds: new Set<string>() };
+    expect(shouldAutoStartIntroduction(base)).toBe(true);
+    // 🎓️ The blocking veil owns every pointer in the app, so a dismissed tour must stay dismissed for the
+    // session even though the app definition is republished (a new object, same content) on every full
+    // refresh, hot-swap and re-established session — B47 §5.1 measured a full-viewport
+    // `div.ui-veil.z-tutorial` at `pointer-events: auto` swallowing every press after Skip.
+    const dismissed = { ...base, dismissedAppIds: new Set(["puzzle-3d-play"]) };
+    expect(shouldAutoStartIntroduction(dismissed)).toBe(false);
+    // …and a device-local seen flag that cannot be written (ephemeral brand ⇒ in-memory StoragePort ⇒
+    // `replayOnLoad`) must not resurrect it either.
+    expect(shouldAutoStartIntroduction({ ...dismissed, replayOnLoad: true })).toBe(false);
+    // A genuinely DIFFERENT app still introduces itself in the same shell (demonstrator grid, app switch).
+    expect(shouldAutoStartIntroduction({ ...dismissed, appId: "puzzle-3d-view" })).toBe(true);
+    // The device-local seen flag keeps its own meaning, and replay-on-load brands still ignore it.
+    expect(shouldAutoStartIntroduction({ ...base, seenOnDevice: true })).toBe(false);
+    expect(shouldAutoStartIntroduction({ ...base, seenOnDevice: true, replayOnLoad: true })).toBe(true);
+    // An app id that has not arrived yet must never arm a tour: the "" key persists nothing, so the tour
+    // would arm a second time the moment the real id lands.
+    expect(shouldAutoStartIntroduction({ ...base, appId: "" })).toBe(false);
+    expect(shouldAutoStartIntroduction({ ...base, hasIntroduction: false })).toBe(false);
+    expect(shouldAutoStartIntroduction({ ...base, tutorialActive: true })).toBe(false);
+    expect(shouldAutoStartIntroduction({ ...base, suppressed: true })).toBe(false);
   });
 
   it("isEphemeralShellBrand skips durable shell state so a refresh boots from brand defaults only", () => {
@@ -9954,16 +10062,20 @@ describe("classifyWindowLayoutChange", () => {
 });
 
 describe("noteShellCommand", () => {
+  /** ↩️ The descriptor also carries its OWN undo inverse: `🔌️plugin/🦀️.rs` reads `inverseCommandId`
+   * (falling back to `commandId`) and `inverseArgs` when it pushes the reserved note onto the undo
+   * stack, so a shell command a guest never authored is still reversible in chrome order. `detail`
+   * is the only optional half — no detail, no `inverseArgs`. */
   it("buildNoteShellCommandAction builds a noteShellCommand action descriptor targeting the given controller, carrying detail only when provided", () => {
     expect(buildNoteShellCommandAction("puzzle3d-play", "shell.windowClose", "Close Window", { windowId: "w1" })).toEqual({
       controllerId: "puzzle3d-play",
       action: "noteShellCommand",
-      args: { commandId: "shell.windowClose", label: "Close Window", detail: { windowId: "w1" } },
+      args: { commandId: "shell.windowClose", label: "Close Window", detail: { windowId: "w1" }, inverseCommandId: "shell.windowClose", inverseArgs: { windowId: "w1" } },
     });
     expect(buildNoteShellCommandAction("puzzle3d-play", "os.resetDock", "Reset Panels")).toEqual({
       controllerId: "puzzle3d-play",
       action: "noteShellCommand",
-      args: { commandId: "os.resetDock", label: "Reset Panels" },
+      args: { commandId: "os.resetDock", label: "Reset Panels", inverseCommandId: "os.resetDock" },
     });
   });
 
@@ -10049,6 +10161,7 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
 import {
   PUZZLE3D_MESH_COMMAND_RAW_BYTES,
   PUZZLE3D_MESH_PAGE_VALUES,
+  PUZZLE3D_MESH_REUPLOAD_CLAIMS,
   PUZZLE3D_MESH_UPLOAD_MAX_PAGES,
   PUZZLE3D_MESH_UPLOAD_SLOTS,
   puzzle3dBrushMeshDigest,
@@ -10148,24 +10261,36 @@ describe("puzzle3d brush mesh paged upload", () => {
     expect(registry.holds(urls[1]!, digest)).toBe(false);
   });
 
-  // 🚚️ Wave W-H: a guest that refuses an id-only announcement publishes the identity on the world body
-  // (`meshReuploadUrls`) and republishes it until the bytes land, so the claim must be answered exactly
-  // once per publishing residency — re-driving on every republish would be an upload storm, not recovery.
-  it("claims a guest re-upload request once per residency and drops the stale claim", () => {
+  // 🚚️ Wave W-H, rewritten by wave B48: a guest that refuses an id-only announcement publishes the
+  // identity on the world body (`meshReuploadUrls`) and republishes it until the bytes land, so the
+  // claim has to be BOUNDED — re-driving on every republish is an upload storm, not a recovery.
+  //
+  // 🐛️ The bound used to be "once per publishing residency value", and `meshResidency` is the guest's
+  // own install counter, which every accepted announcement in the tab increments
+  // (`derive_brush_mesh`/`adopt_brush_mesh_by_digest`, `✏️editor/⏳️precompute/🦀️.rs`). So the brake was
+  // moved by the very traffic it suppressed: one standing request re-opened the gate on each unit of
+  // progress, each claim deleted the paged entry and forced the next announcement onto the full
+  // 72-command page path. Browser-measured at wasm #58 on the 180-object Nakagin document: 123 of 285
+  // console lines were `registerBrushMesh`, seq 22 → 124 over 306 s, still arriving 8 minutes after the
+  // example switch (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B46 §5, wave B48 §1.2). The bound is now
+  // per guest INSTANTIATION, which is the only fact the guest's accepted work cannot move.
+  it("claims a guest re-upload request a bounded number of times per guest instantiation", () => {
     const example = brushMeshUploadFixture.example;
     const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
     const url = "/test/reupload-claim.glb";
     const registry = new Puzzle3dBrushMeshRegistry();
     registry.observeResidency(4);
     registry.confirm(url, digest);
-    expect(registry.claimReupload(url, 4)).toBe(true);
+    expect(registry.claimReupload(url)).toBe(true);
     expect(registry.holds(url, digest)).toBe(false);
-    expect(registry.claimReupload(url, 4)).toBe(false);
+    for (let installs = 5; installs < 24; installs += 1) expect(registry.observeResidency(installs)).toBe(false);
+    let claims = 1;
+    while (registry.claimReupload(url)) claims += 1;
+    expect(claims, "a climbing residency is the guest making progress, never a new claim").toBe(PUZZLE3D_MESH_REUPLOAD_CLAIMS);
     registry.confirm(url, digest);
-    expect(registry.claimReupload(url, 5)).toBe(true);
-    expect(registry.claimReupload(url, 5)).toBe(false);
+    expect(registry.claimReupload(url), "a completed run does not buy a further claim either").toBe(false);
     expect(registry.observeResidency(0)).toBe(true);
-    expect(registry.claimReupload(url, 0)).toBe(true);
+    expect(registry.claimReupload(url), "a restarted guest holds nothing, so every claim is released").toBe(true);
     registry.clear();
     expect(registry.residency).toBe(-1);
     expect(registry.size).toBe(0);
@@ -10205,7 +10330,7 @@ describe("puzzle3d brush mesh paged upload", () => {
     registry.confirm("/test/paged.glb", digest);
     expect(registry.holdsDigest(digest)).toBe(true);
     expect(registry.mayAlias("/test/alias-only.glb")).toBe(true);
-    expect(registry.claimReupload("/test/alias-only.glb", 7)).toBe(true);
+    expect(registry.claimReupload("/test/alias-only.glb")).toBe(true);
     expect(registry.mayAlias("/test/alias-only.glb")).toBe(false);
     expect(registry.holds("/test/alias-only.glb", digest)).toBe(false);
     registry.confirm("/test/alias-only.glb", digest);
@@ -10479,7 +10604,9 @@ describe("node-graph surface attachment in a hidden tab", () => {
       const successor = view.container.querySelectorAll("canvas")[0]!;
       expect(successor).not.toBe(first);
       expect(view.container.querySelectorAll("canvas").length).toBe(2);
-      expect([successor.width, successor.height]).toEqual([966, 836]);
+      // ⏳️ The successor's backing store is sized by its own layout effect, which runs after the
+      // attach this test waited on — reading it in the same tick catches the jsdom default 300x150.
+      await waitFor(() => expect([successor.width, successor.height]).toEqual([966, 836]));
       await waitFor(() => expect((painted.get(successor) ?? []).some((operation) => operation.startsWith("clearRect("))).toBe(true));
       expect(painted.has(first)).toBe(false);
       // 🔚️ Exactly one successor: it re-attaches without a device, so it stays 2D-capable and the
@@ -10991,8 +11118,8 @@ describe("example switch — the completion's scope is what re-takes the flow wi
 //#endregion 🎨️ExampleSwitchHostCaching
 
 //#region 📷️CameraAndLabelFitTwins
-import cameraFitFixture from "../../../../♾️infinite/🖼️canvas/🧪️tests/📷️camera-fit/🔣️.json" with { type: "json" };
-import labelFitFixture from "../../../../♾️infinite/🖼️canvas/🧪️tests/🏷️label-fit/🔣️.json" with { type: "json" };
+import cameraFitFixture from "../../../../♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json" with { type: "json" };
+import labelFitFixture from "../../../../♾️infinite/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json" with { type: "json" };
 
 /** 📏️ The fixture's own synthetic advance — the ONE measure both implementations are driven with, so
  * a row pins the clipping algorithm rather than a font file. Mirror of `synthetic_measure` in

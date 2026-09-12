@@ -15,6 +15,9 @@
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
+#[path = "🪟️viewport/🦀️.rs"]
+mod viewport;
+
 pub use crate::os_dsl::schema::*;
 pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
 pub use dsl_derive::{DslArtifact, DslDiff, DslEnum, DslOps, DslRecord, DslScalar, MutationLeaf, Mutations};

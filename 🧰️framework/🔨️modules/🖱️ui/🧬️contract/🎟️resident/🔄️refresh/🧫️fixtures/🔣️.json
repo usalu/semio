@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "aggregateBytes": 33554432,
+  "surfaceBytes": 8388608,
+  "surfaceItems": 4097,
+  "documentNodes": 128,
+  "nodeRecordBytes": 6416,
+  "openBytes": 1906,
+  "refreshes": 2,
+  "retirementGrantItems": 1024,
+  "retirementGrantBytes": 32768,
+  "surfaces": [
+    { "id": "procedural-main", "nodes": 120 },
+    { "id": "procedural-preview", "nodes": 40 },
+    { "id": "framework.panel.catalogue", "nodes": 110 },
+    { "id": "framework.panel.artifact", "nodes": 90 },
+    { "id": "framework.panel.inspection", "nodes": 70 },
+    { "id": "framework.panel.history", "nodes": 60 }
+  ],
+  "peakResidentRoots": 6,
+  "peakResidentBytes": 3232268,
+  "permitFaults": 0,
+  "doubleBufferedPeakRoots": 12,
+  "doubleBufferedPeakBytes": 6464536,
+  "ceilingSizedRoots": 3,
+  "measured": {
+    "target": "http://127.0.0.1:6118/?plugin=generation3d",
+    "run": "2026-09-12 wgpu-settle/run-5",
+    "seconds": 122,
+    "surfaces": 6,
+    "residentRoots": 6,
+    "residentBytes": 1311424,
+    "fixedBackingBytes": 566352,
+    "capacityFaults": 0
+  },
+  "laws": [
+    "a refresh replaces one resident root at a time, so the peak is the live surface count and never twice it",
+    "the double-buffered order needs a second FULL set: twice the roots and twice the bytes",
+    "the aggregate admits only three ceiling-sized surface reservations, which is why a retained caller right-sizes",
+    "two consecutive six-surface refreshes take no permit refusal"
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "valid": [
+    {
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "resultSourceId": null,
+      "resultMode": "static",
+      "resultModeIndex": 0
+    },
+    {
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "resultSourceId": null,
+      "resultMode": "modal",
+      "resultModeIndex": 1
+    },
+    {
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "resultSourceId": null,
+      "resultMode": "buckling",
+      "resultModeIndex": 2
+    }
+  ],
+  "invalid": [
+    {
+      "kind": "unknown"
+    },
+    {
+      "kind": "camera-null"
+    },
+    {
+      "kind": "camera-unknown"
+    },
+    {
+      "kind": "bad-mode"
+    },
+    {
+      "kind": "camera-zero"
+    },
+    {
+      "kind": "camera-negative"
+    }
+  ],
+  "patch": [
+    {
+      "op": "replace",
+      "path": "/camera/zoom",
+      "value": 2.5
+    }
+  ]
+}

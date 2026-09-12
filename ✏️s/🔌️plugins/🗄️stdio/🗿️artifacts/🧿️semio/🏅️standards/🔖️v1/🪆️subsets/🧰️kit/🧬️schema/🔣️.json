@@ -2,41 +2,41 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/artifact.json",
   "title": "SemioKitArtifact",
-  "description": "Full artifact state for s.stdio.semio.kit — mirrors SemioKitSnapshot field for field. Second COMPOSITE subset, first to carry a LINK slot.",
   "type": "object",
-  "required": [
-    "schema"
-  ],
+  "additionalProperties": false,
+  "required": ["schema", "types", "designs", "objects", "models", "representations"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
+    "schema": { "const": "stdio.semio.kit", "x-semio-state": "artifact" },
     "types": {
       "type": "array",
+      "items": { "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitType" },
       "x-semio-state": "artifact"
     },
     "designs": {
       "type": "array",
+      "items": { "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitDesign" },
       "x-semio-state": "artifact"
     },
     "objects": {
       "type": "array",
+      "items": { "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/object" },
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio.object"
+      "x-semio-child": "s.stdio.semio"
     },
     "models": {
       "type": "array",
+      "items": { "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/model" },
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio.model"
+      "x-semio-child": "s.stdio.semio"
     },
     "properties": {
-      "type": "object",
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/value",
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio.value"
+      "x-semio-child": "s.stdio.semio"
     },
     "representations": {
       "type": "array",
+      "items": { "$ref": "https://semio.tech/schema/os/store/link.json" },
       "x-semio-state": "artifact",
       "x-semio-link": "representation"
     }

@@ -4,7 +4,7 @@ import { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "../�
 /// <reference types="vitest/importMeta" />
 /** @emoji 🎠️ `@semio-tech/framework` — plugin runtime, leases, invocation responses, and playground boot. */
 import type { IconName } from "@semio-tech/assets";
-import type { ShellLocale, ShellTerminology, LocalizedLabel } from "../🛂️manifest/🤖️generated/🎚️ui-axes.ts";
+import type { ShellLocale, ShellTerminology, LocalizedLabel } from "../🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts";
 
 import type {
   PluginManifest,
@@ -213,7 +213,7 @@ export function createTurnOutcomeBroadcast<T>(): { readonly push: (value: T) => 
  * `PluginRuntime/🟦️.tsx`'s own header doc on that pre-existing limitation). */
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests1(import.meta.vitest, { createTurnOutcomeBroadcast }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
+  await registerTests1(import.meta.vitest, { createTurnOutcomeBroadcast }, { directory: (await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️TurnOutcomeBroadcastTests
 
@@ -750,7 +750,7 @@ export class AppRouter {
 //#region 🧪️AppRouterTests
 if (import.meta.vitest) {
   const { registerTests2 } = await import("./🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests2(import.meta.vitest, { AppRouter, dialectCoordinate }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
+  await registerTests2(import.meta.vitest, { AppRouter, dialectCoordinate }, { directory: (await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️AppRouterTests
 //#endregion 🔖️AppRouter
@@ -1143,7 +1143,7 @@ export type PlaygroundCatalogTarget = {
  * 🗂️ Everything the kernel's plugin/playground resolvers need, injected by the caller instead of
  * imported from a specific product's generated build output — inverts the upward dependency a generic
  * framework module must never have on a product's build artifacts. The OS product's
- * `🔌️plugin/📦️packages/🟦️typescript/🟦️.ts` is the one place allowed to import the generated
+ * `🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts` is the one place allowed to import the generated
  * registry and build this shape; every other product wanting kernel resolvers builds its own.
  */
 export interface PluginCatalog {
@@ -2317,7 +2317,7 @@ export function runtimeMetricsDue(lastPublishedMs: number | null, nowMs: number)
  * `path_scope` is this region only, and a peer holds `🔖️IoRouter` (must stay byte-identical). */
 if (import.meta.vitest) {
   const { registerTests3 } = await import("./🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests3(import.meta.vitest, { ActivationRegistry, DEFAULT_MAX_RESIDENT_ACTORS, OwnedResidentLedger, RUNTIME_METRICS_PUBLISH_INTERVAL_MS, ShardClient, intersectCapabilityGrants, residentActorCapFromMemory, runtimeMetricsDue }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
+  await registerTests3(import.meta.vitest, { ActivationRegistry, DEFAULT_MAX_RESIDENT_ACTORS, OwnedResidentLedger, RUNTIME_METRICS_PUBLISH_INTERVAL_MS, ShardClient, intersectCapabilityGrants, residentActorCapFromMemory, runtimeMetricsDue }, { directory: (await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️RuntimeMetricsTests
 //#endregion 🐚️ActivationRegistry
@@ -2603,9 +2603,8 @@ export class PlaygroundBootPlanner {
   }
 }
 
-/** @emoji 🎮️ Resolves the wasm plugin list and default app for one playground variant; when the on-disk
- * `generated/🟦️session.ts` was overwritten by another concurrent dev variant, rebuilds from the injected
- * {@link PluginCatalog} instead of trusting the stale program rows. One-turn drive of
+/** @emoji 🎮️ Resolves the wasm plugin list and default app for one playground variant; when a caller injects
+ * session rows for a different variant, rebuilds from the authoritative {@link PluginCatalog}. One-turn drive of
  * {@link PlaygroundBootPlanner} for callers that own no interactive budget. */
 export function resolvePlaygroundBoot(catalog: PluginCatalog, variant: string, session?: PlaygroundBootSession): PlaygroundBoot {
   return new PlaygroundBootPlanner(catalog, variant, session).finish();
@@ -3109,84 +3108,13 @@ export class ArtifactInferenceRouter {
 //#region 🧪️ExpandPluginRegistryTests
 if (import.meta.vitest) {
   const { registerTests4 } = await import("./🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests4(import.meta.vitest, { expandPluginRegistry }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
+  await registerTests4(import.meta.vitest, { expandPluginRegistry }, { directory: (await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️ExpandPluginRegistryTests
 
 //#region 🧪️IoRouterTests
 if (import.meta.vitest) {
   const { registerTests5 } = await import("./🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests5(import.meta.vitest, { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
+  await registerTests5(import.meta.vitest, { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun }, { directory: (await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️IoRouterTests
-
-//#region 🧪️ScopeContributionsTests
-if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  
-  describe("exampleArtifactSources", () => {
-    const generation3d = { artifactKind: "s.procedural.generation3d", standard: "1", subset: "*" } as const;
-    const examples = [
-      { id: "box-shell-preview", dialect: generation3d, artifactJson: "neuron id=box neuron-kind=brep.prim3d.box neuron-kind=brep.solid.shell" },
-      { id: "face-sweep-extrude", dialect: generation3d, artifactJson: "neuron-kind=brep.surf.planarFaceWire neuron-kind=brep.sweep.extrude" },
-    ];
-    it("reads neuron-kind from published example artifactJson", () => {
-      const sources = exampleArtifactSources(examples, generation3d, "box-shell-preview");
-      expect(resolveDocumentOperatorKinds(sources)).toEqual({ status: "resolved", kinds: ["brep.prim3d.box", "brep.solid.shell"] });
-    });
-    it("uses the same dialect graphs when the open app is the viewer of that artifact", () => {
-      const sources = exampleArtifactSources(examples, generation3d);
-      const scope = resolveDocumentOperatorKinds(sources);
-      expect(scope.status).toBe("resolved");
-      if (scope.status === "resolved") {
-        expect(scope.kinds).toContain("brep.prim3d.box");
-        expect(scope.kinds).toContain("brep.surf.planarFaceWire");
-      }
-    });
-  });
-
-describe("scopeContributionsJson", () => {
-    const manifest = (topic: string, payload: unknown) =>
-      ({ topicContributions: [{ topic, payload }], apps: [], workflows: [] }) as PluginManifest;
-    const loaded = [
-      { pluginId: "procedural", manifest: manifest("flow.extension", { operators: [{ kind: "procedural.example" }] }) },
-      { pluginId: "flow-extension-brep", manifest: manifest("flow.extension", { operators: [{ kind: "brep.solid.extrude" }, { kind: "brep.curve.polygon" }] }) },
-      { pluginId: "flow-extension-bim", manifest: manifest("flow.extension", { operators: [{ kind: "bim.wall" }] }) },
-      { pluginId: "flow-extension-math", manifest: manifest("flow.extension", { operators: [{ kind: "math.vector" }] }) },
-    ];
-    it("keeps the receiver and only plugins whose operators the document graph can reach", () => {
-      const kinds = reachableKindsFromUnknown([
-        { widgets: [{ neuronKind: "brep.solid.extrude" }, { neuronKind: "math.vector" }] },
-      ]);
-      expect(kinds.sort()).toEqual(["brep.solid.extrude", "math.vector"]);
-      const scoped = JSON.parse(scopeContributionsJson(loaded, "procedural", kinds)) as { pluginId: string }[];
-      expect(scoped.map((entry) => entry.pluginId).sort()).toEqual(["flow-extension-brep", "flow-extension-math", "procedural"]);
-    });
-    it("drops every foreign contribution when the graph names no operator kind", () => {
-      const scoped = JSON.parse(scopeContributionsJson(loaded, "procedural", [])) as { pluginId: string }[];
-      expect(scoped.map((entry) => entry.pluginId)).toEqual(["procedural"]);
-    });
-    it("reaches operators nested in a flow-extension manifestJson string", () => {
-      const brep = {
-        pluginId: "flow-extension-brep",
-        manifest: manifest("flow.extension", { manifestJson: JSON.stringify({ contributes: { operators: [{ id: "brep.solid.extrude" }, { id: "brep.curve.polygon" }] } }) }),
-      };
-      const kinds = reachableKindsFromUnknown([{ widgets: [{ "neuron-kind": "brep.solid.extrude" }] }, "neuron-kind=brep.solid.extrude"]);
-      expect(kinds).toContain("brep.solid.extrude");
-      const scoped = JSON.parse(scopeContributionsJson([loaded[0]!, brep, loaded[2]!], "procedural", kinds)) as { pluginId: string }[];
-      expect(scoped.map((entry) => entry.pluginId).sort()).toEqual(["flow-extension-brep", "procedural"]);
-    });
-    it("resolves neuron-kind from the open document DSL and refuses a missing graph", () => {
-      const dsl =
-        'widgets {\n  neuron id="profile" neuron-kind=brep.curve.polygon\n  neuron id="extrusion-axis" neuron-kind=math.vector\n  neuron id="extrude" neuron-kind=brep.solid.extrude\n}';
-      const fromDsl = resolveDocumentOperatorKinds([dsl]);
-      expect(fromDsl.status).toBe("resolved");
-      if (fromDsl.status === "resolved") expect([...fromDsl.kinds].sort()).toEqual(["brep.curve.polygon", "brep.solid.extrude", "math.vector"]);
-      const emptyGraph = resolveDocumentOperatorKinds([{ fixture: { widgets: [] } }]);
-      expect(emptyGraph).toEqual({ status: "resolved", kinds: [] });
-      expect(resolveDocumentOperatorKinds([{ surface: "lane-split" }])).toEqual({ status: "unresolved", reason: "no-operator-graph" });
-      expect(resolveDocumentOperatorKinds([])).toEqual({ status: "unresolved", reason: "no-document-sources" });
-    });
-  });
-}
-//#endregion 🧪️ScopeContributionsTests

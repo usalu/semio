@@ -372,7 +372,7 @@ pub fn inference_resources(workspace: Option<&Arc<HeadlessWorkspace>>) -> Vec<Re
 
 //#region 💡️InferenceJobWire
 /// 💡️ The exact closed wire vocabulary the hub's four authenticated GIS Map inference routes
-/// publish (`🌎️hub/💡️inference/🏃️runtime/🦀️.rs`, `🚀️bin.rs`'s own `//#region 💡️Inference`).
+/// publish (`🌎️hub/💡️inference/🏃️runtime/🦀️.rs`, `🌎️hub/🏗️bootstrap/🦀️.rs`'s own `//#region 💡️Inference`).
 /// Mirrored here as typed Rust rather than reached for as free-form JSON: nothing on this
 /// boundary is a `serde_json::Value`, and a hub field this client does not know about is a loud
 /// decode failure rather than a silently-dropped one.

@@ -64,6 +64,84 @@
       "content": {
         "childId": "dag-content"
       }
+    },
+    {
+      "schema": null
+    },
+    {
+      "content": null
+    },
+    {
+      "content": {
+        "childId": "different-child",
+        "target": {
+          "artifactId": "dag-content",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "graph"
+          }
+        }
+      }
+    },
+    {
+      "content": {
+        "childId": "dag-content",
+        "target": {
+          "artifactId": "dag-content",
+          "dialect": {
+            "artifactKind": "foreign",
+            "standard": "v1",
+            "subset": "graph"
+          }
+        }
+      }
+    },
+    {
+      "content": {
+        "childId": "dag-content",
+        "target": {
+          "artifactId": "dag-content",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "foreign",
+            "subset": "graph"
+          }
+        }
+      }
+    },
+    {
+      "content": {
+        "childId": "dag-content",
+        "target": {
+          "artifactId": "dag-content",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "foreign"
+          }
+        }
+      }
+    },
+    {
+      "content": {
+        "childId": "dag-content",
+        "target": {
+          "artifactId": "dag-content",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "graph"
+          }
+        },
+        "locale": "de"
+      }
+    },
+    {
+      "locale": "de"
+    },
+    {
+      "schema": "foreign.document"
     }
   ],
   "invalidIdentityDocuments": [
@@ -185,6 +263,64 @@
           }
         }
       }
+    },
+    {
+      "name": "replace-content",
+      "before": {
+        "schema": "dag.dag",
+        "content": {
+          "childId": "dag-content",
+          "target": {
+            "artifactId": "dag-content",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "graph"
+            }
+          }
+        }
+      },
+      "diff": {
+        "content": {
+          "childId": "dag-content-replacement",
+          "target": {
+            "artifactId": "dag-content-replacement",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "graph"
+            }
+          }
+        }
+      },
+      "after": {
+        "schema": "dag.dag",
+        "content": {
+          "childId": "dag-content-replacement",
+          "target": {
+            "artifactId": "dag-content-replacement",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "graph"
+            }
+          }
+        }
+      }
     }
+  ],
+  "invalidTextEnvelopes": [
+    "semio foreign.dag.dsl v1",
+    "semio dag.dag.pack v1",
+    "semio dag.dag.dsl v2"
+  ],
+  "invalidTextMarkers": [
+    "dag.fixture",
+    "foreign.dag"
+  ],
+  "invalidPackEnvelopes": [
+    "semio foreign.dag.pack v1",
+    "semio dag.dag.dsl v1",
+    "semio dag.dag.pack v2"
   ]
 }

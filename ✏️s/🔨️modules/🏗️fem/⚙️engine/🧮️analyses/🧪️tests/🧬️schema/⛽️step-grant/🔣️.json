@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://fem/engine/analyses/step-grant",
+  "title": "FEM Assembly Step Grant",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "oracle",
+    "cases"
+  ],
+  "properties": {
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "version"
+      ],
+      "properties": {
+        "package": {
+          "const": "fast-json-patch"
+        },
+        "version": {
+          "const": "3.1.1"
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    }
+  },
+  "$defs": {
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpointDue",
+        "previewDue",
+        "pendingBuild",
+        "complete"
+      ],
+      "properties": {
+        "checkpointDue": {
+          "type": "boolean"
+        },
+        "previewDue": {
+          "type": "boolean"
+        },
+        "pendingBuild": {
+          "type": "boolean"
+        },
+        "complete": {
+          "type": "boolean"
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transition",
+        "fuel",
+        "deadline",
+        "before",
+        "after",
+        "outcome",
+        "fuelRemaining"
+      ],
+      "properties": {
+        "transition": {
+          "enum": [
+            "checkpoint",
+            "preview",
+            "complete",
+            "work"
+          ]
+        },
+        "fuel": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "deadline": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "before": {
+          "$ref": "#/$defs/state"
+        },
+        "after": {
+          "$ref": "#/$defs/state"
+        },
+        "outcome": {
+          "enum": [
+            "yield",
+            "complete"
+          ]
+        },
+        "fuelRemaining": {
+          "enum": [
+            0,
+            1
+          ]
+        }
+      }
+    }
+  }
+}

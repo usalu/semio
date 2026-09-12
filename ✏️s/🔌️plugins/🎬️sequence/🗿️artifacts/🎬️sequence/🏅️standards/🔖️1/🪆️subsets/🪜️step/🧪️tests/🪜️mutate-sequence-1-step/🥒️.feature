@@ -6,7 +6,7 @@ Feature: Apply every typed SEQUENCE step mutation to the real committed step gra
   `s.sequence.sequence` is a semio-NATIVE artifact — the `sequence.sequence.dsl` envelope is defined
   by this repository alone and no package in any ecosystem reads it — so this case carries a recorded
   no-oracle decision (`sequence-step-graph-mutation-semantics`, in
-  `../../../✳️any/🔮️oracle/🔣️.json`) whose survey names and DECLINES the BPMN and Graphviz readers
+  `../../../✳️any/🔮️oracles/🔣️.json`) whose survey names and DECLINES the BPMN and Graphviz readers
   on the substantive ground that neither models this graph.
 
   ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. `🐧️mutate-puzzle-2d-1` and

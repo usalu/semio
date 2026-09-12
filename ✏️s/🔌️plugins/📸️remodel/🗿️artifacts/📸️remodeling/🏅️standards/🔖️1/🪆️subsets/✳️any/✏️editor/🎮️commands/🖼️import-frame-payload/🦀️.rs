@@ -1,7 +1,7 @@
 //! 📥️ 📥️ Remodeling play app commands command — `import-frame-payload`.
 
 use crate::editor::remodeling::commands::import_video_bytes_payload;
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 #[cfg(test)]
 use crate::editor::remodeling::engine::images as remodeling_image;
 use crate::editor::remodeling::{decode_still_image, payload_from_data_url};
@@ -46,13 +46,13 @@ fn batch_stream_id(scene: &RemodelingSnapshot, index: u32) -> String {
 //#region 🔖️SetStreamSync
 //#endregion 🔖️SetStreamSync
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 📥️ Imports `n` checker frames as one new image-sequence stream via `ImportFramePayload`, mirroring
 /// exactly what a real `importFrames` → `RequestFileOpen.multiple` re-dispatch loop sends. Shared with
 /// `🎮️commands/🏗️run-reconstruction`'s own tests, which need real decodable frames to run a pipeline on.
 #[cfg(test)]
-pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remodeling::testkit::RemodelingApp, n: u32) {
-    use crate::editor::remodeling::testkit::dispatch;
+pub(crate) async fn verify_import_checker_stream(app: &mut crate::editor::remodeling::unit_tests::context::RemodelingApp, n: u32) {
+    use crate::editor::remodeling::unit_tests::context::dispatch;
     use crate::editor::remodeling::RemodelingCommand;
     for index in 0..n {
         dispatch(app, RemodelingCommand::ImportFramePayload(ImportFramePayload { payload: checker_data_url(24, 24, 3).await, name: format!("frame-{index}.png"), index })).await;
@@ -82,7 +82,7 @@ fn checker_image(w: u32, h: u32, cell: u32) -> remodeling_image::ImageRgba8 {
     }
     image
 }
-//#endregion 🧪️Testkit
+//#endregion 🧪️UnitTests
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "import-frame-payload")]
@@ -94,7 +94,7 @@ pub struct ImportFramePayload {
 
 /// 📥️ A still-image drop-zone/file-picker payload; a `video/*` mime is re-routed to the in-process
 /// video-bytes decoder.
-pub fn handle(payload: &ImportFramePayload, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &ImportFramePayload, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     let Some((mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
     if mime.starts_with("video/") {
         return import_video_bytes_payload::handle(&import_video_bytes_payload::ImportVideoBytesPayload { payload: payload.payload.clone(), name: payload.name.clone() }, doc, cfg);

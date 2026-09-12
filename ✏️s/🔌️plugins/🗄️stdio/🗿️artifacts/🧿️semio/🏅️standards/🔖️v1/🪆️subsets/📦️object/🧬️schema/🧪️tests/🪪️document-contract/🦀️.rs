@@ -4,7 +4,7 @@ use store::{ArtifactDsl, ArtifactPack};
 
 #[semio_framework_async_macros::async_test]
 async fn stdio_document_contract_object_round_trips_exact_children() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("neutral Object vectors");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document-contract/🔣️.json")).expect("neutral Object vectors");
     for case in fixture["snapshotCases"].as_array().expect("snapshot vectors") {
         let input = &case["input"];
         let text = input.to_string();
@@ -19,7 +19,8 @@ async fn stdio_document_contract_object_round_trips_exact_children() {
             assert_eq!(SemioObjectSnapshot::parse_dsl(&snapshot.print_dsl()).expect("Object text"), snapshot);
             assert_eq!(SemioObjectSnapshot::decode_pack(&snapshot.encode_pack()).expect("Object Pack decode"), snapshot);
             let encoded = dsl::json::to_json_string(&snapshot);
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).expect("independent JSON decode"), *input);
+            let independent: serde_json::Value = serde_json::from_str(&encoded).expect("independent JSON decode");
+            assert!(store::pack_rt::json_values_equal(&independent, input), "{independent} != {input}");
         }
     }
     let rich: SemioObjectSnapshot = dsl::json::from_json_str(&fixture["snapshotCases"][1]["input"].to_string()).expect("rich Object");

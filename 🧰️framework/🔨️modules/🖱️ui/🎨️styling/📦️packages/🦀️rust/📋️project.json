@@ -95,5 +95,11 @@
         "command": "bun ./📜️script.ts test"
       }
     }
+  },
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/**/*",
+      "sharedGlobals"
+    ]
   }
 }

@@ -1,4 +1,8 @@
-import { dependencyIsCompositionManifest, DEPENDENCY_REPO_POLICY_ROUTERS, dependencyRepoPolicyLibrarySpecifier, WORKSPACE_ROOT, dependencyRepoPolicyImportBoundaryFailure, dependencyRepoPolicyRouterSetFailure, DEPENDENCY_REPO_POLICY_ROOT, dependencyParseGoModule, type DependencyBaselineEntry, dependencyClassifyOracleEntry, type DependencyEcosystem, type DependencyKind, dependencyTruthReportFromEntries } from "../../../../../../../../📜️script.ts";
+import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
+import { dependencyClassifyOracleEntry, dependencyIsCompositionManifest, dependencyParseGoModule, type DependencyBaselineEntry, type DependencyEcosystem, type DependencyKind } from "../../📇️inventory/🟦️.ts";
+import { DEPENDENCY_REPO_POLICY_ROOT, DEPENDENCY_REPO_POLICY_ROUTERS, dependencyRepoPolicyImportBoundaryFailure, dependencyRepoPolicyLibrarySpecifier, dependencyRepoPolicyRouterSetFailure, dependencyTruthReportFromEntries } from "../../⚖️truth/🟦️.ts";
+
+const WORKSPACE_ROOT = getWorkspaceRoot();
 
 /** 🧪️Hostile source-only fixtures for every correction and exception in the literal-external census. */
 export function dependencyTruthSelfTests(): number {

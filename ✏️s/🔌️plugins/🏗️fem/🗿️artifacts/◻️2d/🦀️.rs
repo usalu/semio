@@ -25,7 +25,7 @@ pub mod mesh;
 pub mod model;
 #[cfg(test)]
 #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧪️tests/⚙️engine/🦀️.rs"]
-pub(crate) mod numerical_testkit;
+pub(crate) mod engine_test_vectors;
 #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs"]
 pub mod sparse;
 #[path = "."]
@@ -294,20 +294,7 @@ impl Default for FemAnalysisSettings {
     }
 }
 
-/// 🎥️ The canvas camera (pan/zoom) for the plugin viewport.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
-#[value(rename_all = "camelCase")]
-pub struct FemCamera {
-    pub x: f64,
-    pub y: f64,
-    pub zoom: f64,
-}
-
-impl Default for FemCamera {
-    fn default() -> Self {
-        Self { x: 0.0, y: 0.0, zoom: 1.0 }
-    }
-}
+pub use semio_framework_os_kernel::Viewport2d;
 
 /// 📸️ `Fem2dSnapshot` lives in `📸️snapshot/🧬️schema` — re-exported here for crate consumers.
 pub use crate::standards::v1::subsets::any::schema::Fem2dArtifact;
@@ -340,14 +327,7 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 // #endregion 🔖️ArtifactKind
 
 // #region 🔖️Register
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
-/// the old side-effecting `register()`, which called five different global registries directly from a
-/// plugin `.setup()` callback. `crate::editor::fem2d::config::schema::register_app_schema()` is the one
-/// pre-existing exception referenced here (module path only updated for ticket
-/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET's `apps::fem2d` → `editor::fem2d` rename); it
-/// registers `Fem2dPlayApp`'s CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
-/// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
-/// artifact-scoped function set.
+/// 🧩️ Application wrappers supported by this artifact declaration.
 #[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
@@ -1289,25 +1269,9 @@ pub mod editor {
             }
         }
 
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
 
-            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
 
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
 
-            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
 
         #[cfg(test)]
         #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🌉️wasm/🧪️tests/🔬️unit/🦀️.rs"]

@@ -11,7 +11,7 @@ Feature: Solve real fem3d structures, and every typed edit to one, against an in
   of this repository's kernel reaches it. The reference is `🐍️.py` beside this file; `🦀️.rs` registers
   the SUBJECT half only, so this repository's answer is never on both sides.
 
-  WHY THIS CASE EXISTS. `../../../🌐️any/🔮️oracle/🔣️.json` recorded, honestly and for a long time, that
+  WHY THIS CASE EXISTS. `../../../🌐️any/🔮️oracles/🔣️.json` recorded, honestly and for a long time, that
   twenty-two of this artifact's twenty-five mutation kinds had no qualifying third-party reference at
   all: `fem3d-non-geometry-mutation-semantics`, capability `fem3d-1-mutate-uncarried`. Its survey was
   right that a finite-element solver cannot adjudicate document ALGEBRA — a solver reads a model, it

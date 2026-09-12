@@ -2,7 +2,6 @@
 
 use crate::document_dsl as forms_dsl;
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::reset_try_config_mutations;
 use crate::schema::{default_example_spec, empty_forms_snapshot, onboarding_example_spec};
 use crate::{forms_steps, op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -50,5 +49,5 @@ pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, FormsSnapshot>,
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no longer clears a config-owned
     // selection here — swapping in a whole new document prunes every stale "fields" selection id
     // automatically via `revalidate_interaction_state_after_document_change`.
-    Ok(Emit { artifact_mutations: replace_spec_operations(doc.snapshot, &next), config_mutations: reset_try_config_mutations(), ..Default::default() })
+    Ok(Emit { artifact_mutations: replace_spec_operations(doc.snapshot, &next), ..Default::default() })
 }

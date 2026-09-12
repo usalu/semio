@@ -11,7 +11,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn trace_inspector_records_one_microstep_per_transition() {
         use super::super::kernel::{init, macrostep};
-        use super::super::testing::support::{UnitToggleEvent, UnitToggleMachine};
+        use super::super::testing::toggle_model::{UnitToggleEvent, UnitToggleMachine};
 
         let mut sink = Vec::new();
         let mut snapshot = init::<UnitToggleMachine>((), &mut sink);

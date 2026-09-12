@@ -4,7 +4,7 @@
 //! this subset's own 🏭️generator, the same one that produced this catalog's per-mutation fixture
 //! pairs) into the case work directory first; the committed asset is never written to. `oracle` handlers drive the registered `lopdf`
 //! 0.44 reference implementation through this subset's own
-//! `../../🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🔮️oracle/🦀️.rs`, `subject` handlers drive this
+//! `../../🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🔮️oracles/🦀️.rs`, `subject` handlers drive this
 //! repository's own decode/mutate/encode round trip, and both results are read back by the SAME
 //! independent `project_conformance` before the `semantic-pdf-conformance-h-v1` profile compares
 //! them. The subject half is gated behind the generated host's `sut` feature so the oracle-only run

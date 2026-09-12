@@ -47,7 +47,7 @@ Feature: Apply every typed ISO 10303-214 CC2 (bounded wireframe/basic surfaces) 
   Below the ladder (CC1) no representation is admitted at all, so deletion replaces both verbs.
   On top of it (CC6) nothing can be above the ceiling, so no demotion has a subject. The two edge
   classes declare five kinds each. This is asserted, not merely written down: the shared
-  `🏅️standards/🔖️ap214/🔮️oracle/🦀️component.rs` carries
+  `🏅️standards/🔖️ap214/🔮️oracles/🦀️component.rs` carries
   `the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place`, and the
   four classes share every line of classification and serialization through that one module —
   what this subset supplies is `MAX_RUNG = 2` and the ceiling type GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION

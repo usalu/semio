@@ -1,0 +1,11 @@
+# Reusable Viewport Contract Audit Scope
+
+A Terra Extra High read-only audit is the next fleet rotation after Note's bounded execution proof. Root continues FEM native feedback while that audit runs. This is a preparation note, not a completed ownership decision.
+
+The audit must trace the renderer-produced 2D and 3D camera payloads to concrete retained command decoding, exact window config publication and scene echo. Start from FEM, then compare the existing shared infinite canvas/board cameras and the Note, Sequence and Drawing 2D records. Separate transient navigation gestures, persisted exact-window viewport state, and semantic document cameras; a glTF camera node or an authored saved viewpoint must not be moved merely because its type contains Camera.
+
+The 3D renderer currently publishes nested position/target/zoom/optional-up, while FEM's command expects opaque JSON text. Projection family and full projection taxonomy are different fields in the renderer; determine their actual persisted owner and behavior before choosing a shared wire schema. Use the existing renderer gesture fixture as the independent producer-side input for the eventual native dispatch regression.
+
+UI-scene is renderer- and product-neutral and already owns scene math/value codecs. It has no OS-kernel dependency. DslField and the types in its method signatures currently belong to OS kernel, which has no UI-scene dependency. Inspect exact Cargo and generated derive requirements. Recommend a dependency direction that keeps a reusable viewport record independent of the OS product, preserves direct native/text/Pack typing, and avoids copied records, compatibility wrappers or a feature-gated dependency cycle. Evaluate a neutral field/schema binding owner against a trait-owner binding with explicit dependencies; do not assume wholesale DSL relocation is required.
+
+Deliver a Markdown audit in this ticket with exact paths, producer/consumer payloads, valid/invalid neutral vectors, dependency edges, proposed owner and a bounded implementation file set. Run no Cargo while the execution fleet uses its coordinated slot. Do not change source, schemas, generated files, manifests, or launch catalogs. Root will turn the evidence into the next execution slice.

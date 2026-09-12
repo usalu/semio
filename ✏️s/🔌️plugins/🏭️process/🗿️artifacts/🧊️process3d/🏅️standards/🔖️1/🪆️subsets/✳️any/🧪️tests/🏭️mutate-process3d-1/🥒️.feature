@@ -60,7 +60,7 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
   reached through this plugin's `oracleHostPackages` entry) and a subject role (this repository's own
   `process3d_mutation_report_json`, unaffected by this change), each independently asserting the
   forward/inverse laws in role through the shared law module
-  `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` that the stdio subsets use, before the two are
+  `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` that the stdio subsets use, before the two are
   compared — on `stepPayloads` for the seven step-scoped kinds, on the whole snapshot for the other
   nine. A handler that applied the mutation and returned would report a pass having checked nothing.
 

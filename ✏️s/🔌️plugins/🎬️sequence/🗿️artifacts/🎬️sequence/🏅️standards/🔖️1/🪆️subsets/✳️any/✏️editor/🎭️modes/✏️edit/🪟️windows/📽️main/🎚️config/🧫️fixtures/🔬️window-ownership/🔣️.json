@@ -1,0 +1,26 @@
+{
+  "schema": "semio.sequence.window-ownership/v1",
+  "document": { "content": { "childId": "sequence-content-fixture", "dialect": "s.stdio.semio@v1/flow" } },
+  "childDocument": { "steps": [{ "id": "step-1" }] },
+  "childEditAfterReload": { "kind": "log.print", "x": 560, "y": 0, "expectedNodeDelta": 1, "expectedLane": "child" },
+  "windowInstances": [
+    { "id": "sequence-main-left", "windowKindId": "sequence-main" },
+    { "id": "sequence-main-right", "windowKindId": "sequence-main" },
+    { "id": "sequence-script-left", "windowKindId": "sequence-script" },
+    { "id": "sequence-script-right", "windowKindId": "sequence-script" }
+  ],
+  "baseConfig": { "orientation": "leftRight", "camera": { "x": 0, "y": 0, "zoom": 1 } },
+  "baseTransient": { "lastRunJson": "" },
+  "configMutations": [
+    { "windowId": "sequence-main-left", "windowKindId": "sequence-main", "mutation": { "kind": "snapshot", "config": { "orientation": "topBottom", "camera": { "x": 13, "y": -5, "zoom": 2 } } } },
+    { "windowId": "sequence-main-right", "windowKindId": "sequence-main", "mutation": { "kind": "snapshot", "config": { "orientation": "leftRight", "camera": { "x": -8, "y": 21, "zoom": 0.5 } } } }
+  ],
+  "transientMutations": [
+    { "windowId": "sequence-script-left", "windowKindId": "sequence-script", "mutation": { "kind": "snapshot", "transient": { "lastRunJson": "{\"window\":\"left\"}" } } },
+    { "windowId": "sequence-script-right", "windowKindId": "sequence-script", "mutation": { "kind": "snapshot", "transient": { "lastRunJson": "{\"window\":\"right\"}" } } }
+  ],
+  "rejections": [
+    { "windowId": "missing-sequence", "claimedWindowKindId": "sequence-main", "code": "sequence-window-stale" },
+    { "windowId": "sequence-script-left", "claimedWindowKindId": "sequence-main", "code": "sequence-window-kind-mismatch" }
+  ]
+}

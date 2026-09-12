@@ -1,7 +1,7 @@
 //! ▶️ Run-stage reconstruction command.
 
 use crate::editor::remodeling::commands::run_reconstruction;
-use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::RemodelingMutation;
 use crate::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -15,7 +15,7 @@ pub struct RunStage {
 }
 
 /// ▶️ Starts the requested stage as a fresh generation on the resumable pipeline.
-pub fn handle(payload: &RunStage, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &RunStage, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     Ok(run_reconstruction::begin_stage_reconstruction(doc, &payload.stage))
 }
 //#endregion 🔖️RunStage

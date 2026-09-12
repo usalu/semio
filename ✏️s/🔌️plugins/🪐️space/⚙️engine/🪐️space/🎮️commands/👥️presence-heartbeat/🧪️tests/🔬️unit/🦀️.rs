@@ -11,7 +11,7 @@ async fn space_command_op_text_round_trips_every_variant() {
 async fn presence_heartbeat_declares_none_ui_scope() {
     use crate::demo_space_projection;
     use crate::engine::space::SpaceCommand;
-    use crate::engine::space::testkit::studio_emit;
+    use crate::engine::space::unit_tests::context::studio_emit;
     use semio_framework::kernel::UiDirtyScope;
     let projection = demo_space_projection().await;
     let config = SpaceConfig::default();

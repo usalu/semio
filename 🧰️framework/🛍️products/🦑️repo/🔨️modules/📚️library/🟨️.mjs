@@ -800,6 +800,7 @@ function componentTargets(root, workspaceRoot, commandInputs) {
   if (!manifest.lib?.["crate-type"]?.includes("cdylib")) throw new Error(`Component ${metadata.component.package} needs a cdylib target: ${path}`);
   const script = nxPath(relative(workspaceRoot, join(LIBRARY_ROOT, "⚡️caching/🦀️cargo/📜️script.ts")));
   const webRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript";
+  const webSourceRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle";
   const deployment = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment";
   const moduleCatalog = JSON.parse(readFileSync(join(workspaceRoot, deployment, "🗺️catalog.json"), "utf8"));
   const moduleDirectory = moduleCatalog.modules.find((row) => metadata.component.package === `semio:${row.pluginId}`)?.directoryName;
@@ -816,7 +817,7 @@ function componentTargets(root, workspaceRoot, commandInputs) {
     executor: DEFAULT_EXECUTOR,
     cache: true,
     dependsOn: [`component-${profile}`, `@semio-tech/framework-plugin-web:support-${profile}`, ...(profile === "release" ? ["workspace:deps-wasm-opt"] : [])],
-    inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*" }, `{workspaceRoot}/${webRoot}/**/*.{ts,json}`, `{workspaceRoot}/${deployment}/*.json`, `!{workspaceRoot}/${webRoot}/dist/**/*`],
+    inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*" }, `{workspaceRoot}/${webRoot}/**/*.{ts,json}`, `{workspaceRoot}/${webSourceRoot}/**/*.ts`, `!{workspaceRoot}/${webSourceRoot}/**/🧪️tests/**/*.ts`, `{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🛂️actor-exports/🔣️.json`, `{workspaceRoot}/${deployment}/*.json`, `!{workspaceRoot}/${webRoot}/dist/**/*`],
     outputs: [`{workspaceRoot}/${webRoot}/dist/${profile}/🔌️plugin-modules/${moduleDirectory}`],
     options: { cwd: ".", command: `bun ${JSON.stringify(`${webRoot}/📜️script.ts`)} materialize ${profile} --manifest ${JSON.stringify(nxPath(relative(workspaceRoot, path)))}` },
   }]]));
@@ -877,7 +878,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
   const composition = JSON.parse(readFileSync(join(workspaceRoot, projectRoot, "package.json"), "utf8"));
   const baseline = ["🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"];
   const linked = (composition.semio?.browserSessionFactories ?? []).map((row) => row.engine);
-  const wgpuRoot = nxPath("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"), wgpuProject = projectAt(wgpuRoot);
+  const wgpuRoot = nxPath("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"), wgpuProject = projectAt(wgpuRoot);
   if (!wgpuProject?.name || !wgpuProject.targets?.wasm) throw new Error(`WGPU renderer must name an authored wasm producer: ${wgpuRoot}`);
   const wgpuEngine = `${wgpuProject.name}:wasm`;
   const result = {};

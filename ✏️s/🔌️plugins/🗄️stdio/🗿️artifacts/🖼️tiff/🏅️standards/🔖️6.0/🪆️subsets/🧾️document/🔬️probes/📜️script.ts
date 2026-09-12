@@ -9,7 +9,7 @@
 //
 // Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should
 // produce. The actual TIFF IFD/tag decode is performed by the sibling standalone `tiff-ifd-codec`
-// binary (`../🏭️generator/🦀️tiff-ifd-codec`, depends on nothing but `tiff` 0.11) via its `project`
+// binary (`../🏭️generator/🔁️codec/📦️packages/🦀️rust`, depends on nothing but `tiff` 0.11) via its `project`
 // subcommand — this file only shells out to it and performs the GATING structural comparison
 // itself (already-hashed `samplesDigest` for the raster, per the codec's own opaque-payload
 // treatment of pixel data — never raw bytes cross this boundary either) — no TIFF semantics
@@ -24,7 +24,7 @@
 // @see ../../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch/compare shape is mirrored from (both hand the
 //      structural equality itself to this file, never to a computed prediction)
-// @see ../🏭️generator/🦀️tiff-ifd-codec/src/main.rs — the `project` subcommand this file calls
+// @see ../🏭️generator/🔁️codec/🦀️.rs — the `project` subcommand this file calls
 
 //#endregion 🧲️Header
 
@@ -48,7 +48,7 @@ type ProbeReport = {
 
 const ENGINE = { family: "tiff", implementation: "tiff-ifd-codec (tiff 0.11.3 decoder/encoder, no hand-rolled field layout)", version: "tiff@0.11.3" } as const;
 const PROBE_VERSION = "tiff@0.11.3";
-const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🦀️tiff-ifd-codec", "Cargo.toml");
+const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 //#endregion 🧬️Contract
 
 //#region 📥️Model

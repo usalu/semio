@@ -9,7 +9,7 @@
 //
 // Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should
 // produce. The actual PNG decode is performed by the sibling standalone `png-codec` binary
-// (`../🏭️generator/🦀️png-codec`, depends on nothing but `png` 0.18.1) via its `project` subcommand
+// (`../🏭️generator/🔁️codec/📦️packages/🦀️rust`, depends on nothing but `png` 0.18.1) via its `project` subcommand
 // — this file only shells out to it, hashes the decoded pixel sample buffer it returns into a
 // size+digest pair (per `semantic-png-1-2-v1`'s own opaque-binary-payload treatment, the same
 // treatment the sibling `avi` probe gives a movi chunk payload), and performs the GATING structural
@@ -23,7 +23,7 @@
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔬️probes/📜️script.ts — the
 //      sibling probe suite this file's CLI/dispatch/compare shape is mirrored from
-// @see ../🏭️generator/🦀️png-codec/src/main.rs — the `project` subcommand this file calls
+// @see ../🏭️generator/🔁️codec/🦀️.rs — the `project` subcommand this file calls
 
 //#endregion 🧲️Header
 
@@ -48,7 +48,7 @@ type ProbeReport = {
 
 const ENGINE = { family: "png", implementation: "png-codec (png 0.18.1)", version: "png@0.18.1" } as const;
 const PROBE_VERSION = "png@0.18.1";
-const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🦀️png-codec", "Cargo.toml");
+const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 //#endregion 🧬️Contract
 
 //#region 📥️Model

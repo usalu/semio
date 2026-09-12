@@ -10,10 +10,10 @@
 //! calls.
 //!
 //! Recorded no-oracle decision `sequence-step-graph-mutation-semantics`
-//! (`../../../✳️any/🔮️oracle/🔣️.json`): `s.sequence.sequence` is a semio-NATIVE artifact with no
+//! (`../../../✳️any/🔮️oracles/🔣️.json`): `s.sequence.sequence` is a semio-NATIVE artifact with no
 //! third-party reader or writer in any ecosystem, so this adapter registers NO oracle handler at
 //! all. All evidence lives in the SUBJECT role below, where each handler asserts its law through the
-//! shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` module.
+//! shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module.
 //!
 //! The subject half is `sut`-gated because the generated host links this repository's crate only
 //! for the subject role.

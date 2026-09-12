@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::forms::commands::set_active_example::SetActiveExample;
-use crate::editor::forms::testkit::{dispatch, forms_app};
+use crate::editor::forms::unit_tests::context::{dispatch, forms_app};
 use crate::editor::forms::FormsCommand;
 use crate::schema::onboarding_example_spec;
 use SetSpecJson;

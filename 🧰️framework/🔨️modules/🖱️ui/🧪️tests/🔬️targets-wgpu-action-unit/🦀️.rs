@@ -238,7 +238,7 @@ fn close_releases_one_flat_inline_owner_per_grant() {
 
 #[test]
 fn production_boundary_has_no_forget_or_background_drop_escape() {
-    const SOURCE: &str = include_str!("../../📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧾️action.rs");
+    const SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🎬️action/🦀️.rs");
     assert!(!SOURCE.contains(concat!("mem::", "forget")));
     assert!(!SOURCE.contains(concat!("thread::", "spawn")));
     assert!(!SOURCE.contains(concat!("impl Clone", " for BoundedAction")));

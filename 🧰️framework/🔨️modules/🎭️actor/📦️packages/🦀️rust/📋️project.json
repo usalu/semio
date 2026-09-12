@@ -44,7 +44,7 @@
         "command": "bun ./📜️script.ts typegen"
       },
       "outputs": [
-        "{projectRoot}/../../🤖️generated"
+        "{projectRoot}/../../🤖️generated/🎭️actor"
       ]
     },
     "preview-generated": {

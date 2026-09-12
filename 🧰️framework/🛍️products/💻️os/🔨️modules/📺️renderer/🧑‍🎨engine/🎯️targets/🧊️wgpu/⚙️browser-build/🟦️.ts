@@ -67,7 +67,7 @@ async function bundleAtWorkspaceRoot(entryPath: string): Promise<string> {
 /** 🚀️ Renders the browser boot artifact without changing generated files. */
 export async function renderBrowserBoot(bundleRoot: string): Promise<{ path: string; content: string }> {
   const bootTs = join(bundleRoot, "../../🚀️browser-boot/🟦️.ts");
-  const bootJs = join(bundleRoot, "🟦️typescript/🚀️boot.js");
+  const bootJs = join(bundleRoot, "../../🚀️browser-boot/🤖️generated/🟨️.js");
   return { path: bootJs, content: await renderBrowserEntry(bootTs) };
 }
 
@@ -112,4 +112,3 @@ export function assertBundleModuleRoutes(bundleRoot: string, routes: readonly st
     throw new Error(`🌐️.html copy-dir for ${MODULE_ROUTES.plugin} must resolve to the one staging root ${expected}, not ${resolve(bundleRoot, pluginHref)}`);
   }
 }
-

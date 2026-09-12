@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::shooting::testkit::{dispatch, shooting_app};
+use crate::editor::shooting::unit_tests::context::{dispatch, shooting_app};
 use crate::editor::shooting::ShootingCommand;
 
 /// 🧬️ `reset_snapshot::handle` emits a `Effect::LoadDocument` (outside undo history), not an

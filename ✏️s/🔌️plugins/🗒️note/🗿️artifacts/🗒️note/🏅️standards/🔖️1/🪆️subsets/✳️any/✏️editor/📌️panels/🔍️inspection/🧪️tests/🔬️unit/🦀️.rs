@@ -1,4 +1,4 @@
-use crate::editor::note::testkit::{note_app, render as render_body};
+use crate::editor::note::unit_tests::context::{note_app, render as render_body};
 use crate::editor::note::NOTE_PLAY_BODY_PROPERTIES as BODY_PROPERTIES;
 
 #[semio_framework_async_macros::async_test]

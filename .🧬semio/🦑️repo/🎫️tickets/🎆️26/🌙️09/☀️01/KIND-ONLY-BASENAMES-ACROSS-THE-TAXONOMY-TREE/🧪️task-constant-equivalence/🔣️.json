@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Read-only native equivalence controls for a literal task environment default; no runtime process environment is modified.",
+  "before": "process.env.RUST_MIN_STACK ??= String(128 * 1024 * 1024);",
+  "after": "process.env.RUST_MIN_STACK ??= \"134217728\";",
+  "cases": [
+    {
+      "name": "absent",
+      "environment": {},
+      "expected": "134217728"
+    },
+    {
+      "name": "empty-is-present",
+      "environment": {
+        "RUST_MIN_STACK": ""
+      },
+      "expected": ""
+    },
+    {
+      "name": "user-override",
+      "environment": {
+        "RUST_MIN_STACK": "268435456"
+      },
+      "expected": "268435456"
+    },
+    {
+      "name": "zero-is-present",
+      "environment": {
+        "RUST_MIN_STACK": "0"
+      },
+      "expected": "0"
+    }
+  ]
+}
+

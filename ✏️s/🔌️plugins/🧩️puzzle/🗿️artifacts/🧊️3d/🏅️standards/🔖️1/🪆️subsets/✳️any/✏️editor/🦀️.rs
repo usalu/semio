@@ -2409,7 +2409,7 @@ macro_rules! puzzle3d_command_variants {
             }
 
             /// 🎯️ Reverse of `action_id()` — builds the typed command used by both the host's
-            /// transitional `{action,args}` bridge and the testkit dispatch helper.
+            /// transitional `{action,args}` bridge and the test context dispatch helper.
             fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Option<Self> {
                 match action {
                     $($id => Some(Puzzle3dCommand::$Variant { window_id, args })),*,
@@ -2938,7 +2938,10 @@ const PUZZLE3D_SESSION_PROCESS_BYTES: usize = 96 * 1024 * 1024;
 /// whole state), so the fixed slot row itself never carries the multi-kilobyte payload inline.
 #[derive(Default)]
 struct Puzzle3dSessionState {
-    geometry: Option<(u64, String, String)>,
+    /// 🚚️ Wave B44: the per-object instance residency, so the record text an unchanged object already
+    /// has survives a dispatch and a worker hop exactly as the whole-set blob used to.
+    instances: Option<Box<main::Puzzle3dInstanceResidency>>,
+    meshes: Option<(u64, String)>,
     fill_display: Option<FillDisplayMemo>,
     document_tree: Option<(Puzzle3dDocumentTreeKey, Box<BuiltNode>)>,
     collision: Option<Puzzle3dCollisionSession>,
@@ -2948,9 +2951,10 @@ struct Puzzle3dSessionState {
 
 impl Puzzle3dSessionState {
     fn bytes(&self) -> usize {
-        self.geometry
+        self.instances
             .as_ref()
-            .map_or(0, |(_, instances, meshes)| instances.len().saturating_add(meshes.len()))
+            .map_or(0, |residency| residency.bytes())
+            .saturating_add(self.meshes.as_ref().map_or(0, |(_, meshes)| meshes.len()))
             .saturating_add(self.fill_display.as_ref().map_or(0, |_| size_of::<FillDisplayMemo>()))
             .saturating_add(self.document_tree.as_ref().map_or(0, |_| size_of::<BuiltNode>()))
             .saturating_add(self.collision.as_ref().map_or(0, Puzzle3dCollisionSession::bytes))
@@ -3094,7 +3098,8 @@ impl Puzzle3dSessionRegistry {
 /// behaviour — this path can never make a call wrong, only cold.
 fn puzzle3d_session_check_out(app_instance_id: u32, document_id: Option<&str>, app: &Puzzle3dPlayApp) -> Option<Puzzle3dSessionLease> {
     let (lease, state) = puzzle3d_session_registry().try_lock().ok()?.check_out(app_instance_id, document_id)?;
-    *app.geometry_cache.lock().expect("geometry cache") = state.geometry;
+    *app.instance_residency.lock().expect("instance residency") = state.instances;
+    *app.mesh_cache.lock().expect("mesh cache") = state.meshes;
     *app.fill_display_memo.lock().expect("fill display memo") = state.fill_display;
     *app.document_tree_cache.lock().expect("document cache") = state.document_tree;
     {
@@ -3118,7 +3123,8 @@ fn puzzle3d_session_check_in(lease: Puzzle3dSessionLease, app: &Puzzle3dPlayApp)
         (Some(session.take_collision_session()), Some(session.take_fill_session()), session.brush_live_target().map(str::to_string))
     };
     let state = Puzzle3dSessionState {
-        geometry: app.geometry_cache.lock().expect("geometry cache").take(),
+        instances: app.instance_residency.lock().expect("instance residency").take(),
+        meshes: app.mesh_cache.lock().expect("mesh cache").take(),
         fill_display: app.fill_display_memo.lock().expect("fill display memo").take(),
         document_tree: app.document_tree_cache.lock().expect("document cache").take(),
         collision,
@@ -3179,12 +3185,20 @@ thread_local! {
     /// 🔬️ How many times `document_tree_cached` genuinely rebuilt the outliner tree on THIS thread —
     /// the counter the memo's laws read instead of inferring cache behaviour from timings.
     pub(crate) static PUZZLE3D_DOCUMENT_TREE_BUILDS: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
+    /// 🔬️ How many times `ArtifactApp::interaction_topology` decoded the document and rebuilt the whole
+    /// object/vortex/attraction forest on THIS thread. One pick used to pay it TWICE — once in the
+    /// framework's own `interactionSelect` arm and once in the revalidation behind it — which on the
+    /// 180-object flagship is the O(n) term wave B44 §2.2 measured as `interactionSelect`'s 20×.
+    pub(crate) static PUZZLE3D_INTERACTION_TOPOLOGY_BUILDS: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
 }
 
 pub struct Puzzle3dPlayApp {
     pub(crate) precompute: std::cell::RefCell<Box<Puzzle3dPrecomputeSession>>,
     fill_display_memo: Mutex<Option<FillDisplayMemo>>,
-    geometry_cache: Mutex<Option<(u64, String, String)>>,
+    /// 🚚️ Wave B44: per-object instance residency — the ONE owner of the published instance text, and
+    /// the source of the changed/removed id delta the world lane rides with.
+    pub(crate) instance_residency: Mutex<Option<Box<main::Puzzle3dInstanceResidency>>>,
+    mesh_cache: Mutex<Option<(u64, String)>>,
     /// 🌳️ Boxed on purpose: `BuiltNode` is ~36 KiB by value, and this app object is built on the stack on
     /// every dispatch and every render — inline it dominated `size_of::<Puzzle3dPlayApp>()` and was the
     /// difference between a comfortable and an overflowing worker stack.
@@ -3193,22 +3207,41 @@ pub struct Puzzle3dPlayApp {
 
 impl Default for Puzzle3dPlayApp {
     fn default() -> Self {
-        Self { precompute: std::cell::RefCell::new(Box::new(Puzzle3dPrecomputeSession::new())), fill_display_memo: Mutex::new(None), geometry_cache: Mutex::new(None), document_tree_cache: Mutex::new(None) }
+        Self {
+            precompute: std::cell::RefCell::new(Box::new(Puzzle3dPrecomputeSession::new())),
+            fill_display_memo: Mutex::new(None),
+            instance_residency: Mutex::new(None),
+            mesh_cache: Mutex::new(None),
+            document_tree_cache: Mutex::new(None),
+        }
     }
 }
 
 impl Puzzle3dPlayApp {
-    fn geometry_jsons(&self, fixture: &Puzzle3dFixture) -> (String, String) {
+    /// 🚚️ The world lane's three geometry payloads for one fixture: the authoritative instance set, the
+    /// mesh declarations, and the per-object delta that produced the current instance revision.
+    ///
+    /// ⏱️ Wave B44: invalidation is PER OBJECT. Only the records whose own
+    /// `instance_record_fingerprint` moved are re-serialized; the mesh declarations and the outliner
+    /// memo stay keyed on the (now allocation-free) whole-fixture `fixture_geometry_fingerprint`, which
+    /// is what actually changes when the catalogs or the mesh set do.
+    fn geometry_jsons(&self, fixture: &Puzzle3dFixture) -> (String, String, Option<String>) {
         let fingerprint = main::fixture_geometry_fingerprint(fixture);
-        let mut cache = self.geometry_cache.lock().expect("geometry cache");
-        if cache.as_ref().is_none_or(|(fp, _, _)| *fp != fingerprint) {
-            #[cfg(test)]
-            PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(|counter| counter.set(counter.get().saturating_add(1)));
-            *cache = Some((fingerprint, main::world_instances_geometry_json(fixture), main::world_meshes_json(fixture)));
+        let mut residency = self.instance_residency.lock().expect("instance residency");
+        let residency = residency.get_or_insert_with(Box::<main::Puzzle3dInstanceResidency>::default);
+        let republished = residency.refresh(fixture);
+        let mut meshes = self.mesh_cache.lock().expect("mesh cache");
+        let mesh_miss = meshes.as_ref().is_none_or(|(cached, _)| *cached != fingerprint);
+        if mesh_miss {
+            *meshes = Some((fingerprint, main::world_meshes_json(fixture)));
             *self.document_tree_cache.lock().expect("document cache") = None;
         }
-        let (_, instances, meshes) = cache.as_ref().expect("geometry cache populated");
-        (instances.clone(), meshes.clone())
+        #[cfg(test)]
+        if republished || mesh_miss {
+            PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(|counter| counter.set(counter.get().saturating_add(1)));
+        }
+        let (_, meshes) = meshes.as_ref().expect("mesh cache populated");
+        (residency.instances_json().to_string(), meshes.clone(), residency.delta_json().map(str::to_string))
     }
 
     /// 🌳️ The outliner body for one fixture, memoized on [`Puzzle3dDocumentTreeKey`] and carried by the
@@ -3439,9 +3472,6 @@ impl Puzzle3dActionPrologue {
             debug_assert!(!puzzle3d_action_document_intent(action));
             Vec::new()
         };
-        if action == "importFixture" {
-            eprintln!("[DEBUG] puzzle3d.import.apply ops={} after_objects={}", operations.len(), scene.fixture.objects.len());
-        }
         let coalesce_key = match action {
             "translateSelection" => Some("gumball-translate".to_string()),
             "rotateSelection" => Some("gumball-rotate".to_string()),
@@ -3898,6 +3928,10 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     return match export_fixture::puzzle3d_export_publication(&puzzle3d_fixture_from_snapshot(snapshot.typed()), &runtime.active_example_id)? {
                         export_fixture::Puzzle3dExportPublication::Inline(effect) => Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::effect(effect))),
                         export_fixture::Puzzle3dExportPublication::Segmented(download) => Ok(crate::retained_command::PuzzleCommandWorkStep::Download(download)),
+                        // 🧾️ An export above what ONE segmented download may carry is refused with a
+                        // notice, never with a fault: a payload the wire cannot admit is an answer the
+                        // user must read, and a fault here lands as a dead job instead.
+                        export_fixture::Puzzle3dExportPublication::Refused(message) => Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::effect(Effect::Notify { message }))),
                     };
                 }
                 self.prologue.scene_step(command.action_id(), snapshot, &runtime, Some(view), Some(window_id));
@@ -7645,10 +7679,16 @@ impl Puzzle3dClipboardJob {
         let fixture = puzzle3d_fixture_from_play_snapshot(self.snapshot.as_ref());
         let marks = Puzzle3dInteractionSnapshot::from_state(&interaction, &hover);
         match self.tool_id.as_str() {
-            "copy" => match puzzle3d_copy_fragment_from(&fixture, puzzle3d_selected_objects_from(&marks, &fixture)) {
-                Ok(fragment) => Emit { effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() },
-                Err(_) => Emit::default(),
-            },
+            // 🧾️ `copy` answers a selection it cannot resolve with `Emit::default()`, i.e. ZERO effects —
+            // the same shape as "the hotkey never reached the guest" (ticket 26/09/02/PUZZLE-3D-END-TO-END
+            // wave B47 §4).
+            "copy" => {
+                let selected = puzzle3d_selected_objects_from(&marks, &fixture);
+                match puzzle3d_copy_fragment_from(&fixture, selected) {
+                    Ok(fragment) => Emit { effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() },
+                    Err(_) => Emit::default(),
+                }
+            }
             "cut" => {
                 let objects = puzzle3d_selected_objects_from(&marks, &fixture);
                 let Ok(fragment) = puzzle3d_copy_fragment_from(&fixture, objects) else { return Emit::default() };
@@ -7758,11 +7798,11 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         window_ownership::register_transient(registry)
     }
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
 
@@ -7782,7 +7822,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
     }
 
@@ -7997,6 +8037,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// makes "the user can see it" and "the user can pick it" the same statement
     /// (26/09/02/PUZZLE-3D-END-TO-END wave B9 lane 2).
     fn interaction_topology(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle3dConfig>) -> semio_framework_plugin::InteractionTopology {
+        #[cfg(test)]
+        PUZZLE3D_INTERACTION_TOPOLOGY_BUILDS.with(|counter| counter.set(counter.get().saturating_add(1)));
         let snapshot = puzzle3d_fixture_from_projection(&puzzle3d_projection_value(doc.snapshot.value()));
         let mut ordered = Vec::new();
         for object in &snapshot.objects {
@@ -8027,6 +8069,23 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// potentially many producers (`multiplicity: Many`).
     fn io() -> Option<AppIo> {
         Some(puzzle3d_io())
+    }
+
+    /// 🧹️ The always-on driver of fill-plan teardown — stage 15 of the framework's own maintenance
+    /// ladder, one granted item per turn. `fillBuildTick` can only retire a plan while the Fill tool is
+    /// armed, and `engagement_abort` disarms it in the very turn it cancels, so without this the
+    /// cancelled plan's owners and one of the four process envelope slots stood until some `Drop` tore
+    /// the whole ladder down inline. Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42.
+    fn mounted_job_maintenance_step(_instance_id: u32, maximum_items: usize, _maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        Ok(crate::editor::puzzle3d::precompute::fill_envelope_maintenance_step(maximum_items))
+    }
+
+    fn mounted_job_close_step(_instance_id: u32, maximum_items: usize, _maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        Ok(crate::editor::puzzle3d::precompute::fill_envelope_maintenance_step(maximum_items))
+    }
+
+    fn mounted_jobs_terminal_is_empty(_instance_id: u32) -> bool {
+        crate::editor::puzzle3d::precompute::fill_envelope_terminal_is_empty()
     }
 
     /// 🎞️ `kit:in` seam: normalizes an incoming `kit.catalog` fragment (`objectKinds`/`vortexKinds`/
@@ -8245,8 +8304,8 @@ impl Puzzle3dPlayApp {
             let labels = puzzle3d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle3d has no authored label set for the host's locale/terminology axes"))?;
             match base_body_key {
                 main::BODY_KEY => {
-                    let (instances_json, meshes_json) = app.geometry_jsons(&envelope.fixture);
-                    main::render(&envelope, &precompute, labels, instances_json, meshes_json, interaction)
+                    let (instances_json, meshes_json, instances_delta_json) = app.geometry_jsons(&envelope.fixture);
+                    main::render(&envelope, &precompute, labels, instances_json, meshes_json, instances_delta_json, interaction)
                 }
                 document::BODY_KEY => app.document_tree_cached_from(&envelope.fixture, labels, &envelope.runtime.panel_pages),
                 catalogue::BODY_KEY => catalogue::render(&envelope, labels),
@@ -8677,20 +8736,25 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
 
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 🧪️ The one puzzle3d-app test harness — every other taxonomy node's `🧪️Tests` region builds on it
 /// instead of re-deriving a store/dispatch/render scaffold of its own.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️example-switch/🦀️.rs"]
 mod example_switch;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️mutation-latency/🦀️.rs"]
+mod mutation_latency;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️selection-scale/🦀️.rs"]
+mod selection_scale;
 //#endregion 🧪️Tests

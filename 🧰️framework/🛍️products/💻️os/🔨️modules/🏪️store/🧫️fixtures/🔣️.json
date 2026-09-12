@@ -2,7 +2,7 @@
   "families": [
     {
       "key": "demo",
-      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testkit/🧬️mutations/🧮️demo/🧬️mutations",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧬️mutations/🧮️demo/🧬️mutations",
       "aggregate": "DemoMutation",
       "leaves": [
         {
@@ -77,7 +77,7 @@
     },
     {
       "key": "timestamped",
-      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testkit/🧬️mutations/⏱️timestamped/🧬️mutations",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧬️mutations/⏱️timestamped/🧬️mutations",
       "aggregate": "TimestampedMutation",
       "leaves": [
         {
@@ -120,7 +120,7 @@
     },
     {
       "key": "severity",
-      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testkit/🧬️mutations/🚦️severity/🧬️mutations",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧬️mutations/🚦️severity/🧬️mutations",
       "aggregate": "SeverityMutation",
       "leaves": [
         {
@@ -212,7 +212,7 @@
     },
     {
       "key": "validated",
-      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testkit/🧬️mutations/🛂️validated/🧬️mutations",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧬️mutations/🛂️validated/🧬️mutations",
       "aggregate": "ValidatedMutation",
       "leaves": [
         {
@@ -254,7 +254,7 @@
     },
     {
       "key": "lossy",
-      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testkit/🧬️mutations/🪤️lossy/🧬️mutations",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧬️mutations/🪤️lossy/🧬️mutations",
       "aggregate": "LossyMutation",
       "leaves": [
         {
@@ -278,7 +278,7 @@
     },
     {
       "key": "presence",
-      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️testkit/🧬️mutations",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧫️fixtures/🧬️mutations",
       "aggregate": "ValueMutation",
       "leaves": [
         {

@@ -1,12 +1,12 @@
 use super::*;
 use protocol::{OpBinary, OpText};
-use semio_framework_plugin::{testkit, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel};
+use semio_framework_plugin::{artifact_app_laws, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel};
 
-/// 🎫️ `testkit::assert_declared_actions_bridge_to_commands`/`new_app_with_registry`'s own signature
+/// 🎫️ `artifact_app_laws::assert_declared_actions_bridge_to_commands`/`new_app_with_registry`'s own signature
 /// is still `fn(manifest: fn() -> App)`, unchanged for this ticket (SDK gap, see this packet's
 /// notes file) — `create_trinity_jack_app` now returns a bare `AppDefinition`, so this tiny local
-/// wrapper adapts it back into the `App { definition, examples }` shape those testkit fns expect.
-fn trinity_jack_manifest_for_testkit() -> App {
+/// wrapper adapts it back into the `App { definition, examples }` shape those test context fns expect.
+fn trinity_jack_manifest_for_tests() -> App {
     App { definition: create_trinity_jack_app(), examples: Vec::new() }
 }
 
@@ -37,7 +37,7 @@ async fn trinity_jack_command_text_and_binary_round_trip() {
 }
 
 fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
-    testkit::meta(actor)
+    artifact_app_laws::meta(actor)
 }
 
 fn query_windows() -> ViewModel {
@@ -50,11 +50,11 @@ fn query_windows() -> ViewModel {
     }
 }
 
-/// 🕹️ Registry-backed (not the bare `testkit::new_app`): `interactionSelect`/`interactionHover`
+/// 🕹️ Registry-backed (not the bare `artifact_app_laws::new_app`): `interactionSelect`/`interactionHover`
 /// resolve the dispatching app's declared `AppActionRegistry.interactions`, so any test exercising
 /// domain "ast" selection needs the real manifest's `.interaction(...)` declaration present.
 async fn new_app() -> VcsArtifactApp<EditorApp<TrinityJackPlayApp>> {
-    testkit::new_app_with_registry::<EditorApp<TrinityJackPlayApp>>(trinity_jack_manifest_for_testkit).await
+    artifact_app_laws::new_app_with_registry::<EditorApp<TrinityJackPlayApp>>(trinity_jack_manifest_for_tests).await
 }
 
 fn jack_envelope_wire() -> Vec<u8> {
@@ -320,7 +320,7 @@ async fn delete_selection_removes_selected_node() {
 
 #[semio_framework_async_macros::async_test]
 async fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
-    let mut app = testkit::new_app_with_registry::<EditorApp<TrinityJackPlayApp>>(trinity_jack_manifest_for_testkit).await;
+    let mut app = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityJackPlayApp>>(trinity_jack_manifest_for_tests).await;
     let node_id = node_id_at(&app, 0);
     let request = ContextMenuRequest {
         menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
@@ -388,14 +388,14 @@ async fn query_ownership_runtime_publishes_transient_result_without_document_edi
             return Err("query result did not publish exactly once to only the results-window transient".into());
         }
         let tree = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &results).await.map_err(|error| format!("{error:?}"))?;
-        let rendered = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+        let rendered = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
         if !rendered.contains(&expected_name) {
             return Err("query result table did not contain the document's matching Piece".into());
         }
         Ok((generation, rendered))
     }
     .await;
-    testkit::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app);
     let (generation, rendered) = outcome.expect("owned query runtime");
     assert!(rendered.contains("table"));
     eprintln!("[DEBUG] query result reached results-window transient generation {generation}, rendered as a table, preserved the document, and retired the app");
@@ -498,17 +498,17 @@ async fn jack_graph_window_config_query_ownership_isolates_two_editor_result_pai
 
     for (context, expected) in [(&editor_left, left_query), (&editor_right, right_query)] {
         let tree = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, context).await.expect("editor render");
-        let rendered = testkit::project_and_retire_fixture_tree(tree).expect("editor projection");
+        let rendered = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("editor projection");
         assert!(rendered.contains(expected));
     }
     for context in [&results_left, &results_right] {
         let tree = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, context).await.expect("result render");
-        assert!(testkit::project_and_retire_fixture_tree(tree).expect("result projection").contains("table"));
+        assert!(artifact_app_laws::project_and_retire_fixture_tree(tree).expect("result projection").contains("table"));
     }
 
     let packs = app.window_config_packs().await.expect("persisted window configs");
     assert_eq!(packs.len(), 2, "only two authored editor query configs were instantiated");
-    testkit::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app);
 
     let mut reopened = new_app().await;
     for pack in packs {
@@ -516,7 +516,7 @@ async fn jack_graph_window_config_query_ownership_isolates_two_editor_result_pai
     }
     for (context, expected) in [(&editor_left, left_query), (&editor_right, right_query)] {
         let tree = reopened.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, context).await.expect("reloaded editor render");
-        assert!(testkit::project_and_retire_fixture_tree(tree).expect("reloaded editor projection").contains(expected));
+        assert!(artifact_app_laws::project_and_retire_fixture_tree(tree).expect("reloaded editor projection").contains(expected));
     }
     for context in [&results_left, &results_right] {
         assert_eq!(reopened.window_transient_generation(context).expect("fresh result generation"), Some(0));
@@ -524,6 +524,6 @@ async fn jack_graph_window_config_query_ownership_isolates_two_editor_result_pai
         let state = snapshot.get::<JackResultsWindowTransientOwner>().expect("fresh results state");
         assert!(state.query_execution_id.is_none() && state.result.is_none() && state.query_error.is_none());
     }
-    testkit::close_registered_fixture_app(&mut reopened);
+    artifact_app_laws::close_registered_fixture_app(&mut reopened);
     eprintln!("[DEBUG] two editor/result pairs kept query source and output isolated; reload restored only the authored editor configs and reset both results transients");
 }

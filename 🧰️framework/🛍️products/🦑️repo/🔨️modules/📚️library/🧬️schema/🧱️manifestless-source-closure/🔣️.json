@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/manifestless-source-closure.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sources",
+    "supportMoves",
+    "aliases",
+    "command",
+    "cacheAuthority",
+    "descriptorProbe",
+    "directoryContexts"
+  ],
+  "properties": {
+    "sources": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "legacy",
+          "legacyDisposition",
+          "owners",
+          "consumers"
+        ],
+        "properties": {
+          "legacy": {
+            "type": "string",
+            "minLength": 1
+          },
+          "legacyDisposition": {
+            "enum": [
+              "absent",
+              "thin-command"
+            ]
+          },
+          "owners": {
+            "type": "array",
+            "minItems": 1
+          },
+          "consumers": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "supportMoves": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["legacy", "owner", "language", "consumer"],
+        "properties": {
+          "legacy": { "type": "string", "minLength": 1 },
+          "owner": { "type": "string", "minLength": 1 },
+          "language": { "const": "dotnet" },
+          "consumer": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "aliases": {
+      "type": "array",
+      "minItems": 4
+    },
+    "command": {
+      "type": "object"
+    },
+    "cacheAuthority": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "fragments"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "fragments": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "descriptorProbe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bytes", "base64"],
+      "properties": {
+        "bytes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+        },
+        "base64": { "type": "string", "pattern": "^[A-Za-z0-9+/]+={0,2}$" }
+      }
+    },
+    "directoryContexts": {
+      "type": "array",
+      "minItems": 15
+    }
+  }
+}

@@ -1,6 +1,6 @@
 
 use super::*;
-use protocol::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
+use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
 
 #[semio_framework_async_macros::async_test]
 async fn home_op_text_round_trips_every_variant() {

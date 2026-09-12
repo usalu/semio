@@ -221,51 +221,51 @@ async fn dispatch_registers_semantic_descriptors() {
 #[semio_framework_async_macros::async_test]
 async fn delete_missing_node_is_a_target_missing_error() {
     let base = mini_fixture();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &TrinityGraphMutation::DeleteNode(DeleteNode { id: "does-not-exist".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &TrinityGraphMutation::DeleteNode(DeleteNode { id: "does-not-exist".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_missing_node_is_a_target_missing_error() {
     let base = mini_fixture();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &TrinityGraphMutation::RenameNode(RenameNode { id: "does-not-exist".into(), new_name: "New".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &TrinityGraphMutation::RenameNode(RenameNode { id: "does-not-exist".into(), new_name: "New".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_node_duplicate_id_never_applies() {
     let base = mini_fixture();
     let duplicate = TrinityGraphMutation::CreateNode(CreateNode { node: mini_node("root", 0.0, 0.0, vec![]) });
-    protocol::os_spr::testkit::assert_fatal_never_applies(&duplicate.diff(&base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_edge_duplicate_id_never_applies() {
     let base = mini_fixture();
     let duplicate = TrinityGraphMutation::CreateEdge(CreateEdge { edge: Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out-a".into(), target: "child@in-a".into(), properties: PropertyBag::new() } });
-    protocol::os_spr::testkit::assert_fatal_never_applies(&duplicate.diff(&base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_node_outcome_obeys_the_policy_matrix() {
     let base = mini_fixture();
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &TrinityGraphMutation::DeleteNode(DeleteNode { id: "child".into() })).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &TrinityGraphMutation::DeleteNode(DeleteNode { id: "child".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_node_outcome_obeys_the_policy_matrix() {
     let base = mini_fixture();
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &TrinityGraphMutation::RenameNode(RenameNode { id: "child".into(), new_name: "New".into() })).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &TrinityGraphMutation::RenameNode(RenameNode { id: "child".into(), new_name: "New".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_node_outcome_obeys_the_policy_matrix() {
     let base = mini_fixture();
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &TrinityGraphMutation::CreateNode(CreateNode { node: mini_node("node-fresh", 10.0, 10.0, vec![]) })).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &TrinityGraphMutation::CreateNode(CreateNode { node: mini_node("node-fresh", 10.0, 10.0, vec![]) })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_edge_outcome_obeys_the_policy_matrix() {
     let base = mini_fixture();
     let edge = Edge { id: "e2".into(), kind: "Connection".into(), source: "root@out-a".into(), target: "child@in-a".into(), properties: PropertyBag::new() };
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &TrinityGraphMutation::CreateEdge(CreateEdge { edge })).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &TrinityGraphMutation::CreateEdge(CreateEdge { edge })).await;
 }
 //#endregion 🧪️OutcomeLaws

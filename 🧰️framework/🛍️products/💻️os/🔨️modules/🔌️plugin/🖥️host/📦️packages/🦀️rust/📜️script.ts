@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🖥️ Runs owned plugin-host checks and exact native test filters. */
-import { SCALE_COMPONENT_ARTIFACT } from "../../../../../🧪️testkit/⚖️scale/🟦️.ts";
+const SCALE_COMPONENT_ARTIFACT = "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import findIndex from "lodash-es/findIndex.js";
@@ -303,7 +303,7 @@ class UiPatchMarshallingCheckScript extends BundleScript {
     const codec = readFileSync(join(owner, "🦀️.rs"), "utf8");
     const synchronous = readFileSync(join(hostRoot, "🦀️.rs"), "utf8");
     const asynchronous = readFileSync(join(hostRoot, "⏳️runtime", "🦀️.rs"), "utf8");
-    const scale = readFileSync(join(this.repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧪️testkit", "⚖️scale", "🦀️.rs"), "utf8");
+    const scale = readFileSync(join(this.repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧫️fixtures", "⚖️scale", "🦀️.rs"), "utf8");
     for (const kind of ["Upsert", "SetComponent", "SetLayout", "SetActivity", "SetChildren", "SetStyle", "SetAccessibility", "SetBindings", "SetMenu", "Remove", "SetRoot"]) {
       assert(codec.includes(`wit_ui::PatchOp::${kind}`), `missing ${kind} reverse codec`);
     }

@@ -152,7 +152,7 @@ test("glTF generator follows exact fixture-manifest roles and handpicked file co
 });
 
 test("logo animation uses all six explicitly handpicked keyframe paths in order", () => {
-  const source = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts"), "utf8");
+  const source = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🖼️assets/🪧️logos/🏗️builder/🎞️animation/🟦️.ts"), "utf8");
   const syntax = ts.createSourceFile("script.ts", source, ts.ScriptTarget.Latest, true);
   const definition = syntax.statements.filter(ts.isFunctionDeclaration).find((node) => node.name?.text === "logoKeyframePaths");
   expect(definition).toBeDefined();
@@ -173,7 +173,7 @@ test("generated asset documentation keeps README literal without rewriting froze
   expect(catalog?.cases.some((row) => row.sourcePath === contract.outputPath)).toBe(true);
   expect(readFileSync(join(repoRoot, evidence.authorityCatalogPath))).toEqual(before);
   expect(parseTree(before.toString("utf8"))?.type).toBe("object");
-  const source = readFileSync(join(repoRoot, taxonomy.generatorContracts[contract.generatorId].ownerPath, "📜️script.ts"), "utf8");
+  const source = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🏗️builder/📽️projection/🟦️.ts"), "utf8");
   const syntax = ts.createSourceFile("script.ts", source, ts.ScriptTarget.Latest, true);
   const definition = syntax.statements.filter(ts.isFunctionDeclaration).find((node) => node.name?.text === "renderCatalogReadme")!.getText(syntax);
   for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
@@ -183,7 +183,7 @@ test("generated asset documentation keeps README literal without rewriting froze
 });
 
 test("asset SVG identities preserve handpicked paths independently of language bindings", () => {
-  const source = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts"), "utf8");
+  const source = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🏗️builder/📽️projection/🟦️.ts"), "utf8");
   const definition = source.match(/^export function catalogSvgSources\([\s\S]*?^\}/mu)?.[0];
   expect(definition).toBeDefined();
   for (const row of fixture.assetIconPaths) {
@@ -209,12 +209,13 @@ test("asset SVG identities preserve handpicked paths independently of language b
 });
 
 test("Rust icon bindings retain the source path and the public identity separately", () => {
-  const source = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts"), "utf8");
-  const syntax = ts.createSourceFile("script.ts", source, ts.ScriptTarget.Latest, true);
-  const definitions = syntax.statements.filter(ts.isFunctionDeclaration).filter((node) => ["renderRust", "renderRustMetabolism", "iconIdToRustVariant"].includes(node.name?.text ?? "")).map((node) => node.getText(syntax).replace(/^export /u, "")).join("\n");
+  const repoRoot = resolve(root, "../../../../../../..");
+  const sources = ["🧰️framework/🔨️modules/🖼️assets/🔣️icons/🏗️builder/📽️projection/🟦️.ts", "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🏗️builder/📽️projection/🟦️.ts"].map((path) => ts.createSourceFile(path, readFileSync(join(repoRoot, path), "utf8"), ts.ScriptTarget.Latest, true));
+  const functionSource = (name: string): string => sources.flatMap((syntax) => syntax.statements.filter(ts.isFunctionDeclaration).filter((node) => node.name?.text === name).map((node) => node.getText(syntax).replace(/^export /u, "")))[0]!;
   for (const row of fixture.assetIconPaths.filter((row: any) => row.expected !== null)) {
     const icons = Object.fromEntries(row.expected.map(({ id }: { id: string }) => [id, `<svg id="${id}" />`]));
     for (const [renderer, mirror] of [["renderRust", "🖼️icon_svgs"], ["renderRustMetabolism", "🌱️metabolism_svgs"]]) {
+      const definitions = ["iconIdToRustVariant", renderer].map(functionSource).join("\n");
       const expected = row.expected.map(({ id, path }: { id: string; path: string }) => ({ path: join("output", mirror, path), content: icons[id] })).sort((left: any, right: any) => left.path.localeCompare(right.path));
       for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
         const render = new Function("join", `${compile(definitions)}\nreturn ${renderer};`)(join);
@@ -223,7 +224,7 @@ test("Rust icon bindings retain the source path and the public identity separate
         const binding = artifacts.find((artifact: any) => artifact.path.endsWith(".rs")).content;
         for (const { id, path } of row.expected) {
           expect(binding).toContain(`#[serde(rename = "${id}")]`);
-          expect(binding).toContain(`include_str!("${mirror}/${path}")`);
+          expect(binding).toContain(`include_str!("../${mirror}/${path}")`);
         }
       }
     }
@@ -436,7 +437,7 @@ test("domain-owned mutations keep explicit identities with short unique operatio
   expect(semanticProjectionCatalogProblems([{ ownerPath, catalogId: "domain-catalog", vectors: [{ ...vectors[0], mutationId: "create-unknown" }] }], catalogTaxonomy).some((problem) => problem.includes("no exact registered"))).toBe(true);
 });
 
-test("mutation projection catalog lookup respects exact oracle owner overrides", () => {
+test("mutation projection catalog lookup uses the one canonical oracle collection", () => {
   const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
   const definition = source.match(/^function projectionCatalogEntryForSubset\([\s\S]*?^\}/mu)?.[0];
   expect(definition).toBeDefined();
@@ -447,8 +448,7 @@ test("mutation projection catalog lookup respects exact oracle owner overrides",
     const lookup = new Function("basename", "dirname", `${compile(definition!)}\nreturn projectionCatalogEntryForSubset;`)(basename, dirname);
     for (const row of fixture.projectionOracleDirectories) {
       const entry = { nodeKind: "file", fileKind: "json", sourcePath: row.candidate, normalizedPath: row.candidate };
-      const overrides = row.override === null ? {} : { [row.owner]: row.override };
-      const result = lookup(new Map([[row.candidate, entry]]), row.owner, { discoverySchema: { testContributionDirectoryOverrides: overrides, testContributionDirName: "🔮️oracle" } });
+      const result = lookup(new Map([[row.candidate, entry]]), row.owner, { discoverySchema: { testOraclesDirName: "🔮️oracles" } });
       expect(result !== null, row.candidate).toBe(row.expected);
     }
   }
@@ -552,15 +552,15 @@ test("projected scenarios retain individually chosen single-emoji identities", (
   }
 });
 
-test("Storybook discovers every handpicked UI story by its semantic suffix", () => {
-  const source = readFileSync(resolve(root, "../../../../../../..", ".storybook/scopes.ts"), "utf8");
+test("Storybook discovers only the canonical story-kind leaf", () => {
+  const source = readFileSync(resolve(root, "../../../../../../..", ".storybook/📖️stories/🧭️coordination/🟦️.ts"), "utf8");
   const pattern = source.match(/"(\.\.\/🧰️framework\/🔨️modules\/🖱️ui\/🧱️elements\/[^"]+\.story\.tsx)"/u)?.[1];
   expect(pattern).toBeDefined();
   const glob = pattern!.slice(3);
   const matcher = createTaxonomyPathMatcher();
   const oracle = picomatch(glob);
   for (const row of fixture.storyNames) {
-    const path = `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧩️Example/${row.name}`;
+    const path = `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧩️Example/📖️stories/${row.name}`;
     expect(oracle(path), row.name).toBe(row.expected);
     expect(matcher.matches(path, glob), row.name).toBe(row.expected);
   }
@@ -580,7 +580,7 @@ test("graph manifest discovery uses its semantic filename without a package buil
   }
 });
 
-test("normalization preserves handpicked file identities and rejects stacked names through both compilers", () => {
+test("normalization preserves handpicked non-implementation identities and rejects stacked names through both compilers", () => {
   const taxonomy = loadCatalogTaxonomy();
   const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
   const names = ["canonicalFile", "splitLeadingEmoji", "splitLeadingEmojiIdentity", "isEmojiGrapheme", "emojiFold"];
@@ -598,11 +598,15 @@ test("normalization preserves handpicked file identities and rejects stacked nam
       const ids = fixedFilenameContractIdsForPath(path, taxonomy);
       return { selected: ids.length === 1 ? [ids[0], taxonomy.fixedFilenameContracts[ids[0]!]] : null, ambiguous: ids.length > 1 ? ids : [] };
     },
-    resolveFileKind: (path: string) => ({ kind: { id: "json", emoji: "🔣️", role: "data" }, extension: path.endsWith(".schema.json") ? ".schema.json" : ".json", stem: basename(path).replace(/(?:\.schema)?\.json$/u, "") }),
+    resolveFileKind: (path: string) => path.endsWith(".rs")
+      ? { kind: { id: "rust", emoji: "🦀️", role: "source" }, extension: ".rs", stem: basename(path).replace(/\.rs$/u, "") }
+      : { kind: { id: "json", emoji: "🔣️", role: "data" }, extension: path.endsWith(".schema.json") ? ".schema.json" : ".json", stem: basename(path).replace(/(?:\.schema)?\.json$/u, "") },
     matchDirectoryKind: () => ({ kind: null, ambiguous: [] }),
     GENERIC_SEMANTIC_STEMS: new Set(),
     pathEmojiStatuteFindings,
     reservedDocumentationBasename,
+    taxonomyFileKindIsImplementation: (fileKindId: string) => fileKindId === "rust",
+    implementationLeafBasenameFinding: (path: string) => path.endsWith(".rs") ? { breachId: "taxonomy/kind-only-basename", actualBasename: basename(path), expectedBasename: "🦀️.rs" } : null,
     violation: (code: string, path: string, message: string) => ({ code, path, message, severity: "error" }),
   };
   for (const compile of [
@@ -611,10 +615,13 @@ test("normalization preserves handpicked file identities and rejects stacked nam
   ]) {
     const canonical = new Function(...Object.keys(support), `${compile(definitions)}\nreturn canonicalFile;`)(...Object.values(support));
     for (const scenario of fixture.normalization) {
-      const result = canonical(scenario.name, "", undefined, [], new Map(), new Map(), new Map(), { schema: { fixedFilenameContracts: {} } });
+      const result = canonical(scenario.name, "", undefined, [], new Map(), new Map(), new Map(), new Set(), { schema: { fixedFilenameContracts: {} } });
       expect(result.path, scenario.name).toBe(scenario.expectedName);
       expect(result.violations.map((row: { code: string }) => row.code), scenario.name).toEqual(scenario.expectedViolations);
     }
+    const implementation = canonical("🧩️component.rs", "", undefined, [], new Map(), new Map(), new Map(), new Set(), { schema: { fixedFilenameContracts: {} } });
+    expect(implementation.path).toBe("🦀️.rs");
+    expect(implementation.violations.map((row: { code: string }) => row.code)).toContain("taxonomy/kind-only-basename");
   }
 }, 30000);
 
@@ -702,11 +709,10 @@ test("standard documentation basenames remain reserved outside package roots too
   expect(fixedFilenameContractIdsForPath("owner/LICENSE.md", taxonomy)).toEqual(["reserved-license-markdown"]);
 });
 
-test("Cargo conventional source entrypoints remain literal reserved basenames", () => {
+test("Cargo conventional source entrypoints are configurable rather than fixed authorities", () => {
   const taxonomy = loadCatalogTaxonomy();
-  expect(fixedDirectoryContractIdsForPath("owner/🏗️generator/🦀️json-engine/src", taxonomy)).toEqual(["cargo-build-source-directory"]);
-  expect(fixedFilenameContractIdsForPath("owner/src/lib.rs", taxonomy)).toEqual(["cargo-conventional-library-entry"]);
-  expect(fixedFilenameContractIdsForPath("owner/src/main.rs", taxonomy)).toEqual(["cargo-conventional-binary-entry"]);
+  expect(fixedFilenameContractIdsForPath("owner/src/lib.rs", taxonomy)).toEqual([]);
+  expect(fixedFilenameContractIdsForPath("owner/src/main.rs", taxonomy)).toEqual([]);
 });
 
 test("OS semantic-stem owners use canonical leaves and exact tool authority", () => {

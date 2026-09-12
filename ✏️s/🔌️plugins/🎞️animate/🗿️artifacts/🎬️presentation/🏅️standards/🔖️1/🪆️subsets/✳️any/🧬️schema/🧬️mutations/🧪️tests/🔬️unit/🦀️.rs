@@ -1,6 +1,6 @@
 use super::*;
 use crate::{default_presentation_snapshot, presentation_snapshot_with_tiles, presentation_working_scene, FigureTileDraft, FigureTileFrame};
-use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
 use protocol::SemanticMutation;
 
 fn tile(id: &str) -> FigureTileDraft {
@@ -77,10 +77,10 @@ async fn create_tile_obeys_the_inverse_and_diff_absorb_laws() {
     let (source, _) = presentation_working_scene(&default_presentation_snapshot());
     let base = presentation_snapshot_with_tiles(&source, &[tile("t1")]);
     let mutation = PresentationMutation::CreateTile(create_tile::CreateTile { index: 1, tile: tile("t2") });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = PresentationMutation::CreateTile(create_tile::CreateTile { index: 2, tile: tile("t3") }).diff(&base).into_parts().0;
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -88,7 +88,7 @@ async fn rename_tile_obeys_the_inverse_law() {
     let (source, _) = presentation_working_scene(&default_presentation_snapshot());
     let base = presentation_snapshot_with_tiles(&source, &[tile("t1")]);
     let mutation = PresentationMutation::RenameTile(rename_tile::RenameTile { id: "t1".into(), new_name: "Hero".into() });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -101,10 +101,10 @@ async fn replace_source_obeys_the_inverse_and_diff_absorb_laws() {
     source_b.kind = "figure".into();
     source_b.src = "/other.png".into();
     let mutation = PresentationMutation::ReplaceSource(replace_source::ReplaceSource { new_source: source_a });
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = PresentationMutation::ReplaceSource(replace_source::ReplaceSource { new_source: source_b }).diff(&base).into_parts().0;
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -118,7 +118,7 @@ async fn semantic_kinds_cover_every_variant() {
 //#region 🔖️OutcomeLaws
 // 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — one law test per verb
 // family presentation in this facet (`assert_missing_target_is_error`/`assert_fatal_never_applies`,
-// landed in `📡️spr/🧪️testkit`). `replace` has no addressable target here (whole-collection
+// landed in `📡️spr/🧪️tests/⚖️protocol-laws`). `replace` has no addressable target here (whole-collection
 // `replace-tiles` / singleton `replace-source`), so it has no missing-target case to exercise.
 // `assert_outcome_policy_matrix` is NOT landed under that name (only the generic closure-based
 // `assert_policy_matrix` exists) — see this ticket's report.
@@ -174,7 +174,7 @@ async fn reorder_family_missing_target_is_error() {
 fn kinds_match_the_enum_and_the_catalog() {
     let declared: Vec<&str> = <PresentationMutation as SemanticMutation<PresentationSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
     assert_eq!(KINDS, declared.as_slice(), "KINDS must name every PresentationMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog presentation-1-any");
     }

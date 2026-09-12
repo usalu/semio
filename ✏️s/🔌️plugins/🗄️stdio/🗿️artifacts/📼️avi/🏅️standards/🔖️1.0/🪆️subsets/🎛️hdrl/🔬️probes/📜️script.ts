@@ -9,7 +9,7 @@
 //
 // Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should
 // produce. The actual RIFF/AVI decode is performed by the sibling standalone `riff-avi-codec`
-// binary (`../🏭️generator/🦀️riff-avi-codec`, depends on nothing but `riff` 2.0) via its `project`
+// binary (`../🏭️generator/🔁️codec/📦️packages/🦀️rust`, depends on nothing but `riff` 2.0) via its `project`
 // subcommand — this file only shells out to it, hashes each opaque chunk payload it returns into a
 // size+digest pair (per `semantic-avi-v1`'s own "opaque binary payload" treatment, mirroring the
 // BCF probe's identical `snapshotDigest` treatment of a PNG viewpoint snapshot), and performs the
@@ -24,7 +24,7 @@
 // @see ../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch/compare shape is mirrored from (both hand the
 //      structural equality itself to this file, never to a computed prediction)
-// @see ../🏭️generator/🦀️riff-avi-codec/src/main.rs — the `project` subcommand this file calls
+// @see ../🏭️generator/🔁️codec/🦀️.rs — the `project` subcommand this file calls
 
 //#endregion 🧲️Header
 
@@ -49,7 +49,7 @@ type ProbeReport = {
 
 const ENGINE = { family: "riff", implementation: "riff-avi-codec (riff 2.0 + this artifact's own AVI-1.0 field layout)", version: "riff@2.0.0" } as const;
 const PROBE_VERSION = "riff@2.0.0";
-const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🦀️riff-avi-codec", "Cargo.toml");
+const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 //#endregion 🧬️Contract
 
 //#region 📥️Model

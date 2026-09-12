@@ -88,6 +88,7 @@ semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀
 semio-framework-job = { workspace = true }
 
 [dev-dependencies]
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
 serde_json.workspace = true
 geo = { version = "0.31.0", default-features = false }
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

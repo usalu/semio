@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/playground-session-output-ownership-v1.json",
+  "title": "Playground Session Output Ownership",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "default", "isolation", "staging"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "default": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["variant", "sourcePath", "producerScript"],
+      "properties": {
+        "variant": { "$ref": "#/$defs/variant" },
+        "sourcePath": { "$ref": "#/$defs/repositoryPath" },
+        "producerScript": { "$ref": "#/$defs/repositoryPath" }
+      }
+    },
+    "isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonicalOutputRoot", "stagedOutputRoot", "canonicalRootEnvironment", "resolverSource"],
+      "properties": {
+        "canonicalOutputRoot": { "$ref": "#/$defs/fixturePath" },
+        "stagedOutputRoot": { "$ref": "#/$defs/fixturePath" },
+        "canonicalRootEnvironment": { "const": "SEMIO_PLAYGROUND_SESSION_OUTPUT_ROOT" },
+        "resolverSource": { "$ref": "#/$defs/repositoryPath" }
+      }
+    },
+    "staging": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rootPath", "ownerDirectory", "sourceLeaf", "artifactKey", "viteConfigPath", "viteSpecifier", "variants"],
+      "properties": {
+        "rootPath": { "$ref": "#/$defs/repositoryPath" },
+        "ownerDirectory": { "const": "🎮️playground-session" },
+        "sourceLeaf": { "const": "🟦️.ts" },
+        "artifactKey": { "const": "🎮️playground-session/🟦️.ts" },
+        "viteConfigPath": { "$ref": "#/$defs/repositoryPath" },
+        "viteSpecifier": { "const": "virtual:semio-playground-session" },
+        "variants": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["variant", "pluginId"],
+            "properties": {
+              "variant": { "$ref": "#/$defs/variant" },
+              "pluginId": { "$ref": "#/$defs/variant" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "variant": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "fixturePath": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(?:/[a-z][a-z0-9-]*)*$" },
+    "repositoryPath": { "type": "string", "minLength": 1, "pattern": "^[^/]+(?:/[^/]+)+$" }
+  }
+}

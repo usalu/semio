@@ -1,0 +1,70 @@
+{
+  "title": "raster operation witness lifecycle",
+  "why": "A document that composites an `engine:<surface>` raster made this authority reachable for the first time. The commit re-read the candidate/presentation witness pair on EVERY retirement step, so the moment its own cursor consumed the first field of the candidate slot the comparison failed and the frame refused its own progress with `raster commit candidate witness was stale` — quarantining the surface at ~7.8 s on every boot (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).",
+  "witness": {
+    "fields": ["sceneRevision", "previewGeneration", "operation"],
+    "retiredOneFieldPerStep": true,
+    "readableOnlyWhenWhole": true
+  },
+  "operations": {
+    "first": { "sceneRevision": 4, "previewGeneration": 2, "operation": 1 },
+    "second": { "sceneRevision": 4, "previewGeneration": 2, "operation": 2 },
+    "laterScene": { "sceneRevision": 5, "previewGeneration": 2, "operation": 3 }
+  },
+  "admission": {
+    "verdicts": ["Nothing", "Retire"],
+    "occupied": "raster retirement authority was occupied",
+    "rules": [
+      {
+        "name": "a surface with no raster yet owes nothing",
+        "candidate": null,
+        "presenting": null,
+        "verdict": "Nothing",
+        "reason": "an engine surface whose first raster has not been reserved is NOT YET, never stale"
+      },
+      { "name": "reserved but never presented", "candidate": "first", "presenting": null, "commit": "first", "verdict": "Retire" },
+      { "name": "reserved and presented", "candidate": "first", "presenting": "first", "commit": "first", "verdict": "Retire" },
+      { "name": "a later operation cannot commit an earlier candidate", "candidate": "first", "presenting": "first", "commit": "second", "fault": "raster retirement candidate witness was stale" },
+      { "name": "a presentation from another operation", "candidate": "second", "presenting": "first", "commit": "second", "fault": "raster retirement presentation witness was stale" }
+    ]
+  },
+  "presentation": {
+    "armsOnlyItsOwnCandidate": "raster candidate witness was stale before presentation",
+    "refusesASecondArming": "raster presentation witness was already occupied"
+  },
+  "retirement": {
+    "unitsPerStep": 1,
+    "slotsInOrder": ["candidate", "presenting"],
+    "stepsPerOccupiedSlot": 4,
+    "stepsPerEmptySlot": 1,
+    "terminalStep": 1,
+    "expected": {
+      "reservedAndPresented": 9,
+      "reservedOnly": 6
+    },
+    "readmissionMustStayAdmissibleAtEveryStep": true,
+    "ledgerIsReusableAfterTerminal": true
+  },
+  "production": {
+    "ledger": "RasterOperationWitnessLedger",
+    "table": "RasterTextureTable",
+    "admissionEntry": "retirement_admission",
+    "retireEntry": "retire_step",
+    "inFlightOwner": "retiring",
+    "beginEntry": "begin_retirement",
+    "commitEntry": "commit_presented_step",
+    "abortEntry": "abort_presented_step",
+    "armEntry": "arm_presentation",
+    "candidateEntry": "admit_candidate",
+    "witnessType": "RasterTextureWitness",
+    "mintPhase": "BeginGpu",
+    "consumePhase": "Engine",
+    "commitPhase": "Acknowledge",
+    "framePhaseOrder": ["BeginGpu", "Engine", "Uploads", "Stage", "Render", "CloseGpu", "Acknowledge", "ProgressAcknowledge", "Fullscreen", "Directives"],
+    "authority": "RuntimeRasterOperationAuthority",
+    "authorityBegin": "begin",
+    "authorityRelease": "release",
+    "retirementModes": ["Abort", "Commit", "Close"],
+    "retiredFieldsAreNotOnTheScanCursor": ["candidate_retired", "presenting_retired"]
+  }
+}

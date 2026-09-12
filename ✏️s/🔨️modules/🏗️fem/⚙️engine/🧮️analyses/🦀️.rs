@@ -6,12 +6,14 @@
 use crate::algebra::{MatD, VecD};
 use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, Elements, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult, Support};
 use crate::sparse::{ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
+use replication::value::list::PagedList;
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 const MOUNTED_OWNER_PAGE_BYTES: usize = 4_096;
+const ASSEMBLY_TRIPLET_INDEX_SPACE: usize = usize::MAX;
 
 fn encode_value<T: dsl::ToValue>(value: &T) -> Vec<u8> {
     store::pack_rt::encode_wire_value(&value.to_value())
@@ -39,6 +41,27 @@ fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<O
     }
     *owner = Vec::new();
     Ok(Some((1, bytes)))
+}
+
+fn close_paged_owner_step<T, const N: usize>(owner: &mut PagedList<T, N>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
+    if owner.pop().is_some() {
+        return Ok(Some((1, 0)));
+    }
+    if owner.terminal_is_empty() {
+        return Ok(None);
+    }
+    let progress = owner.release_empty_page(maximum_bytes).map_err(|_| ())?;
+    progress.progressed.then_some(Some((1, progress.released_allocation_bytes))).ok_or(())
+}
+
+fn cold_paged_owner<T, const N: usize>(capacity: usize) -> Result<PagedList<T, N>, FemError> {
+    let mut owner = PagedList::default();
+    while owner.capacity() < capacity {
+        if !owner.reserve_capacity_one(capacity, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::Singular)?.progressed {
+            return Err(FemError::Singular);
+        }
+    }
+    Ok(owner)
 }
 
 // #region 🔖️Model
@@ -803,8 +826,8 @@ struct AssemblyTriplet {
 
 #[derive(Clone, Default)]
 struct AssemblyPartitionBuffer {
-    full: Vec<AssemblyTriplet>,
-    free: Vec<AssemblyTriplet>,
+    full: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
+    free: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
 }
 
 #[derive(Clone)]
@@ -898,8 +921,8 @@ struct AssemblyCheckpoint {
     partitions: Vec<AssemblyPartitionBuffer>,
     full_merge_cursors: Vec<usize>,
     free_merge_cursors: Vec<usize>,
-    merged_full: Vec<AssemblyTriplet>,
-    merged_free: Vec<AssemblyTriplet>,
+    merged_full: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
+    merged_free: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
     checkpoint_due: bool,
     preview_due: bool,
     resume_target: usize,
@@ -985,6 +1008,8 @@ impl AssemblyPlan {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum AssemblyConstructionStage {
+    ReservePartitionTripletCounts,
+    InitializePartitionTripletCounts,
     ReserveDofs,
     ValidateNodePairs,
     ValidateElementReferences,
@@ -1004,6 +1029,8 @@ enum AssemblyConstructionStage {
     BuildCompact,
     ReservePartitions,
     BuildPartitions,
+    ReserveMergedFull,
+    ReserveMergedFree,
     ReserveFullMergeCursors,
     ReserveFreeMergeCursors,
     BuildMergeCursors,
@@ -1099,11 +1126,14 @@ pub struct AssemblyJobConstruction {
     constraint_order_cursor: usize,
     scalar_cursor: usize,
     maximum_triplets: usize,
+    partition_triplet_counts: Vec<usize>,
     partition_reserve_cursor: usize,
     partition_reserve_lane: u8,
     plan: AssemblyPlan,
     constrained_old: Vec<bool>,
     partitions: Vec<AssemblyPartitionBuffer>,
+    merged_full: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
+    merged_free: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
     full_merge_cursors: Vec<usize>,
     free_merge_cursors: Vec<usize>,
     job: Option<AssemblyJob<'static>>,
@@ -1120,7 +1150,7 @@ impl AssemblyJobConstruction {
             model_close: AnalysisModelCloseCursor::default(),
             operation,
             partition_count,
-            stage: AssemblyConstructionStage::ReserveDofs,
+            stage: AssemblyConstructionStage::ReservePartitionTripletCounts,
             node_outer: 0,
             node_inner: 1,
             element_cursor: 0,
@@ -1139,11 +1169,14 @@ impl AssemblyJobConstruction {
             constraint_order_cursor: 0,
             scalar_cursor: 0,
             maximum_triplets: 0,
+            partition_triplet_counts: Vec::new(),
             partition_reserve_cursor: 0,
             partition_reserve_lane: 0,
             plan: AssemblyPlan { dof_map: DofMap { order: Vec::new() }, inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new() },
             constrained_old: Vec::new(),
             partitions: Vec::new(),
+            merged_full: PagedList::default(),
+            merged_free: PagedList::default(),
             full_merge_cursors: Vec::new(),
             free_merge_cursors: Vec::new(),
             job: None,
@@ -1157,8 +1190,24 @@ impl AssemblyJobConstruction {
 
     pub fn step_one(&mut self) -> Result<bool, FemError> {
         match self.stage {
+            AssemblyConstructionStage::ReservePartitionTripletCounts => {
+                if self.partition_count == 0 {
+                    return Err(FemError::EmptyModel);
+                }
+                if !reserve_exact_owner_page(&mut self.partition_triplet_counts, self.partition_count) {
+                    return Err(FemError::Singular);
+                }
+                self.stage = AssemblyConstructionStage::InitializePartitionTripletCounts;
+            }
+            AssemblyConstructionStage::InitializePartitionTripletCounts => {
+                if self.partition_triplet_counts.len() < self.partition_count {
+                    self.partition_triplet_counts.push(0);
+                } else {
+                    self.stage = AssemblyConstructionStage::ReserveDofs;
+                }
+            }
             AssemblyConstructionStage::ReserveDofs => {
-                if self.partition_count == 0 || self.model.as_ref().is_none_or(|model| model.nodes_len() == 0) {
+                if self.model.as_ref().is_none_or(|model| model.nodes_len() == 0) {
                     return Err(FemError::EmptyModel);
                 }
                 let maximum_dofs = self.model.as_ref().ok_or(FemError::EmptyModel)?.nodes_len().checked_mul(6).ok_or(FemError::Singular)?;
@@ -1190,7 +1239,10 @@ impl AssemblyJobConstruction {
                 } else if self.reference_cursor >= model.element(self.element_cursor).and_then(Elements::mounted_node_id_count).ok_or(FemError::Singular)? {
                     let element = model.element(self.element_cursor).ok_or(FemError::Singular)?;
                     let side = element.mounted_node_id_count().and_then(|nodes| nodes.checked_mul(element.dofs_per_node().len())).ok_or(FemError::Singular)?;
-                    self.maximum_triplets = self.maximum_triplets.checked_add(side.checked_mul(side).ok_or(FemError::Singular)?).ok_or(FemError::Singular)?;
+                    let triplets = side.checked_mul(side).ok_or(FemError::Singular)?;
+                    self.maximum_triplets = self.maximum_triplets.checked_add(triplets).ok_or(FemError::Singular)?;
+                    let partition = self.element_cursor % self.partition_count;
+                    self.partition_triplet_counts[partition] = self.partition_triplet_counts[partition].checked_add(triplets).ok_or(FemError::Singular)?;
                     self.element_cursor += 1;
                     self.reference_cursor = 0;
                     self.reference_node_cursor = 0;
@@ -1363,27 +1415,48 @@ impl AssemblyJobConstruction {
                     self.partitions.push(AssemblyPartitionBuffer::default());
                 } else if self.partition_reserve_cursor < self.partitions.len() {
                     let partition = &mut self.partitions[self.partition_reserve_cursor];
-                    let per_partition = self.maximum_triplets.checked_add(self.partition_count - 1).ok_or(FemError::Singular)? / self.partition_count;
+                    let per_partition = self.partition_triplet_counts[self.partition_reserve_cursor];
                     if self.partition_reserve_lane == 0 {
-                        if !reserve_exact_owner_page(&mut partition.full, per_partition) {
-                            return Err(FemError::Singular);
+                        partition.full.reserve_capacity_one(per_partition, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::Singular)?;
+                        if partition.full.capacity() < per_partition {
+                            return Ok(false);
                         }
                         self.partition_reserve_lane = 1;
-                    } else if !reserve_exact_owner_page(&mut partition.free, per_partition) {
-                        return Err(FemError::Singular);
                     } else {
+                        partition.free.reserve_capacity_one(per_partition, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::Singular)?;
+                        if partition.free.capacity() < per_partition {
+                            return Ok(false);
+                        }
                         self.partition_reserve_lane = 0;
                         self.partition_reserve_cursor += 1;
                     }
                 } else {
+                    self.stage = AssemblyConstructionStage::ReserveMergedFull;
+                }
+            }
+            AssemblyConstructionStage::ReserveMergedFull => {
+                self.merged_full.reserve_capacity_one(self.maximum_triplets, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::Singular)?;
+                if self.merged_full.capacity() >= self.maximum_triplets {
+                    self.stage = AssemblyConstructionStage::ReserveMergedFree;
+                }
+            }
+            AssemblyConstructionStage::ReserveMergedFree => {
+                self.merged_free.reserve_capacity_one(self.maximum_triplets, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::Singular)?;
+                if self.merged_free.capacity() >= self.maximum_triplets {
+                    self.scalar_cursor = 0;
                     self.stage = AssemblyConstructionStage::ReserveFullMergeCursors;
                 }
             }
             AssemblyConstructionStage::ReserveFullMergeCursors => {
-                if !reserve_exact_owner_page(&mut self.full_merge_cursors, self.partition_count) {
-                    return Err(FemError::Singular);
+                if self.full_merge_cursors.is_empty() && !self.partition_triplet_counts.is_empty() {
+                    self.full_merge_cursors = std::mem::take(&mut self.partition_triplet_counts);
                 }
-                self.stage = AssemblyConstructionStage::ReserveFreeMergeCursors;
+                if self.scalar_cursor < self.full_merge_cursors.len() {
+                    self.full_merge_cursors[self.scalar_cursor] = 0;
+                    self.scalar_cursor += 1;
+                } else {
+                    self.stage = AssemblyConstructionStage::ReserveFreeMergeCursors;
+                }
             }
             AssemblyConstructionStage::ReserveFreeMergeCursors => {
                 if !reserve_exact_owner_page(&mut self.free_merge_cursors, self.partition_count) {
@@ -1411,8 +1484,8 @@ impl AssemblyJobConstruction {
                             partitions: std::mem::take(&mut self.partitions),
                             full_merge_cursors: std::mem::take(&mut self.full_merge_cursors),
                             free_merge_cursors: std::mem::take(&mut self.free_merge_cursors),
-                            merged_full: Vec::new(),
-                            merged_free: Vec::new(),
+                            merged_full: std::mem::take(&mut self.merged_full),
+                            merged_free: std::mem::take(&mut self.merged_free),
                             checkpoint_due: false,
                             preview_due: false,
                             resume_target: 0,
@@ -1496,6 +1569,18 @@ impl AssemblyJobConstruction {
             Err(()) => return (false, 0, 0),
             Ok(None) => {}
         }
+        match close_vec_owner_step(&mut self.partition_triplet_counts, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
+        }
+        for owner in [&mut self.merged_full, &mut self.merged_free] {
+            match close_paged_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+        }
         for owner in [&mut self.full_merge_cursors, &mut self.free_merge_cursors] {
             match close_vec_owner_step(owner, maximum_bytes) {
                 Ok(Some((items, bytes))) => return (false, items, bytes),
@@ -1504,12 +1589,12 @@ impl AssemblyJobConstruction {
             }
         }
         if let Some(partition) = self.partitions.last_mut() {
-            match close_vec_owner_step(&mut partition.full, maximum_bytes) {
+            match close_paged_owner_step(&mut partition.full, maximum_bytes) {
                 Ok(Some((items, bytes))) => return (false, items, bytes),
                 Err(()) => return (false, 0, 0),
                 Ok(None) => {}
             }
-            match close_vec_owner_step(&mut partition.free, maximum_bytes) {
+            match close_paged_owner_step(&mut partition.free, maximum_bytes) {
                 Ok(Some((items, bytes))) => return (false, items, bytes),
                 Err(()) => return (false, 0, 0),
                 Ok(None) => {}
@@ -1618,6 +1703,18 @@ impl<'model> AssemblyJob<'model> {
         let plan = AssemblyPlan::prepare(dynamic)?;
         let model_signature = assembly_model_signature(dynamic);
         let total_elements = model.elements_len();
+        let mut partition_triplet_counts = vec![0usize; partition_count];
+        let maximum_triplets = dynamic.elements.iter().enumerate().try_fold(0usize, |total, (index, element)| {
+            let side = element.node_ids().len().checked_mul(element.dofs_per_node().len()).ok_or(FemError::Singular)?;
+            let triplets = side.checked_mul(side).ok_or(FemError::Singular)?;
+            let partition = index % partition_count;
+            partition_triplet_counts[partition] = partition_triplet_counts[partition].checked_add(triplets).ok_or(FemError::Singular)?;
+            total.checked_add(triplets).ok_or(FemError::Singular)
+        })?;
+        let mut partitions = Vec::with_capacity(partition_count);
+        for capacity in partition_triplet_counts {
+            partitions.push(AssemblyPartitionBuffer { full: cold_paged_owner(capacity)?, free: cold_paged_owner(capacity)? });
+        }
         Ok(Self {
             model,
             operation,
@@ -1629,11 +1726,11 @@ impl<'model> AssemblyJob<'model> {
                 element_cursor: 0,
                 pending_build: None,
                 pending: None,
-                partitions: vec![AssemblyPartitionBuffer::default(); partition_count],
+                partitions,
                 full_merge_cursors: vec![0; partition_count],
                 free_merge_cursors: vec![0; partition_count],
-                merged_full: Vec::new(),
-                merged_free: Vec::new(),
+                merged_full: cold_paged_owner(maximum_triplets)?,
+                merged_free: cold_paged_owner(maximum_triplets)?,
                 checkpoint_due: false,
                 preview_due: false,
                 resume_target: 0,
@@ -1728,12 +1825,12 @@ impl<'model> AssemblyJob<'model> {
                 }
                 1 => {
                     if let Some(partition) = self.state.partitions.last_mut() {
-                        match close_vec_owner_step(&mut partition.full, maximum_bytes) {
+                        match close_paged_owner_step(&mut partition.full, maximum_bytes) {
                             Ok(Some(step)) => return (false, step.0, step.1),
                             Err(()) => return (false, 0, 0),
                             Ok(None) => {}
                         }
-                        match close_vec_owner_step(&mut partition.free, maximum_bytes) {
+                        match close_paged_owner_step(&mut partition.free, maximum_bytes) {
                             Ok(Some(step)) => return (false, step.0, step.1),
                             Err(()) => return (false, 0, 0),
                             Ok(None) => {}
@@ -1769,7 +1866,7 @@ impl<'model> AssemblyJob<'model> {
                         continue;
                     }
                 },
-                4 => match close_vec_owner_step(&mut self.state.merged_full, maximum_bytes) {
+                4 => match close_paged_owner_step(&mut self.state.merged_full, maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -1777,7 +1874,7 @@ impl<'model> AssemblyJob<'model> {
                         continue;
                     }
                 },
-                5 => match close_vec_owner_step(&mut self.state.merged_free, maximum_bytes) {
+                5 => match close_paged_owner_step(&mut self.state.merged_free, maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -2052,12 +2149,12 @@ impl<'model> AssemblyJob<'model> {
         Ok(())
     }
 
-    fn assemble_cell(&mut self) {
+    fn assemble_cell(&mut self) -> Result<(), FemError> {
         let pending = self.state.pending.as_mut().expect("pending element exists");
         if pending.side == 0 {
             pending.complete = true;
             self.state.element_cursor += 1;
-            return;
+            return Ok(());
         }
         let local_row = pending.cell_cursor / pending.side;
         let local_col = pending.cell_cursor % pending.side;
@@ -2067,9 +2164,16 @@ impl<'model> AssemblyJob<'model> {
             let new_col = pending.indices_new[local_col];
             let sequence = ((pending.element_index as u64) << 32) | pending.cell_cursor as u64;
             let partition = pending.element_index % self.state.partitions.len();
-            self.state.partitions[partition].full.push(AssemblyTriplet { sequence, row: new_row as u32, col: new_col as u32, value });
-            if let (Some(compact_row), Some(compact_col)) = (self.plan.compact_of_new[new_row], self.plan.compact_of_new[new_col]) {
-                self.state.partitions[partition].free.push(AssemblyTriplet { sequence, row: compact_row as u32, col: compact_col as u32, value });
+            let full = AssemblyTriplet { sequence, row: new_row as u32, col: new_col as u32, value };
+            let free =
+                if let (Some(compact_row), Some(compact_col)) = (self.plan.compact_of_new[new_row], self.plan.compact_of_new[new_col]) { Some(AssemblyTriplet { sequence, row: compact_row as u32, col: compact_col as u32, value }) } else { None };
+            let owner = &mut self.state.partitions[partition];
+            if !owner.full.has_reserved_slot() || free.is_some() && !owner.free.has_reserved_slot() {
+                return Err(FemError::Singular);
+            }
+            owner.full.push_reserved(full).map_err(|_| FemError::Singular)?;
+            if let Some(free) = free {
+                owner.free.push_reserved(free).map_err(|_| FemError::Singular)?;
             }
         }
         pending.cell_cursor += 1;
@@ -2077,6 +2181,7 @@ impl<'model> AssemblyJob<'model> {
             self.state.element_cursor += 1;
             pending.complete = true;
         }
+        Ok(())
     }
 
     fn reclaim_element_owner(&mut self) -> bool {
@@ -2107,7 +2212,7 @@ impl<'model> AssemblyJob<'model> {
         true
     }
 
-    fn advance_partition_merge(&mut self, full: bool) -> Option<bool> {
+    fn advance_partition_merge(&mut self, full: bool) -> Result<Option<bool>, FemError> {
         if self.state.merge_scan_partition < self.state.partitions.len() {
             let partition_index = self.state.merge_scan_partition;
             let partition = &self.state.partitions[partition_index];
@@ -2119,18 +2224,24 @@ impl<'model> AssemblyJob<'model> {
                 }
             }
             self.state.merge_scan_partition += 1;
-            return Some(false);
+            return Ok(Some(false));
         }
-        let (partition_index, entry) = self.state.merge_candidate.take()?;
+        let Some((partition_index, entry)) = self.state.merge_candidate else {
+            return Ok(None);
+        };
+        let placement = if full { self.state.merged_full.push_reserved(entry) } else { self.state.merged_free.push_reserved(entry) };
+        if let Err(entry) = placement {
+            self.state.merge_candidate = Some((partition_index, entry));
+            return Err(FemError::Singular);
+        }
         if full {
             self.state.full_merge_cursors[partition_index] += 1;
-            self.state.merged_full.push(entry);
         } else {
             self.state.free_merge_cursors[partition_index] += 1;
-            self.state.merged_free.push(entry);
         }
+        self.state.merge_candidate = None;
         self.state.merge_scan_partition = 0;
-        Some(true)
+        Ok(Some(true))
     }
 
     fn finish(self) -> Option<UnfactoredSystem> {
@@ -2138,11 +2249,11 @@ impl<'model> AssemblyJob<'model> {
             return None;
         }
         let mut k_full_coo = Coo::new(self.plan.ndof);
-        for entry in self.state.merged_full {
+        for entry in self.state.merged_full.iter() {
             k_full_coo.add(entry.row as usize, entry.col as usize, entry.value);
         }
         let mut k_ff_coo = Coo::new(self.plan.free_new.len());
-        for entry in self.state.merged_free {
+        for entry in self.state.merged_free.iter() {
             k_ff_coo.add(entry.row as usize, entry.col as usize, entry.value);
         }
         Some(UnfactoredSystem { plan: self.plan, k_full_coo, k_ff_coo })
@@ -2167,6 +2278,7 @@ enum AssemblyCsrBuildStage {
     ReserveRows,
     InitializeRows,
     Sort,
+    CountUnique,
     ReserveIndices,
     ReserveValues,
     Merge,
@@ -2179,16 +2291,19 @@ enum AssemblyCsrBuildStage {
 /// merge, row count and output entry advances in a distinct worker opportunity.
 pub struct AssemblyCsrBuild {
     assembly: Option<AssemblyJob<'static>>,
-    entries: Vec<AssemblyTriplet>,
+    entries: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
     stage: AssemblyCsrBuildStage,
     sort_outer: usize,
     sort_inner: usize,
+    count_cursor: usize,
+    unique_count: usize,
+    count_key: Option<(u32, u32)>,
     merge_cursor: usize,
     row_cursor: usize,
-    row_counts: Vec<u32>,
-    indptr: Vec<u32>,
-    indices: Vec<u32>,
-    values: Vec<f64>,
+    row_counts: PagedList<u32, ASSEMBLY_TRIPLET_INDEX_SPACE>,
+    indptr: PagedList<u32, ASSEMBLY_TRIPLET_INDEX_SPACE>,
+    indices: PagedList<u32, ASSEMBLY_TRIPLET_INDEX_SPACE>,
+    values: PagedList<f64, ASSEMBLY_TRIPLET_INDEX_SPACE>,
     last_key: Option<(u32, u32)>,
     matrix: Option<Csr>,
     n: usize,
@@ -2207,12 +2322,15 @@ impl AssemblyCsrBuild {
             stage: AssemblyCsrBuildStage::ReserveRows,
             sort_outer: 1,
             sort_inner: 1,
+            count_cursor: 0,
+            unique_count: 0,
+            count_key: None,
             merge_cursor: 0,
             row_cursor: 0,
-            row_counts: Vec::new(),
-            indptr: Vec::new(),
-            indices: Vec::new(),
-            values: Vec::new(),
+            row_counts: PagedList::default(),
+            indptr: PagedList::default(),
+            indices: PagedList::default(),
+            values: PagedList::default(),
             last_key: None,
             matrix: None,
             n,
@@ -2232,12 +2350,15 @@ impl AssemblyCsrBuild {
             stage: AssemblyCsrBuildStage::ReserveRows,
             sort_outer: 1,
             sort_inner: 1,
+            count_cursor: 0,
+            unique_count: 0,
+            count_key: None,
             merge_cursor: 0,
             row_cursor: 0,
-            row_counts: Vec::new(),
-            indptr: Vec::new(),
-            indices: Vec::new(),
-            values: Vec::new(),
+            row_counts: PagedList::default(),
+            indptr: PagedList::default(),
+            indices: PagedList::default(),
+            values: PagedList::default(),
             last_key: None,
             matrix: None,
             n,
@@ -2248,28 +2369,31 @@ impl AssemblyCsrBuild {
         let n = self.n;
         match self.stage {
             AssemblyCsrBuildStage::ReserveRows => {
-                if !reserve_exact_owner_page(&mut self.row_counts, n) {
-                    return Err(b"fem.assembly-csr-row-allocation");
+                self.row_counts.reserve_capacity_one(n, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| b"fem.assembly-csr-row-allocation" as &'static [u8])?;
+                if self.row_counts.capacity() >= n {
+                    self.stage = AssemblyCsrBuildStage::InitializeRows;
                 }
-                self.stage = AssemblyCsrBuildStage::InitializeRows;
             }
             AssemblyCsrBuildStage::InitializeRows => {
                 if self.row_counts.len() < n {
-                    self.row_counts.push(0);
+                    self.row_counts.push_reserved(0).map_err(|_| b"fem.assembly-csr-row-placement" as &'static [u8])?;
                 } else {
                     self.stage = AssemblyCsrBuildStage::Sort;
                 }
             }
             AssemblyCsrBuildStage::Sort => {
                 if self.sort_outer >= self.entries.len() {
-                    self.stage = AssemblyCsrBuildStage::ReserveIndices;
+                    self.stage = AssemblyCsrBuildStage::CountUnique;
                 } else if self.sort_inner > 0 {
                     let left = self.sort_inner - 1;
                     let right = self.sort_inner;
-                    let left_key = (self.entries[left].row, self.entries[left].col, self.entries[left].sequence);
-                    let right_key = (self.entries[right].row, self.entries[right].col, self.entries[right].sequence);
+                    let left_entry = self.entries.get(left).copied().ok_or(b"fem.assembly-csr-left-entry" as &'static [u8])?;
+                    let right_entry = self.entries.get(right).copied().ok_or(b"fem.assembly-csr-right-entry" as &'static [u8])?;
+                    let left_key = (left_entry.row, left_entry.col, left_entry.sequence);
+                    let right_key = (right_entry.row, right_entry.col, right_entry.sequence);
                     if right_key < left_key {
-                        self.entries.swap(left, right);
+                        *self.entries.get_mut(left).ok_or(b"fem.assembly-csr-left-entry" as &'static [u8])? = right_entry;
+                        *self.entries.get_mut(right).ok_or(b"fem.assembly-csr-right-entry" as &'static [u8])? = left_entry;
                         self.sort_inner -= 1;
                     } else {
                         self.sort_outer += 1;
@@ -2280,27 +2404,44 @@ impl AssemblyCsrBuild {
                     self.sort_inner = self.sort_outer;
                 }
             }
-            AssemblyCsrBuildStage::ReserveIndices => {
-                if !reserve_exact_owner_page(&mut self.indices, self.entries.len()) {
-                    return Err(b"fem.assembly-csr-index-allocation");
+            AssemblyCsrBuildStage::CountUnique => {
+                if let Some(entry) = self.entries.get(self.count_cursor).copied() {
+                    let key = (entry.row, entry.col);
+                    if self.count_key != Some(key) {
+                        self.unique_count = self.unique_count.checked_add(1).ok_or(b"fem.assembly-csr-unique-overflow" as &'static [u8])?;
+                        self.count_key = Some(key);
+                    }
+                    self.count_cursor += 1;
+                } else {
+                    self.stage = AssemblyCsrBuildStage::ReserveIndices;
                 }
-                self.stage = AssemblyCsrBuildStage::ReserveValues;
+            }
+            AssemblyCsrBuildStage::ReserveIndices => {
+                self.indices.reserve_capacity_one(self.unique_count, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| b"fem.assembly-csr-index-allocation" as &'static [u8])?;
+                if self.indices.capacity() >= self.unique_count {
+                    self.stage = AssemblyCsrBuildStage::ReserveValues;
+                }
             }
             AssemblyCsrBuildStage::ReserveValues => {
-                if !reserve_exact_owner_page(&mut self.values, self.entries.len()) {
-                    return Err(b"fem.assembly-csr-value-allocation");
+                self.values.reserve_capacity_one(self.unique_count, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| b"fem.assembly-csr-value-allocation" as &'static [u8])?;
+                if self.values.capacity() >= self.unique_count {
+                    self.stage = AssemblyCsrBuildStage::Merge;
                 }
-                self.stage = AssemblyCsrBuildStage::Merge;
             }
             AssemblyCsrBuildStage::Merge => {
                 if let Some(entry) = self.entries.get(self.merge_cursor).copied() {
                     let key = (entry.row, entry.col);
                     if self.last_key == Some(key) {
-                        *self.values.last_mut().expect("duplicate has prior value") += entry.value;
+                        let last = self.values.len().checked_sub(1).ok_or(b"fem.assembly-csr-missing-value" as &'static [u8])?;
+                        *self.values.get_mut(last).ok_or(b"fem.assembly-csr-missing-value" as &'static [u8])? += entry.value;
                     } else {
-                        self.indices.push(entry.col);
-                        self.values.push(entry.value);
-                        self.row_counts[entry.row as usize] = self.row_counts[entry.row as usize].checked_add(1).ok_or(b"fem.assembly-csr-row-overflow" as &'static [u8])?;
+                        if !self.indices.has_reserved_slot() || !self.values.has_reserved_slot() {
+                            return Err(b"fem.assembly-csr-output-capacity");
+                        }
+                        self.indices.push_reserved(entry.col).map_err(|_| b"fem.assembly-csr-index-placement" as &'static [u8])?;
+                        self.values.push_reserved(entry.value).map_err(|_| b"fem.assembly-csr-value-placement" as &'static [u8])?;
+                        let count = self.row_counts.get_mut(entry.row as usize).ok_or(b"fem.assembly-csr-row-bound" as &'static [u8])?;
+                        *count = count.checked_add(1).ok_or(b"fem.assembly-csr-row-overflow" as &'static [u8])?;
                         self.last_key = Some(key);
                     }
                     self.merge_cursor += 1;
@@ -2309,19 +2450,21 @@ impl AssemblyCsrBuild {
                 }
             }
             AssemblyCsrBuildStage::ReserveIndptr => {
-                if !reserve_exact_owner_page(&mut self.indptr, n + 1) {
-                    return Err(b"fem.assembly-csr-indptr-allocation");
+                let required = n.checked_add(1).ok_or(b"fem.assembly-csr-indptr-overflow" as &'static [u8])?;
+                self.indptr.reserve_capacity_one(required, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| b"fem.assembly-csr-indptr-allocation" as &'static [u8])?;
+                if self.indptr.capacity() >= required {
+                    self.indptr.push_reserved(0).map_err(|_| b"fem.assembly-csr-indptr-placement" as &'static [u8])?;
+                    self.stage = AssemblyCsrBuildStage::Indptr;
                 }
-                self.indptr.push(0);
-                self.stage = AssemblyCsrBuildStage::Indptr;
             }
             AssemblyCsrBuildStage::Indptr => {
                 if let Some(count) = self.row_counts.get(self.row_cursor).copied() {
-                    let next = self.indptr.last().copied().unwrap_or(0).checked_add(count).ok_or(b"fem.assembly-csr-indptr-overflow" as &'static [u8])?;
-                    self.indptr.push(next);
+                    let previous = self.indptr.get(self.indptr.len() - 1).copied().unwrap_or(0);
+                    let next = previous.checked_add(count).ok_or(b"fem.assembly-csr-indptr-overflow" as &'static [u8])?;
+                    self.indptr.push_reserved(next).map_err(|_| b"fem.assembly-csr-indptr-placement" as &'static [u8])?;
                     self.row_cursor += 1;
                 } else {
-                    self.matrix = Some(Csr::from_owned_parts(n, std::mem::take(&mut self.indptr), std::mem::take(&mut self.indices), std::mem::take(&mut self.values)));
+                    self.matrix = Some(Csr::from_paged_parts(n, std::mem::take(&mut self.indptr), std::mem::take(&mut self.indices), std::mem::take(&mut self.values)));
                     self.stage = AssemblyCsrBuildStage::Complete;
                 }
             }
@@ -2353,19 +2496,19 @@ impl AssemblyCsrBuild {
             self.assembly = None;
             return (false, 1, size_of::<AssemblyJob<'static>>());
         }
-        match close_vec_owner_step(&mut self.entries, maximum_bytes) {
+        match close_paged_owner_step(&mut self.entries, maximum_bytes) {
             Ok(Some((items, bytes))) => return (false, items, bytes),
             Err(()) => return (false, 0, 0),
             Ok(None) => {}
         }
         for owner in [&mut self.row_counts, &mut self.indptr, &mut self.indices] {
-            match close_vec_owner_step(owner, maximum_bytes) {
+            match close_paged_owner_step(owner, maximum_bytes) {
                 Ok(Some((items, bytes))) => return (false, items, bytes),
                 Err(()) => return (false, 0, 0),
                 Ok(None) => {}
             }
         }
-        match close_vec_owner_step(&mut self.values, maximum_bytes) {
+        match close_paged_owner_step(&mut self.values, maximum_bytes) {
             Ok(Some((items, bytes))) => return (false, items, bytes),
             Err(()) => return (false, 0, 0),
             Ok(None) => {}
@@ -2391,6 +2534,10 @@ impl InteractiveJob for AssemblyJob<'_> {
             return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
         }
         context.set_stage(self.state.pending_build.as_ref().map_or_else(|| self.state.stage.label(), |build| build.stage.label()));
+        if context.should_yield() {
+            return StepOutcome::Yield;
+        }
+        context.consume_fuel(1);
         if self.state.checkpoint_due {
             self.state.checkpoint_due = false;
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
@@ -2413,9 +2560,6 @@ impl InteractiveJob for AssemblyJob<'_> {
                 Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
             };
         }
-        if context.should_yield() {
-            return StepOutcome::Yield;
-        }
         if self.state.stage == AssemblyJobStage::Complete {
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
                 return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
@@ -2426,7 +2570,6 @@ impl InteractiveJob for AssemblyJob<'_> {
                 Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
             };
         }
-        context.consume_fuel(1);
         match self.state.stage {
             AssemblyJobStage::ElementTriplets => {
                 if !self.reclaim_element_owner() {
@@ -2440,22 +2583,26 @@ impl InteractiveJob for AssemblyJob<'_> {
                             }
                         }
                     } else {
-                        self.assemble_cell();
+                        if self.assemble_cell().is_err() {
+                            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                        }
                     }
                 }
             }
-            AssemblyJobStage::MergeFull => {
-                if self.advance_partition_merge(true).is_none() {
+            AssemblyJobStage::MergeFull => match self.advance_partition_merge(true) {
+                Ok(None) => {
                     self.state.merge_scan_partition = 0;
                     self.state.merge_candidate = None;
                     self.state.stage = AssemblyJobStage::MergeFree;
                 }
-            }
-            AssemblyJobStage::MergeFree => {
-                if self.advance_partition_merge(false).is_none() {
-                    self.state.stage = AssemblyJobStage::Complete;
-                }
-            }
+                Ok(Some(_)) => {}
+                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            },
+            AssemblyJobStage::MergeFree => match self.advance_partition_merge(false) {
+                Ok(None) => self.state.stage = AssemblyJobStage::Complete,
+                Ok(Some(_)) => {}
+                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            },
             AssemblyJobStage::Complete => {}
         }
         if context.is_cancelled() {

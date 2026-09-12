@@ -3,13 +3,12 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { FileLinter } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter, buildBudgetMs, defineLint, goLevelTestArgs, resolveCliBin, resolveTestLevel, runBundleScriptMain, runCanonicalGoTests, runCmd } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, defineLint, goLevelTestArgs, resolveCliBin, resolveTestLevel, runBundleScriptMain, runCanonicalGoBuild, runCanonicalGoTests, runCmd } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 export const policyFile = "🐹️.go";
 
 const REPO_CLIENT_DIR = join("🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client");
 const REPO_CLI_GO = join(REPO_CLIENT_DIR, "⌨️cli");
-const REPO_CLI_ENTRY_GO = join(REPO_CLI_GO, "cmd", "repo");
 
 export const policy = defineLint("repo-client-cli-main-go", (l: FileLinter) => {
   const n = l.lines().length;
@@ -42,8 +41,7 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   run(): void {
-    runCmd("go", ["build", "-trimpath", "-ldflags=-s -w", "-o", join(this.repoRoot, REPO_CLIENT_DIR, process.platform === "win32" ? "client.exe" : "client"), `./${REPO_CLI_ENTRY_GO}`], {
-      cwd: this.repoRoot,
+    runCanonicalGoBuild(join(this.repoRoot, REPO_CLI_GO), ["-trimpath", "-ldflags=-s -w", "-o", join(this.repoRoot, REPO_CLIENT_DIR, process.platform === "win32" ? "client.exe" : "client"), "./cmd/repo"], {
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
       budgetMs: buildBudgetMs(),
     });

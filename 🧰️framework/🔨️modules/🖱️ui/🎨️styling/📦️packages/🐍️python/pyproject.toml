@@ -1,7 +1,22 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
 [project]
 name = "semio-framework-ui-styling"
 version = "0.1.0"
 requires-python = ">=3.12"
+dependencies = []
+
+[tool.semio]
+role = "framework"
+id = "ui-styling-py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["🎨️styling"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"../../🔤️tokens/🐍️.py" = "🎨️styling/🐍️.py"
 
 [tool.uv]
-package = false
+package = true

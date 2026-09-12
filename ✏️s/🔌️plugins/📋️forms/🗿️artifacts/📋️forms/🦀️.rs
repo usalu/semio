@@ -374,9 +374,11 @@ pub fn materialize_forms_steps(handle: &mut FormsStructureChild, steps: Vec<Form
 pub fn forms_children_from_steps(steps: &[FormStep]) -> (FormsStructureChild, FormsResultsChild) {
     let scene_id = forms_scene_id(steps);
     let dialect_for = |subset: &str| store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
-    let target_for = |subset: &str| store::os_io::ArtifactRef { artifact_id: format!("forms-{subset}"), dialect: dialect_for(subset) };
+    let target_for = |subset: &str| store::os_io::ArtifactRef { artifact_id: format!("forms-{subset}-{}", scene_id.strip_prefix("forms-scene-").unwrap_or(&scene_id)), dialect: dialect_for(subset) };
     let scene = std::sync::Arc::new(FormsWorkingScene { steps: steps.to_vec() });
-    (store::ArtifactChild::new(scene_id.clone(), target_for("value")).with_local_owner(scene.clone()), store::ArtifactChild::new(scene_id, target_for("table")).with_local_owner(scene))
+    let structure = target_for("value");
+    let results = target_for("table");
+    (store::ArtifactChild::new(structure.artifact_id.clone(), structure).with_local_owner(scene.clone()), store::ArtifactChild::new(results.artifact_id.clone(), results).with_local_owner(scene))
 }
 
 /// 🔎 Reads the materialization owned by this snapshot's exact structure child. A wire-only
@@ -895,11 +897,6 @@ pub mod editor {
             pub mod schema;
         }
 
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
         pub mod terminology;
 

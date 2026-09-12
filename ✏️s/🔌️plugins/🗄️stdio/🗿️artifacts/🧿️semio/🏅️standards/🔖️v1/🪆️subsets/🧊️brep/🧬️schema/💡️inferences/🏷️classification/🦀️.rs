@@ -5,7 +5,7 @@
 //! Returns [`PointClassification`] for solid queries.
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/🏷️classify` in ticket
-//! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL. `🔮️oracle`'s
+//! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL. `🔮️oracles`'s
 //! queries (named as a future co-tenant of this facet) have not moved yet — still batch2 "queries"
 //! in the peel plan — so this file is classify-only for now.
 

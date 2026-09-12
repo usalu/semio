@@ -157,13 +157,13 @@ async fn artifact_creation_admission_cannot_activate_after_shutdown_deadline() {
     assert!(matches!(owner.reserve("user\0space\0request".into(), Arc::new(ArtifactCreationHttpControlV1::new())), ArtifactCreationHttpAdmissionV1::Unavailable));
 }
 
-#[cfg(all(feature = "native-artifact-execution", feature = "test-support"))]
+#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
 #[tokio::test]
 async fn space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_backed() {
     use semio_hub::artifact_authority::creation::ArtifactCreationOperationV1;
-    use semio_hub::artifact_authority::trusted_catalog::test_support;
+    use semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture;
 
-    let profile = test_support::verified_gis_map_test_profile(&test_support::unique_profile_root("artifact-creation-http")).await.expect("verified GIS Map creation profile");
+    let profile = trusted_catalog_fixture::verified_gis_map_integration_profile(&trusted_catalog_fixture::unique_profile_root("artifact-creation-http")).await.expect("verified GIS Map creation profile");
     let mut state = test_state().await;
     state.verified_catalog = Some(profile.catalog().clone());
     state.artifact_creation = Some(Arc::new(ArtifactCreationServiceV1::new(state.directory_service.clone(), profile.catalog().clone(), state.artifact_cas.clone())));
@@ -929,10 +929,10 @@ async fn checkpoint_publication_fixture(label: &str) -> CheckpointPublicationFix
     CheckpointPublicationFixture { state, author, spectator, scope, handle, command, pack, spr, catalog_root }
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 #[tokio::test]
 async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog() {
-    use semio_hub::artifact_authority::trusted_catalog::test_support;
+    use semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture;
 
     let artifact_root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket-owned checkpoint process artifact root"));
     let destination = artifact_root.join("checkpoint-publication-process-fixture");
@@ -941,7 +941,7 @@ async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_cata
     let _ = std::fs::remove_dir_all(&destination);
     std::fs::create_dir_all(&stage).expect("create process fixture stage");
 
-    let profile = test_support::verified_gis_map_test_profile(&test_support::unique_profile_root("checkpoint-process")).await.expect("verified GIS Map process profile");
+    let profile = trusted_catalog_fixture::verified_gis_map_integration_profile(&trusted_catalog_fixture::unique_profile_root("checkpoint-process")).await.expect("verified GIS Map process profile");
     let selection = profile.binding().selection();
     assert_eq!((selection.artifact.kind.as_str(), selection.artifact.schema.as_str()), ("s.gis.gismap", "gis.map"));
     let source = profile.bundle_path().parent().expect("profile bundle parent");
@@ -960,7 +960,7 @@ async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_cata
         format!(
             r#"{{"profileId":"{}","generationId":"{generation_id}","bundleSha256":"{bundle_sha256}","publicationRevision":"1"}}
 "#,
-            test_support::GIS_MAP_TEST_PROFILE_ID
+            trusted_catalog_fixture::GIS_MAP_INTEGRATION_PROFILE_ID
         ),
     )
     .expect("write trusted current pointer");
@@ -976,7 +976,7 @@ async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_cata
     }
     let fixture = serde_json::json!({
         "schema": "semio.hub.checkpoint-publication-process-fixture/v1",
-        "profileId": test_support::GIS_MAP_TEST_PROFILE_ID,
+        "profileId": trusted_catalog_fixture::GIS_MAP_INTEGRATION_PROFILE_ID,
         "generationId": generation_id,
         "documentId": "mcp-cold-gis-map",
         "mutationId": "mcp-cold-gis-map-edit-1",
@@ -1247,17 +1247,17 @@ async fn gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding() {
 }
 
 /// 🗺️ Builds a real trusted GIS Map editor profile, ledger and runtime on a live `HubState`.
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 struct GisMapInferenceFixture {
     state: HubState,
-    profile: semio_hub::artifact_authority::trusted_catalog::test_support::VerifiedGisMapTestProfileV1,
+    profile: semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture::VerifiedGisMapIntegrationProfileV1,
     space_id: String,
     document_id: String,
     snapshot_pack: Vec<u8>,
     ledger_path: std::path::PathBuf,
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 fn gis_map_test_snapshot() -> semio_s_artifact_gis_gismap::GisMapSnapshot {
     use directory::DslValue;
     use semio_s_artifact_gis_gismap::{GisMapSnapshot, MapFeature};
@@ -1272,11 +1272,11 @@ fn gis_map_test_snapshot() -> semio_s_artifact_gis_gismap::GisMapSnapshot {
 }
 
 /// 🧭️ Seeds one space, one Author, one Spectator, a GIS Map document and its verified checkpoint.
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 async fn gis_map_inference_fixture(author_email: &str, spectator_email: &str) -> (GisMapInferenceFixture, TestIssuedSession, TestIssuedSession) {
-    use semio_hub::artifact_authority::trusted_catalog::test_support;
+    use semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture;
     let mut state = test_state().await;
-    let profile = test_support::verified_gis_map_test_profile(&test_support::unique_profile_root("routes")).await.expect("real GIS Map editor profile");
+    let profile = trusted_catalog_fixture::verified_gis_map_integration_profile(&trusted_catalog_fixture::unique_profile_root("routes")).await.expect("real GIS Map editor profile");
     let ledger_path = tempdir("inference").join("jobs.sqlite3");
     let ledger = semio_hub::inference::sqlite::InferenceJobLedgerV1::open(&ledger_path).expect("private job ledger");
     state.verified_catalog = Some(profile.catalog().clone());
@@ -1311,7 +1311,7 @@ async fn gis_map_inference_fixture(author_email: &str, spectator_email: &str) ->
 }
 
 /// 🧾️ Publishes one verified active checkpoint whose pack is the literal GIS Map snapshot bytes.
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 async fn publish_gis_checkpoint_for_test(state: &HubState, space_id: &str, document_id: &str, pack: &[u8], genesis: &os_directory::ArtifactCheckpoint) {
     let spr = b"gis-map-spr";
     let pack_hash = os_directory::ArtifactHash(Sha256::digest(pack));
@@ -1346,17 +1346,17 @@ async fn publish_gis_checkpoint_for_test(state: &HubState, space_id: &str, docum
     state.directory_service.publish_reserved_artifact_checkpoint(system, checkpoint, reservation, 100).await.expect("publish verified GIS Map checkpoint");
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 fn inference_route(space_id: &str, document_id: &str, suffix: &str) -> String {
     format!("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs{suffix}")
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 fn inference_intent(request_id: &str) -> String {
     serde_json::json!({ "schema": "semio.hub.inference-request/v1", "version": 1, "requestId": request_id, "serviceId": "s.gis.gismap.inference", "policyVersion": 1, "lifetimeMs": 120_000 }).to_string()
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 async fn wait_for_inference_state(addr: SocketAddr, space_id: &str, document_id: &str, job_id: &str, headers: &[(&str, &str)], expected: &str) -> serde_json::Value {
     tokio::time::timeout(std::time::Duration::from_secs(5), async {
         loop {
@@ -1373,12 +1373,12 @@ async fn wait_for_inference_state(addr: SocketAddr, space_id: &str, document_id:
     .expect("inference reaches its bounded terminal state")
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 fn proposal_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture")
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 #[tokio::test]
 async fn gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation() {
     let fixture = proposal_fixture();
@@ -1436,7 +1436,7 @@ async fn gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancella
     assert_eq!(denied.status, 409, "a cancelled offer can never be approved afterwards");
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 #[tokio::test]
 async fn inference_reconciliation_route_is_existing_only_reader_bound_and_body_bounded() {
     let (bound, author, spectator) = gis_map_inference_fixture("reconcile-owner@example.test", "reconcile-watcher@example.test").await;
@@ -1494,7 +1494,7 @@ async fn inference_reconciliation_route_is_existing_only_reader_bound_and_body_b
     assert_eq!(revoked.status, 403, "the exact original reader loses reconciliation after session revocation");
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 #[tokio::test]
 async fn gis_map_inference_runtime_close_signals_and_joins_actual_codec_work() {
     let (bound, author, _spectator) = gis_map_inference_fixture("close-owner@example.test", "close-watcher@example.test").await;
@@ -1515,7 +1515,7 @@ async fn gis_map_inference_runtime_close_signals_and_joins_actual_codec_work() {
     assert_eq!(runtime.retained_operation_count_for_test().await.expect("retained worker count"), 0, "close joins the outer and blocking worker before returning");
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 #[tokio::test]
 async fn gis_map_inference_revocation_after_compute_refuses_late_publication() {
     let (bound, author, _spectator) = gis_map_inference_fixture("revoked-owner@example.test", "revoked-watcher@example.test").await;
@@ -1555,7 +1555,7 @@ async fn gis_map_inference_revocation_after_compute_refuses_late_publication() {
     assert!(page.proposal_hash.is_none(), "revocation before the final authority fence publishes no proposal");
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 #[tokio::test]
 async fn gis_map_proposal_is_private_to_every_peer_spectator_and_stale_caller() {
     let fixture = proposal_fixture();
@@ -1597,7 +1597,7 @@ async fn gis_map_proposal_is_private_to_every_peer_spectator_and_stale_caller() 
     assert!(!bound.snapshot_pack.is_empty(), "the base Map pack the job froze is a real encoded snapshot");
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 #[tokio::test]
 async fn gis_map_approval_stamps_one_create_region_and_rejects_every_frozen_drift() {
     let fixture = proposal_fixture();
@@ -1630,7 +1630,7 @@ async fn gis_map_approval_stamps_one_create_region_and_rejects_every_frozen_drif
     assert!(!kinds.contains(&"approved"), "no committed-WAL witness, no approved event");
 }
 
-#[cfg(all(feature = "sqlite", feature = "test-support"))]
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 #[tokio::test]
 async fn gis_map_approval_is_idempotent_across_duplicate_requests_and_restart() {
     let (bound, author, _spectator) = gis_map_inference_fixture("idempotent-owner@example.test", "idempotent-watcher@example.test").await;

@@ -42,7 +42,7 @@ impl protocol::MutationDiff<WireTestSnapshot> for WireTestDiff {
     }
 }
 
-#[path = "../../🧪️testkit/📡️contributed-mutation-wire/🧬️mutations/🦀️.rs"]
+#[path = "../../🧫️fixtures/📡️contributed-mutation-wire/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub(crate) use mutations::{AddValue, WireTestMutation};
 

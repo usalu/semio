@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio-tech.com/schema/generated-source-topology-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kindLeaves",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kindLeaves": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "css",
+        "dotnet-source",
+        "python-source",
+        "rust-source",
+        "typescript-source"
+      ],
+      "properties": {
+        "css": {
+          "type": "string",
+          "minLength": 4
+        },
+        "dotnet-source": {
+          "type": "string",
+          "minLength": 4
+        },
+        "python-source": {
+          "type": "string",
+          "minLength": 4
+        },
+        "rust-source": {
+          "type": "string",
+          "minLength": 4
+        },
+        "typescript-source": {
+          "type": "string",
+          "minLength": 4
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 29,
+      "maxItems": 29,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contractId",
+          "previousPath",
+          "canonicalPath",
+          "fileKindId",
+          "semanticOwnerKindId",
+          "inclusion"
+        ],
+        "properties": {
+          "contractId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "previousPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "supersededPaths": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "canonicalPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fileKindId": {
+            "enum": [
+              "css",
+              "dotnet-source",
+              "python-source",
+              "rust-source",
+              "typescript-source"
+            ]
+          },
+          "semanticOwnerKindId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inclusion": {
+            "enum": [
+              "ignored",
+              "tracked"
+            ]
+          },
+          "nativePackage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "root",
+              "metadataPath",
+              "sourceReference"
+            ],
+            "properties": {
+              "root": {
+                "type": "string",
+                "minLength": 1
+              },
+              "metadataPath": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceReference": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

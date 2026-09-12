@@ -1,0 +1,10 @@
+type LayoutWindowCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type LayoutWindowConfig {
+  activePageId: String!
+  camera: LayoutWindowCamera!
+}

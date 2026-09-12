@@ -1,0 +1,29 @@
+{
+  "name": "@semio-tech/puzzle-5d-react",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react",
+  "projectType": "library",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/**/*"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/📦️packages/🟦️typescript"
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test quick",
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/📦️packages/🟦️typescript"
+      }
+    }
+  },
+  "tags": ["scope:plugin", "type:renderer", "technology:puzzle"]
+}

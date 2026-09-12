@@ -11,7 +11,7 @@ async fn space_command_op_text_round_trips_every_variant() {
 async fn node_graph_edit_set_fixture_moves_node_and_persists_camera() {
     use crate::demo_space_projection;
     use crate::engine::space::SpaceCommand;
-    use crate::engine::space::testkit::{apply_mutations, studio_emit};
+    use crate::engine::space::unit_tests::context::{apply_mutations, studio_emit};
     use pack::json::Object;
     use semio_framework_os::{OsWorkflowCamera, os_workflow_to_flow_fixture};
     let projection = demo_space_projection().await;

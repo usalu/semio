@@ -7,7 +7,7 @@ use crate::model::{Bar3, Dof, Element, Elements, Frame3, Node};
 use crate::sparse::{Csr, LdltJob, ModalInputConstruction, MountedScalarSlots, PcgJob, PcgJobConstruction, SubspaceIterationJob};
 use crate::{element_id, load_id, Fem3dSnapshot, FemElement, FemLoad};
 use semio_framework::kernel::{Effect, JobPlacement};
-use semio_framework_job::{Generation, InteractiveJob, OperationId, RetainedJobPayload, RevisionId, StepBudget, StepContext, StepOutcome};
+use semio_framework_job::{Generation, InteractiveJob, OperationId, RevisionId, StepBudget, StepContext, StepOutcome};
 use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
 use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginCloseStep};
 #[cfg(test)]
@@ -376,7 +376,7 @@ struct FixedSlots<T, const N: usize> {
 
 impl<T, const N: usize> FixedSlots<T, N> {
     fn new() -> Self {
-        Self { slots: std::array::from_fn(|_| None), admitted: 0, len: 0 }
+        Self { slots: [const { None }; N], admitted: 0, len: 0 }
     }
 
     fn admit_one(&mut self, target: usize) -> Result<bool, ()> {
@@ -513,7 +513,7 @@ struct Fem3dNumericalChild {
     solver_page_lane: bool,
     modal_lumped_mass: [f64; MAXIMUM_FIELDS * 6],
     modal_free_mass: MountedScalarSlots,
-    fault_payload: Option<RetainedJobPayload>,
+    child_outcome: Option<StepOutcome>,
 }
 
 impl Fem3dNumericalChild {
@@ -596,7 +596,7 @@ impl Fem3dNumericalChild {
             solver_page_lane: false,
             modal_lumped_mass: [0.0; MAXIMUM_FIELDS * 6],
             modal_free_mass: MountedScalarSlots::new(),
-            fault_payload: None,
+            child_outcome: None,
         }
     }
 
@@ -648,9 +648,27 @@ impl Fem3dNumericalChild {
         Ok(())
     }
 
-    fn retain_fault(&mut self, payload: RetainedJobPayload) -> Vec<u8> {
-        self.fault_payload = Some(payload);
-        b"fem3d.numerical-child-fault".to_vec()
+    fn observe_child_outcome(&mut self, outcome: StepOutcome) -> Result<bool, Vec<u8>> {
+        assert!(self.child_outcome.is_none(), "previous child outcome must retire before another step");
+        let complete = matches!(outcome, StepOutcome::Complete(_));
+        let fault = matches!(outcome, StepOutcome::Fault(_));
+        if matches!(outcome, StepOutcome::Cancelled) {
+            return Err(b"fem3d.numerical-cancelled".to_vec());
+        }
+        if !matches!(outcome, StepOutcome::Yield) {
+            self.child_outcome = Some(outcome);
+        }
+        if fault { Err(b"fem3d.numerical-child-fault".to_vec()) } else { Ok(complete) }
+    }
+
+    fn close_child_outcome(&mut self, maximum_bytes: usize) -> Option<(bool, usize, usize)> {
+        match self.child_outcome.as_mut()?.close_step(1, maximum_bytes) {
+            semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => Some((false, released_items, released_bytes)),
+            semio_framework_job::JobPayloadCloseStep::Complete => {
+                self.child_outcome = None;
+                Some((false, 1, 0))
+            }
+        }
     }
 
     fn step_model(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
@@ -1062,6 +1080,13 @@ impl Fem3dNumericalChild {
 
     fn step(&mut self, doc: &Fem3dSnapshot, solver: &mut Fem3dSolverView, backing: &mut Fem3dBackingCredit, freshness: Fem3dVisualFreshness, operation: semio_framework_job::Operation, context: &mut StepContext<'_>) -> Result<bool, Vec<u8>> {
         self.operation = Some(operation);
+        if self.child_outcome.is_some() {
+            if context.is_cancelled() { return Err(b"fem3d.numerical-cancelled".to_vec()); }
+            if context.should_yield() { return Ok(false); }
+            context.consume_fuel(1);
+            self.close_child_outcome(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            return Ok(false);
+        }
         let delegated = matches!(self.stage, Fem3dNumericalStage::SolidMesh | Fem3dNumericalStage::Assembly | Fem3dNumericalStage::Pcg | Fem3dNumericalStage::Ldlt | Fem3dNumericalStage::Subspace);
         if !delegated {
             if context.is_cancelled() {
@@ -1104,16 +1129,12 @@ impl Fem3dNumericalChild {
             return Ok(false);
         }
         if self.stage == Fem3dNumericalStage::SolidMesh {
-            return match self.mesh.as_mut().ok_or_else(|| b"fem3d.numerical-solid-mesh-child".to_vec())?.step(context) {
-                StepOutcome::Complete(_) => {
-                    self.point_cursor = 0;
-                    self.stage = Fem3dNumericalStage::SolidMeshReservePoints;
-                    Ok(false)
-                }
-                StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => Ok(false),
-                StepOutcome::Cancelled => Err(b"fem3d.numerical-cancelled".to_vec()),
-                StepOutcome::Fault(fault) => Err(self.retain_fault(fault.detail)),
-            };
+            let outcome = self.mesh.as_mut().ok_or_else(|| b"fem3d.numerical-solid-mesh-child".to_vec())?.step(context);
+            if self.observe_child_outcome(outcome)? {
+                self.point_cursor = 0;
+                self.stage = Fem3dNumericalStage::SolidMeshReservePoints;
+            }
+            return Ok(false);
         }
         if self.stage == Fem3dNumericalStage::SolidMeshReservePoints {
             let (points, _) = self.mesh.as_ref().and_then(MeshJob::completed_counts).ok_or_else(|| b"fem3d.numerical-solid-mesh-false-terminal".to_vec())?;
@@ -1222,17 +1243,16 @@ impl Fem3dNumericalChild {
                 }
                 Err(error) => return Err(error.to_string().into_bytes()),
             },
-            Fem3dNumericalStage::Assembly => match self.assembly.as_mut().ok_or_else(|| b"fem3d.numerical-assembly".to_vec())?.step(context) {
-                StepOutcome::Complete(_) => {
+            Fem3dNumericalStage::Assembly => {
+                let outcome = self.assembly.as_mut().ok_or_else(|| b"fem3d.numerical-assembly".to_vec())?.step(context);
+                if self.observe_child_outcome(outcome)? {
                     self.node_cursor = 0;
                     self.dof_cursor = 0;
                     self.free_order = self.assembly.as_ref().map_or(0, AssemblyJob::visual_free_order);
                     self.stage = Fem3dNumericalStage::ReserveModalMass;
                 }
-                StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => return Ok(false),
-                StepOutcome::Cancelled => return Err(b"fem3d.numerical-cancelled".to_vec()),
-                StepOutcome::Fault(fault) => return Err(self.retain_fault(fault.detail)),
-            },
+                return Ok(false);
+            }
             Fem3dNumericalStage::ReserveModalMass => {
                 if self.modal_free_mass.admit_one(self.free_order).map_err(|_| b"fem3d.numerical-modal-mass-admission".to_vec())? {
                     self.stage = Fem3dNumericalStage::InitializeModalMass;
@@ -1568,16 +1588,15 @@ impl Fem3dNumericalChild {
                 }
                 Err(detail) => return Err(detail.to_vec()),
             },
-            Fem3dNumericalStage::Pcg => match self.pcg.as_mut().ok_or_else(|| b"fem3d.numerical-pcg".to_vec())?.step(context) {
-                StepOutcome::Complete(_) => {
+            Fem3dNumericalStage::Pcg => {
+                let outcome = self.pcg.as_mut().ok_or_else(|| b"fem3d.numerical-pcg".to_vec())?.step(context);
+                if self.observe_child_outcome(outcome)? {
                     self.stage = Fem3dNumericalStage::ReadNodeScalar;
                     self.node_cursor = 0;
                     self.scalar_axis = 0;
                 }
-                StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => return Ok(false),
-                StepOutcome::Cancelled => return Err(b"fem3d.numerical-cancelled".to_vec()),
-                StepOutcome::Fault(fault) => return Err(self.retain_fault(fault.detail)),
-            },
+                return Ok(false);
+            }
             Fem3dNumericalStage::ReadNodeScalar => {
                 if self.node_cursor == self.analysis_node_ids.len() {
                     self.stage = Fem3dNumericalStage::BeginModal;
@@ -1639,14 +1658,13 @@ impl Fem3dNumericalChild {
                 self.ldlt = Some(LdltJob::new(operation, stiffness, 1));
                 self.stage = Fem3dNumericalStage::Ldlt;
             }
-            Fem3dNumericalStage::Ldlt => match self.ldlt.as_mut().ok_or_else(|| b"fem3d.numerical-ldlt".to_vec())?.step(context) {
-                StepOutcome::Complete(_) => {
+            Fem3dNumericalStage::Ldlt => {
+                let outcome = self.ldlt.as_mut().ok_or_else(|| b"fem3d.numerical-ldlt".to_vec())?.step(context);
+                if self.observe_child_outcome(outcome)? {
                     self.stage = Fem3dNumericalStage::BeginSubspace;
                 }
-                StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => return Ok(false),
-                StepOutcome::Cancelled => return Err(b"fem3d.numerical-cancelled".to_vec()),
-                StepOutcome::Fault(fault) => return Err(self.retain_fault(fault.detail)),
-            },
+                return Ok(false);
+            }
             Fem3dNumericalStage::BeginSubspace => {
                 let factor = self.ldlt.as_mut().and_then(LdltJob::take_factor).ok_or_else(|| b"fem3d.numerical-ldlt-factor".to_vec())?;
                 let mass = self.modal_mass.take().ok_or_else(|| b"fem3d.numerical-modal-mass".to_vec())?;
@@ -1654,16 +1672,15 @@ impl Fem3dNumericalChild {
                 self.subspace = Some(SubspaceIterationJob::new(operation, factor, mass, order, 1, 30));
                 self.stage = Fem3dNumericalStage::Subspace;
             }
-            Fem3dNumericalStage::Subspace => match self.subspace.as_mut().ok_or_else(|| b"fem3d.numerical-subspace".to_vec())?.step(context) {
-                StepOutcome::Complete(_) => {
+            Fem3dNumericalStage::Subspace => {
+                let outcome = self.subspace.as_mut().ok_or_else(|| b"fem3d.numerical-subspace".to_vec())?.step(context);
+                if self.observe_child_outcome(outcome)? {
                     self.node_cursor = 0;
                     self.scalar_axis = 0;
                     self.stage = Fem3dNumericalStage::ReadModeScalar;
                 }
-                StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => return Ok(false),
-                StepOutcome::Cancelled => return Err(b"fem3d.numerical-cancelled".to_vec()),
-                StepOutcome::Fault(fault) => return Err(self.retain_fault(fault.detail)),
-            },
+                return Ok(false);
+            }
             Fem3dNumericalStage::ReadModeScalar => {
                 if self.node_cursor == self.analysis_node_ids.len() {
                     self.stage = Fem3dNumericalStage::PublishProgress;
@@ -1713,15 +1730,7 @@ impl Fem3dNumericalChild {
     }
 
     fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        if let Some(payload) = self.fault_payload.as_mut() {
-            return match payload.close_step(1, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => (false, released_items, released_bytes),
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    self.fault_payload = None;
-                    (false, 1, 0)
-                }
-            };
-        }
+        if let Some(step) = self.close_child_outcome(maximum_bytes) { return step; }
         if let Some(matrix) = self.rejected_pcg_matrix.as_mut() {
             let step = matrix.close_step(maximum_bytes);
             if step.0 {
@@ -2655,6 +2664,9 @@ impl Fem3dPageVisualJob {
             return (false, 1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY);
         }
         if let Some(token) = self.token {
+            if maximum_bytes < WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY {
+                return (false, 0, 0);
+            }
             if !self.abort_started {
                 if world3d_snapshot_abort_write(token).is_err() {
                     return (false, 0, 0);
@@ -2675,11 +2687,19 @@ impl Fem3dPageVisualJob {
                 Err(_) => return (false, 0, 0),
             }
         }
-        if self.region_order.take().is_some() {
-            return (false, 1, size_of::<Option<usize>>() * MAXIMUM_REGIONS);
+        if self.region_order.is_some() {
+            if maximum_bytes < FEM3D_REGION_ORDER_BYTES {
+                return (false, 0, 0);
+            }
+            self.region_order = None;
+            return (false, 1, FEM3D_REGION_ORDER_BYTES);
         }
-        if self.element_order.take().is_some() {
-            return (false, 1, size_of::<Option<usize>>() * MAXIMUM_ELEMENTS);
+        if self.element_order.is_some() {
+            if maximum_bytes < FEM3D_ELEMENT_ORDER_BYTES {
+                return (false, 0, 0);
+            }
+            self.element_order = None;
+            return (false, 1, FEM3D_ELEMENT_ORDER_BYTES);
         }
         (true, 0, 0)
     }
@@ -2836,9 +2856,9 @@ struct MountedState {
     credit: Fem3dPageCredit,
     backing: Fem3dBackingCredit,
     solver: Option<Fem3dSolverView>,
-    numerical: Option<Fem3dNumericalChild>,
+    numerical: Option<Box<Fem3dNumericalChild>>,
     numerical_done: bool,
-    candidate: Option<Fem3dPageVisualJob>,
+    candidate: Option<Box<Fem3dPageVisualJob>>,
     current: Option<Fem3dPageVisualLease>,
     displaced: Option<Fem3dPageVisualLease>,
     close_lane: u8,
@@ -2858,7 +2878,7 @@ impl MountedState {
             credit,
             backing: Fem3dBackingCredit::new(),
             solver: Some(solver),
-            numerical: Some(Fem3dNumericalChild::new()),
+            numerical: Some(Box::new(Fem3dNumericalChild::new())),
             numerical_done: false,
             candidate: None,
             current,
@@ -2919,7 +2939,7 @@ impl MountedState {
             if !fields_ready {
                 return JobStep::Running(None);
             }
-            self.candidate = Some(Fem3dPageVisualJob::new(self.identity.freshness(0), self.credit));
+            self.candidate = Some(Box::new(Fem3dPageVisualJob::new(self.identity.freshness(0), self.credit)));
             return JobStep::Running(None);
         }
         let freshness = self.identity.freshness(0);
@@ -2930,7 +2950,7 @@ impl MountedState {
         match step {
             Some(Ok(false)) => JobStep::Running(None),
             Some(Ok(true)) => {
-                let Some(lease) = self.candidate.as_mut().and_then(Fem3dPageVisualJob::take_complete) else { return self.fail(b"fem3d.visual-complete-owner".to_vec()) };
+                let Some(lease) = self.candidate.as_deref_mut().and_then(Fem3dPageVisualJob::take_complete) else { return self.fail(b"fem3d.visual-complete-owner".to_vec()) };
                 let live = current_identity(self.identity.app_instance_id) == Some(self.identity)
                     && snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision)
                     && !self.cancel.is_cancelled_now()
@@ -3773,10 +3793,16 @@ pub fn close_step(app_instance_id: u32, maximum_items: usize, maximum_bytes: usi
     if let Some((items, bytes)) = close_recovered_fem3d_backing(maximum_bytes) {
         return PluginCloseStep::Pending { released_items: items, released_bytes: bytes };
     }
+    if terminal_is_empty(app_instance_id) {
+        return PluginCloseStep::Complete;
+    }
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let slot = app_instance_id as usize % ACTIVE_CAPACITY;
-        registry.pending[slot] = None;
+        if registry.pending[slot].as_ref().is_some_and(|pending| pending.render.app_instance_id == app_instance_id) {
+            registry.pending[slot] = None;
+            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
         if let Some(current) = registry.current[slot].filter(|current| current.app_instance_id == app_instance_id) {
             if !registry.retain_retiring(app_instance_id, current.shell) {
                 return PluginCloseStep::Blocked { reason: "FEM3D close retirement capacity" };
@@ -3798,7 +3824,7 @@ pub fn terminal_is_empty(app_instance_id: u32) -> bool {
     MOUNTED.with(|registry| {
         let registry = registry.borrow();
         let slot = app_instance_id as usize % ACTIVE_CAPACITY;
-        registry.pending[slot].is_none()
+        registry.pending[slot].as_ref().is_none_or(|pending| pending.render.app_instance_id != app_instance_id)
             && registry.current[slot].is_none_or(|current| current.app_instance_id != app_instance_id)
             && (registry.retiring_owner[slot] != app_instance_id || registry.retiring_count[slot] == 0)
             && registry.recoveries.iter().all(|recovery| !recovery.contains(app_instance_id))

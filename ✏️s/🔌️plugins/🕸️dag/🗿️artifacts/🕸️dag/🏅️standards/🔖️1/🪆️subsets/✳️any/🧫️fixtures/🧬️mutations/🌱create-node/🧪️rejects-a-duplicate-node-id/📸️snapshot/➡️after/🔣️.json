@@ -3,7 +3,7 @@
   "content": {
     "childId": "dag-content-seeded-fixture",
     "target": {
-      "artifactId": "dag-content",
+      "artifactId": "dag-content-seeded-fixture",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

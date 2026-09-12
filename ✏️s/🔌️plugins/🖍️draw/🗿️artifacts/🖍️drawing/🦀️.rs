@@ -8,7 +8,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<DrawingMutation, DrawingConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
+// `Result<Emit<DrawingMutation, NoConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -32,26 +32,6 @@ pub const DRAWING_UTILITY_IDS: &[&str] = &["selectMarquee", "selectLasso", "sele
 // these types is itself `#[dsl(block)]`, which already supplies the bare leading keyword from the
 // FIELD's own name — an inner keyword too would double it (`transform { transform x=0 ... }`),
 // same reasoning as `note`'s `NoteImageAsset`.
-/// 🎥️ Camera pose (pan + zoom). Ephemeral view state owned by the `drawing` app runtime struct
-/// (`DrawingConfig`), never a `DrawingSnapshot` field — see `.🧬semio/🦑️repo/🎫️tickets/26/07/31/
-/// MOVE-DRAWING-PLUGIN-CAMERA-TO-RUNTIME-STATE`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct DrawingCamera {
-    pub x: f64,
-    pub y: f64,
-    pub zoom: f64,
-}
-
-impl Default for DrawingCamera {
-    /// 🎯️ Matches the pre-migration `default_drawing_document` camera: centered on its 1024x1024 artboard.
-    fn default() -> Self {
-        Self { x: 512.0, y: 512.0, zoom: 0.75 }
-    }
-}
-
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -496,10 +476,8 @@ pub const DRAWING_DIALECT: semio_framework::Dialect = semio_framework::Dialect {
 
 /// 🔖️ This artifact's OLD capability-row definition (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) — kept per debt D1 (`📌️important.md`), not
-/// deleted repo-wide until W6; `crate::editor::drawing::config::schema::register_app_schema()` is the
-/// one exception, still called from `🖍️drawing/🦀️.rs`'s own `.setup()`: it registers the
-/// `DrawingPlayApp` CONFIG/PRESENCE schema, an app-scope concern neither this nor the new declaration
-/// tree (`artifact()`, below) has a field for. Superseded as the schema/io/surface registration
+/// deleted repo-wide until W6. The app's empty CONFIG and real PRESENCE facets now register through
+/// the editor declaration's app schema descriptor. Superseded as the schema/io/surface registration
 /// channel by `artifact()` (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM) — this
 /// function's only remaining reader is the `en`/`de` localized name pair (see `artifact()`'s own
 /// `localization: &[]` doc).
@@ -1092,9 +1070,6 @@ pub mod editor {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
             mod component;
             pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
         }
 
         #[path = "."]

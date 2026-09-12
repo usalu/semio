@@ -3,7 +3,7 @@
 //!
 //! Every scenario copies the derived, committed `🚏️bus-shelter` fixture into the case work
 //! directory first; the committed asset is never written to. `oracle` drives the registered `dxf`
-//! 0.6 reference implementation (`../../🏅️standards/🔖️r12/🪆️subsets/📰️header/🔮️oracle/🦀️.rs`'s
+//! 0.6 reference implementation (`../../🏅️standards/🔖️r12/🪆️subsets/📰️header/🔮️oracles/🦀️.rs`'s
 //! own `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's
 //! own `parse_dxf_document`/`print_dxf_document`/`apply_dxf_mutation` over the full 19-kind
 //! `DxfMutation` vocabulary. Both results are read back by the SAME independent `project_dxf_r12`

@@ -18,7 +18,7 @@ export interface NoteCompositeImageAsset {
   height?: number;
 }
 
-/** 📸️ `render(document: &NoteSnapshot, cfg: &NoteConfig)`'s document input. */
+/** 📸️ The composite renderer's document input; camera state is exact-window configuration. */
 export interface NoteCompositeSnapshot {
   schema: string;
   id: string;

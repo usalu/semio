@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::vcs::commands::{edit, text_edit};
-use crate::editor::vcs::testkit::{app, dispatch};
+use crate::editor::vcs::unit_tests::context::{app, dispatch};
 use crate::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]

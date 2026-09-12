@@ -1,0 +1,20 @@
+{
+  "internal": {
+    "kind": "bar",
+    "materialId": "m1",
+    "section": "s1"
+  },
+  "external": {
+    "bar-view": {
+      "materialId": "m1",
+      "section": "s1"
+    }
+  },
+  "adjacent": {
+    "kind": "bar",
+    "payload": {
+      "materialId": "m1",
+      "section": "s1"
+    }
+  }
+}

@@ -1,10 +1,10 @@
 # 🪪️ FormsDiff imports the canonical OS Store child identity.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type FormsDiff {
-  schema: String
-  id: String
-  version: String
-  title: String
-  structure: ArtifactChild
-  results: ArtifactChild
+  schema: String @state(class: ARTIFACT)
+  id: String @state(class: ARTIFACT)
+  version: String @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  structure: ArtifactChild @state(class: ARTIFACT)
+  results: ArtifactChild @state(class: ARTIFACT)
 }

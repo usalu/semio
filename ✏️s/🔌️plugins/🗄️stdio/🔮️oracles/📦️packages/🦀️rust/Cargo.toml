@@ -1,0 +1,64 @@
+# 🧭️ Own workspace root: this crate is linked by generated cache-local test hosts by path and must
+# not join the repository workspace, whose root manifest is a shared, contended file.
+[workspace]
+
+[package]
+name = "semio-s-plugin-stdio-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Reference implementations for the artifacts ✏️s/🔌️plugins/🗄️stdio owns, contributed to the repository test platform."
+
+[lib]
+name = "semio_s_plugin_stdio_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+# 🔮️ Links the registered third-party reference implementations. Enabled only by a generated test
+# host, never by any production target — `bun ./📜️script.ts dependency` enforces that.
+oracles = ["dep:pdf-writer", "dep:lopdf", "dep:png", "dep:gif", "dep:zip", "dep:flate2", "dep:csv", "dep:image", "dep:tobj", "dep:stl_io", "dep:quick-xml", "dep:json", "dep:html5ever", "dep:markup5ever_rcdom", "dep:comrak", "dep:dxf", "dep:las", "dep:mp4", "dep:ruststep", "dep:calamine", "dep:rust_xlsxwriter", "dep:ply-rs", "dep:riff", "dep:id3"]
+
+[dependencies]
+semio-repo-test-host = { path = "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
+pdf-writer = { version = "0.15", optional = true }
+lopdf = { version = "0.44", optional = true }
+png = { version = "0.18", optional = true }
+gif = { version = "0.13", optional = true }
+zip = { version = "6", optional = true, default-features = false, features = ["deflate"] }
+flate2 = { version = "1", optional = true }
+csv = { version = "1", optional = true }
+image = { version = "0.25", optional = true, default-features = false, features = ["bmp", "tiff", "jpeg"] }
+tobj = { version = "4", optional = true }
+stl_io = { version = "0.8", optional = true }
+# 🔮️ Structured-text and CAD/BIM references. Each reads AND writes its format — a reader-only crate
+# cannot serve as a differential oracle, because a mutation oracle has to re-serialize what it changed.
+quick-xml = { version = "0.42", optional = true }
+# 🔮️ json-rust, deliberately NOT serde_json: `serde_json` is already a production runtime
+# dependency of this repository (94 manifests, 1,503 files) and the JSON snapshot itself declares
+# `impl From<serde_json::Value>`, so using it as the oracle would compare our implementation with
+# something it already converts from. json-rust appears nowhere in production and is genuinely
+# independent.
+json = { version = "0.12", optional = true }
+html5ever = { version = "0.39", optional = true }
+markup5ever_rcdom = { version = "0.39", optional = true }
+comrak = { version = "0.54", optional = true }
+dxf = { version = "0.6", optional = true }
+las = { version = "0.11", optional = true }
+mp4 = { version = "0.14", optional = true }
+ruststep = { version = "0.4", optional = true }
+ply-rs = { version = "0.1", optional = true }
+# 📕️ XLSX needs two crates: `calamine` reads a workbook, `rust_xlsxwriter` writes one. Neither does
+# both, which is why the XLSX case is typed as an independent-reader round trip rather than a
+# differential — see 📓️w8-plan.md.
+calamine = { version = "0.36", optional = true }
+rust_xlsxwriter = { version = "0.96", optional = true }
+# 🔮️ Generic RIFF chunk reader/writer, composed with a hand-written AVI 1.0 hdrl/strl/movi/idx1
+# codec — the same shape as BCF's zip + quick-xml composition, and for the same reason: no single
+# credible AVI crate exists. The three that do were read and rejected (metadata-only pass-through,
+# a self-described scaffolded muxer, and a four-month-old crate with no independent validation).
+riff = { version = "2.0", optional = true }
+# 🎵️ ID3 metadata reference (MIT). Registered for 🎵️mp3 mpeg1-layer3 ✳️any, composed with a
+# hand-written ISO/IEC 11172-3 frame walker in that subset's own oracle module — no crate reads both
+# layers. `symphonia` (the pure-Rust MP3 decoder) is MPL-2.0 and deliberately NOT linked: no owner
+# ruling on that licence exists here, and decoding PCM is not needed to exercise the vocabulary.
+id3 = { version = "1.17", optional = true }

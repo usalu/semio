@@ -1,7 +1,7 @@
 use super::*;
 use crate::default_remodeling_scene;
 use crate::editor::remodeling::commands::set_report_table::SetReportTable;
-use crate::editor::remodeling::testkit::{app, dispatch, render as render_body};
+use crate::editor::remodeling::unit_tests::context::{app, dispatch, render as render_body};
 use crate::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]

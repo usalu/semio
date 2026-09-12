@@ -2756,6 +2756,11 @@ impl FillBuilderRetirementCursor {
         Self { fill: Some(fill), field: 0, current: None }
     }
 
+    /// 🔎️ What the builder this cursor is draining still owes, by name — `None` once it owes nothing.
+    pub(crate) fn owner_debt(&self) -> Option<&'static str> {
+        self.fill.as_ref().and_then(FillBuilder::terminal_owner_debt)
+    }
+
     pub(crate) fn retire_one(&mut self) -> bool {
         if let Some(current) = self.current.as_mut() {
             if retire_retained_owner(current) {
@@ -2930,82 +2935,94 @@ impl FillBuilder {
         witness
     }
 
+    /// 🔎️ The FIRST retained-owner clause this builder still fails, BY NAME. A close ladder that wedges
+    /// has to be able to say which owner nothing drains, instead of only that the builder is "not empty":
+    /// `FillBuilderRetirementCursor::retire_one`'s terminal arm returns `false` forever in that case, so
+    /// the whole teardown spins without progress (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42).
+    pub(crate) fn terminal_owner_debt(&self) -> Option<&'static str> {
+        [
+            ("fixture_terminal_owners_empty base", fixture_terminal_owners_empty(&self.base)),
+            ("sequence.is_empty", self.sequence.is_empty()),
+            ("sequence.capacity 0", self.sequence.capacity() == 0),
+            ("appended_objects.is_empty", self.appended_objects.is_empty()),
+            ("appended_objects.capacity 0", self.appended_objects.capacity() == 0),
+            ("appended_attractions.is_empty", self.appended_attractions.is_empty()),
+            ("appended_attractions.capacity 0", self.appended_attractions.capacity() == 0),
+            ("placed.is_empty", self.placed.is_empty()),
+            ("placed.capacity 0", self.placed.capacity() == 0),
+            ("placed_lookup.is_empty", self.placed_lookup.is_empty()),
+            ("candidate_cache.is_empty", self.candidate_cache.is_empty()),
+            ("seed_object_ids.is_empty", self.seed_object_ids.is_empty()),
+            ("catalogs.objects.terminal_owners_empty", self.catalogs.objects.terminal_owners_empty()),
+            ("catalogs.vortices.terminal_owners_empty", self.catalogs.vortices.terminal_owners_empty()),
+            ("catalogs.cables.terminal_owners_empty", self.catalogs.cables.terminal_owners_empty()),
+            ("weights.object_weights.is_empty", self.weights.object_weights.is_empty()),
+            ("weights.vortex_weights.is_empty", self.weights.vortex_weights.is_empty()),
+            ("kind_compatibility.terminal_owners_empty", self.kind_compatibility.terminal_owners_empty()),
+            ("meshes.is_empty", self.meshes.is_empty()),
+            ("spatial_index.terminal_owners_empty", self.spatial_index.terminal_owners_empty()),
+            ("targets.is_empty", self.targets.is_empty()),
+            ("targets.capacity 0", self.targets.capacity() == 0),
+            ("blocked_vortex_ids.is_empty", self.blocked_vortex_ids.is_empty()),
+            ("seed_targets.is_empty", self.seed_targets.is_empty()),
+            ("seed_targets.capacity 0", self.seed_targets.capacity() == 0),
+            ("frontier_targets.is_empty", self.frontier_targets.is_empty()),
+            ("frontier_targets.capacity 0", self.frontier_targets.capacity() == 0),
+            ("seed_target_weights.is_empty", self.seed_target_weights.is_empty()),
+            ("seed_target_weights.capacity 0", self.seed_target_weights.capacity() == 0),
+            ("frontier_target_weights.is_empty", self.frontier_target_weights.is_empty()),
+            ("frontier_target_weights.capacity 0", self.frontier_target_weights.capacity() == 0),
+            ("seed_target_tree.is_empty", self.seed_target_tree.is_empty()),
+            ("seed_target_tree.capacity 0", self.seed_target_tree.capacity() == 0),
+            ("frontier_target_tree.is_empty", self.frontier_target_tree.is_empty()),
+            ("frontier_target_tree.capacity 0", self.frontier_target_tree.capacity() == 0),
+            ("current_target.is_none", self.current_target.is_none()),
+            ("candidates.is_empty", self.candidates.is_empty()),
+            ("candidates.capacity 0", self.candidates.capacity() == 0),
+            ("candidate_seen.is_empty", self.candidate_seen.is_empty()),
+            ("candidate_raw.is_empty", self.candidate_raw.is_empty()),
+            ("candidate_raw.capacity 0", self.candidate_raw.capacity() == 0),
+            ("candidate_cross.is_empty", self.candidate_cross.is_empty()),
+            ("candidate_same.is_empty", self.candidate_same.is_empty()),
+            ("candidate_same_sorted.is_empty", self.candidate_same_sorted.is_empty()),
+            ("candidate_same_sorted.capacity 0", self.candidate_same_sorted.capacity() == 0),
+            ("candidate_same_weights.is_empty", self.candidate_same_weights.is_empty()),
+            ("candidate_same_weights.capacity 0", self.candidate_same_weights.capacity() == 0),
+            ("candidate_same_tree.is_empty", self.candidate_same_tree.is_empty()),
+            ("candidate_same_tree.capacity 0", self.candidate_same_tree.capacity() == 0),
+            ("current_preview.is_none", self.current_preview.is_none()),
+            ("broad_phase_query.as_ref .is_none_or CollisionQueryCursor terminal_owners_empty", self.broad_phase_query.as_ref().is_none_or(CollisionQueryCursor::terminal_owners_empty)),
+            ("collision.is_none", self.collision.is_none()),
+            ("pending_payload.is_none", self.pending_payload.is_none()),
+            ("pending_object.is_none", self.pending_object.is_none()),
+            ("pending_attraction.is_none", self.pending_attraction.is_none()),
+            ("pending_spatial.is_none", self.pending_spatial.is_none()),
+            ("preparation_spatial.is_none", self.preparation_spatial.is_none()),
+            ("tail_removal.is_none", self.tail_removal.is_none()),
+            ("preparation_roots.is_none", self.preparation_roots.is_none()),
+            ("preparation_capacity_refusal.is_none", self.preparation_capacity_refusal.is_none()),
+            ("last_rejection.is_none", self.last_rejection.is_none()),
+            ("fixed_rejection.is_none", self.fixed_rejection.is_none()),
+            ("collection_over_capacity", !self.collection_over_capacity),
+            ("placed_lookup.terminal_owners_empty", self.placed_lookup.terminal_owners_empty()),
+            ("candidate_cache.terminal_owners_empty", self.candidate_cache.terminal_owners_empty()),
+            ("seed_object_ids.terminal_owners_empty", self.seed_object_ids.terminal_owners_empty()),
+            ("weights.object_weights.terminal_owners_empty", self.weights.object_weights.terminal_owners_empty()),
+            ("weights.vortex_weights.terminal_owners_empty", self.weights.vortex_weights.terminal_owners_empty()),
+            ("meshes.terminal_owners_empty", self.meshes.terminal_owners_empty()),
+            ("blocked_vortex_ids.terminal_owners_empty", self.blocked_vortex_ids.terminal_owners_empty()),
+            ("candidate_seen.terminal_owners_empty", self.candidate_seen.terminal_owners_empty()),
+            ("candidate_cross.terminal_owners_empty", self.candidate_cross.terminal_owners_empty()),
+            ("candidate_same.terminal_owners_empty", self.candidate_same.terminal_owners_empty()),
+            ("preview_json.terminal_owners_empty", self.preview_json.terminal_owners_empty()),
+            ("preview_terminal_owners_empty preview", preview_terminal_owners_empty(&self.preview)),
+        ]
+        .into_iter()
+        .find_map(|(owner, empty)| (!empty).then_some(owner))
+    }
+
     fn terminal_owners_empty(&self) -> bool {
-        fixture_terminal_owners_empty(&self.base)
-            && self.sequence.is_empty()
-            && self.sequence.capacity() == 0
-            && self.appended_objects.is_empty()
-            && self.appended_objects.capacity() == 0
-            && self.appended_attractions.is_empty()
-            && self.appended_attractions.capacity() == 0
-            && self.placed.is_empty()
-            && self.placed.capacity() == 0
-            && self.placed_lookup.is_empty()
-            && self.candidate_cache.is_empty()
-            && self.seed_object_ids.is_empty()
-            && self.catalogs.objects.terminal_owners_empty()
-            && self.catalogs.vortices.terminal_owners_empty()
-            && self.catalogs.cables.terminal_owners_empty()
-            && self.weights.object_weights.is_empty()
-            && self.weights.vortex_weights.is_empty()
-            && self.kind_compatibility.terminal_owners_empty()
-            && self.meshes.is_empty()
-            && self.spatial_index.terminal_owners_empty()
-            && self.targets.is_empty()
-            && self.targets.capacity() == 0
-            && self.blocked_vortex_ids.is_empty()
-            && self.seed_targets.is_empty()
-            && self.seed_targets.capacity() == 0
-            && self.frontier_targets.is_empty()
-            && self.frontier_targets.capacity() == 0
-            && self.seed_target_weights.is_empty()
-            && self.seed_target_weights.capacity() == 0
-            && self.frontier_target_weights.is_empty()
-            && self.frontier_target_weights.capacity() == 0
-            && self.seed_target_tree.is_empty()
-            && self.seed_target_tree.capacity() == 0
-            && self.frontier_target_tree.is_empty()
-            && self.frontier_target_tree.capacity() == 0
-            && self.current_target.is_none()
-            && self.candidates.is_empty()
-            && self.candidates.capacity() == 0
-            && self.candidate_seen.is_empty()
-            && self.candidate_raw.is_empty()
-            && self.candidate_raw.capacity() == 0
-            && self.candidate_cross.is_empty()
-            && self.candidate_same.is_empty()
-            && self.candidate_same_sorted.is_empty()
-            && self.candidate_same_sorted.capacity() == 0
-            && self.candidate_same_weights.is_empty()
-            && self.candidate_same_weights.capacity() == 0
-            && self.candidate_same_tree.is_empty()
-            && self.candidate_same_tree.capacity() == 0
-            && self.current_preview.is_none()
-            && self.broad_phase_query.as_ref().is_none_or(CollisionQueryCursor::terminal_owners_empty)
-            && self.collision.is_none()
-            && self.pending_payload.is_none()
-            && self.pending_object.is_none()
-            && self.pending_attraction.is_none()
-            && self.pending_spatial.is_none()
-            && self.preparation_spatial.is_none()
-            && self.tail_removal.is_none()
-            && self.preparation_roots.is_none()
-            && self.preparation_capacity_refusal.is_none()
-            && self.last_rejection.is_none()
-            && self.fixed_rejection.is_none()
-            && !self.collection_over_capacity
-            && self.placed_lookup.terminal_owners_empty()
-            && self.candidate_cache.terminal_owners_empty()
-            && self.seed_object_ids.terminal_owners_empty()
-            && self.weights.object_weights.terminal_owners_empty()
-            && self.weights.vortex_weights.terminal_owners_empty()
-            && self.meshes.terminal_owners_empty()
-            && self.blocked_vortex_ids.terminal_owners_empty()
-            && self.candidate_seen.terminal_owners_empty()
-            && self.candidate_cross.terminal_owners_empty()
-            && self.candidate_same.terminal_owners_empty()
-            && self.preview_json.terminal_owners_empty()
-            && preview_terminal_owners_empty(&self.preview)
+        self.terminal_owner_debt().is_none()
     }
 
     pub(crate) fn begin_preparation(roots: FillPreparationRoots, operation: Operation) -> Self {

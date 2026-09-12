@@ -60,7 +60,7 @@ export interface AssemblySnapshot {
   /** @state artifact */ seed: number;
   /** @state artifact */ slots: AssemblySlot[];
   /** @state artifact */ edges: AssemblySlotEdge[];
-  /** @state artifact @child kind=s.stdio.semio.kit many */ modules: ArtifactChildHandle[];
+  /** @state artifact @child kind=s.stdio.semio many */ modules: ArtifactChildHandle[];
   /** @state artifact */ weights: AssemblyModuleWeight[];
   /** @state artifact */ rules: AssemblyRule[];
 }

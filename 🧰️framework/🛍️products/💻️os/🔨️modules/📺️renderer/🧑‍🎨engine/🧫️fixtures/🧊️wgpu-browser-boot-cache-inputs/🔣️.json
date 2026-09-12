@@ -9,28 +9,32 @@
       "search": "",
       "expected": {
         "pluginVariant": "s",
-        "appRole": "editor"
+        "appRole": "editor",
+        "appMode": ""
       }
     },
     {
       "search": "?plugin=note&role=viewer",
       "expected": {
         "pluginVariant": "note",
-        "appRole": "viewer"
+        "appRole": "viewer",
+        "appMode": ""
       }
     },
     {
       "search": "?plugin=puzzle3d&role=unknown",
       "expected": {
         "pluginVariant": "puzzle3d",
-        "appRole": "editor"
+        "appRole": "editor",
+        "appMode": ""
       }
     },
     {
       "search": "?plugin=note&plugin=puzzle3d",
       "expected": {
         "pluginVariant": "note",
-        "appRole": "editor"
+        "appRole": "editor",
+        "appMode": ""
       }
     },
     {
@@ -42,13 +46,30 @@
           "hubUrl": "https://example.test",
           "user": "Fixture User",
           "dataDir": "fixture"
-        }
+        },
+        "appMode": ""
+      }
+    },
+    {
+      "search": "?plugin=generation3d&mode=generate",
+      "expected": {
+        "pluginVariant": "generation3d",
+        "appRole": "editor",
+        "appMode": "generate"
+      }
+    },
+    {
+      "search": "?plugin=generation3d&role=viewer&mode=view",
+      "expected": {
+        "pluginVariant": "generation3d",
+        "appRole": "viewer",
+        "appMode": "view"
       }
     }
   ],
   "generator": {
     "target": "generate-browser-boot",
-    "output": "{projectRoot}/🟦️typescript/🚀️boot.js",
+    "output": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🤖️generated/🟨️.js",
     "prerequisites": [
       "@semio-tech/plugin-registry:generate"
     ],
@@ -60,6 +81,6 @@
     "inputs": [
       "browserBootSources"
     ],
-    "dependencyOutput": "**/🎮️playgrounds.ts"
+    "dependencyOutput": "**/🎮️playgrounds/🟦️.ts"
   }
 }

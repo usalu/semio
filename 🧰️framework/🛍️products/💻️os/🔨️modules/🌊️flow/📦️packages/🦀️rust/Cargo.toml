@@ -33,7 +33,7 @@ semio-framework-os-infinite = { path = "../../../♾️infinite/📦️packages/
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { workspace = true }
 # 🤝 `browser::future_to_promise` — the owned Promise ABI `flowAttachSurfaceCanvas` resolves through
-# (🕸️wasm/🦀️component.rs, `surface_canvas`). Unconditional because the module itself is gated.
+# (🕸️wasm/🦀️.rs, `surface_canvas`). Unconditional because the module itself is gated.
 semio-framework-async = { workspace = true }
 semio-framework-replication = { workspace = true }
 neural_engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
@@ -95,7 +95,7 @@ ui_webgpu = { path = "../../../../../../🔨️modules/🖱️ui/🖌️render/�
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 getrandom = { version = "0.3.4", features = ["wasm_js"] }
 wasm-bindgen = "0.2.106"
-# 🖼️ `surface_canvas` (🕸️wasm/🦀️component.rs) binds the node-graph canvas to the shared
+# 🖼️ `surface_canvas` (🕸️wasm/🦀️.rs) binds the node-graph canvas to the shared
 # `CanvasGpuSession` out of band from the byte ABI, which cannot carry an element handle.
 js-sys = "0.3.83"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }

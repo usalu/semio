@@ -44,7 +44,7 @@ fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_index::co
 ///
 /// 🌐️ **Known limitation, documented (`📓️w2-b-report.md`)**: `UiTreeItemNode`/`PanelTreeBuilder`
 /// take a plain `Label` (`impl Into<Label>`, gated to `Label::data`/a locale-already-resolved
-/// `LabelText` — `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️label.rs`, no
+/// `LabelText` — `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🏷️label/🦀️.rs`, no
 /// `From<LocalizedLabel>`), never a bare `LocalizedLabel` — unlike `PanelTabDefinition.label`/
 /// `ActionDefinition.label`/`DialogDefinition`/`ActionArgDef` (all genuinely bilingual below). A real
 /// `LabelText` needs a resolved locale, which means a per-app `app_labels!` terminology struct plus a

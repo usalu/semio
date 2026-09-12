@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.app.forms.forms.try_window;
+
+message FormsTryValueChunks { repeated string chunks = 1; }
+
+message FormsTryWindowTransient {
+  // @state window_transient
+  map<string, FormsTryValueChunks> try_values = 1;
+}

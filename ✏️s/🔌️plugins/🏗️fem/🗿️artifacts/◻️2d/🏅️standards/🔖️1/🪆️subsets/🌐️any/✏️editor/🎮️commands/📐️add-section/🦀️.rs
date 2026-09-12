@@ -1,6 +1,6 @@
 //! 🧱️ 🧱️ Fem2d play app commands command — `add-section`.
 
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::FemSection;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -37,7 +37,7 @@ pub struct AddSection {
     pub iy: f64,
 }
 
-pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
     Ok(Emit::mutations(vec![Fem2dMutation::CreateSection(crate::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy } })]))

@@ -16,19 +16,19 @@
   },
   "diff": {
     "artifact": null,
-    "exaggeration": 3,
+    "exaggeration": 3.0,
     "importedFeaturesJson": null
   },
   "invalidDocuments": [
     {
-      "exaggeration": 2,
+      "exaggeration": 2.0,
       "importedFeaturesJson": "{}",
       "mesh": {
         "vertices": []
       }
     },
     {
-      "exaggeration": 2,
+      "exaggeration": 2.0,
       "importedFeaturesJson": "{}",
       "locale": "de"
     }
@@ -39,7 +39,7 @@
     },
     {
       "artifact": {
-        "exaggeration": 2,
+        "exaggeration": 2.0,
         "importedFeaturesJson": "{}",
         "mesh": {
           "vertices": []
@@ -101,7 +101,7 @@
         }
       },
       "diff": {
-        "exaggeration": 3
+        "exaggeration": 3.0
       },
       "patch": [
         {
@@ -111,7 +111,7 @@
         }
       ],
       "after": {
-        "exaggeration": 3,
+        "exaggeration": 3.0,
         "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
         "mesh": {
           "childId": "terrain-mesh-custom",

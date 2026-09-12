@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::layout::commands::{canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_move, set_camera};
-use crate::editor::layout::testkit::{dispatch, layout_app, render, test_screen_point};
+use crate::editor::layout::unit_tests::context::{dispatch, layout_app, render, test_screen_point};
 use crate::editor::layout::{LayoutCommand, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_SURFACE_PREVIEW};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID};

@@ -5,7 +5,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Artifact
 /// 🧬️ fem2d document artifact state.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.fem.fem2d")]
 #[derive(Default)]
 pub struct Fem2dArtifact {
@@ -263,7 +263,6 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔁️Re-exports
 pub use crate::FemAnalysisSettings;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::FemCamera;
 pub use crate::FemCombination;
 pub use crate::FemElement;
 pub use crate::FemLoadCase;

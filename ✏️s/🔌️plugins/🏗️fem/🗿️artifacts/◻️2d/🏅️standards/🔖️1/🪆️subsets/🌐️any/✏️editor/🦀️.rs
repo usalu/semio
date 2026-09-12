@@ -2,17 +2,17 @@
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
-//! `🎭️modes/*/🪟️windows/*`, view state in `🎚️config`, shared compute in the artifact's `⚙️engine`.
+//! `🎭️modes/*/🪟️windows/*`, view state in concrete window config, shared compute in the artifact's `⚙️engine`.
 //! This file is a routing table: `handle` → `Fem2dCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one passthrough per node (fem2d's mode/window declarations stay
 //! scalar/inline — no `mode_def`/`window_kind_def` object is built anywhere in the pre-migration code).
 
-use crate::app_surface::{DisplayMode, ResultDisplay};
+use crate::app_surface::ResultDisplay;
 use crate::editor::fem2d::commands::{
     add_area_load, add_bar, add_beam, add_combination, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_region, add_section, add_support, remove_selection, set_active_example, set_analysis_settings, set_camera,
     set_result_display, set_self_weight,
 };
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::fem2d::modes::edit;
 use crate::editor::fem2d::modes::edit::windows::model as model_window;
 use crate::editor::fem2d::modes::edit::windows::results as results_window;
@@ -46,7 +46,7 @@ semio_framework_plugin::app_commands! {
     /// `#[dsl(key = ..)]` the codec uses) — genuinely different vocabularies; `"setActiveExample" as
     /// "active-example"` and `"setCamera" as "camera"` are two of the rows that prove it. **Row order is
     /// the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum Fem2dCommand for Fem2dSnapshot, Fem2dMutation, Fem2dConfig, Fem2dConfigMutation {
+    pub enum Fem2dCommand for Fem2dSnapshot, Fem2dMutation, NoConfig, NoConfigMutation {
         "addNode" as "add-node" => add_node::AddNode,
         "addBar" as "add-bar" => add_bar::AddBar,
         "addBeam" as "add-beam" => add_beam::AddBeam,
@@ -103,10 +103,8 @@ const FEM2D_RETAINED_WORK_ITEMS: usize = 4_096;
 /// same number the artifact-lane store preparation admits, so a document too large for the reducer is
 /// rejected before any authority is claimed rather than mid-publication.
 const FEM2D_MAXIMUM_DOCUMENT_ITEMS: usize = 4_096;
-/// 🛣️ Publication lanes per route: the fifteen structural editors emit `Fem2dMutation`s only, while
-/// `setActiveExample` replaces the whole document through a non-history `Effect::LoadDocument` and
-/// publishes ONLY its two granular config resets (`SetResultDisplay`, `SetCamera`) — effects are not a
-/// store lane, so its contract is `Config`, exactly like the three view actions.
+/// 🛣️ Structural commands publish artifact mutations; example loading emits a host effect.
+/// Camera and result display publish only to the addressed window's configuration.
 const FEM2D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "addBar", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -123,9 +121,9 @@ const FEM2D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setSelfWeight", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setAnalysisSettings", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "removeSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setResultDisplay", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setResultDisplay", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
 ];
 
 fn fem2d_retained_contract() -> ToolExecutionContract {
@@ -152,17 +150,24 @@ fn fem2d_retained_extent(command: &Fem2dCommand, snapshot: &Fem2dSnapshot, _inte
 fn fem2d_retained_reduce(
     command: &Fem2dCommand,
     snapshot: &Fem2dSnapshot,
-    config: &Fem2dConfig,
+    config: &NoConfig,
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>,
     operation: &AppOperationContext,
-) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, NoDraftMutation>, Fault> {
+) -> Result<Emit<Fem2dMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     if !FEM2D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::from("fem2d-command-retained-route-rejected"));
     }
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
+    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
+    let view = context.and_then(|context| context.view_state.as_ref());
+    match command {
+        Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, &cfg, view.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
+        Fem2dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, &cfg, view.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
+        _ => command.dispatch(&doc, &cfg),
+    }
 }
 
 struct Fem2dRetainedCommandJobFactory {
@@ -221,190 +226,8 @@ impl ArtifactOwnedToolJobFactory for Fem2dRetainedCommandJobFactory {
 }
 //#endregion 🧵️RetainedCommands
 
-//#region 📬️ConfigStorePreparation
-const FEM2D_CONFIG_TEXT_MAXIMUM_BYTES: usize = 128;
-const FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES: usize = 4_096;
-
-//#region 🎟️Admission
-fn fem2d_config_text_bytes(config: &Fem2dConfig) -> usize {
-    [config.result_source_id.as_ref().map_or(0, String::len), config.result_mode.len()].into_iter().fold(0usize, usize::saturating_add)
-}
-
-fn fem2d_config_publication_bytes(mutation: &Fem2dConfigMutation) -> Result<usize, String> {
-    let bytes = match mutation {
-        Fem2dConfigMutation::Snapshot { config } => fem2d_config_text_bytes(config),
-        Fem2dConfigMutation::SetResultDisplay { source_id, mode, .. } => source_id.as_ref().map_or(0, String::len).saturating_add(mode.len()),
-        Fem2dConfigMutation::SetCamera { .. } => 0,
-    };
-    if bytes > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES {
-        return Err("fem2d-config-text-envelope".into());
-    }
-    Ok(FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES)
-}
-
-struct Fem2dConfigPreparationFactory;
-
-impl store::ArtifactStoreOneItemPreparationFactory<Fem2dConfig, Fem2dConfigMutation> for Fem2dConfigPreparationFactory {
-    fn preflight(&self, mutation: &Fem2dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > 64) {
-            return Err("fem2d-config-lane-or-description-envelope".into());
-        }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: fem2d_config_publication_bytes(mutation)? })
-    }
-
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Fem2dConfig, Fem2dConfigMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Fem2dConfig, Fem2dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Fem2dConfig, Fem2dConfigMutation>> {
-        if request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > 64
-            || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
-            || fem2d_config_text_bytes(request.base.get()) > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES
-        {
-            return Err(request);
-        }
-        Ok(Box::new(Fem2dConfigPreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            description: request.description,
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            cancelled: false,
-            closing: false,
-        }))
-    }
-}
-//#endregion 🎟️Admission
-
-//#region 🧵️Preparation
-struct Fem2dConfigPreparation {
-    base: Option<store::SnapshotRead<Fem2dConfig>>,
-    mutation: Option<Fem2dConfigMutation>,
-    description: Option<String>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<Fem2dConfig, Fem2dConfigMutation>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
-    cancelled: bool,
-    closing: bool,
-}
-
-impl store::ArtifactStoreOneItemPreparation<Fem2dConfig, Fem2dConfigMutation> for Fem2dConfigPreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || grant.maximum_bytes < FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.closing {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.checkpoint.cursor != 0 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        let base = self.base.as_ref().ok_or_else(|| "fem2d-config-base-owner-missing".to_string())?;
-        let mutation = self.mutation.as_ref().ok_or_else(|| "fem2d-config-mutation-owner-missing".to_string())?;
-        let mut next = base.get().clone();
-        let inverse = match mutation {
-            Fem2dConfigMutation::Snapshot { config } => {
-                next = config.clone();
-                Fem2dConfigMutation::Snapshot { config: base.get().clone() }
-            }
-            Fem2dConfigMutation::SetResultDisplay { source_id, mode, mode_index } => {
-                next.result_source_id = source_id.clone();
-                next.result_mode = mode.clone();
-                next.result_mode_index = *mode_index;
-                Fem2dConfigMutation::SetResultDisplay { source_id: base.get().result_source_id.clone(), mode: base.get().result_mode.clone(), mode_index: base.get().result_mode_index }
-            }
-            Fem2dConfigMutation::SetCamera { camera } => {
-                next.camera = camera.clone();
-                Fem2dConfigMutation::SetCamera { camera: base.get().camera.clone() }
-            }
-        };
-        if fem2d_config_text_bytes(&next) > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES {
-            return Err("fem2d-config-post-text-envelope".into());
-        }
-        let authority = self.authority.as_ref().ok_or_else(|| "fem2d-config-authority-missing".to_string())?;
-        let id = format!("fem2d-config-{}", authority.next_sequence_number());
-        let edit = protocol::Edit {
-            id: id.clone(),
-            actor: Some(authority.actor().to_string()),
-            forwards: vec![mutation.clone()],
-            inverse: vec![inverse],
-            mutation_meta: vec![protocol::MutationMeta {
-                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-                dependencies: Vec::new(),
-                base_version: authority.base_applied_edit_count() as u64,
-                author_id: Some(protocol::ActorId(authority.actor().to_string())),
-                timestamp: authority.next_clock(),
-                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                payload_hash: None,
-                semantic_kind: None,
-                label: None,
-                group_id: None,
-                origin: Default::default(),
-            }],
-            description: self.description.clone(),
-            coalesce_key: None,
-            sequence_number: authority.next_sequence_number(),
-            started_at: String::new(),
-            finished_at: None,
-        };
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(next))?;
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES as u64, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-    }
-
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem2dConfig, Fem2dConfigMutation>> {
-        self.prepared.as_ref()
-    }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem2dConfig, Fem2dConfigMutation>> {
-        self.prepared.take()
-    }
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err("fem2d-config-base-retirement-rejected".into());
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.authority.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
-}
-//#endregion 🧵️Preparation
-//#region 🧪️PreparationLaws
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fem2d-config-preparation-laws/🦀️.rs"]
-mod fem2d_config_preparation_laws;
-//#endregion 🧪️PreparationLaws
-//#endregion 📬️ConfigStorePreparation
-
 //#region 📬️ArtifactStorePreparation
-/// 📬️ The document lane's one-item publication authority — the counterpart of
-/// `Fem2dConfigPreparationFactory` above. Without it every `Artifact`-lane route is refused at
-/// registration with `interactive-job.publication-authority-missing`, which is why fem2d's fifteen
-/// structural editors could not be retained before.
+/// 📬️ Retains the document lane's one-item publication authority for structural edits.
 struct Fem2dArtifactPreparationFactory;
 
 struct Fem2dArtifactPreparation {
@@ -551,15 +374,9 @@ mod fem2d_artifact_preparation_laws;
 //#endregion 📬️ArtifactStorePreparation
 
 //#region 🔖️ExportImportHelpers
-/// 👁️ B1: `cfg`-driven counterpart of the deleted `ResultDisplay` `RefCell` — converts the flat
-/// `Fem2dConfig` result-display fields back into `crate::app_surface::ResultDisplay`/`DisplayMode` so
-/// the results window's render pipeline (built around those shared types) needs no changes.
-fn config_result_display(cfg: &Fem2dConfig) -> ResultDisplay {
-    let mode = match cfg.result_mode.as_str() {
-        "modal" => DisplayMode::Modal(cfg.result_mode_index as usize),
-        "buckling" => DisplayMode::Buckling(cfg.result_mode_index as usize),
-        _ => DisplayMode::Static,
-    };
+/// 👁️ Project persisted configuration from the addressed results window for rendering.
+fn config_result_display(cfg: &results_window::config::Fem2dResultsWindowConfig) -> ResultDisplay {
+    let mode = cfg.result_mode.display(cfg.result_mode_index);
     ResultDisplay { source_id: cfg.result_source_id.clone(), mode }
 }
 
@@ -687,23 +504,19 @@ fn fem2d_dofs(value: Option<&str>) -> Vec<crate::FemDof> {
 //#endregion 🔖️ActionArgHelpers
 
 //#region 🔖️Fem2dPlayApp
-/// 🧪️ B1: unit struct — every former `Fem2dPlayApp` `RefCell` field (`result_display`, `camera`) now
-/// lives in `crate::editor::fem2d::config::Fem2dConfig`, written
-/// through `Fem2dConfigMutation`s. v0 design unchanged: results are never persisted or cached —
-/// `fem2d_solve`/`fem2d_solve_all` run fresh inside `render()`/`export_media` whenever the results
-/// window is drawn or the `"results:out"` port is read.
+/// 🪟️ FEM application commands and rendering use the concrete Model and Results window owners.
 #[derive(Default)]
 pub struct Fem2dPlayApp;
 
 impl ArtifactEditor for Fem2dPlayApp {
     type Snapshot = Fem2dSnapshot;
     type Mutation = Fem2dMutation;
-    type Config = Fem2dConfig;
-    type ConfigMutation = Fem2dConfigMutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = crate::editor::fem2d::presence::Fem2dPresence;
-    type PresenceMutation = crate::editor::fem2d::presence::Fem2dPresenceMutation;
+    type Presence = semio_framework_plugin::NoPresence;
+    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
@@ -713,9 +526,56 @@ impl ArtifactEditor for Fem2dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::FEM_2D_SCHEMA;
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(std::sync::Arc::new(Fem2dConfigPreparationFactory))
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_owners())
     }
+
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::no_config_store_disposer())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<model_window::config::Fem2dModelWindowConfigOwner>()?;
+        registry.register::<results_window::config::Fem2dResultsWindowConfigOwner>()
+    }
+
+
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Fem2dArtifactPreparationFactory))
@@ -780,7 +640,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                 history: request.history,
                 interaction_state: request.interaction_state,
                 interaction_hover: request.interaction_hover,
-                context: None,
+                context: Some(request.context),
                 operation: operation_context,
                 completion: request.completion,
             },
@@ -793,7 +653,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     }
 
     fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
-        Some(crate::editor::fem2d::config::schema::app_schema_descriptor())
+        None
     }
 
     /// 🌱️ Boots on the bundled `📚️examples/🎬️demo` document so the playground paints a real structure
@@ -857,7 +717,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// `"geometry:in"` decodes a minimal, app-owned `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...]}`
     /// polygon-with-holes contract into a new `FemRegion` via `create-region`, defaulted to the
     /// document's first existing material if any, else an `"unassigned"` placeholder id.
-    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Fem2dSnapshot>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Fem2dSnapshot>) -> Result<Emit<Fem2dMutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -958,16 +818,20 @@ impl ArtifactEditor for Fem2dPlayApp {
     fn handle(
         command: &Fem2dCommand,
         doc: &ArtifactView<'_, Fem2dSnapshot>,
-        cfg: &ConfigView<'_, Fem2dConfig>,
+        cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+    ) -> Result<Emit<Fem2dMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
+        match command {
+            Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
+            Fem2dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
+            _ => command.dispatch(doc, cfg),
+        }
     }
 
-    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
+    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
         crate::editor::fem2d::session::reconcile(doc)
     }
 
@@ -979,11 +843,16 @@ impl ArtifactEditor for Fem2dPlayApp {
         ConfigSpec::default()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let camera = &cfg.snapshot.camera;
+    fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            model_window::BODY_KEY => crate::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual)),
-            results_window::BODY_KEY => results_window::render(doc.snapshot, &config_result_display(cfg.snapshot), camera),
+            model_window::BODY_KEY => {
+                let window = model_window::config::current(cfg);
+                crate::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, &window.camera, visual))
+            }
+            results_window::BODY_KEY => {
+                let window = results_window::config::current(cfg);
+                results_window::render(doc.snapshot, &config_result_display(&window), &window.camera)
+            }
             _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d unknown-body label admission failed")),
         }
         .map(semio_framework_plugin::built_to_component_tree)
@@ -1001,8 +870,7 @@ impl ArtifactEditor for Fem2dPlayApp {
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Fem2dSnapshot as store::ArtifactPack>::encode_pack(scene);
-    let envelope = store::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(crate::FEM_2D_SCHEMA, "fem2d", scene.clone(), None);
-    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("fem2d document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("fem2d", crate::FEM_2D_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -1142,11 +1010,6 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
-            // 🧵️ Every row is `Migrated`: each one is an owned retained route on
-            // `Fem2dRetainedCommandJobFactory` (`FEM2D_RETAINED_TOOL_IDS`) with a real reducer
-            // (`fem2d_retained_reduce` → the `🎮️commands/*` handler) and a real publication authority
-            // (`Fem2dArtifactPreparationFactory` for the document lane, `Fem2dConfigPreparationFactory`
-            // for the config lane) — pinned by `retained_routes_cover_every_command_exactly_once`.
             .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
             .action_interactive_job("addBar", InteractiveJobClassification::Migrated)
             .action_interactive_job("addBeam", InteractiveJobClassification::Migrated)
@@ -1173,16 +1036,13 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
 /// able to drive the whole app without re-deriving the harness.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
-#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🪟️window-config-ownership/🦀️.rs"]
+mod window_config_ownership;
+//#endregion 🧪️UnitTests

@@ -1,0 +1,20 @@
+#region 🧬️Configuration
+type MapWindowConfig {
+  layerVisibility: [Gis2dBoolEntry!]! @state(class: CONFIG)
+  cameraJson: String! @state(class: CONFIG)
+  renderMode: String! @state(class: CONFIG)
+  vectorStyle: String! @state(class: CONFIG)
+  lodMode: String! @state(class: CONFIG)
+  layerStrokeScale: [Gis2dNumberEntry!]! @state(class: CONFIG)
+}
+
+type Gis2dBoolEntry {
+  key: String!
+  value: Boolean!
+}
+
+type Gis2dNumberEntry {
+  key: String!
+  value: Float!
+}
+#endregion 🧬️Configuration

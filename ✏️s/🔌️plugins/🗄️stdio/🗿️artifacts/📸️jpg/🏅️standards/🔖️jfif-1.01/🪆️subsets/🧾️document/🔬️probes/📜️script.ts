@@ -9,7 +9,7 @@
 //
 // Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should
 // produce. The actual JPEG decode is performed by the sibling standalone `jpeg-jfif-codec` binary
-// (`../🏭️generator/🦀️jpeg-jfif-codec`, depends on nothing but `image` 0.25) via its `project`
+// (`../🏭️generator/🔁️codec/📦️packages/🦀️rust`, depends on nothing but `image` 0.25) via its `project`
 // subcommand — this file only shells out to it and performs the GATING structural comparison
 // itself. No JPEG semantics are computed here, only projection + compare.
 //
@@ -21,7 +21,7 @@
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔬️probes/📜️script.ts — the sibling probe
 //      suite this file's CLI/dispatch/compare shape is mirrored from.
-// @see ../🏭️generator/🦀️jpeg-jfif-codec/src/main.rs — the `project` subcommand this file calls,
+// @see ../🏭️generator/🔁️codec/🦀️.rs — the `project` subcommand this file calls,
 //      and its own module docstring recording exactly what `image` 0.25.10 can and cannot see.
 
 //#endregion 🧲️Header
@@ -46,7 +46,7 @@ type ProbeReport = {
 
 const ENGINE = { family: "image-rs", implementation: "jpeg-jfif-codec (image 0.25.10, zune-jpeg 0.5.15 backend)", version: "image@0.25.10" } as const;
 const PROBE_VERSION = "image@0.25.10";
-const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🦀️jpeg-jfif-codec", "Cargo.toml");
+const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 //#endregion 🧬️Contract
 
 //#region 📥️Model

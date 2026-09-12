@@ -130,7 +130,7 @@ pub mod os_pack {
 
     // 🎒️ The `.spk` container (header/footer/segments/manifest/recovery/sources) is owned by
     // `🧰️framework/🔨️modules/🎒️pack`, and its codec floor by the replication crate. What stays os-side
-    // below is only the schema-driven half: the record value codec and the arbitrary/law testkit.
+    // below is only the schema-driven half: the record value codec and its test-only laws.
     pub use pack::async_;
     pub use pack::codec;
     pub use pack::codec::ids;
@@ -147,8 +147,9 @@ pub mod os_pack {
     // 🎾️ The flat codec/ids/source surface arrives through `component`'s `pub use pack::*` above —
     // re-exporting it a second time here would make every primitive an ambiguous glob.
 
-    #[path = "../../🔨️modules/🎒️pack/🧪️testkit/🦀️.rs"]
-    pub mod testkit;
+    #[cfg(any(test, feature = "record-codec-laws"))]
+    #[path = "../../🔨️modules/🎒️pack/🧪️tests/🧬️record-codec-laws/🦀️.rs"]
+    pub mod record_codec_laws;
 
     #[path = "../../🔨️modules/🎒️pack/🌱️value/🦀️.rs"]
     pub mod value;
@@ -200,8 +201,9 @@ pub mod os_spr {
     #[path = "../../🔨️modules/📡️spr/💎️materialize/🦀️.rs"]
     pub mod materialize;
 
-    #[path = "../../🔨️modules/📡️spr/🧪️testkit/🦀️.rs"]
-    pub mod testkit;
+    #[cfg(any(test, feature = "protocol-laws"))]
+    #[path = "../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs"]
+    pub mod protocol_laws;
 }
 
 #[path = "../../🔨️modules/🌿️vcs/🦀️.rs"]
@@ -339,6 +341,7 @@ pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
 /// crate under that literal name needs them reachable at the crate root, not only as
 /// `crate::schema::ToValue`.
 pub use crate::os_dsl::schema::{DslValue, FromValue, ToValue, ValueError};
+pub use semio_framework_ui_viewport::{Viewport2d, Viewport3dOrbit};
 
 /// 🌿️ Crate-root re-export of the `#[derive(ToValue, FromValue)]` proc-macros themselves (distinct
 /// Rust namespace from the trait re-export directly above — a derive macro and a trait can share an

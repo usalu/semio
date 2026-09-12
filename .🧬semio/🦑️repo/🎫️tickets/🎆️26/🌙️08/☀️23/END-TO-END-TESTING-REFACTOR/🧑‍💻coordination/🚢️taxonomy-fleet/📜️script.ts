@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import { mkdirSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+const root=process.env.SEMIO_TAXONOMY_REPO_ROOT!,ticket=dirname(dirname(import.meta.dir)),lane=process.argv[2];
+assert(["framework","plugins","puzzle"].includes(lane));
+const output=join(ticket,"🗑️generated/testing-taxonomy",lane);
+mkdirSync(output,{recursive:true});
+const child=Bun.spawn([process.env.SEMIO_TAXONOMY_CODEX_BIN??"codex","exec","--ephemeral","--json","--model","gpt-5.6-sol","--config",'model_reasoning_effort="xhigh"',"--config",'approval_policy="never"',"--sandbox","danger-full-access","--cd",root,"--output-last-message",join(output,"final.md"),"-"],{cwd:root,env:process.env,stdin:new Blob([readFileSync(join(import.meta.dir,lane+".md"))]),stdout:Bun.file(join(output,"worker.jsonl")),stderr:Bun.file(join(output,"worker.stderr.log"))});
+process.on("SIGINT",()=>child.kill("SIGINT"));
+process.on("SIGTERM",()=>child.kill("SIGTERM"));
+console.log("[DEBUG] Sol Extra High "+lane+" worker pid="+child.pid);
+const code=await child.exited;
+console.log("[DEBUG] Sol Extra High "+lane+" worker exit="+code);
+process.exitCode=code;

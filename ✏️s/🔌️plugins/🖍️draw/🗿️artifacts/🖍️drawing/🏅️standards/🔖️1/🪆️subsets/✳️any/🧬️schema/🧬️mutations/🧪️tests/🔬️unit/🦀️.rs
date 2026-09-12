@@ -1,6 +1,6 @@
 use super::*;
 use crate::schema::{create_drawing_path_layer, create_drawing_shape_layer_rect, default_drawing_document};
-use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
+use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 
 fn base_document() -> DrawingSnapshot {

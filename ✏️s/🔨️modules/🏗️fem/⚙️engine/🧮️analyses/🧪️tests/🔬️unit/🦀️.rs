@@ -1,7 +1,7 @@
 use super::*;
 use crate::elements2d::{Bar2, BeamEb2};
+use crate::engine_test_vectors::payload_bytes;
 use crate::model::{solve_linear_static, AxialSpring, Model};
-use crate::numerical_testkit::payload_bytes;
 
 fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
     let model = AnalysisModel {
@@ -25,6 +25,95 @@ fn assembly_operation(id: u64) -> Operation {
     Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(7), semio_framework_job::Generation(3), 11)
 }
 
+/// ⛽️ Assembly control, publication, and work transitions share the same exact grant admission.
+#[test]
+fn assembly_triplet_pages_control_transitions_preserve_state_until_granted() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⛽️step-grant/🔣️.json")).expect("assembly step grants");
+    for (index, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
+        let operation = assembly_operation(940 + index as u64);
+        let model = Arc::new(cantilever_analysis_model(210e9, 0.02, 8e-6, 3.0, 7_850.0).0);
+        let mut construction = AssemblyJobConstruction::new_owned(model, operation, 1);
+        while !construction.step_one().expect("step grant construction") {}
+        let mut job = construction.take_complete().expect("step grant job");
+        job.state.checkpoint_due = case["before"]["checkpointDue"].as_bool().unwrap();
+        job.state.preview_due = case["before"]["previewDue"].as_bool().unwrap();
+        if case["before"]["complete"].as_bool().unwrap() { job.state.stage = AssemblyJobStage::Complete; }
+        let mut sequence = 0;
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(case["fuel"].as_u64().unwrap(), case["deadline"].as_u64().unwrap()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let outcome = job.step(&mut context);
+        let observed = serde_json::json!({ "checkpointDue": job.state.checkpoint_due, "previewDue": job.state.preview_due, "pendingBuild": job.state.pending_build.is_some(), "complete": job.state.stage == AssemblyJobStage::Complete });
+        assert_eq!(observed, case["after"], "fixture {index} preserves or advances exactly the admitted transition");
+        assert_eq!(context.fuel_remaining(), case["fuelRemaining"].as_u64().unwrap(), "fixture {index} fuel");
+        assert_eq!(match outcome { StepOutcome::Yield => "yield", StepOutcome::Complete(_) => "complete", _ => panic!("unexpected assembly control outcome") }, case["outcome"].as_str().unwrap());
+        let mut closed = false;
+        for _ in 0..20_000 {
+            let (terminal, items, bytes) = job.close_step(MOUNTED_OWNER_PAGE_BYTES);
+            assert!(items <= 1 && bytes <= MOUNTED_OWNER_PAGE_BYTES);
+            if terminal { closed = true; break; }
+        }
+        assert!(closed, "step grant fixture releases every exact owner");
+    }
+}
+
+fn merge_fixture_triplet(value: &serde_json::Value) -> AssemblyTriplet {
+    AssemblyTriplet {
+        sequence: value["sequence"].as_u64().expect("triplet sequence"),
+        row: value["row"].as_u64().and_then(|value| value.try_into().ok()).expect("triplet row"),
+        col: value["column"].as_u64().and_then(|value| value.try_into().ok()).expect("triplet column"),
+        value: value["value"].as_f64().expect("triplet value"),
+    }
+}
+
+/// 🔀️ A full paged merge destination retains the exact selected producer and source cursor until
+/// capacity becomes available, then publishes and advances each exactly once in both merge lanes.
+#[test]
+fn assembly_triplet_pages_merge_refusal_retains_candidate_for_retry() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔀️merge-refusal/🔣️.json")).expect("merge refusal fixture");
+    for (case_index, case) in fixture["cases"].as_array().expect("merge refusal cases").iter().enumerate() {
+        let full = case["lane"].as_str().expect("merge lane") == "full";
+        let candidate = merge_fixture_triplet(&case["candidate"]);
+        let model = Arc::new(cantilever_analysis_model(210e9, 0.02, 8e-6, 3.0, 7_850.0).0);
+        let mut construction = AssemblyJobConstruction::new_owned(model, assembly_operation(900 + case_index as u64), 1);
+        while !construction.step_one().expect("merge refusal construction") {}
+        let mut job = construction.take_complete().expect("merge refusal job");
+        let partition = &mut job.state.partitions[0];
+        let source = if full { &mut partition.full } else { &mut partition.free };
+        source.push_reserved(candidate).expect("source candidate fits admitted partition");
+        let destination = if full { &mut job.state.merged_full } else { &mut job.state.merged_free };
+        let filler = AssemblyTriplet { sequence: 0, row: 0, col: 0, value: 0.0 };
+        while destination.has_reserved_slot() {
+            destination.push_reserved(filler).expect("destination filler fits advertised slot");
+        }
+        let destination_len = destination.len();
+        assert_eq!(job.advance_partition_merge(full), Ok(Some(false)), "scan selects the fixture candidate");
+        assert_eq!(job.state.merge_candidate, Some((0, candidate)));
+        assert_eq!(job.advance_partition_merge(full), Err(FemError::Singular), "full destination refuses exact candidate");
+        let cursor = if full { job.state.full_merge_cursors[0] } else { job.state.free_merge_cursors[0] };
+        assert_eq!(cursor, case["refused"]["sourceCursor"].as_u64().expect("refused cursor") as usize);
+        assert_eq!(job.state.merge_candidate, Some((0, candidate)));
+        let destination = if full { &mut job.state.merged_full } else { &mut job.state.merged_free };
+        assert_eq!(destination.len(), destination_len, "refusal leaves destination unchanged");
+        assert_eq!(destination.pop(), Some(filler), "one retired filler restores one exact reserved slot");
+        assert_eq!(job.advance_partition_merge(full), Ok(Some(true)), "retry publishes retained candidate");
+        let cursor = if full { job.state.full_merge_cursors[0] } else { job.state.free_merge_cursors[0] };
+        assert_eq!(cursor, case["retried"]["sourceCursor"].as_u64().expect("retried cursor") as usize);
+        assert_eq!(job.state.merge_candidate, None);
+        let destination = if full { &job.state.merged_full } else { &job.state.merged_free };
+        assert_eq!(destination.get(destination.len() - 1), Some(&candidate), "retry publishes the same fixture producer");
+        let mut closed = false;
+        for _ in 0..20_000 {
+            let (terminal, released_items, released_bytes) = job.close_step(MOUNTED_OWNER_PAGE_BYTES);
+            assert!(released_items <= 1);
+            assert!(released_bytes <= MOUNTED_OWNER_PAGE_BYTES);
+            if terminal {
+                closed = true;
+                break;
+            }
+        }
+        assert!(closed, "refusal fixture closes under the 4 KiB grant");
+    }
+}
+
 #[test]
 fn mounted_assembly_construction_is_retained_and_preserves_the_exact_model_owner() {
     let operation = assembly_operation(83);
@@ -45,6 +134,184 @@ fn mounted_assembly_construction_is_retained_and_preserves_the_exact_model_owner
         AnalysisModelOwner::Mounted(_) => panic!("dynamic construction cannot substitute mounted fixed authority"),
     }
     assert!(construction.take_complete().is_none(), "completion transfers exactly once");
+}
+
+#[test]
+fn assembly_triplet_pages_cross_one_physical_page_without_extra_logical_partitions() {
+    let nodes = vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [2.0, 0.0, 0.0] }];
+    let mut model = MountedAnalysisModel::new();
+    while !model.admit_node_one(nodes.len()).unwrap() {}
+    for node in nodes { model.push_node(node).unwrap(); }
+    while !model.admit_element_one(50).unwrap() {}
+    for index in 0..50 {
+        let element = BeamEb2 { id: format!("e{index}"), start: "a".into(), end: "b".into(), e: 210e9, area: 0.02, iy: 8e-6, density: 7_850.0 }.into();
+        model.push_element(element).unwrap_or_else(|_| panic!("admitted mounted element"));
+    }
+    while !model.admit_support_one(1).unwrap() {}
+    let mut support = MountedAnalysisSupport::new("a".into());
+    for dof in [Dof::Tx, Dof::Ty, Dof::Rz] { support.push_fixed(dof).unwrap(); }
+    model.push_support(support).unwrap_or_else(|_| panic!("admitted mounted support"));
+    let mut construction = AssemblyJobConstruction::new_mounted(Arc::new(model), assembly_operation(87), 1);
+    let mut previous_paged_bytes = 0;
+    let mut opportunities = 0;
+    loop {
+        let complete = construction.step_one().expect("paged assembly construction");
+        opportunities += 1;
+        let paged_bytes = construction.partitions.iter().map(|partition| partition.full.allocated_bytes() + partition.free.allocated_bytes()).sum::<usize>() + construction.merged_full.allocated_bytes() + construction.merged_free.allocated_bytes();
+        assert!(paged_bytes.saturating_sub(previous_paged_bytes) <= MOUNTED_OWNER_PAGE_BYTES);
+        previous_paged_bytes = paged_bytes;
+        if complete {
+            break;
+        }
+        assert!(opportunities < 16_384);
+    }
+    let mut job = construction.take_complete().expect("paged construction publishes one job");
+    assert_eq!(job.state.partitions.len(), 1);
+    let partition = &job.state.partitions[0];
+    for owner in [&partition.full, &partition.free, &job.state.merged_full, &job.state.merged_free] {
+        assert!(owner.capacity() >= 50 * 6 * 6);
+        assert!(owner.allocated_bytes() > MOUNTED_OWNER_PAGE_BYTES);
+    }
+    for _ in 0..100_000 {
+        let (terminal, released_items, released_bytes) = job.close_step(MOUNTED_OWNER_PAGE_BYTES);
+        assert!(released_items <= 1);
+        assert!(released_bytes <= MOUNTED_OWNER_PAGE_BYTES);
+        if terminal {
+            return;
+        }
+    }
+    panic!("paged assembly close did not reach its exact terminal witness");
+}
+
+/// 📚️ Final compressed row pointers, columns, and values retain separate fixed physical pages
+/// while preserving one logical CSR and its exact matrix action.
+#[test]
+fn assembly_triplet_pages_build_final_csr_without_contiguous_arrays() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔢️sparse/🧪️tests/🧫️fixtures/📚️paged-csr/🔣️.json")).expect("paged CSR fixture");
+    let expected_order = fixture["order"].as_u64().expect("CSR order") as usize;
+    let node_count = expected_order / 3;
+    assert_eq!(node_count * 3, expected_order);
+    let model = Arc::new(AnalysisModel {
+        nodes: (0..node_count).map(|index| Node { id: format!("n{index}"), pos: [index as f64, 0.0, 0.0] }).collect(),
+        elements: (1..node_count).map(|index| BeamEb2 { id: format!("e{index}"), start: format!("n{}", index - 1), end: format!("n{index}"), e: 210e9, area: 0.02, iy: 8e-6, density: 7_850.0 }.into()).collect(),
+        supports: vec![Support { node_id: "n0".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] }],
+    });
+    let plan = AssemblyPlan::prepare(&model).expect("beam CSR source plan");
+    let source_grant = [
+        model.nodes.capacity() * size_of::<Node>(),
+        model.elements.capacity() * size_of::<Elements>(),
+        model.supports.capacity() * size_of::<Support>(),
+        plan.dof_map.order.capacity() * size_of::<(String, Dof)>(),
+        plan.inv_perm.capacity() * size_of::<usize>(),
+        plan.free_new.capacity() * size_of::<usize>(),
+        plan.compact_of_new.capacity() * size_of::<Option<usize>>(),
+        MOUNTED_OWNER_PAGE_BYTES,
+    ].into_iter().max().unwrap();
+    let n = plan.ndof;
+    assert_eq!(n, expected_order);
+    let entry_count = n.checked_mul(3).and_then(|count| count.checked_sub(2)).expect("tridiagonal entry count");
+    assert_eq!(entry_count, fixture["entryCount"].as_u64().expect("CSR entry count") as usize);
+    let mut merged_full = cold_paged_owner(entry_count).expect("tridiagonal paged triplets");
+    let mut sequence = 0;
+    for row in 0..n {
+        for column in row.saturating_sub(1)..=(row + 1).min(n - 1) {
+            let value = if row == column {
+                if row == 0 || row + 1 == n {
+                    1.0
+                } else {
+                    2.0
+                }
+            } else {
+                -1.0
+            };
+            merged_full.push_reserved(AssemblyTriplet { sequence, row: row.try_into().expect("row index"), col: column.try_into().expect("column index"), value }).expect("tridiagonal triplet slot");
+            sequence += 1;
+        }
+    }
+    let operation = assembly_operation(88);
+    let model_signature = assembly_model_signature(&model);
+    let total_elements = model.elements.len();
+    let job: AssemblyJob<'static> = AssemblyJob {
+        model: AnalysisModelOwner::Owned(model),
+        operation,
+        model_signature,
+        plan,
+        state: AssemblyCheckpoint {
+            stage: AssemblyJobStage::Complete,
+            total_elements,
+            element_cursor: total_elements,
+            pending_build: None,
+            pending: None,
+            partitions: Vec::new(),
+            full_merge_cursors: Vec::new(),
+            free_merge_cursors: Vec::new(),
+            merged_full,
+            merged_free: PagedList::default(),
+            checkpoint_due: false,
+            preview_due: false,
+            resume_target: 0,
+            merge_scan_partition: 0,
+            merge_candidate: None,
+        },
+        close_lane: 0,
+        model_close: AnalysisModelCloseCursor::default(),
+    };
+    let mut build = AssemblyCsrBuild::new(job).unwrap_or_else(|_| panic!("completed assembly enters CSR build"));
+    let mut previous_bytes = 0;
+    for _ in 0..100_000 {
+        let complete = build.step_one().expect("paged CSR build");
+        let current_bytes = build.row_counts.allocated_bytes() + build.indptr.allocated_bytes() + build.indices.allocated_bytes() + build.values.allocated_bytes();
+        assert!(current_bytes.saturating_sub(previous_bytes) <= MOUNTED_OWNER_PAGE_BYTES);
+        previous_bytes = current_bytes;
+        if complete {
+            break;
+        }
+    }
+    let mut matrix = build.take_complete().expect("paged CSR completes");
+    assert_eq!(matrix.entries_len(), entry_count);
+    let [indptr_bytes, index_bytes, value_bytes] = matrix.physical_backing_bytes();
+    assert!(indptr_bytes != 0);
+    let page_bytes = fixture["physicalPageBytes"].as_u64().expect("CSR physical page") as usize;
+    assert_eq!(page_bytes, MOUNTED_OWNER_PAGE_BYTES);
+    assert!(index_bytes > page_bytes);
+    assert!(value_bytes > page_bytes);
+    let rule = &fixture["vectorRule"];
+    let multiplier = rule["multiplier"].as_i64().expect("vector multiplier");
+    let modulus = rule["modulus"].as_i64().expect("vector modulus");
+    let offset = rule["offset"].as_i64().expect("vector offset");
+    let divisor = rule["divisor"].as_f64().expect("vector divisor");
+    let vector = VecD::from_vec((0..n).map(|index| ((index as i64 * multiplier) % modulus - offset) as f64 / divisor).collect());
+    let action = matrix.mul_vec(&vector);
+    for sample in fixture["actionSamples"].as_array().expect("CSR action samples") {
+        let index = sample["index"].as_u64().expect("action index") as usize;
+        let expected = sample["value"].as_f64().expect("action value");
+        assert!((action.get(index) - expected).abs() <= 1e-12, "NumPy action sample {index}");
+    }
+    let action_l1: f64 = action.0.iter().map(|value| value.abs()).sum();
+    assert!((action_l1 - fixture["actionL1"].as_f64().expect("action L1")).abs() <= 1e-10);
+    let mut build_closed = false;
+    for _ in 0..20_000 {
+        let grant = if build.assembly.is_some() { source_grant } else { MOUNTED_OWNER_PAGE_BYTES };
+        let (terminal, released_items, released_bytes) = build.close_step(grant);
+        assert!(released_items <= 1);
+        assert!(released_bytes <= grant);
+        if terminal {
+            build_closed = true;
+            break;
+        }
+    }
+    assert!(build_closed, "CSR construction closes under each source owner's exact physical grant");
+    let mut closed = false;
+    for _ in 0..20_000 {
+        let (terminal, released_items, released_bytes) = matrix.close_step(MOUNTED_OWNER_PAGE_BYTES);
+        assert!(released_items <= 1);
+        assert!(released_bytes <= MOUNTED_OWNER_PAGE_BYTES);
+        if terminal {
+            closed = true;
+            break;
+        }
+    }
+    assert!(closed, "paged CSR closes under the exact physical grant");
 }
 
 #[test]

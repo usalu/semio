@@ -1,5 +1,52 @@
+pub(crate) mod context {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app as new_test_app, new_app_with_registry};
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    
+    pub type WiresApp = VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>>;
+    
+    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    pub async fn new_app() -> WiresApp {
+        new_test_app::<EditorApp<ReasoningWiresPlayApp>>().await
+    }
+    
+    /// 🧪️ Framework test context gap (SDK GAP, see this ticket's `📓️w0-f-report.md` handoff #3):
+    /// `assert_declared_actions_bridge_to_commands`/`new_app_with_registry` still take `fn() -> App`,
+    /// unchanged for this ticket, while `create_wires_app` now returns `AppDefinition` — this tiny
+    /// local wrapper bridges the two shapes with an empty `examples` list (dropped per `create_wires_app`'s
+    /// own doc comment).
+    fn wires_manifest_for_tests() -> App {
+        App { definition: create_wires_app(), examples: Vec::new() }
+    }
+    
+    /// 🧪️ An app wired to the real manifest registry — required to resolve the "graph" interaction
+    /// domain's declaration when dispatching a framework-injected verb like `interactionSelect`.
+    pub async fn app_with_registry() -> WiresApp {
+        new_app_with_registry::<EditorApp<ReasoningWiresPlayApp>>(wires_manifest_for_tests).await
+    }
+    
+    /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
+    pub async fn metabolism_app() -> WiresApp {
+        let mut app = new_app().await;
+        let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
+        let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
+        let files = store::print_document_pack(&envelope).await.expect("print document pack");
+        app.load_document_pack(&files).await.expect("load metabolism");
+        app
+    }
+    
+    pub async fn dispatch(app: &mut WiresApp, command: WiresCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+    
+    pub async fn render(app: &mut WiresApp, body_key: &str) -> String {
+        let tree = app.render(body_key, None, &ViewModel::default()).await.expect("render");
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire rendered tree")
+    }
+}
+
 use super::*;
-use crate::editor::wires::testkit::{metabolism_app, new_app, render};
+use crate::editor::wires::unit_tests::context::{metabolism_app, new_app, render};
 use semio_framework_plugin::EditorApp;
 
 const RETAINED_ROUTES: &str = include_str!("../../🧫️fixtures/🛣️retained-command-routes.json");
@@ -11,14 +58,14 @@ fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
     assert_eq!(fixture.get("maximumRawBytes").and_then(Value::as_u64), Some(WIRES_RETAINED_RAW_BYTES as u64));
     assert_eq!(fixture.get("maximumWorkItems").and_then(Value::as_u64), Some(WIRES_RETAINED_WORK_ITEMS as u64));
     let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
-    let migrated = routes.iter().filter(|route| route.get("disposition").and_then(Value::as_str) == Some("migrated")).map(|route| route.get("id").and_then(Value::as_str).expect("route id")).collect::<Vec<_>>();
+    let migrated = routes.iter().filter(|route| route.get("disposition").and_then(Value::as_str) == Some("Migrated")).map(|route| route.get("id").and_then(Value::as_str).expect("route id")).collect::<Vec<_>>();
     assert_eq!(migrated, WIRES_RETAINED_TOOL_IDS);
     assert_eq!(routes.len(), 10);
     assert_eq!(<WiresRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, WIRES_RETAINED_PUBLICATION_CONTRACTS);
     assert_eq!(WIRES_RETAINED_PUBLICATION_CONTRACTS[0].lanes, [ArtifactToolPublicationLane::WindowTransient]);
     assert_eq!(WIRES_RETAINED_PUBLICATION_CONTRACTS[1].lanes, [ArtifactToolPublicationLane::WindowTransient]);
     assert_eq!(WIRES_RETAINED_PUBLICATION_CONTRACTS[2].lanes, [ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient]);
-    assert!(routes.iter().filter(|route| route.get("disposition").and_then(Value::as_str) == Some("batch-only-pending-rewrite")).all(|route| route.get("lanes").and_then(Value::as_array).is_some_and(Vec::is_empty)));
+    assert!(routes.iter().filter(|route| route.get("disposition").and_then(Value::as_str) == Some("BatchOnlyPendingRewrite")).all(|route| route.get("lanes").and_then(Value::as_array).is_some_and(Vec::is_empty)));
 }
 
 //#region 🔖️CommandSurface
@@ -101,7 +148,7 @@ pub(super) fn every_command() -> Vec<WiresCommand> {
         WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.5, y: -2.5 }),
         WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }),
         WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
-        WiresCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: edit::windows::canvas::config::WiresCanvasCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
+        WiresCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
     ]
 }
 //#endregion 🔖️CommandSurface
@@ -174,7 +221,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = new_app().await;
-    semio_framework_plugin::testkit::assert_undo_redo_round_trip(
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
         &mut app,
         WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
         |app| crate::schema::fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).len(),
@@ -186,7 +233,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent() {
-    semio_framework_plugin::testkit::assert_ingest_idempotent::<EditorApp<ReasoningWiresPlayApp>, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| {
+    semio_framework_plugin::artifact_app_laws::assert_ingest_idempotent::<EditorApp<ReasoningWiresPlayApp>, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| {
         crate::schema::fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).len()
     })
     .await;
@@ -197,7 +244,7 @@ async fn ingest_operations_is_idempotent() {
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
-    use semio_framework_plugin::testkit::meta;
+    use semio_framework_plugin::artifact_app_laws::meta;
     use semio_framework_plugin::PluginApp;
     use store::MemoryBackbone;
 

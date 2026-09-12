@@ -56,7 +56,7 @@ mod scope_schema_export_law;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
-/// 🧫 `📚️examples/🧪️conformance/📇️catalog.json`: the language-neutral conformance corpus index — the
+/// 🧫 `🧫️fixtures/🧪️conformance/📇️catalog.json`: the language-neutral conformance corpus index — the
 /// case identities and the per-role filenames every renderer's conformance run reads, so a directory
 /// glyph is never an identity. The Rust half of the `ConformanceCatalogFixture` export its
 /// `"x-semio-formats"` declares; `🧪️tests/🔬️conformance-unit/🦀️.rs` decodes the file through it.
@@ -240,7 +240,7 @@ key: string, component: Component, layout: LayoutSpec, style: StyleSpec, activit
 export type ButtonProps = {
 /**
  * 🖼️ Icon key. The old `IconName` is generated per-consuming-crate via a `#[path]` mount (see
- * `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs`), not a publishable
+ * `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs`), not a publishable
  * dependency this crate's `Cargo.toml` — which this packet is forbidden from editing — could
  * take on. A plain `String` icon key is the only viable choice here; flagged as a
  * registrar-request in `📓️terra-contract-doc-report.md` in case a shared icon crate should
@@ -434,7 +434,7 @@ export type KeyValueListProps = { entries: Array<KeyValueEntry>, };"####,
  * 🏷️ Display-ready UI text carried on the wire.
  *
  * ⚠️ Decision (flagged per packet brief): the old `UiNode`'s `Label` (`crate::wgpu::Label` in
- * `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️label.rs`) is NOT reused here. It
+ * `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🏷️label/🦀️.rs`) is NOT reused here. It
  * is defined inside the old wgpu-target UI package, imports that package's own `Locale`/
  * `Terminology` axes, and its whole point (`From<LabelText>` wired to the `app_labels!` macro,
  * no `From<&str>`) is a compile-time-checked-label enforcement mechanism that lives at the

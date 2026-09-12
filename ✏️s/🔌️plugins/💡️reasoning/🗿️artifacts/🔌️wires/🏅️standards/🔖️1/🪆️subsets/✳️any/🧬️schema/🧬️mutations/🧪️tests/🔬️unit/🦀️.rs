@@ -15,7 +15,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }
@@ -118,24 +118,24 @@ async fn op_text_round_trip_move_node() {
 
 //#region 🧪️MutationLaws
 /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-/// (reachable here as `protocol::testkit`), exercised against the two most structurally distinct
+/// (reachable here as `protocol::os_spr::protocol_laws`), exercised against the two most structurally distinct
 /// kinds: an id-keyed create/delete pair (`create-node`) and a single-field addressed setter
 /// (`move-node`).
 #[semio_framework_async_macros::async_test]
 async fn create_node_satisfies_the_inverse_and_absorb_laws() {
     let base = empty_wires_snapshot();
     let mutation = create_node(node("node-1", "Alpha"));
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = create_node(node("node-2", "Beta")).diff(&base).diff().clone();
-    protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn move_node_satisfies_the_inverse_law() {
     let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
     let mutation = move_node("node-1".into(), 40.0, 30.0);
-    protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
 }
 //#endregion 🧪️MutationLaws
 
@@ -146,59 +146,59 @@ async fn move_node_satisfies_the_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn delete_missing_node_is_a_target_missing_error() {
     let base = empty_wires_snapshot();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &delete_node("does-not-exist".into())).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &delete_node("does-not-exist".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn move_missing_node_is_a_target_missing_error() {
     let base = empty_wires_snapshot();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &move_node("does-not-exist".into(), 1.0, 2.0)).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &move_node("does-not-exist".into(), 1.0, 2.0)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn disconnect_missing_edge_is_a_target_missing_error() {
     let base = empty_wires_snapshot();
-    protocol::os_spr::testkit::assert_missing_target_is_error(&base, &disconnect_nodes("does-not-exist".into())).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &disconnect_nodes("does-not-exist".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_node_duplicate_id_never_applies() {
     let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
     let duplicate = create_node(node("node-1", "Alpha Again"));
-    protocol::os_spr::testkit::assert_fatal_never_applies(&duplicate.diff(&base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_node_outcome_obeys_the_policy_matrix() {
     let base = empty_wires_snapshot();
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &create_node(node("node-1", "Alpha"))).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &create_node(node("node-1", "Alpha"))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_node_outcome_obeys_the_policy_matrix() {
     let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &delete_node("node-1".into())).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &delete_node("node-1".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn move_and_resize_node_outcomes_obey_the_policy_matrix() {
     let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &move_node("node-1".into(), 40.0, 30.0)).await;
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &resize_node("node-1".into(), Some(48.0), None, None)).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &move_node("node-1".into(), 40.0, 30.0)).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &resize_node("node-1".into(), Some(48.0), None, None)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn change_and_set_node_outcomes_obey_the_policy_matrix() {
     let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &change_node_kind("node-1".into(), "topic".into())).await;
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &change_node_shape("node-1".into(), "rectangle".into())).await;
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &set_node_root("node-1".into(), true)).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &change_node_kind("node-1".into(), "topic".into())).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &change_node_shape("node-1".into(), "rectangle".into())).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &set_node_root("node-1".into(), true)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn edit_node_text_outcome_obeys_the_policy_matrix() {
     let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &edit_node_text("node-1".into(), "Renamed".into())).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &edit_node_text("node-1".into(), "Renamed".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -210,8 +210,8 @@ async fn connect_and_disconnect_nodes_outcomes_obey_the_policy_matrix() {
     let relationship = dsl::to_dsl_value(&dsl::json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
     let connect = connect_nodes(edge, relationship);
     let with_edge = round_trip(&snapshot, &connect);
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&snapshot, &connect).await;
-    protocol::os_spr::testkit::assert_outcome_policy_matrix(&with_edge, &disconnect_nodes("edge-1".into())).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&snapshot, &connect).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&with_edge, &disconnect_nodes("edge-1".into())).await;
 }
 //#endregion 🧪️OutcomeLaws
 

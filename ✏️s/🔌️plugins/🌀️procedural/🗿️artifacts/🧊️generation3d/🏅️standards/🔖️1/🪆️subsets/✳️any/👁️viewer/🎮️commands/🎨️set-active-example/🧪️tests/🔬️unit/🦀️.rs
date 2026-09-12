@@ -4,8 +4,8 @@ use crate::standards::v1::subsets::any::schema::{
     PROCEDURAL_EXAMPLE_SPHERE_TORUS,
 };
 use crate::viewer::generation3d::modes::view::windows::preview;
-use crate::viewer::generation3d::testkit;
-use crate::viewer::generation3d::testkit::{app, armed_window_ids, dispatch_with_view, view_shell_view};
+use crate::viewer::generation3d::unit_tests::context;
+use crate::viewer::generation3d::unit_tests::context::{app, armed_window_ids, dispatch_with_view, view_shell_view};
 use crate::viewer::generation3d::Generation3dViewCommand;
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::ArtifactViewer;
@@ -42,7 +42,7 @@ fn viewed_node_ids(example_id: &str) -> Vec<String> {
 /// the sibling surface's own switch (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
 fn every_bundled_example_switches_the_viewed_document() {
-    let _serial = testkit::lock();
+    let _serial = context::lock();
     let opened = viewed_node_ids("");
     assert!(!opened.is_empty(), "the opened document must report its own graph nodes");
     let mut seen: Vec<(&str, Vec<String>)> = Vec::new();
@@ -76,11 +76,11 @@ fn every_bundled_example_switches_the_viewed_document() {
 /// separately by `consecutive_switches_arm_once_until_the_chain_answers` below.
 #[semio_framework_async_macros::async_test]
 async fn every_bundled_example_dispatches_live_rearms_the_preview_and_never_mutates_the_document() {
-    let _serial = testkit::lock();
+    let _serial = context::lock();
     let shell_view = view_shell_view("view-preview");
     for example_id in EVERY_BUNDLED_EXAMPLE.iter().chain(std::iter::once(&"")) {
         let mut app = app().await;
-        let before = testkit::snapshot(&app);
+        let before = context::snapshot(&app);
         let command = Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: (*example_id).into() });
         assert_eq!(command.command_id(), "setActiveExample");
         let receipt = dispatch_with_view(&mut app, command, shell_view.clone()).await.expect("the viewer example switch settles");
@@ -91,7 +91,7 @@ async fn every_bundled_example_dispatches_live_rearms_the_preview_and_never_muta
         let armed = armed_window_ids(&receipt.effects);
         println!("[STATS] viewer setActiveExample {example_id:?} lanes={:?} armed={armed:?}", receipt.lanes);
         assert_eq!(armed, vec!["view-preview".to_string()], "the switch owes the attached preview its own re-armed tick ({example_id})");
-        assert_eq!(testkit::snapshot(&app), before, "viewer setActiveExample({example_id}) must not mutate the document");
+        assert_eq!(context::snapshot(&app), before, "viewer setActiveExample({example_id}) must not mutate the document");
     }
 }
 
@@ -100,7 +100,7 @@ async fn every_bundled_example_dispatches_live_rearms_the_preview_and_never_muta
 /// navbar would stack another chain on a surface that already owes one.
 #[semio_framework_async_macros::async_test]
 async fn consecutive_switches_arm_once_until_the_chain_answers() {
-    let _serial = testkit::lock();
+    let _serial = context::lock();
     let mut app = app().await;
     let shell_view = view_shell_view("view-preview");
     let first = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: PROCEDURAL_EXAMPLE_BOX_SHELL.into() }), shell_view.clone()).await.expect("first switch");
@@ -115,9 +115,9 @@ async fn consecutive_switches_arm_once_until_the_chain_answers() {
 /// offer declared ids, so anything else is a wire defect worth naming.
 #[semio_framework_async_macros::async_test]
 async fn an_unpublished_example_id_is_refused() {
-    let _serial = testkit::lock();
+    let _serial = context::lock();
     let mut app = app().await;
-    let before = testkit::snapshot(&app);
+    let before = context::snapshot(&app);
     let shell_view = view_shell_view("view-preview");
     let receipt = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: "not-a-real-example".into() }), shell_view).await;
     let refused = match receipt {
@@ -128,7 +128,7 @@ async fn an_unpublished_example_id_is_refused() {
         }
     };
     println!("[STATS] viewer setActiveExample refusal={refused}");
-    assert_eq!(testkit::snapshot(&app), before, "a refused example switch leaves the document untouched");
+    assert_eq!(context::snapshot(&app), before, "a refused example switch leaves the document untouched");
 }
 
 /// 🪟️ The window the switch re-arms is the one the SHELL says is attached; with no roster at all
@@ -136,7 +136,7 @@ async fn an_unpublished_example_id_is_refused() {
 /// cannot land.
 #[semio_framework_async_macros::async_test]
 async fn an_unattached_surface_arms_no_tick() {
-    let _serial = testkit::lock();
+    let _serial = context::lock();
     let mut app = app().await;
     let receipt = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: PROCEDURAL_EXAMPLE_BOX_SHELL.into() }), semio_framework_plugin::ViewModel::default())
         .await

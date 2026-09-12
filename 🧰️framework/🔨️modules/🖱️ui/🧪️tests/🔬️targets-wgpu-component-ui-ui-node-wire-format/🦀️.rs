@@ -357,7 +357,7 @@ mod ui_node_wire_format_tests {
             Board2dScene::base("{}".into(), "{}".into(), true),
             InkCanvasScene::base("{}".into(), "select".into(), "edit".into(), true),
             GraphTimelineScene { columns_json: "[]".into() },
-            NodeGraphScene::base(vec![], vec![], NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 }),
+            NodeGraphScene::base(vec![], vec![], semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 }),
             TextEditorScene::base("buf".into(), Some("rust".into()), None),
             BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None },
         );

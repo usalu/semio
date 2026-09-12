@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::shooting::testkit::{render as render_body, shooting_app};
+use crate::editor::shooting::unit_tests::context::{render as render_body, shooting_app};
 
 #[semio_framework_async_macros::async_test]
 async fn inspector_falls_back_to_the_active_shot() {

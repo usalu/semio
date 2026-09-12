@@ -10,7 +10,7 @@ async fn kinds_matches_every_variant_and_manifest() {
     let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
     assert_eq!(from_variants, from_kinds, "KINDS must equal every GifMutation variant's kind()");
     assert_eq!(KINDS.len(), 20, "KINDS must list exactly the declared 20 kinds");
-    let manifest = include_str!("../../../../🔮️oracle/🔣️.json");
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "oracle catalog manifest must declare kind {kind:?}");
     }

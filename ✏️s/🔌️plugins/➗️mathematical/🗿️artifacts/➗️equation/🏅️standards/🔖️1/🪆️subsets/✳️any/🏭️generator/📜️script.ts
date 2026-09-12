@@ -25,10 +25,10 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const ENGINE = join(HERE, "🦀️json-engine");
+const ENGINE = join(HERE, "🧩️json", "📦️packages", "🦀️rust");
 const TARGET = cargoTargetDirectory(getWorkspaceRoot());
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
-const CATALOG = join(HERE, "..", "🧪️oracle", "🔣️.json");
+const CATALOG = join(HERE, "..", "🔮️oracles", "🔣️.json");
 const ORACLE_ID = "serde-json-equation-carrier-reader";
 const COMPARISON_PROFILE = "semantic-equation-carrier-v1";
 const KINDS: readonly string[] = ["change-coefficient", "change-graph-directed", "connect-nodes", "disconnect-nodes", "insert-point", "move-point", "remove-point", "replace-graph", "replace-points", "update-graph-algorithm"];

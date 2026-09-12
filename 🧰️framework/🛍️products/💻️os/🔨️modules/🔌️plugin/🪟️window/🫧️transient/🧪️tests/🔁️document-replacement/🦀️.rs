@@ -35,7 +35,7 @@ mod document_window_replacement_tests {
         type Mutation = crate::publication_fixture::PublicationTransientMutation;
 
         fn build_owners() -> crate::component::window_transient::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-            crate::window_transient_testkit::owners()
+            crate::window_transient_owners::owners()
         }
     }
 

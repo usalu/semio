@@ -16,7 +16,7 @@ async fn render_lists_one_row_per_top_level_step() {
     let scene: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(props).expect("packed table");
     let rows: serde_json::Value = serde_json::from_str(&scene.rows_json).expect("independent row oracle");
     assert_eq!(rows.as_array().expect("rows").len(), expected);
-    semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire table");
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire table");
     crate::retire_procedure_fixture(document);
 }
 
@@ -28,7 +28,7 @@ async fn columns_resolve_from_the_shared_view_locale() {
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("table surface") };
         let scene: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(props).expect("packed table");
         let columns = serde_json::from_str::<Vec<String>>(&scene.columns_json).expect("columns");
-        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire table");
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire table");
         columns
     };
     assert_eq!(columns(semio_framework_plugin::Locale::En), ["#", "Id", "Kind"]);

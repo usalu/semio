@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://fem/engine/sparse/publication-grant",
+  "title": "FEM PCG Publication Grant",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "oracle",
+    "cases"
+  ],
+  "properties": {
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "version"
+      ],
+      "properties": {
+        "package": {
+          "const": "fast-json-patch"
+        },
+        "version": {
+          "const": "3.1.1"
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "fuel",
+          "deadline",
+          "expected"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "checkpoint",
+              "preview",
+              "complete"
+            ]
+          },
+          "fuel": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "deadline": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "pending",
+              "cursor",
+              "fuelRemaining",
+              "outcome",
+              "terminalEmpty"
+            ],
+            "properties": {
+              "pending": {
+                "type": "boolean"
+              },
+              "cursor": {
+                "const": 0
+              },
+              "fuelRemaining": {
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "yield",
+                  "preview",
+                  "checkpoint",
+                  "complete"
+                ]
+              },
+              "terminalEmpty": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

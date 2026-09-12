@@ -1,11 +1,11 @@
 
 use super::*;
-use crate::editor::space_index::{SpaceIndexCommand, testkit};
+use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn open_artifact_relays_with_document_and_space_ids() {
-    let (mut app, id) = testkit::new_app_with_indexed_artifact().await;
-    let result = app.dispatch_typed(SpaceIndexCommand::OpenArtifact(OpenArtifact { id: id.clone() }), &semio_framework_plugin::testkit::meta("local")).await.expect("open indexed artifact");
+    let (mut app, id) = context::new_app_with_indexed_artifact().await;
+    let result = app.dispatch_typed(SpaceIndexCommand::OpenArtifact(OpenArtifact { id: id.clone() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("open indexed artifact");
     assert!(result.mutations.is_empty());
     assert_eq!(result.requested_effects.len(), 1);
     match &result.requested_effects[0] {
@@ -22,7 +22,7 @@ async fn open_artifact_relays_with_document_and_space_ids() {
 
 #[semio_framework_async_macros::async_test]
 async fn open_artifact_of_a_missing_row_faults() {
-    let mut app = testkit::new_app().await;
-    let error = app.dispatch_typed(SpaceIndexCommand::OpenArtifact(OpenArtifact { id: "ghost".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect_err("missing row must fault");
+    let mut app = artifact_app_laws::new_app().await;
+    let error = app.dispatch_typed(SpaceIndexCommand::OpenArtifact(OpenArtifact { id: "ghost".into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect_err("missing row must fault");
     assert_eq!(error.code.0, "s.space.index.target-missing");
 }

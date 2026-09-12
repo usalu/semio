@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import laws from "./laws.json";
+import laws from "../../🧫️fixtures/🧩️wgpu-module-routes/🔣️.json";
 import { assertBundleModuleRoutes, bundleCopyDirectives } from "../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts";
 import { MODULE_ROUTES, moduleRoutePath } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { pluginModulesRoot } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";

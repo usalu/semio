@@ -27,7 +27,7 @@ export interface Puzzle5dSnapshot {
   label?: string;
   /** @state artifact */
   meta: Puzzle5dMeta;
-  /** @state artifact @child kind=s.stdio.semio.kit */
+  /** @state artifact @child kind=s.stdio.semio */
   kindCatalogs?: ArtifactChildHandle;
   /** @state artifact */
   kindCatalogsExtra?: Puzzle5dKindCatalogsExtra;

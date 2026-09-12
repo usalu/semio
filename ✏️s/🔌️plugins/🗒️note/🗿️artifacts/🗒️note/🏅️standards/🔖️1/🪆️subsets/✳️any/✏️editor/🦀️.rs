@@ -17,7 +17,6 @@ use crate::editor::note::commands::{set_camera, set_camera_zoom};
 use crate::editor::note::commands::{set_eraser_radius, set_pencil_width};
 use crate::editor::note::commands::{set_grid_opacity, set_grid_spacing, set_grid_subdivisions, set_grid_visible};
 use crate::editor::note::commands::{set_snap_enabled, set_snap_grid_spacing};
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::editor::note::modes::edit;
 use crate::editor::note::modes::edit::windows::{composite, navigator};
 use crate::editor::note::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -29,7 +28,7 @@ use crate::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactView, ConfigView, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UtilityCategory, UtilityDefinition, WindowEngagement,
+    InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UtilityCategory, UtilityDefinition, WindowEngagement,
     WindowMeasure,
 };
 use std::collections::HashMap;
@@ -45,6 +44,22 @@ pub use document_panel::NOTE_PLAY_BODY_DOCUMENT;
 pub use inspection_panel::NOTE_PLAY_BODY_PROPERTIES;
 pub use navigator::{NOTE_PLAY_BODY_NAVIGATOR, NOTE_PLAY_WINDOW_NAVIGATOR};
 //#endregion 🔖️Constants
+
+//#region 🧬️AppSchema
+fn note_app_schema_descriptor() -> framework_schema::AppSchemaDescriptor {
+    framework_schema::AppSchemaDescriptor {
+        id: "s.note.note",
+        config: framework_schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },
+        presence: framework_schema::FacetLeaves {
+            rust: include_str!("👥️presence/🧬️schema/🦀️.rs"),
+            typescript: include_str!("👥️presence/🧬️schema/🟦️.ts"),
+            graphql: include_str!("👥️presence/🧬️schema/🔗️.graphql"),
+            json_schema: include_str!("👥️presence/🧬️schema/🔣️.json"),
+            proto: include_str!("👥️presence/🧬️schema/🛰️.proto"),
+        },
+    }
+}
+//#endregion 🧬️AppSchema
 
 //#region 🔖️ResetDocument
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (see
@@ -126,7 +141,7 @@ semio_framework_plugin::app_commands! {
     /// or its hosts) collapse onto the one surviving action id's command instead of keeping a dead
     /// synonym. Row order is the binary variant ordinal: appending is safe, reordering is a wire-format
     /// break.
-    pub enum NoteCommand for NoteSnapshot, NoteMutation, NoteConfig, NoteConfigMutation, ctx = NoteDispatchCtx {
+    pub enum NoteCommand for NoteSnapshot, NoteMutation, NoConfig, NoConfigMutation, ctx = NoteDispatchCtx {
         "setGridVisible" as "set-grid-visible" => set_grid_visible::SetGridVisible,
         "setGridSpacing" as "set-grid-spacing" => set_grid_spacing::SetGridSpacing,
         "setGridSubdivisions" as "set-grid-subdivisions" => set_grid_subdivisions::SetGridSubdivisions,
@@ -174,8 +189,8 @@ pub struct NotePlayApp;
 impl ArtifactEditor for NotePlayApp {
     type Snapshot = NoteSnapshot;
     type Mutation = NoteMutation;
-    type Config = NoteConfig;
-    type ConfigMutation = NoteConfigMutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
     type Presence = NotePresence;
@@ -231,12 +246,52 @@ impl ArtifactEditor for NotePlayApp {
         Some(crate::editor::note::retained::artifact_preparation_factory())
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(crate::editor::note::retained::config_preparation_factory())
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_owners())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::no_config_store_disposer())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(crate::editor::note::presence::NotePresenceRetirementFactory))
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(crate::editor::note::presence::NotePresenceRetirementFactory))
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(crate::editor::note::presence::note_presence_store_disposer())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
     fn app_schema() -> Option<framework_schema::AppSchemaDescriptor> {
-        Some(crate::editor::note::config::schema::app_schema_descriptor())
+        Some(note_app_schema_descriptor())
     }
 
     fn initial_snapshot() -> NoteSnapshot {
@@ -253,12 +308,12 @@ impl ArtifactEditor for NotePlayApp {
     fn handle(
         command: &NoteCommand,
         doc: &ArtifactView<'_, NoteSnapshot>,
-        cfg: &ConfigView<'_, NoteConfig>,
+        cfg: &ConfigView<'_, NoConfig>,
         interaction: &InteractionView<'_>,
         view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
+    ) -> Result<Emit<NoteMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         let selected_block_ids = interaction.selection(NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::schema::block_id_from_tree_row_id(id)).collect();
         let mut ctx = NoteDispatchCtx {
             selected_block_ids,
@@ -272,13 +327,13 @@ impl ArtifactEditor for NotePlayApp {
 
     /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the document's own Group nesting — see
     /// `note_blocks_topology`'s doc comment.
-    fn interaction_topology(doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(NOTE_INTERACTION_BLOCKS.to_string(), note_blocks_topology(doc.snapshot));
         InteractionTopology { domains }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let window = crate::editor::note::window::config_from_view(cfg);
         let labels = note_play_labels(view_state);
@@ -294,7 +349,7 @@ impl ArtifactEditor for NotePlayApp {
         .map(semio_framework_plugin::built_to_component_tree)
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let kind = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
         let config = crate::editor::note::window::config_from_view(cfg);
@@ -308,7 +363,7 @@ impl ArtifactEditor for NotePlayApp {
 
     fn window_engagements_with_request_context(
         doc: &ArtifactView<'_, NoteSnapshot>,
-        cfg: &ConfigView<'_, NoteConfig>,
+        cfg: &ConfigView<'_, NoConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
     ) -> HashMap<String, WindowEngagement> {
@@ -324,7 +379,7 @@ impl ArtifactEditor for NotePlayApp {
         }
     }
 
-    fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let kind = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
         let config = crate::editor::note::window::config_from_view(cfg);
@@ -532,19 +587,14 @@ pub fn create_note_app() -> AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Testkit
+//#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
 /// able to drive the whole app without re-deriving the harness.
 #[cfg(test)]
-#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
-pub(crate) mod testkit;
-//#endregion 🧪️Testkit
-
-//#region 🧪️Tests
-#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+pub(crate) mod unit_tests;
+//#endregion 🧪️UnitTests
+
 
 /// 🏷️ Admits Note display text into a bounded semantic label.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {

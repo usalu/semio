@@ -7,8 +7,8 @@ export function interactivityMountedPreparedRenderSelfTests(repoRoot: string): v
     INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE,
     INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE,
     INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE,
-    "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/🖼️frame.rs",
-    "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/🎬️scene.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🖌️render/🖼️frame/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎬️scene/🦀️.rs",
   ] as const;
   const clean = files.map((file) => policyReadRustPolicySource(repoRoot, file));
   const mutations: readonly [string, number, string, string][] = [

@@ -1,0 +1,461 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/framework-source-topology.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "moves",
+    "extractions",
+    "nativeCrates",
+    "testOwners",
+    "directoryContexts",
+    "producerContracts",
+    "browserBoundary",
+    "scriptExtractions",
+    "packedFontCases",
+    "scanCoverage"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "moves": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "owner",
+          "kind",
+          "anchor"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "css",
+              "javascript",
+              "json",
+              "rust",
+              "typescript",
+              "typescript-jsx"
+            ]
+          },
+          "anchor": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "extractions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "packageEntry",
+          "owner",
+          "maximumPackageLines",
+          "anchor"
+        ],
+        "properties": {
+          "packageEntry": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maximumPackageLines": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "anchor": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "nativeCrates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "manifest",
+          "library",
+          "implementation",
+          "formerRoot"
+        ],
+        "properties": {
+          "manifest": {
+            "type": "string",
+            "minLength": 1
+          },
+          "library": {
+            "type": "string",
+            "pattern": "^\\.\\./\\.\\./"
+          },
+          "implementation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "formerRoot": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "browserBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entry",
+        "builder",
+        "buildConfig",
+        "testSentinel",
+        "browserReachable",
+        "forbiddenImports"
+      ],
+      "properties": {
+        "entry": {
+          "type": "string",
+          "minLength": 1
+        },
+        "builder": {
+          "type": "string",
+          "minLength": 1
+        },
+        "buildConfig": {
+          "type": "string",
+          "minLength": 1
+        },
+        "testSentinel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "forbiddenImports": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "browserReachable": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "testOwners": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "owner"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "pattern": "packages-rust"
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "directoryContexts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "parentKind",
+          "kind"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parentKind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ancestorKinds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "producerContracts": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract",
+          "inputs"
+        ],
+        "properties": {
+          "contract": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inputs": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "scriptExtractions": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command",
+          "owner",
+          "exports",
+          "context"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "exports": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "context": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "parentKind",
+              "ancestorKinds",
+              "kind"
+            ],
+            "properties": {
+              "parentKind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ancestorKinds": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "kind": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "packedFontCases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "bytes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bytes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "error": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "scanCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roots",
+        "hostileCases",
+        "overlappingRootCase"
+      ],
+      "properties": {
+        "roots": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "former",
+              "current"
+            ],
+            "properties": {
+              "former": {
+                "type": "string",
+                "minLength": 1
+              },
+              "current": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "hostileCases": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "root",
+              "path",
+              "content",
+              "expected"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "px",
+                  "color"
+                ]
+              },
+              "root": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "content": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expected": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "overlappingRootCase": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "root",
+            "nestedRoot",
+            "path",
+            "content",
+            "expectedPx",
+            "expectedColor"
+          ],
+          "properties": {
+            "root": {
+              "type": "string",
+              "minLength": 1
+            },
+            "nestedRoot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "content": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expectedPx": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expectedColor": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

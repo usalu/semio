@@ -87,7 +87,7 @@ impl store::ArtifactPack for FlowWindowTransient {
     }
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() { return Err(store::PackError::Schema("Flow window pack envelope mismatch".into())); }
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) { return Err(store::PackError::Schema("Flow window pack envelope mismatch".into())); }
         let json: serde_json::Value = serde_json::from_slice(&body).map_err(|error| store::PackError::Schema(error.to_string()))?;
         dsl::FromValue::from_value(json.into()).map_err(|error| store::PackError::Schema(error.to_string()))
     }

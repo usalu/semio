@@ -24,7 +24,7 @@
 // @see ../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts — the sibling
 //      generator this file's CLI/recipe shape is mirrored from (both hand-author before/after
 //      states directly rather than executing mutation dispatch).
-// @see ./🦀️riff-avi-codec/src/main.rs — the actual codec; `build <recipe-id> <out-dir>` and
+// @see ./🔁️codec/🦀️.rs — the actual codec; `build <recipe-id> <out-dir>` and
 //      `project <path>` are its only two commands.
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/
 
@@ -38,7 +38,7 @@ import { spawnSync } from "node:child_process";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-const CODEC_MANIFEST = join(import.meta.dir, "🦀️riff-avi-codec", "Cargo.toml");
+const CODEC_MANIFEST = join(import.meta.dir, "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 const ORACLE_ID = "riff-avi-1-0-mutate";
 const ENGINE_FAMILY = "riff";
 const ENGINE_VERSION = "2.0.0";
@@ -46,7 +46,7 @@ const ENGINE_VERSION = "2.0.0";
 type Outcome = "applied" | "rejected";
 type Recipe = Readonly<{ id: string; directoryName: string; subset: "hdrl" | "idx1" | "movi"; mutation: string; outcome: Outcome; notes: string }>;
 
-/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🦀️riff-avi-codec/src/main.rs` verbatim — one entry per
+/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🔁️codec/🦀️.rs` verbatim — one entry per
  *  declared `AviMutation` kind, `-applied` always, `-rejected-<reason>` wherever the real
  *  `validate_indexed`/`AviDiff::apply` genuinely refuses the input (see that file's own recipe
  *  comments for exactly which real error code each rejection corresponds to). */

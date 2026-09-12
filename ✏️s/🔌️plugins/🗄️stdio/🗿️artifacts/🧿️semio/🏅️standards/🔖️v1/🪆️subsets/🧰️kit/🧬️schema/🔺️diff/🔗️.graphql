@@ -1,8 +1,16 @@
+# import SemioKitType, SemioKitDesign from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactLink from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql"
+type SemioKitTypeList { values: [SemioKitType!]! }
+type SemioKitDesignList { values: [SemioKitDesign!]! }
+type SemioKitObjectChildList { values: [ArtifactChild!]! }
+type SemioKitModelChildList { values: [ArtifactChild!]! }
+type SemioKitLinkList { values: [ArtifactLink!]! }
 type SemioKitDiff {
-  typesTouched: Boolean!
-  designsTouched: Boolean!
-  objectsTouched: Boolean!
-  modelsTouched: Boolean!
-  propertiesTouched: Boolean!
-  representationsTouched: Boolean!
+  types: SemioKitTypeList
+  designs: SemioKitDesignList
+  objects: SemioKitObjectChildList
+  models: SemioKitModelChildList
+  properties: ArtifactChild
+  representations: SemioKitLinkList
 }

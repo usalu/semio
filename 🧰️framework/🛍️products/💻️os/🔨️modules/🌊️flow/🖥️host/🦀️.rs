@@ -300,7 +300,7 @@ impl FlowHost {
             if let Some(store) = self.history_store.as_mut() {
                 let envelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.fixture.clone(), None);
                 resolve_ready(store.reset(envelope, Vec::new(), Vec::new())).expect("failed to reset flow history store");
-                store.install_member_store_owners_exact(FlowFixture::member_store_owners());
+                store.install_document_store_owners_exact(FlowFixture::member_store_owners());
             }
             self.pending_history_baseline = None;
             self.pending_change = false;
@@ -2130,7 +2130,7 @@ impl FlowHost {
             return self.history_store.as_mut();
         }
         let mut store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", baseline, None))).ok()?;
-        store.install_member_store_owners_exact(FlowFixture::member_store_owners());
+        store.install_document_store_owners_exact(FlowFixture::member_store_owners());
         self.history_store = Some(store);
         self.history_store.as_mut()
     }
