@@ -30,8 +30,8 @@ export class SupportScript extends BundleScript {
       ensurePreview2ShimVendorAt(vendor, getWorkspaceRoot());
       mkdirSync(shard);
       writeFileSync(join(shard, SHARD_WORKER_FILE), shardWorkerSource());
-      stageArtifacts(join(root, PREVIEW2_VENDOR_RELATIVE), `browser-support:${profile}:preview2`, artifactFiles(vendor));
-      stageArtifacts(join(root, MODULE_SHARD_DIRECTORY), `browser-support:${profile}:shard`, artifactFiles(shard));
+      await stageArtifacts(join(root, PREVIEW2_VENDOR_RELATIVE), `browser-support:${profile}:preview2`, artifactFiles(vendor));
+      await stageArtifacts(join(root, MODULE_SHARD_DIRECTORY), `browser-support:${profile}:shard`, artifactFiles(shard));
       console.log(`Browser support ${profile}: vendor shims and shard worker staged`);
     } finally { rmSync(temporary, { recursive: true, force: true }); }
   }
@@ -70,7 +70,7 @@ export class MaterializeScript extends BundleScript {
       writeFileSync(join(temporary, "🔣️.json"), descriptor.json);
       writeFileSync(join(temporary, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, crate + ".wasm"));
       controller.signal.throwIfAborted();
-      stageArtifacts(output, relative(repo, manifestPath).split(sep).join("/") + `:browser:${profile}`, artifactFiles(temporary));
+      await stageArtifacts(output, relative(repo, manifestPath).split(sep).join("/") + `:browser:${profile}`, artifactFiles(temporary), { signal: controller.signal });
       console.log(`Materialized ${pluginId} ${profile}: browser bridge and descriptor staged -> ${output}`);
       // 📣️ A served dev session reads THIS directory directly, so a plugin is live the moment it is
       // staged; an extension is not — the runtime install root (`/🧩️extension-modules`) is written by
@@ -83,4 +83,3 @@ export class MaterializeScript extends BundleScript {
     }
   }
 }
-

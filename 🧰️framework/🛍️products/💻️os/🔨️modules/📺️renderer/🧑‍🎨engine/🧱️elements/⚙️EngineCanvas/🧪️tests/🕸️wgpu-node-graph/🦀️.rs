@@ -58,7 +58,7 @@ fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
 /// poisons it for every later lane — the ladder is the only correct teardown.
 fn drop_engine_surface(surface_id: &str) {
     let _ = take_engine_surface_registrations();
-    while STAGED_ENGINE_SCENES.with(|cell| cell.borrow_mut().take_one()).is_some() {}
+    STAGED_ENGINE_SCENES.with(|cell| cell.borrow_mut().remove_surface(surface_id));
     let Some(token) = ENGINE_SURFACES.with(|cell| cell.borrow_mut().token(surface_id)) else {
         return;
     };
@@ -168,9 +168,18 @@ fn node_graph_window_attaches_the_flow_engine_and_paints_a_non_empty_draw_list()
         turns += 1;
         assert!(turns < 512, "the staged paint reaches the frame's packet ledger");
     }
-    let packet = resources.take_packet_step().unwrap_or_else(|_| panic!("ready packet destination")).expect("the attach staged one engine packet");
+    let mut packet = resources.take_packet_step().unwrap_or_else(|_| panic!("ready packet destination")).expect("the attach staged one engine packet");
     assert!(!packet.scene.retirement_is_empty(), "the flow host painted real vector commands, not an empty scene");
     assert_eq!((packet.width, packet.height), (966, 836), "the packet is sized to the window body");
+    let mut retirement_turns = 0usize;
+    while !packet.close_step() {
+        retirement_turns += 1;
+        assert!(retirement_turns < 262_144, "the transferred engine packet reaches terminal release");
+    }
+    assert!(packet.terminal_is_empty());
+    assert!(resources.terminal_is_empty());
+    drop(packet);
+    drop(resources);
     drop_engine_surface(surface_id);
 }
 
@@ -245,9 +254,19 @@ fn wheel_zoom_emits_the_node_graph_viewport_action_with_the_moved_camera() {
         viewport.args,
         semio_framework::optional_json_to_dsl(Some(json!({
             "surfaceId": surface_id,
-            "viewportJson": json!({ "x": committed[0], "y": committed[1], "zoom": committed[2] }).to_string(),
+            "viewport": { "x": committed[0], "y": committed[1], "zoom": committed[2] },
         }))),
         "the published viewport is exactly the camera the host committed"
     );
     drop_engine_surface(surface_id);
+}
+
+#[test]
+fn projection_snapshot_rejects_invalid_node_graph_viewports() {
+    for camera in [[0.0, 0.0, 0.0], [f64::NAN, 0.0, 1.0], [0.0, f64::INFINITY, 1.0]] {
+        assert!(matches!(
+            graph_projection_snapshot(Vec::new(), None, None, camera),
+            Err(ui_wgpu::wgpu::BoundedActionFault::Structure)
+        ));
+    }
 }

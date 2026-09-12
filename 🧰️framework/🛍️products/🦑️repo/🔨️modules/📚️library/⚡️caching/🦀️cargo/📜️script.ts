@@ -146,7 +146,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
     if (files.size === 0) throw new Error(`Cargo emitted no final artifacts for ${owner}`);
     if (hasLibrary) for (const [name, file] of dependencies) files.set(name, file);
     options.validate?.(files);
-    stageArtifacts(staging, owner, files);
+    await stageArtifacts(staging, owner, files);
     console.log(`[nx-native] staged ${files.size} deliverables in ${slash(relative(repoRoot, staging))}`);
   } finally {
     rmSync(capture, { recursive: true, force: true });

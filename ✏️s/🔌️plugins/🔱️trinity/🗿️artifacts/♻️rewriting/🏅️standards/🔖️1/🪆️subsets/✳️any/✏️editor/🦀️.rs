@@ -392,8 +392,12 @@ pub enum TrinityRewritingCommand {
     PatchNodes { node_ids: Vec<String>, field: String, value: String },
 
     // 👁️ Config-only — was ephemeral `RewritingPlayRuntime` state, now emits `config_mutations`.
-    #[dsl(key = "set-viewport")]
-    SetViewport { surface_id: Option<String>, viewport_json: String },
+    #[dsl(key = "node-graph-viewport")]
+    SetViewport {
+        surface_id: Option<String>,
+        #[dsl(block)]
+        viewport: Viewport2d,
+    },
     #[dsl(key = "reorganize")]
     Reorganize,
     #[dsl(key = "set-lod-mode")]
@@ -610,7 +614,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TrinityRewritingCommand::AddRuleClause { .. } => "addRuleClause",
             TrinityRewritingCommand::ResetRule => "resetRule",
             TrinityRewritingCommand::PatchNodes { .. } => "patchNodes",
-            TrinityRewritingCommand::SetViewport { .. } => "setViewport",
+            TrinityRewritingCommand::SetViewport { .. } => "nodeGraphViewport",
             TrinityRewritingCommand::Reorganize => "reorganize",
             TrinityRewritingCommand::SetLodMode { .. } => "setLodMode",
         }
@@ -634,7 +638,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TrinityRewritingCommand::AddRuleClause { kind } => crate::editor::rewriting::commands::add_rule_clause_command(state, kind),
             TrinityRewritingCommand::ResetRule => crate::editor::rewriting::commands::reset_rule(state),
             TrinityRewritingCommand::PatchNodes { node_ids, field, value } => crate::editor::rewriting::commands::patch_nodes(state, node_ids, field, value),
-            TrinityRewritingCommand::SetViewport { surface_id, viewport_json } => crate::editor::rewriting::commands::set_viewport(surface_id, viewport_json, view_state)?,
+            TrinityRewritingCommand::SetViewport { surface_id, viewport } => crate::editor::rewriting::commands::set_viewport(surface_id, viewport, view_state)?,
             TrinityRewritingCommand::Reorganize => crate::editor::rewriting::commands::reorganize(state),
             TrinityRewritingCommand::SetLodMode { value } => crate::editor::rewriting::commands::set_lod_mode(value, view_state)?,
         })
@@ -801,10 +805,10 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setRhsJson", LocalizedLabel::native("Set RHS Json", "RHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
             // 👁️ Ephemeral view state — viewport, recompute/layout, LOD. Selection/hover/text-cursor
             // cross-highlighting is framework-owned now (domain "graph") — no app-declared verbs.
-            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("setViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"), ActionKind::View).with_category("view"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"), ActionKind::View).with_category("view"))
             .action_with(semio_framework_plugin::ActionDefinition::new("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "rotate-cw").with_category("transform"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View, "layers").with_category("mode"))
-            .action_interactive_job("setViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nodeGraphViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodMode", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("addRuleClause", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("resetRule", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)

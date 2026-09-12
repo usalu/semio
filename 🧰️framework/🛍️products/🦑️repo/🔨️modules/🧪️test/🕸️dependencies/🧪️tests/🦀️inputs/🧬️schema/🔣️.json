@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "case",
+    "domain",
+    "files",
+    "projects",
+    "subjectRoots",
+    "oracleRoots",
+    "generator",
+    "subjectInputs",
+    "nativeCache",
+    "commandSources"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "case": {
+      "type": "string",
+      "minLength": 1
+    },
+    "domain": {
+      "type": "string",
+      "minLength": 1
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "projects": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "subjectRoots": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "oracleRoots": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "generator": {
+      "type": "object",
+      "required": [
+        "ownership",
+        "target",
+        "nativeConsumers",
+        "outputRoots"
+      ]
+    },
+    "subjectInputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "nativeCache": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "initial",
+        "changed",
+        "source",
+        "replacement",
+        "unrelated"
+      ],
+      "properties": {
+        "initial": {
+          "type": "string"
+        },
+        "changed": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "replacement": {
+          "type": "string"
+        },
+        "unrelated": {
+          "type": "string"
+        }
+      }
+    },
+    "commandSources": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

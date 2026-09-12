@@ -218,8 +218,12 @@ pub enum TrinityJackCommand {
     SetActiveExample { example_id: String },
 
     // 👁️ Config-only — was ephemeral `TrinityJackRuntime` state, now emits `config_mutations`.
-    #[dsl(key = "set-viewport")]
-    SetViewport { viewport_json: String },
+    #[dsl(key = "node-graph-viewport")]
+    SetViewport {
+        surface_id: Option<String>,
+        #[dsl(block)]
+        viewport: Viewport2d,
+    },
     #[dsl(key = "text-edit")]
     TextEdit { text: String },
     #[dsl(key = "text-select")]
@@ -253,7 +257,7 @@ impl protocol::OpText for TrinityJackCommand {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for TrinityJackCommand {
-    const TOOL_JOB_IDS: &'static [&'static str] = &["runQuery", "loadExampleQuery", "setViewport", "textEdit", "textSelect", "formatDocument", "setLodMode"];
+    const TOOL_JOB_IDS: &'static [&'static str] = &["runQuery", "loadExampleQuery", "nodeGraphViewport", "textEdit", "textSelect", "formatDocument", "setLodMode"];
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
@@ -295,13 +299,13 @@ impl protocol::OpBinary for TrinityJackCommand {
 pub struct TrinityJackPlayApp;
 
 //#region 🧵️RetainedConfigCommands
-const JACK_RETAINED_WINDOW_CONFIG_TOOL_IDS: &[&str] = &["setViewport", "textEdit", "formatDocument", "setLodMode"];
+const JACK_RETAINED_WINDOW_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport", "textEdit", "formatDocument", "setLodMode"];
 const JACK_RETAINED_TRANSIENT_TOOL_IDS: &[&str] = &["textSelect"];
 const JACK_RETAINED_PAYLOAD_SCHEMA: &str = "trinity.graph.config-command.v1";
 const JACK_RETAINED_RAW_BYTES: usize = 8_192;
 const JACK_RETAINED_WORK_ITEMS: usize = 64;
 const JACK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "setViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "formatDocument", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
@@ -314,7 +318,8 @@ fn jack_retained_config_contract() -> ToolExecutionContract {
 
 fn jack_retained_window_config_extent(command: &TrinityJackCommand, _snapshot: &JackSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let bytes = match command {
-        TrinityJackCommand::SetViewport { viewport_json } => viewport_json.len(),
+        TrinityJackCommand::SetViewport { viewport, .. } if viewport.validate().is_ok() => 1,
+        TrinityJackCommand::SetViewport { .. } => return None,
         TrinityJackCommand::TextEdit { text } => text.len(),
         TrinityJackCommand::FormatDocument => 1,
         TrinityJackCommand::SetLodMode { value } => value.len(),
@@ -335,7 +340,7 @@ fn jack_retained_window_config_reduce(
     _operation: &AppOperationContext,
 ) -> Result<Emit<TrinityGraphMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        TrinityJackCommand::SetViewport { viewport_json } => commands::set_viewport(viewport_json, context.and_then(|context| context.view_state.as_ref())),
+        TrinityJackCommand::SetViewport { viewport, .. } => commands::set_viewport(viewport, context.and_then(|context| context.view_state.as_ref())),
         TrinityJackCommand::TextEdit { text } => commands::text_edit(text, context.and_then(|context| context.view_state.as_ref())),
         TrinityJackCommand::FormatDocument => {
             let context = context.ok_or_else(|| Fault::from("Jack query formatting requires retained window context"))?;
@@ -687,7 +692,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
             TrinityJackCommand::RunQuery { .. } => "runQuery",
             TrinityJackCommand::LoadExampleQuery { .. } => "loadExampleQuery",
             TrinityJackCommand::SetActiveExample { .. } => "setActiveExample",
-            TrinityJackCommand::SetViewport { .. } => "setViewport",
+            TrinityJackCommand::SetViewport { .. } => "nodeGraphViewport",
             TrinityJackCommand::TextEdit { .. } => "textEdit",
             TrinityJackCommand::TextSelect { .. } => "textSelect",
             TrinityJackCommand::FormatDocument => "formatDocument",
@@ -712,7 +717,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
             TrinityJackCommand::Reorganize => commands::reorganize(fixture),
             TrinityJackCommand::RunQuery { .. } | TrinityJackCommand::LoadExampleQuery { .. } => return Err(Fault::from("query execution requires its retained operation owner")),
             TrinityJackCommand::SetActiveExample { example_id } => commands::set_active_example(example_id),
-            TrinityJackCommand::SetViewport { viewport_json } => return commands::set_viewport(viewport_json, view_state),
+            TrinityJackCommand::SetViewport { viewport, .. } => return commands::set_viewport(viewport, view_state),
             TrinityJackCommand::TextEdit { text } => return commands::text_edit(text, view_state),
             TrinityJackCommand::TextSelect { .. } => return Err(Fault::from("text selection requires its retained transient operation owner")),
             TrinityJackCommand::FormatDocument => {
@@ -864,14 +869,14 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left").with_category("mode"))
             // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
-            .view_action("setViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
+            .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
             .action_with(semio_framework_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"), ActionKind::View, "typography"))
             .action_with(semio_framework_plugin::ActionDefinition::new("textSelect", LocalizedLabel::native("Select Jack Query Text", "Jack-Abfragetext auswählen"), ActionKind::View, "text-cursor"))
             .action_with(semio_framework_plugin::ActionDefinition::new("formatDocument", LocalizedLabel::native("Format Jack Query", "Jack-Abfrage formatieren"), ActionKind::View, "typography").with_category("utilities"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
             .action_interactive_job("runQuery", InteractiveJobClassification::Migrated)
             .action_interactive_job("loadExampleQuery", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setViewport", InteractiveJobClassification::Migrated)
+            .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
             .action_interactive_job("textEdit", InteractiveJobClassification::Migrated)
             .action_interactive_job("textSelect", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)

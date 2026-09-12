@@ -103,13 +103,13 @@ export interface FileKindResolutionRuleSpec {
   readonly priority: 0;
 }
 
-/** 🎟️ Owner-scoped evidence kind whose suffix is never admitted globally. */
+/** 🎟️ Owner-scoped file kind whose suffix or role is never admitted globally. */
 export interface ScopedFileKindSpec {
   readonly pathPattern: string;
   readonly parentDirectoryKindId?: string;
   readonly emoji: string;
   readonly extensionChains: readonly string[];
-  readonly role: "evidence";
+  readonly role: FileKindSpec["role"] | "evidence";
   readonly sourceFilenamePattern: string;
   readonly authority: string;
   readonly reason: string;
@@ -543,7 +543,7 @@ export interface PackageBoundaryRule {
 
 /** 🧠️ Conservative source-role grammar selected by ecosystem. */
 export interface PackageGlueGrammarSpec {
-  readonly analyzer: "rust" | "typescript" | "javascript" | "go" | "python" | "dotnet" | "c-cpp";
+  readonly analyzer: "rust" | "typescript" | "javascript" | "go" | "python" | "dotnet" | "c-cpp" | "tex";
   readonly allowedRoles: readonly ("declaration" | "registration" | "bootstrap" | "thin-delegation")[];
   readonly maxDelegationStatements: number;
 }
@@ -578,6 +578,7 @@ export type GeneratorOwnership = "owned" | "external";
 export interface GeneratorOutputRoot {
   readonly path: string;
   readonly inclusion: "tracked" | "ignored";
+  readonly producer?: { readonly ownerPath: string; readonly target: string };
 }
 
 /** 📇️ Catalog content, membership and implementation dependency authority. */
@@ -1470,7 +1471,8 @@ function implementationLeafBasenameFindingResolved(
   authorizedCargoBuildScriptPaths: ReadonlySet<string> = new Set(),
 ): TaxonomyImplementationFinding | null {
   const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize(taxonomy.unicodeNormalization.form);
-  const fileKindId = fileKindIdForSourcePath(normalized, taxonomy);
+  const scopedKindId = scopedFileKindIdForSourcePath(normalized, taxonomy, { parentDirectoryKindId });
+  const fileKindId = scopedKindId ? `scoped:${scopedKindId}` : fileKindIdForSourcePath(normalized, taxonomy);
   if (!taxonomyFileKindIsImplementation(fileKindId, taxonomy)) return null;
   const packageLocation = implementationPackageLocation(normalized, taxonomy);
   const fixed = resolver.filenameIdsForPath(normalized, {
@@ -1481,14 +1483,17 @@ function implementationLeafBasenameFindingResolved(
     siblingFixedFilenameContractIds,
   });
   if (fixed.some((contractId) => contractId !== "cargo-build-script" || authorizedCargoBuildScriptPaths.has(normalized))) return null;
-  const expectedBasename = canonicalLeafFilenameForSourcePath(normalized, taxonomy)!;
+  const scopedKind = scopedKindId ? taxonomy.scopedFileKinds[scopedKindId] : undefined;
+  const scopedExtension = scopedKind?.extensionChains.find((extension) => normalized.toLocaleLowerCase("und").endsWith(extension.toLocaleLowerCase("und")));
+  const expectedBasename = scopedKind && scopedExtension ? `${scopedKind.emoji}${scopedExtension}` : canonicalLeafFilenameForSourcePath(normalized, taxonomy)!;
   const actualBasename = basename(normalized);
   return actualBasename === expectedBasename ? null : { breachId: "taxonomy/kind-only-basename", path: normalized, fileKindId, actualBasename, expectedBasename, exemptionAuthorityId: null };
 }
 
 /** 🪶️ Classifies implementation kinds from the closed taxonomy policy. */
 export function taxonomyFileKindIsImplementation(fileKindId: string | null | undefined, taxonomy: Taxonomy = loadCatalogTaxonomy()): boolean {
-  const fileKind = fileKindId ? taxonomy.fileKinds[fileKindId] : undefined;
+  const scopedId = fileKindId?.startsWith("scoped:") ? fileKindId.slice("scoped:".length) : undefined;
+  const fileKind = scopedId ? taxonomy.scopedFileKinds[scopedId] : fileKindId ? taxonomy.fileKinds[fileKindId] : undefined;
   return Boolean(fileKind && (taxonomy.implementationLeafPolicy.roles.includes(fileKind.role) || taxonomy.implementationLeafPolicy.fileKindIds.includes(fileKindId!)));
 }
 
@@ -4128,7 +4133,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     if (!canonicalTaxonomyEmoji(spec.emoji)) problems.push(`scopedFileKinds[${JSON.stringify(id)}].emoji must be one canonical NFC emoji sequence.`);
     if (!Array.isArray(spec.extensionChains) || spec.extensionChains.length === 0) problems.push(`scopedFileKinds[${JSON.stringify(id)}].extensionChains must be non-empty.`);
     for (const extension of spec.extensionChains ?? []) extensionChain(extension, `scopedFileKinds[${JSON.stringify(id)}].extensionChains`);
-    if (spec.role !== "evidence") problems.push(`scopedFileKinds[${JSON.stringify(id)}].role must be evidence.`);
+    if (!["source", "schema", "specification", "configuration", "documentation", "test", "asset", "generated", "marker", "evidence"].includes(spec.role)) problems.push(`scopedFileKinds[${JSON.stringify(id)}].role is invalid.`);
     fullPattern(spec.sourceFilenamePattern, `scopedFileKinds[${JSON.stringify(id)}].sourceFilenamePattern`);
     if (!spec.authority || !spec.reason || !spec.verification) problems.push(`scopedFileKinds[${JSON.stringify(id)}] must declare authority, reason, and verification.`);
     if (!(spec.expires === null || /^\d{4}-\d{2}-\d{2}$/u.test(spec.expires))) problems.push(`scopedFileKinds[${JSON.stringify(id)}].expires must be null or YYYY-MM-DD.`);
@@ -4810,7 +4815,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   }
 
   if (record(taxonomy.packageGlueGrammar, "packageGlueGrammar")) for (const [id, grammar] of Object.entries(taxonomy.packageGlueGrammar)) {
-    if (!["rust", "typescript", "javascript", "go", "python", "dotnet", "c-cpp"].includes(grammar.analyzer)) problems.push(`packageGlueGrammar[${JSON.stringify(id)}].analyzer is invalid.`);
+    if (!["rust", "typescript", "javascript", "go", "python", "dotnet", "c-cpp", "tex"].includes(grammar.analyzer)) problems.push(`packageGlueGrammar[${JSON.stringify(id)}].analyzer is invalid.`);
     if (!Number.isSafeInteger(grammar.maxDelegationStatements) || grammar.maxDelegationStatements < 0) problems.push(`packageGlueGrammar[${JSON.stringify(id)}].maxDelegationStatements is invalid.`);
     if (!Array.isArray(grammar.allowedRoles) || grammar.allowedRoles.some((role) => !["declaration", "registration", "bootstrap", "thin-delegation"].includes(role))) problems.push(`packageGlueGrammar[${JSON.stringify(id)}].allowedRoles is invalid.`);
   }
@@ -4843,6 +4848,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if (kindId && taxonomy.fileKinds[kindId]?.role === "source") expected.set(id, "fixed");
     }
     for (const [id, contract] of Object.entries(taxonomy.configurableEntryContracts)) if (taxonomy.fileKinds[contract.fileKindId]?.role === "source") expected.set(id, "configurable");
+    for (const [id, disposition] of Object.entries(taxonomy.packageSourceDispositions)) if (disposition.contractKind === "fixed" && disposition.grammarId && taxonomy.fixedFilenameContracts[id]) expected.set(id, "fixed");
     for (const missing of [...expected.keys()].filter((id) => !taxonomy.packageSourceDispositions[id])) problems.push(`packageSourceDispositions is missing source-format contract ${JSON.stringify(missing)}.`);
     for (const [id, disposition] of Object.entries(taxonomy.packageSourceDispositions)) {
       exactKeys(disposition, ["contractKind", "disposition", "validator", ...(disposition.grammarId === undefined ? [] : ["grammarId"]), "authority", "verification"], `packageSourceDispositions[${JSON.stringify(id)}]`);
@@ -4982,6 +4988,17 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
           const key = `generatorContracts[${JSON.stringify(id)}].outputRoots[${index}]`;
           if (workspacePath(output.path, `${key}.path`) && exactTouchesOpaque(output.path)) problems.push(`${key}.path crosses an opaque boundary.`);
           if (!["tracked", "ignored"].includes(output.inclusion)) problems.push(`${key}.inclusion must be tracked or ignored.`);
+          if (output.producer !== undefined) {
+            exactKeys(output.producer, ["ownerPath", "target"], `${key}.producer`);
+            if (!runnable) problems.push(`${key}.producer requires an owned generator.`);
+            if (workspacePath(output.producer?.ownerPath, `${key}.producer.ownerPath`) && exactTouchesOpaque(output.producer.ownerPath)) problems.push(`${key}.producer crosses an opaque boundary.`);
+            if (nxTarget(output.producer?.target, `${key}.producer.target`)) {
+              const prior = targets.get(output.producer.target);
+              if (prior && prior !== id) problems.push(`${key}.producer belongs to another generator contract.`);
+              targets.set(output.producer.target, id);
+              if (output.producer.target === contract.target && output.producer.ownerPath !== contract.ownerPath) problems.push(`${key}.producer disagrees with the generator owner.`);
+            }
+          }
           if (runnable && contract.inputPatterns.some((input) => pathMatcher.matches(output.path, input))) problems.push(`${key}.path is also declared as an input.`);
           outputOwners.push({ id, path: output.path });
         }
@@ -6140,6 +6157,13 @@ export function validateGeneratorContractsAgainstWorkspace(repoRoot: string, tax
       }
     }
     for (const output of contract.outputRoots ?? []) {
+      if (output.producer) {
+        try {
+          const producer = output.producer, project = JSON.parse(readFileSync(join(root, producer.ownerPath, "📋️project.json"), "utf8"));
+          const separator = producer.target.lastIndexOf(":");
+          if (project.name !== producer.target.slice(0, separator) || !project.targets?.[producer.target.slice(separator + 1)]) problems.push(`generatorContracts[${JSON.stringify(id)}] output ${JSON.stringify(output.path)} has no declared Nx producer.`);
+        } catch { problems.push(`generatorContracts[${JSON.stringify(id)}] output ${JSON.stringify(output.path)} producer project is unreadable.`); }
+      }
       const owners = generatorContractIdsForOutputPath(output.path, taxonomy);
       if (owners.length !== 1 || owners[0] !== id) problems.push(`generatorContracts[${JSON.stringify(id)}] output ${JSON.stringify(output.path)} does not have exactly one owner.`);
       if (output.inclusion === "tracked" && !existsSync(join(root, output.path)) && !exactOwnerGeneratorPrestate(root, output.path, id, catalog) && !nestedCargoGeneratedPrestate(root, output.path, id, taxonomy)) problems.push(`generatorContracts[${JSON.stringify(id)}] tracked output ${JSON.stringify(output.path)} is missing.`);
@@ -10374,11 +10398,41 @@ function classifyGoPackageSource(content: string, grammar: PackageGlueGrammarSpe
   return functions.length > 0 ? { role: "bootstrap", evidence: "main or init only delegates to imported owner" } : { role: "declaration", evidence: "package and import declarations only" };
 }
 
+/** 🧾️ Removes unescaped TeX comments while retaining statement boundaries. */
+function texStructuralSource(content: string): string {
+  let source = "", index = 0;
+  while (index < content.length) {
+    if (content[index] !== "%") { source += content[index]!; index++; continue; }
+    let escapes = 0;
+    for (let cursor = index - 1; cursor >= 0 && content[cursor] === "\\"; cursor--) escapes++;
+    if (escapes % 2 === 1) { source += content[index]!; index++; continue; }
+    const end = content.indexOf("\n", index);
+    if (end < 0) break;
+    source += "\n"; index = end + 1;
+  }
+  return source;
+}
+
+/** 🪶️ Accepts only a native package identity that delegates to one canonical semantic macro leaf. */
+function classifyTexPackageSource(content: string, grammar: PackageGlueGrammarSpec): PackageSourceDecision {
+  const source = texStructuralSource(content).trim();
+  const match = /^\\NeedsTeXFormat\s*\{\s*LaTeX2e\s*\}\s*\\ProvidesPackage\s*\{\s*([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)\s*\}(?:\s*\[[A-Za-z0-9][A-Za-z0-9 ./,:;()+-]*\])?\s*\\input\s*\{\s*([^{}]+?)\s*\}\s*(?:\\endinput\s*)?$/u.exec(source);
+  if (match) {
+    const target = match[2]!, segments = target.split("/");
+    const statements = source.match(/\\(?:NeedsTeXFormat|ProvidesPackage|input|endinput)\b/gu)?.length ?? 0;
+    const literal = target === target.normalize("NFC") && !/[\u0000-\u0020\u007f\\^%#{}~$&]/u.test(target) && segments.every((segment) => segment !== "." && segment !== ".." && /^[\p{L}\p{N}\p{M}\p{Extended_Pictographic}\p{Regional_Indicator}\u200d._-]+$/u.test(segment));
+    if (statements <= grammar.maxDelegationStatements && literal && !target.startsWith("/") && /(?:^|\/)📐️\.tex$/u.test(target)) return { role: "thin-delegation", evidence: "native TeX package identity delegates to one canonical semantic macro leaf" };
+  }
+  if (/\\(?:def|edef|gdef|xdef|newcommand|renewcommand|providecommand|NewDocumentCommand|RenewDocumentCommand|cs_new|cs_set|RequirePackage)\b/u.test(source)) return { role: "implementation", evidence: "TeX runtime definition or package composition remains in the fixed shim" };
+  return { role: "unresolved", evidence: "unsupported TeX package shim form" };
+}
+
 /** 🧪️ Returns one shared, justified decision for discovery and normalization. */
 export function classifyPackageSource(content: string, grammar: PackageGlueGrammarSpec): PackageSourceDecision {
   if (grammar.analyzer === "rust") return classifyRustPackageSource(content, grammar);
   if (grammar.analyzer === "typescript" || grammar.analyzer === "javascript") return classifyEcmaPackageSource(content, grammar);
   if (grammar.analyzer === "go") return classifyGoPackageSource(content, grammar);
+  if (grammar.analyzer === "tex") return classifyTexPackageSource(content, grammar);
   const structural = packageStructuralSource(content, grammar.analyzer), source = structural.source.trim();
   if (!structural.balanced) return { role: "unresolved", evidence: "unbalanced lexical structure" };
   if (!source) return { role: "declaration", evidence: "trivia-only source" };

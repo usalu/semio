@@ -3,7 +3,7 @@ import { chmodSync, lstatSync, readFileSync, mkdirSync, writeFileSync, mkdtempSy
 import { delimiter, dirname, join, resolve, relative } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { testGraphCoalescing } from "../🕸️daemon/🟦️.ts";
+import { testGraphCoalescing, testWatcherReadiness, testWorkspaceWatchIgnores } from "../🕸️daemon/🟦️.ts";
 import { testBrowserDistribution } from "../🌐️browser/🟦️.ts";
 import { testContinuousServices } from "../🖥️services/🟦️.ts";
 import { testServiceReadiness } from "../🌐️service-readiness/🟦️.ts";
@@ -57,6 +57,8 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   testNxDaemonDiagnostics(workspace, output);
   testNxDaemonRetention(workspace, output);
   await testGraphCoalescing(workspace);
+  await testWatcherReadiness(workspace);
+  testWorkspaceWatchIgnores(workspace, output);
   await testContinuousServices(workspace, output);
   await testResourceLeases(output);
   await testCachePrune(output);
@@ -72,6 +74,12 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testServiceReadiness(workspace, output);
   await testBunDependencies(workspace, output);
   await testNativePreparation(workspace, output);
+  const { testGeneratorOwnership, testWgpuGeneratorOwnership, testWgpuGeneratorPublication } = await import("../🧬️generator-ownership/🟦️.ts");
+  await testGeneratorOwnership(workspace, output);
+  await testWgpuGeneratorOwnership(workspace);
+  await testWgpuGeneratorPublication(workspace, output);
+  const { testInferredNativeInputs } = await import("../../../../🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts");
+  await testInferredNativeInputs(workspace, output);
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures");
   const root = mkdtempSync(join(output, "native-inputs-"));
   try {
@@ -689,6 +697,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     } finally { rmSync(selectionFixture, { recursive: true }); }
     await testCommandInputs(root, ticketOutput(root, []));
     await (await import("../🚀️bootstrap/🟦️.ts")).testNxBootstrap(root, ticketOutput(root, []));
+    await (await import("../📦️publication/🟦️.ts")).testArtifactPublication(ticketOutput(root, []));
     await (await import("../📇️artifacts/🟦️.ts")).testArtifactRegistry(root, ticketOutput(root, []));
     await (await import("../🌎️hub/🟦️.ts")).testHubBuild(root);
     await testDependencyBootstrap(root, ticketOutput(root, []));
@@ -849,7 +858,12 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       const authority = generators[id], split = authority.target.lastIndexOf(":"), project = contracts.find((project) => project.name === authority.target.slice(0, split))!;
       const target = project.targets[authority.target.slice(split + 1)];
       assert.equal(target.cache, true, `${id} must cache its verified deliverables`);
-      assert.deepEqual(target.outputs, authority.outputRoots.map((output: any) => `{workspaceRoot}/${output.path}`), id);
+      assert.deepEqual(target.outputs, authority.outputRoots.filter((output: any) => !output.producer || output.producer.target === authority.target).map((output: any) => `{workspaceRoot}/${output.path}`), id);
+      for (const output of authority.outputRoots.filter((output: any) => output.producer && output.producer.target !== authority.target)) {
+        const split = output.producer.target.lastIndexOf(":"), producer = contracts.find((project) => project.name === output.producer.target.slice(0, split));
+        assert.ok(producer.targets[output.producer.target.slice(split + 1)].outputs.includes(`{workspaceRoot}/${output.path}`));
+        assert.ok(target.dependsOn.includes(output.producer.target));
+      }
       for (const path of authority.inputPatterns) assert.ok(target.inputs.includes(`{workspaceRoot}/${path}`), `${id} missing ${path}`);
       if (authority.inputDiscovery) {
         const fingerprint = policy.generatorInputs[authority.inputDiscovery.kind], separator = fingerprint.target.lastIndexOf(":"), owner = contracts.find((project) => project.name === fingerprint.target.slice(0, separator));
@@ -1093,13 +1107,13 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     writeFileSync(artifact, "native fixture\n");
     chmodSync(artifact, 0o755);
     const staged = join(fixture, "dist/build");
-    stageArtifacts(staged, "leaf/Cargo.toml", new Map([["consumer", artifact], ["obsolete", artifact]]));
-    stageArtifacts(staged, "leaf/Cargo.toml", new Map([["consumer", artifact]]));
+    await stageArtifacts(staged, "leaf/Cargo.toml", new Map([["consumer", artifact], ["obsolete", artifact]]));
+    await stageArtifacts(staged, "leaf/Cargo.toml", new Map([["consumer", artifact]]));
     assert.deepEqual(readFileSync(join(staged, "consumer")), readFileSync(artifact));
     assert.equal(existsSync(join(staged, "obsolete")), false);
     if (process.platform !== "win32") assert.equal(lstatSync(join(staged, "consumer")).mode & 0o111, 0o111);
-    assert.throws(() => stageArtifacts(staged, "another/Cargo.toml", new Map()), /Unowned/);
-    assert.throws(() => stageArtifacts(staged, "leaf/Cargo.toml", new Map([["../escape", artifact]])), /Invalid artifact/);
+    await assert.rejects(() => stageArtifacts(staged, "another/Cargo.toml", new Map()), /Unowned/);
+    await assert.rejects(() => stageArtifacts(staged, "leaf/Cargo.toml", new Map([["../escape", artifact]])), /Invalid artifact/);
     assert.ok(existsSync(join(staged, "consumer")));
     const testApi = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts"));
     const taxonomy = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";

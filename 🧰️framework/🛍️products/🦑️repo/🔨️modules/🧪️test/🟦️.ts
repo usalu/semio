@@ -7,6 +7,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
+import { packagesForOwner } from "./🕸️dependencies/🟨️.mjs";
 import { createHash } from "node:crypto";
 import { constants, cpSync, existsSync, linkSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { opendir, readFile as readFileAsync } from "node:fs/promises";
@@ -984,8 +985,7 @@ export function profileTable(registry: OracleRegistry): ReadonlyMap<string, Comp
 
 /** 🧩️ The native oracle packages one owner's adapters may reach, walking up to the nearest contributor. */
 export function oracleHostPackagesFor(registry: OracleRegistry, owner: string, implementation: Implementation): OracleHostPackage[] {
-  const contributing = registry.contributions.filter((entry) => owner === entry.owner || owner.startsWith(`${entry.owner}/`));
-  return contributing.flatMap((entry) => entry.oracleHostPackages).filter((entry) => entry.implementation === implementation);
+  return packagesForOwner(registry.contributions, owner, implementation);
 }
 //#endregion 📇️Registry
 

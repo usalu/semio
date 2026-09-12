@@ -1,0 +1,198 @@
+{
+  "version": 1,
+  "defaultPreferences": {
+    "kind": "threePoint",
+    "orthographicView": "top",
+    "axonometricVariant": "isometric",
+    "axonometricAngleA": 15,
+    "axonometricAngleB": 12,
+    "axonometricQuadrant": "ne",
+    "obliqueVariant": "cavalier",
+    "obliqueAngle": 45,
+    "obliqueDepth": 1,
+    "onePointAxis": "y",
+    "fov": 50,
+    "twoPointShift": 0,
+    "curvilinearFov": 120,
+    "curvilinearStrength": 1,
+    "curvilinearMapping": "fisheye"
+  },
+  "modes": [
+    { "kind": "orthographic" },
+    { "kind": "axonometric", "variant": "trimetric", "angleA": 80, "angleB": 4 },
+    { "kind": "oblique", "variant": "cabinet", "angle": 135, "depthScale": 1.5 },
+    { "kind": "onePoint", "fov": 130 },
+    { "kind": "twoPoint", "fov": 130, "verticalShift": -1.25 },
+    { "kind": "threePoint", "fov": 130 },
+    { "kind": "curvilinear", "fov": 200, "strength": 1.25, "mapping": "panini" }
+  ],
+  "orientations": [
+    { "type": "cardinal", "view": "plan" },
+    { "type": "cardinal", "view": "top" },
+    { "type": "cardinal", "view": "bottom" },
+    { "type": "cardinal", "view": "front" },
+    { "type": "cardinal", "view": "back" },
+    { "type": "cardinal", "view": "left" },
+    { "type": "cardinal", "view": "right" },
+    { "type": "corner", "quadrant": "ne" },
+    { "type": "corner", "quadrant": "nw" },
+    { "type": "corner", "quadrant": "se" },
+    { "type": "corner", "quadrant": "sw" },
+    { "type": "corner", "quadrant": "ne", "hemisphere": "upper" },
+    { "type": "corner", "quadrant": "nw", "hemisphere": "upper" },
+    { "type": "corner", "quadrant": "se", "hemisphere": "upper" },
+    { "type": "corner", "quadrant": "sw", "hemisphere": "upper" },
+    { "type": "corner", "quadrant": "ne", "hemisphere": "lower" },
+    { "type": "corner", "quadrant": "nw", "hemisphere": "lower" },
+    { "type": "corner", "quadrant": "se", "hemisphere": "lower" },
+    { "type": "corner", "quadrant": "sw", "hemisphere": "lower" },
+    { "type": "free" }
+  ],
+  "derivations": [
+    {
+      "name": "default explicit three point",
+      "patch": [],
+      "expected": { "mode": { "kind": "threePoint", "fov": 50 }, "orientation": { "type": "free" } }
+    },
+    {
+      "name": "orthographic retains selected cardinal view",
+      "patch": [
+        { "op": "replace", "path": "/kind", "value": "orthographic" },
+        { "op": "replace", "path": "/orthographicView", "value": "bottom" }
+      ],
+      "expected": { "mode": { "kind": "orthographic" }, "orientation": { "type": "cardinal", "view": "bottom" } }
+    },
+    {
+      "name": "isometric fixes both declared angles",
+      "patch": [{ "op": "replace", "path": "/kind", "value": "axonometric" }],
+      "expected": {
+        "mode": { "kind": "axonometric", "variant": "isometric", "angleA": 30, "angleB": 30 },
+        "orientation": { "type": "corner", "quadrant": "ne", "hemisphere": "upper" }
+      }
+    },
+    {
+      "name": "dimetric uses configured angle A twice",
+      "patch": [
+        { "op": "replace", "path": "/kind", "value": "axonometric" },
+        { "op": "replace", "path": "/axonometricVariant", "value": "dimetric" },
+        { "op": "replace", "path": "/axonometricAngleA", "value": 22 },
+        { "op": "replace", "path": "/axonometricAngleB", "value": 13 },
+        { "op": "replace", "path": "/axonometricQuadrant", "value": "sw" }
+      ],
+      "expected": {
+        "mode": { "kind": "axonometric", "variant": "dimetric", "angleA": 22, "angleB": 22 },
+        "orientation": { "type": "corner", "quadrant": "sw", "hemisphere": "upper" }
+      }
+    },
+    {
+      "name": "trimetric uses both configured angles",
+      "patch": [
+        { "op": "replace", "path": "/kind", "value": "axonometric" },
+        { "op": "replace", "path": "/axonometricVariant", "value": "trimetric" },
+        { "op": "replace", "path": "/axonometricAngleA", "value": 22 },
+        { "op": "replace", "path": "/axonometricAngleB", "value": 13 },
+        { "op": "replace", "path": "/axonometricQuadrant", "value": "nw" }
+      ],
+      "expected": {
+        "mode": { "kind": "axonometric", "variant": "trimetric", "angleA": 22, "angleB": 13 },
+        "orientation": { "type": "corner", "quadrant": "nw", "hemisphere": "upper" }
+      }
+    },
+    {
+      "name": "military oblique uses plan",
+      "patch": [
+        { "op": "replace", "path": "/kind", "value": "oblique" },
+        { "op": "replace", "path": "/obliqueVariant", "value": "military" },
+        { "op": "replace", "path": "/obliqueAngle", "value": 37 },
+        { "op": "replace", "path": "/obliqueDepth", "value": 0.8 }
+      ],
+      "expected": {
+        "mode": { "kind": "oblique", "variant": "military", "angle": 37, "depthScale": 0.8 },
+        "orientation": { "type": "cardinal", "view": "plan" }
+      }
+    },
+    {
+      "name": "one point maps x axis to left",
+      "patch": [
+        { "op": "replace", "path": "/kind", "value": "onePoint" },
+        { "op": "replace", "path": "/onePointAxis", "value": "x" },
+        { "op": "replace", "path": "/fov", "value": 67 }
+      ],
+      "expected": { "mode": { "kind": "onePoint", "fov": 67 }, "orientation": { "type": "cardinal", "view": "left" } }
+    },
+    {
+      "name": "two point carries shift",
+      "patch": [
+        { "op": "replace", "path": "/kind", "value": "twoPoint" },
+        { "op": "replace", "path": "/fov", "value": 67 },
+        { "op": "replace", "path": "/twoPointShift", "value": -0.25 }
+      ],
+      "expected": { "mode": { "kind": "twoPoint", "fov": 67, "verticalShift": -0.25 }, "orientation": { "type": "free" } }
+    },
+    {
+      "name": "three point carries shared fov",
+      "patch": [
+        { "op": "replace", "path": "/kind", "value": "threePoint" },
+        { "op": "replace", "path": "/fov", "value": 67 }
+      ],
+      "expected": { "mode": { "kind": "threePoint", "fov": 67 }, "orientation": { "type": "free" } }
+    },
+    {
+      "name": "curvilinear carries inactive bank values",
+      "patch": [
+        { "op": "replace", "path": "/kind", "value": "curvilinear" },
+        { "op": "replace", "path": "/curvilinearFov", "value": 140 },
+        { "op": "replace", "path": "/curvilinearStrength", "value": 0.6 },
+        { "op": "replace", "path": "/curvilinearMapping", "value": "panini" }
+      ],
+      "expected": {
+        "mode": { "kind": "curvilinear", "fov": 140, "strength": 0.6, "mapping": "panini" },
+        "orientation": { "type": "free" }
+      }
+    }
+  ],
+  "preferenceRejections": [
+    { "name": "missing preset", "patch": [{ "op": "remove", "path": "/obliqueDepth" }] },
+    { "name": "foreign field", "patch": [{ "op": "add", "path": "/renderer", "value": "three" }] },
+    { "name": "unknown kind", "patch": [{ "op": "replace", "path": "/kind", "value": "parallel" }] },
+    { "name": "unknown cardinal view", "patch": [{ "op": "replace", "path": "/orthographicView", "value": "rear" }] },
+    { "name": "unknown axonometric variant", "patch": [{ "op": "replace", "path": "/axonometricVariant", "value": "classic" }] },
+    { "name": "unknown quadrant", "patch": [{ "op": "replace", "path": "/axonometricQuadrant", "value": "north" }] },
+    { "name": "unknown oblique variant", "patch": [{ "op": "replace", "path": "/obliqueVariant", "value": "sheared" }] },
+    { "name": "unknown one point axis", "patch": [{ "op": "replace", "path": "/onePointAxis", "value": "w" }] },
+    { "name": "unknown curvilinear mapping", "patch": [{ "op": "replace", "path": "/curvilinearMapping", "value": "spherical" }] },
+    { "name": "angle below range", "patch": [{ "op": "replace", "path": "/axonometricAngleA", "value": 4.99 }] },
+    { "name": "angle above range", "patch": [{ "op": "replace", "path": "/axonometricAngleB", "value": 75.01 }] },
+    { "name": "oblique angle below range", "patch": [{ "op": "replace", "path": "/obliqueAngle", "value": 4.99 }] },
+    { "name": "oblique depth above range", "patch": [{ "op": "replace", "path": "/obliqueDepth", "value": 1.01 }] },
+    { "name": "perspective fov below range", "patch": [{ "op": "replace", "path": "/fov", "value": 14.99 }] },
+    { "name": "two point shift above range", "patch": [{ "op": "replace", "path": "/twoPointShift", "value": 1.01 }] },
+    { "name": "curvilinear fov above range", "patch": [{ "op": "replace", "path": "/curvilinearFov", "value": 160.01 }] },
+    { "name": "curvilinear strength below range", "patch": [{ "op": "replace", "path": "/curvilinearStrength", "value": -0.01 }] }
+  ],
+  "specRejections": [
+    null,
+    "threePoint",
+    { "mode": { "kind": "threePoint", "fov": 50 }, "orientation": { "type": "free" }, "renderer": "three" },
+    { "mode": { "kind": "parallel" }, "orientation": { "type": "free" } },
+    { "mode": { "kind": "orthographic", "fov": 50 }, "orientation": { "type": "free" } },
+    { "mode": { "kind": "onePoint" }, "orientation": { "type": "free" } },
+    { "mode": { "kind": "threePoint", "fov": 50 }, "orientation": "free" },
+    { "mode": { "kind": "threePoint", "fov": 50 }, "orientation": { "type": "cardinal", "view": "north" } },
+    { "mode": { "kind": "threePoint", "fov": 50 }, "orientation": { "type": "corner", "quadrant": "ne", "hemisphere": null } },
+    { "mode": { "kind": "threePoint", "fov": 50 }, "orientation": { "type": "free", "view": "top" } }
+  ],
+  "retention": {
+    "editWhileOrthographic": [
+      { "op": "replace", "path": "/kind", "value": "orthographic" },
+      { "op": "replace", "path": "/curvilinearFov", "value": 150 },
+      { "op": "replace", "path": "/curvilinearStrength", "value": 0.4 },
+      { "op": "replace", "path": "/curvilinearMapping", "value": "panini" }
+    ],
+    "recallCurvilinear": [{ "op": "replace", "path": "/kind", "value": "curvilinear" }],
+    "expected": {
+      "mode": { "kind": "curvilinear", "fov": 150, "strength": 0.4, "mapping": "panini" },
+      "orientation": { "type": "free" }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "windowKind": "identity-window",
+  "schema": "test.window.identity",
+  "cases": [
+    {
+      "id": "same-window",
+      "sourceWindowId": "source",
+      "targetWindowId": "source",
+      "accepted": true
+    },
+    {
+      "id": "same-kind-foreign-window",
+      "sourceWindowId": "source",
+      "targetWindowId": "target",
+      "accepted": false
+    },
+    {
+      "id": "same-kind-foreign-colon-window",
+      "sourceWindowId": "scene:one",
+      "targetWindowId": "scene:two",
+      "accepted": false
+    }
+  ]
+}

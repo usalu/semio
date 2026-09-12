@@ -1222,3 +1222,59 @@ fn a_dropped_render_reservation_releases_its_surface_slot_and_its_output() {
     grant.cancel();
     assert!(tracker.reserve_mounted(surface, key).is_ok(), "`cancel` and `Drop` must leave the slot in the same reservable state: {}", tracker.debug_state());
 }
+
+/// 🪟️ WAVE B52 LAW: an alias window surface that still HOLDS an output, and whose revision the host
+/// never acknowledges, must not hold its instance's retirement ladder open.
+///
+/// 🧾️ The `1:window` alias is a Window binding (wave B25), so it is the one surface of a puzzle3d
+/// instance that is published without the host ever asking for it by body, and B50's live census caught it
+/// mid-publication with its reconciler checked out and its revision unacknowledged
+/// (`1:window#g14:-J-:ack1/rev0:outSome(0)` — output SLOT 0, not zero bytes). `reserve_mounted` rightly
+/// refuses such a slot and the turn defers the render; what must never follow is the CLOSE ladder waiting
+/// on the same slot, because then the instance never reaches its terminal and the actor answers
+/// `more-work` for ever with nothing to publish (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B52 §2,
+/// wave B50's 7 843-turn streak with `sources=["reconcile"]`).
+#[test]
+fn an_alias_window_surface_the_host_never_acknowledges_does_not_block_the_retirement_ladder() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let tracker = PatchTracker::new();
+    tracker.begin("21:window".into(), tree_with_owned_child("alias")).expect("admitted alias publication");
+    let patch = finish(&tracker).expect("alias surface publishes");
+    close_test_patch(patch);
+    {
+        let mut state = tracker.state.borrow_mut();
+        let slot = state.slots.iter_mut().flatten().find(|slot| slot.surface.as_ref() == "21:window").expect("mounted alias surface");
+        let revision = slot.reconciler.as_ref().expect("published canonical root").revision();
+        slot.acknowledged_revision = ui_contract::UiRevision(revision.0.saturating_sub(1));
+    }
+    assert!(tracker.defer(ui_contract::SurfaceId::try_from("21:window").expect("bounded surface")).is_ok());
+    assert!(tracker.take_deferred_ready().is_none(), "the unacknowledged alias stays deferred: {}", tracker.debug_state());
+    close_instance_to_empty(&tracker, 21);
+}
+
+/// 🧮️ WAVE B52 LAW: the retirement ladder of a published surface must not be priced by a grant
+/// narrower than one indivisible allocation of the value it retires.
+///
+/// 🐛️ `PagedList::release_empty_page` frees a page whole or not at all, and refuses a grant that does
+/// not fit it — its own laws pin that refusal. One `UiNodeRecord` is 6 416 bytes against the reconciler's
+/// 4 096-byte `SURFACE_COMPONENT_COPY_WORK_BYTES`, so the document ladder answered
+/// `progressed: false, complete: false` 67 667 consecutive times on one catalogue surface and its terminal
+/// never emptied. This law publishes a document-scaled surface, retires it, and requires the whole ladder
+/// to reach terminal empty — which the fixed `retire_exact` grant makes possible and which its failure
+/// message prices in node records so a future record growth cannot silently re-break it (ticket
+/// 26/09/02/PUZZLE-3D-END-TO-END wave B52 §2).
+#[test]
+fn a_node_record_wider_than_the_copy_grant_still_retires_its_document_to_terminal_empty() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let record = size_of::<ui_contract::UiNodeRecord>();
+    let tracker = PatchTracker::new();
+    let mut root = leaf("catalogue", "Catalogue").root;
+    for row in 0..32u32 {
+        root.children.try_push(leaf(&row.to_string(), "Row").root).expect("bounded fixture row");
+    }
+    reserve(&tracker, ui_contract::SurfaceId::try_from("22:catalogue").expect("bounded surface")).expect("fixed mounted reservation").commit_source(root).expect("admitted publication");
+    let patch = finish(&tracker).expect("catalogue surface publishes");
+    close_test_patch(patch);
+    close_instance_to_empty(&tracker, 22);
+    assert!(!tracker.has_work(), "one node record is {record} bytes and its document ladder still holds work: {}", tracker.debug_state());
+}

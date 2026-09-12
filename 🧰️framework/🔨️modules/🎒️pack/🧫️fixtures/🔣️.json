@@ -4,7 +4,29 @@
   "admission": {
     "pageBytes": 4096,
     "opportunitiesPerGrant": 1,
-    "cases": ["zero", "maximum", "maximum-plus-one", "missing-preflight", "producer-handback"]
+    "cases": ["zero", "maximum", "maximum-plus-one", "missing-preflight", "producer-handback", "physical-limit", "allocator-overgrant-sticky"]
+  },
+  "physicalOwnership": {
+    "limits": ["payload-bytes", "allocation-bytes"],
+    "allocationPhases": ["metadata", "payload"],
+    "pageItemMinimumBytes": 4097,
+    "zeroGrant": {"mutates": false},
+    "logicalPop": {"releasedItems": 1, "releasedBytes": 0},
+    "insufficientGrantDelta": 1,
+    "terminal": {"rootCapacity": 0, "length": 0, "capacity": 0, "allocatedBytes": 0}
+  },
+  "multiByteChunk": {
+    "bytes": [17, 34, 51, 68, 85],
+    "rawByteEvents": 5,
+    "observations": 1,
+    "observationEvent": "begin"
+  },
+  "outerCancellation": {
+    "demandDelegation": ["field-decoder", "vcs", "snapshot", "mounted-source"],
+    "subexactGrant": {"mutates": false, "releasedItems": 0, "releasedBytes": 0},
+    "exactGrant": {"physicalReleaseObserved": true},
+    "workFuelPerCloseOpportunity": 1,
+    "terminal": "cancelled"
   },
   "anchors": ["header-magic", "header-crc32c", "header-reserved", "footer-magic", "footer-crc32c", "version", "required-flags", "file-length", "manifest-span"],
   "segments": ["kind", "flags", "stored-length", "raw-length", "raw-byte", "crc32c", "end", "footer"],

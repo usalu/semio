@@ -30,7 +30,7 @@ export async function runWgpuPackageGenerator(repoRoot: string, mode: string, op
     }
     view = generatorProjectedInputView(repoRoot, taxonomy, parseGeneratorInputProjection(Buffer.concat(chunks).toString("utf8"), taxonomy, "wgpu-frame-worker"), base);
   }
-  const rendered = await renderWgpuPackageArtifacts(repoRoot, { taxonomy, view, isCancelled });
+  const rendered = await renderWgpuPackageArtifacts(repoRoot, { taxonomy, view, isCancelled, ...(mode === "generate" ? { producerTarget: contract.target! } : {}) });
   if (mode === "preview") {
     const nodes = rendered.nodes.map(({ path, content, mode }) => ({ path, nodeKind: "file", mode, bytesBase64: Buffer.from(content).toString("base64") }));
     process.stdout.write(canonicalJson({ contractId: "wgpu-frame-worker", schemaVersion: 1, nodes, staleRemovals: [] }) + "\n");

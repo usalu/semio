@@ -28,7 +28,7 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                 use crate::editor::equation::{EquationCommand, EquationPlayApp, MATH_PLAY_BODY_GRAPH};
                 use semio_framework_plugin::{artifact_app_laws, ActionMeta, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
 
-                async fn render(app: &mut MathApp, view: &ViewModel) -> Result<semio_framework_plugin::NodeGraphViewport, String> {
+                async fn render(app: &mut MathApp, view: &ViewModel) -> Result<semio_framework_plugin::Viewport2d, String> {
                     let tree = app.render(MATH_PLAY_BODY_GRAPH, None, view).await.map_err(|error| format!("{error:?}"))?;
                     let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
                     let scene = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&json).map_err(str::to_string)?;

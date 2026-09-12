@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://fem/engine/sparse/scalar-owners",
+  "title": "FEM Scalar Numerical Owners",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "oracle",
+    "factor",
+    "precondition"
+  ],
+  "properties": {
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "version"
+      ],
+      "properties": {
+        "package": {
+          "const": "numpy"
+        },
+        "version": {
+          "const": "2.0.2"
+        }
+      }
+    },
+    "factor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lower",
+        "diagonal",
+        "matrix",
+        "rhs",
+        "expected"
+      ],
+      "properties": {
+        "lower": {
+          "$ref": "#/$defs/matrix"
+        },
+        "diagonal": {
+          "$ref": "#/$defs/vector"
+        },
+        "matrix": {
+          "$ref": "#/$defs/matrix"
+        },
+        "rhs": {
+          "$ref": "#/$defs/matrix"
+        },
+        "expected": {
+          "$ref": "#/$defs/matrix"
+        }
+      }
+    },
+    "precondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "diagonal",
+        "residual",
+        "steps",
+        "retainsBacking"
+      ],
+      "properties": {
+        "diagonal": {
+          "$ref": "#/$defs/vector"
+        },
+        "residual": {
+          "$ref": "#/$defs/vector"
+        },
+        "steps": {
+          "$ref": "#/$defs/matrix"
+        },
+        "retainsBacking": {
+          "const": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "vector": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "matrix": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/vector"
+      }
+    }
+  }
+}

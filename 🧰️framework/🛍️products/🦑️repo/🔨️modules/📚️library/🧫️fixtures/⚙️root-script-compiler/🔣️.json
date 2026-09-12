@@ -1,6 +1,40 @@
 {
   "schemaVersion": 1,
-  "declarations": ["policyCollectGluePathTargets", "policySnakeToCamel"],
+  "declarations": ["policyCollectGluePathTargets"],
+  "fieldOwners": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts",
+      "declarations": ["PolicySchemaFieldCardinality", "PolicySchemaFieldShape", "PolicySchemaLeafExtract", "policyCanonicalState", "policyCanonicalScalar", "policyFindSchemaDeclaration", "policySnakeToCamel"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts",
+      "declarations": ["policyParseRustFieldType", "policyExtractRustSchemaFields"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🟦️typescript/🟦️.ts",
+      "declarations": ["policyParseTsFieldType", "policyExtractTypescriptSchemaFields"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🟦️typescript/📂️module-resolution/🟦️.ts",
+      "declarations": ["policyExtractTypescriptSchemaFile"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🔗️graphql/🟦️.ts",
+      "declarations": ["policyExtractGraphqlSchemaFields"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🔣️json-schema/🟦️.ts",
+      "declarations": ["policyJsonSchemaScalar", "policyParseJsonSchemaProperty", "policyExtractJsonSchemaFields"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts",
+      "declarations": ["policyParseProtoFieldType", "policyExtractProtobufSchemaFields"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/⚖️comparison/🟦️.ts",
+      "declarations": ["policySchemaFieldDifferences"]
+    }
+  ],
   "fieldNames": [
     { "input": "field_name", "output": "fieldName" },
     { "input": "field__name", "output": "fieldName" },
@@ -14,18 +48,22 @@
   ],
   "schemaFields": ["field_name", "field__name", "field_", "a_1_field"],
   "eagerVocabulary": {
+    "sourceOwner": {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts",
+      "declarations": ["POLICY_TS_COMPONENT_LEAF", "POLICY_RS_COMPONENT_LEAF_NAME"]
+    },
     "missingActiveOutput": "Strict workspace validation requires the missing active output",
     "lookupCount": 26,
     "values": {
-      "POLICY_TS_COMPONENT_LEAF": "../⚙️root-script-compiler/🟦️.ts",
+      "POLICY_TS_COMPONENT_LEAF": "🟦️.ts",
       "POLICY_RS_COMPONENT_LEAF_NAME": "🦀️.rs",
       "POLICY_GRAMMAR_SPEC_LEAF": "📖️.grammar.semio",
       "POLICY_PROTOCOL_SPEC_LEAF": "📡️.protocol.semio",
       "POLICY_RS_COMPONENT_LEAF": "🦀️.rs",
-      "POLICY_STDIO_TEXT_SPEC_LEAVES": ["📖️.grammar.semio", "🔤️.ebnf", "🅰️.g4", "🔗️.graphql", "../⚙️root-script-compiler/🔣️.json", "🛰️.proto", "🦀️.rs", "../⚙️root-script-compiler/🟦️.ts"],
-      "POLICY_STDIO_BINARY_SPEC_LEAVES": ["📡️.protocol.semio", "🔠️.abnf", "🥋️.ksy", "🌶️.spicy", "🦀️.rs", "../⚙️root-script-compiler/🟦️.ts"],
+      "POLICY_STDIO_TEXT_SPEC_LEAVES": ["📖️.grammar.semio", "🔤️.ebnf", "🅰️.g4", "🔗️.graphql", "🔣️.json", "🛰️.proto", "🦀️.rs", "🟦️.ts"],
+      "POLICY_STDIO_BINARY_SPEC_LEAVES": ["📡️.protocol.semio", "🔠️.abnf", "🥋️.ksy", "🌶️.spicy", "🦀️.rs", "🟦️.ts"],
       "POLICY_GRAMMAR_HONESTY_LEAF_MARKERS": { "🅰️.g4": "DOCUMENT: 'schema' [ ]+", "🔤️.ebnf": "header = 'schema', space,", "📖️.grammar.semio": "payload = *OCTET", "🔠️.abnf": "payload = *OCTET", "📡️.protocol.semio": "payload = *OCTET", "🥋️.ksy": "size-eos: true", "🌶️.spicy": "payload: bytes &eod;" },
-      "POLICY_FACET_MIRROR_DRIFT_SIBLINGS": ["../⚙️root-script-compiler/🟦️.ts", "🔗️.graphql", "../⚙️root-script-compiler/🔣️.json", "🛰️.proto"]
+      "POLICY_FACET_MIRROR_DRIFT_SIBLINGS": ["🟦️.ts", "🔗️.graphql", "🔣️.json", "🛰️.proto"]
     }
   },
   "fixtureRetention": { "ownerPath": "📓️root-script-compiler/🧾️runs", "prefix": "🧪️glue-" },
@@ -42,8 +80,8 @@
   "execution": {
     "target": "test-root-script-compiler",
     "command": "bun ./📜️script.ts test root-script-compiler",
-    "launchName": "🧹clean🧩️taxonomy⚙️root-script-compiler",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-script-compiler --skip-nx-cache",
+    "launchName": "🧹clean🧩️taxonomy🧪️root-script-compiler",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-script-compiler",
     "launchGroup": "4_gate",
     "launchOrder": 410.11
   }

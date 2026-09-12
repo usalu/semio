@@ -7215,7 +7215,7 @@ var _catalog_default = {
   records: {
     Canvas2dScene: { fields: [["cameraX", "f64"], ["cameraY", "f64"], ["zoom", "f64"], ["layersJson", "text"], ["snapshot", "?#Canvas2dSnapshotLease"]] },
     World3dScene: { fields: [["snapshot", "?#World3dSnapshotLease"], ["cameraJson", "text"], ["meshesJson", "text"], ["instancesJson", "text"], ["selectionJson", "text"], ["vorticesJson", "?text"], ["attractionsJson", "?text"], ["targetVolumesJson", "?text"], ["referencesJson", "?text"], ["brushPreviewJson", "?text"], ["interactionJson", "?text"], ["engagementPreviewJson", "?text"], ["lodJson", "?text"], ["chunkingJson", "?text"], ["environmentJson", "?text"], ["frameJson", "?text"], ["fitJson", "?text"], ["terrainJson", "?text"], ["pointsJson", "?text"], ["statusJson", "?text"], ["domainId", "?text"], ["domainGranularityId", "?text"]] },
-    NodeGraphScene: { fields: [["nodes", "[#NodeGraphNodeRecord]"], ["edges", "[#NodeGraphEdgeRecord]"], ["viewport", "?#NodeGraphViewport"], ["editable", "?bool"], ["operators", "[#NodeGraphOperatorRecord]"], ["findItems", "[#NodeGraphFindItem]"], ["selection", "[text]"], ["hover", "?#NodeGraphHover"], ["previewOffJson", "?text"], ["lodJson", "?text"], ["controlsJson", "?text"], ["clustersJson", "?text"], ["computingJson", "?text"], ["statusJson", "?text"], ["capabilitiesJson", "?text"], ["fixtureJson", "?text"], ["presencePeersJson", "?text"], ["evalJson", "?text"]], defaults: { nodes: [], edges: [], operators: [], findItems: [], selection: [] } },
+    NodeGraphScene: { fields: [["nodes", "[#NodeGraphNodeRecord]"], ["edges", "[#NodeGraphEdgeRecord]"], ["viewport", "?#Viewport2d"], ["editable", "?bool"], ["operators", "[#NodeGraphOperatorRecord]"], ["findItems", "[#NodeGraphFindItem]"], ["selection", "[text]"], ["hover", "?#NodeGraphHover"], ["previewOffJson", "?text"], ["lodJson", "?text"], ["controlsJson", "?text"], ["clustersJson", "?text"], ["computingJson", "?text"], ["statusJson", "?text"], ["capabilitiesJson", "?text"], ["fixtureJson", "?text"], ["presencePeersJson", "?text"], ["evalJson", "?text"]], defaults: { nodes: [], edges: [], operators: [], findItems: [], selection: [] } },
     TextEditorScene: { fields: [["buffer", "text"], ["language", "?text"], ["selectionJson", "?text"], ["tokensJson", "?text"], ["diagnosticsJson", "?text"], ["completionsJson", "?text"], ["overlaysJson", "?text"], ["occurrencesJson", "?text"], ["placeholdersJson", "?text"], ["extraCaretsJson", "?text"], ["selectableSpansJson", "?text"], ["settingsJson", "?text"], ["cameraJson", "?text"], ["hoverJson", "?text"], ["newlineGatesJson", "?text"], ["renameJson", "?text"]] },
     TableScene: { fields: [["columnsJson", "text"], ["rowsJson", "text"], ["selectionJson", "?text"], ["rowDragMime", "?text"], ["dropActionJson", "?text"], ["sortJson", "?text"], ["domainId", "?text"]] },
     Paint2dScene: { fields: [["documentSyncJson", "text"], ["assetsJson", "text"], ["cameraJson", "text"], ["selectionJson", "text"], ["hoveredId", "?text"], ["activeUtility", "text"], ["brushSize", "f64"], ["brushOpacity", "f64"], ["viewMode", "text"], ["compositeViewportJson", "?text"]] },
@@ -7233,7 +7233,7 @@ var _catalog_default = {
     NodeGraphPortRecord: { fields: [["id", "text"], ["label", "?text"], ["code", "?text"], ["abbreviation", "?text"], ["fullName", "?text"], ["resourceKind", "?text"]] },
     NodeGraphNodeRecord: { fields: [["id", "text"], ["label", "?text"], ["x", "f64"], ["y", "f64"], ["width", "f64"], ["height", "f64"], ["inputs", "[#NodeGraphPortRecord]"], ["outputs", "[#NodeGraphPortRecord]"], ["instanceId", "?text"], ["pluginId", "?text"], ["appId", "?text"], ["icon", "?text"]], defaults: { inputs: [], outputs: [] } },
     NodeGraphEdgeRecord: { fields: [["id", "text"], ["sourceNodeId", "text"], ["sourcePortId", "text"], ["targetNodeId", "text"], ["targetPortId", "text"], ["label", "?text"]] },
-    NodeGraphViewport: { fields: [["x", "f64"], ["y", "f64"], ["zoom", "f64"]], defaults: { x: 0, y: 0, zoom: 1 } },
+    Viewport2d: { fields: [["x", "f64"], ["y", "f64"], ["zoom", "f64"]] },
     NodeGraphFindItem: { fields: [["id", "text"], ["label", "text"], ["category", "text"]] },
     NodeGraphHover: { fields: [["nodeId", "?text"]] },
     NodeGraphOperatorVariadicRecord: { fields: [["slotKey", "text"], ["min", "usize"], ["max", "?usize"]] },
@@ -24362,7 +24362,7 @@ function coerceWireBytes(raw) {
       bytes[i] = binary.charCodeAt(i);
     return bytes;
   }
-  throw new Error(`[DEBUG] coerceWireBytes: unsupported payload ${JSON.stringify(raw)?.slice(0, 120)}`);
+  throw new Error(`coerceWireBytes: unsupported payload ${JSON.stringify(raw)?.slice(0, 120)}`);
 }
 function coerceTurnResult(raw) {
   const record = raw && typeof raw === "object" ? raw : {};
@@ -24606,11 +24606,11 @@ function wireEffectToFriendly(effect, decodePackValue2) {
     case "send-message": {
       if (isRoutedWireSendMessage(effect))
         return null;
-      console.warn(`[DEBUG] wireEffectToFriendly: send-message to "${wireSendMessageTargetTag(effect) || "no endpoint"}" has no host route — only ${WIRE_SEND_MESSAGE_ROUTED_TARGETS.join("/")} are consumed`);
+      console.warn(`wireEffectToFriendly: send-message to "${wireSendMessageTargetTag(effect) || "no endpoint"}" has no host route — only ${WIRE_SEND_MESSAGE_ROUTED_TARGETS.join("/")} are consumed`);
       return null;
     }
     default:
-      console.warn(`[DEBUG] wireEffectToFriendly: unmapped effect "${effect.tag}" dropped — unverified wasm-boundary conversion`);
+      console.warn(`wireEffectToFriendly: unmapped effect "${effect.tag}" dropped — unverified wasm-boundary conversion`);
       return null;
   }
 }

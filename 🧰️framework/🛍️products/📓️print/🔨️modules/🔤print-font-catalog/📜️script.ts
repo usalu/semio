@@ -2,9 +2,9 @@ import { BundleScript, ScriptRouter } from "../../../🦑️repo/🔨️modules/
 import { stagePrintFonts } from "./🟦️.ts";
 
 class BuildScript extends BundleScript {
-  run(args: string[]): void {
+  async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Print font preparation accepts no arguments");
-    const result = stagePrintFonts(this.repoRoot);
+    const result = await stagePrintFonts(this.repoRoot);
     console.log(`Print fonts staged: ${result.total} authored TTF assets`);
   }
 }

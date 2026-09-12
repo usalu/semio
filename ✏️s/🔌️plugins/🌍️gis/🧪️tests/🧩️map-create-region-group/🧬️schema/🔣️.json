@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/gis/test/map-create-region-group.json",
+  "$ref": "#/$defs/GisMapCreateRegionGroup",
+  "$defs": {
+    "Point": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "number" }
+    },
+    "Feature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "data"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "data": { "type": "object" }
+      }
+    },
+    "GisMapCreateRegionGroupMembership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["drawingChildId", "valueChildId", "imageChildId"],
+      "properties": {
+        "drawingChildId": { "const": "gismap-drawing" },
+        "valueChildId": { "const": "gismap-value" },
+        "imageChildId": { "const": null }
+      }
+    },
+    "MembershipCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "drawingChildId", "valueChildId", "imageChildId", "deriveChildren", "accepted"],
+      "properties": {
+        "name": {
+          "enum": ["image-free", "forged-drawing", "forged-value", "supplied-image-preserved-and-denied"]
+        },
+        "drawingChildId": { "type": "string", "minLength": 1 },
+        "valueChildId": { "type": "string", "minLength": 1 },
+        "imageChildId": { "type": ["string", "null"] },
+        "deriveChildren": { "type": "boolean" },
+        "accepted": { "type": "boolean" }
+      }
+    },
+    "GisMapCreateRegionGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "jobId", "base", "expected", "hostile", "membershipCases"],
+      "properties": {
+        "schema": { "const": "semio.gis.map-create-region-group/v1" },
+        "jobId": { "type": "string", "pattern": "^[a-f0-9]{32}$" },
+        "base": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["positions", "routes", "regions", "drawingChildId", "valueChildId"],
+          "properties": {
+            "positions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Feature" } },
+            "routes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Feature" } },
+            "regions": { "type": "array", "items": { "$ref": "#/$defs/Feature" } },
+            "drawingChildId": { "const": "gismap-drawing" },
+            "valueChildId": { "const": "gismap-value" }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["region", "parentKind", "parentInverseKind", "drawing", "value", "touchedChildren", "imageTouched", "maximumBytes"],
+          "properties": {
+            "region": { "$ref": "#/$defs/Feature" },
+            "parentKind": { "const": "create-region" },
+            "parentInverseKind": { "const": "delete-region" },
+            "drawing": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "slot", "childId", "parentLayer", "parentPath", "index", "inverseKind"],
+              "properties": {
+                "kind": { "const": "create-node" },
+                "slot": { "const": "drawing" },
+                "childId": { "const": "gismap-drawing" },
+                "parentLayer": { "const": 0 },
+                "parentPath": { "const": [] },
+                "index": { "type": "integer", "minimum": 0 },
+                "inverseKind": { "const": "delete-node" }
+              }
+            },
+            "value": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "slot", "childId", "path", "index", "inverseKind"],
+              "properties": {
+                "kind": { "const": "insert-list-item" },
+                "slot": { "const": "value" },
+                "childId": { "const": "gismap-value" },
+                "path": { "const": ["regions"] },
+                "index": { "type": "integer", "minimum": 0 },
+                "inverseKind": { "const": "remove-list-item" }
+              }
+            },
+            "touchedChildren": { "const": ["drawing", "value"] },
+            "imageTouched": { "const": false },
+            "maximumBytes": { "const": 65536 }
+          }
+        },
+        "hostile": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["drawing-id", "value-id", "missing-drawing", "missing-value", "image-touch", "wrong-index", "wrong-job", "oversize"]
+          }
+        },
+        "membershipCases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/MembershipCase" }
+        }
+      }
+    }
+  }
+}

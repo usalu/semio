@@ -4,8 +4,8 @@ use super::*;
 #[test]
 fn fixture_from_workflow_json() {
     let nodes = r#"[{"id":"a","label":"Alpha","x":10,"y":20,"inputs":[],"outputs":[{"id":"out","label":"Out"}]}]"#;
-    let edges = r#"[]"#;
-    let fixture = fixture_from_node_graph_json(nodes, edges, r#"{"x":0,"y":0,"zoom":1}"#).expect("fixture");
+    let nodes: Vec<GraphNodeRecord> = serde_json::from_str(nodes).expect("independent JSON oracle");
+    let fixture = fixture_from_node_graph_records(&nodes, &[], Some(&Viewport2d::default()));
     assert_eq!(fixture.nodes.len(), 1);
     assert_eq!(fixture.nodes[0].id, "a");
 }
@@ -16,7 +16,7 @@ fn graph_host_syncs_selection_from_framework_interaction_state() {
     let payload = NodeGraphScenePayload {
         nodes: vec![GraphNodeRecord { id: "a".into(), label: Some("A".into()), outputs: Some(vec![GraphPortRecord { id: "out".into(), ..Default::default() }]), ..Default::default() }],
         edges: Vec::new(),
-        viewport: Some(GraphViewport { x: 0.0, y: 0.0, zoom: 1.0 }),
+        viewport: Some(Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 }),
         ..Default::default()
     };
     host.sync_from_payload(&payload).expect("sync");
@@ -130,48 +130,64 @@ fn node_record_to_spec_falls_back_to_id_when_label_missing() {
 }
 //#endregion 🔖️NodeRecordConversion
 
-//#region 🔖️FixtureFromJson
+//#region 🔖️FixtureFromRecords
 #[test]
-fn fixture_from_node_graph_json_defaults_when_inputs_blank() {
-    let fixture = fixture_from_node_graph_json("", "", "").expect("fixture");
+fn fixture_from_node_graph_records_uses_shared_default_viewport() {
+    let fixture = fixture_from_node_graph_records(&[], &[], None);
     assert_eq!(fixture.schema, "dag.fixture");
     assert!(fixture.nodes.is_empty());
     assert!(fixture.edges.is_empty());
-    // 🐛️ blank viewport_json takes the `GraphViewport::default()` (derived) path, which zeroes zoom
-    // instead of using `default_zoom()` (1.0) — that helper only fires for missing-key JSON parsing.
-    assert_eq!(fixture.camera.zoom, 0.0);
+    assert_eq!(fixture.camera.zoom, 1.0);
 }
 
 #[test]
-fn fixture_from_node_graph_json_builds_composite_edge_endpoints() {
+fn fixture_from_node_graph_records_builds_composite_edge_endpoints() {
     let nodes = r#"[{"id":"a","outputs":[{"id":"out"}]},{"id":"b","inputs":[{"id":"in"}]}]"#;
     let edges = r#"[{"id":"e1","sourceNodeId":"a","sourcePortId":"out","targetNodeId":"b","targetPortId":"in"}]"#;
-    let fixture = fixture_from_node_graph_json(nodes, edges, "").expect("fixture");
+    let nodes: Vec<GraphNodeRecord> = serde_json::from_str(nodes).expect("independent node oracle");
+    let edges: Vec<GraphEdgeRecord> = serde_json::from_str(edges).expect("independent edge oracle");
+    let fixture = fixture_from_node_graph_records(&nodes, &edges, None);
     assert_eq!(fixture.edges.len(), 1);
     assert_eq!(fixture.edges[0].source, "a@out");
     assert_eq!(fixture.edges[0].target, "b@in");
 }
 
 #[test]
-fn fixture_from_node_graph_json_propagates_malformed_nodes_json() {
-    let err = fixture_from_node_graph_json("not json", "[]", "").unwrap_err();
+fn node_graph_scene_payload_rejects_an_invalid_typed_viewport() {
+    let err = NodeGraphScenePayload::from_json(&serde_json::json!({ "viewport": { "x": 0.0, "y": 0.0, "zoom": 0.0 } })).unwrap_err();
     assert!(matches!(err, NodeGraphError::Json(_)));
 }
 
 #[test]
-fn fixture_from_node_graph_json_reads_custom_viewport() {
-    let fixture = fixture_from_node_graph_json("[]", "[]", r#"{"x":5,"y":-3,"zoom":2.5}"#).expect("fixture");
+fn node_graph_scene_viewport_matches_the_shared_neutral_contract() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🖱️ui/🪟️viewport/🧪️tests/🧫️fixtures/🪟️poses/🔣️.json")).expect("shared viewport fixture");
+    let mut cases = 0;
+    for row in fixture["cases"].as_array().expect("viewport cases").iter().filter(|row| row["dimension"] == "2d") {
+        let value = row["value"].clone();
+        let valid = row["valid"].as_bool().expect("valid flag");
+        let decoded = NodeGraphScenePayload::from_json(&serde_json::json!({ "viewport": value.clone() }));
+        let oracle = serde_json::from_value::<Viewport2d>(value);
+        assert_eq!(decoded.is_ok(), valid, "{}", row["name"]);
+        assert_eq!(decoded.is_ok(), oracle.is_ok(), "{} independent serde oracle", row["name"]);
+        cases += 1;
+    }
+    assert_eq!(cases, 8);
+}
+
+#[test]
+fn fixture_from_node_graph_records_reads_custom_viewport() {
+    let fixture = fixture_from_node_graph_records(&[], &[], Some(&Viewport2d { x: 5.0, y: -3.0, zoom: 2.5 }));
     assert_eq!(fixture.camera.x, 5.0);
     assert_eq!(fixture.camera.y, -3.0);
     assert_eq!(fixture.camera.zoom, 2.5);
 }
-//#endregion 🔖️FixtureFromJson
+//#endregion 🔖️FixtureFromRecords
 
 //#region 🔖️ScenePayloadFromJson
 #[test]
 fn node_graph_scene_payload_from_json_defaults_missing_fields() {
     let value = serde_json::json!({});
-    let payload = NodeGraphScenePayload::from_json(&value);
+    let payload = NodeGraphScenePayload::from_json(&value).expect("empty payload");
     assert!(payload.nodes.is_empty());
     assert!(payload.edges.is_empty());
     assert!(payload.viewport.is_none());
@@ -192,7 +208,7 @@ fn node_graph_scene_payload_from_json_reads_optional_fields() {
         "capabilitiesJson": "cap",
         "fixtureJson": "fix",
     });
-    let payload = NodeGraphScenePayload::from_json(&value);
+    let payload = NodeGraphScenePayload::from_json(&value).expect("typed payload");
     assert_eq!(payload.nodes.len(), 1);
     assert_eq!(payload.edges.len(), 1);
     assert_eq!(payload.controls_json.as_deref(), Some("ctl"));
@@ -215,7 +231,7 @@ fn payload_with_node(id: &str) -> NodeGraphScenePayload {
             ..Default::default()
         }],
         edges: Vec::new(),
-        viewport: Some(GraphViewport { x: 0.0, y: 0.0, zoom: 1.0 }),
+        viewport: Some(Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 }),
         ..Default::default()
     }
 }
@@ -317,12 +333,28 @@ fn graph_host_sync_from_scene_json_rejects_invalid_json() {
 
 //#region 🔖️GraphHostQueries
 #[test]
-fn graph_host_camera_json_reflects_viewport() {
+fn graph_host_viewport_reflects_typed_initial_scene_viewport() {
     let mut host = GraphHost::default();
     let mut payload = payload_with_node("a");
-    payload.viewport = Some(GraphViewport { x: 11.0, y: 22.0, zoom: 3.0 });
+    payload.viewport = Some(Viewport2d { x: 11.0, y: 22.0, zoom: 3.0 });
     host.sync_from_payload(&payload).expect("sync");
-    assert_eq!(host.camera_json(), r#"{"x":11.0,"y":22.0,"zoom":3.0}"#);
+    assert_eq!(host.viewport(), Viewport2d { x: 11.0, y: 22.0, zoom: 3.0 });
+}
+
+#[test]
+fn graph_host_keeps_live_viewport_when_the_scene_echo_lags() {
+    let mut host = GraphHost::default();
+    let mut payload = payload_with_node("a");
+    payload.viewport = Some(Viewport2d { x: 11.0, y: 22.0, zoom: 3.0 });
+    host.sync_from_payload(&payload).expect("initial sync");
+    host.set_viewport(400, 400, 1.0);
+    host.wheel_screen(200.0, 200.0, -10.0, true);
+    let live = host.viewport();
+    host.sync_from_payload(&payload).expect("echo sync");
+    assert_eq!(host.viewport(), live);
+    payload.nodes.push(GraphNodeRecord { id: "b".into(), ..Default::default() });
+    host.sync_from_payload(&payload).expect("content sync");
+    assert_eq!(host.viewport(), live);
 }
 
 #[test]
@@ -362,13 +394,13 @@ fn graph_wheel_plan_matches_direct_and_rejects_stale_revision() {
     direct.wheel_screen(160.0, 190.0, -10.0, true);
     let plan = planned.plan_wheel(160.0, 190.0, -10.0, true);
     assert!(planned.commit_wheel(plan));
-    assert_eq!(direct.camera_json(), planned.camera_json());
+    assert_eq!(direct.viewport(), planned.viewport());
 
     let stale = planned.plan_wheel(160.0, 190.0, -10.0, true);
     planned.set_viewport(401, 400, 1.0);
-    let replacement = planned.camera_json();
+    let replacement = planned.viewport();
     assert!(!planned.commit_wheel(stale));
-    assert_eq!(planned.camera_json(), replacement);
+    assert_eq!(planned.viewport(), replacement);
 }
 
 #[test]
@@ -391,9 +423,9 @@ fn graph_pointer_plan_matches_direct_click_and_rejects_stale_revision() {
 
     let stale = planned.plan_pointer(dag::DagPointerIntent { phase: dag::DagPointerPhase::Down, x: 200.0, y: 200.0, button: 0, shift: false, ctrl_or_meta: false, alt: false, pan: true }).expect("stale plan");
     planned.set_viewport(401, 400, 1.0);
-    let camera = planned.camera_json();
+    let camera = planned.viewport();
     assert!(!planned.commit_pointer(stale));
-    assert_eq!(planned.camera_json(), camera);
+    assert_eq!(planned.viewport(), camera);
 }
 
 #[test]

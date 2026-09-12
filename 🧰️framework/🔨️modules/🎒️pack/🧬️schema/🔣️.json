@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "wire", "admission", "physicalOwnership", "multiByteChunk", "outerCancellation", "anchors", "segments", "registries", "hostile", "valueTags"],
+  "properties": {
+    "schema": {"const": "semio.retained-canonical-pack-laws.v1"},
+    "wire": {"const": "SPK/1.0"},
+    "admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pageBytes", "opportunitiesPerGrant", "cases"],
+      "properties": {
+        "pageBytes": {"const": 4096},
+        "opportunitiesPerGrant": {"const": 1},
+        "cases": {"type": "array", "minItems": 5, "uniqueItems": true, "items": {"type": "string"}}
+      }
+    },
+    "physicalOwnership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["limits", "allocationPhases", "pageItemMinimumBytes", "zeroGrant", "logicalPop", "insufficientGrantDelta", "terminal"],
+      "properties": {
+        "limits": {"const": ["payload-bytes", "allocation-bytes"]},
+        "allocationPhases": {"const": ["metadata", "payload"]},
+        "pageItemMinimumBytes": {"minimum": 4097, "type": "integer"},
+        "zeroGrant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mutates"],
+          "properties": {"mutates": {"const": false}}
+        },
+        "logicalPop": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["releasedItems", "releasedBytes"],
+          "properties": {"releasedItems": {"const": 1}, "releasedBytes": {"const": 0}}
+        },
+        "insufficientGrantDelta": {"const": 1},
+        "terminal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rootCapacity", "length", "capacity", "allocatedBytes"],
+          "properties": {
+            "rootCapacity": {"const": 0},
+            "length": {"const": 0},
+            "capacity": {"const": 0},
+            "allocatedBytes": {"const": 0}
+          }
+        }
+      }
+    },
+    "multiByteChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bytes", "rawByteEvents", "observations", "observationEvent"],
+      "properties": {
+        "bytes": {"type": "array", "minItems": 2, "items": {"type": "integer", "minimum": 0, "maximum": 255}},
+        "rawByteEvents": {"minimum": 2, "type": "integer"},
+        "observations": {"const": 1},
+        "observationEvent": {"const": "begin"}
+      }
+    },
+    "outerCancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["demandDelegation", "subexactGrant", "exactGrant", "workFuelPerCloseOpportunity", "terminal"],
+      "properties": {
+        "demandDelegation": {"const": ["field-decoder", "vcs", "snapshot", "mounted-source"]},
+        "subexactGrant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mutates", "releasedItems", "releasedBytes"],
+          "properties": {"mutates": {"const": false}, "releasedItems": {"const": 0}, "releasedBytes": {"const": 0}}
+        },
+        "exactGrant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["physicalReleaseObserved"],
+          "properties": {"physicalReleaseObserved": {"const": true}}
+        },
+        "workFuelPerCloseOpportunity": {"const": 1},
+        "terminal": {"const": "cancelled"}
+      }
+    },
+    "anchors": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+    "segments": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+    "registries": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+    "hostile": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+    "valueTags": {"type": "array", "minItems": 24, "maxItems": 24, "uniqueItems": true, "items": {"type": "string", "pattern": "^[0-9a-f]{2}$"}}
+  }
+}

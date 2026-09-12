@@ -4,7 +4,11 @@ import ts from "typescript";
 import glob from "fast-glob";
 import { dirname, resolve } from "node:path";
 import fixture from "../../🧫️fixtures/🪪️field-parity/🔣️.json" with { type: "json" };
-import { policyExtractRustSchemaFields, policyExtractTypescriptSchemaFields, policyExtractGraphqlSchemaFields, policySchemaFieldDifferences, policyArtifactSchemaBreaches, policyArtifactOwnershipFieldParity, policyDiscoverArtifactSchemaOwners } from "../../../../../../../../📜️script.ts";
+import { policyExtractRustSchemaFields } from "../../../🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts";
+import { policyExtractTypescriptSchemaFields } from "../../../🧬️schema/🔍️field-discovery/🟦️typescript/🟦️.ts";
+import { policyExtractGraphqlSchemaFields } from "../../../🧬️schema/🔍️field-discovery/🔗️graphql/🟦️.ts";
+import { policySchemaFieldDifferences } from "../../../🧬️schema/🔍️field-discovery/⚖️comparison/🟦️.ts";
+import { policyArtifactSchemaBreaches, policyArtifactOwnershipFieldParity, policyDiscoverArtifactSchemaOwners } from "../../../../../../../../📜️script.ts";
 
 /** 🪪️ Checks native field discovery against independent TypeScript AST and Ajv evaluators. */
 export function testArtifactFieldParityOracle(): void {

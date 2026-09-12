@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "contract": {
+    "ownership": "owned",
+    "ownerPath": "package",
+    "target": "package:generate",
+    "inputPatterns": [
+      "catalog.json"
+    ],
+    "outputRoots": [
+      {
+        "path": "dist/boot.js",
+        "inclusion": "ignored",
+        "producer": {
+          "ownerPath": "browser",
+          "target": "browser:generate-boot"
+        }
+      },
+      {
+        "path": "dist/package.rs",
+        "inclusion": "ignored"
+      },
+      {
+        "path": "dist/worker.js",
+        "inclusion": "ignored",
+        "producer": {
+          "ownerPath": "browser",
+          "target": "browser:generate-worker"
+        }
+      }
+    ]
+  },
+  "projects": {
+    "package": {
+      "name": "package",
+      "targets": {
+        "generate": {
+          "options": {
+            "command": "bun ./📜️script.ts generate"
+          }
+        }
+      }
+    },
+    "browser": {
+      "name": "browser",
+      "targets": {
+        "generate-boot": {
+          "inputs": [
+            "{workspaceRoot}/boot.ts"
+          ],
+          "options": {
+            "command": "bun ./📜️script.ts generate-boot"
+          }
+        },
+        "generate-worker": {
+          "inputs": [
+            "{workspaceRoot}/worker.ts"
+          ],
+          "options": {
+            "command": "bun ./📜️script.ts generate-worker"
+          }
+        }
+      }
+    }
+  },
+  "expected": {
+    "package:generate": [
+      "dist/package.rs"
+    ],
+    "browser:generate-boot": [
+      "dist/boot.js"
+    ],
+    "browser:generate-worker": [
+      "dist/worker.js"
+    ]
+  },
+  "files": {
+    "catalog.json": "package\n",
+    "boot.ts": "boot-one\n",
+    "worker.ts": "worker-one\n",
+    "package/📜️script.ts": "import { run } from \"../📜️script.ts\";\nrun(process.argv[2]);\n",
+    "browser/📜️script.ts": "import { run } from \"../📜️script.ts\";\nrun(process.argv[2]);\n",
+    "📜️script.ts": "import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from \"node:fs\";\nimport { join } from \"node:path\";\nconst root = import.meta.dirname;\nexport function run(command) {\n  const mappings = { generate: [\"catalog.json\", \"package.rs\"], \"generate-boot\": [\"boot.ts\", \"boot.js\"], \"generate-worker\": [\"worker.ts\", \"worker.js\"] };\n  const [input, output] = mappings[command];\n  if (command === \"generate\") for (const file of [\"boot.js\", \"worker.js\"]) readFileSync(join(root, \"dist\", file));\n  mkdirSync(join(root, \"dist\"), { recursive: true });\n  writeFileSync(join(root, \"dist\", output), readFileSync(join(root, input)));\n  appendFileSync(join(root, \".runs\"), command + \"\\n\");\n}\n"
+  },
+  "changedWorker": "worker-two\n"
+}

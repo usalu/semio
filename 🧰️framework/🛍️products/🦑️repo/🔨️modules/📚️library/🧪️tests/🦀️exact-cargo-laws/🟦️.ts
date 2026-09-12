@@ -77,7 +77,7 @@ test("active exact Cargo lease protects ticket evidence from workspace cleanup",
     mkdirSync(lease, { recursive: true });
     writeFileSync(join(ticket, "🎫️ticket.json"), '{"status":"closed"}');
     writeFileSync(join(lease, fixture.activeLease.manifestName), JSON.stringify({ version: fixture.activeLease.version, pid: process.pid }));
-    const { CleanScript } = await import("../../../../../../../📜️script.ts");
+    const { CleanScript } = await import("../../🧼️workspace-cleanup/🎮️command/🟦️.ts");
     await new CleanScript(workspace, workspace).run([]);
     expect(existsSync(generated)).toBe(true);
     rmSync(lease, { recursive: true });

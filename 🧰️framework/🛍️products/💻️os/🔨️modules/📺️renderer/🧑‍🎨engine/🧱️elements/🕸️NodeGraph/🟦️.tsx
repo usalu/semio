@@ -98,7 +98,7 @@ type FrameworkGraphSession = GraphWasmSession & {
   selectionDomainsJson?(): string;
   hoveredNodeId(): string | null | undefined;
   hoveredChannelJson(): string;
-  cameraJson(): string;
+  viewport(): unknown;
   takePendingOpenInstanceId(): string | null | undefined;
   pickTargetsAtScreenJson(sx: number, sy: number): string;
   /** 🎯️ Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) — powers
@@ -140,7 +140,7 @@ function syncOptionalGraphCanvasTheme(session: FrameworkGraphSession | null): vo
 
 //#region Viewport
 export function parseNodeGraphSessionViewport(value: unknown): Viewport2d {
-  return parseViewport2d(typeof value === "string" ? JSON.parse(value) : value);
+  return parseViewport2d(value);
 }
 
 export function nodeGraphViewportActionArgs(viewport: Viewport2d): { readonly viewport: Viewport2d } {
@@ -715,7 +715,7 @@ function WasmGraphSurface({
       selectedNodeIdsJson: () => "[]",
       hoveredNodeId: () => null,
       hoveredChannelJson: () => "{}",
-      cameraJson: () => JSON.stringify(scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT),
+      viewport: () => scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT,
       pickTargetsAtScreenJson: () => "[]",
       setHover: () => {},
       setHoverChannel: () => {},
@@ -733,7 +733,7 @@ function WasmGraphSurface({
       dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds }));
       const hovered = session.hoveredNodeId();
       dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered));
-      dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(session.cameraJson())));
+      dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(session.viewport())));
       const openId = session.takePendingOpenInstanceId?.();
       if (openId) dispatch("openInstance", { instanceId: openId });
     } catch {
@@ -2413,15 +2413,14 @@ export function FlowGraphCanvasHost({
       readObservedFlowTask(session, "selectionDomainsJson:interaction", session.selectionDomainsJson()),
       readObservedFlowTask(session, "hoveredWidgetId:interaction", session.hoveredWidgetId()),
       readObservedFlowTask(session, "hoveredChannelJson:interaction", session.hoveredChannelJson()),
-      readObservedFlowTask(session, "cameraJson:interaction", session.cameraJson()),
+      readObservedFlowTask(session, "viewport:interaction", session.viewport()),
     ]).then(([domainsValue, hoveredValue, channelValue, cameraValue]) => {
       const domains = parseSelectionDomainsFromSession(flowJsonText(domainsValue));
       dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds: domains.nodes, edgeIds: domains.edges, handleIds: domains.handles }));
       const hovered = typeof hoveredValue === "string" ? hoveredValue : undefined;
       void channelValue;
       dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered));
-      const cameraJson = flowJsonText(cameraValue);
-      if (cameraJson) dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(cameraJson)));
+      dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(cameraValue)));
     }).catch(() => {});
     paintOverlays();
   }, [dispatch, paintOverlays]);
@@ -2543,11 +2542,11 @@ export function FlowGraphCanvasHost({
         const container = containerRef.current;
         const rect = container?.getBoundingClientRect();
         if (rect) {
-          readObservedFlowTask(session, "cameraJson:refit", session.cameraJson())
+          readObservedFlowTask(session, "viewport:refit", session.viewport())
             .then((value) => {
               const live = sessionRef.current;
               if (!live) return;
-              const fitted = refitFlowCameraIfContentLeftView(live, sceneRef.current, parseDagCameraState(flowJsonText(value)), Math.round(rect.width), Math.round(rect.height));
+              const fitted = refitFlowCameraIfContentLeftView(live, sceneRef.current, parseNodeGraphSessionViewport(value), Math.round(rect.width), Math.round(rect.height));
               if (!fitted) return;
               console.log("[DEBUG] node-graph refit after graph change surface=%s %s", surfaceId, JSON.stringify(fitted));
               dispatchRef.current(nodeGraphActions.viewport, nodeGraphViewportActionArgs(fitted));
@@ -3011,8 +3010,8 @@ export function FlowGraphCanvasHost({
           const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * 400 : event.deltaY;
           observeFlowTask(session, "wheelScreen", session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, 0, delta, true));
           renderFlow();
-          observeFlowTask(session, "cameraJson:wheel", session.cameraJson(), (value) => {
-            dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(flowJsonText(value))));
+          observeFlowTask(session, "viewport:wheel", session.viewport(), (value) => {
+            dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(value)));
           });
           paintOverlays();
         }}

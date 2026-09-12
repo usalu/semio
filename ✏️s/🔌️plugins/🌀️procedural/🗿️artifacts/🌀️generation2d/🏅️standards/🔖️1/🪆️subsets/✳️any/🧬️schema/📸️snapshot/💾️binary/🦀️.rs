@@ -1002,6 +1002,12 @@ enum Generation2dMountedPackPhase {
     Closed,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Generation2dMountedPackCloseStep {
+    Pending { released_items: usize, released_bytes: usize },
+    Complete,
+}
+
 /// 🧵️ Worker-owned mounted session. P2D2 is rejected before semantic allocation; every byte
 /// after it is handed unchanged to the canonical retained page source.
 pub struct Generation2dMountedPackSession {
@@ -1079,7 +1085,8 @@ impl Generation2dMountedPackSession {
             max_items: self.maximum_items as u64,
             max_total_alloc: canonical as u64,
         };
-        *self.source = Some(mounted::RetainedPackSourceCursor::try_new(pages, canonical)?);
+        let maximum_source_allocation_bytes = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES.checked_mul(4).ok_or("generation2d-mounted.source-allocation-credits")?;
+        *self.source = Some(mounted::RetainedPackSourceCursor::try_new(pages, canonical, maximum_source_allocation_bytes)?);
         *self.anchor = Some(mounted::RetainedPackAnchorCursor::new());
         *self.segment = Some(mounted::RetainedPackSegmentCursor::try_new(limits()).map_err(|_| "generation2d-mounted.segment-preflight")?);
         *self.catalog = Some(mounted::RetainedPackCatalogCursor::try_new(limits(), maximum_symbols as usize, self.maximum_items, canonical).map_err(|_| "generation2d-mounted.catalog-preflight")?);
@@ -1106,6 +1113,9 @@ impl Generation2dMountedPackSession {
             }
             return Ok(());
         }
+        if !self.source.as_ref().is_some_and(mounted::RetainedPackSourceCursor::has_reserved_page) {
+            return Err(value);
+        }
         self.page[self.page_len] = value;
         self.canonical_ledger ^= u64::from(value);
         self.canonical_ledger = self.canonical_ledger.wrapping_mul(0x0000_0100_0000_01b3);
@@ -1123,11 +1133,15 @@ impl Generation2dMountedPackSession {
             return Ok(());
         }
         let len = self.page_len;
-        let page = mounted::RetainedPackPage::try_from_array(std::mem::replace(&mut self.page, [0; mounted::RETAINED_PACK_PAGE_BYTES]), len).map_err(|_| "generation2d-mounted.page-owner")?;
-        self.page_len = 0;
         let source = self.source.as_mut().ok_or("generation2d-mounted.source-owner")?;
         source.preflight_page(len)?;
-        source.admit_page(page).map_err(|_| "generation2d-mounted.producer-handback")
+        let page = mounted::RetainedPackPage::try_from_array(std::mem::replace(&mut self.page, [0; mounted::RETAINED_PACK_PAGE_BYTES]), len).map_err(|_| "generation2d-mounted.page-owner")?;
+        self.page_len = 0;
+        if let Err(page) = source.admit_page(page) {
+            (self.page, self.page_len) = page.into_array();
+            return Err("generation2d-mounted.producer-handback");
+        }
+        Ok(())
     }
 
     pub fn seal(&mut self) -> Result<(), &'static str> {
@@ -1219,6 +1233,18 @@ impl Generation2dMountedPackSession {
         self.source.as_ref().map(mounted::RetainedPackSourceCursor::progress)
     }
 
+    pub fn next_source_allocation_bytes(&self) -> Result<Option<usize>, &'static str> {
+        let Some(source) = self.source.as_ref() else { return Ok(None) };
+        if source.has_reserved_page() { Ok(None) } else { source.next_allocation_bytes().map(Some) }
+    }
+
+    pub fn reserve_source_page(&mut self, maximum_bytes: usize) -> Result<mounted::RetainedPackSourceAllocationStep, mounted::RetainedPackSourceAllocationError> {
+        self.source
+            .as_mut()
+            .ok_or(mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason: "generation2d-mounted.source-owner" })?
+            .reserve_page(maximum_bytes)
+    }
+
     #[cfg(test)]
     fn canonical_ingress_ledger(&self) -> u64 {
         self.canonical_ledger
@@ -1236,65 +1262,88 @@ impl Generation2dMountedPackSession {
         self.phase = Generation2dMountedPackPhase::Closing;
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<bool, &'static str> {
-        self.phase = Generation2dMountedPackPhase::Closing;
-        if maximum_items == 0 || maximum_bytes < mounted::RETAINED_PACK_PAGE_BYTES {
-            return Ok(false);
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Generation2dMountedPackCloseStep, &'static str> {
+        if maximum_items == 0 {
+            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
+        self.phase = Generation2dMountedPackPhase::Closing;
         if self.document_byte.take().is_some() {
-            return Ok(false);
+            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.page_len != 0 {
+            self.page.fill(0);
+            self.page_len = 0;
+            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(catalog) = self.catalog_value.as_mut() {
             if catalog.symbols.pop().is_some() || catalog.chunks.pop().is_some() {
-                return Ok(false);
+                return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             drop(self.catalog_value.take());
-            return Ok(false);
+            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(typed) = self.typed.as_mut() {
             if !typed.close_step() {
-                return Ok(false);
+                return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             drop(self.typed.take());
-            return Ok(false);
+            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(value) = self.value.as_mut() {
             if value.close_step(1) != mounted::RetainedPackCloseStep::Complete {
-                return Ok(false);
+                return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             drop(self.value.take());
-            return Ok(false);
+            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(catalog) = self.catalog.as_mut() {
             if catalog.close_step(1) != mounted::RetainedPackCloseStep::Complete {
-                return Ok(false);
+                return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             drop(self.catalog.take());
-            return Ok(false);
+            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(segment) = self.segment.as_mut() {
             segment.close_step();
             drop(self.segment.take());
-            return Ok(false);
+            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(anchor) = self.anchor.as_mut() {
             anchor.close_step();
             drop(self.anchor.take());
-            return Ok(false);
+            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(source) = self.source.as_mut() {
-            if source.close_step(1, mounted::RETAINED_PACK_PAGE_BYTES)? != mounted::RetainedPackCloseStep::Complete {
-                return Ok(false);
+            match source.close_step(1, maximum_bytes)? {
+                mounted::RetainedPackCloseStep::Pending { released_items, released_bytes } => {
+                    return Ok(Generation2dMountedPackCloseStep::Pending { released_items, released_bytes });
+                }
+                mounted::RetainedPackCloseStep::Complete => {}
             }
             drop(self.source.take());
-            return Ok(false);
+            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         self.phase = Generation2dMountedPackPhase::Closed;
-        Ok(true)
+        Ok(Generation2dMountedPackCloseStep::Complete)
+    }
+
+    pub fn next_source_release_allocation_bytes(&self) -> Option<usize> {
+        if self.document_byte.is_some()
+            || self.page_len != 0
+            || self.catalog_value.is_some()
+            || self.typed.is_some()
+            || self.value.is_some()
+            || self.catalog.is_some()
+            || self.segment.is_some()
+            || self.anchor.is_some()
+        {
+            return None;
+        }
+        self.source.as_ref()?.next_release_allocation_bytes().ok()
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.phase == Generation2dMountedPackPhase::Closed && self.source.is_none() && self.anchor.is_none() && self.segment.is_none() && self.catalog.is_none() && self.value.is_none() && self.typed.is_none() && self.catalog_value.is_none() && self.document_byte.is_none()
+        self.phase == Generation2dMountedPackPhase::Closed && self.page_len == 0 && self.source.is_none() && self.anchor.is_none() && self.segment.is_none() && self.catalog.is_none() && self.value.is_none() && self.typed.is_none() && self.catalog_value.is_none() && self.document_byte.is_none()
     }
 }
 

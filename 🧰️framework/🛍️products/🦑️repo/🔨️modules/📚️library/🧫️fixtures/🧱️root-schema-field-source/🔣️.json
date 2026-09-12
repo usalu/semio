@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts",
+      "directoryName": "🧱️contract",
+      "parentKindId": "repo-schema-field-discovery",
+      "kindId": "repo-schema-field-contract",
+      "declarations": ["PolicySchemaFieldCardinality", "PolicySchemaFieldShape", "PolicySchemaLeafExtract", "policyCanonicalState", "policyCanonicalScalar", "policyFindSchemaDeclaration", "policySnakeToCamel"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts",
+      "directoryName": "🦀️rust",
+      "parentKindId": "repo-schema-field-discovery",
+      "kindId": "repo-schema-field-rust-representation",
+      "declarations": ["policyParseRustFieldType", "policyExtractRustSchemaFields"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🟦️typescript/🟦️.ts",
+      "directoryName": "🟦️typescript",
+      "parentKindId": "repo-schema-field-discovery",
+      "kindId": "repo-schema-field-typescript-representation",
+      "declarations": ["policyParseTsFieldType", "policyExtractTypescriptSchemaFields"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🟦️typescript/📂️module-resolution/🟦️.ts",
+      "directoryName": "📂️module-resolution",
+      "parentKindId": "repo-schema-field-typescript-representation",
+      "kindId": "repo-schema-field-typescript-module-resolution",
+      "declarations": ["policyExtractTypescriptSchemaFile"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🔗️graphql/🟦️.ts",
+      "directoryName": "🔗️graphql",
+      "parentKindId": "repo-schema-field-discovery",
+      "kindId": "repo-schema-field-graphql-representation",
+      "declarations": ["policyExtractGraphqlSchemaFields"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🔣️json-schema/🟦️.ts",
+      "directoryName": "🔣️json-schema",
+      "parentKindId": "repo-schema-field-discovery",
+      "kindId": "repo-schema-field-json-schema-representation",
+      "declarations": ["policyJsonSchemaScalar", "policyParseJsonSchemaProperty", "policyExtractJsonSchemaFields"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts",
+      "directoryName": "🛰️protobuf",
+      "parentKindId": "repo-schema-field-discovery",
+      "kindId": "repo-schema-field-protobuf-representation",
+      "declarations": ["policyParseProtoFieldType", "policyExtractProtobufSchemaFields"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/⚖️comparison/🟦️.ts",
+      "directoryName": "⚖️comparison",
+      "parentKindId": "repo-schema-field-discovery",
+      "kindId": "repo-schema-field-comparison",
+      "declarations": ["policySchemaFieldDifferences"]
+    }
+  ],
+  "contexts": [
+    { "directoryName": "🔍️field-discovery", "parentKindId": "schema", "kindId": "repo-schema-field-discovery" },
+    { "directoryName": "🧱️contract", "parentKindId": "repo-schema-field-discovery", "kindId": "repo-schema-field-contract" },
+    { "directoryName": "🦀️rust", "parentKindId": "repo-schema-field-discovery", "kindId": "repo-schema-field-rust-representation" },
+    { "directoryName": "🟦️typescript", "parentKindId": "repo-schema-field-discovery", "kindId": "repo-schema-field-typescript-representation" },
+    { "directoryName": "📂️module-resolution", "parentKindId": "repo-schema-field-typescript-representation", "kindId": "repo-schema-field-typescript-module-resolution" },
+    { "directoryName": "🔗️graphql", "parentKindId": "repo-schema-field-discovery", "kindId": "repo-schema-field-graphql-representation" },
+    { "directoryName": "🔣️json-schema", "parentKindId": "repo-schema-field-discovery", "kindId": "repo-schema-field-json-schema-representation" },
+    { "directoryName": "🛰️protobuf", "parentKindId": "repo-schema-field-discovery", "kindId": "repo-schema-field-protobuf-representation" },
+    { "directoryName": "⚖️comparison", "parentKindId": "repo-schema-field-discovery", "kindId": "repo-schema-field-comparison" }
+  ],
+  "consumers": [
+    {
+      "path": "📜️script.ts",
+      "owners": [
+        "🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts",
+        "🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts",
+        "🧬️schema/🔍️field-discovery/🟦️typescript/🟦️.ts",
+        "🧬️schema/🔍️field-discovery/🟦️typescript/📂️module-resolution/🟦️.ts",
+        "🧬️schema/🔍️field-discovery/🔗️graphql/🟦️.ts",
+        "🧬️schema/🔍️field-discovery/🔣️json-schema/🟦️.ts",
+        "🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts",
+        "🧬️schema/🔍️field-discovery/⚖️comparison/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🪪️field-parity/🟦️.ts",
+      "owners": [
+        "🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts",
+        "🧬️schema/🔍️field-discovery/🟦️typescript/🟦️.ts",
+        "🧬️schema/🔍️field-discovery/🔗️graphql/🟦️.ts",
+        "🧬️schema/🔍️field-discovery/⚖️comparison/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚙️root-script-compiler/🟦️.ts",
+      "owners": [
+        "🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts",
+        "🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts",
+        "🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts"
+      ]
+    }
+  ],
+  "route": {
+    "target": "test-root-schema-field-source",
+    "command": "bun ./📜️script.ts test root-schema-field-source",
+    "launchName": "🧹clean🧩️taxonomy🧪️root-schema-field-source",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-schema-field-source"
+  }
+}

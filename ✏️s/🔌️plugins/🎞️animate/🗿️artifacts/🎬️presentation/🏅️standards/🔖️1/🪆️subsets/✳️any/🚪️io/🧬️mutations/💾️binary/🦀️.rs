@@ -178,6 +178,18 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot> for Pre
         Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
+    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(usize::from(self.retirement.is_some()) * store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
+    }
+
+    fn maximum_close_byte_demand(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES
+    }
+
+    fn maximum_retained_close_bytes(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES
+    }
+
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
         let diagnostic = |code: &'static str| store::OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path };

@@ -1,11 +1,13 @@
 import { expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { CleanScript } from "../../../../../../../📜️script.ts";
+import { CleanScript } from "../../🧼️workspace-cleanup/🎮️command/🟦️.ts";
 
 test("clean removes generated ticket run output without removing ticket material", () => {
-  const root = mkdtempSync(join(tmpdir(), "semio-clean-ticket-runs-"));
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for cleanup fixture output.");
+  mkdirSync(artifactRoot, { recursive: true });
+  const root = mkdtempSync(join(artifactRoot, "semio-clean-ticket-runs-"));
   const ticket = join(root, ".🧬semio", "🦑️repo", "🎫️tickets", "🎆️26", "🌙️09", "☀️01", "CLEAN-TICKET-RUNS");
   const runs = ["🧾️runs", "🧪️runs"].map((name) => join(ticket, "📓️energy-rust-reference-diagnostics", "🧭️finite-target-consumption", name, "🔖️05BsOk", "📝️.md"));
   const probes = ["🧪️cli-plan-cancellation-05BsOk", "🧪️inventory-producer-order-05BsOk"].map((name) => join(ticket, name, "📝️.md"));

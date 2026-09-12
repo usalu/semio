@@ -14,9 +14,9 @@
     {
       "implementation": "python",
       "package": "semio-s-plugin-energy-oracle",
-      "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+      "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution",
       "version": "0.1.0",
-      "module": "🔮️oracles.🐍️"
+      "module": "🐍️"
     },
     {
       "implementation": "python",

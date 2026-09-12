@@ -66,15 +66,21 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
     writeFileSync(join(output, `${compiler}.log`), `Independent session overlays emitted identical parseable bundles: ${Buffer.byteLength(builds[0])} bytes\n`);
   }
   const api = await import(resolve(packageRoot, "../../⚙️browser-build/🟦️.ts"));
-  const fixtureRoot = join(output, "renderer/📦️packages/🦀️rust"), bootSource = resolve(fixtureRoot, "../../🚀️browser-boot/🟦️.ts");
+  const fixtureWorkspace = join(output, "workspace"), owner = project.sourceRoot;
+  const fixtureRoot = join(fixtureWorkspace, owner, "📦️packages/🦀️rust"), bootSource = resolve(fixtureRoot, "../../🚀️browser-boot/🟦️.ts");
+  const taxonomyPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
+  for (const path of ["nx.json", "📋️project.json", "package.json", taxonomyPath]) {
+    mkdirSync(resolve(fixtureWorkspace, path, ".."), { recursive: true });
+    writeFileSync(join(fixtureWorkspace, path), readFileSync(join(workspace, path)));
+  }
   mkdirSync(resolve(bootSource, ".."), { recursive: true });
   writeFileSync(bootSource, "export const answer = 42;\n");
-  const artifact = await api.renderBrowserBoot(fixtureRoot); mkdirSync(resolve(artifact.path, ".."), { recursive: true }); assert.equal(existsSync(artifact.path), false);
-  await assert.rejects(() => api.checkBrowserBoot(fixtureRoot), /missing|stale/); assert.equal(existsSync(artifact.path), false);
+  const artifact = await api.renderBrowserBoot(fixtureRoot, fixtureWorkspace); mkdirSync(resolve(artifact.path, ".."), { recursive: true }); assert.equal(existsSync(artifact.path), false);
+  await assert.rejects(() => api.checkBrowserBoot(fixtureRoot, fixtureWorkspace), /missing|stale/); assert.equal(existsSync(artifact.path), false);
   writeFileSync(artifact.path, artifact.content); utimesSync(artifact.path, 1700000000, 1700000000);
-  await api.checkBrowserBoot(fixtureRoot); assert.equal(statSync(artifact.path).mtimeMs, 1700000000000);
+  await api.checkBrowserBoot(fixtureRoot, fixtureWorkspace); assert.equal(statSync(artifact.path).mtimeMs, 1700000000000);
   writeFileSync(bootSource, "export const answer = 43;\n");
-  await assert.rejects(() => api.checkBrowserBoot(fixtureRoot), /stale/); assert.equal(statSync(artifact.path).mtimeMs, 1700000000000);
+  await assert.rejects(() => api.checkBrowserBoot(fixtureRoot, fixtureWorkspace), /stale/); assert.equal(statSync(artifact.path).mtimeMs, 1700000000000);
   assert.equal(readFileSync(artifact.path, "utf8"), artifact.content);
   const scriptText = readFileSync(join(packageRoot, "📜️script.ts"), "utf8"), scriptSource = ts.createSourceFile("script.ts", scriptText, ts.ScriptTarget.Latest, true);
   const check = scriptSource.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "BrowserWorkerCheckScript").getText(scriptSource);

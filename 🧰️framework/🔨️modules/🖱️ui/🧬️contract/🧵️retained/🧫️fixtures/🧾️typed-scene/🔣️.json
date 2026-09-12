@@ -3,7 +3,7 @@
   "cases":[
     {"kind":"canvas-2d","schema":"canvas-2d@1","value":{"cameraX":0,"cameraY":0,"zoom":1,"layersJson":"[]"}},
     {"kind":"world-3d","schema":"world-3d@1","value":{"cameraJson":"{}","meshesJson":"[]","instancesJson":"[]","selectionJson":"{}"}},
-    {"kind":"node-graph","schema":"node-graph@1","value":{"nodes":[{"id":"operator-a","label":{"$some":"Größe"},"x":0,"y":0,"width":128,"height":96,"inputs":[{"id":"in"}],"outputs":[]}],"edges":[]}},
+    {"kind":"node-graph","schema":"node-graph@1","value":{"nodes":[{"id":"operator-a","label":{"$some":"Größe"},"x":0,"y":0,"width":128,"height":96,"inputs":[{"id":"in"}],"outputs":[]}],"edges":[],"viewport":{"$some":{"x":12.5,"y":-6.5,"zoom":3.5}}}},
     {"kind":"text-editor","schema":"text-editor@1","value":{"buffer":"Größe🧭","language":{"$some":"typescript"}}},
     {"kind":"table","schema":"table@1","value":{"columnsJson":"[]","rowsJson":"[]"}},
     {"kind":"paint-2d","schema":"paint-2d@1","value":{"documentSyncJson":"{}","assetsJson":"[]","cameraJson":"{}","selectionJson":"[]","activeUtility":"brush","brushSize":10,"brushOpacity":1,"viewMode":"composite"}},
@@ -23,6 +23,7 @@
     {"kind":"text-editor","schema":"text-editor@1","value":{}},
     {"kind":"text-editor","schema":"text-editor@1","value":{"buffer":"text","language":"plain-option-is-not-native-wire"}},
     {"kind":"node-graph","schema":"node-graph@1","value":{"nodes":[{"id":"node","x":0,"y":0,"width":1,"height":1,"inputs":[{"id":false}],"outputs":[]}],"edges":[]}},
+    {"kind":"node-graph","schema":"node-graph@1","value":{"nodes":[],"edges":[],"viewport":{"$some":{"x":0,"y":0}}}},
     {"kind":"canvas-2d","schema":"canvas-2d@1","value":{"cameraX":0,"cameraY":0,"zoom":"not-a-number","layersJson":"[]"}}
   ],
   "lifecycle":{"text":"Größe🧭","repeat":2000,"maxItems":1,"maxBytes":4096,"maximumEmittedTextBytes":131,"cancelEveryPrefix":true,"independentReaders":2},

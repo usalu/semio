@@ -69,7 +69,7 @@ import { produceFreshComponentV1, testFreshComponentStagingV1, testFreshComponen
 import { type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
 import { verifyFreshCatalogPackageV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
 import { buildClosedBrowserActorArtifactV1, type ClosedBrowserActorArtifactV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
-import { proveGisComponentColdMapPatch } from "../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts";
+import { proveGisComponentColdMapPatch } from "../../../✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
 /** 🌎️ `os-hub` router: `bun ./📜️script.ts <setup|build|test|dev>`. */
 import {
   BundleScript,
@@ -5424,7 +5424,7 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
     const commandRoots = headlessStdioCommandRoots();
     proveHeadlessStdioLaunchIsolation(this.repoRoot);
     proveHeadlessStdioMetadataCaptureContract(commandRoots.artifactRoot);
-    await (await import("../../../✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📜️script.ts")).proveVcsNativeCodecReceipts(this.repoRoot);
+    await (await import("../../../✏️s/🔌️plugins/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts")).proveVcsNativeCodecReceipts(this.repoRoot);
     await proveVcsNativeProviderSelectionFixture(this.repoRoot);
     await proveNativeOpenableCatalogProviderFixture(this.repoRoot);
     if (segments.includes("--oracle-only")) return;
@@ -8174,8 +8174,8 @@ class GisInferenceLedgerOracleScript extends BundleScript {
     await proveInferenceWalChainFixture(this.repoRoot);
     await proveInferenceCatalogSelectionFixture(this.repoRoot);
     await proveTrustedCatalogIdentityRolesFixture(this.repoRoot);
-    await (await import("../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts")).proveGisNativeCodecReceipts(this.repoRoot);
-    await (await import("../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts")).proveGisControlledProposal(this.repoRoot);
+    await (await import("../../../✏️s/🔌️plugins/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts")).proveGisNativeCodecReceipts(this.repoRoot);
+    await (await import("../../../✏️s/🔌️plugins/🌍️gis/🧪️tests/💡️inference-control/🟦️.ts")).proveGisControlledProposal(this.repoRoot);
     await proveGisNativeProviderSelectionFixture(this.repoRoot);
     await proveMemoryBackendBackingFixture(this.repoRoot);
     await proveNativeDeficitFixture(this.repoRoot);
@@ -13036,7 +13036,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
           gisColdMap.includes("genuine_gis_component_rejects_stale_cold_authority_before_loading"),
       ],
       ["GIS cold-map pre-publication", nativeMaterialized.length < nativeGate.length && ordered(candidate, "await proveTrustedGisColdMapComponentV1", "stageTrustedBootstrapCandidateCurrent") && ordered(candidate, "await proveTrustedGisColdMapComponentV1", "await startLocalHub")],
-      ["GIS cold-map neutral source", nativeGate.includes("await proveGisComponentColdMapPatch(this.repoRoot)")],
+      ["GIS cold-map neutral source", nativeGate.includes("await proveGisComponentColdMapPatch(this.repoRoot)") && scriptSource.includes('from "../../../✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts"')],
       [
         "native target",
         nativeGate.includes("CARGO_TARGET_DIR: hubTarget") &&

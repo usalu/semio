@@ -17,11 +17,11 @@ class DepsScript extends BundleScript {
 
 /** 🔷️ Publishes only the support-library deliverables after a successful incremental build. */
 class BuildScript extends BundleScript {
-  run(args: string[]): void {
+  async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("The .NET support library has one Release artifact contract");
     const output = join(nativeState(this.repoRoot), "deliverables");
     runCmd("dotnet", ["build", project, "--no-restore", "--configuration", "Release", "--artifacts-path", nativeState(this.repoRoot), "--output", output, `-p:PathMap=${this.repoRoot}=/_/`, "-p:ContinuousIntegrationBuild=true"], { cwd: import.meta.dir });
-    stageArtifacts(join(import.meta.dir, "dist/build"), "@semio-tech/repo-test-dotnet:build", new Map(readdirSync(output, { withFileTypes: true }).filter((entry) => entry.isFile()).map((entry) => [entry.name, join(output, entry.name)])));
+    await stageArtifacts(join(import.meta.dir, "dist/build"), "@semio-tech/repo-test-dotnet:build", new Map(readdirSync(output, { withFileTypes: true }).filter((entry) => entry.isFile()).map((entry) => [entry.name, join(output, entry.name)])));
   }
 }
 

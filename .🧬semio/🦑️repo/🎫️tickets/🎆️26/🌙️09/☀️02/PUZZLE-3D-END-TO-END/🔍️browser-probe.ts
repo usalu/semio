@@ -3536,18 +3536,59 @@ if (booted && interact) {
     // the same DOM — 100 ms later — carried `hide-show` and `lock-unlock` with their ids and their
     // `setSelectionFlag` action. That race, not a missing vocabulary, is what
     // `context-menu-object-vocabulary missing=["hide-show","lock-unlock"]` has been reporting.
+    // 🔭️ Wave B55: the gesture that failed is NAMED. B45's single `hover()` swallowed its own rejection
+    // (`.catch(() => {})`), so "the submenu did not open" covered three different worlds — the hover
+    // never landed (actionability), it landed and the row ignored it, or it opened and something
+    // collapsed it again. Each candidate gesture is attempted in turn and its outcome, together with
+    // the row's own `aria-expanded`, is logged; `openedVia` is the answer.
     for (const group of groups) {
       const sizeBefore = merged.size;
-      await page.locator(`[id="${group.id}"]`).first().hover({ timeout: 2500 }).catch(() => {});
-      const expanded = await settleFor(
-        async () => {
-          for (const row of await menuRows()) if (row.id) merged.set(row.id, row);
-          return merged.size;
-        },
-        (size) => size > sizeBefore,
-        8000,
-      );
-      log(`context-menu group ${group.id} rowsBefore=${sizeBefore} rowsAfter=${expanded.value} opened=${expanded.ok} waitedMs=${expanded.waitedMs}`);
+      const ariaOf = async () => await evalSafe((id: string) => document.getElementById(id)?.getAttribute("aria-expanded") ?? "absent", "eval-failed", group.id as string);
+      const attempts: string[] = [];
+      let openedVia = "none";
+      const gestures: [string, () => Promise<void>][] = [
+        ["hover", async () => await page.locator(`[id="${group.id}"]`).first().hover({ timeout: 2500 })],
+        ["hover-force", async () => await page.locator(`[id="${group.id}"]`).first().hover({ force: true, timeout: 2500 })],
+        ["ordinal-digit", async () => await page.keyboard.press(String(topRows.findIndex((row) => row.id === group.id) + 1))],
+        ["click", async () => await page.locator(`[id="${group.id}"]`).first().click({ force: true, timeout: 2500 })],
+        ["arrow-down-right", async () => {
+          for (let hop = 0; hop <= topRows.findIndex((row) => row.id === group.id); hop++) await page.keyboard.press("ArrowDown");
+          await page.keyboard.press("ArrowRight");
+        }],
+      ];
+      let expanded = { ok: false, value: sizeBefore, waitedMs: 0 };
+      for (const [name, run] of gestures) {
+        let outcome = "ok";
+        await run().catch((error) => {
+          outcome = `threw:${String(error).replace(/\s+/g, " ").slice(0, 400)}`;
+        });
+        const settled = await settleFor(
+          async () => {
+            for (const row of await menuRows()) if (row.id) merged.set(row.id, row);
+            return merged.size;
+          },
+          (size) => size > sizeBefore,
+          name === "hover" ? 8000 : 3000,
+        );
+        expanded = { ok: settled.ok, value: settled.value, waitedMs: expanded.waitedMs + settled.waitedMs };
+        const aria = await ariaOf().catch(() => "read-failed");
+        const geometry = await evalSafe(
+          (id: string) => {
+            const node = document.getElementById(id);
+            if (!node) return "absent";
+            const first = node.getBoundingClientRect();
+            return `${Math.round(first.x)},${Math.round(first.y)} ${Math.round(first.width)}x${Math.round(first.height)} active=${node.getAttribute("data-active") ?? "none"} top=${(document.elementFromPoint(first.x + first.width / 2, first.y + first.height / 2) as HTMLElement | null)?.id || (document.elementFromPoint(first.x + first.width / 2, first.y + first.height / 2)?.tagName ?? "nothing")}`;
+          },
+          "eval-failed",
+          group.id as string,
+        );
+        attempts.push(`${name}=${outcome} rows=${settled.value} ariaExpanded=${aria} geometry=${geometry} waitedMs=${settled.waitedMs}`);
+        if (settled.ok) {
+          openedVia = name;
+          break;
+        }
+      }
+      log(`context-menu group ${group.id} rowsBefore=${sizeBefore} rowsAfter=${expanded.value} opened=${expanded.ok} waitedMs=${expanded.waitedMs} openedVia=${openedVia} attempts=${JSON.stringify(attempts)}`);
     }
     const rows = [...merged.values()];
     log(`context-menu rows=${JSON.stringify(rows).slice(0, 1400)} groupsExpanded=${JSON.stringify(groups.map((group) => group.id))}`);
@@ -3572,6 +3613,40 @@ if (booted && interact) {
     );
     log(`context-menu selectionAtRightClick=${JSON.stringify(await worldInteraction()).slice(0, 300)} chrome=${JSON.stringify((await chromeState()).menus).slice(0, 400)}`);
     log(`context-menu console tail=${JSON.stringify(consoleSince(consoleMark).filter((row) => /context.?menu/i.test(row)).slice(-8)).slice(0, 800)}`);
+    // 🧱️ Wave B55: the PAINT ORDER around the menu, not just its row count. `context-menu-object-vocabulary`
+    // and `context-menu-zoom-moves-camera` both failed because `document.elementFromPoint` at a row's own
+    // centre answered `CANVAS` — the menu renders and reads correctly while being unreachable by any
+    // pointer. This dump names the element that wins the hit test and the stacking/pointer-events chain
+    // above the row, so "the row is missing" and "the row cannot be clicked" stay separable.
+    log(
+      `context-menu stacking=${JSON.stringify(
+        await evalSafe(
+          () => {
+            const row = document.querySelector('[role="menuitem"]');
+            if (!row) return { row: "absent" };
+            const rect = row.getBoundingClientRect();
+            const cx = rect.x + rect.width / 2;
+            const cy = rect.y + rect.height / 2;
+            const chain: string[] = [];
+            for (let node: Element | null = row; node; node = node.parentElement) {
+              const style = window.getComputedStyle(node);
+              chain.push(`${node.tagName}${node.id ? `#${node.id}` : ""}${node.getAttribute("data-slot") ? `[${node.getAttribute("data-slot")}]` : ""}${node.hasAttribute("data-semio-portal-layer") ? "[portal-layer]" : ""} pe=${style.pointerEvents} z=${style.zIndex} pos=${style.position} iso=${style.isolation} tf=${style.transform === "none" ? "none" : "set"}`);
+              if (chain.length >= 10) break;
+            }
+            const hit = document.elementFromPoint(cx, cy) as HTMLElement | null;
+            const stack = (document as unknown as { elementsFromPoint?: (x: number, y: number) => Element[] }).elementsFromPoint?.(cx, cy) ?? [];
+            return {
+              row: `${row.id || row.tagName} at ${Math.round(cx)},${Math.round(cy)}`,
+              hit: hit ? `${hit.tagName}${hit.id ? `#${hit.id}` : ""} pe=${window.getComputedStyle(hit).pointerEvents} z=${window.getComputedStyle(hit).zIndex}` : "nothing",
+              hitsRowOrDescendant: Boolean(hit && (hit === row || row.contains(hit))),
+              stack: stack.slice(0, 8).map((el) => `${el.tagName}${el.id ? `#${el.id}` : ""}${el.getAttribute("data-slot") ? `[${el.getAttribute("data-slot")}]` : ""}`),
+              chain,
+            };
+          },
+          { row: "eval-failed" } as Record<string, unknown>,
+        ),
+      ).slice(0, 2000)}`,
+    );
     log(
       `context-menu dom=${JSON.stringify(
         await evalSafe(

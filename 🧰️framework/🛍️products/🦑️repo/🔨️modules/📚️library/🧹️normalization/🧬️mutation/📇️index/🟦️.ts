@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
+import { relative, sep } from "node:path";
 import { canonicalJson, type TaxonomySourceInventory } from "../../🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validation/🟦️.ts";
 import { MUTATION_DESCRIPTOR_SCHEMA_REL, mutationTaxonomyCancelled, mutationTaxonomyCapturedSchema, mutationTaxonomyCompare, mutationTaxonomyInputPath, mutationTaxonomyScope, mutationTaxonomySourceAdmission, mutationTaxonomySourceFileFacts, mutationTaxonomyStructuralDirectories, policyFindAllMutationsDirs, type MutationTaxonomyAssignmentRow, type MutationTaxonomyCapturedSchema, type MutationTaxonomyInventoryOptions, type MutationTaxonomySourceRecord, type MutationTaxonomyStructuralDirectory } from "../📸️captured-source/🟦️.ts";
-import { loadTaxonomy } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { getRepoMetaDir, loadTaxonomy } from "../../../📦️packages/🟦️typescript/🟦️.ts";
 import { semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/🟦️.ts";
 
 export const MUTATION_TAXONOMY_ASSIGNMENT_LEDGER_SCHEMA = {
@@ -64,8 +65,13 @@ export function mutationTaxonomySourceIndex(repoRoot: string, options: MutationT
   const allRoots = policyFindAllMutationsDirs(repoRoot, admission).sort(mutationTaxonomyCompare);
   const scopes = (options.scope ?? "").split(",").map((scope) => scope.trim()).filter(Boolean).map(mutationTaxonomyScope);
   const roots = scopes.length === 0 ? allRoots : allRoots.filter((root) => scopes.some((scope) => root === scope || root.startsWith(`${scope}/`) || scope.startsWith(`${root}/`)));
+  const excludedSourcePaths = new Set((options.excludedSourcePaths ?? []).map(mutationTaxonomyScope));
+  const ticketPrefix = `${relative(repoRoot, getRepoMetaDir(repoRoot)).split(sep).join("/")}/🎫️tickets/`;
+  const retainedSource = (path: string): boolean => !excludedSourcePaths.has(path) && !path.startsWith(ticketPrefix);
+  const retainedObservations = admission.observations.filter((observation) => retainedSource(observation.sourcePath));
+  const membershipDigest = retainedObservations.length === admission.observations.length ? admission.membershipDigest : createHash("sha256").update(canonicalJson({ schemaVersion: admission.schemaVersion, scope: admission.scope, status: admission.status, observations: retainedObservations, diagnostics: admission.diagnostics })).digest("hex");
   const evidenceFile = (path: string): boolean => roots.some((root) => path.startsWith(`${root}/`)) || /(?:\.(?:rs|ts|tsx|json|graphql|proto|semio|toml|yaml|yml|md)$|(?:^|\/)(?:package\.json|Cargo\.toml|go\.mod)$)/u.test(path);
-  const files = mutationTaxonomySourceFileFacts(admission, taxonomy).filter((fact) => evidenceFile(fact.sourcePath) || fact.fileRole === "source" || fact.fileRole === "schema" || fact.fileRole === "specification").map((fact) => fact.sourcePath);
+  const files = mutationTaxonomySourceFileFacts(admission, taxonomy).filter((fact) => retainedSource(fact.sourcePath) && (evidenceFile(fact.sourcePath) || fact.fileRole === "source" || fact.fileRole === "schema" || fact.fileRole === "specification")).map((fact) => fact.sourcePath);
   const bytes = new Map<string, Buffer>();
   const contents = new Map<string, string>();
   const initialBytes = new Map<string, Buffer>([[taxonomySchema.path, taxonomySchema.bytes], [mutationDescriptorSchema.path, mutationDescriptorSchema.bytes]]);
@@ -83,7 +89,7 @@ export function mutationTaxonomySourceIndex(repoRoot: string, options: MutationT
   sourceRoster.push({ path: taxonomySchema.path, sha256: taxonomySchema.sha256, role: "taxonomy-schema" as const }, { path: mutationDescriptorSchema.path, sha256: mutationDescriptorSchema.sha256, role: "mutation-descriptor-schema" as const });
   if (ledger.bytes) sourceRoster.push({ path: ledger.path ?? "<supplied-assignment-ledger>", sha256: createHash("sha256").update(ledger.bytes).digest("hex"), role: "assignment-ledger" });
   sourceRoster.sort((left, right) => mutationTaxonomyCompare(`${left.role}\0${left.path}`, `${right.role}\0${right.path}`));
-  return { admission, roots, files, bytes, contents, directories: mutationTaxonomyStructuralDirectories(admission), taxonomySchema, mutationDescriptorSchema, sourceRoster, sourceTreeDigest: createHash("sha256").update(canonicalJson({ roots, sourceRoster, membershipDigest: admission.membershipDigest, taxonomyContentHash: admission.taxonomyContentHash, mutationDescriptorSchemaHash: mutationDescriptorSchema.sha256 })).digest("hex"), ledger: { path: ledger.path, rows: ledger.rows, invalidReason: ledger.invalidReason } };
+  return { admission, roots, files, bytes, contents, directories: mutationTaxonomyStructuralDirectories(admission), taxonomySchema, mutationDescriptorSchema, sourceRoster, sourceTreeDigest: createHash("sha256").update(canonicalJson({ roots, sourceRoster, membershipDigest, taxonomyContentHash: admission.taxonomyContentHash, mutationDescriptorSchemaHash: mutationDescriptorSchema.sha256 })).digest("hex"), ledger: { path: ledger.path, rows: ledger.rows, invalidReason: ledger.invalidReason } };
 }
 
 

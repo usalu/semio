@@ -40,7 +40,7 @@ export async function buildViteArtifact(options: ViteArtifactBuild): Promise<voi
     if (status !== 0) throw new Error(`Vite build failed for ${options.owner} (${status})`);
     const files = await collectArtifactFiles(temporary, options.signal);
     options.signal?.throwIfAborted();
-    stageArtifacts(options.output, options.owner, files);
+    await stageArtifacts(options.output, options.owner, files, { signal: options.signal });
     console.log(`Published ${options.owner}: ${files.size} files at ${options.output}`);
   } finally { await rm(temporary, { recursive: true, force: true }); }
 }

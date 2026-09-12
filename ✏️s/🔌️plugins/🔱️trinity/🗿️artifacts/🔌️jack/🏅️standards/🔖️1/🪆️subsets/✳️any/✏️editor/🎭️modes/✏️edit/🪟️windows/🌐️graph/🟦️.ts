@@ -1,6 +1,6 @@
 /** 🌐️ Trinity Jack editor — Nakagin Graph window: typed twin of `🦀️.rs`'s node-graph
  * render boundary + LOD control, mirroring the framework's own `NodeGraphNodeRecord`/
- * `NodeGraphEdgeRecord`/`NodeGraphViewport` shapes rather than importing them (no cross-package TS
+ * `NodeGraphEdgeRecord`/`Viewport2d` shapes rather than importing them (no cross-package TS
  * import, per this taxonomy's per-component twin convention). */
 
 export interface TrinityJackEditGraphNode {

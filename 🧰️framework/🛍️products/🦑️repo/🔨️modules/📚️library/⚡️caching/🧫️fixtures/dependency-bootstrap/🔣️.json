@@ -28,7 +28,8 @@
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🔣️schema.json",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs"
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs"
     ],
     "storage": {
       "data": ".nx/workspace-data",

@@ -359,6 +359,86 @@ fn pcg_job_publication_grants_preserve_pending_state_and_work_cursor() {
     }
 }
 
+/// 🧭️ Each admitted initial PCG scalar fills the already owned search direction.
+#[test]
+fn pcg_job_initial_precondition_preserves_admitted_direction_backing() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔢️scalar-owners/🔣️.json")).unwrap();
+    let case = &fixture["precondition"];
+    let diagonal: Vec<f64> = serde_json::from_value(case["diagonal"].clone()).unwrap();
+    let residual: Vec<f64> = serde_json::from_value(case["residual"].clone()).unwrap();
+    let expected: Vec<Vec<f64>> = serde_json::from_value(case["steps"].clone()).unwrap();
+    let mut matrix = Coo::new(3);
+    for (index, value) in diagonal.iter().copied().enumerate() { matrix.add(index, index, value); }
+    let operation = test_operation(995);
+    let mut job = PcgJob::new(operation, matrix.to_csr(), VecD::from_vec(residual.clone()), VecD::zeros(3), 1e-12, 20, 1);
+    job.state.diag = VecD::from_vec(diagonal);
+    job.state.r = VecD::from_vec(residual);
+    job.state.stage = PcgStage::InitialPrecondition;
+    let pointer = job.state.p.0.as_ptr();
+    let capacity = job.state.p.0.capacity();
+    let mut sequence = 0;
+    let mut observed = Vec::new();
+    for _ in 0..3 {
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        assert!(matches!(job.step(&mut context), StepOutcome::Yield));
+        assert_eq!(context.fuel_remaining(), 0);
+        observed.push((job.state.p.0.clone(), job.state.p.0.as_ptr() == pointer && job.state.p.0.capacity() == capacity));
+    }
+    for _ in 0..1_024 { if job.close_step(NUMERICAL_OWNER_PAGE_BYTES).0 { break; } }
+    assert!(InteractiveJob::terminal_is_empty(&job));
+    for (index, (direction, retained)) in observed.into_iter().enumerate() {
+        assert_eq!(direction, expected[index], "precondition scalar {index}");
+        assert_eq!(retained, case["retainsBacking"].as_bool().unwrap(), "direction backing {index}");
+    }
+    eprintln!("[DEBUG] PCG initialized three NumPy scalars in the original admitted direction backing");
+}
+
+/// 🪜️ Retained LDLT substitution visits every factor column before diagonal scaling.
+#[test]
+fn subspace_factor_cursor_matches_numpy_for_three_nondiagonal_right_hand_sides() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔢️scalar-owners/🔣️.json")).unwrap();
+    let case = &fixture["factor"];
+    let lower: Vec<Vec<f64>> = serde_json::from_value(case["lower"].clone()).unwrap();
+    let rhs: Vec<Vec<f64>> = serde_json::from_value(case["rhs"].clone()).unwrap();
+    let expected: Vec<Vec<f64>> = serde_json::from_value(case["expected"].clone()).unwrap();
+    let factor = LdltFactor {
+        n: 3,
+        l_cols: (0..3).map(|column| ((column + 1)..3).map(|row| (row as u32, lower[row][column])).collect()).collect(),
+        d: serde_json::from_value(case["diagonal"].clone()).unwrap(),
+    };
+    let mut mass = Coo::new(3);
+    for index in 0..3 { mass.add(index, index, 1.0); }
+    let mut job = SubspaceIterationJob::new(test_operation(996), factor, mass.to_csr(), 3, 1, 30);
+    job.state.work.rhs = MatD::zeros(3, 3);
+    job.state.work.solved = MatD::zeros(3, 3);
+    for row in 0..3 { for column in 0..3 { job.state.work.rhs.set(row, column, rhs[row][column]); } }
+    let pointer = job.state.work.solved.data.as_ptr();
+    let capacity = job.state.work.solved.data.capacity();
+    job.reset_cursor(SubspaceStage::FactorForwardEntry);
+    let mut scalar_steps = true;
+    let mut retained = true;
+    for _ in 0..100 {
+        let before = job.state.work.solved.data.clone();
+        match job.state.work.stage {
+            SubspaceStage::FactorForwardEntry => job.advance_factor_forward(),
+            SubspaceStage::FactorDiagonalEntry => job.advance_factor_diagonal(),
+            SubspaceStage::FactorBackwardEntry => job.advance_factor_backward(),
+            _ => break,
+        }
+        scalar_steps &= before.iter().zip(&job.state.work.solved.data).filter(|(left, right)| left != right).count() <= 1;
+        retained &= job.state.work.solved.data.as_ptr() == pointer && job.state.work.solved.data.capacity() == capacity;
+    }
+    let terminal = job.state.work.stage == SubspaceStage::OrthogonalizePairElement;
+    let observed: Vec<Vec<f64>> = (0..3).map(|row| (0..3).map(|column| job.state.work.solved.get(row, column)).collect()).collect();
+    for _ in 0..1_024 {
+        if matches!(InteractiveJob::close_step(&mut job, 1, NUMERICAL_OWNER_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) { break; }
+    }
+    assert!(InteractiveJob::terminal_is_empty(&job));
+    assert!(terminal && scalar_steps && retained);
+    assert_eq!(observed, expected);
+    eprintln!("[DEBUG] Subspace factor cursor matches three independent NumPy solves with one retained scalar per transition");
+}
+
 fn drive_pcg_job(mut job: PcgJob, operation: Operation) -> (VecD, PcgStats) {
     let mut sequence = 0;
     loop {

@@ -2,6 +2,8 @@
 
 ## Decision Status
 
+Current refinement (2026-09-12): read `store-owner-capability-level-audit.md` and `store-owner-capability-level-review.md` before implementing the factory slices below. The existing owner bundle is generic Store lifecycle authority. Persisted load capabilities belong in separate identity-bearing load bundles, including real config/draft/window load routes; do not add a required artifact decoder to all lifecycle constructors. The lower source repair is recorded in `retained-pack-physical-source-ownership.md`. Existing codec 1 admission must remain available throughout these changes; the older refusal wording below is not an instruction to disable it. The next catalog slice is specified in `retained-pack-catalog-next-slice.md`.
+
 This is the bounded implementation proposal requested after the suite 52 checkpoint. No referenced production source was edited while preparing it, and no new native result is claimed. The earlier proposed one-byte Pack scan/cleanup test was withdrawn because it would have accepted bookkeeping progress and logical `Vec` truncation as if they were parser progress and physical release.
 
 `🗑️generated/recursive-replacement-suite-native-52.log` remains useful functional evidence: the current common hydrator reconstructs nonempty parent, branch and leaf histories, preserves the old archive on malformed-after-valid-prefix input, and reaches the existing atomic replacement boundary on the normal stack. It does not prove retained Pack parsing, retained typed snapshot construction, or physical backing retirement.

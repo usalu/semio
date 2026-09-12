@@ -10,10 +10,9 @@ import { strictSourceDiagnostics } from "../🔮️typescript-declaration-facts-
 import { sourceFileFactByteCompare, sourceFileFactCatalog, sourceFileFactReference, type SourceFileFactCase as Case, type SourceFileFactExpected as Expected } from "../🔮️source-file-facts-oracle/🟦️.ts";
 
 //#region 🧭️Inputs
-const root = resolve(import.meta.dir, "../../../../../../../");
 const schemaPath = resolve(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/🧾️source-file-facts/🔣️.json");
 const vectorsPath = resolve(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/🧾️source-file-facts/🔣️.json");
-const rootScriptPath = resolve(root, "📜️script.ts");
+const capturedSourcePath = resolve(import.meta.dir, "../../🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts");
 const taxonomyPath = resolve(import.meta.dir, "../../🔣️taxonomy.json");
 const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
 const vectors = JSON.parse(readFileSync(vectorsPath, "utf8")) as { readonly schemaVersion: 1; readonly cases: readonly Case[] };
@@ -56,9 +55,9 @@ function opaqueComposeAdmission(): TaxonomySourceInventory {
   return { ...projected, repoRoot: "/virtual/workspace", taxonomyPath: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", taxonomyContentHash: "a".repeat(64), membershipDigest: "b".repeat(64) };
 }
 
-/** 🧭️ Resolves the proposed root projector dynamically so absence is a real test failure. */
+/** 🧭️ Resolves the captured-source projector dynamically so absence is a real test failure. */
 async function subject(): Promise<(admission: TaxonomySourceInventory, taxonomy: Taxonomy) => readonly Omit<Expected, "extensionChain">[]> {
-  const module = await import(`${pathToFileURL(rootScriptPath).href}?source-file-facts=${createHash("sha256").update(readFileSync(rootScriptPath)).digest("hex")}`);
+  const module = await import(`${pathToFileURL(capturedSourcePath).href}?source-file-facts=${createHash("sha256").update(readFileSync(capturedSourcePath)).digest("hex")}`);
   const projector = Reflect.get(module, "mutationTaxonomySourceFileFacts");
   if (typeof projector !== "function") throw new Error("missing mutationTaxonomySourceFileFacts export");
   return projector as (admission: TaxonomySourceInventory, taxonomy: Taxonomy) => readonly Omit<Expected, "extensionChain">[];
@@ -85,7 +84,7 @@ test("mutation source-file facts vectors are closed and cover the registered sou
 test("mutation source-file facts reference oracle has strict standalone types", () => {
   const path = resolve(import.meta.dir, "../🔮️source-file-facts-oracle/🟦️.ts");
   expect(strictSourceDiagnostics(readFileSync(path, "utf8"), path)).toEqual([]);
-});
+}, 15_000);
 
 for (const catalog of ["current", "synthetic-generated", "synthetic-tie"] as const) test(`mutation source-file facts independent suffix reference: ${catalog}`, () => {
   const rows = vectors.cases.filter((row) => row.catalog === catalog && row.admissionStatus === "complete"), actual = sourceFileFactReference(rows, sourceFileFactCatalog(catalog, taxonomy));

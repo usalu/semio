@@ -1,0 +1,101 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "version": 1,
+  "entries": [
+    "📄️document.tex",
+    "📦️library",
+    "🔨️modules/🕸️graph/📐️.tex"
+  ],
+  "inputs": {
+    "📄️document.tex": "\\documentclass{fixture}\\n\\input{🔨️modules/🕸️graph/📐️}\\nsymbol 📐️ remains\\n",
+    "📦️library/fixture.cls": "\\ProvidesClass{fixture}\\n\\RequirePackage{fixture-graph}\\n\\input{🔨️modules/🕸️graph/📐️.tex}\\n",
+    "📦️library/fixture-graph.sty": "\\ProvidesPackage{fixture-graph}\\n\\input{🔨️modules/🕸️graph/📐️.tex}\\n",
+    "📦️library/references.bib": "@misc{graph, note={🔨️modules/🕸️graph/📐️.tex and 🔨️modules/🕸️graph/📐️}}\\n",
+    "📦️library/unchanged.txt": "unrelated 🔨️modules/🕸️graph/📐️.tex bytes\\n",
+    "🔨️modules/🕸️graph/📐️.tex": "\\newcommand{\\FixtureGraphMarker}{graph implementation reached}\\n"
+  },
+  "outputs": {
+    "document.tex": "\\documentclass{fixture}\\n\\input{modules/graph/_}\\nsymbol 📐️ remains\\n",
+    "library/fixture.cls": "\\ProvidesClass{fixture}\\n\\RequirePackage{fixture-graph}\\n\\input{modules/graph/_.tex}\\n",
+    "library/fixture-graph.sty": "\\ProvidesPackage{fixture-graph}\\n\\input{modules/graph/_.tex}\\n",
+    "library/references.bib": "@misc{graph, note={modules/graph/_.tex and modules/graph/_}}\\n",
+    "library/unchanged.txt": "unrelated 🔨️modules/🕸️graph/📐️.tex bytes\\n",
+    "modules/graph/_.tex": "\\newcommand{\\FixtureGraphMarker}{graph implementation reached}\\n"
+  },
+  "sourceKind": {
+    "canonicalPath": "🧰️framework/🛍️products/📓️print/🔨️modules/🕸️graph/📐️.tex",
+    "scopedKindId": "print-graph-macro-source",
+    "hostileBasenames": [
+      "📐️reconcile.tex",
+      "reconcile.tex",
+      "_.tex"
+    ],
+    "neighborPath": "🧰️framework/🛍️products/📓️print/🧫️fixtures/📐️.tex",
+    "neighborFileKindId": "tex"
+  },
+  "shimGrammar": {
+    "contractId": "print-latex-semio-graph",
+    "grammarId": "tex",
+    "acceptedRole": "thin-delegation",
+    "rejections": [
+      {
+        "id": "runtime-definition",
+        "suffix": "\\newcommand{\\Bad}{body}\\n",
+        "expectedRole": "implementation"
+      },
+      {
+        "id": "second-input",
+        "suffix": "\\input{🔨️modules/🕸️graph/📐️.tex}\\n",
+        "expectedRole": "unresolved"
+      },
+      {
+        "id": "metadata-command",
+        "source": "\\NeedsTeXFormat{LaTeX2e} \\ProvidesPackage{semio-graph}[2026/08/12 \\def\\hidden{payload}] \\input{🔨️modules/🕸️graph/📐️.tex}",
+        "expectedRole": "implementation"
+      },
+      {
+        "id": "literal-backslash-target",
+        "source": "\\NeedsTeXFormat{LaTeX2e} \\ProvidesPackage{semio-graph}[2026/08/12 v0.1.0 semio graph diagrams] \\input{🔨️modules\\🕸️graph/📐️.tex}",
+        "expectedRole": "unresolved"
+      },
+      {
+        "id": "encoded-target-command",
+        "source": "\\NeedsTeXFormat{LaTeX2e} \\ProvidesPackage{semio-graph}[2026/08/12 v0.1.0 semio graph diagrams] \\input{^^5csome/📐️.tex}",
+        "expectedRole": "unresolved"
+      },
+      {
+        "id": "encoded-traversal",
+        "source": "\\NeedsTeXFormat{LaTeX2e} \\ProvidesPackage{semio-graph}[2026/08/12 v0.1.0 semio graph diagrams] \\input{^^2e^^2e/📐️.tex}",
+        "expectedRole": "unresolved"
+      },
+      {
+        "id": "expanded-target",
+        "source": "\\NeedsTeXFormat{LaTeX2e} \\ProvidesPackage{semio-graph}[2026/08/12 v0.1.0 semio graph diagrams] \\input{\\csname hidden\\endcsname/📐️.tex}",
+        "expectedRole": "unresolved"
+      }
+    ]
+  },
+  "collisions": [
+    {
+      "id": "canonical-leaf",
+      "entries": ["🔨️modules/🕸️graph/📐️.tex", "🔨️modules/🕸️graph/_.tex"],
+      "inputs": {
+        "🔨️modules/🕸️graph/📐️.tex": "canonical",
+        "🔨️modules/🕸️graph/_.tex": "native collision"
+      }
+    },
+    {
+      "id": "repeated-entry",
+      "entries": ["📐️.tex", "📐️.tex"],
+      "inputs": { "📐️.tex": "canonical" }
+    },
+    {
+      "id": "directory-file",
+      "entries": ["📦️library", "library"],
+      "inputs": {
+        "📦️library": "file",
+        "library/fixture.tex": "directory child"
+      }
+    }
+  ]
+}

@@ -291,6 +291,11 @@ function cargoSourceInputs(root, workspaceRoot, facts, includeTests = true) {
 
 const SCRIPT_IMPORT_CACHE = new Map();
 
+/** 🗂️ Shares source reads and command closures only within one graph construction. */
+function createScriptInputCache() {
+  return { files: new Map(), closures: new Map() };
+}
+
 /** 🔗️ Collects executable import expressions while excluding erased TypeScript declarations. */
 function commandImports(path, source, compiler) {
   const previous = SCRIPT_IMPORT_CACHE.get(path);
@@ -324,35 +329,45 @@ function commandImports(path, source, compiler) {
 }
 
 /** 🧭️ Tracks literal relative command imports through the existing TypeScript tooling boundary. */
-function relativeScriptInputs(entries, workspaceRoot) {
+function relativeScriptInputs(entries, workspaceRoot, cache = createScriptInputCache()) {
+  const roots = [...new Set(entries.map(entry => resolve(entry)))].sort(), key = JSON.stringify([resolve(workspaceRoot), roots]);
+  const cached = cache.closures.get(key);
+  if (cached) return cached;
   const compiler = createRequire(import.meta.url)("typescript"), files = new Set();
   const visit = (path) => {
     if (files.has(path)) return;
+    if (nxPath(relative(workspaceRoot, path)).startsWith("../")) throw new Error(`Command import escapes workspace: ${path}`);
     files.add(path);
-    const source = readFileSync(path, "utf8");
-    for (const entry of commandImports(path, source, compiler)) {
-      let resolved;
-      try { resolved = createRequire(path).resolve(entry); }
-      catch (error) {
-        if (error.code !== "MODULE_NOT_FOUND") throw error;
-        resolved = compiler.resolveModuleName(entry, path, { moduleResolution: compiler.ModuleResolutionKind.Bundler, allowJs: true, resolveJsonModule: true }, compiler.sys).resolvedModule?.resolvedFileName;
-        if (!resolved) continue;
-        if (/\.d\.[cm]?ts$/.test(resolved)) throw error;
+    let imports = cache.files.get(path);
+    if (!imports) {
+      imports = [];
+      for (const entry of commandImports(path, readFileSync(path, "utf8"), compiler)) {
+        let resolved;
+        try { resolved = createRequire(path).resolve(entry); }
+        catch (error) {
+          if (error.code !== "MODULE_NOT_FOUND") throw error;
+          resolved = compiler.resolveModuleName(entry, path, { moduleResolution: compiler.ModuleResolutionKind.Bundler, allowJs: true, resolveJsonModule: true }, compiler.sys).resolvedModule?.resolvedFileName;
+          if (!resolved) continue;
+          if (/\.d\.[cm]?ts$/.test(resolved)) throw error;
+        }
+        imports.push(resolved);
       }
-      if (nxPath(relative(workspaceRoot, resolved)).startsWith("../")) throw new Error(`Command import escapes workspace: ${resolved}`);
-      visit(resolved);
+      cache.files.set(path, imports);
     }
+    for (const imported of imports) visit(imported);
   };
-  for (const entry of entries) visit(resolve(entry));
-  return [...files].map((file) => `{workspaceRoot}/${nxPath(relative(workspaceRoot, file))}`).sort();
+  for (const entry of roots) visit(entry);
+  const result = [...files].map((file) => `{workspaceRoot}/${nxPath(relative(workspaceRoot, file))}`).sort();
+  cache.closures.set(key, result);
+  return result;
 }
 
 /** 🔧️ Native leaves hash their compiler contract and exact command implementation, independently of UI selection. */
-function nativeCommandInputs(workspaceRoot) {
+function nativeCommandInputs(workspaceRoot, scripts) {
   const script = join(LIBRARY_ROOT, "⚡️caching/🦀️cargo/📜️script.ts");
   const cargo = POLICY.toolchains.cargo, javascript = POLICY.toolchains.javascript;
   return [
-    ...relativeScriptInputs([script], workspaceRoot),
+    ...relativeScriptInputs([script], workspaceRoot, scripts),
     ...[...javascript.files.filter((file) => !["package.json", "bun.lock"].includes(file)), ...cargo.files].map((file) => `{workspaceRoot}/${file}`),
     { json: "{workspaceRoot}/package.json", fields: ["name"] },
     { externalDependencies: ["@iarna/toml"] },
@@ -363,7 +378,7 @@ function nativeCommandInputs(workspaceRoot) {
 }
 
 /** 🧭️ Parses a target's own script entry points from its command, or reports that none exist. */
-function targetScriptClosure(target, workspaceRoot) {
+function targetScriptClosure(target, workspaceRoot, scripts) {
   const command = target.options?.command;
   if (typeof command !== "string") return undefined;
   const cwd = resolve(workspaceRoot, target.options?.cwd ?? ".");
@@ -372,7 +387,7 @@ function targetScriptClosure(target, workspaceRoot) {
     .filter((token) => token.endsWith(SCRIPT_BASENAME))
     .map((token) => resolve(cwd, token))
     .filter((path) => existsSync(path) && !nxPath(relative(workspaceRoot, path)).startsWith("../"));
-  return entries.length ? relativeScriptInputs(entries, workspaceRoot) : undefined;
+  return entries.length ? relativeScriptInputs(entries, workspaceRoot, scripts) : undefined;
 }
 
 /** 🔐️ `cargo metadata --locked` validates the shared lock against every workspace manifest, so its replay must hash all of them. */
@@ -381,14 +396,14 @@ function nativeLockInputs(command) {
 }
 
 /** 🧭️ Adds the selected native target's local router and executable import closure. */
-function nativeTargetCommandInputs(target, workspaceRoot, fallback = nativeCommandInputs(workspaceRoot)) {
-  const closure = targetScriptClosure(target, workspaceRoot);
+function nativeTargetCommandInputs(target, workspaceRoot, fallback = nativeCommandInputs(workspaceRoot), scripts) {
+  const closure = targetScriptClosure(target, workspaceRoot, scripts);
   return closure ? [...new Set([...closure, ...fallback])] : fallback;
 }
 
 /** 🎯️ Hashes any script-backed target's own command closure, exactly, instead of the whole router. */
-function genericTargetCommandInputs(target, workspaceRoot, fallback) {
-  return targetScriptClosure(target, workspaceRoot) ?? fallback;
+function genericTargetCommandInputs(target, workspaceRoot, fallback, scripts) {
+  return targetScriptClosure(target, workspaceRoot, scripts) ?? fallback;
 }
 
 /** 🪢️ The previous blanket router contract, kept only as a correctness fallback for a command naming no script. */
@@ -410,6 +425,23 @@ function generatorContractInputs(contract) {
     inputs: [...contract.inputPatterns.map((path) => `{workspaceRoot}/${path}`), ...(fingerprint ? [{ dependentTasksOutputFiles: fingerprint.output }] : [])],
     dependsOn: fingerprint ? [fingerprint.target] : [],
   };
+}
+
+/** 🧬️ Assigns each output to its physical Nx producer while retaining the generator's complete entry point. */
+function generatorOutputOwners(contracts, root, project, targets) {
+  const outputs = new Map();
+  for (const contract of Object.values(contracts)) {
+    if (contract.ownership !== "owned") continue;
+    if (contract.ownerPath === root) outputs.set(contract.target, outputs.get(contract.target) ?? []);
+    for (const output of contract.outputRoots) {
+      const owner = output.producer ?? contract;
+      if (owner.ownerPath !== root) continue;
+      if (!owner.target?.startsWith(`${project}:`) || !targets[owner.target.slice(project.length + 1)]) throw new Error(`Generator output has no Nx producer: ${output.path}`);
+      if (!outputs.has(owner.target)) outputs.set(owner.target, []);
+      outputs.get(owner.target).push(`{workspaceRoot}/${output.path}`);
+    }
+  }
+  return outputs;
 }
 
 /** 🌲️ Reads one root's current bytes into a stable digest, independently of directory-vs-file shape or a missing path. */
@@ -605,7 +637,7 @@ function declaredSourceInputs(json, workspaceRoot) {
 }
 
 /** 📥️ Shared command implementation and host identity are inputs of every script-backed task. */
-function projectInputs(json, root, workspaceRoot, facts) {
+function projectInputs(json, root, workspaceRoot, facts, scripts) {
   const tools = ["javascript"];
   if (existsSync(join(workspaceRoot, root, "Cargo.toml")) || json.targets?.wasm) tools.push("cargo");
   if (json.targets?.wasm || json.targets?.["extension-package"] || (tools.includes("cargo") && json.targets?.package)) tools.push("wasm");
@@ -657,9 +689,9 @@ function projectInputs(json, root, workspaceRoot, facts) {
   const native = (sources, productionOnly = false) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${root}/Cargo.toml`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...(productionOnly ? ["!{projectRoot}/**/🧪️tests/**/*", "!{projectRoot}/**/🧫️fixtures/**/*", "!{workspaceRoot}/**/🧫️fixtures/**/*", ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`] : [])] : []), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...exclusions];
   const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript") && owner !== root && existsSync(join(workspaceRoot, root, SCRIPT_BASENAME));
   const artifactSource = join(workspaceRoot, owner, "🟦️.ts");
-  const artifactSources = artifactTypeScript ? [...relativeScriptInputs([artifactSource], workspaceRoot), "{projectRoot}/package.json", ...exclusions] : [];
+  const artifactSources = artifactTypeScript ? [...relativeScriptInputs([artifactSource], workspaceRoot, scripts), "{projectRoot}/package.json", ...exclusions] : [];
   const javascript = POLICY.toolchains.javascript;
-  const artifactCommandSources = artifactTypeScript ? [...relativeScriptInputs([join(workspaceRoot, root, SCRIPT_BASENAME)], workspaceRoot), `{workspaceRoot}/bunfig.toml`, { externalDependencies: ["typescript"] }, ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime })), { runtime: 'node -p "process.platform.concat(process.arch)"' }] : [];
+  const artifactCommandSources = artifactTypeScript ? [...relativeScriptInputs([join(workspaceRoot, root, SCRIPT_BASENAME)], workspaceRoot, scripts), `{workspaceRoot}/bunfig.toml`, { externalDependencies: ["typescript"] }, ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime })), { runtime: 'node -p "process.platform.concat(process.arch)"' }] : [];
   return { ...declarations, ...declaredSourceInputs(json, workspaceRoot), default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...production, ...(declarations.production ?? [])], nativeSources: [...native(nativeSources, true), ...(declarations.nativeSources ?? [])], nativeTestSources: [...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])], ...(artifactTypeScript ? { artifactSources: [...artifactSources, ...(declarations.artifactSources ?? [])], artifactCommandSources: [...artifactCommandSources, ...(declarations.artifactCommandSources ?? [])] } : {}) };
 }
 
@@ -703,19 +735,22 @@ function withLeveledTestTargets(targets) {
  * @param {string} root
  * @param {string} projectDir
  */
-function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = {}, facts, commandInputs) {
+function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = {}, facts, commandInputs, scripts) {
   const ownsScript = existsSync(join(projectDir, SCRIPT_BASENAME));
   const nativeProject = existsSync(join(projectDir, "Cargo.toml"));
   const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript");
-  const declared = withWasmTooling({ ...(root === "." && ownsScript ? rootCommandTargets(join(projectDir, SCRIPT_BASENAME)) : {}), ...cargoTargets(root, workspaceRoot, commandInputs), ...json.targets, ...componentTargets(root, workspaceRoot, commandInputs), ...printDocumentTargets(json, root, workspaceRoot) }, ownsScript && json.targets?.wasm ? readFileSync(join(projectDir, SCRIPT_BASENAME), "utf8") : "");
+  const declared = withWasmTooling({ ...(root === "." && ownsScript ? rootCommandTargets(join(projectDir, SCRIPT_BASENAME)) : {}), ...cargoTargets(root, workspaceRoot, commandInputs), ...json.targets, ...componentTargets(root, workspaceRoot, commandInputs), ...printDocumentTargets(json, root, workspaceRoot, scripts) }, ownsScript && json.targets?.wasm ? readFileSync(join(projectDir, SCRIPT_BASENAME), "utf8") : "");
   for (const contract of Object.values(contracts)) {
     if (contract.ownership !== "owned" || contract.ownerPath !== root) continue;
     const name = contract.target.slice(contract.target.lastIndexOf(":") + 1), target = declared[name];
     if (!target || contract.target !== `${json.name}:${name}`) throw new Error(`Generator target has no project owner: ${contract.target}`);
     const discovery = generatorContractInputs(contract);
-    const inputs = [...(target.inputs ?? ["default", "^default"]), ...discovery.inputs];
-    declared[name] = { ...target, inputs, ...(discovery.dependsOn.length ? { dependsOn: [...new Set([...(target.dependsOn ?? []), ...discovery.dependsOn])] } : {}), outputs: contract.outputRoots.map((output) => `{workspaceRoot}/${output.path}`) };
+    const producers = [...new Set(contract.outputRoots.flatMap((output) => output.producer && output.producer.target !== contract.target ? [output.producer.target] : []))].sort();
+    const inputs = [...(target.inputs ?? ["default", "^default"]), ...discovery.inputs, ...(producers.length ? [{ dependentTasksOutputFiles: "**/*" }] : [])];
+    const dependencies = [...discovery.dependsOn, ...producers];
+    declared[name] = { ...target, inputs, ...(dependencies.length ? { dependsOn: [...new Set([...(target.dependsOn ?? []), ...dependencies])] } : {}) };
   }
+  for (const [target, outputs] of generatorOutputOwners(contracts, root, json.name, declared)) declared[target.slice(json.name.length + 1)] = { ...declared[target.slice(json.name.length + 1)], outputs };
   const normalized = {};
   const genericFallback = genericCommandFallbackInputs(workspaceRoot);
   for (const [name, target] of Object.entries(withLeveledTestTargets(declared))) {
@@ -724,10 +759,10 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
     const artifactTarget = artifactTypeScript && /^(?:build|check|test(?:-(?:quick|long|exhaustive))?)$/.test(name);
     if (nativeTarget) {
       policy.parallelism ??= false;
-      policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...nativeTargetCommandInputs(policy, workspaceRoot, commandInputs), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : []), ...nativeLockInputs(policy.options?.command)];
+      policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...nativeTargetCommandInputs(policy, workspaceRoot, commandInputs, scripts), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : []), ...nativeLockInputs(policy.options?.command)];
     }
     if (artifactTarget) policy.inputs = ["artifactSources", "artifactCommandSources"];
-    if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...genericTargetCommandInputs(policy, workspaceRoot, genericFallback)];
+    if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...genericTargetCommandInputs(policy, workspaceRoot, genericFallback, scripts)];
     normalized[name] = policy;
   }
   for (const contract of Object.values(contracts)) {
@@ -742,7 +777,7 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
     const extra = generatorOutputCouplingInputs(name, target, declared, root, workspaceRoot);
     if (extra.length) normalized[name] = { ...target, inputs: [...target.inputs, ...extra] };
   }
-  return { ...json, name: json.name, root, namedInputs: projectInputs({ ...json, targets: declared }, root, workspaceRoot, facts), targets: normalized };
+  return { ...json, name: json.name, root, namedInputs: projectInputs({ ...json, targets: declared }, root, workspaceRoot, facts, scripts), targets: normalized };
 }
 
 /** 🛠️ Exposes wasm-pack's immutable optimizer preparation to Nx before compiler execution. */
@@ -752,14 +787,19 @@ function withWasmTooling(targets, source) {
 }
 
 /** 📄️ Projects a document catalog into separately owned PDF tasks without executing a compiler. */
-function printDocumentTargets(project, root, workspaceRoot) {
+function printDocumentTargets(project, root, workspaceRoot, scripts) {
   const path = project.metadata?.printCatalog;
   if (!path) return {};
   const catalog = JSON.parse(readFileSync(join(workspaceRoot, path), "utf8")), compiler = dirname(dirname(path));
-  if (catalog.version !== 1 || !Array.isArray(catalog.documents) || !catalog.documents.length) throw new Error(`Invalid Print catalog: ${path}`);
+  if (catalog.version !== 1 || !Array.isArray(catalog.librarySources) || !catalog.librarySources.length || !Array.isArray(catalog.documents) || !catalog.documents.length) throw new Error(`Invalid Print catalog: ${path}`);
   const product = dirname(dirname(compiler)), script = `${compiler}/${SCRIPT_BASENAME}`, targets = {}, ids = new Set(), sources = new Set();
-  const commandInputs = relativeScriptInputs([join(workspaceRoot, script)], workspaceRoot);
-  const inputs = [...commandInputs, ...project.targets.fonts.inputs, `{workspaceRoot}/${path}`, `{workspaceRoot}/${compiler}/🔧️toolchain/**/*`, `{workspaceRoot}/${compiler}/📚️bundle/🔒️dependencies.json`, `{workspaceRoot}/${product}/🖋️latex/**/*`, `{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json`, "{workspaceRoot}/bunfig.toml", { externalDependencies: ["pdfjs-dist", "sharp"] }, { runtime: "bun --version" }, { runtime: 'node -p "process.platform.concat(process.arch)"' }];
+  const commandInputs = relativeScriptInputs([join(workspaceRoot, script)], workspaceRoot, scripts);
+  const libraryInputs = catalog.librarySources.map(source => {
+    if (!source || source.includes("\\") || source.startsWith("/") || source.split("/").some(part => [".", "..", ""].includes(part))) throw new Error(`Invalid Print library source: ${source}`);
+    const absolute = `${product}/${source}`;
+    return `{workspaceRoot}/${absolute}${statSync(join(workspaceRoot, absolute)).isDirectory() ? "/**/*" : ""}`;
+  });
+  const inputs = [...commandInputs, ...project.targets.fonts.inputs, `{workspaceRoot}/${path}`, `{workspaceRoot}/${compiler}/🔧️toolchain/**/*`, `{workspaceRoot}/${compiler}/📚️bundle/🔒️dependencies.json`, ...libraryInputs, `{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json`, "{workspaceRoot}/bunfig.toml", { externalDependencies: ["pdfjs-dist", "sharp"] }, { runtime: "bun --version" }, { runtime: 'node -p "process.platform.concat(process.arch)"' }];
   for (const document of catalog.documents) {
     if (!/^[a-z]+(?:-[a-z0-9]+)*$/.test(document.id) || ids.has(document.id) || sources.has(document.texPath) || !["templates", "visualizations"].includes(document.collection)) throw new Error(`Invalid Print document owner: ${document.id}`);
     ids.add(document.id); sources.add(document.texPath);
@@ -961,8 +1001,8 @@ function rootCommandTargets(script) {
  */
 function emojiProjectJsonNodes(configFiles, _options, context) {
   const { workspaceRoot } = context;
-  const rootsByName = new Map(), facts = new Map();
-  const commandInputs = configFiles.some((path) => path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? nativeCommandInputs(workspaceRoot) : undefined;
+  const rootsByName = new Map(), facts = new Map(), scripts = createScriptInputCache();
+  const commandInputs = configFiles.some((path) => path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? nativeCommandInputs(workspaceRoot, scripts) : undefined;
   const contractPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
   const contracts = existsSync(contractPath) ? JSON.parse(readFileSync(contractPath, "utf8")).generatorContracts ?? {} : {};
 
@@ -994,7 +1034,7 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
       if (prior === undefined) rootsByName.set(name, root);
       if (name === "@semio-tech/plugin-registry") json.targets = { ...json.targets, ...playgroundSessionTargets(configFiles, workspaceRoot) };
       if (name === "@semio-tech/framework-os-dev") json.targets = { ...json.targets, ...playgroundPreparationTargets(configFiles, workspaceRoot, root) };
-      return [configFile, { projects: { [name]: projectWithDefaults(json, root, projectDir, workspaceRoot, contracts, facts, commandInputs) } }];
+      return [configFile, { projects: { [name]: projectWithDefaults(json, root, projectDir, workspaceRoot, contracts, facts, commandInputs, scripts) } }];
     })
     .filter(Boolean);
   const declaredRoots = new Set([...rootsByName.values()]);
@@ -1010,7 +1050,7 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
     rootsByName.set(name, root);
     const targets = cargoTargets(root, workspaceRoot, commandInputs);
     const project = { name, root, projectType: "library", tags: ["language:cargo", "discovery:manifest"], targets: { ...targets, ...componentTargets(root, workspaceRoot, commandInputs) } };
-    results.push([configFile, { projects: { [name]: { ...project, namedInputs: projectInputs(project, root, workspaceRoot, facts) } } }]);
+    results.push([configFile, { projects: { [name]: { ...project, namedInputs: projectInputs(project, root, workspaceRoot, facts, scripts) } } }]);
   }
   const preparationCache = new Map(), dependencyRootsCache = new Map(), projects = results.flatMap(([, result]) => Object.values(result.projects));
   const projectsByRoot = new Map(projects.map((project) => [project.root, project.name]));
@@ -1033,6 +1073,13 @@ function createDependenciesImplementation(_options, context) {
   const add = (source, target, sourceFile) => {
     if (target && source !== target) edges.set(`${source}\0${target}\0${sourceFile}`, { source, target, sourceFile, type: "static" });
   };
+  const authorityPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
+  const generators = existsSync(authorityPath) ? JSON.parse(readFileSync(authorityPath, "utf8")).generatorContracts ?? {} : {};
+  for (const contract of Object.values(generators)) for (const output of contract.outputRoots ?? []) {
+    if (!output.producer) continue;
+    const producer = output.producer, separator = producer.target.lastIndexOf(":"), name = producer.target.slice(0, separator);
+    if (byRoot.get(resolve(workspaceRoot, producer.ownerPath)) !== name || !projects[name]?.targets?.[producer.target.slice(separator + 1)]) throw new Error(`Generator output has no Nx producer: ${output.path}`);
+  }
   for (const [name, project] of Object.entries(projects)) {
     const go = goManifest(project.root, workspaceRoot);
     if (go) {

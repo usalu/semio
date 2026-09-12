@@ -13,11 +13,32 @@ fn synapse_digest(synapse: &semio_framework_artifact_flow_flow::SynapseSpec) -> 
     digest
 }
 
+fn admit(session: &mut Generation2dMountedPackSession, value: u8) {
+    loop {
+        if let Some(exact) = session.next_source_allocation_bytes().expect("P2 source allocation query") {
+            let step = session.reserve_source_page(exact).expect("P2 source allocation grant");
+            assert!(step.progressed);
+            continue;
+        }
+        session.admit_byte(value).expect("one admitted snapshot byte");
+        return;
+    }
+}
+
 fn close(session: &mut Generation2dMountedPackSession) {
     session.request_cancel();
+    let admitted_allocation_bytes = session.progress().map_or(0, |progress| progress.allocated_bytes);
+    let mut retained_allocation_bytes = admitted_allocation_bytes;
+    let mut released_allocation_bytes = 0;
     for _ in 0..100_000 {
-        if session.close_step(1, mounted::RETAINED_PACK_PAGE_BYTES).expect("P2 retained session close") {
+        let maximum_bytes = session.next_source_release_allocation_bytes().unwrap_or(0);
+        let step = session.close_step(1, maximum_bytes).expect("P2 retained session close");
+        let next_retained_allocation_bytes = session.progress().map_or(0, |progress| progress.allocated_bytes);
+        released_allocation_bytes += retained_allocation_bytes - next_retained_allocation_bytes;
+        retained_allocation_bytes = next_retained_allocation_bytes;
+        if step == Generation2dMountedPackCloseStep::Complete {
             assert!(session.terminal_is_empty());
+            assert_eq!(released_allocation_bytes, admitted_allocation_bytes);
             return;
         }
     }
@@ -52,8 +73,13 @@ fn non_empty_canonical_snapshot_round_trips_one_grant_at_a_time() {
     assert_eq!(&bytes[..4], &GENERATION2D_MOUNTED_PREFIX);
     let expected_ledger = bytes[4..].iter().fold(0xcbf2_9ce4_8422_2325u64, |ledger, byte| (ledger ^ u64::from(*byte)).wrapping_mul(0x0000_0100_0000_01b3));
     let mut session = Generation2dMountedPackSession::new(bytes.len(), 8_192).expect("P2 retained snapshot preflight");
-    for byte in bytes {
-        session.admit_byte(byte).expect("one admitted snapshot byte");
+    for (index, byte) in bytes.into_iter().enumerate() {
+        if index == GENERATION2D_MOUNTED_PREFIX.len() {
+            let before = session.progress().expect("P2 source exists after discriminator");
+            assert_eq!(session.admit_byte(byte), Err(byte));
+            assert_eq!(session.progress(), Some(before));
+        }
+        admit(&mut session, byte);
     }
     assert_eq!(session.canonical_ingress_ledger(), expected_ledger, "bytes after P2D2 must be the unchanged canonical SPK stream");
     session.seal().expect("exact snapshot seal");

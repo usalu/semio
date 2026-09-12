@@ -27,6 +27,7 @@ class TestScript extends BundleScript {
       assert.equal(target.cache, true);
       assert.deepEqual(target.inputs.flatMap((input: any) => input.externalDependencies ?? []), ["pdfjs-dist", "sharp"]);
       assert.equal(target.inputs.includes("{workspaceRoot}/bun.lock"), false);
+      assert.ok(target.inputs.includes("{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🕸️graph/📐️.tex"));
       assert.equal(target.options.forwardAllArgs, false);
       for (const prerequisite of ["fonts", "deps-tectonic", "deps-tex", "generate"]) assert.ok(target.dependsOn.includes(`@semio-tech/print:${prerequisite}`));
       assert.equal(target.dependsOn.includes("generate-actor-network"), document.actorNetwork);

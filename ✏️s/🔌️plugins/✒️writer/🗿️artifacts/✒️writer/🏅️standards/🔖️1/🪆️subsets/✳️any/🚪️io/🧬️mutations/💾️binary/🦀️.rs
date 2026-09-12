@@ -267,6 +267,18 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot> for WriterSna
         Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
+    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(usize::from(self.retirement.is_some()) * store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
+    }
+
+    fn maximum_close_byte_demand(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES
+    }
+
+    fn maximum_retained_close_bytes(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES
+    }
+
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });

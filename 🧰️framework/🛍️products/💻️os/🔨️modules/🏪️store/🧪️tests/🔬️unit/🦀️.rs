@@ -979,6 +979,18 @@ impl ArtifactEnvelopeFieldDecoder<(), ()> for TestEnvelopeFieldDecoder {
         Ok(ArtifactEnvelopeFieldDecodeStep::RecordComplete)
     }
 
+    fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn maximum_close_byte_demand(&self) -> usize {
+        0
+    }
+
+    fn maximum_retained_close_bytes(&self) -> usize {
+        0
+    }
+
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });

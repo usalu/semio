@@ -43,7 +43,10 @@ import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "j
 import mountedGisMapProbeFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔬️mounted-gis-map-probe-v1/🔣️.json";
 import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
 import Ajv, { type ValidateFunction } from "ajv";
+import Ajv2020 from "ajv/dist/2020";
 import deepEqual from "fast-deep-equal";
+import viewport2dSchema from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json";
+import viewportPoseFixture from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🧫️fixtures/🪟️poses/🔣️.json";
 import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🔣️.json";
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
 import admittedInstanceFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🛂️admission/🔣️.json";
@@ -1768,6 +1771,7 @@ import {
   WORLD3D_DEFAULT_MARKER_GRANULARITY,
   world3dMarkerInteractionTarget,
   nodeGraphViewportActionArgs,
+  parseNodeGraphSessionViewport,
   nodeGraphPickChannel,
   dagContentBounds,
   dagContentCoverage,
@@ -4275,13 +4279,30 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("semio-node-graph-host");
   });
 
-  it("uses the live session camera for node graph wheel viewport actions", () => {
+  it("uses the live session viewport for node graph wheel actions", () => {
+    expect(parseNodeGraphSessionViewport({ x: 12, y: 24, zoom: 1.75 })).toEqual({ x: 12, y: 24, zoom: 1.75 });
     expect(nodeGraphViewportActionArgs({ x: 12, y: 24, zoom: 1.75 })).toEqual({
       viewport: { x: 12, y: 24, zoom: 1.75 },
     });
+    expect(() => parseNodeGraphSessionViewport('{"x":12,"y":24,"zoom":1.75}')).toThrow();
     expect(() => nodeGraphViewportActionArgs({ x: 0, y: 0, zoom: 0 })).toThrow();
     expect(() => nodeGraphViewportActionArgs({ x: 0, y: 0, zoom: Number.NaN })).toThrow();
     expect(() => nodeGraphViewportActionArgs({ x: 0, y: 0, zoom: 1, extra: true } as never)).toThrow();
+  });
+
+  it("matches the shared neutral viewport schema at the node graph action boundary", () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(viewport2dSchema);
+    const cases = viewportPoseFixture.cases.filter((row) => row.dimension === "2d");
+    for (const row of cases) {
+      expect(validate(row.value), row.name).toBe(row.valid);
+      if (row.valid) {
+        expect(nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(row.value)), row.name).toEqual({ viewport: row.value });
+      } else {
+        expect(() => nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(row.value)), row.name).toThrow();
+      }
+    }
+    expect(cases).toHaveLength(8);
+    console.log("[DEBUG] Node graph typed viewport action matches Ajv for 8 shared neutral cases");
   });
 
   it("encodes node graph selection and hover with framework interaction actions", () => {

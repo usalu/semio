@@ -1,0 +1,6 @@
+{
+  "cases": [
+    {"path": "🧪️vitest/🟦️.ts", "name": "anonymous-vitest-control"},
+    {"path": "🧪️vitest/_.ts", "name": "ascii-underscore-control"}
+  ]
+}

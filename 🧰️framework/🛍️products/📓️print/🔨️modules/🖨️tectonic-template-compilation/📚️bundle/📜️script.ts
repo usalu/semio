@@ -79,7 +79,7 @@ export async function preparePrintBundle(workspace = getWorkspaceRoot(), signal?
     if (failure) throw failure;
     signal?.throwIfAborted();
     writeFileSync(join(temporary, "SHA256SUM"), `${identity}\n`);
-    if (!existsSync(directory)) stageArtifacts(directory, owner, new Map([...names, "SHA256SUM"].map(name => [name, join(temporary, name)])));
+    if (!existsSync(directory)) await stageArtifacts(directory, owner, new Map([...names, "SHA256SUM"].map(name => [name, join(temporary, name)])));
     console.log(`[print-bundle] Ready: ${manifest.files.length} files, ${manifest.files.reduce((sum, file) => sum + file.bytes, 0)} bytes`);
     return preparedPrintBundle(workspace);
   } finally { signal?.removeEventListener("abort", abort); rmSync(temporary, { recursive: true, force: true }); }

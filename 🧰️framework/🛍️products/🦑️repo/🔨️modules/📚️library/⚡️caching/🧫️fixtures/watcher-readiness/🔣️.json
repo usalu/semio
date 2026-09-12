@@ -1,0 +1,22 @@
+{
+  "progressIntervalMs": 15000,
+  "source": "source.ts",
+  "subscriptions": [
+    { "config": { "watchProjects": "all", "includeGlobalWorkspaceFiles": true }, "graphReads": 0 },
+    { "config": { "watchProjects": "all", "includeGlobalWorkspaceFiles": false }, "graphReads": 1 },
+    { "config": { "watchProjects": ["app"], "includeGlobalWorkspaceFiles": true }, "graphReads": 1 }
+  ],
+  "processes": [
+    { "name": "watcher", "args": ["watch"], "watching": true, "env": { "NX_DAEMON": "false" }, "daemon": true },
+    { "name": "initial-build", "args": ["run", "app:dev"], "watching": true, "env": { "NX_DAEMON": "true" }, "daemon": false },
+    { "name": "changed-source-build", "args": ["run", "app:activate"], "watching": false, "env": { "NX_DAEMON": "true", "NX_FILE_CHANGES": "source.ts" }, "daemon": false },
+    { "name": "ordinary-command", "args": ["run", "app:test"], "watching": false, "env": { "NX_DAEMON": "true" }, "daemon": true }
+  ],
+  "ignored": [".🧬semio/🦑️repo/⚡️cache/cargo/build/debug/build/log/unit/.lock", ".🧬semio/🗺️map/osm-tiles/0/0/0.png"],
+  "cases": [
+    { "name": "cold-graph-exceeds-two-minutes", "elapsedMs": 150000, "chunks": [" NX watch process ", "waiting...\n"], "result": "ready" },
+    { "name": "watcher-exits-during-startup", "elapsedMs": 30000, "exit": 2, "result": "error" },
+    { "name": "cancel-during-startup", "elapsedMs": 15000, "exit": null, "signal": "SIGTERM", "result": "error" },
+    { "name": "watcher-spawn-fails", "elapsedMs": 0, "error": "spawn failed", "result": "error" }
+  ]
+}

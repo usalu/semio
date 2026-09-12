@@ -3,52 +3,156 @@
   "owners": [
     {
       "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📽️projection/🟦️.ts",
-      "exports": ["assertWgpuPackageToolchain", "loadWgpuPackageTaxonomy", "renderWgpuBrowserBundles", "renderWgpuPackageArtifacts"],
-      "consumers": ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🏗️builder/🟦️.ts"]
+      "exports": [
+        "assertWgpuPackageToolchain",
+        "loadWgpuPackageTaxonomy",
+        "renderWgpuBrowserBundles",
+        "renderWgpuPackageArtifacts"
+      ],
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🏗️builder/🟦️.ts"
+      ]
     },
     {
       "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts",
-      "exports": ["runWgpuPackageGenerator"],
-      "consumers": ["🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts"]
+      "exports": [
+        "runWgpuPackageGenerator"
+      ],
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts"
+      ]
     },
     {
       "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🏗️builder/🟦️.ts",
-      "exports": ["checkFrameWorker", "checkFrameWorkerCarrierCensus", "generateFrameWorker", "renderFrameWorker"],
-      "consumers": ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts"]
+      "exports": [
+        "checkFrameWorker",
+        "checkFrameWorkerCarrierCensus",
+        "generateFrameWorker",
+        "renderFrameWorker"
+      ],
+      "consumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts"
+      ]
     },
     {
       "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts",
-      "exports": ["runNestedCargoPackageAdapter"],
-      "consumers": ["📜️script.ts", "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts"]
+      "exports": [
+        "runNestedCargoPackageAdapter"
+      ],
+      "consumers": [
+        "📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts"
+      ]
     },
     {
       "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📇️inventory/🟦️.ts",
-      "exports": ["dependencyClassifyOracleEntry", "dependencyFreezeCheck", "dependencyFreezeWriteBaseline", "dependencyIsCompositionManifest", "dependencyJsLockWorkspaceMismatches", "dependencyJsParity", "dependencyParseGoModule"],
-      "consumers": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/⚖️truth/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-js-lock-parity/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts"]
+      "exports": [
+        "dependencyClassifyOracleEntry",
+        "dependencyFreezeCheck",
+        "dependencyFreezeWriteBaseline",
+        "dependencyIsCompositionManifest",
+        "dependencyJsLockWorkspaceMismatches",
+        "dependencyJsParity",
+        "dependencyParseGoModule"
+      ],
+      "consumers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/⚖️truth/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-js-lock-parity/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts"
+      ]
     },
     {
       "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/⚖️truth/🟦️.ts",
-      "exports": ["dependencyRepoPolicyImportBoundaryFailure", "dependencyRepoPolicyLibrarySpecifier", "dependencyRepoPolicyRouterSetFailure", "dependencyTruthReportFromEntries", "runDependencyVerification"],
-      "consumers": ["📜️script.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts"]
+      "exports": [
+        "dependencyRepoPolicyImportBoundaryFailure",
+        "dependencyRepoPolicyLibrarySpecifier",
+        "dependencyRepoPolicyRouterSetFailure",
+        "dependencyTruthReportFromEntries",
+        "runDependencyVerification"
+      ],
+      "consumers": [
+        "📜️script.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts"
+      ]
     }
   ],
   "directoryContexts": [
-    { "name": "📽️projection", "parentKind": "wgpu-target", "kind": "wgpu-artifact-projection" },
-    { "name": "📦️publication", "parentKind": "wgpu-target", "kind": "wgpu-artifact-publication" },
-    { "name": "🏗️builder", "parentKind": "frame-worker", "kind": "builder" },
-    { "name": "📽️projection", "parentKind": "members-of-modules", "kind": "repo-library-projection" },
-    { "name": "🧩️package-adapter", "parentKind": "repo-library-projection", "kind": "repo-package-adapter-projection" },
-    { "name": "📦️publication", "parentKind": "repo-package-adapter-projection", "kind": "repo-package-adapter-publication" },
-    { "name": "📇️inventory", "parentKind": "members-of-members-of-modules", "kind": "repo-dependency-inventory" },
-    { "name": "⚖️truth", "parentKind": "members-of-members-of-modules", "kind": "repo-dependency-truth" }
+    {
+      "name": "📽️projection",
+      "parentKind": "wgpu-target",
+      "kind": "wgpu-artifact-projection"
+    },
+    {
+      "name": "📦️publication",
+      "parentKind": "wgpu-target",
+      "kind": "wgpu-artifact-publication"
+    },
+    {
+      "name": "🏗️builder",
+      "parentKind": "frame-worker",
+      "kind": "builder"
+    },
+    {
+      "name": "📽️projection",
+      "parentKind": "members-of-modules",
+      "kind": "repo-library-projection"
+    },
+    {
+      "name": "🧩️package-adapter",
+      "parentKind": "repo-library-projection",
+      "kind": "repo-package-adapter-projection"
+    },
+    {
+      "name": "📦️publication",
+      "parentKind": "repo-package-adapter-projection",
+      "kind": "repo-package-adapter-publication"
+    },
+    {
+      "name": "📇️inventory",
+      "parentKind": "members-of-members-of-modules",
+      "kind": "repo-dependency-inventory"
+    },
+    {
+      "name": "⚖️truth",
+      "parentKind": "members-of-members-of-modules",
+      "kind": "repo-dependency-truth"
+    }
   ],
   "wgpuOutputRoots": [
-    { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js", "inclusion": "tracked" },
-    { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📚️library/🟦️.ts", "inclusion": "tracked" },
-    { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🏗️builder/🦀️.rs", "inclusion": "tracked" },
-    { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/💾️binary/🦀️.rs", "inclusion": "tracked" },
-    { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🤖️generated/🟨️.js", "inclusion": "ignored" },
-    { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📇️registry/🦀️.rs", "inclusion": "tracked" }
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js",
+      "inclusion": "tracked",
+      "producer": {
+        "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "target": "@semio-tech/framework-renderer-wgpu:generate-frame-worker"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📚️library/🟦️.ts",
+      "inclusion": "tracked"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🏗️builder/🦀️.rs",
+      "inclusion": "tracked"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/💾️binary/🦀️.rs",
+      "inclusion": "tracked"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🤖️generated/🟨️.js",
+      "inclusion": "ignored",
+      "producer": {
+        "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "target": "@semio-tech/framework-renderer-wgpu:generate-browser-boot"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📇️registry/🦀️.rs",
+      "inclusion": "tracked"
+    }
   ],
   "wgpuGeneratorImplementationInputs": [
     "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",

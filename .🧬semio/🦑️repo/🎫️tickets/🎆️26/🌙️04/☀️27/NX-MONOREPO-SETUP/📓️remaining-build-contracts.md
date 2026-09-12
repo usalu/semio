@@ -375,3 +375,33 @@ The inferred publisher classification was corrected: native Nx executors are leg
 ### Confirmed Inferred Rust Test Input Gap
 
 A native Nx hash probe found 35 missing compilation manifests (including the subject itself) in the inferred DOCX transitional subject test, which hashed 556 files. This adds a confirmed cache-input defect beyond the two missing-output findings in the automated audit. See `📓️inferred-test-inputs.md` for evidence and the next implementation boundary. No real application test/cache-hit claim is made by the hash-only probe.
+
+
+## 2026-09-12 Native Inventory Refresh
+
+Current resolved graph: 704 projects, 7250 executable commands, 7902 declared artifact/storage entries, four unresolved contract findings. The previous two missing-output findings are superseded by this snapshot.
+
+- `@semio-tech/framework-async:twin`: CACHE-06 — Target still needs an explicit output contract. Source: `🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/📋️project.json`.
+- `@semio-tech/ui-styling:twin`: CACHE-06 — Target still needs an explicit output contract. Source: `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📋️project.json`.
+- `@semio-tech/framework-renderer-wgpu:generate-frame-worker`: CACHE-03 — Output overlaps @semio-tech/framework-os:generate-wgpu at 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js. Source: `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json`.
+- `@semio-tech/framework-renderer-wgpu:generate-browser-boot`: CACHE-03 — Output overlaps @semio-tech/framework-os:generate-wgpu at 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🤖️generated/🟨️.js. Source: `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json`.
+
+Inferred Rust test inputs now cover transitive Cargo projects and native generators, with native fixture reuse/restoration/invalidation proof and zero missing manifests in a real case. See `📓️inferred-test-inputs.md`. The broader suite remains failing on three print taxonomy validator errors after the browser import relocation repair passed.
+
+
+The two twin targets now declare `outputs: []`, matching their console-only checks. The CSS animation analysis is explicitly cacheable. The continuation twin includes current-host wall-clock deadlines and a timed scheduling chain, so it is explicitly uncached. Both actual Nx targets passed with cache bypass in 784 ms of target execution (the continuation suite ran eight real-event-loop cases). These commands ran through their authored Bun routers; the source's “Node twin” label is not a claim that this invocation used Node for the test body. The refreshed audit is running; WGPU generator output overlaps remain unresolved.
+
+
+The post-twin audit completed successfully and now reports **2 unresolved findings**, both WGPU duplicate output owners. The twin missing-output findings are resolved. The current package generator `runWgpuPackageGenerator` really renders/writes six leaves, including browser boot and frame worker; those two are also owned by dedicated renderer targets. Removing declarations alone would hide real competing writers. Their generator implementation, schema/catalog ownership, consumers and tests need one coordinated refactor. No WGPU generator ownership source was modified in this turn.
+
+
+## WGPU Ownership Checkpoint — 2026-09-12
+
+The preceding WGPU duplicate-writer findings are resolved by physical producer metadata and coordinated renderer/publication changes. The semantic package preview still contains all six artifacts; Nx assigns four declaration outputs to OS generation and one browser output to each dedicated renderer target. Actual Nx package generation and both browser cache hits have been observed. Native inventory: 704 projects, 7,260 commands, 7,900 artifact/storage entries, zero unresolved automated contract findings. See `📓️generator-ownership.md` for native graph, payload/source parity, cache results and remaining qualification. This automated result does not close the broad platform, lifecycle, retention, CI and release-promotion requirements of the goal.
+
+
+### Next WGPU Build Boundary Confirmed
+
+Current renderer package script still performs environment preparation inside both Trunk build and serve: `ensureTrunk` probes PATH and falls back to unversioned `cargo install trunk --locked`; `ensureWasmTarget` invokes `rustup target add` when needed. These remain real hidden prerequisite/toolchain-selection issues even though the output-contract inventory is clean. The serve path also starts an asset server internally, and build/serve share the renderer output root. The next refactor must give pinned tool acquisition and Rust target preparation explicit Nx prerequisites, then verify serving/publication ownership and cancellation against the current lifecycle code. No Trunk build, install or shared tool mutation was run during this inspection.
+
+The historical storage note describes an older artifact publication lock. Current publication now imports the shared resource-lease module and workspace-root resolver; independent esbuild inspection confirmed the three-file closure. Its new lease behavior must be considered when resuming retention work instead of reimplementing the superseded lock.

@@ -5,27 +5,27 @@
   "routes": [
     {
       "id": "setDocument",
-      "lane": "artifact"
+      "lane": "Artifact"
     },
     {
       "id": "setAlgorithm",
-      "lane": "artifact"
+      "lane": "Artifact"
     },
     {
       "id": "setDirected",
-      "lane": "artifact"
+      "lane": "Artifact"
     },
     {
       "id": "nodeGraphEdit",
-      "lane": "artifact"
+      "lane": "Artifact"
     },
     {
       "id": "nodeGraphViewport",
-      "lane": "config"
+      "lane": "WindowConfig"
     },
     {
       "id": "setPoints",
-      "lane": "artifact"
+      "lane": "Artifact"
     }
   ],
   "laws": {

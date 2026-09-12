@@ -425,7 +425,7 @@ async function materializePlugin(target: PluginRegistryEntry, artifact: string):
     // `materialize-<profile>` uses, so this catalog builder and the per-crate Nx target are two producers of
     // ONE tree rather than two trees: either may replace a module directory the other staged, and neither
     // can leave a half-written module visible to a running dev server.
-    stageArtifacts(outDir, componentArtifactOwner(target, devStagingProfile()), artifactFiles(temporary));
+    await stageArtifacts(outDir, componentArtifactOwner(target, devStagingProfile()), artifactFiles(temporary));
   } finally { rmSync(temporary, { recursive: true, force: true }); }
   // 🧩️ Publish extension artifacts before the hot-swap marker: the browser reloads `/🧩️extension-modules/...`
   // from the SSE event, so the install root must already serve the new files.
@@ -545,7 +545,7 @@ export async function stageTestBrowserHostV1(input: TestBrowserHostStageInputV1)
     if (await pluginFileDigest(component.path) !== input.selectedGis.componentSha256 || await pluginFileDigest(descriptor.path) !== input.selectedGis.descriptorSha256) throw new Error("Selected GIS bytes changed during browser staging");
     writeFileSync(join(roots.browserHostRoot, "extensions", ".nx-artifact.json"), `${JSON.stringify({ owner: "test-browser-host:extensions", version: 1 })}\n`);
     const closed = closeTestBrowserHostStagingV1(stagingArtifactRoot, { generationId: input.selectedGis.generationId, currentSha256: input.selectedGis.currentSha256, componentSha256: input.selectedGis.componentSha256, descriptorSha256: input.selectedGis.descriptorSha256 }, { byteLength: spaceComponent.size, sha256: spaceComponentSha256 });
-    stageArtifacts(join(artifactRoot, "browser-host"), "test-browser-host:s:dev", artifactFiles(closed.browserHostRoot));
+    await stageArtifacts(join(artifactRoot, "browser-host"), "test-browser-host:s:dev", artifactFiles(closed.browserHostRoot));
     const finalRoot = join(artifactRoot, "browser-host");
     return resolveTestBrowserHostRootsV1({
       SEMIO_TEST_ARTIFACT_DIR: artifactRoot,
@@ -1423,7 +1423,7 @@ async function activationFilesDigest(files: ReadonlyMap<string, string>, signal:
 }
 
 /** 🧩️ Installs source-owned extensions into this development variant's runtime namespace. */
-function publishActivatedExtension(target: PluginRegistryEntry, source: string, installRoot: string, artifactSha256: string, rebuiltAt: number): void {
+async function publishActivatedExtension(target: PluginRegistryEntry, source: string, installRoot: string, artifactSha256: string, rebuiltAt: number): Promise<void> {
   const output = join(installRoot, moduleDirectoryName(target.pluginId)), recordPath = join(output, EXTENSION_INSTALL_META);
   const files = artifactFiles(source);
   files.delete(".nx-artifact.json");
@@ -1442,7 +1442,7 @@ function publishActivatedExtension(target: PluginRegistryEntry, source: string, 
     const metadata = join(temporary, EXTENSION_INSTALL_META);
     writeFileSync(metadata, JSON.stringify(record) + "\n");
     files.set(EXTENSION_INSTALL_META, metadata);
-    stageArtifacts(output, `development-extension:${target.pluginId}`, files);
+    await stageArtifacts(output, `development-extension:${target.pluginId}`, files);
     console.log(`Activated extension ${target.pluginId}`);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }
@@ -1480,7 +1480,7 @@ class ActivationScript extends BundleScript {
         controller.signal.throwIfAborted();
         const target = catalog.get(plugin.pluginId);
         if (!target) throw new Error(`Missing activation catalog entry: ${plugin.pluginId}`);
-        if (target.role === "extension") publishActivatedExtension(target, join(moduleRoot, moduleDirectoryName(plugin.pluginId)), join(runtime, "extensions"), plugin.artifactSha256, plugin.rebuiltAt);
+        if (target.role === "extension") await publishActivatedExtension(target, join(moduleRoot, moduleDirectoryName(plugin.pluginId)), join(runtime, "extensions"), plugin.artifactSha256, plugin.rebuiltAt);
       }
       controller.signal.throwIfAborted();
       const changed = publishActivationReceipt(receiptRoot, receipt);

@@ -45,7 +45,10 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
         for row in fixture["cases"].as_array().unwrap() {
             let context = view.for_window_instance(row["windowId"].as_str().unwrap()).unwrap();
             let command = match row["mutation"]["kind"].as_str().unwrap() {
-                "set-camera" => TrinityRewritingCommand::SetViewport { surface_id: None, viewport_json: row["mutation"]["camera"].to_string() },
+                "set-camera" => TrinityRewritingCommand::SetViewport {
+                    surface_id: None,
+                    viewport: serde_json::from_value(row["mutation"]["camera"].clone()).map_err(|error| format!("independent viewport oracle rejected fixture: {error}"))?,
+                },
                 "set-lod-mode" => TrinityRewritingCommand::SetLodMode { value: row["mutation"]["value"].as_str().unwrap().into() },
                 other => return Err(format!("unexpected neutral command {other}")),
             };

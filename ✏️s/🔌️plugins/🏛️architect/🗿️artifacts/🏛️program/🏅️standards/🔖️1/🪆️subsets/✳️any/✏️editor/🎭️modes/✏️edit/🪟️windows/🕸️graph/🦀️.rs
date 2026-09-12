@@ -36,7 +36,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Camera
-/// 🎥️ Ephemeral node-graph camera — parsed from `nodeGraphViewport`'s JSON payload and, on render,
+/// 🎥️ Ephemeral node-graph camera — read from `nodeGraphViewport`'s typed viewport payload and, on render,
 /// reassembled from `ArchitectConfig`'s flattened `graph_camera_{x,y,zoom}` fields.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

@@ -11,7 +11,7 @@ use semio_framework_plugin::{
 };
 
 type Owner = EditorApp<TrinityRewritingPlayApp>;
-pub const TOOL_IDS: &[&str] = &["setViewport", "setLodMode"];
+pub const TOOL_IDS: &[&str] = &["nodeGraphViewport", "setLodMode"];
 const PAYLOAD_SCHEMA: &str = "trinity.rewriting.window-command.v1";
 const RAW_BYTES: usize = 4096;
 
@@ -21,7 +21,7 @@ pub fn contract() -> ToolExecutionContract {
 
 fn extent(command: &TrinityRewritingCommand, _snapshot: &RewritingSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     match command {
-        TrinityRewritingCommand::SetViewport { viewport_json, .. } if viewport_json.len() <= RAW_BYTES => Some(1),
+        TrinityRewritingCommand::SetViewport { viewport, .. } if viewport.validate().is_ok() => Some(1),
         TrinityRewritingCommand::SetLodMode { value } if value.chars().take(65).count() <= 64 => Some(1),
         _ => None,
     }
@@ -39,7 +39,7 @@ fn reduce(
 ) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let view = context.and_then(|context| context.view_state.as_ref());
     match command {
-        TrinityRewritingCommand::SetViewport { surface_id, viewport_json } => crate::editor::rewriting::commands::set_viewport(surface_id, viewport_json, view),
+        TrinityRewritingCommand::SetViewport { surface_id, viewport } => crate::editor::rewriting::commands::set_viewport(surface_id, viewport, view),
         TrinityRewritingCommand::SetLodMode { value } => crate::editor::rewriting::commands::set_lod_mode(value, view),
         _ => Err(Fault::from("rewriting-window-command-route-mismatch")),
     }
@@ -94,7 +94,7 @@ impl ArtifactOwnedToolJobFactory for RewritingWindowConfigJobFactory {
     const TOOL_IDS: &'static [&'static str] = TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::REWRITE_RULE_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] =
-        &[ArtifactToolPublicationContract { tool_id: "setViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] }, ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[ArtifactToolPublicationLane::WindowConfig] }];
+        &[ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] }, ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[ArtifactToolPublicationLane::WindowConfig] }];
 }
 
 pub fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {

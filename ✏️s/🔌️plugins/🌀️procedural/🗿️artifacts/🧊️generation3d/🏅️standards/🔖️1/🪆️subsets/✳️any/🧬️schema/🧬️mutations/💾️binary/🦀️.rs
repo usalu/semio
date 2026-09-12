@@ -2009,6 +2009,14 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
                 self.state = Generation3dPackSnapshotState::Drive;
                 return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
+            if let Some(exact) = self.session.as_ref().expect("P3 mounted pack session retained").next_source_allocation_bytes().map_err(|_| self.diagnostic("generation3d-envelope.snapshot-source-allocation", retained.start + self.relative as u64))? {
+                let step = self.session.as_mut().expect("P3 mounted pack session retained").reserve_source_page(exact).map_err(|_| self.diagnostic("generation3d-envelope.snapshot-source-allocation", retained.start + self.relative as u64))?;
+                if !step.progressed {
+                    return Err(self.diagnostic("generation3d-envelope.snapshot-source-allocation-stalled", retained.start + self.relative as u64));
+                }
+                cx.consume_fuel(1);
+                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            }
             let mut byte = [0u8; 1];
             if source.copy_token_bytes(retained, self.relative, &mut byte) != 1 {
                 return Err(self.diagnostic("generation3d-envelope.snapshot-pack-source", retained.start + self.relative as u64));
@@ -2036,7 +2044,11 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
         }
         if self.state == Generation3dPackSnapshotState::CloseSession {
             cx.consume_fuel(1);
-            if !self.session.as_mut().expect("P3 mounted pack session retained").close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|_| self.diagnostic("generation3d-envelope.snapshot-session-close", token.start))? {
+            let maximum_bytes = self.session.as_ref().expect("P3 mounted pack session retained").next_source_release_allocation_bytes().unwrap_or(0);
+            if matches!(
+                self.session.as_mut().expect("P3 mounted pack session retained").close_step(1, maximum_bytes).map_err(|_| self.diagnostic("generation3d-envelope.snapshot-session-close", token.start))?,
+                crate::standards::v1::subsets::any::schema::snapshot::binary::Generation3dMountedPackCloseStep::Pending { .. }
+            ) {
                 return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             drop(self.session.take());
@@ -2062,6 +2074,21 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
         Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
+    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        if let Some(session) = self.session.as_ref() {
+            return Ok(session.next_source_release_allocation_bytes().unwrap_or(0));
+        }
+        Ok(usize::from(self.retirement.is_some()) * store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
+    }
+
+    fn maximum_close_byte_demand(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+    }
+
+    fn maximum_retained_close_bytes(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES
+    }
+
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
         let diagnostic = |code: &'static str| store::OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path };
@@ -2070,9 +2097,12 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
         }
         if let Some(session) = self.session.as_mut() {
             session.request_cancel();
-            if !session.close_step(maximum_items.min(1), maximum_bytes).map_err(|_| diagnostic("generation3d-envelope.snapshot-session-close"))? {
-                self.state = Generation3dPackSnapshotState::Closing;
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            match session.close_step(maximum_items.min(1), maximum_bytes).map_err(|_| diagnostic("generation3d-envelope.snapshot-session-close"))? {
+                crate::standards::v1::subsets::any::schema::snapshot::binary::Generation3dMountedPackCloseStep::Pending { released_items, released_bytes } => {
+                    self.state = Generation3dPackSnapshotState::Closing;
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes });
+                }
+                crate::standards::v1::subsets::any::schema::snapshot::binary::Generation3dMountedPackCloseStep::Complete => {}
             }
             drop(self.session.take());
             self.token = None;

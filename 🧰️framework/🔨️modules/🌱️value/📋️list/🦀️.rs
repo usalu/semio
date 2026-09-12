@@ -156,7 +156,7 @@ impl<T, const N: usize> PagedList<T, N> {
         self.length < self.capacity
     }
     pub fn terminal_is_empty(&self) -> bool {
-        self.root.capacity() == 0
+        self.root.capacity() == 0 && self.length == 0 && self.capacity == 0 && self.allocated == 0
     }
 
     pub fn iter_mut(&mut self) -> PagedIterMut<'_, T> {
@@ -331,6 +331,32 @@ impl<T, const N: usize> PagedList<T, N> {
         Some(owner)
     }
 
+    /// ♻️ Returns the exact physical byte grant needed by the next releasable backing.
+    pub fn next_release_allocation_bytes(&self) -> Result<usize, &'static str> {
+        fn next<T>(link: &[Page<T>], capacity: usize) -> Result<usize, &'static str> {
+            let Some(node) = link.first() else {
+                return Ok(capacity * size_of::<Page<T>>());
+            };
+            match node {
+                Page::Branch(children) => {
+                    if let Some(child) = children.iter().rfind(|child| !child.is_empty()) {
+                        return next(child, child.capacity());
+                    }
+                }
+                Page::Leaf { items, slots } => {
+                    if !items.is_empty() {
+                        return Err("fixed list payload must retire before its page");
+                    }
+                    if *slots != 0 {
+                        return Ok(if size_of::<T>() == 0 { 0 } else { items.capacity() * size_of::<T>() });
+                    }
+                }
+            }
+            Ok(capacity * size_of::<Page<T>>())
+        }
+        next(&self.root, self.root.capacity())
+    }
+
     pub fn truncate_retired_last(&mut self) -> Result<(), &'static str> {
         let index = self.length.checked_sub(1).ok_or("fixed list has no retired payload")?;
         let items = self.leaf_mut(index).ok_or("fixed list payload page is missing")?;
@@ -356,7 +382,7 @@ impl<T, const N: usize> PagedList<T, N> {
                     }
                     if *reserved != 0 {
                         let bytes = if size_of::<T>() == 0 { 0 } else { items.capacity() * size_of::<T>() };
-                        if bytes > maximum_bytes { eprintln!("[DEBUG] release_empty_page leaf-starved bytes={bytes} grant={maximum_bytes} reserved={reserved} item={}", size_of::<T>()); return Ok(PagedListProgress::default()); }
+                        if bytes > maximum_bytes { return Ok(PagedListProgress::default()); }
                         *items = Vec::new();
                         *slots -= *reserved;
                         *reserved = 0;
@@ -365,7 +391,7 @@ impl<T, const N: usize> PagedList<T, N> {
                 }
             }
             let bytes = link.capacity() * size_of::<Page<T>>();
-            if bytes > maximum_bytes { eprintln!("[DEBUG] release_empty_page link-starved bytes={bytes} grant={maximum_bytes} page={}", size_of::<Page<T>>()); return Ok(PagedListProgress::default()); }
+            if bytes > maximum_bytes { return Ok(PagedListProgress::default()); }
             *link = Vec::new();
             Ok(PagedListProgress { progressed: true, released_allocation_bytes: bytes, ..Default::default() })
         }
@@ -374,12 +400,12 @@ impl<T, const N: usize> PagedList<T, N> {
         Ok(step)
     }
 
-    #[cfg(test)]
+    #[doc(hidden)]
     pub fn backing_ptr(&self, index: usize) -> Option<*const T> {
         self.leaf(index).map(Vec::as_ptr)
     }
 
-    #[cfg(test)]
+    #[doc(hidden)]
     pub fn initialized_len(&self) -> usize {
         fn count<T>(link: &[Page<T>]) -> usize {
             match link.first() {

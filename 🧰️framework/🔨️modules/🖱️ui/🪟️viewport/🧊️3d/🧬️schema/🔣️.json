@@ -2,36 +2,186 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://semio.tech/schema/framework/ui/viewport/3d",
   "title": "Viewport3dOrbit",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "position",
-    "target",
-    "zoom"
-  ],
-  "properties": {
-    "position": {
-      "$ref": "#/$defs/vector3"
-    },
-    "target": {
-      "$ref": "#/$defs/vector3"
-    },
-    "zoom": {
-      "type": "number",
-      "exclusiveMinimum": 0
-    },
-    "up": {
-      "$ref": "#/$defs/vector3"
-    }
-  },
+  "$ref": "#/$defs/orbit",
   "$defs": {
     "vector3": {
       "type": "array",
-      "items": {
-        "type": "number"
-      },
+      "items": { "type": "number" },
       "minItems": 3,
       "maxItems": 3
+    },
+    "orbit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["position", "target", "zoom"],
+      "properties": {
+        "position": { "$ref": "#/$defs/vector3" },
+        "target": { "$ref": "#/$defs/vector3" },
+        "zoom": { "type": "number", "exclusiveMinimum": 0 },
+        "up": { "$ref": "#/$defs/vector3" }
+      }
+    },
+    "projectionKind": {
+      "enum": ["orthographic", "axonometric", "oblique", "onePoint", "twoPoint", "threePoint", "curvilinear"]
+    },
+    "orthographicView": {
+      "enum": ["plan", "top", "bottom", "front", "back", "left", "right"]
+    },
+    "axonometricVariant": { "enum": ["isometric", "dimetric", "trimetric"] },
+    "axonometricQuadrant": { "enum": ["ne", "nw", "se", "sw"] },
+    "axonometricHemisphere": { "enum": ["upper", "lower"] },
+    "obliqueVariant": { "enum": ["cabinet", "cavalier", "military"] },
+    "onePointAxis": { "enum": ["x", "y", "z"] },
+    "curvilinearMapping": { "enum": ["fisheye", "panini"] },
+    "axonometricAngle": { "type": "number", "minimum": 5, "maximum": 75 },
+    "obliqueAngle": { "type": "number", "minimum": 5, "maximum": 90 },
+    "obliqueDepth": { "type": "number", "minimum": 0.05, "maximum": 1 },
+    "perspectiveFov": { "type": "number", "minimum": 15, "maximum": 120 },
+    "twoPointShift": { "type": "number", "minimum": -1, "maximum": 1 },
+    "curvilinearFov": { "type": "number", "minimum": 60, "maximum": 160 },
+    "curvilinearStrength": { "type": "number", "minimum": 0, "maximum": 1 },
+    "activeProjectionNumber": { "type": "number" },
+    "projectionPreferences": {
+      "title": "Viewport3dProjectionPreferences",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "orthographicView",
+        "axonometricVariant",
+        "axonometricAngleA",
+        "axonometricAngleB",
+        "axonometricQuadrant",
+        "obliqueVariant",
+        "obliqueAngle",
+        "obliqueDepth",
+        "onePointAxis",
+        "fov",
+        "twoPointShift",
+        "curvilinearFov",
+        "curvilinearStrength",
+        "curvilinearMapping"
+      ],
+      "properties": {
+        "kind": { "$ref": "#/$defs/projectionKind" },
+        "orthographicView": { "$ref": "#/$defs/orthographicView" },
+        "axonometricVariant": { "$ref": "#/$defs/axonometricVariant" },
+        "axonometricAngleA": { "$ref": "#/$defs/axonometricAngle" },
+        "axonometricAngleB": { "$ref": "#/$defs/axonometricAngle" },
+        "axonometricQuadrant": { "$ref": "#/$defs/axonometricQuadrant" },
+        "obliqueVariant": { "$ref": "#/$defs/obliqueVariant" },
+        "obliqueAngle": { "$ref": "#/$defs/obliqueAngle" },
+        "obliqueDepth": { "$ref": "#/$defs/obliqueDepth" },
+        "onePointAxis": { "$ref": "#/$defs/onePointAxis" },
+        "fov": { "$ref": "#/$defs/perspectiveFov" },
+        "twoPointShift": { "$ref": "#/$defs/twoPointShift" },
+        "curvilinearFov": { "$ref": "#/$defs/curvilinearFov" },
+        "curvilinearStrength": { "$ref": "#/$defs/curvilinearStrength" },
+        "curvilinearMapping": { "$ref": "#/$defs/curvilinearMapping" }
+      }
+    },
+    "projectionMode": {
+      "title": "Viewport3dProjectionMode",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "orthographic" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "variant", "angleA", "angleB"],
+          "properties": {
+            "kind": { "const": "axonometric" },
+            "variant": { "$ref": "#/$defs/axonometricVariant" },
+            "angleA": { "$ref": "#/$defs/activeProjectionNumber" },
+            "angleB": { "$ref": "#/$defs/activeProjectionNumber" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "variant", "angle", "depthScale"],
+          "properties": {
+            "kind": { "const": "oblique" },
+            "variant": { "$ref": "#/$defs/obliqueVariant" },
+            "angle": { "$ref": "#/$defs/activeProjectionNumber" },
+            "depthScale": { "$ref": "#/$defs/activeProjectionNumber" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "fov"],
+          "properties": { "kind": { "const": "onePoint" }, "fov": { "$ref": "#/$defs/activeProjectionNumber" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "fov", "verticalShift"],
+          "properties": {
+            "kind": { "const": "twoPoint" },
+            "fov": { "$ref": "#/$defs/activeProjectionNumber" },
+            "verticalShift": { "$ref": "#/$defs/activeProjectionNumber" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "fov"],
+          "properties": { "kind": { "const": "threePoint" }, "fov": { "$ref": "#/$defs/activeProjectionNumber" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "fov", "strength", "mapping"],
+          "properties": {
+            "kind": { "const": "curvilinear" },
+            "fov": { "$ref": "#/$defs/activeProjectionNumber" },
+            "strength": { "$ref": "#/$defs/activeProjectionNumber" },
+            "mapping": { "$ref": "#/$defs/curvilinearMapping" }
+          }
+        }
+      ]
+    },
+    "projectionOrientation": {
+      "title": "Viewport3dProjectionOrientation",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "view"],
+          "properties": { "type": { "const": "cardinal" }, "view": { "$ref": "#/$defs/orthographicView" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "quadrant"],
+          "properties": {
+            "type": { "const": "corner" },
+            "quadrant": { "$ref": "#/$defs/axonometricQuadrant" },
+            "hemisphere": { "$ref": "#/$defs/axonometricHemisphere" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": { "type": { "const": "free" } }
+        }
+      ]
+    },
+    "projectionSpec": {
+      "title": "Viewport3dProjectionSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "orientation"],
+      "properties": {
+        "mode": { "$ref": "#/$defs/projectionMode" },
+        "orientation": { "$ref": "#/$defs/projectionOrientation" }
+      }
     }
   }
 }

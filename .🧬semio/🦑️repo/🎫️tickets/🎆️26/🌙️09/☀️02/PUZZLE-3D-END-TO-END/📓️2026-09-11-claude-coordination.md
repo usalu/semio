@@ -785,3 +785,20 @@ A3 also re-verified `worldRelocate` on Nakagin as NOT a live defect (extent ≈1
   are PRE-session in PluginRuntime (`grep` treats those long-line files as binary — use `grep -a`) → follow-up outside
   this ticket's sweep rule; two close-out paths a glob misses: `🗑generated/` without U+FE0F (59 files, 3.6 MB) and a
   corrupted nested `<U+FFFD>️26/…` tree. 0 errors on all three checks, renderer 1037/6 (baseline), ui-react 718/13.
+- 19:20 (09-13) B52 landed (`📓️2026-09-13-wave-B52-reconcile-ladder-livelock.md`): the peer's `♻️reconcile` relocation is
+  near-pure (no peer hunk broke the ladder); `outSome(0)` was output SLOT 0, not a zero-byte output. Root cause
+  (ours, pre-existing): `retire_exact` priced the DOCUMENT retirement ladder with the caller's fixed 4 096-byte grant
+  while it retires 6 416-byte `UiNodeRecord`s that a list page frees whole or not at all → `leaf-starved` forever,
+  every surface deferred, the handback registry holds the owner, pool exhaustion refuses every reservation
+  (`registry-reservation-unavailable` ×6 035). Fix: grant priced from the value's allocated bytes + a named stall
+  fault at 4 096 no-progress steps. `patches:: reconcile_budget` 4 red + B2's law spinning → 42/42 green in 0.6 s.
+  Guest-only → build #61 + deploy + battery chained.
+- 20:50 (09-13) #61 deployed (B52 guest) and battery (`🗑️generated/probe-2026-09-12T20-23-3*.md`, 1 640 s): **FAULTS=0,
+  PASS=71 FAIL=25** — the livelock is gone (camera orbit/pan/zoom, projection flips + repaint, settings→rail,
+  camera-history all PASS). Remaining 25: the mutate group on a 161-brush-object document (gumball/relocate/duplicate/
+  delete/catalogue add at 30 s — B54), Nakagin export `download=none` in the full run + the import chain behind it
+  (B53), context-menu hand rows + zoom camera, locked refusal precondition, outliner hide control, volume-brush arm
+  20 s, clipboard in the long run (B55).
+| B53 | 20:55 (09-13) | Nakagin export in the full run (segmented lane end to end on #61) + import chain | `📓️2026-09-13-wave-B53-nakagin-export-full-run.md` |
+| B54 | 20:55 (09-13) | mutation latency on the brush-painted document round 2 (turn count per mutation, one-item publication grant) | `📓️2026-09-13-wave-B54-mutation-latency-2.md` |
+| B55 | 20:55 (09-13) | context-menu hand rows/zoom camera, locked refusal, outliner hide control, volume-brush arm, clipboard in the long run | `📓️2026-09-13-wave-B55-full-run-bisect-4.md` |

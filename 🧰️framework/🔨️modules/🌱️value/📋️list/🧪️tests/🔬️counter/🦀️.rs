@@ -8,7 +8,8 @@ fn retained_fixed_list_pages_counter_refuses_unaddressable_ownership_before_allo
     let allocated = list.root.capacity() * size_of::<Page<u64>>();
     list.allocated = allocated;
     while !list.terminal_is_empty() {
-        list.release_empty_page(usize::MAX).unwrap();
+        let exact = list.next_release_allocation_bytes().unwrap();
+        list.release_empty_page(exact).unwrap();
     }
     assert!(result.is_err());
     assert_eq!(allocated, 0, "counter rejection must precede a new physical allocation");
@@ -48,9 +49,10 @@ fn retained_fixed_list_pages_counter_rejects_actual_signed_limit_and_preserves_r
         assert_eq!(list.allocated_bytes(), seeded_before);
         list.allocated = physical_before;
         while !list.terminal_is_empty() {
-            assert!(list.release_empty_page(4096).unwrap().progressed);
+            let exact = list.next_release_allocation_bytes().unwrap();
+            assert!(list.release_empty_page(exact).unwrap().progressed);
         }
-        assert_eq!(list.allocated_bytes(), 0);
+        assert_eq!((list.root.capacity(), list.len(), list.capacity(), list.allocated_bytes()), (0, 0, 0, 0));
     }
     eprintln!("[DEBUG] paged-list-signed-limit metadata-and-payload rejected-actual=true retained-on-small-release=true released-exact=true");
 }
@@ -64,9 +66,11 @@ fn retained_fixed_list_pages_counter_keeps_actual_failed_allocation_until_releas
     assert_eq!(error.allocated_bytes, requested * data["counter"]["allocatorMultiplier"].as_u64().unwrap() as usize);
     assert_eq!(list.allocated_bytes(), error.allocated_bytes);
     assert!(!list.terminal_is_empty());
-    let released = list.release_empty_page(usize::MAX).unwrap();
+    let exact = list.next_release_allocation_bytes().unwrap();
+    let released = list.release_empty_page(exact).unwrap();
     assert_eq!(released.released_allocation_bytes, error.allocated_bytes);
     assert!(list.terminal_is_empty());
+    assert_eq!((list.root.capacity(), list.len(), list.capacity(), list.allocated_bytes()), (0, 0, 0, 0));
     let mut list = PagedList::<u64, 1>::default();
     list.reserve_one(requested).unwrap();
     let before = list.allocated_bytes();
@@ -74,10 +78,13 @@ fn retained_fixed_list_pages_counter_keeps_actual_failed_allocation_until_releas
     assert_eq!(list.allocated_bytes() - before, error.allocated_bytes);
     assert_eq!(error.allocated_bytes, 2 * size_of::<u64>());
     assert!(list.has_reserved_slot());
-    let step = list.release_empty_page(usize::MAX).unwrap();
+    let exact = list.next_release_allocation_bytes().unwrap();
+    let step = list.release_empty_page(exact).unwrap();
     assert_eq!(step.released_allocation_bytes, error.allocated_bytes);
     assert_eq!(list.allocated_bytes(), before);
-    list.release_empty_page(usize::MAX).unwrap();
+    let exact = list.next_release_allocation_bytes().unwrap();
+    list.release_empty_page(exact).unwrap();
     assert!(list.terminal_is_empty());
+    assert_eq!((list.root.capacity(), list.len(), list.capacity(), list.allocated_bytes()), (0, 0, 0, 0));
     eprintln!("[DEBUG] fixed-list-allocation-error metadata-and-payload actual-capacity-retained=true released-exact=true");
 }

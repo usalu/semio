@@ -338,8 +338,9 @@ pub struct GraphHost {
     /// 📡️ (c) Preview/Effect — transient capability-advertisement UI state, never persisted.
     pub capabilities_json: String,
     /// 🔗️ (d) runtime wiring — content-hash of the last-applied payload, so [`GraphHost::sync_from_payload`]
-    /// only rebuilds `dag` when the upstream content actually changed. A change-detection cache, not state.
-    last_payload_signature: u64,
+    /// only rebuilds `dag` when upstream content actually changed. `None` distinguishes the initial
+    /// scene attach, whose typed viewport hydrates the live session once, from later scene echoes.
+    last_payload_signature: Option<u64>,
     /// 🎯️ (c) Preview/Effect — the raw geometric hit-test result of the last completed pick/marquee
     /// gesture, read once by [`GraphHost::take_selection_gather`] so the caller can dispatch it as ONE
     /// batched `interactionSelect` — no merge algebra lives here, `next_selection` owns that.
@@ -358,7 +359,7 @@ impl GraphHost {
     pub fn from_fixture(fixture: DagFixture) -> Self {
         let dag = DagHost::from_fixture_without_layout(fixture);
         let interaction_projection = dag.bounded_interaction_projection(0).ok();
-        Self { dag, catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: 0, pending_gather: None, interaction_revision: 0, interaction_projection }
+        Self { dag, catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: None, pending_gather: None, interaction_revision: 0, interaction_projection }
     }
 
     fn refresh_interaction_projection(&mut self) {
@@ -371,7 +372,6 @@ impl GraphHost {
         let mut hasher = DefaultHasher::new();
         format!("{:?}", payload.nodes).hash(&mut hasher);
         format!("{:?}", payload.edges).hash(&mut hasher);
-        format!("{:?}", payload.viewport).hash(&mut hasher);
         payload.preview_off_json.hash(&mut hasher);
         payload.lod_json.hash(&mut hasher);
         payload.computing_json.hash(&mut hasher);
@@ -389,10 +389,11 @@ impl GraphHost {
 
     pub fn sync_from_payload(&mut self, payload: &NodeGraphScenePayload) -> Result<(), NodeGraphError> {
         let signature = Self::payload_signature(payload);
-        if signature != self.last_payload_signature {
-            let fixture = fixture_from_node_graph_records(&payload.nodes, &payload.edges, payload.viewport.as_ref());
+        if self.last_payload_signature != Some(signature) {
+            let viewport = self.last_payload_signature.map(|_| self.viewport()).or(payload.viewport);
+            let fixture = fixture_from_node_graph_records(&payload.nodes, &payload.edges, viewport.as_ref());
             self.dag = DagHost::from_fixture_without_layout(fixture);
-            self.last_payload_signature = signature;
+            self.last_payload_signature = Some(signature);
         }
         if let Some(preview_off_json) = &payload.preview_off_json {
             if let Ok(ids) = serde_json::from_str::<Vec<String>>(preview_off_json) {

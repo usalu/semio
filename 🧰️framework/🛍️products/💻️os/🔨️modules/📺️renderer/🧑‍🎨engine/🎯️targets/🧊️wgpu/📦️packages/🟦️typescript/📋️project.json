@@ -22,20 +22,126 @@
       "nativeAssets"
     ],
     "frameWorkerSources": [
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏱️turn-budget/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫀️boot-liveness/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗄️wasm-module-cache/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📇️interactive-job-registry/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🥽️mesh/**/*",
-      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔔️event-wait/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🥇️latest-wins/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🗂️index/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/📇️catalog.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📖️read-lease/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🔒️transport/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🔢️bytes/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔢️hash/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️nodes/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧩️action-argument-resolution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🚪️opening/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📇️interactive-job-registry/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔌️browser-interactive-job-port/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/💾️resident/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🛣️routes.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
       "{workspaceRoot}/bunfig.toml",
       "{workspaceRoot}/tsconfig.json",
-      { "runtime": "bun --version" },
-      { "runtime": "node -p \"process.platform.concat(process.arch)\"" }
+      {
+        "json": "{workspaceRoot}/package.json",
+        "fields": [
+          "packageManager"
+        ]
+      },
+      {
+        "runtime": "bun --version"
+      },
+      {
+        "runtime": "node -p \"process.platform.concat(process.arch)\""
+      },
+      {
+        "env": "NODE_ENV"
+      },
+      {
+        "env": "BUN_ENV"
+      }
     ]
   },
   "targets": {
@@ -143,6 +249,22 @@
         },
         {
           "dependentTasksOutputFiles": "**/🎮️playgrounds/🟦️.ts"
+        },
+        {
+          "json": "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+          "fields": [
+            "pathEmojiPolicy.genericEmojiIdentities",
+            "generatorContracts.wgpu-frame-worker.packageGeneration.browserProfile",
+            "generatorContracts.wgpu-frame-worker.outputRoots",
+            "generatorContracts.wgpu-frame-worker.target",
+            "pathExclusions"
+          ]
+        },
+        {
+          "json": "{workspaceRoot}/📋️project.json",
+          "fields": [
+            "metadata.semio.taxonomy"
+          ]
         }
       ],
       "outputs": [
@@ -161,7 +283,32 @@
       "executor": "nx:run-commands",
       "cache": true,
       "inputs": [
-        "frameWorkerSources"
+        "frameWorkerSources",
+        {
+          "json": "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+          "fields": [
+            "pathEmojiPolicy.genericEmojiIdentities",
+            "generatorContracts.wgpu-frame-worker.packageGeneration.browserProfile",
+            "generatorContracts.wgpu-frame-worker.outputRoots",
+            "generatorContracts.wgpu-frame-worker.target",
+            "pathExclusions"
+          ]
+        },
+        {
+          "dependentTasksOutputFiles": "**/🎚️ui-axes/🟦️.ts"
+        },
+        {
+          "dependentTasksOutputFiles": "**/🎮️playgrounds/🟦️.ts"
+        },
+        {
+          "dependentTasksOutputFiles": "**/🧩️plugins/🟦️.ts"
+        },
+        {
+          "json": "{workspaceRoot}/📋️project.json",
+          "fields": [
+            "metadata.semio.taxonomy"
+          ]
+        }
       ],
       "outputs": [
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js"
@@ -169,7 +316,11 @@
       "options": {
         "command": "bun ./📜️script.ts generate-frame-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
-      }
+      },
+      "dependsOn": [
+        "@semio-tech/plugin-registry:generate",
+        "@semio-tech/ui-rs:generate"
+      ]
     },
     "preview-generated": {
       "executor": "nx:run-commands",

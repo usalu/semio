@@ -2,7 +2,12 @@
   "name": "@semio-tech/gis-plugin",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.rs",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.json",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "component-cold-map-patch-check": {

@@ -2,7 +2,12 @@
   "name": "@semio-tech/vcs-plugin",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/✏️s/🔌️plugins/🌿️vcs/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🌿️vcs/**/*.rs",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌿️vcs/**/*.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌿️vcs/**/*.json",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "native-openable-identity-check": {

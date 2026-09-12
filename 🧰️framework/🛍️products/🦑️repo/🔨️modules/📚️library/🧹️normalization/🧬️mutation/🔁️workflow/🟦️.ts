@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { canonicalJson } from "../../🟦️.ts";
 import type { BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
 import { taxonomyCliArtifactPath, taxonomyCliGuardedPath, taxonomyCliPrintJson, taxonomyCliProgress, taxonomyCliRequireCommittedApply, taxonomyCliWriteJson, type TaxonomyCliOperation, type TaxonomyCliOptions } from "../../🎮️command-contract/🟦️.ts";
@@ -92,15 +92,16 @@ export function runMutationTaxonomyCli(root: string, operation: TaxonomyCliOpera
     if (!ticketDir || !options.baseline || !options.plan) throw new Error("[clean taxonomy apply --kind mutation] --ticket, --baseline, and --plan are required.");
     mutationTaxonomyCheckCancellation(root, cancelFile ?? options.cancelFile);
     const planPath = taxonomyCliGuardedPath(root, options.plan, "--plan")!;
+    const applyInventoryOptions: MutationTaxonomyInventoryOptions = { ...inventoryOptions, excludedSourcePaths: [relative(root, planPath).replaceAll("\\", "/")] };
     const plan = JSON.parse(readFileSync(planPath, "utf8")) as MutationTaxonomyPlan;
     const { planDigest: _digest, ...unsigned } = plan;
     const digest = createHash("sha256").update(canonicalJson(unsigned)).digest("hex");
     if (plan.kind !== "mutation" || plan.schemaVersion !== 1 || digest !== plan.planDigest || plan.baselineCommit !== options.baseline) throw new Error("[clean taxonomy apply --kind mutation] plan identity or baseline is invalid.");
-    const terminalVerification = verifyMutationTaxonomy(root, inventoryOptions);
+    const terminalVerification = verifyMutationTaxonomy(root, applyInventoryOptions);
     if (terminalVerification.inventoryDigest !== plan.inventoryDigest) throw new Error("[clean taxonomy apply --kind mutation] fresh inventory digest does not match the plan.");
     if (plan.unresolved.length > 0 || plan.moves.length > 0) throw new Error("[clean taxonomy apply --kind mutation] direct cutover plans must be semantically integrated before apply; no partial compatibility move is permitted.");
     if (!terminalVerification.clean) throw new Error(`[clean taxonomy apply --kind mutation] terminal verification has ${terminalVerification.violations.length} violation(s).`);
-    if (mutationTaxonomySourceSnapshot(root, inventoryOptions).sourceTreeDigest !== terminalVerification.inventoryDigest) throw new Error("[clean taxonomy apply --kind mutation] source changed after terminal verification.");
+    if (mutationTaxonomySourceSnapshot(root, applyInventoryOptions).sourceTreeDigest !== terminalVerification.inventoryDigest) throw new Error("[clean taxonomy apply --kind mutation] source changed after terminal verification.");
     mutationTaxonomyCheckCancellation(root, cancelFile ?? options.cancelFile);
     const result = { schemaVersion: 1 as const, kind: "mutation" as const, state: "committed" as const, planDigest: plan.planDigest, inventoryDigest: terminalVerification.inventoryDigest, terminalVerification, appliedMoves: 0 };
     taxonomyCliWriteJson(taxonomyCliArtifactPath(ticketDir, operation, "json"), result);

@@ -26,8 +26,8 @@
         },
         "routes": {
           "type": "array",
-          "minItems": 7,
-          "maxItems": 7,
+          "minItems": 6,
+          "maxItems": 6,
           "uniqueItems": true,
           "items": {
             "type": "object",
@@ -49,8 +49,8 @@
               },
               "lane": {
                 "enum": [
-                  "artifact",
-                  "config"
+                  "Artifact",
+                  "WindowConfig"
                 ]
               }
             }
@@ -113,7 +113,7 @@
         }
       },
       "title": "MathematicalPublicationAuthority",
-      "description": "➗️ The publication-authority law of the Equation play app: its seven routes, their lanes, and the six boolean guarantees the app publishes under."
+      "description": "➗️ The publication-authority law of the Equation play app: its six routes, their exact Artifact or WindowConfig lanes, and the six boolean guarantees the app publishes under."
     }
   }
 }

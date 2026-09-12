@@ -28,12 +28,17 @@ fn retained_paged_list_neutral_order_capacity_and_close() {
     assert_eq!(list.allocated_bytes(), before);
     let mut released = 0;
     while !list.terminal_is_empty() {
-        let step = list.release_empty_page(grant).unwrap();
+        let exact = list.next_release_allocation_bytes().unwrap();
+        let step = list.release_empty_page(exact).unwrap();
         assert!(step.progressed);
-        assert!(step.released_allocation_bytes <= grant);
+        assert_eq!(step.released_allocation_bytes, exact);
         released += step.released_allocation_bytes;
     }
     assert_eq!(released, admitted);
+    assert_eq!(list.len(), 0);
+    assert_eq!(list.capacity(), 0);
+    assert_eq!(list.allocated_bytes(), 0);
+    assert_eq!(list.root.capacity(), 0);
     eprintln!("[DEBUG] Neutral paged list matched Serde order, exact capacity refusal and all allocated backing releases");
 }
 
@@ -50,11 +55,17 @@ fn retained_paged_list_capacity_admission_and_exact_release_grants() {
     assert!(list.reserve_capacity_one(601, 4096).is_err());
     assert_eq!(list.capacity(), 600);
     let pointer = list.backing_ptr(512).unwrap();
-    assert!(!list.release_empty_page(87 * size_of::<u64>()).unwrap().progressed);
+    let exact = list.next_release_allocation_bytes().unwrap();
+    assert_eq!(exact, 88 * size_of::<u64>());
+    assert!(!list.release_empty_page(exact - 1).unwrap().progressed);
     assert_eq!(list.backing_ptr(512).unwrap(), pointer);
     let released = list.release_empty_page(88 * size_of::<u64>()).unwrap();
     assert_eq!(released.released_allocation_bytes, 88 * size_of::<u64>());
     assert_eq!(list.capacity(), 512);
-    while !list.terminal_is_empty() { list.release_empty_page(4096).unwrap(); }
+    while !list.terminal_is_empty() {
+        let exact = list.next_release_allocation_bytes().unwrap();
+        list.release_empty_page(exact).unwrap();
+    }
+    assert_eq!((list.root.capacity(), list.len(), list.capacity(), list.allocated_bytes()), (0, 0, 0, 0));
     eprintln!("[DEBUG] Neutral paged list pre-admitted multiple backing pages and retained exact tail below its grant");
 }

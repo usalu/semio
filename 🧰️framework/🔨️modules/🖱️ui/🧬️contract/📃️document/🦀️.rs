@@ -534,6 +534,12 @@ struct UiDocumentSlot {
     retire_scalar: u8,
     retirement_claimed: bool,
     retirement: crate::UiTypedRetirementCursor,
+    /// 🧯️ Consecutive retirement steps that reported NEITHER progress nor completion. A single such
+    /// step is ordinary — a descendant can be waiting on an owner another step releases — but a ladder
+    /// that answers it forever is a livelock the reactor cannot see, because the guest simply keeps
+    /// answering `more-work` (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B52). Capped by
+    /// [`UI_DOCUMENT_RETIREMENT_STALL_LIMIT`], then named as a fault.
+    stalled: u16,
 }
 
 impl Default for UiDocumentSlot {
@@ -560,6 +566,7 @@ impl UiDocumentSlot {
             retire_scalar: 0,
             retirement_claimed: false,
             retirement: crate::UiTypedRetirementCursor::empty(),
+            stalled: 0,
         }
     }
 }

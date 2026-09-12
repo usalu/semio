@@ -2,6 +2,15 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
 index cebfd6d1f8ddb2c5b93dcb847904aa9ab0553de6..852f6298fcf9fd9c8a43f799382dbf3769e206bd 100644
 --- a/dist/src/daemon/client/client.js
 +++ b/dist/src/daemon/client/client.js
+@@ -222,7 +222,7 @@
+     }
+     async registerFileWatcher(config, callback) {
+         try {
+-            await this.getProjectGraphAndSourceMaps();
++            if (config.watchProjects !== 'all' || !config.includeGlobalWorkspaceFiles) await this.getProjectGraphAndSourceMaps();
+         }
+         catch (e) {
+             if (config.allowPartialGraph && e instanceof error_types_1.ProjectGraphError) {
 @@ -1235,7 +1235,18 @@ function daemonProcessException(message) {
      // which is exactly when the daemon is most likely to fail to start.
      let body = message;
@@ -38,7 +47,7 @@ diff --git a/dist/src/daemon/client/daemon-environment.js b/dist/src/daemon/clie
  };
  /**
   * Env vars that should NOT be sent to the daemon because they cannot affect
-@@ -65,6 +65,13 @@
+@@ -65,6 +65,15 @@
      'NX_PROFILE',
      'NX_DAEMON_VERBOSE_LOGGING',
      'NX_ORIGINAL_FORCE_COLOR',
@@ -49,10 +58,12 @@ diff --git a/dist/src/daemon/client/daemon-environment.js b/dist/src/daemon/clie
 +    'SEMIO_PLUGIN',
 +    'SEMIO_RENDERER',
 +    'CODEX_SESSION_ID',
++    'NX_PROJECT_NAME',
++    'NX_FILE_CHANGES',
      // AI agent detection vars (the daemon itself is not an AI agent)
      'CLAUDECODE',
      'CLAUDE_CODE',
-@@ -267,7 +274,7 @@
+@@ -267,7 +276,7 @@
  function getDaemonEnv() {
      const env = { ...DAEMON_ENV_OVERRIDABLE_SETTINGS };
      for (const key in process.env) {

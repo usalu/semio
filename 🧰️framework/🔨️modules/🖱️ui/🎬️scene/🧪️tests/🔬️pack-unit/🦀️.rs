@@ -72,6 +72,57 @@ fn truncated_input_errs_not_panics() {
     assert!(result.is_err());
 }
 
+#[test]
+fn viewport_projection_pack_round_trips_every_shared_mode_orientation_pair() {
+    use semio_framework_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionPreferences, Viewport3dProjectionSpec};
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️viewport/🧪️tests/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
+    let preferences: Viewport3dProjectionPreferences = serde_json::from_value(fixture["defaultPreferences"].clone()).unwrap();
+    let bytes = to_bytes(&preferences).unwrap();
+    assert_eq!(from_bytes::<Viewport3dProjectionPreferences>(&bytes).unwrap(), preferences);
+    let mut combinations = 0;
+    for mode in fixture["modes"].as_array().unwrap() {
+        let mode_value: Viewport3dProjectionMode = serde_json::from_value(mode.clone()).unwrap();
+        let mode_bytes = to_bytes(&mode_value).unwrap();
+        from_bytes::<Viewport3dProjectionMode>(&mode_bytes).unwrap_or_else(|error| panic!("mode={mode}: {error:?}"));
+        for orientation in fixture["orientations"].as_array().unwrap() {
+            let orientation_value: Viewport3dProjectionOrientation = serde_json::from_value(orientation.clone()).unwrap();
+            let orientation_bytes = to_bytes(&orientation_value).unwrap();
+            from_bytes::<Viewport3dProjectionOrientation>(&orientation_bytes).unwrap_or_else(|error| panic!("orientation={orientation}: {error:?}"));
+            let spec: Viewport3dProjectionSpec = serde_json::from_value(serde_json::json!({ "mode": mode, "orientation": orientation })).unwrap();
+            let bytes = to_bytes(&spec).unwrap();
+            let decoded = from_bytes::<Viewport3dProjectionSpec>(&bytes).unwrap_or_else(|error| panic!("mode={mode} orientation={orientation}: {error:?}"));
+            assert_eq!(decoded, spec);
+            combinations += 1;
+        }
+    }
+    eprintln!("[DEBUG] Shared viewport projection Pack codec round-tripped the full preference bank and {combinations} mode-orientation pairs including outside-control active values");
+}
+
+#[test]
+fn viewport_projection_pack_outside_control_fov_matches_native_projection_math() {
+    use semio_framework_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
+
+    let spec = Viewport3dProjectionSpec { mode: Viewport3dProjectionMode::ThreePoint { fov: 130.0 }, orientation: Viewport3dProjectionOrientation::Free {} };
+    let decoded: Viewport3dProjectionSpec = from_bytes(&to_bytes(&spec).unwrap()).unwrap();
+    let mut camera = crate::math::Camera3d::default();
+    let Viewport3dProjectionMode::ThreePoint { fov } = decoded.mode else { panic!("unexpected projection mode") };
+    camera.fov_y = (fov as f32).to_radians();
+    let matrix = camera.view_proj(16.0 / 9.0);
+    assert!(matrix.cols.into_iter().flatten().all(f32::is_finite));
+    eprintln!("[DEBUG] Shared viewport projection Pack preserved FOV 130 and native projection math produced a finite matrix");
+}
+
+#[test]
+fn viewport_projection_pack_rejects_nonfinite_active_values() {
+    use semio_framework_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
+
+    let invalid = Viewport3dProjectionSpec { mode: Viewport3dProjectionMode::ThreePoint { fov: f64::NAN }, orientation: Viewport3dProjectionOrientation::Free {} };
+    let bytes = to_bytes(&invalid).unwrap();
+    assert!(from_bytes::<Viewport3dProjectionSpec>(&bytes).is_err());
+    eprintln!("[DEBUG] Shared viewport projection Pack decode rejected a nonfinite active lens");
+}
+
 //#region 🎬️RetainedSceneOracle
 #[test]
 fn owned_scene_neutral_vectors_match_native_serde_packet() {

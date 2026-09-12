@@ -5,7 +5,6 @@ import { loadTaxonomy } from "../../../📦️packages/🟦️typescript/🟦️
 import { fileKindIdForSourcePath, semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/🟦️.ts";
 import { inventoryTaxonomySources, type TaxonomySourceInventory } from "../../🟦️.ts";
 import { POLICY_MUTATIONS_FACET } from "../🪪️identity/🟦️.ts";
-import type { MutationTaxonomySourceIndex } from "../📇️index/🟦️.ts";
 
 export interface MutationTaxonomyAssignmentRow { readonly mutationRootPath: string; readonly targetMutationDirectoryName: string; readonly lunaAuditor: string; readonly terraExecutor: string; readonly rootIntegrator: string }
 
@@ -17,6 +16,7 @@ export interface MutationTaxonomyInventoryOptions {
   readonly assignmentLedger?: unknown;
   readonly assignmentLedgerPath?: string;
   readonly cancelFile?: string;
+  readonly excludedSourcePaths?: readonly string[];
   readonly progress?: (event: { readonly operation: "inventory"; readonly phase: string; readonly current: number; readonly total: number; readonly path?: string }) => void;
   readonly scope?: string;
   readonly explicitTicketDir?: string;
@@ -28,7 +28,7 @@ export type MutationTaxonomyCapturedSchema = { readonly path: string; readonly b
 export type MutationTaxonomyStructuralDirectory = { readonly path: string; readonly supportingObservations: readonly string[] };
 
 
-export type MutationTaxonomyStructuralSourceView = Pick<MutationTaxonomySourceIndex, "admission" | "roots" | "files" | "bytes" | "contents" | "directories" | "taxonomySchema" | "mutationDescriptorSchema">;
+export interface MutationTaxonomyStructuralSourceView { readonly admission: TaxonomySourceInventory; readonly roots: readonly string[]; readonly files: readonly string[]; readonly bytes: ReadonlyMap<string, Buffer>; readonly contents: ReadonlyMap<string, string>; readonly directories: ReadonlyMap<string, MutationTaxonomyStructuralDirectory>; readonly taxonomySchema: MutationTaxonomyCapturedSchema; readonly mutationDescriptorSchema: MutationTaxonomyCapturedSchema }
 
 
 export function mutationTaxonomyCompare(left: string, right: string): number {
@@ -65,7 +65,7 @@ export function mutationTaxonomyStructuralDirectories(admission: TaxonomySourceI
 }
 
 
-export function mutationTaxonomyStructuralView(index: MutationTaxonomySourceIndex): MutationTaxonomyStructuralSourceView {
+export function mutationTaxonomyStructuralView(index: MutationTaxonomyStructuralSourceView): MutationTaxonomyStructuralSourceView {
   return { admission: index.admission, roots: index.roots, files: index.files, bytes: index.bytes, contents: index.contents, directories: index.directories, taxonomySchema: index.taxonomySchema, mutationDescriptorSchema: index.mutationDescriptorSchema };
 }
 
@@ -103,6 +103,7 @@ export function mutationTaxonomyScope(scope: string): string {
 export function mutationTaxonomySourceAdmission(repoRoot: string, options: MutationTaxonomyInventoryOptions): TaxonomySourceInventory {
   const admission = inventoryTaxonomySources({
     repoRoot,
+    structuralDirectoryNames: [POLICY_MUTATIONS_FACET],
     ...(options.explicitTicketDir ? { ticketDir: options.explicitTicketDir } : {}),
     ...(options.cancelFile ? { cancelFile: options.cancelFile } : {}),
     ...(options.progress ? { progress: (event) => options.progress!({ operation: "inventory", phase: event.phase, current: event.current, total: event.total, ...(event.path ? { path: event.path } : {}) }) } : {}),

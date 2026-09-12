@@ -11,6 +11,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
+import { rustSubjectPackage } from "./🕸️dependencies/🟨️.mjs";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, delimiter, join, relative, sep } from "node:path";
@@ -410,25 +411,6 @@ function ownerShipsImplementation(repoRoot: string, discovered: DiscoveredCase, 
   return false;
 }
 
-/** 🦀️ The owner's own Rust package, discovered by walking up from the owner root — the subject under test. */
-function rustSutCrate(repoRoot: string, discovered: DiscoveredCase): { name: string; path: string } | null {
-  let dir = discovered.owner;
-  for (let depth = 0; depth < 16; depth += 1) {
-    const manifest = join(repoRoot, dir, "📦️packages", "🦀️rust", "Cargo.toml");
-    if (existsSync(manifest)) {
-      const name = readFileSync(manifest, "utf8").match(/^\s*name\s*=\s*"([^"]+)"/m)?.[1];
-      // 🧭️ The host crate is already a dependency of every generated host; a case owned by the
-      // testing domain itself must not declare it twice.
-      if (name !== undefined && name !== "semio-repo-test-host") return { name, path: join(repoRoot, dir, "📦️packages", "🦀️rust") };
-      if (name === "semio-repo-test-host") return null;
-    }
-    const parent = dir.split("/").slice(0, -1).join("/");
-    if (parent === "" || parent === dir) break;
-    dir = parent;
-  }
-  return null;
-}
-
 /**
  * 🧩️ The native oracle packages this case's OWNER contributes, resolved from the discovered
  * contribution manifests. The framework links whatever an owner declares; it never names a package,
@@ -442,7 +424,7 @@ function contributedOraclePackages(repoRoot: string, discovered: DiscoveredCase,
 function materializeRustHost(repoRoot: string, discovered: DiscoveredCase, role: TestRole, planPath: string, outPath: string): MaterializedHost {
   const dir = hostDirFor(repoRoot, discovered, role, "rust");
   const adapterAbs = join(repoRoot, discovered.adapters.rust!);
-  const sut = rustSutCrate(repoRoot, discovered);
+  const sut = rustSubjectPackage(repoRoot, discovered.owner);
   const declared = contributedOraclePackages(repoRoot, discovered, "rust");
   // 🦀️A Cargo dependency is linked by path or it is not linked at all; a crates.io coordinate would
   // be an unreviewed third-party dependency of the generated host, which is what the local-crate
@@ -475,7 +457,7 @@ function materializeRustHost(repoRoot: string, discovered: DiscoveredCase, role:
       `semio-repo-test-host = { path = ${JSON.stringify(join(repoRoot, RUST_PACKAGE_REL))} }`,
       // 🧩️Whatever the owner contributed, exactly as the owner declared it.
       ...oraclePackages.map((entry) => `${entry.package} = { path = ${JSON.stringify(join(repoRoot, entry.path!))}${(entry.features ?? []).length > 0 ? `, features = [${(entry.features ?? []).map((feature) => JSON.stringify(feature)).join(", ")}]` : ""} }`),
-      ...(sut === null ? [] : [`${sut.name} = { path = ${JSON.stringify(sut.path)}, default-features = false, optional = true }`]),
+      ...(sut === null ? [] : [`${sut.name} = { path = ${JSON.stringify(join(repoRoot, sut.path))}, default-features = false, optional = true }`]),
       "",
     ].join("\n"),
   );

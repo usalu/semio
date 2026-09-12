@@ -1,6 +1,20 @@
 {
   "name": "abstraction-ownership-validation",
   "targets": {
+    "window-config-pack-identity": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts window-config-pack-identity"
+      }
+    },
+    "window-config-pack-identity-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts window-config-pack-identity native"
+      }
+    },
     "verify-abstraction-ownership": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -20,6 +34,20 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts framework-viewport-ownership native"
+      }
+    },
+    "framework-viewport-projection": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-viewport-projection"
+      }
+    },
+    "framework-viewport-projection-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-viewport-projection native"
       }
     },
     "framework-ui-protocol-ownership": {
@@ -986,6 +1014,48 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts framework-paged-list-ownership"
+      }
+    },
+    "framework-retained-pack-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-retained-pack-ownership"
+      }
+    },
+    "framework-retained-pack-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-retained-pack-ownership native"
+      }
+    },
+    "node-graph-viewport-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts node-graph-viewport-ownership"
+      }
+    },
+    "node-graph-viewport-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts node-graph-viewport-ownership native"
+      }
+    },
+    "node-graph-viewport-ownership-renderer-host-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts node-graph-viewport-ownership native renderer-host"
+      }
+    },
+    "node-graph-viewport-ownership-consumers-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts node-graph-viewport-ownership native consumers"
       }
     },
     "framework-variant-field-casing": {

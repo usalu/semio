@@ -26,7 +26,10 @@
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts twin",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "outputs": [],
+      "description": "Checks live event-loop deadlines and measures chained scheduling on the current host."
     }
   }
 }

@@ -179,6 +179,18 @@ impl ArtifactEnvelopeFieldDecoder<(), ()> for CountedField {
         Err(Self::unexpected())
     }
 
+    fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        Ok(self.token.as_ref().map_or(0, |token| token.payload.len()))
+    }
+
+    fn maximum_close_byte_demand(&self) -> usize {
+        self.token.as_ref().map_or(0, |token| token.payload.len())
+    }
+
+    fn maximum_retained_close_bytes(&self) -> usize {
+        self.token.as_ref().map_or(0, |token| token.payload.len())
+    }
+
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic> {
         self.counts.close_calls.fetch_add(1, Ordering::SeqCst);
         let Some(token) = self.token.as_ref() else { return Ok(SnapshotRetirementStep::Complete) };

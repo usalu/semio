@@ -28,8 +28,8 @@ use crate::editor::puzzle3d::precompute::geometry::{
     CollisionStepResult,
 };
 use crate::standards::v1::subsets::any::schema::{
-    puzzle3d_vortex_full_id, BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, FillBuildProgress, FillProgressSummary, Fixture, KindCatalogBundle, PrecomputeLane, Puzzle3dEngineCommand, Puzzle3dEngineOutcome,
-    SceneConfig,
+    puzzle3d_vortex_full_id, BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, FillBuildProgress, FillProgressSummary, Fixture, FixtureObject, KindCatalogBundle, PrecomputeLane, Puzzle3dEngineCommand,
+    Puzzle3dEngineOutcome, SceneConfig,
 };
 use crate::Puzzle3dError;
 use semio_framework_job::{default_now_us, root_cancel_token, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, Operation, RevisionId, StepOutcome};
@@ -1543,6 +1543,66 @@ pub fn staged_brush_mesh_uploads() -> Vec<(String, String, u32, u32)> {
 /// indexes with, so one document's two lanes bucket identically.
 const BRUSH_INDEX_CELL_SIZE: f32 = 8.0;
 
+/// 🗺️ What ONE scene sync invalidated, named per object instead of per document.
+///
+/// 🧾️ Every sync whose scene differed at all used to be a whole-document `rebuild_queue`: `brush_cache`
+/// cleared for every object, both prepare cursors reset to zero so the entire object × vortex product
+/// was re-walked, and the fill preparation restarted. On the 340-object Nakagin document one pose edit
+/// therefore threw away every resolved brush candidate — and the background `suggestionsTick` /
+/// `fillBuildTick` cadence re-paid that every 120 ms while an interactive mutation waited behind it,
+/// which is how a translate that reads one object burned a 30-second budget
+/// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B54).
+///
+/// [`Self::plan`] names the members the fill plan and the compatibility tables are derived from: any of
+/// them invalidates every candidate, so that case stays the whole-scene rebuild.
+struct Puzzle3dSceneInvalidation {
+    stale: std::collections::HashSet<String>,
+    pending: Vec<String>,
+    topology: bool,
+    plan: bool,
+}
+
+impl Puzzle3dSceneInvalidation {
+    fn between(previous: &SceneConfig, next: &SceneConfig) -> Self {
+        let plan = previous.kind_catalogs != next.kind_catalogs
+            || previous.kind_compatibility != next.kind_compatibility
+            || previous.overlap_budget != next.overlap_budget
+            || previous.seed != next.seed
+            || previous.host_rules != next.host_rules
+            || previous.weights != next.weights
+            || previous.fixture.attractions != next.fixture.attractions
+            || previous.fixture.target_volumes != next.fixture.target_volumes;
+        let before: HashMap<&str, &FixtureObject> = previous.fixture.objects.iter().map(|object| (object.id.as_str(), object)).collect();
+        let after: HashMap<&str, &FixtureObject> = next.fixture.objects.iter().map(|object| (object.id.as_str(), object)).collect();
+        let mut invalidation = Self { stale: std::collections::HashSet::new(), pending: Vec::new(), topology: false, plan };
+        for object in &next.fixture.objects {
+            match before.get(object.id.as_str()) {
+                Some(retained) if **retained == *object => continue,
+                Some(retained) => invalidation.mark_stale(retained),
+                None => invalidation.topology = true,
+            }
+            invalidation.mark_stale(object);
+            invalidation.pending.extend(Self::vortex_ids(object));
+        }
+        for object in &previous.fixture.objects {
+            if after.contains_key(object.id.as_str()) {
+                continue;
+            }
+            invalidation.topology = true;
+            invalidation.mark_stale(object);
+        }
+        invalidation
+    }
+
+    fn mark_stale(&mut self, object: &FixtureObject) {
+        self.stale.extend(Self::vortex_ids(object));
+    }
+
+    fn vortex_ids(object: &FixtureObject) -> impl Iterator<Item = String> + '_ {
+        object.vortices.iter().map(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id))
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[derive(Default)]
 enum BrushIndexSyncStage {
@@ -1960,6 +2020,24 @@ impl Puzzle3dCollision {
         self.scene_synced.as_deref() == Some(scene)
     }
 
+    /// 🗺️ Invalidates the brush derivation for exactly the objects one sync changed. The cached
+    /// collision-free candidates of the changed and removed objects are evicted by their own vortex
+    /// ids, the changed objects' vortices are re-queued, the persistent broad phase is re-armed — it is
+    /// already incremental and replaces only the entries whose bounds actually moved
+    /// ([`Self::step_brush_index_objects`]) — and the fill preparation restarts only when the object
+    /// TOPOLOGY moved, because a pose edit is not a replan.
+    fn invalidate_scene_objects(&mut self, invalidation: Puzzle3dSceneInvalidation) {
+        for full_id in &invalidation.stale {
+            self.brush_cache.remove(full_id);
+        }
+        self.brush_queue.retain(|full_id| !invalidation.stale.contains(full_id));
+        self.brush_queue.extend(invalidation.pending);
+        self.begin_brush_index_sync();
+        if invalidation.topology {
+            self.start_fill_preparation(true);
+        }
+    }
+
     fn adopt_fill_projection_scene(&mut self, scene: SceneConfig) {
         if let Some(current) = &mut self.scene {
             let current = Arc::make_mut(current);
@@ -1974,10 +2052,14 @@ impl Puzzle3dCollision {
     }
 
     fn replace_scene(&mut self, scene: SceneConfig) {
+        let invalidation = self.scene_synced.as_deref().map(|synced| Puzzle3dSceneInvalidation::between(synced, &scene));
         let scene = Arc::new(scene);
         self.scene = Some(Arc::clone(&scene));
         self.scene_synced = Some(scene);
-        self.rebuild_queue();
+        match invalidation {
+            Some(invalidation) if !invalidation.plan => self.invalidate_scene_objects(invalidation),
+            _ => self.rebuild_queue(),
+        }
     }
 
     /// 🥽️ Real geometry for one mesh identity, derived once per process through the content-addressed

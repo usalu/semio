@@ -2235,6 +2235,9 @@ impl PcgJob {
             let d = self.state.diag.get(i);
             let value = if d.abs() > 1e-300 { self.state.r.get(i) / d } else { self.state.r.get(i) };
             self.state.z.set(i, value);
+            if initial {
+                self.state.p.set(i, value);
+            }
             self.state.rz_new += self.state.r.get(i) * value;
             self.state.cursor += 1;
             *units += 1;
@@ -2243,7 +2246,6 @@ impl PcgJob {
         if self.state.cursor == self.state.a.n {
             self.state.cursor = 0;
             if initial {
-                self.state.p = self.state.z.clone();
                 self.state.rz_old = self.state.rz_new;
                 self.state.iteration = 1;
                 self.reset_spmv(PcgStage::IterationSpmv);
@@ -3601,8 +3603,8 @@ impl SubspaceIterationJob {
         }
         if work.second == n {
             work.second = 0;
-            work.phase = 0;
-            work.first += 1;
+            work.third = 0;
+            work.stage = SubspaceStage::FactorDiagonalEntry;
             return;
         }
         let entries = &self.state.k_factor.l_cols[work.second];
@@ -3613,7 +3615,7 @@ impl SubspaceIterationJob {
             work.third += 1;
         } else {
             work.third = 0;
-            work.stage = SubspaceStage::FactorDiagonalEntry;
+            work.second += 1;
         }
     }
 

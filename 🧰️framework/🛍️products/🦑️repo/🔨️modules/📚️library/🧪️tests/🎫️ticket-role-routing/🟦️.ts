@@ -29,7 +29,7 @@ type Case = {
 };
 
 type Vectors = { readonly schemaVersion: 1; readonly cases: readonly Case[] };
-const root = resolve(import.meta.dir, "../../../../../../../"), schemaPath = resolve(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/🎫️ticket-role-routing/🔣️.json"), vectorsPath = resolve(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/🎫️ticket-role-routing/🔣️.json"), rootScriptPath = resolve(root, "📜️script.ts"), normalizationPath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts");
+const root = resolve(import.meta.dir, "../../../../../../../"), schemaPath = resolve(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/🎫️ticket-role-routing/🔣️.json"), vectorsPath = resolve(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/🎫️ticket-role-routing/🔣️.json"), workflowPath = resolve(import.meta.dir, "../../🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts"), indexPath = resolve(import.meta.dir, "../../🧹️normalization/🧬️mutation/📇️index/🟦️.ts"), normalizationPath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts");
 const schema = JSON.parse(readFileSync(schemaPath, "utf8")), vectors = JSON.parse(readFileSync(vectorsPath, "utf8")) as Vectors;
 
 /** 🧪️ Projects supplied role facts only; it does not construct a source roster. */
@@ -87,12 +87,13 @@ test("mutation ticket role routing vectors are closed and every field participat
 
 //#region 🧪️Subject
 test("mutation ticket role routing reaches only the mocked N admission boundary", () => {
-  const rootBefore = createHash("sha256").update(readFileSync(rootScriptPath)).digest("hex"), normalizationBefore = createHash("sha256").update(readFileSync(normalizationPath)).digest("hex");
+  const workflowBefore = createHash("sha256").update(readFileSync(workflowPath)).digest("hex"), indexBefore = createHash("sha256").update(readFileSync(indexPath)).digest("hex"), normalizationBefore = createHash("sha256").update(readFileSync(normalizationPath)).digest("hex");
   const marker = "__MUTATION_TICKET_ROLE_ROUTING__";
   const source = [
     'import { mock } from "bun:test";',
     `const normalizerUrl = ${JSON.stringify(pathToFileURL(normalizationPath).href)};`,
-    `const rootUrl = ${JSON.stringify(pathToFileURL(rootScriptPath).href)};`,
+    `const workflowUrl = ${JSON.stringify(pathToFileURL(workflowPath).href)};`,
+    `const indexUrl = ${JSON.stringify(pathToFileURL(indexPath).href)};`,
     `const cases = ${JSON.stringify(vectors.cases)};`,
     'const family = await import(normalizerUrl);',
     'const calls = []; let armed = false;',
@@ -101,12 +102,13 @@ test("mutation ticket role routing reaches only the mocked N admission boundary"
     'mock.module(normalizerUrl, () => { armed = true; return { ...family, inventoryTaxonomySources: sentinel }; });',
     'const rebound = await import(normalizerUrl);',
     'if (!armed || rebound.inventoryTaxonomySources !== sentinel) throw new Error("N sentinel identity was not armed before S import");',
-    'const subject = await import(`${rootUrl}?ticket-role-routing=${Date.now()}`);',
+    'const workflow = await import(`${workflowUrl}?ticket-role-routing=${Date.now()}`);',
+    'const index = await import(`${indexUrl}?ticket-role-routing=${Date.now()}`);',
     'for (const row of cases) {',
     '  globalThis.__ticketRoleCase = row.id;',
     '  try {',
-    '    if (row.invocation === "mutation-cli") subject.runMutationTaxonomyCli("/virtual/workspace", row.operation, { failOnWarning: false, format: "json", kind: "mutation", ...(row.operation === "plan" ? { baseline: "a".repeat(40) } : {}) }, `/virtual/workspace/${row.outputTicket}`);',
-    '    else subject.mutationTaxonomySourceIndex("/virtual/workspace", { explicitTicketDir: `/virtual/workspace/${row.explicitTicketDir}` });',
+    '    if (row.invocation === "mutation-cli") workflow.runMutationTaxonomyCli("/virtual/workspace", row.operation, { failOnWarning: false, format: "json", kind: "mutation", ...(row.operation === "plan" ? { baseline: "a".repeat(40) } : {}) }, `/virtual/workspace/${row.outputTicket}`);',
+    '    else index.mutationTaxonomySourceIndex("/virtual/workspace", { explicitTicketDir: `/virtual/workspace/${row.explicitTicketDir}` });',
     '    throw new Error(`sentinel was not reached for ${row.id}`);',
     '  } catch (error) { if (!(error instanceof Stop)) throw error; }',
     '}',
@@ -124,7 +126,8 @@ test("mutation ticket role routing reaches only the mocked N admission boundary"
   expect(receipt.calls).toHaveLength(vectors.cases.length);
   const observed = new Map(receipt.calls.map((entry) => [entry.id, entry.options.ticketDir === undefined ? null : relative("/virtual/workspace", entry.options.ticketDir).replaceAll("\\", "/")]));
   for (const row of vectors.cases) expect(observed.get(row.id), row.id).toBe(row.expected.nTicketDir);
-  expect(createHash("sha256").update(readFileSync(rootScriptPath)).digest("hex")).toBe(rootBefore);
+  expect(createHash("sha256").update(readFileSync(workflowPath)).digest("hex")).toBe(workflowBefore);
+  expect(createHash("sha256").update(readFileSync(indexPath)).digest("hex")).toBe(indexBefore);
   expect(createHash("sha256").update(readFileSync(normalizationPath)).digest("hex")).toBe(normalizationBefore);
 });
 //#endregion 🧪️Subject

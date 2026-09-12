@@ -1,6 +1,10 @@
 {
   "version": 1,
   "sourceDateEpoch": 1782864000,
+  "librarySources": [
+    "🖋️latex",
+    "🔨️modules/🕸️graph/📐️.tex"
+  ],
   "documents": [
     {
       "id": "report",

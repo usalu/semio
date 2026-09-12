@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:window-config-pack-identity-fixtures",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "windowKind",
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "windowKind": {
+      "const": "identity-window"
+    },
+    "schema": {
+      "const": "test.window.identity"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sourceWindowId",
+          "targetWindowId",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceWindowId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "targetWindowId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

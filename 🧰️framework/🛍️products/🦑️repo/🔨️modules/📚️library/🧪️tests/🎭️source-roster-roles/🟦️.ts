@@ -6,11 +6,10 @@ import { resolve } from "node:path";
 import ts from "typescript";
 
 //#region 🧭️Inputs
-const root = resolve(import.meta.dir, "../../../../../../../");
 const inventorySchemaPath = resolve(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/🔣️.json");
 const vectorsPath = resolve(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/🎭️source-roster-roles/🔣️.json");
 const vectorsSchemaPath = resolve(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/🎭️source-roster-roles/🔣️.json");
-const rootScriptPath = resolve(root, "📜️script.ts");
+const sourceRecordPath = resolve(import.meta.dir, "../../🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts");
 const inventorySchema = JSON.parse(readFileSync(inventorySchemaPath, "utf8"));
 const vectorsSchema = JSON.parse(readFileSync(vectorsSchemaPath, "utf8"));
 const vectors = JSON.parse(readFileSync(vectorsPath, "utf8")) as {
@@ -23,7 +22,7 @@ const vectors = JSON.parse(readFileSync(vectorsPath, "utf8")) as {
 
 /** 🧭️ Extracts the current public source-roster role literals without executing inventory collection. */
 function sourceRecordRoles(source: string): readonly string[] {
-  const file = ts.createSourceFile(rootScriptPath, source, ts.ScriptTarget.Latest, true);
+  const file = ts.createSourceFile(sourceRecordPath, source, ts.ScriptTarget.Latest, true);
   const declaration = file.statements.find((statement): statement is ts.InterfaceDeclaration => ts.isInterfaceDeclaration(statement) && statement.name.text === "MutationTaxonomySourceRecord");
   if (!declaration) throw new Error("missing MutationTaxonomySourceRecord");
   const member = declaration.members.find((entry): entry is ts.PropertySignature => ts.isPropertySignature(entry) && entry.name.getText(file) === "role");
@@ -50,7 +49,7 @@ test("mutation source roster roles vectors are closed", () => {
 });
 
 test("mutation source roster roles match the current public source record", () => {
-  expect(sourceRecordRoles(readFileSync(rootScriptPath, "utf8"))).toEqual([...vectors.roles].sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right))));
+  expect(sourceRecordRoles(readFileSync(sourceRecordPath, "utf8"))).toEqual([...vectors.roles].sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right))));
 });
 
 test("mutation inventory v2 source roster accepts every public role and rejects unknown fields", () => {

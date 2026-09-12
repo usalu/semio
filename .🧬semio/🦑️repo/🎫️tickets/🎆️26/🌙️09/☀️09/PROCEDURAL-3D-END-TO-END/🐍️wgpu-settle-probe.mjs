@@ -31,6 +31,13 @@ await page.goto(url, { waitUntil: "domcontentloaded" }).catch((error) => lines.p
 const samples = [];
 for (let second = 1; second <= seconds; second += 1) {
   await page.waitForTimeout(1000);
+  if (process.env.SEMIO_PROBE_CLICK_AT && second === Number(process.env.SEMIO_PROBE_CLICK_SECOND ?? 20)) {
+    // 🖱️ One real pointer click, where the deliverable asks for a mutation (generate mode's
+    // "Add Generation") rather than a boot-only chain.
+    const [cx, cy] = process.env.SEMIO_PROBE_CLICK_AT.split(",").map(Number);
+    await page.mouse.click(cx, cy).catch((error) => lines.push(`${at()} clickerror ${String(error).slice(0, 200)}`));
+    lines.push(`${at()} PROBE clicked ${cx},${cy}`);
+  }
   if (process.env.SEMIO_PROBE_NUDGE === "1") {
     // 🖱️ Forces a frame each second: the wgpu shell is event-driven, so a surface whose own cursor
     // wake never reaches the scheduler makes no progress at all while nothing else moves.
@@ -63,6 +70,20 @@ for (let second = 1; second <= seconds; second += 1) {
   sample.t = at();
   samples.push(sample);
   if (second % shotEvery === 0 || second === seconds) {
+    // 🧹️ Trunk's own dev-server build-failure overlay is the FIRST body child and covers the whole
+    // page whenever any crate in the workspace is red — including a peer's, on a serve that is still
+    // correctly running the last good bundle. It is dev-server chrome, never app content, so it is
+    // removed before the shot and the removal is reported in the console log.
+    const removed = await page
+      .evaluate(() => {
+        const overlay = Array.from(document.body.children).find((node) => node.tagName === "DIV" && node.id !== "root");
+        if (!overlay) return null;
+        const text = (overlay.textContent ?? "").slice(0, 120);
+        overlay.remove();
+        return text;
+      })
+      .catch(() => null);
+    if (removed) lines.push(`${at()} PROBE removed trunk overlay ${JSON.stringify(removed)}`);
     await page.screenshot({ path: join(outDir, `shot-${String(second).padStart(3, "0")}s.png`), type: "png" }).catch(() => {});
   }
 }

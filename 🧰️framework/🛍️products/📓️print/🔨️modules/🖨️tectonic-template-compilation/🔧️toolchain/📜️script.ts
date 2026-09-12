@@ -81,7 +81,7 @@ export async function prepareTectonic(workspace = getWorkspaceRoot(), signal?: A
     writeFileSync(receipt, JSON.stringify({ version: manifest.version, target: distribution.target, archiveSha256: distribution.sha256, files: Object.fromEntries([...files].map(([name, file]) => [name, digest(file)])) }) + "\n");
     files.set(".toolchain.json", receipt);
     signal?.throwIfAborted();
-    if (!existsSync(directory)) stageArtifacts(directory, owner, files);
+    if (!existsSync(directory)) await stageArtifacts(directory, owner, files);
     console.log(`[print-toolchain] Ready: ${distribution.target}`);
     return preparedTectonic(workspace);
   } finally { rmSync(temporary, { recursive: true, force: true }); }

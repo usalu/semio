@@ -1,0 +1,20 @@
+\documentclass[type=paper,theme=light,language=en,citestyle=alphabetic]{semio}
+\title{Graph macro staging}
+\author{Semio}
+\date{2026-09-12}
+\subtitle{Native semantic-owner control}
+\begin{document}
+\ExplSyntaxOn
+\iow_new:N \g_taxonomy_chart_audit_iow
+\iow_open:Nn \g_taxonomy_chart_audit_iow { chart-registry.tsv }
+\seq_map_inline:Nn \g_semio_viz_chart_kinds_seq
+  { \iow_now:Nn \g_taxonomy_chart_audit_iow {kind|#1} }
+\prop_map_inline:Nn \g_semio_viz_chart_family_prop
+  { \iow_now:Nn \g_taxonomy_chart_audit_iow {family|#1|#2} }
+\prop_map_inline:Nn \g_semio_viz_chart_opts_prop
+  { \iow_now:Nn \g_taxonomy_chart_audit_iow {options|#1|#2} }
+\iow_close:N \g_taxonomy_chart_audit_iow
+\typeout{[DEBUG]~NATIVE~CHART~REGISTRY~EXPORTED}
+\ExplSyntaxOff
+Chart registration ownership control.
+\end{document}

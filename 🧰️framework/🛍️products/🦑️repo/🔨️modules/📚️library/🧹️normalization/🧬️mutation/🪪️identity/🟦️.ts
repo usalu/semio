@@ -9,6 +9,8 @@ export function policyStripEmoji(segment: string): string {
 
 export const POLICY_MUTATIONS_FACET = "🧬️mutations";
 
+export const POLICY_MUTATION_PLAN_DIR = "🧩️plan";
+
 export const POLICY_TS_COMPONENT_LEAF = canonicalPrimaryFilenameForKind(loadCatalogTaxonomy().componentFileKinds["🟦️typescript"]!, loadCatalogTaxonomy());
 
 export const POLICY_RS_COMPONENT_LEAF_NAME = canonicalPrimaryFilenameForKind(loadCatalogTaxonomy().componentFileKinds["🦀️rust"]!, loadCatalogTaxonomy());

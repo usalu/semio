@@ -20,6 +20,36 @@ function nxBootstrapServices(): typeof import("./🛠️tools/📜️script.ts")
   return createRequire(import.meta.url)("./🛠️tools/📜️script.ts");
 }
 
+/** 🧮️ Lets each watched build finish its graph while the daemon retains source watching. */
+export function nxChildEnvironment(environment: NodeJS.ProcessEnv, args: readonly string[], watching: boolean): NodeJS.ProcessEnv {
+  if (args[0] === "watch") return { ...environment, NX_DAEMON: "true" };
+  return watching || environment.NX_FILE_CHANGES !== undefined ? { ...environment, NX_DAEMON: "false" } : environment;
+}
+
+/** ⏳️ Awaits Nx's readiness handshake while cold graph discovery reports progress and remains cancellable. */
+export function waitForNxWatcher(watcher: ReturnType<typeof spawnNxProcess>): Promise<void> {
+  return new Promise((accept, reject) => {
+    let pending = "";
+    const started = Date.now(), progress = setInterval(() => console.log(`[nx] Waiting for source watcher and project graph (${Math.floor((Date.now() - started) / 1000)}s); Ctrl+C cancels`), 15000);
+    const finish = (error?: Error): void => {
+      clearInterval(progress);
+      watcher.removeListener("close", exited);
+      watcher.removeListener("error", failed);
+      watcher.stdout!.removeListener("data", received);
+      if (error) reject(error); else accept();
+    };
+    const exited = (code: number | null, signal: string | null): void => finish(new Error(`Nx source watcher exited before readiness (${signal ?? code ?? "unknown status"})`));
+    const failed = (error: Error): void => finish(error);
+    const received = (chunk: Buffer): void => {
+      pending = (pending + chunk.toString()).slice(-8192);
+      if (pending.includes("watch process waiting...")) finish();
+    };
+    watcher.once("close", exited);
+    watcher.once("error", failed);
+    watcher.stdout!.on("data", received);
+  });
+}
+
 //#region 🔖️NxScript
 export class NxScript extends Script {
   /** 🧿️ `nx watch` refuses to run without the daemon, and Nx disables its daemon for every later
@@ -97,7 +127,7 @@ export class NxScript extends Script {
       force.unref();
     };
     const launch = (args: string[], capture = false): ReturnType<typeof spawnNxProcess> => {
-      const child = spawnNxProcess("node", [nxCli, ...args], { cwd: this.root, env, stdio: capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
+      const child = spawnNxProcess("node", [nxCli, ...args], { cwd: this.root, env: nxChildEnvironment(env, args, Boolean(invocation.watch)), stdio: capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
       children.push(child);
       return child;
     };
@@ -110,18 +140,8 @@ export class NxScript extends Script {
       if (invocation.watch) {
         NxScript.ensureDaemon(nxCli, this.root, env);
         watcher = launch(["watch", "--all", "--includeGlobalWorkspaceFiles", "--verbose", "--", "bun", "nx", "run", invocation.watch, "--output-style=stream"], true);
-        await new Promise<void>((accept, reject) => {
-          let pending = "";
-          const ready = setTimeout(() => reject(new Error("Nx source watcher did not become ready within 120 seconds")), 120_000);
-          const exited = (): void => { clearTimeout(ready); reject(new Error("Nx source watcher exited before readiness")); };
-          watcher!.once("close", exited);
-          watcher!.once("error", (error) => { clearTimeout(ready); reject(error); });
-          watcher!.stdout!.on("data", (chunk) => {
-            process.stdout.write(chunk);
-            pending = (pending + chunk.toString()).slice(-8192);
-            if (pending.includes("watch process waiting...")) { clearTimeout(ready); watcher!.removeListener("close", exited); accept(); }
-          });
-        });
+        watcher.stdout!.on("data", (chunk) => process.stdout.write(chunk));
+        await waitForNxWatcher(watcher);
         watcher.once("close", (code) => { if (!finishing && !cancelled) { watchFailure = code || 1; stop("SIGTERM"); } });
       }
       if (!cancelled) {

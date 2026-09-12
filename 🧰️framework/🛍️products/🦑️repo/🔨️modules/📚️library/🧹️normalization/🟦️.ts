@@ -277,6 +277,7 @@ export interface TaxonomyInventoryOptions {
   readonly scope?: string;
   readonly ticketDir?: string;
   readonly cancelFile?: string;
+  readonly structuralDirectoryNames?: readonly string[];
   readonly workers?: number;
   readonly progress?: (progress: TaxonomyProgress) => void;
   readonly taxonomyPath?: string;
@@ -577,10 +578,10 @@ interface FileKindResolutionRuleSpec {
 
 interface ScopedFileKindSpec {
   readonly pathPattern: string;
-  readonly parentDirectoryKindId: string;
+  readonly parentDirectoryKindId?: string;
   readonly emoji: string;
   readonly extensionChains: readonly string[];
-  readonly role: "evidence";
+  readonly role: string;
   readonly sourceFilenamePattern: string;
   readonly authority: string;
   readonly reason: string;
@@ -809,7 +810,7 @@ interface EcosystemSpec {
 }
 
 interface PackageGlueGrammar {
-  readonly analyzer: "rust" | "typescript" | "javascript" | "go" | "python" | "dotnet" | "c-cpp";
+  readonly analyzer: "rust" | "typescript" | "javascript" | "go" | "python" | "dotnet" | "c-cpp" | "tex";
   readonly allowedRoles: readonly ("declaration" | "registration" | "bootstrap" | "thin-delegation")[];
   readonly maxDelegationStatements: number;
 }
@@ -1113,15 +1114,16 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     if (extensionChains.length === 0 || extensionChains.some((chain) => !chain.startsWith("."))) throw new Error(`Taxonomy v7 scopedFileKinds.${id}.extensionChains must contain dotted chains`);
     const sourceFilenamePattern = requiredString(spec.sourceFilenamePattern, `scopedFileKinds.${id}.sourceFilenamePattern`);
     new RegExp(sourceFilenamePattern, "u");
-    if (spec.role !== "evidence") throw new Error(`Taxonomy v7 scopedFileKinds.${id}.role must be evidence`);
-    const parentDirectoryKindId = requiredString(spec.parentDirectoryKindId, `scopedFileKinds.${id}.parentDirectoryKindId`);
-    if (!semanticDirectoryKinds[parentDirectoryKindId]) throw new Error(`Taxonomy v7 scopedFileKinds.${id} references unknown parent directory kind ${parentDirectoryKindId}`);
+    const role = requiredString(spec.role, `scopedFileKinds.${id}.role`);
+    if (!["source", "schema", "specification", "configuration", "documentation", "test", "asset", "generated", "marker", "evidence"].includes(role)) throw new Error(`Taxonomy v7 scopedFileKinds.${id}.role is invalid`);
+    const parentDirectoryKindId = spec.parentDirectoryKindId === undefined ? undefined : requiredString(spec.parentDirectoryKindId, `scopedFileKinds.${id}.parentDirectoryKindId`);
+    if (parentDirectoryKindId && !semanticDirectoryKinds[parentDirectoryKindId]) throw new Error(`Taxonomy v7 scopedFileKinds.${id} references unknown parent directory kind ${parentDirectoryKindId}`);
     scopedFileKinds[id] = {
       pathPattern: validatedContractPattern(spec.pathPattern, `scopedFileKinds.${id}.pathPattern`, false),
       parentDirectoryKindId,
       emoji: requiredString(spec.emoji, `scopedFileKinds.${id}.emoji`).normalize("NFC"),
       extensionChains: [...new Set(extensionChains)].sort((left, right) => right.length - left.length || left.localeCompare(right)),
-      role: "evidence",
+      role,
       sourceFilenamePattern,
       authority: requiredString(spec.authority, `scopedFileKinds.${id}.authority`),
       reason: requiredString(spec.reason, `scopedFileKinds.${id}.reason`),
@@ -1570,7 +1572,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
   const packageGlueGrammar: Record<string, PackageGlueGrammar> = {};
   for (const [id, value] of Object.entries(grammarRows)) {
     const spec = record(value, `packageGlueGrammar.${id}`);
-    if (!["rust", "typescript", "javascript", "go", "python", "dotnet", "c-cpp"].includes(String(spec.analyzer))) throw new Error(`Taxonomy v7 packageGlueGrammar.${id}.analyzer is invalid`);
+    if (!["rust", "typescript", "javascript", "go", "python", "dotnet", "c-cpp", "tex"].includes(String(spec.analyzer))) throw new Error(`Taxonomy v7 packageGlueGrammar.${id}.analyzer is invalid`);
     const allowedRoles = stringArray(spec.allowedRoles, `packageGlueGrammar.${id}.allowedRoles`) as PackageGlueGrammar["allowedRoles"];
     if (allowedRoles.some((role) => !["declaration", "registration", "bootstrap", "thin-delegation"].includes(role)) || new Set(allowedRoles).size !== allowedRoles.length) throw new Error(`Taxonomy v7 packageGlueGrammar.${id}.allowedRoles is invalid`);
     if (!Number.isSafeInteger(spec.maxDelegationStatements) || (spec.maxDelegationStatements as number) < 0) throw new Error(`Taxonomy v7 packageGlueGrammar.${id}.maxDelegationStatements is invalid`);
@@ -2309,7 +2311,7 @@ function resolveFileKind(
   const folded = normalized.toLocaleLowerCase("und");
   const scoped = Object.entries(taxonomy.schema.scopedFileKinds)
     .flatMap(([id, spec]) => {
-      if (!taxonomy.pathMatcher.matches(path, spec.pathPattern) || !new RegExp(spec.sourceFilenamePattern, "u").test(normalized)) return [];
+      if (!taxonomy.pathMatcher.matches(path, spec.pathPattern) || spec.parentDirectoryKindId !== undefined && spec.parentDirectoryKindId !== parentKindId || !new RegExp(spec.sourceFilenamePattern, "u").test(normalized)) return [];
       const extensions = spec.extensionChains.filter((chain) => folded.endsWith(chain.toLocaleLowerCase("und"))).sort((left, right) => right.length - left.length || left.localeCompare(right));
       return extensions.length > 0 ? [{ id, spec, extension: extensions[0] }] : [];
     })
@@ -2906,6 +2908,40 @@ function sourceAdmissionWalk(repoRoot: string, root: string, taxonomy: LoadedTax
   return rows.sort(sourceAdmissionByteCompare);
 }
 
+function sourceAdmissionStructuralDirectories(repoRoot: string, names: readonly string[], taxonomy: LoadedTaxonomy, scope: string | undefined, cancelFile: string | undefined, repositoryFences: readonly string[]): readonly string[] {
+  const expected = new Set(names);
+  if (expected.size !== names.length || names.some((name) => !sourceAdmissionSafePath(name) || name.includes("/"))) throw new Error("Source admission structural directory names must be unique safe segments");
+  const found: string[] = [];
+  const opaquePrefixes = ["compose", ...taxonomy.exclusions.map((entry) => entry.path)];
+  const visit = (path: string | null, stat: Stats): void => {
+    sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
+    const absolute = path === null ? repoRoot : join(repoRoot, ...path.split("/"));
+    const names = readdirSync(absolute, { encoding: "buffer" }).map((name) => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(name));
+    const dirents = new Map(readdirSync(absolute, { withFileTypes: true }).map((entry) => [entry.name, entry]));
+    if (names.length !== dirents.size || names.some((name) => !dirents.has(name))) throw new Error(`Source admission structural directory names changed during enumeration: ${path ?? "."}`);
+    const entries = names.map((name) => ({ name, directory: dirents.get(name)!.isDirectory(), symlink: dirents.get(name)!.isSymbolicLink() })).sort((left, right) => sourceAdmissionByteCompare(left.name, right.name));
+    const current = path === null ? lstatSync(repoRoot) : sourceAdmissionLstat(repoRoot, path);
+    if (!current?.isDirectory() || current.isSymbolicLink() || current.dev !== stat.dev || current.ino !== stat.ino || current.mode !== stat.mode || current.mtimeMs !== stat.mtimeMs || current.ctimeMs !== stat.ctimeMs) throw new Error(`Source admission structural directory changed during enumeration: ${path ?? "."}`);
+    for (const entry of entries) {
+      if (!entry.directory && !entry.symlink) continue;
+      const child = path === null ? entry.name : `${path}/${entry.name}`;
+      if (!sourceAdmissionSafePath(child)) throw new Error(`Source admission structural directory has an invalid path: ${child}`);
+      if (sourceAdmissionOpaque(child, opaquePrefixes) || !inScope(child, scope)) continue;
+      sourceAdmissionAssertRepositoryPath(child, repositoryFences, "Source admission structural directory", true);
+      if (entry.symlink) { if (expected.has(entry.name)) found.push(child); continue; }
+      const childStat = sourceAdmissionLstat(repoRoot, child);
+      if (!childStat) continue;
+      if (expected.has(entry.name)) found.push(child);
+      if (!childStat.isDirectory() || childStat.isSymbolicLink() || sourceAdmissionContainingRepository(child, repositoryFences, true) !== null) continue;
+      const nestedGit = taxonomy.schema.fixedDirectoryContracts["nested-git-metadata"];
+      if (nestedGit && entry.name === ".git" && taxonomy.pathMatcher.matches(child, nestedGit.pathPattern)) continue;
+      visit(child, childStat);
+    }
+  };
+  visit(null, sourceAdmissionDirectoryChain(repoRoot).at(-1)!.stat);
+  return found.sort(sourceAdmissionByteCompare);
+}
+
 function sourceAdmissionObservation(repoRoot: string, path: string, origins: readonly TaxonomySourceOrigin[], indexEntries: readonly TaxonomySourceIndexEntry[]): TaxonomySourceCandidateObservation {
   try {
     const stat = sourceAdmissionLstat(repoRoot, path);
@@ -2949,6 +2985,11 @@ function collectTaxonomySourceAdmission(options: TaxonomyInventoryOptions, taxon
   sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
   for (const row of sourceAdmissionUntrackedRows(repoRoot, pathspec, taxonomy, repositoryFences)) add(row.path, "nonignored-untracked", undefined, row.directoryMarker);
   sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences); report(options.progress, "inventory", "untracked-enumeration", 1, 1, scope);
+  if (options.structuralDirectoryNames?.length) {
+    report(options.progress, "inventory", "structural-directory-admission", 0, 1, scope);
+    for (const path of sourceAdmissionStructuralDirectories(repoRoot, options.structuralDirectoryNames, taxonomy, scope, cancelFile, repositoryFences)) add(path, "nonignored-untracked", undefined, true);
+    sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences); report(options.progress, "inventory", "structural-directory-admission", 1, 1, scope);
+  }
   report(options.progress, "inventory", "ignored-generator-admission", 0, 1, scope);
   for (const output of generatorOutputRoots) if (output.inclusion === "ignored") for (const path of sourceAdmissionWalk(repoRoot, output.rootPath, taxonomy, scope, cancelFile, repositoryFences)) add(path, "ignored-generator");
   sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences); report(options.progress, "inventory", "ignored-generator-admission", 1, 1, scope);

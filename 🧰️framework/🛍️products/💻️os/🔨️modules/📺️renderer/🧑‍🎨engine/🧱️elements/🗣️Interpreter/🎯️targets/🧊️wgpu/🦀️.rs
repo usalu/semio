@@ -2028,7 +2028,12 @@ fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Dum
     // the window painted, which is why `drawCalls: 0` survived every earlier lane. The engine's own
     // per-window paint census measures the delta that paint appended, for either entry; the retained
     // `draw_list` is still read when it carries one (the `frame_step` path).
-    if let Some(census) = engine.paint_census(&window_id).filter(|census| census.layers > 0) {
+    // 🩸️ `layers > 0` alone disqualified a window whose whole paint IS its scene pass: the wgpu
+    // preview appends one `push_scene_pass` and no new draw LAYER, so its real census
+    // (`scene_passes 1, scene_draws 2, scene_instances 1`) was thrown away and the empty retained
+    // `draw_list` answered zeros — the hexagonal column was on screen while `dumpFrameStats` said
+    // nothing had been drawn (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    if let Some(census) = engine.paint_census(&window_id).filter(|census| census.layers > 0 || census.scene_passes > 0) {
         return DumpFrameStats {
             window_id: Some(window_id),
             window_ids,

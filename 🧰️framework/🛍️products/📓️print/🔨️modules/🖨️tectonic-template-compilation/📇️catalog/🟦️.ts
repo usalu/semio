@@ -3,10 +3,11 @@ import { join } from "node:path";
 import { getWorkspaceRoot } from "../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 export type PrintDocument = { readonly id: string; readonly texPath: string; readonly collection: "templates" | "visualizations"; readonly sources: readonly string[] };
-const catalog: { version: number; sourceDateEpoch: number; documents: PrintDocument[] } = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8"));
+const catalog: { version: number; sourceDateEpoch: number; librarySources: string[]; documents: PrintDocument[] } = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8"));
 const product = "🧰️framework/🛍️products/📓️print";
-if (catalog.version !== 1 || !Number.isSafeInteger(catalog.sourceDateEpoch) || catalog.sourceDateEpoch < 0 || !catalog.documents.length) throw new Error("Invalid Print document catalog");
+if (catalog.version !== 1 || !Number.isSafeInteger(catalog.sourceDateEpoch) || catalog.sourceDateEpoch < 0 || !catalog.librarySources.length || !catalog.documents.length) throw new Error("Invalid Print document catalog");
 const ids = new Set<string>(), paths = new Set<string>();
+for (const path of catalog.librarySources) if (!path || path.includes("\\") || path.startsWith("/") || path.split("/").some(part => [".", "..", ""].includes(part))) throw new Error(`Invalid Print library source: ${path}`);
 for (const document of catalog.documents) {
   if (!/^[a-z]+(?:-[a-z0-9]+)*$/.test(document.id) || ids.has(document.id) || paths.has(document.texPath) || !["templates", "visualizations"].includes(document.collection) || !document.texPath.endsWith(".tex")) throw new Error(`Invalid Print document: ${document.id}`);
   for (const path of [document.texPath, ...document.sources]) if (!path || path.includes("\\") || path.startsWith("/") || path.split("/").some(part => [".", "..", ""].includes(part))) throw new Error(`Invalid Print source: ${path}`);
@@ -15,6 +16,9 @@ for (const document of catalog.documents) {
 
 /** 📇️ Lists the authored document owners used by the compiler and Nx inference. */
 export function printDocuments(): readonly PrintDocument[] { return catalog.documents; }
+
+/** 📚️ Lists the exact shared macro-library roots materialized for every compiler invocation. */
+export function printLibrarySources(): readonly string[] { return catalog.librarySources; }
 
 /** 📄️ Resolves one declared document without accepting filesystem paths as identifiers. */
 export function printDocument(id: string): PrintDocument {

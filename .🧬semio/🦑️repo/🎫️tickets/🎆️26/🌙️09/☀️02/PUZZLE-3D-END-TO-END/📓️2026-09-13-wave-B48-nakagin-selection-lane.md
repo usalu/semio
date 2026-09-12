@@ -593,3 +593,28 @@ export DOES exist in source — the dev server was holding a transform from a pe
 
 Each cost one 200-second boot budget. Any wave whose battery reports `boot instances=0` should read the
 console tail before believing anything about the guest: `🔍️b48-selection-refresh.ts` now prints it.
+
+### 9.1 The eight `reactor`-family failures, attributed
+
+A broad `cargo test -p semio-framework-plugin --lib -- --test-threads=1 reactor` reached 124 ok / 8
+FAILED before the coordinator stopped it inside the W-B2 mixed-surface budget law (which is running to
+its 100 000-turn bound because of the `♻️reconcile` regression above). Every one of the eight was
+attributed by running it in ISOLATION and, where it could plausibly be this wave's, by running it with
+this wave's `release` change temporarily reverted:
+
+| failure | attribution | evidence |
+| --- | --- | --- |
+| `patches::issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner` | peer (`♻️reconcile`) | fails in isolation; fails with `release` on AND off; `instance 7 did not reach terminal empty` |
+| `patches::mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes` | peer (`♻️reconcile`) | same, `instance 1` |
+| `patches::mounted_output_admission_direct_receiver_preserves_captured_lifetime_generation_and_callback_roots` | peer (`♻️reconcile`) | same, `instance 75` |
+| `patches::mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner` | cascade only | **passes in isolation** |
+| `command_ingress_terminal_tests::async_actor_poll_awaits_exchange_and_render_work` | peer | a SOURCE-TEXT law over `🔄️turn/🦀️.rs`; the literal it requires, `plugin_exchange(runtime, cursor.instance, None).await`, exists NOWHERE in the repo any more — a peer changed that call's shape |
+| `executor::tests::cancel_of_a_parked_task_drops_it_and_frees_its_slot_for_reuse` | peer | fails with `release` on AND off; `a detached slot must be reusable by a later spawn: left 1, right 0` — executor slots, untouched here |
+| `m1_m2_reactor_tests::revision_guard_rejects_an_intent_trailing_by_more_than_the_tolerance` | peer | fails with `release` on AND off; `UiRevision(1)` where 3 is expected, i.e. `can_begin`'s acknowledged-revision gate refuses the 2nd and 3rd `patches_diff` — `♻️reconcile`'s ack bookkeeping |
+| `plugin_builder_contract_tests::one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll` | unattributable — the workspace broke again | at 22:46 a peer left `semio-framework-ui-viewport` non-compiling (`E0277: Viewport3dAxonometricHemisphere` needs `Default` for a `NonNullOption<T>` derive), so this test can no longer be built at all |
+
+**No name that was green in this filter before this wave went red.** Every law this wave added or
+rewrote was re-run green after the last edit
+(`deferred_render dropped_render reservable tracker_initialization` → `5 passed; 0 failed`), and all
+temporary `[DEBUG] b48 … probe` reverts used for red-gate proof were removed (`rg` over `*.rs` finds
+none).

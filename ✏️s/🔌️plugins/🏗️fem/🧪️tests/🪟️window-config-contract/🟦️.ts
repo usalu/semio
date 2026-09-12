@@ -4,6 +4,7 @@ import { testFemAssemblyMergeRefusalOracle } from "../../../../🔨️modules/�
 import { testFemAssemblyStepGrantOracle } from "../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/⛽️step-grant/🟦️.ts";
 import { testFemPagedCsrOracle } from "../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📚️paged-csr/🟦️.ts";
 import { testFemPcgPublicationGrantOracle } from "../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/⛽️publication-grant/🟦️.ts";
+import { testFemScalarOwnerOracle } from "../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🔢️scalar-owners/🟦️.ts";
 import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import commandLimits from "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧫️fixtures/🚧️retained-command-limits/🔣️.json" with { type: "json" };
@@ -36,6 +37,7 @@ export function testFem3dWindowConfigContract(): void {
   testFemAssemblyStepGrantOracle();
   testFemPagedCsrOracle();
   testFemPcgPublicationGrantOracle();
+  testFemScalarOwnerOracle();
   const validateCommands = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-formats").compile(commandLimitsSchema);
   assert(validateCommands(commandLimits), JSON.stringify(validateCommands.errors));
   for (const id of ["setCamera", "setResultDisplay"]) {

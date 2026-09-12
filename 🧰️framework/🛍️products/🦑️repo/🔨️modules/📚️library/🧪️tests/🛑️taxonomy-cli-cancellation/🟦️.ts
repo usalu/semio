@@ -7,22 +7,38 @@ import { inventoryTaxonomy, planTaxonomy, type TaxonomyPlanOptions } from "../..
 
 const root = resolve(import.meta.dir, "../../../../../../../");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
+const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for taxonomy cancellation output.");
+const ticket = join(artifactRoot, "taxonomy-cli-cancellation");
+const workflowPath = resolve(import.meta.dir, "../../🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts");
+const commandPath = resolve(import.meta.dir, "../../🧼️workspace-cleanup/🎮️command/🟦️.ts");
 const schemaPath = `${library}/🔣️taxonomy.json`;
 const vector = JSON.parse(readFileSync(join(root, library, "🧫️fixtures/🛑️taxonomy-cli-cancellation/🔣️.json"), "utf8"));
 
 /** 🎛️ Compiles the actual CLI plan-options expression with two independent TypeScript implementations. */
 function planOptionFactories(): ((baseline: string, cancel: string | undefined, progress: NonNullable<TaxonomyPlanOptions["progress"]>) => TaxonomyPlanOptions)[] {
-  const source = ts.createSourceFile("📜️script.ts", readFileSync(join(root, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
-  const owner = source.statements.find((node) => ts.isClassDeclaration(node) && node.name?.text === "CleanScript") as ts.ClassDeclaration;
-  const method = owner.members.find((node) => ts.isMethodDeclaration(node) && node.name.getText(source) === "runTaxonomy")!;
+  const source = ts.createSourceFile("🟦️.ts", readFileSync(workflowPath, "utf8"), ts.ScriptTarget.Latest, true);
+  const owner = source.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "runTaxonomyCliWorkflow") as ts.FunctionDeclaration;
   const calls: ts.CallExpression[] = [];
   const visit = (node: ts.Node): void => { if (ts.isCallExpression(node) && node.expression.getText(source) === "planTaxonomy") calls.push(node); ts.forEachChild(node, visit); };
-  visit(method);
+  visit(owner);
   expect(calls).toHaveLength(1);
   const code = `function capture(baseline, cancelArgumentPath, taxonomyCliProgress) { const options = { baseline }; return (${calls[0].arguments[1].getText(source)}); }`;
   return [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText].map((compiled) => new Function(`${compiled}\nreturn capture;`)());
 }
+
+
+test("the clean command delegates taxonomy arguments to the extracted workflow owner", () => {
+  const source = readFileSync(commandPath, "utf8");
+  const syntax = ts.createSourceFile("🟦️.ts", source, ts.ScriptTarget.Latest, true);
+  const owner = syntax.statements.find((node) => ts.isClassDeclaration(node) && node.name?.text === "CleanScript") as ts.ClassDeclaration;
+  const run = owner.members.find((node) => ts.isMethodDeclaration(node) && node.name.getText(syntax) === "run")!;
+  const calls: ts.CallExpression[] = [];
+  const visit = (node: ts.Node): void => { if (ts.isCallExpression(node) && node.expression.getText(syntax) === "runTaxonomyCliWorkflow") calls.push(node); ts.forEachChild(node, visit); };
+  visit(run);
+  expect(calls).toHaveLength(1);
+  expect(calls[0]!.arguments.map((argument) => argument.getText(syntax))).toEqual(["this.root", "segments.slice(1)"]);
+});
 
 test("the CLI forwards its guarded cancellation path to every planning implementation", () => {
   const cancel = join(ticket, vector.cancelPath), progress = () => {};
@@ -33,6 +49,7 @@ test("the CLI forwards its guarded cancellation path to every planning implement
 });
 
 test("the real CLI options cancel incoming-reference planning without changing source bytes", () => {
+  mkdirSync(ticket, { recursive: true });
   for (const factory of planOptionFactories()) {
     const directory = mkdtempSync(join(ticket, "🧪️cli-plan-cancellation-"));
     const put = (path: string, bytes: string | Buffer): void => { mkdirSync(dirname(join(directory, path)), { recursive: true }); writeFileSync(join(directory, path), bytes); };

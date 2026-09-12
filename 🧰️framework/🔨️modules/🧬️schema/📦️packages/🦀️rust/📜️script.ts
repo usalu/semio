@@ -46,7 +46,7 @@ function emitTypeScript(source: EntityCatalogSource): string {
   const rows = source.kinds.map((kind) => `\t{ id: ${JSON.stringify(kind.id)}, emoji: ${JSON.stringify(kind.emoji)}, iconId: ${JSON.stringify(kind.iconId)}, label: ${JSON.stringify(kind.label)}, filterable: ${kind.filterable} },`).join("\n");
   return `/** ${origin}
  * ${refresh} */
-import type { EntityKind, EntityKindCatalog } from "../🟦️";
+import type { EntityKind, EntityKindCatalog } from "../../🟦️";
 
 export type { EntityKind, EntityKindCatalog };
 

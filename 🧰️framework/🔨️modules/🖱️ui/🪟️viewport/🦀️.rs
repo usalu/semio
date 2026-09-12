@@ -7,7 +7,7 @@ mod planar;
 #[path = "🧊️3d/🧬️schema/🦀️.rs"]
 mod orbit;
 pub use planar::Viewport2d;
-pub use orbit::Viewport3dOrbit;
+pub use orbit::*;
 
 fn fields(value: DslValue, allowed: &[&str]) -> Result<Vec<(String, DslValue)>, ValueError> {
     let entries = value.into_object()?;
@@ -25,6 +25,10 @@ fn take<T: FromValue>(entries: &mut Vec<(String, DslValue)>, name: &str) -> Resu
     T::from_value(entries.swap_remove(index).1).map_err(|error| error.under(name))
 }
 
+fn finish(entries: Vec<(String, DslValue)>) -> Result<(), ValueError> {
+    if let Some((name, _)) = entries.into_iter().next() { Err(ValueError::new("field does not belong to selected viewport variant").under(name)) } else { Ok(()) }
+}
+
 fn finite(value: f64, name: &str) -> Result<(), ValueError> {
     if value.is_finite() { Ok(()) } else { Err(ValueError::new("expected finite coordinate").under(name)) }
 }
@@ -36,3 +40,7 @@ fn zoom(value: f64) -> Result<(), ValueError> {
 #[cfg(test)]
 #[path = "🧪️tests/🪟️poses/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/📐️projection/🦀️.rs"]
+mod projection_tests;

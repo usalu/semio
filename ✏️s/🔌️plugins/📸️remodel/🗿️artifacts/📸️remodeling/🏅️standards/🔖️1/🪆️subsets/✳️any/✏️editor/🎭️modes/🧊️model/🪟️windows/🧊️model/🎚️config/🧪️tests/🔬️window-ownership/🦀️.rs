@@ -72,7 +72,7 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
             }
 
             async fn model_scene(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, view: &ViewModel) -> Result<semio_framework_plugin::World3dScene, String> {
-                artifact_app_laws::decode_fixture_scene(&render(app, model::windows::model::REMODELING_PLAY_BODY_MAIN, view).await?).map_err(str::to_string)
+                artifact_app_laws::decode_fixture_scene_with_lanes(&render(app, model::windows::model::REMODELING_PLAY_BODY_MAIN, view).await?).map_err(str::to_string)
             }
 
             async fn frames_scene(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, view: &ViewModel) -> Result<semio_framework_plugin::Canvas2dScene, String> {
@@ -117,6 +117,21 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                 if publications != 6 { return Err(format!("Remodel exact-window lane count changed: {publications}")); }
                 let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Remodel window commands changed document bytes".into()); }
+                let stored_model_left = artifact_app_laws::capture_fixture_window_config::<RemodelingModelWindowConfigOwner, _, _>(&mut *app, &model_left)
+                    .await
+                    .map_err(|error| format!("{error:?}"))?
+                    .ok_or_else(|| "Remodel left Model config disappeared before render".to_string())?;
+                let stored_model_right = artifact_app_laws::capture_fixture_window_config::<RemodelingModelWindowConfigOwner, _, _>(&mut *app, &model_right)
+                    .await
+                    .map_err(|error| format!("{error:?}"))?
+                    .ok_or_else(|| "Remodel right Model config disappeared before render".to_string())?;
+                let expected_left_camera = store::Viewport3dOrbit { position: [12.0, -8.0, 4.0], target: [1.0, 2.0, 3.0], zoom: 1.25, up: None };
+                if stored_model_left.camera != expected_left_camera || !stored_model_left.layers.mesh {
+                    return Err(format!("Remodel left Model store did not retain its isolated camera/layers: {stored_model_left:?}"));
+                }
+                if stored_model_right.camera != RemodelingModelWindowConfig::default().camera || stored_model_right.layers.mesh {
+                    return Err(format!("Remodel right Model store did not retain its isolated camera/layers: {stored_model_right:?}"));
+                }
                 let left_model = model_scene(&mut app, &model_left).await?;
                 let right_model = model_scene(&mut app, &model_right).await?;
                 let left_frames = frames_scene(&mut app, &frames_left).await?;
@@ -125,7 +140,7 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                 let right_report = report_scene(&mut app, &report_right).await?;
                 let left_camera: store::Viewport3dOrbit = dsl::json::from_json_str(&left_model.camera_json).map_err(|error| format!("{error:?}"))?;
                 if left_model == right_model { return Err("Remodel Model rendered identical scenes for two isolated window configs".into()); }
-                if left_camera != (store::Viewport3dOrbit { position: [12.0, -8.0, 4.0], target: [1.0, 2.0, 3.0], zoom: 1.25, up: None }) {
+                if left_camera != expected_left_camera {
                     return Err(format!("Remodel Model rendered the wrong left camera: {left_camera:?}"));
                 }
                 if right_model.instances_json != "[]" { return Err(format!("Remodel Model rendered a mesh instance hidden by the right config: {}", right_model.instances_json)); }

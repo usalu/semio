@@ -5,7 +5,11 @@ Resumes `📓️wgpu-document-reconcile-2026-09-12.md` §6 (deliverable A) and �
 
 Repo MCP was down all session (`repo -32602 invalid initialize params`, `semio CONNECTION_CLOSED`); no
 ticket was opened, closed or reopened — bookkeeping is on disk. Evidence under
-`🗑️generated/wgpu-raster/run-1 … run-10`; nothing under any `🗑️generated` folder was swept. The react
+`🗑️generated/wgpu-raster/run-1 … run-10`; nothing under any `🗑️generated` folder was swept BY THIS
+LANE. (Noted 22:47 the same day: a later lane wiped the whole `🗑️generated` tree and started its own
+`wgpu-settle/` in it, so those ten run directories — consoles, `samples.json`, screenshots — no longer
+exist and are unrecoverable, since `🗑️generated` is gitignored. Every measurement quoted below was read
+off them while they were live; the quoted lines are verbatim.) The react
 serve on 6018 was not touched, the procedural guest was NOT rebuilt or restaged, and no git-state
 modifying command was run.
 

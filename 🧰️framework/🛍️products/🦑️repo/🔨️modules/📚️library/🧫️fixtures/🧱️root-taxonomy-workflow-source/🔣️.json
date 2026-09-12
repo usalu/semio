@@ -246,8 +246,28 @@
       ]
     },
     {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧾️source-file-facts/🟦️.ts",
+      "owners": [
+        "🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎭️source-roster-roles/🟦️.ts",
+      "owners": [
+        "🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎫️ticket-role-routing/🟦️.ts",
+      "owners": [
+        "🧹️normalization/🧬️mutation/📇️index/🟦️.ts",
+        "🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts"
+      ]
+    },
+    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
       "owners": [
+        "🧹️normalization/🎮️command-contract/🟦️.ts",
         "🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts",
         "🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts",
         "🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts",

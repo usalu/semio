@@ -68,7 +68,7 @@
     "canRedo": 2563,
     "worldFromScreen": 2564,
     "setCamera": 2565,
-    "cameraJson": 2566,
+    "viewport": 2566,
     "wheelScreen": 2567,
     "setWheelZoomActive": 2568,
     "lodScaleJson": 2569,
@@ -608,7 +608,7 @@
         "type": "f64"
       }
     ],
-    "cameraJson": [],
+    "viewport": [],
     "wheelScreen": [
       {
         "name": "sx",

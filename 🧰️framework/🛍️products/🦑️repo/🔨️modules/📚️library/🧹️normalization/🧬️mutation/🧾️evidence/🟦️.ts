@@ -193,6 +193,8 @@ export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTax
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const before = mutationTaxonomySourceSnapshot(repoRoot, options);
     const roots = before.roots;
+    const symlink = before.admission.observations.find((observation) => observation.observedKind === "symlink" && roots.some((root) => observation.sourcePath === root || observation.sourcePath.startsWith(`${root}/`)));
+    if (symlink) throw new Error(`[clean taxonomy --kind mutation] source admission contains symlink ${symlink.sourcePath}.`);
     const view = mutationTaxonomyStructuralView(before);
     const violations = policyMutationStructuralBreachesView(view, roots);
     const records: MutationTaxonomyRecord[] = [];

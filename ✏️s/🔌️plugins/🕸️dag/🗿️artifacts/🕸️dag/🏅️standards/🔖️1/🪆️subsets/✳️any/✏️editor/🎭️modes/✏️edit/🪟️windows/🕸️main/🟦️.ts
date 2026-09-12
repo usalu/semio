@@ -1,5 +1,5 @@
 /** 🕸️ DAG editor — the main window: typed twin of `🦀️.rs`'s node-graph render boundary.
- * Mirrors the framework's own `NodeGraphNodeRecord`/`NodeGraphEdgeRecord`/`NodeGraphViewport` shapes
+ * Mirrors the framework's own `NodeGraphNodeRecord`/`NodeGraphEdgeRecord`/`Viewport2d` shapes
  * (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts`) rather than importing them, matching this
  * taxonomy's per-component TS twin convention (no cross-package TS import). */
 

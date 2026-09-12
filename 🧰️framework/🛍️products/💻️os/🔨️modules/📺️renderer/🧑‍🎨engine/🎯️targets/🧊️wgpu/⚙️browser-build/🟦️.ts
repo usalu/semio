@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { renderWgpuPackageArtifacts } from "../📽️projection/🟦️.ts";
 import { join, resolve } from "node:path";
 import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { MODULE_ROUTES } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
@@ -65,15 +66,16 @@ async function bundleAtWorkspaceRoot(entryPath: string): Promise<string> {
 }
 
 /** 🚀️ Renders the browser boot artifact without changing generated files. */
-export async function renderBrowserBoot(bundleRoot: string): Promise<{ path: string; content: string }> {
-  const bootTs = join(bundleRoot, "../../🚀️browser-boot/🟦️.ts");
+export async function renderBrowserBoot(bundleRoot: string, workspaceRoot: string = repoRoot): Promise<{ path: string; content: string }> {
   const bootJs = join(bundleRoot, "../../🚀️browser-boot/🤖️generated/🟨️.js");
-  return { path: bootJs, content: await renderBrowserEntry(bootTs) };
+  const artifact = (await renderWgpuPackageArtifacts(workspaceRoot, { producerTarget: "@semio-tech/framework-renderer-wgpu:generate-browser-boot" })).nodes.find((node) => resolve(workspaceRoot, node.path) === resolve(bootJs));
+  if (!artifact) throw new Error("WGPU browser boot producer omitted its artifact");
+  return { path: bootJs, content: artifact.content };
 }
 
 /** 🔎️ Checks generated boot bytes without creating or rewriting the artifact. */
-export async function checkBrowserBoot(bundleRoot: string): Promise<void> {
-  const artifact = await renderBrowserBoot(bundleRoot);
+export async function checkBrowserBoot(bundleRoot: string, workspaceRoot: string = repoRoot): Promise<void> {
+  const artifact = await renderBrowserBoot(bundleRoot, workspaceRoot);
   if (!existsSync(artifact.path) || readFileSync(artifact.path, "utf8") !== artifact.content) throw new Error("🚀️boot.js is missing or stale; run the generate-browser-boot target");
 }
 

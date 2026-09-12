@@ -2111,6 +2111,18 @@ mod plugin_builder_contract_tests {
                 Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
             }
 
+            fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+                Ok(0)
+            }
+
+            fn maximum_close_byte_demand(&self) -> usize {
+                0
+            }
+
+            fn maximum_retained_close_bytes(&self) -> usize {
+                0
+            }
+
             fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
                 if maximum_items == 0 {
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });

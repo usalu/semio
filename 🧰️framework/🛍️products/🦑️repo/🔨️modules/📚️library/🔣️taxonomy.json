@@ -2797,6 +2797,19 @@
     }
   },
   "scopedFileKinds": {
+    "print-graph-macro-source": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🔨️modules/🕸️graph/*.tex",
+      "emoji": "📐️",
+      "extensionChains": [
+        ".tex"
+      ],
+      "role": "source",
+      "sourceFilenamePattern": "^[^/]+\\.tex$",
+      "authority": "Print macro-library catalog and semantic graph owner",
+      "reason": "Every TeX leaf directly owned by the exact graph module is implementation while TeX documents elsewhere remain documentation",
+      "verification": "@semio-tech/print:test-macro-staging and taxonomy inventory",
+      "expires": null
+    },
     "transaction-backup-candidate": {
       "pathPattern": "**/💾️backup/🚧️restore-*/*.backup",
       "parentDirectoryKindId": "transaction-restore-preparation",
@@ -4739,6 +4752,78 @@
         "schema"
       ]
     },
+    "repo-schema-field-discovery": {
+      "emoji": "🔍️",
+      "slugPattern": "^field-discovery$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "repo-schema-field-contract": {
+      "emoji": "🧱️",
+      "slugPattern": "^contract$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-field-discovery"
+      ]
+    },
+    "repo-schema-field-rust-representation": {
+      "emoji": "🦀️",
+      "slugPattern": "^rust$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-field-discovery"
+      ]
+    },
+    "repo-schema-field-typescript-representation": {
+      "emoji": "🟦️",
+      "slugPattern": "^typescript$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-field-discovery"
+      ]
+    },
+    "repo-schema-field-typescript-module-resolution": {
+      "emoji": "📂️",
+      "slugPattern": "^module-resolution$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-field-typescript-representation"
+      ]
+    },
+    "repo-schema-field-graphql-representation": {
+      "emoji": "🔗️",
+      "slugPattern": "^graphql$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-field-discovery"
+      ]
+    },
+    "repo-schema-field-json-schema-representation": {
+      "emoji": "🔣️",
+      "slugPattern": "^json-schema$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-field-discovery"
+      ]
+    },
+    "repo-schema-field-protobuf-representation": {
+      "emoji": "🛰️",
+      "slugPattern": "^protobuf$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-field-discovery"
+      ]
+    },
+    "repo-schema-field-comparison": {
+      "emoji": "⚖️",
+      "slugPattern": "^comparison$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-field-discovery"
+      ]
+    },
     "vulkan-target": {
       "emoji": "🌋️",
       "slugPattern": "^vulkan$",
@@ -6266,6 +6351,102 @@
       "allowEmojiOnly": false,
       "parentKindIds": [
         "stories"
+      ]
+    },
+    "repo-workspace-cleanup": {
+      "emoji": "🧼️",
+      "slugPattern": "^workspace-cleanup$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-workspace-cleanup-protection": {
+      "emoji": "🛡️",
+      "slugPattern": "^protection$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-workspace-cleanup"
+      ]
+    },
+    "repo-workspace-cleanup-candidate-discovery": {
+      "emoji": "🔍️",
+      "slugPattern": "^candidate-discovery$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-workspace-cleanup"
+      ]
+    },
+    "repo-workspace-cleanup-removal": {
+      "emoji": "🗑️",
+      "slugPattern": "^removal$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-workspace-cleanup"
+      ]
+    },
+    "repo-workspace-cleanup-command": {
+      "emoji": "🎮️",
+      "slugPattern": "^command$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-workspace-cleanup"
+      ]
+    },
+    "repo-normalization-command-workflow": {
+      "emoji": "🔁️",
+      "slugPattern": "^workflow$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization-command-contract"
+      ]
+    },
+    "repo-authoring": {
+      "emoji": "🏗️",
+      "slugPattern": "^authoring$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-authoring-contract": {
+      "emoji": "🧱️",
+      "slugPattern": "^contract$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-authoring"
+      ]
+    },
+    "repo-authoring-artifact-tree": {
+      "emoji": "🗿️",
+      "slugPattern": "^artifact-tree$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-authoring"
+      ]
+    },
+    "repo-authoring-mutation-tree": {
+      "emoji": "🧬️",
+      "slugPattern": "^mutation-tree$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-authoring"
+      ]
+    },
+    "repo-authoring-command": {
+      "emoji": "🎮️",
+      "slugPattern": "^command$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-authoring"
+      ]
+    },
+    "repo-normalization-mutation-direct-owner-index": {
+      "emoji": "📇️",
+      "slugPattern": "^direct-owner-index$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-normalization-mutation"
       ]
     }
   },
@@ -13450,6 +13631,98 @@
       ],
       "memberNames": [
         "📣️plugin-publication-source-ownership"
+      ],
+      "source": "registry"
+    },
+    "app-verification-source-ownership": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "📱️app-verification-source-ownership"
+      ],
+      "source": "registry"
+    },
+    "publication-authority-verification": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "📣️publication-authority"
+      ],
+      "source": "registry"
+    },
+    "native-codec-verification": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "📇️native-codecs"
+      ],
+      "source": "registry"
+    },
+    "inference-control-verification": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "💡️inference-control"
+      ],
+      "source": "registry"
+    },
+    "map-create-region-group-verification": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🧩️map-create-region-group"
+      ],
+      "source": "registry"
+    },
+    "durable-three-store-assembly-verification": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🗄️durable-three-store-assembly"
+      ],
+      "source": "registry"
+    },
+    "component-cold-map-patch-verification": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🌉️component-cold-map-patch"
+      ],
+      "source": "registry"
+    },
+    "native-openable-identity-verification": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🪪️native-openable-identity"
+      ],
+      "source": "registry"
+    },
+    "oracle-toolchain": {
+      "ownerKindIds": [
+        "oracles"
+      ],
+      "memberNames": [
+        "🛠️toolchain"
+      ],
+      "source": "registry"
+    },
+    "oracle-execution": {
+      "ownerKindIds": [
+        "oracles"
+      ],
+      "memberNames": [
+        "🏃️execution"
       ],
       "source": "registry"
     },
@@ -23238,6 +23511,13 @@
         "thin-delegation"
       ],
       "maxDelegationStatements": 8
+    },
+    "tex": {
+      "analyzer": "tex",
+      "allowedRoles": [
+        "thin-delegation"
+      ],
+      "maxDelegationStatements": 4
     }
   },
   "packageBoundaryRules": {
@@ -23405,6 +23685,14 @@
     }
   },
   "packageSourceDispositions": {
+    "print-latex-semio-graph": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "grammarId": "tex",
+      "authority": "LaTeX package lookup delegation to the semantic graph macro owner",
+      "verification": "@semio-tech/print:test-macro-staging and taxonomy fixed-source validation"
+    },
     "dev-plugin-component-sourcing-module-beams-js": {
       "contractKind": "fixed",
       "disposition": "adapter-source",
@@ -26194,6 +26482,8 @@
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🟦️.ts",
             "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json",
             "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json",
             "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts",
@@ -26300,6 +26590,8 @@
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🟦️.ts",
         "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json",
         "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json",
         "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts",
@@ -26377,7 +26669,11 @@
       "outputRoots": [
         {
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js",
-          "inclusion": "tracked"
+          "inclusion": "tracked",
+          "producer": {
+            "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+            "target": "@semio-tech/framework-renderer-wgpu:generate-frame-worker"
+          }
         },
         {
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📚️library/🟦️.ts",
@@ -26393,14 +26689,18 @@
         },
         {
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🤖️generated/🟨️.js",
-          "inclusion": "ignored"
+          "inclusion": "ignored",
+          "producer": {
+            "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+            "target": "@semio-tech/framework-renderer-wgpu:generate-browser-boot"
+          }
         },
         {
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📇️registry/🦀️.rs",
           "inclusion": "tracked"
         }
       ],
-      "reason": "One exact package owner emits four catalog leaves and two closed browser bundles; first generation requires the complete 31-move and one-retirement projection, with canonical producer-input freshness thereafter"
+      "reason": "One canonical package projection with exclusive Nx producers for the package declarations, frame worker and browser boot."
     }
   },
   "pathExclusions": {

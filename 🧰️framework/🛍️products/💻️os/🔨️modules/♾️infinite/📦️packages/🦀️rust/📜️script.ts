@@ -30,7 +30,7 @@ class FontsScript extends BundleScript {
       const result = await runExactCargoLawProcess(binary, [asset], { cwd: ROOT, env: process.env, budgetMs: 60_000, maxOutputBytes: 1024 * 1024, stdoutPath: join(temporary, "stdout"), stderrPath: join(temporary, "stderr"), cancelled: () => cancelled });
       if (result.status !== 0 || cancelled) throw new Error(`Font dump failed: ${result.stderr}`);
       const bytes = readFileSync(asset), count = validateFontAsset(bytes);
-      stageArtifacts(join(ROOT, "dist/fonts"), "infinite:fonts", new Map([[FONT_ASSET, asset]]));
+      await stageArtifacts(join(ROOT, "dist/fonts"), "infinite:fonts", new Map([[FONT_ASSET, asset]]));
       console.log(`Staged ${count} fonts (${bytes.byteLength} bytes)`);
     } finally {
       process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel);

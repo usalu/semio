@@ -10351,6 +10351,26 @@ impl RuntimeMailbox {
         self.try_lock().ok().and_then(|runtime| runtime.interaction.as_ref().map(AppInteractionState::has_pending_text_work)).unwrap_or(false)
     }
 
+    /// 🌍️ Whether any World3d surface still owes its own frame.
+    ///
+    /// ⚖️ The world's existing wake authority (`World3dBuildContext::request_cursor_wake`) is only
+    /// reachable from `render_world_3d`, i.e. from a PAINT — and a retained window republishes its
+    /// cached paint while its revision is unchanged, so the paint that would ask for the next frame
+    /// runs once per DOCUMENT, not once per frame. A mesh ingest that needs more frames than the
+    /// document that started it therefore stalled forever on a settled, event-driven shell: measured
+    /// on 6118 as `procedural-preview` parked at `apply-page=0/3 apply-item=1 rebuild=true
+    /// state-meshes=2 draws=0` with `extrude@solid` sitting unconsumed in its mesh lane
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). This is the same shape as
+    /// `has_pending_text_work`: a per-frame predicate the browser tick turns into `request_frame`,
+    /// so the work the FRAME TRANSACTION drives keeps its own frames coming.
+    #[cfg(target_arch = "wasm32")]
+    fn has_pending_world3d_work(&self) -> bool {
+        self.try_lock()
+            .ok()
+            .and_then(|runtime| runtime.interaction.as_ref().map(|interaction| interaction.shell.world3d_states.values().any(infinite_world::world::world3d_cursor_work_pending)))
+            .unwrap_or(false)
+    }
+
     #[cfg(target_arch = "wasm32")]
     fn take_text_fault(&self) -> Option<String> {
         self.try_lock().ok()?.interaction.as_mut()?.text_fault.take()
@@ -11439,6 +11459,7 @@ impl FrameTransaction {
                     self.phase = AppFrameTransactionPhase::Terminal;
                     return AppFrameTransactionStep::Fault;
                 };
+                world3d_ingest_trace(&surface_id, state, "phase-entry");
                 if retire_cancelled_world3d_asset_step(state) {
                     context.consume_fuel(1);
                     return AppFrameTransactionStep::Pending;
@@ -11452,17 +11473,28 @@ impl FrameTransaction {
                     }
                     World3dSceneBridgeStep::Idle | World3dSceneBridgeStep::Complete => {}
                 }
+                // 🔁️ A `Pending` draw rebuild does NOT end this phase's turn.
+                //
+                // 🩸️ `step_world3d_draw_rebuild` owns only the PUBLISH half of a rebuild and answers
+                // `Pending` for as long as its cursor is unsealed — and the only thing that can seal
+                // it is `step_world3d_snapshot`, below. Returning here therefore made the two steps
+                // wait on each other forever: measured on 6118 as `procedural-preview` frozen at
+                // `apply-page=0/3 apply-item=1 rebuild=true state-meshes=2 draws=0` across 3.8 M
+                // frame-transaction turns, with the solid `extrude@solid` sitting unconsumed in its
+                // mesh lane (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Both shared drivers —
+                // `♾️infinite/🌍️world`'s own `drive_scene_bridge` and
+                // `⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces` — already run the two steps in
+                // exactly this order, unconditionally; this host was the one place that diverged.
                 match step_world3d_draw_rebuild(state, context) {
-                    WorldDrawRebuildStep::Pending => return AppFrameTransactionStep::Pending,
+                    WorldDrawRebuildStep::Pending | WorldDrawRebuildStep::Complete => {}
                     WorldDrawRebuildStep::Stale | WorldDrawRebuildStep::Fault => {
                         runtime.record_frame_fault("world3d retained draw rebuild faulted");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     }
-                    WorldDrawRebuildStep::Complete => {}
                 }
                 let snapshot_step = step_world3d_snapshot(state, context);
-                world3d_ingest_trace(&surface_id, state, snapshot_step);
+                world3d_ingest_trace(&surface_id, state, &format!("snapshot-{snapshot_step:?}"));
                 match snapshot_step {
                     World3dSnapshotApplyStep::Idle | World3dSnapshotApplyStep::Complete => {
                         self.world3d_authority_cursor += 1;
@@ -13687,19 +13719,17 @@ impl AppInteractionState {
 /// the preview sat at `apply=true state-meshes=2 draws=0` with no further evidence for 95 s
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Every terminal step is reported, and a `Pending` one
 /// every `WORLD3D_INGEST_TRACE_STRIDE` frames.
-fn world3d_ingest_trace(surface_id: &str, state: &infinite_world::world::World3dState, step: World3dSnapshotApplyStep) {
-    const WORLD3D_INGEST_TRACE_STRIDE: u32 = 256;
-    static PENDING_STEPS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
-    if matches!(step, World3dSnapshotApplyStep::Idle) {
+fn world3d_ingest_trace(surface_id: &str, state: &infinite_world::world::World3dState, stage: &str) {
+    const WORLD3D_INGEST_TRACE_STRIDE: u32 = 512;
+    static STEPS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+    if !infinite_world::world::world3d_cursor_work_pending(state) {
         return;
     }
-    if matches!(step, World3dSnapshotApplyStep::Pending) {
-        let seen = PENDING_STEPS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        if seen % WORLD3D_INGEST_TRACE_STRIDE != 0 {
-            return;
-        }
+    let seen = STEPS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    if seen % WORLD3D_INGEST_TRACE_STRIDE != 0 {
+        return;
     }
-    log_debug(&format!("world3d ingest surface={surface_id} step={step:?} {}", state.ingest_census()));
+    log_debug(&format!("world3d ingest surface={surface_id} stage={stage} steps={seen} {}", state.ingest_census()));
 }
 
 #[cfg(not(target_arch = "wasm32"))]

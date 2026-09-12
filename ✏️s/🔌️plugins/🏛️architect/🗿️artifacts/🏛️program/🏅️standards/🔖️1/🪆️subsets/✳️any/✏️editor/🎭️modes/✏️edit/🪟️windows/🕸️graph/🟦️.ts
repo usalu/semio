@@ -3,7 +3,7 @@
  * elements and their adjacencies as an undirected node-graph surface, laid out on a circle. */
 
 /** 🎥️ Ephemeral node-graph camera — mirrors the Rust `GraphCamera` struct, parsed from
- * `nodeGraphViewport`'s JSON payload and, on render, reassembled from the config's flattened
+ * `nodeGraphViewport`'s typed viewport payload and, on render, reassembled from the config's flattened
  * `graph_camera_{x,y,zoom}` fields. */
 export interface ArchitectGraphCamera {
   x: number;

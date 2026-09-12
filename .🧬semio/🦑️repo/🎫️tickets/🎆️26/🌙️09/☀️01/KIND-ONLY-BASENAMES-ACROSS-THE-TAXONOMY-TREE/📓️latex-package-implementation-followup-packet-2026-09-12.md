@@ -29,3 +29,5 @@ A later read-only exact-file inventory of semio-graph.sty completed in 11.520 se
 ## Available Native Prerequisites
 
 The current owned preparedTectonic and preparedPrintBundle readers both validated their existing cache receipts and file checksums without acquisition. The compiler is the pinned 0.16.9 aarch64-apple-darwin executable, and the locked local bundle identity is 2f375cdacdf7f982138c778c3e12d8cd11e4aa3af3d854deb1467d560e8d71b0. Its native --help exits zero and exposes explicit --bundle, --only-cached, --format and --outdir options. Thus the native loading audit has local prerequisites available; it need not start by downloading a toolchain or bundle. No TeX document compilation has yet run in this coordinator probe. Raw prerequisite receipts and help text remain under generated/coordinator.
+
+The accepted graph lane now has an explicit remaining97-identity follow-up in 📓️remaining-print-identity-domain-closure-2026-09-12.md:17 implementation-role bodies, one accepted graph shim and79 chart-family registrations containing1910 literal rows. The earlier seven large bodies are not the full remaining owner/generator/class/data scope.

@@ -2,6 +2,16 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+    {"name":"🧪️window-config-pack-identity-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:window-config-pack-identity-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.222}},
+    {"name":"🧪️window-config-pack-identity","type":"node-terminal","request":"launch","command":"bun nx run workspace:window-config-pack-identity","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.221}},
+    {"name":"🧪️framework-viewport-projection-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:framework-viewport-projection-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.220}},
+    {"name":"🧪️framework-viewport-projection","type":"node-terminal","request":"launch","command":"bun nx run workspace:framework-viewport-projection","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.219}},
+    {"name":"🧪️node-graph-viewport-ownership-consumers-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:node-graph-viewport-ownership-consumers-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.218}},
+    {"name":"🧪️node-graph-viewport-ownership-renderer-host-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:node-graph-viewport-ownership-renderer-host-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.217}},
+    {"name":"🧪️node-graph-viewport-ownership-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:node-graph-viewport-ownership-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.216}},
+    {"name":"🧪️node-graph-viewport-ownership","type":"node-terminal","request":"launch","command":"bun nx run workspace:node-graph-viewport-ownership","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.215}},
+    {"name":"🧪️framework-retained-pack-ownership-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:framework-retained-pack-ownership-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.214}},
+    {"name":"🧪️framework-retained-pack-ownership","type":"node-terminal","request":"launch","command":"bun nx run workspace:framework-retained-pack-ownership","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.213}},
     {"name":"🧪️fem3d-numerical-child-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:fem3d-numerical-child-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.212}},
     {"name":"🧪️framework-ui-protocol-ownership","type":"node-terminal","request":"launch","command":"bun nx run workspace:framework-ui-protocol-ownership","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.211}},
     {"name":"🧪️framework-job-physical-close","type":"node-terminal","request":"launch","command":"bun nx run workspace:framework-job-physical-close","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.210}},
@@ -694,6 +704,17 @@
       }
     },
     {
+      "name": "🧪️test print macro staging",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-macro-staging",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 925.1
+      }
+    },
+    {
       "name": "📚️deps print tex",
       "type": "node-terminal",
       "request": "launch",
@@ -1084,6 +1105,17 @@
       },
       "env": {
         "SEMIO_TICKET_DIR": "${input:nxCacheTicket}"
+      }
+    },
+    {
+      "name": "🗺️gis verification",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=workspace --excludeTaskDependencies --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/GIS-MAP-END-TO-END/📜️script.ts\" ${input:gisVerification}",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": -20
       }
     },
     {
@@ -6208,7 +6240,7 @@
       "name": "🧹clean🧩️taxonomy🧪️cli-cancellation",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/repo-lib:test-taxonomy-cli-cancellation",
+      "command": "bun nx run @semio-tech/repo-lib:test-taxonomy-cli-cancellation --skip-nx-cache",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -9349,10 +9381,10 @@
       }
     },
     {
-      "name": "🧹clean🧩️taxonomy🧪️artifact-empty-facet-authoring",
+      "name": "🧹clean🧩️taxonomy🪶️artifact-empty-facet-authoring",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/repo-lib:test-artifact-empty-facet-authoring",
+      "command": "bun nx run @semio-tech/repo-lib:test-artifact-empty-facet-authoring --skip-nx-cache",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -9467,6 +9499,28 @@
       "presentation": {
         "group": "4_gate",
         "order": 410.2096265
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️root-schema-field-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-root-schema-field-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.2096266
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️root-clean-scaffold-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-root-clean-scaffold-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.2096267
       }
     },
     {
@@ -28889,6 +28943,7 @@
     }
   ],
   "inputs": [
+    { "id": "gisVerification", "type": "pickString", "description": "GIS verification", "options": ["imports", "watcher", "map", "graph"], "default": "map" },
     { "id": "nxCacheTicket", "type": "promptString", "description": "Active ticket directory for Nx diagnostics" },
     { "id": "artifactPackageProject", "type": "promptString", "description": "Artifact package Nx project, for example @semio-tech/stdio-pdf-rs" },
     { "id": "artifactPackageTarget", "type": "pickString", "description": "Artifact package target", "options": ["build", "check", "test"] },

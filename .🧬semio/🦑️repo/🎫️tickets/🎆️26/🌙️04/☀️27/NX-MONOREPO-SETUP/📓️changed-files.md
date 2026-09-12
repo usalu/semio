@@ -842,3 +842,37 @@ Generated WGPU package 🟦️typescript/🚀️boot.js and .vscode/launch.json 
 - Caching `🌐️vite/🧫️cases.json`, `🌐️vite/🧬️schema/🔣️.json`, and `🧪️tests/🌐️browser/🟦️.ts`: private package/module directories and native config/optimizer cache assertions; focused red/green validation passed.
 - Native inventory fixture: native task-graph cacheability checks for inferred publishing executors; removed the overbroad executor-bypass classification.
 - Ticket native-inventory Vite-storage and Rust-input probes: retained input scripts.
+
+
+## 2026-09-12 Inferred Native Test Caching
+
+Shared subject/oracle resolution, native source and generator dependencies, affected edges, executable import closure, resident plugin refresh, schema-backed native regression, and existing browser import repairs. Twin target contracts are under validation.
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🟦️.ts`
+- `🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/📋️project.json`
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📋️project.json`
+
+Ticket inputs: updated `🔬️native-inventory/🦀️test-inputs/📜️script.ts`; added `🔬️native-inventory/🦀️input-contract/📜️script.ts`. Reports: `📓️inferred-test-inputs.md`, `📓️remaining-build-contracts.md`, `📓️nx-inventory.md`, this file.
+
+
+## WGPU Physical Producer Partition — 2026-09-12
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs`: exclusive generator output assignment, prerequisite inference, producer binding validation.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts`: optional physical-producer contract fields and schema/workspace validation.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json`: WGPU output producers and two independently observed viewport inputs.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️root-artifact-dependency-source/🔣️.json`: canonical WGPU output owner expectations.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧬️generator-ownership/{🔣️.json,🧬️schema/🔣️.json,🟦️.ts}`: neutral fixture, Ajv schema, native Nx partition/cache tests, real WGPU preview/source/publication/restoration tests.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts`: test registration and partition-aware generator assertions.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/command-boundaries/🧫️cases.json`: reviewed import budgets for existing leased publication.
+- WGPU domain `📽️projection/🟦️.ts`, `📦️publication/🟦️.ts`, `⚙️browser-build/{🟦️.ts,🔣️.json}`, `🎞️frame-worker/🏗️builder/🟦️.ts`, `📦️packages/🟦️typescript/📋️project.json`: selective canonical rendering, exclusive writing, exact browser inputs/prerequisites, workspace-aware boot checks and cold worker directory creation.
+- Renderer engine `🧪️tests/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts`: private canonical workspace freshness fixture.
+- Ticket probes `🔬️native-inventory/🧬️generator-ownership/📜️script.ts`, `🔬️native-inventory/🧊️wgpu/📜️script.ts`, `🔬️native-inventory/📦️command-boundaries/📜️script.ts`; retained generator-ownership/inventory/build-contract reports.
+- Actual generators refreshed frame-worker JS, boot JS, UI axes, plugin registry and `.vscode/launch.json`; concurrent changes to those shared generated files remain authoritative.

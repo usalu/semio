@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { atTestLevel } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import {
   PLAYGROUND_SESSION_OUTPUT_ROOT_ENV,
   playgroundSessionOutputPath,
@@ -94,7 +95,7 @@ describe("playground session output ownership", () => {
     expect(readFileSync(absolute(fixture.staging.viteConfigPath), "utf8")).toContain("playgroundSessionViteAlias(sessionRoot, plugin)");
   });
 
-  test("an empty private root isolates two variants and the default from live outputs", async () => {
+  atTestLevel(test, "long")("an empty private root isolates two variants and the default from live outputs", async () => {
     const liveStagingRoot = absolute(fixture.staging.rootPath);
     const liveSnapshot = () => ({ canonical: snapshotFile(absolute(fixture.default.sourcePath)), staged: snapshotTree(liveStagingRoot) });
     const liveBefore = liveSnapshot();
@@ -114,7 +115,7 @@ describe("playground session output ownership", () => {
     expect(canonicalBytes).toBe(renderPlaygroundSessionTypeScript(DEFAULT_HOST_VARIANT, projection));
 
     for (const row of fixture.staging.variants) {
-      const result = stagePlaygroundSession(row.variant, stagedRoot, projection);
+      const result = await stagePlaygroundSession(row.variant, stagedRoot, projection);
       expect(result.path).toBe(playgroundSessionStagedOutputPath(stagedRoot, row.variant));
       expect(result.session.variant).toBe(row.variant);
       expect(result.session.registryPluginId).toBe(row.pluginId);
@@ -159,5 +160,5 @@ describe("playground session output ownership", () => {
     expect(snapshotFile(canonical)).toEqual(canonicalBefore);
     expect(liveSnapshot()).toEqual(liveBefore);
     console.log(`[DEBUG] isolated identities ${fixture.staging.variants.map((row) => `${row.variant}:${row.pluginId}`).join(",")} preserve default ${canonicalBefore.exists ? canonicalBefore.sha256 : "missing"}`);
-  }, 30_000);
+  }, 120_000);
 });

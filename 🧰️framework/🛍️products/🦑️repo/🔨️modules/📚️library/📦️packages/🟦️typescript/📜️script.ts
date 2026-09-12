@@ -99,7 +99,7 @@ class TestScript extends BundleScript {
     if (segments[0] === "kind-only-basename") {
       if (segments.length !== 1) throw new Error("Expected test kind-only-basename");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🌳️kind-only-basename/🟦️.ts");
-      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 45_000 });
       return;
     }
     if (segments[0] === "framework-source-topology") {
@@ -117,6 +117,18 @@ class TestScript extends BundleScript {
     if (segments[0] === "root-taxonomy-workflow-source") {
       if (segments.length !== 1) throw new Error("Expected test root-taxonomy-workflow-source");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-taxonomy-workflow-source/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 45_000 });
+      return;
+    }
+    if (segments[0] === "root-schema-field-source") {
+      if (segments.length !== 1) throw new Error("Expected test root-schema-field-source");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-schema-field-source/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 45_000 });
+      return;
+    }
+    if (segments[0] === "root-clean-scaffold-source") {
+      if (segments.length !== 1) throw new Error("Expected test root-clean-scaffold-source");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-clean-scaffold-source/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 45_000 });
       return;
     }

@@ -1,7 +1,7 @@
 {
   "title": "Procedural 3d End To End",
   "emoji": "🧊️",
-  "status": "open",
+  "status": "closed",
   "description": "Get the 🧊️generation3d artifact of the 🌀️procedural plugin (✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d) working end to end from a user perspective: the procedural 3d playground boots (react, then wgpu wasm), every window renders working content, all eight examples load and switch with live 3d preview, hover and selection work, editor actions dispatch at runtime, and the architecture is optimized wherever the app hits performance limits. Fleet: Fable 5.1 coordination, Opus 5 execution agents, Sonnet 5 read-only audit agents, maximum parallelism, working alongside other sessions on shared files.",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "sessions": [
@@ -10,5 +10,6 @@
   ],
   "client": "claude-code",
   "llm": "fable-5-1",
-  "note": "Ticket bookkeeping done manually on disk: repo MCP CONNECT_TIMEOUT at session start (2026-09-09); repo MCP -32602 invalid initialize params (2026-09-12, session 3)."
+  "note": "Ticket bookkeeping done manually on disk: repo MCP CONNECT_TIMEOUT at session start (2026-09-09); repo MCP -32602 invalid initialize params (2026-09-12, session 3). Closed on disk 2026-09-12 (repo MCP -32602).",
+  "summary": "Procedural 3d (generation3d) works end to end from a user perspective in the React playground and the wgpu renderer: every window renders (Flow with a painted node graph, Preview with status/progress/cancel, Generations/Form/Generate preview, Viewer preview), all 8 examples load with live 3d preview (hex column converges in ~12 s, was never), hover/selection/orbit round-trip, role and mode switching by click and keyboard. Root causes fixed: missing extension invoke door on both sides, contributions push starvation, tick storms, a :root CSS animation style-recalc storm (10 s per hop), example-switch livelock, un-budgeted boolean evaluate killing the worker, view-state carriage over the 64 KiB cap, node-graph paint/camera/captions, mesh delivery round trips, close ladder 2052→125 turns, wgpu dock/reconcile/witness/framing/settle. Dev tooling: vite watcher wedge, one plugin-module staging root, wasm-dev opt-level overrides. See 📓️summary-2026-09-12.md and the 📓️*-2026-09-12.md lane reports."
 }

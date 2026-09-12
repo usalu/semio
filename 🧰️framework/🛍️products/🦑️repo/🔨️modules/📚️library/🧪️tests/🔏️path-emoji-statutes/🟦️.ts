@@ -487,20 +487,21 @@ test("semantic collection manifest overrides use exact owners without ancestor f
 test("both mutation inventories enumerate only registered two-tier operation owners", () => {
   const contract = fixture.mutationDomainContract;
   const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [contract.root]: contract.domains } };
-  const source = readFileSync(resolve(root, "../../../../../../..", "📜️script.ts"), "utf8");
-  const definitions = ["policyListMutationDirs", "policyStructuralMutationChildren", "policyStructuralMutationDirs"].map((name) => source.match(new RegExp(`^function ${name}\\([\\s\\S]*?^}`, "m"))![0]).join("\n");
+  const directSource = readFileSync(resolve(root, "../../🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts"), "utf8");
+  const structuralSource = readFileSync(resolve(root, "../../🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts"), "utf8");
+  const definitions = [[directSource, "policyListMutationDirs"], [structuralSource, "policyStructuralMutationChildren"], [structuralSource, "policyStructuralMutationDirs"]].map(([source, name]) => source.match(new RegExp(`^(?:export )?function ${name}\\([\\s\\S]*?^}`, "m"))![0]).join("\n").replace(/^export /gmu, "");
   const expected = Object.entries(contract.domains).flatMap(([domain, operations]) => Object.keys(operations as Record<string, string>).map((operation) => `${domain}/${operation}`)).sort();
   const paths = [contract.root, ...Object.keys(contract.domains).map((domain) => `${contract.root}/${domain}`), ...expected.map((owner) => `${contract.root}/${owner}`), `${contract.root}/🌱️create-access-rule`];
   const directories = new Map(paths.map((path) => [path, {}]));
   const readdir = (_root: string, path: string) => paths.filter((entry) => dirname(entry) === path).map((entry) => ({ name: basename(entry), isDirectory: true }));
-  const support = { loadTaxonomy: () => taxonomy, policyReaddirSafe: readdir, mutationOwnerIdentity, mutationTaxonomyCompare: (left: string, right: string) => left.localeCompare(right) };
+  const support = { loadCatalogTaxonomy: () => taxonomy, mutationOwnerIdentity, mutationTaxonomyCompare: (left: string, right: string) => left.localeCompare(right) };
   for (const compile of [
     (code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code),
     (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText,
   ]) {
     const readers = new Function(...Object.keys(support), `${compile(definitions)}\nreturn {live: policyListMutationDirs, captured: policyStructuralMutationDirs, children: policyStructuralMutationChildren};`)(...Object.values(support));
     const view = { taxonomySchema: { bytes: Buffer.from(JSON.stringify(taxonomy)) }, directories, admission: { observations: [] } };
-    expect(readers.live(".", contract.root)).toEqual(expected);
+    expect(readers.live(".", contract.root, { children: readdir })).toEqual(expected);
     expect(readers.captured(view, contract.root).sort()).toEqual(expected);
     expect(readers.children(view, contract.root).filter((entry: { classification: string }) => entry.classification === "domain-owner")).toHaveLength(Object.keys(contract.domains).length);
     expect(readers.children(view, contract.root).find((entry: { name: string }) => entry.name === "🌱️create-access-rule")?.classification).toBe("malformed-child");

@@ -16,6 +16,18 @@
         "responsibility": "Resolves design-token paints and renders the canonical LaTeX design-token stylesheet text."
       },
       {
+        "directory": "🕸️graph",
+        "id": "framework.print.module.graph",
+        "kind": "module",
+        "module": {
+          "productionConsumers": [
+            "framework.print.module.source-staging",
+            "framework.print.module.tectonic-template-compilation"
+          ]
+        },
+        "responsibility": "Defines the implementation-neutral graph vocabulary and rendering macros consumed by print surfaces."
+      },
+      {
         "directory": "🔤print-font-catalog",
         "id": "framework.print.module.print-font-catalog",
         "kind": "module",

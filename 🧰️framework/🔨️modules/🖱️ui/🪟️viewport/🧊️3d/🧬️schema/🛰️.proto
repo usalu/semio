@@ -9,3 +9,153 @@ message Viewport3dOrbit {
   optional double zoom = 3;
   repeated double up = 4;
 }
+
+enum Viewport3dProjectionKind {
+  VIEWPORT_3D_PROJECTION_KIND_UNSPECIFIED = 0;
+  VIEWPORT_3D_PROJECTION_KIND_ORTHOGRAPHIC = 1;
+  VIEWPORT_3D_PROJECTION_KIND_AXONOMETRIC = 2;
+  VIEWPORT_3D_PROJECTION_KIND_OBLIQUE = 3;
+  VIEWPORT_3D_PROJECTION_KIND_ONE_POINT = 4;
+  VIEWPORT_3D_PROJECTION_KIND_TWO_POINT = 5;
+  VIEWPORT_3D_PROJECTION_KIND_THREE_POINT = 6;
+  VIEWPORT_3D_PROJECTION_KIND_CURVILINEAR = 7;
+}
+
+enum Viewport3dOrthographicView {
+  VIEWPORT_3D_ORTHOGRAPHIC_VIEW_UNSPECIFIED = 0;
+  VIEWPORT_3D_ORTHOGRAPHIC_VIEW_PLAN = 1;
+  VIEWPORT_3D_ORTHOGRAPHIC_VIEW_TOP = 2;
+  VIEWPORT_3D_ORTHOGRAPHIC_VIEW_BOTTOM = 3;
+  VIEWPORT_3D_ORTHOGRAPHIC_VIEW_FRONT = 4;
+  VIEWPORT_3D_ORTHOGRAPHIC_VIEW_BACK = 5;
+  VIEWPORT_3D_ORTHOGRAPHIC_VIEW_LEFT = 6;
+  VIEWPORT_3D_ORTHOGRAPHIC_VIEW_RIGHT = 7;
+}
+
+enum Viewport3dAxonometricVariant {
+  VIEWPORT_3D_AXONOMETRIC_VARIANT_UNSPECIFIED = 0;
+  VIEWPORT_3D_AXONOMETRIC_VARIANT_ISOMETRIC = 1;
+  VIEWPORT_3D_AXONOMETRIC_VARIANT_DIMETRIC = 2;
+  VIEWPORT_3D_AXONOMETRIC_VARIANT_TRIMETRIC = 3;
+}
+
+enum Viewport3dAxonometricQuadrant {
+  VIEWPORT_3D_AXONOMETRIC_QUADRANT_UNSPECIFIED = 0;
+  VIEWPORT_3D_AXONOMETRIC_QUADRANT_NE = 1;
+  VIEWPORT_3D_AXONOMETRIC_QUADRANT_NW = 2;
+  VIEWPORT_3D_AXONOMETRIC_QUADRANT_SE = 3;
+  VIEWPORT_3D_AXONOMETRIC_QUADRANT_SW = 4;
+}
+
+enum Viewport3dAxonometricHemisphere {
+  VIEWPORT_3D_AXONOMETRIC_HEMISPHERE_UNSPECIFIED = 0;
+  VIEWPORT_3D_AXONOMETRIC_HEMISPHERE_UPPER = 1;
+  VIEWPORT_3D_AXONOMETRIC_HEMISPHERE_LOWER = 2;
+}
+
+enum Viewport3dObliqueVariant {
+  VIEWPORT_3D_OBLIQUE_VARIANT_UNSPECIFIED = 0;
+  VIEWPORT_3D_OBLIQUE_VARIANT_CABINET = 1;
+  VIEWPORT_3D_OBLIQUE_VARIANT_CAVALIER = 2;
+  VIEWPORT_3D_OBLIQUE_VARIANT_MILITARY = 3;
+}
+
+enum Viewport3dOnePointAxis {
+  VIEWPORT_3D_ONE_POINT_AXIS_UNSPECIFIED = 0;
+  VIEWPORT_3D_ONE_POINT_AXIS_X = 1;
+  VIEWPORT_3D_ONE_POINT_AXIS_Y = 2;
+  VIEWPORT_3D_ONE_POINT_AXIS_Z = 3;
+}
+
+enum Viewport3dCurvilinearMapping {
+  VIEWPORT_3D_CURVILINEAR_MAPPING_UNSPECIFIED = 0;
+  VIEWPORT_3D_CURVILINEAR_MAPPING_FISHEYE = 1;
+  VIEWPORT_3D_CURVILINEAR_MAPPING_PANINI = 2;
+}
+
+message Viewport3dProjectionPreferences {
+  optional Viewport3dProjectionKind kind = 1;
+  optional Viewport3dOrthographicView orthographic_view = 2;
+  optional Viewport3dAxonometricVariant axonometric_variant = 3;
+  optional double axonometric_angle_a = 4;
+  optional double axonometric_angle_b = 5;
+  optional Viewport3dAxonometricQuadrant axonometric_quadrant = 6;
+  optional Viewport3dObliqueVariant oblique_variant = 7;
+  optional double oblique_angle = 8;
+  optional double oblique_depth = 9;
+  optional Viewport3dOnePointAxis one_point_axis = 10;
+  optional double fov = 11;
+  optional double two_point_shift = 12;
+  optional double curvilinear_fov = 13;
+  optional double curvilinear_strength = 14;
+  optional Viewport3dCurvilinearMapping curvilinear_mapping = 15;
+}
+
+message Viewport3dOrthographicProjectionMode {}
+
+message Viewport3dAxonometricProjectionMode {
+  optional Viewport3dAxonometricVariant variant = 1;
+  optional double angle_a = 2;
+  optional double angle_b = 3;
+}
+
+message Viewport3dObliqueProjectionMode {
+  optional Viewport3dObliqueVariant variant = 1;
+  optional double angle = 2;
+  optional double depth_scale = 3;
+}
+
+message Viewport3dOnePointProjectionMode {
+  optional double fov = 1;
+}
+
+message Viewport3dTwoPointProjectionMode {
+  optional double fov = 1;
+  optional double vertical_shift = 2;
+}
+
+message Viewport3dThreePointProjectionMode {
+  optional double fov = 1;
+}
+
+message Viewport3dCurvilinearProjectionMode {
+  optional double fov = 1;
+  optional double strength = 2;
+  optional Viewport3dCurvilinearMapping mapping = 3;
+}
+
+message Viewport3dProjectionMode {
+  oneof mode {
+    Viewport3dOrthographicProjectionMode orthographic = 1;
+    Viewport3dAxonometricProjectionMode axonometric = 2;
+    Viewport3dObliqueProjectionMode oblique = 3;
+    Viewport3dOnePointProjectionMode one_point = 4;
+    Viewport3dTwoPointProjectionMode two_point = 5;
+    Viewport3dThreePointProjectionMode three_point = 6;
+    Viewport3dCurvilinearProjectionMode curvilinear = 7;
+  }
+}
+
+message Viewport3dCardinalProjectionOrientation {
+  optional Viewport3dOrthographicView view = 1;
+}
+
+message Viewport3dCornerProjectionOrientation {
+  optional Viewport3dAxonometricQuadrant quadrant = 1;
+  optional Viewport3dAxonometricHemisphere hemisphere = 2;
+}
+
+message Viewport3dFreeProjectionOrientation {}
+
+message Viewport3dProjectionOrientation {
+  oneof orientation {
+    Viewport3dCardinalProjectionOrientation cardinal = 1;
+    Viewport3dCornerProjectionOrientation corner = 2;
+    Viewport3dFreeProjectionOrientation free = 3;
+  }
+}
+
+message Viewport3dProjectionSpec {
+  optional Viewport3dProjectionMode mode = 1;
+  optional Viewport3dProjectionOrientation orientation = 2;
+}

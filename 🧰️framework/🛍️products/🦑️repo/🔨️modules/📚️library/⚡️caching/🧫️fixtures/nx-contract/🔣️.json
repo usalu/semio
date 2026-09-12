@@ -602,6 +602,8 @@
     "SEMIO_BUILD_MODE": "fixture-mode",
     "SEMIO_PLUGIN": "fixture-plugin",
     "SEMIO_RENDERER": "fixture-renderer",
-    "CODEX_SESSION_ID": "fixture-session"
+    "CODEX_SESSION_ID": "fixture-session",
+    "NX_PROJECT_NAME": "fixture-project",
+    "NX_FILE_CHANGES": "fixture/source.ts"
   }
 }

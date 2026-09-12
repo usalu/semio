@@ -106,6 +106,49 @@
         "command": "bun ./📜️script.ts test quick"
       }
     },
+    "test-macro-staging": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [
+        "fonts",
+        "deps-tectonic",
+        "deps-tex",
+        "generate"
+      ],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/📥️source-staging/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🕸️graph/📐️.tex",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖋️latex/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/**/*.ttf",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+        {
+          "runtime": "bun --version"
+        },
+        {
+          "runtime": "node -p \"process.platform.concat(process.arch)\""
+        },
+        {
+          "externalDependencies": [
+            "@napi-rs/canvas",
+            "ajv",
+            "markdown-it",
+            "pdfjs-dist",
+            "sharp"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test macro",
+        "forwardAllArgs": false
+      }
+    },
     "test-long": {
       "executor": "nx:run-commands",
       "options": {

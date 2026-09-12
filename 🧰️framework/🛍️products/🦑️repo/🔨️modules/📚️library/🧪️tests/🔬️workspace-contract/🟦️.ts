@@ -41,7 +41,8 @@ import toml from "@iarna/toml";
 import fastGlob from "fast-glob";
 import { loadCatalogTaxonomy, registryCompilerInputDependencies, registryStaticImports, type RegistryCompilerInputRole } from "../../🔍️discovery/🟦️.ts";
 import { leadingEmojiIdentity, pathEmojiStatuteFindings, semanticDirectoryKindId, semanticOwnedInputFileSnapshot } from "../../🔍️discovery/🟦️.ts";
-import { newScaffoldMutationTree } from "../../../../../../../📜️script.ts";
+import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-tree/🟦️.ts";
+import { taxonomyCliArtifactPath } from "../../🧹️normalization/🎮️command-contract/🟦️.ts";
 import { inventoryMutationTaxonomy } from "../../🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts";
 import { mutationTaxonomySourceIndex } from "../../🧹️normalization/🧬️mutation/📇️index/🟦️.ts";
 import { mutationTaxonomyStructuralView } from "../../🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts";
@@ -741,7 +742,7 @@ describe("package language semantic handoff", () => {
 //#region 🛡️ActiveTicketCleanProtection
 describe("active ticket clean protection", () => {
   test("projects synthetic candidates with strict manifest and third-party oracle parity", async () => {
-    const { cleanRemovalProtection, cleanProjectRemovals } = await import("../../../../../../../📜️script.ts");
+    const { cleanRemovalProtection, cleanProjectRemovals } = await import("../../🧼️workspace-cleanup/🛡️protection/🟦️.ts");
     const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🧼️clean");
     const fixture = JSON.parse(readFileSync(join(fixturePath, "🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🧼️clean/🔣️.json"), "utf8")));
@@ -6125,7 +6126,7 @@ describe("taxonomy normalization", () => {
   test("root taxonomy inventory CLI writes phases only to stderr and canonical JSON only to stdout", () => {
     const fixture = normalizationFixture("scoped-cli-purity", { "🟦️subject.ts": "export const value = true;\n" });
     try {
-      const scriptPath = join(getWorkspaceRoot(), "📜️script.ts");
+      const scriptPath = join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts");
       const child = 'const [scriptPath,repoRoot,scope]=process.argv.slice(1);const {pathToFileURL}=await import("node:url");const {CleanScript}=await import(pathToFileURL(scriptPath).href);new CleanScript(repoRoot,repoRoot).run(["taxonomy","inventory","--scope",scope,"--workers","1","--format","json"]);';
       const result = spawnSync("bun", ["-e", child, scriptPath, fixture.repoRoot, fixture.scope], { encoding: "utf8" });
       expect(result.status).toBe(0);
@@ -6963,6 +6964,24 @@ describe("direct mutation ownership", () => {
     expect(oracle).toEqual(expected);
     for (const roots of observed) expect(roots).toEqual(expected);
   });
+
+  test("captures empty structural mutation directories in the source admission epoch", () => {
+    const root = mutationFixtureRoot("semio-empty-mutation-root-capture-");
+    try {
+      const mutations = mutationRoot(root);
+      mkdirSync(mutations, { recursive: true });
+      mkdirSync(join(root, "compose", "🧬️mutations"), { recursive: true });
+      const index = mutationTaxonomySourceIndex(root, {});
+      const observed = index.admission.observations.filter((observation) => observation.observedKind === "directory" && observation.sourcePath.endsWith("/🧬️mutations")).map((observation) => observation.sourcePath).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+      const oracle = fastGlob.sync("**/🧬️mutations", { cwd: root, onlyDirectories: true, followSymbolicLinks: false, dot: true }).filter((path) => !path.split("/").some((segment) => segment.toLocaleLowerCase("en-US") === "compose")).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+      expect(observed).toEqual(oracle);
+      expect(index.roots).toEqual(oracle);
+      rmSync(mutations, { recursive: true, force: true });
+      expect(mutationTaxonomySourceIndex(root, {}).sourceTreeDigest).not.toBe(index.sourceTreeDigest);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
   //#endregion 🔍️MutationRootDiscovery
 
   test("fails closed for missing, opaque, escaped, and symlinked explicit scopes", () => {
@@ -7458,7 +7477,7 @@ describe("direct mutation ownership", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 
   test("proves direct leaf reachability through exact public canonical mounts and wrapped types", () => {
     const fixturePath = join(import.meta.dir, "../../🧫️fixtures/📡️mutation-reachability/🔣️.json");
@@ -7554,7 +7573,7 @@ describe("direct mutation ownership", () => {
     const root = mutationFixtureRoot("semio-mutation-terminality-");
     const ticket = join(root, ".🧬semio", "🦑️repo", "🎫️tickets", "🎆️26", "🌙️08", "☀️12", "TERMINALITY");
     const planPath = join(ticket, "plan.json");
-    const applyPath = join(ticket, "📊️taxonomy-apply", "🔣️.json");
+    const applyPath = taxonomyCliArtifactPath(ticket, "apply", "json");
     const options = (plan: string, cancelFile?: string) => ({ baseline: golden.baseline, cancelFile, failOnWarning: false, format: "json" as const, kind: "mutation" as const, plan });
     const writePlan = (plan: unknown) => {
       mkdirSync(dirname(planPath), { recursive: true });

@@ -3,6 +3,98 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
+import { EventEmitter } from "node:events";
+import { spawnSync } from "node:child_process";
+
+/** 🧹️ Confirms the native Nx source watcher excludes compiler and map cache writes. */
+export function testWorkspaceWatchIgnores(workspace: string, output: string): void {
+  const require = createRequire(join(workspace, "package.json"));
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/watcher-readiness/🔣️.json"), "utf8"));
+  const rules = readFileSync(join(workspace, ".nxignore"), "utf8"), ignore = require("ignore")().add(rules);
+  for (const path of fixture.ignored) assert.ok(ignore.ignores(path), `Nx must ignore derived cache ${path}`);
+  assert.equal(ignore.ignores(fixture.source), false);
+  const source = `
+    const fs = require("node:fs"), path = require("node:path"), assert = require("node:assert/strict");
+    const { Watcher } = require(${JSON.stringify(require.resolve("nx/src/native"))});
+    const fixture = ${JSON.stringify(fixture)}, root = fs.mkdtempSync(path.join(${JSON.stringify(output)}, "nx-watch-"));
+    fs.writeFileSync(path.join(root, ".nxignore"), ${JSON.stringify(rules)});
+    for (const name of [fixture.source, ...fixture.ignored]) { fs.mkdirSync(path.dirname(path.join(root, name)), { recursive: true }); fs.writeFileSync(path.join(root, name), "before"); }
+    const watcher = new Watcher(root, ${JSON.stringify(rules.split("\n").filter(line => line.trim() && !line.startsWith("#")).map(line => "!" + line))}, false), seen = [];
+    watcher.watch((error, events) => { assert.ifError(error); seen.push(...events); });
+    (async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        for (const name of [fixture.source, ...fixture.ignored]) fs.writeFileSync(path.join(root, name), "after");
+        const deadline = Date.now() + 8000;
+        while (!seen.some(event => event.path === fixture.source) && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 100));
+        seen.push(...watcher.forceFlushPending());
+        assert.ok(seen.some(event => event.path === fixture.source), "source edit was not observed: " + JSON.stringify(seen));
+        for (const name of fixture.ignored) assert.ok(!seen.some(event => event.path === name), name);
+      } finally { await watcher.stop(); fs.rmSync(root, { recursive: true, force: true }); }
+    })().catch(error => { console.error(error); process.exitCode = 1; });
+  `;
+  const result = spawnSync("node", ["--eval", source], { cwd: workspace, encoding: "utf8", timeout: 15000 });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  console.log("[DEBUG] Native Nx watcher observes source edits and excludes compiler/map cache writes PASS");
+}
+
+/** ⏳️ Uses Nx's own readiness output to verify progress, long startup and process cancellation. */
+export async function testWatcherReadiness(workspace: string): Promise<void> {
+  const require = createRequire(join(workspace, "package.json")), ts = require("typescript");
+  const root = join(import.meta.dir, "../.."), fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/watcher-readiness/🔣️.json"), "utf8"));
+  const source = ts.createSourceFile("bootstrap.ts", readFileSync(join(root, "🚀️bootstrap/📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+  const clientSource = ts.createSourceFile("client.js", readFileSync(require.resolve("nx/src/daemon/client/client"), "utf8"), ts.ScriptTarget.Latest, true);
+  const clientClass = clientSource.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "DaemonClient");
+  const subscribe = clientClass.members.find((node: any) => node.name?.text === "registerFileWatcher");
+  const Client = runInNewContext(`(class { ${subscribe.getText(clientSource)} })`);
+  for (const row of fixture.subscriptions) {
+    let graphReads = 0;
+    const messages: unknown[] = [], client = Object.assign(new Client(), { getProjectGraphAndSourceMaps: async () => { graphReads++; }, fileWatcherCallbacks: new Map(), fileWatcherConfigs: new Map(), fileWatcherMessenger: { sendMessage: (message: unknown) => messages.push(message) }, queue: { sendToQueue: async (callback: () => Promise<void>) => callback() } });
+    await client.registerFileWatcher(row.config, () => {});
+    assert.equal(graphReads, row.graphReads, "A subscription to every workspace file needs no project classification");
+    assert.equal(messages.length, 1);
+    assert.equal(client.fileWatcherConfigs.size, 1);
+  }
+  const environmentDefinition = source.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "nxChildEnvironment");
+  assert.ok(environmentDefinition, "Watched builds must own their graph independently of other daemon clients");
+  const environmentCode = ts.transpileModule(environmentDefinition.getText(source).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const environment = runInNewContext(`${environmentCode}; nxChildEnvironment;`);
+  for (const row of fixture.processes) {
+    const before = { ...row.env }, selected = environment(row.env, row.args, row.watching);
+    assert.deepEqual(row.env, before, "Launcher must retain caller environment");
+    const native = spawnSync("node", ["--eval", `process.stdout.write(String(require(${JSON.stringify(require.resolve("nx/src/daemon/client/client"))}).daemonClient.enabled()))`], { cwd: workspace, env: { ...process.env, ...selected }, encoding: "utf8", timeout: 10000 });
+    assert.equal(native.status, 0, native.stderr);
+    assert.equal(native.stdout, String(row.daemon), row.name);
+  }
+  const definition = source.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "waitForNxWatcher");
+  assert.ok(definition, "Watcher startup must support progress and cancellation without a fixed cold-graph deadline");
+  const code = ts.transpileModule(definition.getText(source).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  for (const row of fixture.cases) {
+    const timers = new Map<number, () => void>(), progress: string[] = [], stdout = new EventEmitter(), watcher = Object.assign(new EventEmitter(), { stdout });
+    let now = 0, interval = 0, next = 0;
+    const wait = runInNewContext(`${code}; waitForNxWatcher;`, { Date: { now: () => now }, console: { log: (message: string) => progress.push(message) }, setInterval: (callback: () => void, ms: number) => { interval = ms; timers.set(++next, callback); return next; }, clearInterval: (id: number) => timers.delete(id) });
+    const done = wait(watcher).then(() => "ready", () => "error");
+    assert.equal(interval, fixture.progressIntervalMs);
+    for (; now < row.elapsedMs; now += interval) for (const callback of timers.values()) callback();
+    if (row.chunks) for (const chunk of row.chunks) stdout.emit("data", Buffer.from(chunk));
+    else if (row.error) watcher.emit("error", new Error(row.error));
+    else watcher.emit("close", row.exit, row.signal);
+    assert.equal(await done, row.result, row.name);
+    assert.equal(timers.size, 0, row.name);
+    assert.equal(watcher.listenerCount("close") + watcher.listenerCount("error") + stdout.listenerCount("data"), 0, row.name);
+    assert.equal(progress.length, row.elapsedMs / fixture.progressIntervalMs, row.name);
+  }
+  const output: string[] = [], exports: any = {};
+  const modules: Record<string, any> = {
+    child_process: {}, "../../daemon/client/client": { daemonClient: { enabled: () => true, registerFileWatcher: async () => {} } },
+    "../../daemon/client/daemon-socket-messenger": {}, "../../utils/output": { output: { logSingleLine: (text: string) => output.push(text) } },
+  };
+  runInNewContext(readFileSync(require.resolve("nx/src/command-line/watch/watch"), "utf8"), { exports, require: (name: string) => modules[name], process: { env: {} } });
+  void exports.watch({ all: true, includeGlobalWorkspaceFiles: true, verbose: true, command: "fixture" });
+  await Promise.resolve();
+  assert.ok(output.includes(fixture.cases[0].chunks.join("").trim().replace(/^NX /, "")), "Fixture must match the installed Nx watcher readiness output");
+  console.log(`[DEBUG] Nx watcher readiness: ${fixture.cases.length} lifecycle cases, including 150-second startup, pass against installed Nx output`);
+}
 
 /** 🧵️ Exercises the installed Nx scheduler at controlled native discovery boundaries. */
 export async function testGraphCoalescing(workspace: string, source?: string): Promise<void> {

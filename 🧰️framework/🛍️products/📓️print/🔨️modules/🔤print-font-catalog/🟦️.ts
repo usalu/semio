@@ -14,7 +14,7 @@ export function printFontDescriptors(): readonly PrintFontDescriptor[] { return 
 export function printFontSearchPaths(workspace = getWorkspaceRoot()): readonly string[] { return [join(workspace, product, "📦️packages/🟦️typescript/dist/fonts")]; }
 
 /** 🔤️ Stages tracked TTF sources without acquiring or mutating source assets. */
-export function stagePrintFonts(workspace = getWorkspaceRoot()): { readonly total: number } {
+export async function stagePrintFonts(workspace = getWorkspaceRoot()): Promise<{ readonly total: number }> {
   const files = new Map<string, string>();
   for (const font of fonts) {
     for (const value of [font.directory, font.filename, font.texFilename]) if (basename(value) !== value || /[\\/]/.test(value) || value === "." || value === "..") throw new Error(`Invalid print font path: ${value}`);
@@ -24,6 +24,6 @@ export function stagePrintFonts(workspace = getWorkspaceRoot()): { readonly tota
     if (files.has(font.texFilename)) throw new Error(`Duplicate print font: ${font.texFilename}`);
     files.set(font.texFilename, source);
   }
-  stageArtifacts(printFontSearchPaths(workspace)[0]!, "@semio-tech/print:fonts", files);
+  await stageArtifacts(printFontSearchPaths(workspace)[0]!, "@semio-tech/print:fonts", files);
   return { total: files.size };
 }

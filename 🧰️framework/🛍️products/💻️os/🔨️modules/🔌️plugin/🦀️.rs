@@ -13233,11 +13233,103 @@ pub mod app {
 
     pub const TYPED_OPERATION_RESULT_PAGE_BYTES: usize = 4_096;
     pub const TYPED_OPERATION_MAXIMUM_RETRIES: u8 = 2;
+
+    //#region 📊️PublicationUnitCensus
+    /// 📊️ What the typed-operation publication ladder spends its units on, process-wide. One unit is one
+    /// step of the publication state machine; a HOST TURN is one or more units
+    /// ([`TYPED_OPERATION_PUBLICATION_PUMPS`]), so "how many turns does one mutation cost" is only
+    /// answerable by splitting the units by the ladder that ran them.
+    ///
+    /// 🧾️ Before wave B54 every unit was its own host round trip, and one `deleteSelection` on a
+    /// one-object document spent 104–235 of them (wave B44 §2.3) with no way to say which ladder owned
+    /// them. This census is that instrument: `store` is the artifact/config/draft apply-batch phase
+    /// machine, `page` a unit that produced a result page the host must acknowledge (the only unit that
+    /// is INHERENTLY one round trip), `retirement` the slot-release ladder, `worker` a mounted job step,
+    /// `latest_wins` the coalesced-command lane, and `idle` a unit that found nothing advanceable.
+    /// Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B54.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+    pub struct TypedOperationUnitCensus {
+        pub units: u64,
+        pub store: u64,
+        pub page: u64,
+        pub retirement: u64,
+        pub worker: u64,
+        pub latest_wins: u64,
+        pub idle: u64,
+    }
+
+    impl std::fmt::Display for TypedOperationUnitCensus {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(formatter, "units={} store={} page={} retirement={} worker={} latestWins={} idle={}", self.units, self.store, self.page, self.retirement, self.worker, self.latest_wins, self.idle)
+        }
+    }
+
+    impl std::ops::Sub for TypedOperationUnitCensus {
+        type Output = Self;
+
+        fn sub(self, base: Self) -> Self {
+            Self {
+                units: self.units.saturating_sub(base.units),
+                store: self.store.saturating_sub(base.store),
+                page: self.page.saturating_sub(base.page),
+                retirement: self.retirement.saturating_sub(base.retirement),
+                worker: self.worker.saturating_sub(base.worker),
+                latest_wins: self.latest_wins.saturating_sub(base.latest_wins),
+                idle: self.idle.saturating_sub(base.idle),
+            }
+        }
+    }
+
+    /// 📊️ One counted ladder of the publication census.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum TypedOperationUnitKind {
+        Store,
+        Page,
+        Retirement,
+        Worker,
+        LatestWins,
+        Idle,
+    }
+
+    static PUBLICATION_UNITS: [std::sync::atomic::AtomicU64; 7] = [
+        std::sync::atomic::AtomicU64::new(0),
+        std::sync::atomic::AtomicU64::new(0),
+        std::sync::atomic::AtomicU64::new(0),
+        std::sync::atomic::AtomicU64::new(0),
+        std::sync::atomic::AtomicU64::new(0),
+        std::sync::atomic::AtomicU64::new(0),
+        std::sync::atomic::AtomicU64::new(0),
+    ];
+
+    /// 📊️ Counts one publication unit against its ladder. Relaxed ordering: the census is an attribution
+    /// instrument read between dispatches, never a synchronization point.
+    pub fn record_typed_operation_unit(kind: TypedOperationUnitKind) {
+        let index = match kind {
+            TypedOperationUnitKind::Store => 1,
+            TypedOperationUnitKind::Page => 2,
+            TypedOperationUnitKind::Retirement => 3,
+            TypedOperationUnitKind::Worker => 4,
+            TypedOperationUnitKind::LatestWins => 5,
+            TypedOperationUnitKind::Idle => 6,
+        };
+        PUBLICATION_UNITS[0].fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        PUBLICATION_UNITS[index].fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    /// 📊️ The census as of now. Subtract two readings to attribute one dispatch.
+    pub fn typed_operation_unit_census() -> TypedOperationUnitCensus {
+        let read = |index: usize| PUBLICATION_UNITS[index].load(std::sync::atomic::Ordering::Relaxed);
+        TypedOperationUnitCensus { units: read(0), store: read(1), page: read(2), retirement: read(3), worker: read(4), latest_wins: read(5), idle: read(6) }
+    }
+    //#endregion 📊️PublicationUnitCensus
     /// 🏃️ Upper bound on worker pump iterations one reactor turn spends on a single mounted worker
     /// session — a Worker-stage typed operation or a live artifact-envelope decode.
     pub const INTERACTIVE_TURN_WORKER_PUMPS: usize = 256;
     /// ⏱️ Wall-clock slice one reactor turn spends driving one mounted worker session (half the interactive lane ceiling).
     pub const INTERACTIVE_TURN_WORKER_WALL_US: u64 = 4_000;
+    /// 🏃️ Publication units one continuation unit may run before it hands its turn back, the exact twin of
+    /// [`INTERACTIVE_TURN_WORKER_PUMPS`] for the publication ladder.
+    pub const TYPED_OPERATION_PUBLICATION_PUMPS: usize = 256;
     const TYPED_OPERATION_HOST_OUTBOX_SLOTS: usize = 64;
     const TYPED_OPERATION_FAULT_BYTES: usize = 256;
 
@@ -18089,7 +18181,7 @@ pub mod app {
                 };
             }
             if let Some(rejected) = self.rejected.as_mut() {
-                let step = rejected.close_step(maximum_items.min(1), maximum_bytes.min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).map_err(plugin_sdk_fault)?;
+                let step = rejected.close_step(maximum_items.min(1), maximum_bytes).map_err(plugin_sdk_fault)?;
                 return match step {
                     store::SnapshotRetirementStep::Complete if rejected.terminal_is_empty() => {
                         drop(self.rejected.take());
@@ -24551,28 +24643,28 @@ pub mod app {
                 return self.advance_latest_wins_command_one().await;
             }
             self.latest_wins_turn = true;
-            let Some((index, operation_id)) = self.next_advanceable_typed_operation() else { return Ok(()) };
+            let Some((index, operation_id)) = self.next_advanceable_typed_operation() else {
+                record_typed_operation_unit(TypedOperationUnitKind::Idle);
+                return Ok(());
+            };
             self.typed_publication_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
             if self.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Worker) {
+                record_typed_operation_unit(TypedOperationUnitKind::Worker);
                 return self.drive_typed_operation_worker(operation_id);
             }
             // ♻️ A retiring operation answers `has_runnable_typed_operations`, so the turn driver that reports it
             // runnable must be the one that releases its slot — see [`Self::retire_typed_operation_run`].
             if self.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
+                record_typed_operation_unit(TypedOperationUnitKind::Retirement);
                 return self.retire_typed_operation_run(operation_id);
             }
             if !self.tool_operations.get_mut(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Publishing) {
+                record_typed_operation_unit(TypedOperationUnitKind::Idle);
                 return Ok(());
             }
             let mut mounted =
                 self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-authority"), "typed-operation publication owner changed before one-unit transfer"))?;
-            let outcome = if mounted.pending_child_publication.is_some() {
-                self.publish_mounted_typed_child_operation_unit(&mut mounted).await
-            } else if Self::mounted_typed_interaction_writes_are_next(&mounted) {
-                self.publish_mounted_typed_interaction_unit(&mut mounted).await
-            } else {
-                self.publish_mounted_typed_operation_unit(&mut mounted)
-            };
+            let outcome = self.publish_mounted_typed_operation_run(&mut mounted).await;
             if let Err(fault) = outcome {
                 mounted.publication_attempt = mounted.publication_attempt.saturating_add(1);
                 if mounted.publication_attempt > TYPED_OPERATION_MAXIMUM_RETRIES {
@@ -24588,6 +24680,50 @@ pub mod app {
                 mounted.publication_attempt = 0;
             }
             self.tool_operations.insert_admitted(operation_id, mounted);
+            Ok(())
+        }
+
+        /// 🏃️ Drives ONE mounted operation's publication ladder for a bounded slice of this continuation
+        /// unit — the exact twin of the slice [`Self::drive_typed_operation_worker`] gives a Worker-stage
+        /// operation and [`Self::retire_typed_operation_run`] gives a retiring one, for the publication
+        /// state machine that sits between them.
+        ///
+        /// 🧾️ Every ladder step — install the taken completion, stage the batch, prepare one item, fold
+        /// it, retire its preparation owner, validate the cursor, preflight the commit, commit, mint the
+        /// receipt — used to be its own host round trip, because the caller is driven once per reactor
+        /// turn and the store's grant pages one item per call. One `deleteSelection` on a ONE-object
+        /// document therefore cost 104–235 round trips (wave B44 §2.3): a document-INDEPENDENT constant
+        /// that alone burns seconds of a 30-second interaction budget, and the reason a `setCamera` on a
+        /// document it never reads cost 2.3 s.
+        ///
+        /// 🛑️ The run stops on exactly the protocol's own bounds and on nothing else: a queued result page
+        /// the host must acknowledge before the operation may continue (`stage` leaves `Publishing`), a
+        /// completion that is not ready yet so nothing is staged to advance, [`TYPED_OPERATION_PUBLICATION_PUMPS`],
+        /// and [`INTERACTIVE_TURN_WORKER_WALL_US`]. Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B54.
+        async fn publish_mounted_typed_operation_run(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
+            let started_us = semio_framework_job::default_now_us();
+            for _ in 0..TYPED_OPERATION_PUBLICATION_PUMPS {
+                if mounted.pending_child_publication.is_some() {
+                    record_typed_operation_unit(TypedOperationUnitKind::Store);
+                    self.publish_mounted_typed_child_operation_unit(mounted).await?;
+                } else if Self::mounted_typed_interaction_writes_are_next(mounted) {
+                    record_typed_operation_unit(TypedOperationUnitKind::Store);
+                    self.publish_mounted_typed_interaction_unit(mounted).await?;
+                } else {
+                    self.publish_mounted_typed_operation_unit(mounted)?;
+                    record_typed_operation_unit(if mounted.result_page.is_some() { TypedOperationUnitKind::Page } else { TypedOperationUnitKind::Store });
+                }
+                if mounted.stage != MountedTypedCommandFullOperationStage::Publishing {
+                    return Ok(());
+                }
+                if mounted.publication.is_none() && mounted.pending_artifact_publication.is_none() && mounted.pending_child_publication.is_none() {
+                    return Ok(());
+                }
+                let Some(started_us) = started_us else { return Ok(()) };
+                if semio_framework_job::default_now_us().is_some_and(|now_us| now_us.saturating_sub(started_us) >= INTERACTIVE_TURN_WORKER_WALL_US) {
+                    return Ok(());
+                }
+            }
             Ok(())
         }
 
@@ -25644,7 +25780,7 @@ pub mod app {
                     .envelope_field_decoder_retirements
                     .get_mut(id)
                     .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.field-retirement-authority"), "returned envelope field decoder changed during one bounded maintenance step"))?;
-                let step = store::ErasedSnapshotRetirement::close_step(retirement, maximum_items.min(1), maximum_bytes.min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).map_err(plugin_sdk_fault)?;
+                let step = store::ErasedSnapshotRetirement::close_step(retirement, maximum_items.min(1), maximum_bytes).map_err(plugin_sdk_fault)?;
                 match step {
                     store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_items <= maximum_items && released_bytes <= maximum_bytes => {
                         *cursor = index;

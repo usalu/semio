@@ -767,6 +767,15 @@ impl StagedEngineScenes {
         self.len = index;
         self.slots[index].take()
     }
+
+    #[cfg(test)]
+    fn remove_surface(&mut self, surface_id: &str) {
+        let Some(index) = self.slots[..self.len].iter().position(|slot| slot.as_ref().is_some_and(|staged| staged.surface.identity.id.as_str() == surface_id)) else {
+            return;
+        };
+        self.len -= 1;
+        self.slots[index] = self.slots[self.len].take();
+    }
 }
 
 static STAGED_ENGINE_SCENES: WorkerCell<StagedEngineScenes> = WorkerCell::new();
@@ -2768,7 +2777,7 @@ struct GraphInteractionSnapshot {
     /// emits `granularity: "handle"` with exactly this id — which is what makes hover bidirectional
     /// between the graph and a `World3d` preview keyed by the same channel id.
     hovered_handle: Option<String>,
-    viewport_json: String,
+    viewport: semio_framework_os_kernel::Viewport2d,
 }
 
 enum NodeGraphWheelPlan {
@@ -2799,12 +2808,13 @@ fn graph_plan_fault(fault: flow::dag::DagInteractionPlanFault) -> ui_wgpu::wgpu:
 }
 
 fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<String>, hovered_handle: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, ui_wgpu::wgpu::BoundedActionFault> {
-    let viewport_json = json!({ "x": camera[0], "y": camera[1], "zoom": camera[2] }).to_string();
-    let mut parts = Vec::with_capacity(node_ids.len() + 3);
-    parts.extend([hovered_id.as_deref().unwrap_or_default(), hovered_handle.as_deref().unwrap_or_default(), viewport_json.as_str()]);
+    let viewport = semio_framework_os_kernel::Viewport2d { x: camera[0], y: camera[1], zoom: camera[2] };
+    viewport.validate().map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    let mut parts = Vec::with_capacity(node_ids.len() + 2);
+    parts.extend([hovered_id.as_deref().unwrap_or_default(), hovered_handle.as_deref().unwrap_or_default()]);
     parts.extend(node_ids.iter().map(String::as_str));
     ui_wgpu::wgpu::checked_action_string_bytes(&parts)?;
-    Ok(GraphInteractionSnapshot { node_ids, hovered_id, hovered_handle, viewport_json })
+    Ok(GraphInteractionSnapshot { node_ids, hovered_id, hovered_handle, viewport })
 }
 
 /// 🔌️ The channel the DAG's own hit-test reports under a screen point, in the `"{nodeId}@{portId}"`
@@ -2918,11 +2928,15 @@ fn write_graph_interaction_actions(batch: &mut ui_wgpu::wgpu::BoundedActionBatch
         builder.end_container()
     })?;
     let viewport_action = "nodeGraphViewport";
-    let viewport_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, viewport_action, "surfaceId", surface_id, "viewportJson", snapshot.viewport_json.as_str()])?;
+    let viewport_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, viewport_action, "surfaceId", surface_id, "viewport", "x", "y", "zoom"])?;
     batch.action(controller_id, viewport_action, viewport_bytes, |builder| {
         builder.begin_object(None)?;
         builder.string(Some("surfaceId"), surface_id)?;
-        builder.string(Some("viewportJson"), &snapshot.viewport_json)?;
+        builder.begin_object(Some("viewport"))?;
+        builder.number(Some("x"), snapshot.viewport.x)?;
+        builder.number(Some("y"), snapshot.viewport.y)?;
+        builder.number(Some("zoom"), snapshot.viewport.zoom)?;
+        builder.end_container()?;
         builder.end_container()
     })?;
     Ok(())

@@ -1,0 +1,147 @@
+{
+  "owners": [
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🧪️tests/📣️publication-authority/🟦️.ts",
+      "language": "typescript",
+      "exports": ["verifyMathematicalPublicationAuthority"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🧬️schema/🟦️.ts",
+      "language": "typescript",
+      "exports": ["compileGisScopeExport"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts",
+      "language": "typescript",
+      "exports": ["proveGisNativeCodecReceipts", "NativeCodecCheckScript"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🧪️tests/💡️inference-control/🟦️.ts",
+      "language": "typescript",
+      "exports": ["proveGisControlledProposal"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🧪️tests/🧩️map-create-region-group/🟦️.ts",
+      "language": "typescript",
+      "exports": ["proveGisMapCreateRegionGroup", "MapCreateRegionGroupCheckScript", "MapCreateRegionGroupNativeCheckScript"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🧪️tests/🗄️durable-three-store-assembly/🟦️.ts",
+      "language": "typescript",
+      "exports": ["proveGisDurableThreeStoreAssembly", "DurableThreeStoreAssemblyCheckScript", "DurableThreeStoreAssemblyNativeCheckScript"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts",
+      "language": "typescript",
+      "exports": ["proveGisComponentColdMapPatch", "ComponentColdMapPatchCheckScript", "ComponentColdMapPatchNativeCheckScript"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts",
+      "language": "typescript",
+      "exports": ["proveVcsNativeCodecReceipts", "NativeCodecCheckScript"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🧪️tests/🪪️native-openable-identity/🟦️.ts",
+      "language": "typescript",
+      "exports": ["NativeOpenableIdentityCheckScript"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🛠️toolchain/🟦️.ts",
+      "language": "typescript",
+      "exports": ["validateOracleManifest", "oraclePlatformKey", "oracleManifest", "oracleToolDirectory", "fileSha256", "ensureOracleTool", "oracleEnvironment"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution/🟦️.ts",
+      "language": "typescript",
+      "exports": ["runOraclePython", "DepsScript", "SetupScript", "StatusScript", "RunScript", "NativeScript", "EpJsonScript", "EmitScript", "TestScript"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution/🐍️.py",
+      "language": "python",
+      "exports": ["main"]
+    }
+  ],
+  "routers": [
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/📜️script.ts",
+      "maximumLines": 15
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
+      "maximumLines": 40
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
+      "maximumLines": 30
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📜️script.ts",
+      "maximumLines": 20
+    }
+  ],
+  "directoryContexts": [
+    { "name": "📱️app-verification-source-ownership", "parentKind": "schema", "kind": "app-verification-source-ownership" },
+    { "name": "📱️app-verification-source-ownership", "parentKind": "fixtures", "kind": "app-verification-source-ownership" },
+    { "name": "📱️app-verification-source-ownership", "parentKind": "tests", "kind": "app-verification-source-ownership" },
+    { "name": "📣️publication-authority", "parentKind": "tests", "kind": "publication-authority-verification" },
+    { "name": "📇️native-codecs", "parentKind": "tests", "kind": "native-codec-verification" },
+    { "name": "💡️inference-control", "parentKind": "tests", "kind": "inference-control-verification" },
+    { "name": "🧩️map-create-region-group", "parentKind": "tests", "kind": "map-create-region-group-verification" },
+    { "name": "🗄️durable-three-store-assembly", "parentKind": "tests", "kind": "durable-three-store-assembly-verification" },
+    { "name": "🌉️component-cold-map-patch", "parentKind": "tests", "kind": "component-cold-map-patch-verification" },
+    { "name": "🪪️native-openable-identity", "parentKind": "tests", "kind": "native-openable-identity-verification" },
+    { "name": "🛠️toolchain", "parentKind": "oracles", "kind": "oracle-toolchain" },
+    { "name": "🏃️execution", "parentKind": "oracles", "kind": "oracle-execution" }
+  ],
+  "consumers": [
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/📜️script.ts",
+      "owners": ["✏️s/🔌️plugins/➗️mathematical/🧪️tests/📣️publication-authority/🟦️.ts"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
+      "owners": ["✏️s/🔌️plugins/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts", "✏️s/🔌️plugins/🌍️gis/🧪️tests/🧩️map-create-region-group/🟦️.ts", "✏️s/🔌️plugins/🌍️gis/🧪️tests/🗄️durable-three-store-assembly/🟦️.ts", "✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts",
+      "owners": ["✏️s/🔌️plugins/🌍️gis/🧬️schema/🟦️.ts", "✏️s/🔌️plugins/🌍️gis/🧪️tests/💡️inference-control/🟦️.ts"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🧪️tests/🧩️map-create-region-group/🟦️.ts",
+      "owners": ["✏️s/🔌️plugins/🌍️gis/🧬️schema/🟦️.ts"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🧪️tests/🗄️durable-three-store-assembly/🟦️.ts",
+      "owners": ["✏️s/🔌️plugins/🌍️gis/🧬️schema/🟦️.ts"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts",
+      "owners": ["✏️s/🔌️plugins/🌍️gis/🧬️schema/🟦️.ts"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
+      "owners": ["✏️s/🔌️plugins/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts", "✏️s/🔌️plugins/🌿️vcs/🧪️tests/🪪️native-openable-identity/🟦️.ts"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📜️script.ts",
+      "owners": ["✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution/🟦️.ts"]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution/🟦️.ts",
+      "owners": ["✏️s/🔌️plugins/🔋️energy/🔮️oracles/🛠️toolchain/🟦️.ts"]
+    },
+    {
+      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "owners": ["✏️s/🔌️plugins/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts", "✏️s/🔌️plugins/🌍️gis/🧪️tests/💡️inference-control/🟦️.ts", "✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts", "✏️s/🔌️plugins/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📱️app-verification-source-ownership/🟦️.ts",
+      "owners": ["✏️s/🔌️plugins/🔋️energy/🔮️oracles/🛠️toolchain/🟦️.ts"]
+    }
+  ],
+  "registration": {
+    "name": "🧹clean🧩️taxonomy🧪️app-verification-source-ownership",
+    "command": "bun nx run @semio-tech/repo-lib:test-app-verification-source-ownership",
+    "target": "test-app-verification-source-ownership"
+  }
+}

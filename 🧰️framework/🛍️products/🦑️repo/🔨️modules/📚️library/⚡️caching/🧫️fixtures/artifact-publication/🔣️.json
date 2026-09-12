@@ -1,0 +1,5 @@
+{
+  "owner": "gis:browser-support",
+  "files": { "support.js": "export const ready = true;\n", "nested/worker.js": "postMessage('ready');\n" },
+  "cancelReason": "cancelled publication"
+}

@@ -3,16 +3,12 @@
 /** @emoji 🧪️ Pure-logic tests for `TiledMapHost`'s tile-refresh perf primitives (ticket
  * 26/08/29/GIS-MAP-END-TO-END): the byte-budgeted LRU (`createByteLru`), the bounded miss-key set
  * (`createBoundedSet`), the leading+trailing refresh debounce (`createLeadingTrailingDebounce`), and
- * `MapRenderer`'s `hasTile`-guarded upload path. Not wired into `@semio-tech/framework-renderer-react`'s
- * own nx `test` target (its `vitest.config.ts` `root` is the `⚛️react` package dir, a sibling of —
- * not an ancestor of — `🧱️elements/`) — run directly, e.g.
- * the renderer React package's `vitest.config.ts` and this canonical case path
- * from the `⚛️react` package dir, mirroring `AgentBridge`/`🧵️TaskManager`'s colocated test files. */
+ * `MapRenderer`'s `hasTile`-guarded upload path. Included in the React renderer's long test suite. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, MapRenderer } from "./🟦️.tsx";
+import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, MapRenderer } from "../../🟦️.tsx";
 import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 // #endregion 🔌️Adapters
 

@@ -5297,8 +5297,9 @@ pub mod pack_rt {
 
     pub use crate::os_pack::{RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
     pub use pack::{
-        RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSourceCursor,
-        RetainedPackSourceEvent, RetainedPackSourceProgress, MAGIC, RETAINED_PACK_PAGE_BYTES,
+        RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent,
+        RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep, RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceProgress, MAGIC, RETAINED_PACK_MAXIMUM_PAGES,
+        RETAINED_PACK_PAGE_BYTES,
     };
 
     /// @emoji 🚪️ Forwards to `crate::os_pack::encode_document`.
@@ -5467,8 +5468,9 @@ pub mod pack_rt {
 pub mod mounted_pack_rt {
     pub use crate::os_pack::{PackLimits, RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
     pub use pack::{
-        RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSourceCursor,
-        RetainedPackSourceEvent, RetainedPackSourceProgress, MAGIC, RETAINED_PACK_PAGE_BYTES,
+        RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent,
+        RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep, RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceProgress, MAGIC, RETAINED_PACK_MAXIMUM_PAGES,
+        RETAINED_PACK_PAGE_BYTES,
     };
 }
 
@@ -6544,6 +6546,9 @@ pub trait ArtifactEnvelopeVcsFieldAuthority<P, Mutation>: Send {
         reservation: ArtifactEnvelopeFieldReservation,
         cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic>;
+    fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
+    fn maximum_close_byte_demand(&self) -> usize;
+    fn maximum_retained_close_bytes(&self) -> usize;
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic>;
     fn terminal_is_empty(&self) -> bool;
 }
@@ -6557,6 +6562,9 @@ pub trait ArtifactEnvelopeSnapshotFieldAuthority<P>: Send {
         reservation: ArtifactEnvelopeFieldReservation,
         cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic>;
+    fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
+    fn maximum_close_byte_demand(&self) -> usize;
+    fn maximum_retained_close_bytes(&self) -> usize;
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic>;
     fn terminal_is_empty(&self) -> bool;
 }
@@ -7374,6 +7382,9 @@ impl<P, Mutation> ArtifactEnvelopeDecodeOwnerBundle<P, Mutation> {
 pub trait ArtifactEnvelopeFieldDecoder<P, Mutation>: Send {
     fn accept_field_token(&mut self, field_id: u16, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic>;
     fn finish_record(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic>;
+    fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
+    fn maximum_close_byte_demand(&self) -> usize;
+    fn maximum_retained_close_bytes(&self) -> usize;
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic>;
     fn terminal_is_empty(&self) -> bool;
 }
@@ -7400,6 +7411,7 @@ impl ArtifactEnvelopeFieldDecoderTicket {
 pub enum ArtifactEnvelopeFieldDecoderRegistryFault {
     Contended,
     Capacity,
+    CloseByteCapacity,
     GenerationExhausted,
     Stale,
     Returned,
@@ -8157,6 +8169,8 @@ impl OwnedSchemaEmptyArrayAuthority {
 pub const ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES: usize = 4_096;
 pub const ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES: usize = 262_144;
 pub const ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES: usize = ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES / ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+pub const ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES: usize = ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES * 4;
+pub const ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES: usize = ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES + ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactEnvelopeDecodePage {
@@ -8218,6 +8232,9 @@ pub struct ArtifactEnvelopeDecodeAuthority<P, Mutation> {
     field_registry: Arc<ArtifactEnvelopeFieldDecoderRegistry<P, Mutation>>,
     field_ticket: ArtifactEnvelopeFieldDecoderTicket,
     field_returned: bool,
+    maximum_field_close_byte_demand: usize,
+    maximum_retained_field_close_bytes: usize,
+    released_field_bytes: usize,
     pending_field: Option<(u16, OwnedSchemaToken, bool)>,
     state: ArtifactEnvelopeDecodeState,
 }
@@ -8233,6 +8250,14 @@ where
         field_registry: &Arc<ArtifactEnvelopeFieldDecoderRegistry<P, Mutation>>,
         fields: Box<dyn ArtifactEnvelopeFieldDecoder<P, Mutation>>,
     ) -> Result<Self, (OwnedSchemaRecordCursor, ArtifactEnvelopeFieldDecoderRegistryFault, Box<dyn ArtifactEnvelopeFieldDecoder<P, Mutation>>)> {
+        let maximum_field_close_byte_demand = fields.maximum_close_byte_demand();
+        let maximum_retained_field_close_bytes = fields.maximum_retained_close_bytes();
+        if maximum_field_close_byte_demand > ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+            || maximum_retained_field_close_bytes > ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES
+            || maximum_field_close_byte_demand > maximum_retained_field_close_bytes
+        {
+            return Err((record, ArtifactEnvelopeFieldDecoderRegistryFault::CloseByteCapacity, fields));
+        }
         let fields = match field_registry.try_admit(fields) {
             Ok(fields) => fields,
             Err((fault, fields)) => return Err((record, fault, fields)),
@@ -8244,6 +8269,9 @@ where
             field_registry: Arc::clone(field_registry),
             field_ticket,
             field_returned: false,
+            maximum_field_close_byte_demand,
+            maximum_retained_field_close_bytes,
+            released_field_bytes: 0,
             pending_field: None,
             state: ArtifactEnvelopeDecodeState::Fields,
         })
@@ -8253,8 +8281,31 @@ where
         self.state = state;
     }
 
+    fn record_release_fault(&mut self, diagnostic: OwnedSchemaDecodeDiagnostic) {
+        if !matches!(self.state, ArtifactEnvelopeDecodeState::ReleaseFault(_)) {
+            self.state = ArtifactEnvelopeDecodeState::ReleaseFault(diagnostic);
+        }
+    }
+
     fn diagnostic(code: &'static str) -> OwnedSchemaDecodeDiagnostic {
         OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT }
+    }
+
+    fn checked_field_close_byte_demand(&self, demand: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        if demand > self.maximum_field_close_byte_demand {
+            return Err(Self::diagnostic("artifact-envelope.decode-close-demand-over-admitted-maximum"));
+        }
+        Ok(demand)
+    }
+
+    fn record_released_field_bytes(&mut self, released_bytes: usize) -> Result<(), OwnedSchemaDecodeDiagnostic> {
+        let released_field_bytes = self
+            .released_field_bytes
+            .checked_add(released_bytes)
+            .filter(|total| *total <= self.maximum_retained_field_close_bytes)
+            .ok_or_else(|| Self::diagnostic("artifact-envelope.decode-close-byte-ledger-overflow"))?;
+        self.released_field_bytes = released_field_bytes;
+        Ok(())
     }
 
     fn terminal_fault(diagnostic: OwnedSchemaDecodeDiagnostic, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
@@ -8265,26 +8316,48 @@ where
     fn release_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Option<semio_framework_job::StepOutcome> {
         cx.set_stage("artifact-envelope-decode-close");
         if let Some(fields) = self.fields.as_mut() {
-            let close = fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(SnapshotRetirementStep::Complete) } else { owner.close_step(1, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) });
-            let step = match close {
-                Ok(Ok(step)) => step,
+            let maximum_bytes = match fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(0) } else { owner.next_close_byte_demand() }) {
+                Ok(Ok(maximum_bytes)) => match self.checked_field_close_byte_demand(maximum_bytes) {
+                    Ok(maximum_bytes) => maximum_bytes,
+                    Err(diagnostic) => {
+                        self.record_release_fault(diagnostic);
+                        return Some(semio_framework_job::StepOutcome::Yield);
+                    }
+                },
                 Ok(Err(diagnostic)) => {
-                    self.state = ArtifactEnvelopeDecodeState::ReleaseFault(diagnostic);
+                    self.record_release_fault(diagnostic);
                     return Some(semio_framework_job::StepOutcome::Yield);
                 }
                 Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Some(semio_framework_job::StepOutcome::Yield),
                 Err(_) => {
-                    self.state = ArtifactEnvelopeDecodeState::ReleaseFault(Self::diagnostic("artifact-envelope.decode-field-lease-invalid"));
+                    self.record_release_fault(Self::diagnostic("artifact-envelope.decode-field-lease-invalid"));
                     return Some(semio_framework_job::StepOutcome::Yield);
                 }
             };
+            let close = fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(SnapshotRetirementStep::Complete) } else { owner.close_step(1, maximum_bytes) });
+            let step = match close {
+                Ok(Ok(step)) => step,
+                Ok(Err(diagnostic)) => {
+                    self.record_release_fault(diagnostic);
+                    return Some(semio_framework_job::StepOutcome::Yield);
+                }
+                Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Some(semio_framework_job::StepOutcome::Yield),
+                Err(_) => {
+                    self.record_release_fault(Self::diagnostic("artifact-envelope.decode-field-lease-invalid"));
+                    return Some(semio_framework_job::StepOutcome::Yield);
+                }
+            };
+            cx.consume_fuel(1);
             match step {
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES => {
-                    cx.consume_fuel((released_items as u64).saturating_add(released_bytes as u64).max(1));
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => {
+                    if let Err(diagnostic) = self.record_released_field_bytes(released_bytes) {
+                        self.record_release_fault(diagnostic);
+                        return Some(semio_framework_job::StepOutcome::Yield);
+                    }
                     return Some(semio_framework_job::StepOutcome::Yield);
                 }
                 SnapshotRetirementStep::Pending { .. } => {
-                    self.state = ArtifactEnvelopeDecodeState::ReleaseFault(Self::diagnostic("artifact-envelope.decode-close-over-budget"));
+                    self.record_release_fault(Self::diagnostic("artifact-envelope.decode-close-over-budget"));
                     return Some(semio_framework_job::StepOutcome::Yield);
                 }
                 SnapshotRetirementStep::Blocked => return Some(semio_framework_job::StepOutcome::Yield),
@@ -8299,16 +8372,15 @@ where
                 }
             };
             if !terminal {
-                self.state = ArtifactEnvelopeDecodeState::ReleaseFault(Self::diagnostic("artifact-envelope.decode-close-false-terminal"));
+                self.record_release_fault(Self::diagnostic("artifact-envelope.decode-close-false-terminal"));
                 return Some(semio_framework_job::StepOutcome::Yield);
             }
             if !fields.return_now() {
-                self.state = ArtifactEnvelopeDecodeState::ReleaseFault(Self::diagnostic("artifact-envelope.decode-field-double-return"));
+                self.record_release_fault(Self::diagnostic("artifact-envelope.decode-field-double-return"));
                 return Some(semio_framework_job::StepOutcome::Yield);
             }
             drop(self.fields.take());
             self.field_returned = true;
-            cx.consume_fuel(1);
             return Some(semio_framework_job::StepOutcome::Yield);
         }
         if !self.field_returned || !self.field_registry.ticket_reclaimed(self.field_ticket) {
@@ -8364,9 +8436,22 @@ where
         let Some(fields) = source.fields.take() else { unreachable!("validated rejected field owner") };
         let field_registry = Arc::clone(&source.field_registry);
         let field_ticket = source.field_ticket;
+        let maximum_field_close_byte_demand = source.maximum_field_close_byte_demand;
+        let maximum_retained_field_close_bytes = source.maximum_retained_field_close_bytes;
+        let released_field_bytes = source.released_field_bytes;
         source.state = ArtifactEnvelopeDecodeState::Transferred;
         unsafe { std::mem::ManuallyDrop::drop(&mut source) };
-        Ok(ArtifactEnvelopeDecodeRejected { record: std::mem::ManuallyDrop::new(Some(record)), fields: std::mem::ManuallyDrop::new(Some(fields)), field_registry, field_ticket, field_returned: false, diagnostic })
+        Ok(ArtifactEnvelopeDecodeRejected {
+            record: std::mem::ManuallyDrop::new(Some(record)),
+            fields: std::mem::ManuallyDrop::new(Some(fields)),
+            field_registry,
+            field_ticket,
+            field_returned: false,
+            maximum_field_close_byte_demand,
+            maximum_retained_field_close_bytes,
+            released_field_bytes,
+            diagnostic,
+        })
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -8375,6 +8460,20 @@ where
             && self.field_returned
             && self.field_registry.ticket_reclaimed(self.field_ticket)
             && matches!(self.state, ArtifactEnvelopeDecodeState::Complete | ArtifactEnvelopeDecodeState::Cancelled | ArtifactEnvelopeDecodeState::Fault(_))
+    }
+
+    pub fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        if let Some(fields) = self.fields.as_ref() {
+            let demand = fields
+                .with_owner(|owner| if owner.terminal_is_empty() { Ok(0) } else { owner.next_close_byte_demand() })
+                .map_err(|_| Self::diagnostic("artifact-envelope.decode-field-lease-invalid"))?;
+            return self.checked_field_close_byte_demand(demand?);
+        }
+        Ok(usize::from(self.record.is_some()) * ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
+    }
+
+    pub fn released_field_bytes(&self) -> usize {
+        self.released_field_bytes
     }
 }
 
@@ -8489,10 +8588,37 @@ where
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         self.begin_close();
         if let Some(fields) = self.fields.as_mut() {
-            let close = fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(SnapshotRetirementStep::Complete) } else { owner.close_step(maximum_items, maximum_bytes) });
+            let demand = match fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(0) } else { owner.next_close_byte_demand() }) {
+                Ok(Ok(demand)) if demand <= self.maximum_field_close_byte_demand => demand,
+                Ok(Ok(_)) => {
+                    self.record_release_fault(Self::diagnostic("artifact-envelope.decode-close-demand-over-admitted-maximum"));
+                    return semio_framework_job::InteractiveJobCloseStep::Blocked;
+                }
+                Ok(Err(diagnostic)) => {
+                    self.record_release_fault(diagnostic);
+                    return semio_framework_job::InteractiveJobCloseStep::Blocked;
+                }
+                Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return semio_framework_job::InteractiveJobCloseStep::Blocked,
+                Err(_) => {
+                    self.record_release_fault(Self::diagnostic("artifact-envelope.decode-field-lease-invalid"));
+                    return semio_framework_job::InteractiveJobCloseStep::Blocked;
+                }
+            };
+            if maximum_items == 0 || maximum_bytes < demand {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            let close = fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(SnapshotRetirementStep::Complete) } else { owner.close_step(maximum_items.min(1), demand) });
             match close {
-                Ok(Ok(SnapshotRetirementStep::Pending { released_items, released_bytes })) => {
+                Ok(Ok(SnapshotRetirementStep::Pending { released_items, released_bytes })) if released_items <= 1 && released_bytes <= demand => {
+                    if let Err(diagnostic) = self.record_released_field_bytes(released_bytes) {
+                        self.record_release_fault(diagnostic);
+                        return semio_framework_job::InteractiveJobCloseStep::Blocked;
+                    }
                     return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+                }
+                Ok(Ok(SnapshotRetirementStep::Pending { .. })) => {
+                    self.record_release_fault(Self::diagnostic("artifact-envelope.decode-close-over-budget"));
+                    return semio_framework_job::InteractiveJobCloseStep::Blocked;
                 }
                 Ok(Ok(SnapshotRetirementStep::Blocked)) | Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => {
                     return semio_framework_job::InteractiveJobCloseStep::Blocked;
@@ -8568,6 +8694,9 @@ pub struct ArtifactEnvelopeDecodeRejected<P, Mutation> {
     field_registry: Arc<ArtifactEnvelopeFieldDecoderRegistry<P, Mutation>>,
     field_ticket: ArtifactEnvelopeFieldDecoderTicket,
     field_returned: bool,
+    maximum_field_close_byte_demand: usize,
+    maximum_retained_field_close_bytes: usize,
+    released_field_bytes: usize,
     diagnostic: OwnedSchemaDecodeDiagnostic,
 }
 
@@ -8581,8 +8710,27 @@ where
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(fields) = self.fields.as_mut() {
-            let close = fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(SnapshotRetirementStep::Complete) } else { owner.close_step(1, maximum_bytes.min(ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)) });
+            let demand = match fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(0) } else { owner.next_close_byte_demand() }) {
+                Ok(Ok(demand)) if demand <= self.maximum_field_close_byte_demand => demand,
+                Ok(Ok(_)) => return Err("artifact envelope rejected field close demand exceeded its admitted maximum".into()),
+                Ok(Err(_)) => return Err("artifact envelope rejected field owner faulted while reporting close demand".into()),
+                Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Ok(SnapshotRetirementStep::Blocked),
+                Err(_) => return Err("artifact envelope rejected field lease is invalid".into()),
+            };
+            if maximum_bytes < demand {
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            let close = fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(SnapshotRetirementStep::Complete) } else { owner.close_step(1, demand) });
             let step = match close {
+                Ok(Ok(SnapshotRetirementStep::Pending { released_items, released_bytes })) if released_items <= 1 && released_bytes <= demand => {
+                    self.released_field_bytes = self
+                        .released_field_bytes
+                        .checked_add(released_bytes)
+                        .filter(|total| *total <= self.maximum_retained_field_close_bytes)
+                        .ok_or_else(|| "artifact envelope rejected field close ledger exceeded its admitted aggregate")?;
+                    return Ok(SnapshotRetirementStep::Pending { released_items, released_bytes });
+                }
+                Ok(Ok(SnapshotRetirementStep::Pending { .. })) => return Err("artifact envelope rejected field owner exceeded its close grant".into()),
                 Ok(Ok(step)) => step,
                 Ok(Err(_)) => return Err("artifact envelope rejected field owner faulted while closing".into()),
                 Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Ok(SnapshotRetirementStep::Blocked),
@@ -8654,7 +8802,7 @@ where
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(fields) = self.fields.as_mut() {
-            let step = fields.close_step(maximum_items.min(1), maximum_bytes.min(ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).map_err(|diagnostic| diagnostic.code.to_string())?;
+            let step = fields.close_step(maximum_items.min(1), maximum_bytes).map_err(|diagnostic| diagnostic.code.to_string())?;
             if step != SnapshotRetirementStep::Complete {
                 return Ok(step);
             }
@@ -9409,6 +9557,26 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeVcsFieldAuthor
         Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
+    fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        if let Some(snapshot) = self.snapshot.as_ref() {
+            if !snapshot.terminal_is_empty() {
+                return snapshot.next_close_byte_demand();
+            }
+        }
+        if self.retirement.is_some() || self.active.as_ref().is_some_and(|active| !matches!(active, ArtifactEnvelopeFreshVcsActive::Snapshot { .. })) {
+            return Ok(ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+        }
+        Ok(0)
+    }
+
+    fn maximum_close_byte_demand(&self) -> usize {
+        ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+    }
+
+    fn maximum_retained_close_bytes(&self) -> usize {
+        ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES
+    }
+
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -9729,6 +9897,34 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P
                 Ok(ArtifactEnvelopeFieldDecodeStep::Pending)
             }
         }
+    }
+
+    fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        if let Some(active) = self.active.as_ref() {
+            return match active {
+                ArtifactEnvelopeFreshRecordActive::Vcs { authority, .. } => authority.next_close_byte_demand(),
+                ArtifactEnvelopeFreshRecordActive::String { .. } | ArtifactEnvelopeFreshRecordActive::Empty { .. } => Ok(0),
+            };
+        }
+        if self.pending_completed.is_some() || self.active_retirement.is_some() {
+            return Ok(ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+        }
+        if self.target.vcs.is_some() {
+            return Ok(0);
+        }
+        self.schema
+            .as_ref()
+            .map_or(0, String::len)
+            .checked_add(self.id.as_ref().map_or(0, String::len))
+            .ok_or_else(|| Self::diagnostic("$", "artifact-envelope.close-byte-demand-overflow"))
+    }
+
+    fn maximum_close_byte_demand(&self) -> usize {
+        ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+    }
+
+    fn maximum_retained_close_bytes(&self) -> usize {
+        ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic> {

@@ -12,3 +12,160 @@ type Viewport3dOrbit {
   zoom: Float!
   up: [Float!] @vector3
 }
+
+enum Viewport3dProjectionKind {
+  orthographic
+  axonometric
+  oblique
+  onePoint
+  twoPoint
+  threePoint
+  curvilinear
+}
+
+enum Viewport3dOrthographicView {
+  plan
+  top
+  bottom
+  front
+  back
+  left
+  right
+}
+
+enum Viewport3dAxonometricVariant {
+  isometric
+  dimetric
+  trimetric
+}
+
+enum Viewport3dAxonometricQuadrant {
+  ne
+  nw
+  se
+  sw
+}
+
+enum Viewport3dAxonometricHemisphere {
+  upper
+  lower
+}
+
+enum Viewport3dProjectionOrientationType {
+  cardinal
+  corner
+  free
+}
+
+enum Viewport3dObliqueVariant {
+  cabinet
+  cavalier
+  military
+}
+
+enum Viewport3dOnePointAxis {
+  x
+  y
+  z
+}
+
+enum Viewport3dCurvilinearMapping {
+  fisheye
+  panini
+}
+
+"""
+📐️ Complete editable projection preset bank retained by one viewport-owning window.
+"""
+type Viewport3dProjectionPreferences {
+  kind: Viewport3dProjectionKind!
+  orthographicView: Viewport3dOrthographicView!
+  axonometricVariant: Viewport3dAxonometricVariant!
+  axonometricAngleA: Float!
+  axonometricAngleB: Float!
+  axonometricQuadrant: Viewport3dAxonometricQuadrant!
+  obliqueVariant: Viewport3dObliqueVariant!
+  obliqueAngle: Float!
+  obliqueDepth: Float!
+  onePointAxis: Viewport3dOnePointAxis!
+  fov: Float!
+  twoPointShift: Float!
+  curvilinearFov: Float!
+  curvilinearStrength: Float!
+  curvilinearMapping: Viewport3dCurvilinearMapping!
+}
+
+type Viewport3dOrthographicProjectionMode {
+  kind: Viewport3dProjectionKind!
+}
+
+type Viewport3dAxonometricProjectionMode {
+  kind: Viewport3dProjectionKind!
+  variant: Viewport3dAxonometricVariant!
+  angleA: Float!
+  angleB: Float!
+}
+
+type Viewport3dObliqueProjectionMode {
+  kind: Viewport3dProjectionKind!
+  variant: Viewport3dObliqueVariant!
+  angle: Float!
+  depthScale: Float!
+}
+
+type Viewport3dOnePointProjectionMode {
+  kind: Viewport3dProjectionKind!
+  fov: Float!
+}
+
+type Viewport3dTwoPointProjectionMode {
+  kind: Viewport3dProjectionKind!
+  fov: Float!
+  verticalShift: Float!
+}
+
+type Viewport3dThreePointProjectionMode {
+  kind: Viewport3dProjectionKind!
+  fov: Float!
+}
+
+type Viewport3dCurvilinearProjectionMode {
+  kind: Viewport3dProjectionKind!
+  fov: Float!
+  strength: Float!
+  mapping: Viewport3dCurvilinearMapping!
+}
+
+union Viewport3dProjectionMode =
+  | Viewport3dOrthographicProjectionMode
+  | Viewport3dAxonometricProjectionMode
+  | Viewport3dObliqueProjectionMode
+  | Viewport3dOnePointProjectionMode
+  | Viewport3dTwoPointProjectionMode
+  | Viewport3dThreePointProjectionMode
+  | Viewport3dCurvilinearProjectionMode
+
+type Viewport3dCardinalProjectionOrientation {
+  type: Viewport3dProjectionOrientationType!
+  view: Viewport3dOrthographicView!
+}
+
+type Viewport3dCornerProjectionOrientation {
+  type: Viewport3dProjectionOrientationType!
+  quadrant: Viewport3dAxonometricQuadrant!
+  hemisphere: Viewport3dAxonometricHemisphere
+}
+
+type Viewport3dFreeProjectionOrientation {
+  type: Viewport3dProjectionOrientationType!
+}
+
+union Viewport3dProjectionOrientation = Viewport3dCardinalProjectionOrientation | Viewport3dCornerProjectionOrientation | Viewport3dFreeProjectionOrientation
+
+"""
+🎯️ Active mathematical projection snapshot transported to a renderer.
+"""
+type Viewport3dProjectionSpec {
+  mode: Viewport3dProjectionMode!
+  orientation: Viewport3dProjectionOrientation!
+}

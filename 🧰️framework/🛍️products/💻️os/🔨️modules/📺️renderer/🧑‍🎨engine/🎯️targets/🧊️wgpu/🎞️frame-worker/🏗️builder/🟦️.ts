@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { getWorkspaceRoot } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { renderWgpuPackageArtifacts } from "../../📽️projection/🟦️.ts";
 
@@ -8,13 +8,14 @@ const repoRoot = getWorkspaceRoot();
 /** 🧵️ Renders the frame worker through the schema-owned package projection. */
 export async function renderFrameWorker(bundleRoot: string): Promise<{ path: string; content: string }> {
   const workerJs = join(bundleRoot, "../../🎞️frame-worker/🤖️generated/🟨️.js");
-  const artifact = (await renderWgpuPackageArtifacts(repoRoot)).nodes.find((node) => resolve(repoRoot, node.path) === resolve(workerJs));
+  const artifact = (await renderWgpuPackageArtifacts(repoRoot, { producerTarget: "@semio-tech/framework-renderer-wgpu:generate-frame-worker" })).nodes.find((node) => resolve(repoRoot, node.path) === resolve(workerJs));
   if (!artifact) throw new Error("WGPU package projection omitted the frame-worker artifact");
   return { path: workerJs, content: artifact.content };
 }
 
 export async function generateFrameWorker(bundleRoot: string): Promise<void> {
   const artifact = await renderFrameWorker(bundleRoot);
+  mkdirSync(dirname(artifact.path), { recursive: true });
   writeFileSync(artifact.path, artifact.content, "utf8");
   checkFrameWorkerCarrierCensus(bundleRoot);
 }

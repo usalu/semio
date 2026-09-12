@@ -6,7 +6,7 @@
       "exports": [
         "stageArtifacts"
       ],
-      "maximumInputs": 1
+      "maximumInputs": 3
     },
     {
       "name": "native Cargo producer",
@@ -14,7 +14,7 @@
       "exports": [
         "buildCargoArtifacts"
       ],
-      "maximumInputs": 6
+      "maximumInputs": 7
     },
     {
       "name": "command router",

@@ -195,10 +195,21 @@ import {
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { taxonomyCliArtifactPath, taxonomyCliGuardedPath, taxonomyCliInventoryOptions, taxonomyCliOptions, taxonomyCliPlanOperationConsoleFields, taxonomyCliPlanOperationCounts, taxonomyCliPlanOperationSummaryRows, taxonomyCliPrintJson, taxonomyCliProgress, taxonomyCliRequireCommittedApply, taxonomyCliTicket, taxonomyCliValidateOperationOptions, taxonomyCliWriteJson, taxonomyCliWriteSummary, taxonomyTicketDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🟦️.ts";
 import { publishTaxonomyInventoryArtifactShards } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/📇️inventory/📦️publication/🟦️.ts";
-import { POLICY_MUTATIONS_FACET, POLICY_RS_COMPONENT_LEAF_NAME, POLICY_TS_COMPONENT_LEAF, policyArtifactRootOfMutationsDir, policyLeadingEmojiPrefix, policyStripEmoji, policyStructuralRelativeLocator } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
+import { POLICY_MUTATION_PLAN_DIR, POLICY_MUTATIONS_FACET, POLICY_RS_COMPONENT_LEAF_NAME, POLICY_TS_COMPONENT_LEAF, policyArtifactRootOfMutationsDir, policyLeadingEmojiPrefix, policyStripEmoji, policyStructuralRelativeLocator } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { mutationTaxonomySourceAdmission, policyFindAllMutationsDirs } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts";
 import { policyKebabToPascal, policyMutationDirectOwnerBreachesView, policyMutationEnumVariantNames, policyMutationSemanticIdentity, policyMutationStructuralBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts";
 import { runMutationTaxonomyCli } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts";
+import { policyListMutationDirs } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts";
+import { CleanScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts";
+import { CleanMechanismNewScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🎮️command/🟦️.ts";
+import { policySnakeToCamel, type PolicySchemaLeafExtract } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts";
+import { policyExtractRustSchemaFields } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts";
+import { policyExtractTypescriptSchemaFields } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🟦️typescript/🟦️.ts";
+import { policyExtractTypescriptSchemaFile } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🟦️typescript/📂️module-resolution/🟦️.ts";
+import { policyExtractGraphqlSchemaFields } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🔗️graphql/🟦️.ts";
+import { policyExtractJsonSchemaFields } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🔣️json-schema/🟦️.ts";
+import { policyExtractProtobufSchemaFields } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts";
+import { policySchemaFieldDifferences } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/⚖️comparison/🟦️.ts";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, linkSync, lstatSync, mkdirSync, chownSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
@@ -7370,6 +7381,53 @@ export class VerifyScript extends Script {
       }
       return;
     }
+    if (segments[0] === "framework-viewport-projection") {
+      const validation = join(this.root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/CORRECT-COMMAND-CONFIG-AND-MUTATION-OWNERSHIP-LEVELS/validation/📜️script.ts");
+      runCmd("bun", [validation, "framework-viewport-projection", ...segments.slice(1)], { cwd: this.root });
+      return;
+    }
+    if (segments[0] === "node-graph-viewport-ownership") {
+      const nativePhase = segments[2];
+      if (segments.length > 3 || (segments[1] !== undefined && segments[1] !== "native") || (nativePhase !== undefined && nativePhase !== "renderer-host" && nativePhase !== "consumers")) {
+        throw new Error("node-graph-viewport-ownership accepts native with the optional renderer-host or consumers phase");
+      }
+      const flowRoot = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust");
+      const reactRoot = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript");
+      const surfaceRoot = join(this.root, "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust");
+      runCmd("bun", [join(flowRoot, "📜️script.ts"), "declarations"], { cwd: flowRoot });
+      const { runCargo, runVitest } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      process.env.SEMIO_TEST_LEVEL = "long";
+      await runVitest(reactRoot, ["--silent=false", "--reporter=verbose", "-t", "uses the live session viewport|matches the shared neutral viewport schema"], "vitest.config.ts");
+      if (segments[1] === "native") {
+        if (nativePhase === undefined || nativePhase === "renderer-host") {
+          runCmd("bun", [join(surfaceRoot, "📜️script.ts"), "wasm"], { cwd: surfaceRoot, env: { ...process.env, NX_WORKSPACE_ROOT: this.root, REPO_ROOT: this.root } });
+          for (const [packageName, filters] of [
+            ["semio-framework-ui-scene", ["typed_scene_neutral_catalog_matches_native_serde_contracts"]],
+            ["semio-framework-surface", ["node_graph::tests::"]],
+            ["semio-framework-os-renderer-wgpu", ["node_graph_attach_tests", "concrete_window_instances_round_trip_without_kind_collapse", "context_menu_point_resolves_the_exact_concrete_window_instance", "canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript", "build_os_commands_covers_every_wired_setting"]],
+          ] as const) {
+            for (const filter of filters) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--lib", filter, "--", "--nocapture"], this.root);
+          }
+        }
+        if (nativePhase === undefined || nativePhase === "consumers") {
+          for (const [packageName, filters, features] of [
+          ["semio-s-artifact-procedural-generation2d", ["node_graph_viewport_sets_camera"], ["component-app-assembly"]],
+          ["semio-s-artifact-procedural-generation3d", ["every_command_round_trips_through_text_and_binary"], ["component-app-assembly"]],
+          ["semio-s-artifact-architect-program", ["every_command_round_trips_text_and_binary_under_its_declared_wire_keyword"], []],
+          ["semio-s-artifact-reasoning-wires", ["every_command_round_trips_through_text_and_binary"], []],
+          ["semio-s-plugin-space", ["node_graph_viewport_writes_typed_workflow_camera_config"], []],
+          ["semio-s-artifact-dag-dag", ["every_command_round_trips_through_text_and_binary"], []],
+          ["semio-s-artifact-flow-flow", ["node_graph_viewport_moves_the_camera"], []],
+          ["semio-s-artifact-mathematical-equation", ["node_graph_viewport_writes_config_not_mutations"], []],
+          ["semio-s-artifact-trinity-rewriting", ["trinity_rewriting_command_text_and_binary_round_trip"], ["component-app-assembly"]],
+          ["semio-s-artifact-trinity-jack", ["trinity_jack_command_text_and_binary_round_trip"], ["component-app-assembly"]],
+          ] as const) {
+            for (const filter of filters) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, ...features.flatMap((feature) => ["--features", feature]), "--lib", filter, "--", "--nocapture"], this.root);
+          }
+        }
+      }
+      return;
+    }
     if (segments[0] === "framework-ui-protocol-ownership") {
       if (segments.length !== 1) throw new Error("framework-ui-protocol-ownership accepts no arguments");
       const testPath = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts");
@@ -7390,6 +7448,21 @@ export class VerifyScript extends Script {
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-job", "--lib", "--", "--nocapture", "--test-threads=1"], this.root);
+      return;
+    }
+    if (segments[0] === "framework-retained-pack-ownership") {
+      const testRoot = join(this.root, "🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔬️retained-pack-source-laws");
+      const { testRetainedPackPhysicalOwnership } = await import(`${testRoot}/🟦️.ts`);
+      testRetainedPackPhysicalOwnership();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "value::list::", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "retained_pack_source_laws", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "write_then_read_round_trip_with_compressed_segment_and_chunk", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--lib", "retained_mounted_laws", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--lib", "retained_mounted_laws", "--", "--nocapture"], this.root);
+      }
       return;
     }
     if (segments[0] === "framework-paged-list-ownership") {
@@ -7415,6 +7488,18 @@ export class VerifyScript extends Script {
       if (segments[1] === "native") {
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "framework_empty_state_contract_", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "window-config-pack-identity") {
+      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("window-config-pack-identity accepts only optional native");
+      const testPath = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🪪️pack-identity/🟦️.ts");
+      const { testWindowConfigPackIdentityContract } = await import(testPath);
+      testWindowConfigPackIdentityContract();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "window_config_pack_identity_", "--", "--nocapture", "--test-threads=1"], this.root);
       }
       return;
     }
@@ -7447,11 +7532,11 @@ export class VerifyScript extends Script {
         } else {
           const failures: unknown[] = [];
           for (const [packageName, filters] of [
-            ["semio-s-artifact-fem-2d", ["fem2d_window_config_", "mesh_edge_authority_", "mounted_3d_element_interfaces_", "assembly_triplet_pages_", "pcg_job_"]],
+            ["semio-s-artifact-fem-2d", ["fem2d_window_config_", "mesh_edge_authority_", "mounted_3d_element_interfaces_", "assembly_triplet_pages_", "pcg_job_", "subspace_"]],
             ["semio-s-artifact-fem-3d", ["fem3d_window_config_", "live_visual::tests::"]],
           ] as const) {
             try {
-              await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--features", "component-app-assembly", "--lib", "--", "--nocapture", ...filters], this.root);
+              await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", ...filters], this.root);
             } catch (error) {
               failures.push(error);
             }
@@ -14048,739 +14133,6 @@ export class PurgeScript extends Script {
 }
 //#endregion 🔖️PurgeScript
 
-//#region 🔖️CleanScript
-const CLEAN_TICKET_FILE_MAX_BYTES = 5 * 1024 * 1024;
-const CLEAN_TICKET_DIR_MAX_BYTES = 10 * 1024 * 1024;
-const CLEAN_BUILD_ARTIFACT_MAX_BYTES = 10 * 1024 * 1024 * 1024;
-const CLEAN_CANONICAL_REPO_DIR = REPO_META_DIR_NAME;
-const CLEAN_CANONICAL_TICKETS_DIR = "🎫️tickets";
-const CLEAN_BUILD_DIR_NAMES = new Set(["target", "dist", "build", "out"]);
-const CLEAN_CACHE_DIR_NAME = "⚡️cache";
-const CLEAN_TICKET_GENERATED_OUTPUT_DIRS = new Set(["🗑️generated", TICKET_GENERATED_OUTPUT_DIRECTORY, "🧾️runs", "🧪️runs", "🧾️taxonomy-transaction"]);
-const CLEAN_TICKET_GENERATED_PROBE_PREFIXES = ["🧪️purity-", "🧪️cli-", "🧪️inventory-"];
-
-type CleanRemovalKind = "misplaced" | "gitignore" | "ticket-file" | "ticket-dir" | "build-artifact" | "ticket-generated" | "windows-illegal";
-
-export type CleanRemoval = {
-  kind: CleanRemovalKind;
-  path: string;
-  bytes: number;
-};
-//#endregion 🧬️MutationTaxonomyWorkflow
-
-/**
- * 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts — never
- * map/hub/space, and never the cache except through its own child-level policies.
- *
- * Two different mechanisms used to share the word "clean". This is the WORKSPACE one. Generated
- * test state is removed by `clean test`, which is owned by the testing domain and refuses to touch
- * anything that is not a marked test output; the architecture rule that used to be called
- * `clean-mechanism` is now the `taxonomy/owner-shape` policy and removes nothing at all.
- */
-export class CleanScript extends Script {
-  run(segments: string[]): void {
-    if (segments[0] === "taxonomy") {
-      this.runTaxonomy(segments.slice(1));
-      return;
-    }
-    const dry = segments.includes("--dry") || segments.includes("dry");
-    if (segments[0] === "test") {
-      // 🧪️ Marker-guarded removal of generated test state, delegated to its owner. Never descends
-      // into `compose/`, never follows a symlink, never deletes an unmarked directory.
-      const domain = String(repoTaxonomy(this.root).testDomainPath ?? "");
-      if (domain === "") throw new Error("🔣️taxonomy.json declares no testDomainPath — `clean test` has no owner to delegate to.");
-      runCmd("bun", [join(this.root, domain, "📜️script.ts"), "clean", ...segments.slice(1)], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
-      return;
-    }
-    if (segments[0] === "coverage") {
-      // 📊️ Generated coverage reports only — no source, no fixture, no other cache entry.
-      const removed: string[] = [];
-      for (const kind of ["js", "rust", "go", "py", "dotnet"] as const) {
-        const dir = coverageDir(this.root, kind);
-        if (!existsSync(dir)) continue;
-        removed.push(relative(this.root, dir));
-        if (!dry) rmSync(dir, { recursive: true, force: true });
-      }
-      console.log(`[clean coverage] ${dry ? "dry-run" : "applied"} removals=${removed.length}`);
-      for (const path of removed) console.log(`[clean coverage] ${dry ? "would-remove" : "removed"} ${path}`);
-      return;
-    }
-    const report = runWorkspaceClean(this.root, dry);
-    const totalBytes = report.removals.reduce((n, r) => n + r.bytes, 0);
-    const lines = [
-      `[clean] ${dry ? "dry-run" : "applied"} removals=${report.removals.length} bytes=${totalBytes}`,
-      ...(["misplaced", "gitignore", "ticket-file", "ticket-dir", "ticket-generated", "build-artifact", "windows-illegal"] as const).map((kind) => {
-        const rows = report.removals.filter((r) => r.kind === kind);
-        return `[clean] ${kind}: ${rows.length} (bytes=${rows.reduce((n, r) => n + r.bytes, 0)})`;
-      }),
-      ...report.removals.map((r) => `[clean] ${dry ? "would-remove" : "removed"} ${r.kind} ${r.path} (${r.bytes})`),
-      ...report.skippedProtected.map((p) => `[clean] protected ${p}`),
-    ];
-    for (const line of lines) console.log(line);
-    this.runCachePrune(dry);
-  }
-
-  /** ⚡️Bounds the shared cache root through its own owner instead of size-sweeping it — `clean` never walks or deletes under it directly. */
-  private runCachePrune(dry: boolean): void {
-    const cachingScript = join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts");
-    const status = runCmdStatus("bun", [cachingScript, "cache-prune", ...(dry ? ["--dry-run"] : [])], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log(`[clean] cache-prune ${status === 0 ? "ok" : `unavailable (exit ${status})`} ${repoCacheDirectory(this.root)}`);
-  }
-
-  private runTaxonomy(args: string[]): void {
-    const operation = args[0];
-    if (operation !== "inventory" && operation !== "plan" && operation !== "apply" && operation !== "verify") {
-      throw new Error(`[clean taxonomy] expected inventory, plan, apply or verify, got ${JSON.stringify(operation)}.`);
-    }
-    const options = taxonomyCliOptions(args.slice(1));
-    taxonomyCliValidateOperationOptions(operation, options);
-    const planArgumentPath = operation === "plan" || operation === "apply" ? taxonomyCliGuardedPath(this.root, options.plan, "--plan") : undefined;
-    const resumeArgumentPath = operation === "apply" ? taxonomyCliGuardedPath(this.root, options.resume, "--resume") : undefined;
-    const cancelArgumentPath = taxonomyCliGuardedPath(this.root, options.cancelFile, "--cancel-file");
-    const ticketDir = taxonomyCliTicket(this.root, options.ticket);
-    if (options.kind === "mutation") {
-      runMutationTaxonomyCli(this.root, operation, options, ticketDir, cancelArgumentPath);
-      return;
-    }
-    const inventoryOptions = taxonomyCliInventoryOptions(this.root, options, cancelArgumentPath);
-    if (operation === "inventory") {
-      const inventory = inventoryTaxonomy(inventoryOptions);
-      if (ticketDir) publishTaxonomyInventoryArtifactShards(dirname(taxonomyCliArtifactPath(ticketDir, "inventory", "json")), inventory, (event) => {
-        if (event.current === 0 || event.current === event.total || event.current % 100 === 0) console.error(`[clean taxonomy progress] inventory ${event.phase} ${event.current}/${event.total}${event.path ? ` ${event.path}` : ""}`);
-      });
-      taxonomyCliWriteSummary(ticketDir, "inventory", "Taxonomy Inventory", [
-        `- Source tree digest: \`${inventory.sourceTreeDigest}\``,
-        `- Entries: ${inventory.entries.length}`,
-        `- Violations: ${inventory.entries.reduce((count, entry) => count + entry.violations.length, 0)}`,
-      ]);
-      if (options.format === "json") taxonomyCliPrintJson(inventory);
-      else console.log(`[clean taxonomy inventory] entries=${inventory.entries.length} source=${inventory.sourceTreeDigest}${ticketDir ? ` -> ${ticketDir}` : ""}`);
-      return;
-    }
-    if (operation === "plan") {
-      if (!options.baseline) throw new Error("[clean taxonomy plan] --baseline <commit> is required.");
-      const inventory = inventoryTaxonomy(inventoryOptions);
-      const plan = planTaxonomy(inventory, {
-        baselineCommit: options.baseline,
-        excludedTreeDigests: [],
-        cancelFile: cancelArgumentPath,
-        progress: taxonomyCliProgress,
-      });
-      const counts = taxonomyCliPlanOperationCounts(plan);
-      const planPath = planArgumentPath ?? (ticketDir ? taxonomyCliArtifactPath(ticketDir, "plan", "json") : undefined);
-      if (planPath) taxonomyCliWriteJson(planPath, plan);
-      taxonomyCliWriteSummary(ticketDir, "plan", "Taxonomy Plan", [
-        `- Baseline: \`${plan.baselineCommit}\``,
-        `- Plan digest: \`${plan.planDigest}\``,
-        ...taxonomyCliPlanOperationSummaryRows(counts),
-        `- Unresolved: ${plan.unresolved.length}`,
-      ]);
-      if (options.format === "json" || !planPath) taxonomyCliPrintJson(plan);
-      else console.log(`[clean taxonomy plan] ${taxonomyCliPlanOperationConsoleFields(counts)} unresolved=${plan.unresolved.length} digest=${plan.planDigest} -> ${planPath}`);
-      if (plan.unresolved.length > 0) throw new Error(`[clean taxonomy plan] blocked by ${plan.unresolved.length} unresolved decision(s).`);
-      return;
-    }
-    if (operation === "apply") {
-      if (!ticketDir) throw new Error("[clean taxonomy apply] --ticket <ticket-id> is required.");
-      if (!options.baseline) throw new Error("[clean taxonomy apply] --baseline <commit> is required.");
-      const planPath = planArgumentPath;
-      if (!planPath) throw new Error("[clean taxonomy apply] --plan <path> is required.");
-      const plan = parseTaxonomyPlan(JSON.parse(readFileSync(planPath, "utf8")) as unknown);
-      if (plan.excludedTreeDigests.length > 0) throw new Error("[clean taxonomy apply] opaque tree digest opt-in is forbidden from the root CLI.");
-      const digest = taxonomyPlanDigest(plan);
-      if (plan.planDigest !== digest) throw new Error(`[clean taxonomy apply] stored plan digest ${plan.planDigest} does not match ${digest}.`);
-      if (options.digest && options.digest !== digest) throw new Error(`[clean taxonomy apply] --digest ${options.digest} does not match ${digest}.`);
-      if (plan.unresolved.length > 0) throw new Error(`[clean taxonomy apply] plan contains ${plan.unresolved.length} unresolved decision(s).`);
-      const result = applyTaxonomyPlan(plan, {
-        repoRoot: this.root,
-        ticketDir,
-        expectedBaselineCommit: options.baseline,
-        planArtifactPath: planPath,
-        expectedPlanDigest: options.digest ?? digest,
-        ...(cancelArgumentPath ? { cancelFile: cancelArgumentPath } : {}),
-        ...(resumeArgumentPath ? { resumeJournal: resumeArgumentPath } : {}),
-        progress: taxonomyCliProgress,
-      });
-      taxonomyCliWriteJson(taxonomyCliArtifactPath(ticketDir, "apply", "json"), result);
-      taxonomyCliWriteSummary(ticketDir, "apply", "Taxonomy Apply", [
-        `- Plan digest: \`${result.planDigest}\``,
-        `- State: ${result.state}`,
-        `- Applied moves: ${result.appliedMoves}`,
-        `- Applied embedded ticket-root relocations: ${result.appliedEmbeddedTicketRootRelocations}`,
-        `- Applied symlink target edits: ${result.appliedSymlinkTargetEdits}`,
-        `- Applied evidence removals: ${result.appliedEvidenceRemovals}`,
-        `- Applied edits: ${result.appliedEdits}`,
-        `- Applied regenerations: ${result.appliedRegenerations}`,
-        `- Journal: \`${relative(ticketDir, result.journalPath)}\``,
-      ]);
-      if (options.format === "json") taxonomyCliPrintJson(result);
-      else console.log(`[clean taxonomy apply] state=${result.state} moves=${result.appliedMoves} relocations=${result.appliedEmbeddedTicketRootRelocations} symlinks=${result.appliedSymlinkTargetEdits} removals=${result.appliedEvidenceRemovals} edits=${result.appliedEdits} regenerations=${result.appliedRegenerations} journal=${result.journalPath}`);
-      taxonomyCliRequireCommittedApply(result.state);
-      return;
-    }
-    const verification = verifyTaxonomy(inventoryOptions);
-    if (ticketDir) taxonomyCliWriteJson(taxonomyCliArtifactPath(ticketDir, "verify", "json"), verification);
-    const errors = verification.violations.filter((violation) => violation.severity === "error").length;
-    const warnings = verification.violations.length - errors;
-    taxonomyCliWriteSummary(ticketDir, "verify", "Taxonomy Verification", [
-      `- Clean: ${verification.clean}`,
-      `- Errors: ${errors}`,
-      `- Warnings: ${warnings}`,
-    ]);
-    if (options.format === "json") taxonomyCliPrintJson(verification);
-    else console.log(`[clean taxonomy verify] clean=${verification.clean} errors=${errors} warnings=${warnings}${ticketDir ? ` -> ${ticketDir}` : ""}`);
-    if (!verification.clean || errors > 0 || (options.failOnWarning && warnings > 0)) throw new Error(`[clean taxonomy verify] errors=${errors} warnings=${warnings}.`);
-  }
-}
-
-function cleanEndsWithAscii(name: string, ascii: string): boolean {
-  return name.endsWith(ascii);
-}
-
-function cleanIsCanonicalRepoDir(name: string): boolean {
-  return name === CLEAN_CANONICAL_REPO_DIR;
-}
-
-function cleanIsCanonicalTicketsDir(name: string): boolean {
-  return name === CLEAN_CANONICAL_TICKETS_DIR;
-}
-
-function cleanIsMisplacedRepoDir(name: string): boolean {
-  return cleanEndsWithAscii(name, "repo") && !cleanIsCanonicalRepoDir(name);
-}
-
-function cleanIsMisplacedTicketsDir(name: string): boolean {
-  return cleanEndsWithAscii(name, "tickets") && !cleanIsCanonicalTicketsDir(name);
-}
-
-function cleanIsBuildArtifactDirName(name: string): boolean {
-  if (CLEAN_BUILD_DIR_NAMES.has(name)) return true;
-  if (cleanIsCargoTargetDirName(name)) return true;
-  return false;
-}
-
-/** 🦀️Every Cargo target dir outside the shared cache root is stray — nothing writes there since `.cargo/config.toml` moved `build.target-dir`/`build.build-dir` under the cache root. Names are exact (`🎯️targets` is a source taxonomy folder). */
-function cleanIsCargoTargetDirName(name: string): boolean {
-  return name === "target" || name === "🎯️target" || name.startsWith("target-") || name.startsWith("🎯️target-");
-}
-
-/** 🏷️Cargo stamps every target and build dir with `CACHEDIR.TAG`; only such dirs are provably Cargo output. https://bford.info/cachedir/ */
-function cleanIsCargoTargetDir(abs: string, name: string): boolean {
-  return cleanIsCargoTargetDirName(name) && existsSync(join(abs, "CACHEDIR.TAG"));
-}
-
-function cleanIsSemioRootName(name: string): boolean {
-  return name === ".🧬semio" || (name.startsWith(".🧬") && name.endsWith("semio"));
-}
-
-const CLEAN_WINDOWS_RESERVED_DEVICE_NAMES = /^(con|prn|aux|nul|com[1-9¹²³]|lpt[1-9¹²³])(\..*)?$/iu;
-const CLEAN_WINDOWS_FORBIDDEN_CHARS = /[<>:"|?*\x00-\x1f]/;
-
-/** 🪟️ Checks whether a path component is forbidden on Windows filesystems (NTFS/Win32). */
-export function cleanIsWindowsIllegalName(name: string): boolean {
-  if (!name) return true;
-  if (name === "." || name === "..") return false;
-  if (name.trim().length === 0 || name.endsWith(" ") || name.endsWith(".") || name.startsWith(" ")) return true;
-  if (CLEAN_WINDOWS_FORBIDDEN_CHARS.test(name)) return true;
-  if (CLEAN_WINDOWS_RESERVED_DEVICE_NAMES.test(name)) return true;
-  return false;
-}
-
-function cleanProtectedPrefixes(root: string): string[] {
-  const semio = getSemioRoot(root);
-  return [
-    join(semio, MAP_CACHE_DIR_NAME),
-    join(semio, HUB_DATA_DIR_NAME),
-    join(semio, SPACE_DATA_DIR_NAME),
-    join(getRepoMetaDir(root), CLEAN_CACHE_DIR_NAME),
-  ].map((p) => resolve(p));
-}
-
-function cleanIsProtected(abs: string, protectedPrefixes: readonly string[]): boolean {
-  const resolved = resolve(abs);
-  return protectedPrefixes.some((prefix) => resolved === prefix || resolved.startsWith(prefix + sep));
-}
-
-//#region 🛡️TicketProtection
-export type CleanProtectionNodeKind = "directory" | "file" | "symlink" | "missing" | "unreadable";
-
-/** 🪟️ Read-only filesystem projection used by the deletion gate and synthetic safety laws. */
-export interface CleanProtectionView {
-  kind(path: string): CleanProtectionNodeKind;
-  children(path: string): readonly string[] | undefined;
-  read(path: string): string | undefined;
-}
-
-const CLEAN_PROTECTION_VIEW: CleanProtectionView = {
-  kind(path) {
-    try { const state = lstatSync(path); return state.isSymbolicLink() ? "symlink" : state.isDirectory() ? "directory" : state.isFile() ? "file" : "unreadable"; }
-    catch (error) { return (error as NodeJS.ErrnoException).code === "ENOENT" ? "missing" : "unreadable"; }
-  },
-  children(path) { try { return readdirSync(path); } catch { return undefined; } },
-  read(path) { try { return new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(path)); } catch { return undefined; } },
-};
-
-function cleanIntersectsProtected(abs: string, protectedPrefixes: readonly string[]): boolean {
-  const candidate = resolve(abs);
-  return protectedPrefixes.some((value) => { const prefix = resolve(value); return candidate === prefix || candidate.startsWith(prefix + sep) || prefix.startsWith(candidate + sep); });
-}
-
-function cleanTicketManifestIsClosed(directory: string, view: CleanProtectionView): boolean {
-  const path = join(directory, "🎫️ticket.json");
-  try {
-    if (view.kind(path) !== "file") return false;
-    const text = view.read(path);
-    if (text === undefined) return false;
-    const manifest: unknown = JSON.parse(text);
-    return manifest !== null && typeof manifest === "object" && !Array.isArray(manifest) && Object.hasOwn(manifest, "status") && (manifest as { status: unknown }).status === "closed";
-  } catch { return false; }
-}
-
-function cleanIsTicketFolderBoundary(root: string, directory: string): boolean {
-  const segments = relative(root, directory).split(sep).filter(Boolean);
-  return segments.some((name, index) => cleanEndsWithAscii(name, "tickets") && segments.length - index - 1 === 4);
-}
-
-function cleanTicketFolderForPath(root: string, abs: string): string | undefined {
-  let ancestor = dirname(abs);
-  while (true) {
-    const local = relative(root, ancestor);
-    if (local === "" || local === ".." || local.startsWith(".." + sep) || isAbsolute(local)) return undefined;
-    if (cleanIsTicketFolderBoundary(root, ancestor)) return resolve(ancestor);
-    const parent = dirname(ancestor);
-    if (parent === ancestor) return undefined;
-    ancestor = parent;
-  }
-}
-
-/** 🛡️ Rejects a removal intersecting any non-closed ticket, unsafe path, or unreadable subtree without following symlinks. */
-export function cleanRemovalProtection(root: string, candidate: string, view: CleanProtectionView = CLEAN_PROTECTION_VIEW, allowedOpenTicket?: string): string[] {
-  const workspace = resolve(root), target = resolve(workspace, candidate);
-  const local = relative(workspace, target);
-  if (local === "" || local === ".." || local.startsWith(".." + sep) || isAbsolute(local)) return [target];
-  const protectedPaths = new Set<string>(), closedTickets = new Set<string>();
-  const ancestors: { path: string; kind: CleanProtectionNodeKind }[] = [{ path: workspace, kind: "directory" }];
-  const inspectDirectory = (directory: string): void => {
-    const manifestKind = view.kind(join(directory, "🎫️ticket.json"));
-    if (!cleanIsTicketFolderBoundary(workspace, directory) && manifestKind === "missing") return;
-    if (cleanTicketManifestIsClosed(directory, view)) closedTickets.add(directory);
-    else if (directory !== allowedOpenTicket) protectedPaths.add(directory);
-  };
-  let ancestor = workspace;
-  try {
-    if (view.kind(workspace) !== "directory") return [workspace];
-    inspectDirectory(workspace);
-    for (const segment of local.split(sep)) {
-      ancestor = join(ancestor, segment);
-      const kind = view.kind(ancestor);
-      if (kind === "symlink" || kind === "missing" || kind === "unreadable" || (ancestor !== target && kind !== "directory")) return [ancestor];
-      ancestors.push({ path: ancestor, kind });
-      if (kind === "directory") inspectDirectory(ancestor);
-    }
-    if (protectedPaths.size > 0) return [...protectedPaths];
-    const stack = view.kind(target) === "directory" ? [target] : [];
-    while (stack.length > 0) {
-      const directory = stack.pop()!;
-      inspectDirectory(directory);
-      if (protectedPaths.has(directory)) continue;
-      const names = view.children(directory);
-      if (!names) { protectedPaths.add(directory); continue; }
-      for (const name of names) {
-        if (!name || name === "." || name === ".." || name.includes("/") || name.includes("\\")) { protectedPaths.add(directory); continue; }
-        const child = join(directory, name), kind = view.kind(child);
-        if (kind === "directory") stack.push(child);
-        else if (kind !== "file") protectedPaths.add(child);
-      }
-    }
-    for (const entry of ancestors) if (view.kind(entry.path) !== entry.kind) protectedPaths.add(entry.path);
-    for (const directory of closedTickets) if (view.kind(directory) !== "directory" || !cleanTicketManifestIsClosed(directory, view)) protectedPaths.add(directory);
-  } catch { protectedPaths.add(ancestor); }
-  return [...protectedPaths];
-}
-
-/** 🧮️ Removes unsafe candidates before shallow deduplication so a protected parent cannot absorb eligible siblings. */
-export function cleanProjectRemovals(root: string, removals: readonly CleanRemoval[], protectedPrefixes: readonly string[] = [], view: CleanProtectionView = CLEAN_PROTECTION_VIEW, onProtected?: (path: string) => void): CleanRemoval[] {
-  return cleanDedupePreferShallowest(removals.filter((row) => {
-    const absolute = resolve(root, row.path);
-    const allowedOpenTicket = row.kind === "ticket-generated"
-      ? cleanTicketGeneratedOutputTicketRoot(root, absolute)
-      : row.kind === "windows-illegal"
-        ? cleanTicketFolderForPath(root, absolute)
-        : undefined;
-    const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
-    const protectedPaths = cleanIntersectsProtected(absolute, applicablePrefixes) ? [absolute] : allowedOpenTicket ? [] : cleanRemovalProtection(root, row.path, view, allowedOpenTicket);
-    for (const path of protectedPaths) onProtected?.(path);
-    return protectedPaths.length === 0;
-  }));
-}
-//#endregion 🛡️TicketProtection
-
-function cleanPathBytes(abs: string): number {
-  try {
-    const st = lstatSync(abs);
-    if (st.isSymbolicLink() || st.isFile()) return st.size;
-    if (!st.isDirectory()) return 0;
-    let total = 0;
-    for (const name of readdirSync(abs)) total += cleanPathBytes(join(abs, name));
-    return total;
-  } catch {
-    return 0;
-  }
-}
-
-function cleanRemovePath(root: string, abs: string, dry: boolean, protectedPrefixes: readonly string[], allowTicketGeneratedOutput = false, allowWindowsIllegal = false): boolean {
-  const allowedOpenTicket = (allowTicketGeneratedOutput ? cleanTicketGeneratedOutputTicketRoot(root, abs) : undefined)
-    ?? (allowWindowsIllegal ? cleanTicketFolderForPath(root, abs) : undefined);
-  const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
-  if (cleanIntersectsProtected(abs, applicablePrefixes) || (!allowedOpenTicket && cleanRemovalProtection(root, abs, CLEAN_PROTECTION_VIEW, allowedOpenTicket).length !== 0)) return false;
-  if (allowedOpenTicket && exactCargoGeneratedOutputHasLiveLease(abs)) return false;
-  if (dry) return true;
-  if (allowWindowsIllegal) {
-    try {
-      runProbe("git", ["rm", "-f", "--", relative(root, abs)], { cwd: root });
-    } catch {}
-  }
-  if (existsSync(abs)) {
-    rmSync(abs, { recursive: true, force: true });
-  }
-  return true;
-}
-
-function cleanWalkDirs(root: string, visit: (abs: string, name: string) => "enter" | "skip" | "stop"): void {
-  const stack = [root];
-  while (stack.length > 0) {
-    const dir = stack.pop()!;
-    let entries: string[];
-    try {
-      entries = readdirSync(dir);
-    } catch {
-      continue;
-    }
-    for (const name of entries) {
-      const abs = join(dir, name);
-      let st;
-      try {
-        st = lstatSync(abs);
-      } catch {
-        continue;
-      }
-      if (!st.isDirectory() || st.isSymbolicLink()) continue;
-      const action = visit(abs, name);
-      if (action === "stop") return;
-      if (action === "enter") stack.push(abs);
-    }
-  }
-}
-
-function cleanCollectMisplaced(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
-  const out: CleanRemoval[] = [];
-  const seen = new Set<string>();
-  const push = (abs: string): void => {
-    if (cleanIntersectsProtected(abs, protectedPrefixes) || seen.has(abs)) return;
-    seen.add(abs);
-    out.push({ kind: "misplaced", path: relative(root, abs) || ".", bytes: cleanPathBytes(abs) });
-  };
-  const rootMisplaced = join(root, CLEAN_CANONICAL_REPO_DIR);
-  if (existsSync(rootMisplaced)) push(rootMisplaced);
-  cleanWalkDirs(root, (abs, name) => {
-    if (name === "node_modules" || name === ".git" || name === CLEAN_CACHE_DIR_NAME) return "skip";
-    if (name === MAP_CACHE_DIR_NAME || name === HUB_DATA_DIR_NAME || name === SPACE_DATA_DIR_NAME) return "skip";
-    if (cleanIsBuildArtifactDirName(name)) return "skip";
-    if (cleanIsSemioRootName(name)) {
-      let children: string[];
-      try {
-        children = readdirSync(abs);
-      } catch {
-        return "skip";
-      }
-      for (const child of children) {
-        const childAbs = join(abs, child);
-        try {
-          if (!lstatSync(childAbs).isDirectory()) continue;
-        } catch {
-          continue;
-        }
-        if (cleanIsMisplacedRepoDir(child)) push(childAbs);
-        if (cleanIsCanonicalRepoDir(child)) {
-          let ticketsKids: string[];
-          try {
-            ticketsKids = readdirSync(childAbs);
-          } catch {
-            continue;
-          }
-          for (const ticketsName of ticketsKids) {
-            if (!cleanIsMisplacedTicketsDir(ticketsName)) continue;
-            const ticketsAbs = join(childAbs, ticketsName);
-            try {
-              if (!lstatSync(ticketsAbs).isDirectory()) continue;
-            } catch {
-              continue;
-            }
-            push(ticketsAbs);
-          }
-        }
-      }
-      return "skip";
-    }
-    return "enter";
-  });
-  return out;
-}
-
-function cleanDiscoverTicketRoots(root: string): string[] {
-  const roots: string[] = [];
-  cleanWalkDirs(root, (abs, name) => {
-    if (name === "node_modules" || name === ".git" || name === CLEAN_CACHE_DIR_NAME) return "skip";
-    if (name === MAP_CACHE_DIR_NAME || name === HUB_DATA_DIR_NAME || name === SPACE_DATA_DIR_NAME) return "skip";
-    if (cleanIsBuildArtifactDirName(name)) return "skip";
-    if (cleanIsCanonicalTicketsDir(name)) {
-      roots.push(abs);
-      return "skip";
-    }
-    return "enter";
-  });
-  return roots;
-}
-
-/** 📂Individual ticket slug folders (`…/🎆️YY/🌙️MM/☀️DD/TICKETSLUG`) — never year/month/day parents. */
-function cleanDiscoverTicketFolders(ticketsRoot: string): string[] {
-  const folders: string[] = [];
-  cleanWalkDirs(ticketsRoot, (abs, _name) => {
-    const depth = relative(ticketsRoot, abs).split(sep).filter(Boolean).length;
-    if (depth === 4) {
-      folders.push(abs);
-      return "skip";
-    }
-    if (depth > 4) return "skip";
-    return "enter";
-  });
-  return folders;
-}
-
-function cleanGitignoredUnder(root: string, ticketRoot: string): string[] {
-  const rel = relative(root, ticketRoot);
-  const probe = runProbe("git", ["ls-files", "--others", "-i", "--exclude-standard", "--directory", "--", rel], {
-    cwd: root,
-    budgetMs: 120_000,
-  });
-  if ((probe.status ?? 1) !== 0) return [];
-  return probe.stdout
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => join(root, line.replace(/\/$/, "")));
-}
-
-function cleanTicketSizeRemovals(root: string, ticketFolder: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
-  type Node = { abs: string; rel: string; isDir: boolean; size: number; children: Node[] };
-  const build = (abs: string): Node | null => {
-    if (cleanIsProtected(abs, protectedPrefixes)) return null;
-    let st;
-    try {
-      st = lstatSync(abs);
-    } catch {
-      return null;
-    }
-    const rel = relative(root, abs);
-    if (st.isSymbolicLink() || st.isFile()) return { abs, rel, isDir: false, size: st.size, children: [] };
-    if (!st.isDirectory()) return null;
-    const children: Node[] = [];
-    let size = 0;
-    for (const name of readdirSync(abs)) {
-      const child = build(join(abs, name));
-      if (!child) continue;
-      children.push(child);
-      size += child.size;
-    }
-    return { abs, rel, isDir: true, size, children };
-  };
-  const tree = build(ticketFolder);
-  if (!tree) return [];
-  const out: CleanRemoval[] = [];
-  const visit = (node: Node): void => {
-    for (const child of node.children) visit(child);
-    if (!node.isDir && node.size > CLEAN_TICKET_FILE_MAX_BYTES) {
-      out.push({ kind: "ticket-file", path: node.rel, bytes: node.size });
-      return;
-    }
-    if (node.isDir && node.size > CLEAN_TICKET_DIR_MAX_BYTES) {
-      out.push({ kind: "ticket-dir", path: node.rel, bytes: node.size });
-    }
-  };
-  for (const child of tree.children) visit(child);
-  return out;
-}
-
-function cleanTicketGeneratedOutputRemovals(root: string, ticketFolder: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
-  const out: CleanRemoval[] = [];
-  cleanWalkDirs(ticketFolder, (abs, name) => {
-    if (!cleanIsTicketGeneratedOutputDir(name)) return "enter";
-    const applicablePrefixes = protectedPrefixes.filter((prefix) => resolve(prefix) !== resolve(ticketFolder));
-    if (cleanIntersectsProtected(abs, applicablePrefixes) || cleanIsProtected(abs, applicablePrefixes)) return "skip";
-    if (exactCargoGeneratedOutputHasLiveLease(abs)) return "skip";
-    out.push({ kind: "ticket-generated", path: relative(root, abs), bytes: cleanPathBytes(abs) });
-    return "skip";
-  });
-  return out;
-}
-
-function cleanIsTicketGeneratedOutputDir(name: string): boolean {
-  return CLEAN_TICKET_GENERATED_OUTPUT_DIRS.has(name) || CLEAN_TICKET_GENERATED_PROBE_PREFIXES.some((prefix) => name.startsWith(prefix));
-}
-
-function cleanTicketGeneratedOutputTicketRoot(root: string, abs: string): string | undefined {
-  const name = relative(dirname(abs), abs);
-  if (name.includes(sep) || !cleanIsTicketGeneratedOutputDir(name)) return undefined;
-  return cleanTicketFolderForPath(root, abs);
-}
-
-function cleanGitignoredMapForTicketRoots(root: string, ticketRoots: readonly string[]): Map<string, string[]> {
-  const map = new Map<string, string[]>();
-  for (const ticketRoot of ticketRoots) {
-    const rel = relative(root, ticketRoot);
-    const probe = runProbe("git", ["ls-files", "--others", "-i", "--exclude-standard", "--directory", "--", rel], {
-      cwd: root,
-      budgetMs: 120_000,
-    });
-    if ((probe.status ?? 1) !== 0) continue;
-    for (const line of probe.stdout.split("\n").map((l) => l.trim()).filter(Boolean)) {
-      const abs = join(root, line.replace(/\/$/, ""));
-      const folder = cleanTicketFolderForPath(root, abs);
-      if (folder) {
-        let list = map.get(folder);
-        if (!list) {
-          list = [];
-          map.set(folder, list);
-        }
-        list.push(abs);
-      }
-    }
-  }
-  return map;
-}
-
-function cleanCollectWindowsIllegal(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
-  const out: CleanRemoval[] = [];
-  const seen = new Set<string>();
-  const stack = [root];
-  while (stack.length > 0) {
-    const dir = stack.pop()!;
-    let entries: string[];
-    try {
-      entries = readdirSync(dir);
-    } catch {
-      continue;
-    }
-    for (const name of entries) {
-      if (name === ".git" || name === "node_modules") continue;
-      if (name === CLEAN_CACHE_DIR_NAME || name === MAP_CACHE_DIR_NAME || name === HUB_DATA_DIR_NAME || name === SPACE_DATA_DIR_NAME) continue;
-      if (cleanIsBuildArtifactDirName(name)) continue;
-      const abs = join(dir, name);
-      if (cleanIntersectsProtected(abs, protectedPrefixes)) continue;
-      if (cleanIsWindowsIllegalName(name)) {
-        if (!seen.has(abs)) {
-          seen.add(abs);
-          out.push({ kind: "windows-illegal", path: relative(root, abs), bytes: cleanPathBytes(abs) });
-        }
-        continue;
-      }
-      let st;
-      try {
-        st = lstatSync(abs);
-      } catch {
-        continue;
-      }
-      if (st.isDirectory() && !st.isSymbolicLink()) {
-        stack.push(abs);
-      }
-    }
-  }
-  const probe = runProbe("git", ["ls-files", "-z"], { cwd: root, budgetMs: 60_000 });
-  if ((probe.status ?? 1) === 0) {
-    for (const file of probe.stdout.split("\0").filter(Boolean)) {
-      const parts = file.split("/");
-      if (parts.some((part) => cleanIsWindowsIllegalName(part))) {
-        const abs = join(root, file);
-        if (!cleanIntersectsProtected(abs, protectedPrefixes) && !seen.has(abs)) {
-          seen.add(abs);
-          out.push({ kind: "windows-illegal", path: file, bytes: cleanPathBytes(abs) });
-        }
-      }
-    }
-  }
-  return out;
-}
-
-function cleanBuildArtifactRemovals(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
-  const out: CleanRemoval[] = [];
-  cleanWalkDirs(root, (abs, name) => {
-    if (name === "node_modules" || name === ".git" || name === CLEAN_CACHE_DIR_NAME) return "skip";
-    if (name === MAP_CACHE_DIR_NAME || name === HUB_DATA_DIR_NAME || name === SPACE_DATA_DIR_NAME) return "skip";
-    if (cleanIsCanonicalTicketsDir(name)) return "skip";
-    if (cleanIsProtected(abs, protectedPrefixes)) return "skip";
-    if (cleanIsBuildArtifactDirName(name)) {
-      if (cleanIntersectsProtected(abs, protectedPrefixes)) return "skip";
-      const bytes = cleanPathBytes(abs);
-      if (cleanIsCargoTargetDir(abs, name) || bytes > CLEAN_BUILD_ARTIFACT_MAX_BYTES) out.push({ kind: "build-artifact", path: relative(root, abs), bytes });
-      return "skip";
-    }
-    return "enter";
-  });
-  return out;
-}
-
-/** Ticket size hits keep the deepest path so `target/` wins over year/month parents. */
-function cleanDedupePreferDeepest(removals: readonly CleanRemoval[]): CleanRemoval[] {
-  const sorted = [...removals].sort((a, b) => b.path.length - a.path.length || a.path.localeCompare(b.path));
-  const kept: CleanRemoval[] = [];
-  for (const row of sorted) {
-    if (kept.some((k) => k.path === row.path || k.path.startsWith(row.path + "/"))) continue;
-    kept.push(row);
-  }
-  return kept;
-}
-
-/** Prefer shallow removals across kinds so a parent delete absorbs nested hits. */
-function cleanDedupePreferShallowest(removals: readonly CleanRemoval[]): CleanRemoval[] {
-  const sorted = [...removals].sort((a, b) => a.path.length - b.path.length || a.path.localeCompare(b.path));
-  const kept: CleanRemoval[] = [];
-  for (const row of sorted) {
-    if (kept.some((k) => row.path === k.path || row.path.startsWith(k.path + "/"))) continue;
-    kept.push(row);
-  }
-  return kept;
-}
-
-function runWorkspaceClean(root: string, dry: boolean): { removals: CleanRemoval[]; skippedProtected: string[] } {
-  const protectedPrefixes = cleanProtectedPrefixes(root);
-  const ticketRoots = cleanDiscoverTicketRoots(root);
-  const ticketFolders = ticketRoots.flatMap(cleanDiscoverTicketFolders);
-  for (const folder of ticketFolders) if (!cleanTicketManifestIsClosed(folder, CLEAN_PROTECTION_VIEW)) protectedPrefixes.push(resolve(folder));
-  const skippedProtected = protectedPrefixes.filter((p) => existsSync(p)).map((p) => relative(root, p) || p);
-  const pending: CleanRemoval[] = [];
-  pending.push(...cleanCollectMisplaced(root, protectedPrefixes));
-  pending.push(...cleanCollectWindowsIllegal(root, protectedPrefixes));
-  const gitignoredMap = cleanGitignoredMapForTicketRoots(root, ticketRoots);
-  for (const ticketFolder of ticketFolders) {
-    pending.push(...cleanTicketGeneratedOutputRemovals(root, ticketFolder, protectedPrefixes));
-    if (cleanIsProtected(ticketFolder, protectedPrefixes) || !cleanTicketManifestIsClosed(ticketFolder, CLEAN_PROTECTION_VIEW)) continue;
-    const gitignored = gitignoredMap.get(resolve(ticketFolder)) ?? [];
-    for (const abs of gitignored) {
-      if (!existsSync(abs) || cleanIntersectsProtected(abs, protectedPrefixes)) continue;
-      pending.push({ kind: "gitignore", path: relative(root, abs), bytes: cleanPathBytes(abs) });
-    }
-    pending.push(...cleanDedupePreferDeepest(cleanTicketSizeRemovals(root, ticketFolder, protectedPrefixes)));
-  }
-  pending.push(...cleanBuildArtifactRemovals(root, protectedPrefixes));
-  const candidates = cleanProjectRemovals(root, pending, protectedPrefixes, CLEAN_PROTECTION_VIEW, (path) => skippedProtected.push(relative(root, path) || path));
-  const removals: CleanRemoval[] = [];
-  for (const row of candidates) {
-    if (cleanRemovePath(root, resolve(root, row.path), dry, protectedPrefixes, row.kind === "ticket-generated", row.kind === "windows-illegal")) removals.push(row);
-    else skippedProtected.push(row.path);
-  }
-  return { removals, skippedProtected };
-}
-//#endregion 🔖️CleanScript
 
 //#region 🔖️MicroCommitScript
 /** 🎆️Stages WIP changes and writes deterministic micro-commit templates (GitKraken + CLI). */
@@ -15000,466 +14352,6 @@ export class ExamplesScript extends Script {
 }
 //#endregion 🔖️ExamplesScript
 
-//#region 🔖️CleanMechanismNewScript
-/**
- * 🏗️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, task 3 (corrected by W1-E per the
- * ⚠️ CORRECTION in design.md §1): permanent taxonomy-v6 scaffolders sibling to the framework
- * registry's `new surface` (📇️registry/📜️script.ts, ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET)
- * — `new artifact`/`new standard`/`new subset` generate the v6 skeleton design.md §1 describes: a
- * root component with mounts + declaration-fn stub, plus (subset only) 🧬️schema, 🚪️io with the
- * NATIVE codec dirs directly beneath it (unsplit — `import`/`export` are a FOREIGN-dialect-only
- * concept and are never scaffolded generically, since a generic scaffolder cannot know which foreign
- * dialect a not-yet-written subset will consume), 👁️viewer, ✏️editor, 📚️examples. Every generated
- * leaf carries the same `SCAFFOLD` marker convention `new surface` uses, so
- * `policyOwnerMountsChildrenBreaches`'s "missing-owner-root" check treats a freshly scaffolded root
- * as what it is — a placeholder, not a finished packet. Idempotent — never overwrites an existing
- * leaf, so re-running after hand-authoring never clobbers real content.
- */
-const NEW_SCAFFOLD_MARKER = "SCAFFOLD";
-const NEW_SCAFFOLD_TICKET_PATH = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM";
-
-function newScaffoldRustLeaf(label: string): string {
-  return `//! 🚧️ ${NEW_SCAFFOLD_MARKER}: ${label} — generated by \`bun ./📜️script.ts new …\`, not implemented.\n//! @see ${NEW_SCAFFOLD_TICKET_PATH}\npub const SCAFFOLD: bool = true;\n`;
-}
-
-function newScaffoldTsLeaf(label: string): string {
-  return `// 🚧️ ${NEW_SCAFFOLD_MARKER}: ${label} — generated by \`bun ./📜️script.ts new …\`, not implemented.\n// @see ${NEW_SCAFFOLD_TICKET_PATH}\nexport const SCAFFOLD = true;\n`;
-}
-
-function newScaffoldEmptyFacetMarkdown(facetLabel: string): string {
-  return `# Empty ${facetLabel} facet\n\nThis facet currently declares no specific items. Authored by \`bun ./📜️script.ts new …\`.\n`;
-}
-
-/** 📝️ Writes `relPath` only when absent; an existing leaf is reported as skipped, never overwritten. */
-function newScaffoldWriteIfAbsent(repoRoot: string, relPath: string, content: string, created: string[], skipped: string[], dryRun: boolean): void {
-  const abs = join(repoRoot, relPath);
-  if (existsSync(abs)) {
-    skipped.push(relPath);
-    return;
-  }
-  if (dryRun) {
-    created.push(relPath);
-    return;
-  }
-  mkdirSync(dirname(abs), { recursive: true });
-  try {
-    writeFileSync(abs, content, { flag: "wx" });
-    created.push(relPath);
-  } catch (error) {
-    if ((error as { code?: string }).code !== "EEXIST") throw error;
-    skipped.push(relPath);
-  }
-}
-
-/** 🔎️ Resolves a bare CLI id to the real emoji-prefixed child directory name of `parentAbs`. */
-function newResolveChildDir(parentAbs: string, wantStripped: string): string | undefined {
-  if (!existsSync(parentAbs)) return undefined;
-  for (const name of readdirSync(parentAbs)) {
-    if (!statSync(join(parentAbs, name)).isDirectory()) continue;
-    if (policyStripEmoji(name) === wantStripped) return name;
-  }
-  return undefined;
-}
-
-/** 🚪️ Scaffolds `${ioRel}` per the corrected design.md §1 shape: root leaves, then one dir per
- * `ioSemanticCollectionDirNames` member DIRECTLY under `${ioRel}` (native codec, unsplit — `import`/
- * `export` express direction and exist only for FOREIGN dialects, which this generic scaffolder
- * cannot know in advance and therefore never creates) — `representationDirs` children for
- * 📸️snapshot/🔺️diff, a wildcard-slug-ready empty facet marker for 🧬️mutations/💡️inferences (their real
- * content is per-mutation/per-inference emoji slugs, which `new subset` also cannot know in advance). */
-function newScaffoldIoTree(ioRel: string, taxonomy: ReturnType<typeof loadTaxonomy>, leaves: ArtifactScaffoldLeaf[]): void {
-  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust");
-  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript");
-  const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
-  leaves.push({ path: `${ioRel}/${rustLeaf}`, content: newScaffoldRustLeaf("io root (io() -> IoDeclaration stub)") });
-  leaves.push({ path: `${ioRel}/${typescriptLeaf}`, content: newScaffoldTsLeaf("io root (IoEntryDescriptor[] mirror)") });
-  for (const kind of taxonomy.ioSemanticCollectionDirNames ?? []) {
-    const kindRel = `${ioRel}/${kind}`;
-    if (kind === "🧬️mutations" || kind === "💡️inferences") {
-      leaves.push({ path: `${kindRel}/${emptyMarker}`, content: newScaffoldEmptyFacetMarkdown(kind) });
-      continue;
-    }
-    for (const rep of taxonomy.representationDirs ?? []) {
-      leaves.push({ path: `${kindRel}/${rep}/${rustLeaf}`, content: newScaffoldRustLeaf(`${kind}/${rep} native codec`) });
-    }
-  }
-}
-
-export function newScaffoldSubsetTree(repoRoot: string, subsetRel: string, taxonomy: ReturnType<typeof loadTaxonomy>, dryRun: boolean, options: ArtifactScaffoldOptions = {}): { created: string[]; skipped: string[] } {
-  const leaves: ArtifactScaffoldLeaf[] = [];
-  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust");
-  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript");
-  const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
-  leaves.push({ path: `${subsetRel}/${rustLeaf}`, content: newScaffoldRustLeaf("subset root (subset() -> SubsetDeclaration stub; mounts schema/io/viewer/editor/examples)") });
-  leaves.push({ path: `${subsetRel}/${typescriptLeaf}`, content: newScaffoldTsLeaf("subset root") });
-  leaves.push({ path: `${subsetRel}/🧬️schema/${rustLeaf}`, content: newScaffoldRustLeaf("schema root — own Snapshot/Diff/Mutation types, no codecs") });
-  leaves.push({ path: `${subsetRel}/🧬️schema/${typescriptLeaf}`, content: newScaffoldTsLeaf("schema root") });
-  newScaffoldIoTree(`${subsetRel}/🚪️io`, taxonomy, leaves);
-  for (const role of taxonomy.surfaceRoles) {
-    const surfaceRel = `${subsetRel}/${taxonomy.surfaceDirNames[role]}`;
-    leaves.push({ path: `${surfaceRel}/${rustLeaf}`, content: newScaffoldRustLeaf(`${role} surface`) });
-    leaves.push({ path: `${surfaceRel}/${typescriptLeaf}`, content: newScaffoldTsLeaf(`${role} surface`) });
-  }
-  leaves.push({ path: `${subsetRel}/📚️examples/${emptyMarker}`, content: newScaffoldEmptyFacetMarkdown("examples") });
-  return authorArtifactScaffold(repoRoot, { kind: "subset", subsetPath: subsetRel }, leaves, taxonomy, { ...options, dryRun });
-}
-
-export function newScaffoldStandardTree(repoRoot: string, standardRel: string, dryRun: boolean): { created: string[]; skipped: string[] } {
-  const created: string[] = [];
-  const skipped: string[] = [];
-  const taxonomy = loadTaxonomy();
-  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust");
-  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript");
-  const subsetsManifest = canonicalFilenameForKind(taxonomy.subsetsManifestFileKindId, taxonomy);
-  newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/${rustLeaf}`, newScaffoldRustLeaf("standard root (standard() -> StandardDeclaration stub; mounts subsets)"), created, skipped, dryRun);
-  newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/${typescriptLeaf}`, newScaffoldTsLeaf("standard root"), created, skipped, dryRun);
-  const manifest = { standard: policyStripEmoji(standardRel.split("/").pop() ?? ""), subsets: { "*": {} } };
-  newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/🪆️subsets/${subsetsManifest}`, `${JSON.stringify(manifest, null, 2)}\n`, created, skipped, dryRun);
-  return { created, skipped };
-}
-
-export function newScaffoldArtifactTree(repoRoot: string, artRel: string, dryRun: boolean): { created: string[]; skipped: string[] } {
-  const created: string[] = [];
-  const skipped: string[] = [];
-  const taxonomy = loadTaxonomy();
-  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust");
-  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript");
-  newScaffoldWriteIfAbsent(repoRoot, `${artRel}/${rustLeaf}`, newScaffoldRustLeaf("artifact root (artifact() -> ArtifactDeclaration stub; mounts standards)"), created, skipped, dryRun);
-  newScaffoldWriteIfAbsent(repoRoot, `${artRel}/${typescriptLeaf}`, newScaffoldTsLeaf("artifact root"), created, skipped, dryRun);
-  return { created, skipped };
-}
-
-//#region 🧬️MutationScaffolding
-export type NewMutationScaffoldOptions = {
-  readonly composite?: boolean;
-  readonly text?: boolean;
-  readonly binary?: boolean;
-  readonly typescript?: boolean;
-  readonly graphql?: boolean;
-  readonly protobuf?: boolean;
-  readonly jsonSchema?: boolean;
-  readonly cancelled?: () => boolean;
-};
-
-function newMutationSemanticParts(name: string, explicitIdentity?: string): { emoji: string; semanticKind: string; moduleName: string; variantName: string; verb: string; entity: string } {
-  const emoji = policyLeadingEmojiPrefix(posix.basename(name));
-  const semanticKind = explicitIdentity ?? policyStripEmoji(name);
-  const parts = semanticKind.split("-").filter(Boolean);
-  if (!emoji || parts.length < 2 || parts.some((part) => !/^[a-z][a-z0-9]*$/u.test(part))) throw new Error(`new mutation: "${name}" must be an emoji-prefixed semantic verb-noun kebab name.`);
-  const [verb, ...entityParts] = parts;
-  return { emoji, semanticKind, moduleName: semanticKind.replaceAll("-", "_"), variantName: policyKebabToPascal(semanticKind), verb: verb!, entity: entityParts.join("-") };
-}
-
-function newMutationRustLeaf(parts: ReturnType<typeof newMutationSemanticParts>): string {
-  return [
-    `//! 🧬️ ${NEW_SCAFFOLD_MARKER}: authoritative direct mutation owner for \`${parts.semanticKind}\`.`,
-    `//! @see ${NEW_SCAFFOLD_TICKET_PATH}`,
-    "",
-    "//#region 🪪️Descriptor",
-    `pub const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "${parts.verb}", entity: "${parts.entity}", kind: "${parts.semanticKind}", record: "${parts.variantName}" };`,
-    "//#endregion 🪪️Descriptor",
-    "",
-    "//#region 🧬️Mutation",
-    "#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]",
-    "pub struct Mutation;",
-    "//#endregion 🧬️Mutation",
-    "",
-  ].join("\n");
-}
-
-function newMutationDescriptor(owner: string, parts: ReturnType<typeof newMutationSemanticParts>, options: NewMutationScaffoldOptions): string {
-  return `${JSON.stringify({ schemaVersion: 1, owner, semanticKind: parts.semanticKind, displayName: parts.semanticKind.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" "), emoji: parts.emoji, aggregateVariant: parts.variantName, payloadSchema: options.jsonSchema ? mutationPayloadSchemaRelativePath() : `${POLICY_RS_COMPONENT_LEAF_NAME}#Mutation`, textOpcode: options.text ? parts.semanticKind : null, binaryTag: null, invertibility: options.composite ? "plan" : "explicit-mutation", diffParticipation: options.composite ? "plan" : "detect", outcomeClasses: ["applied"], composition: options.composite ? "composite" : "atomic", requiredLanguageSurfaces: ["rust", ...(options.typescript ? ["typescript"] : []), ...(options.graphql ? ["graphql"] : []), ...(options.protobuf ? ["protobuf"] : []), ...(options.jsonSchema ? ["json-schema"] : []), ...(options.text ? ["text"] : []), ...(options.binary ? ["binary"] : [])] }, null, 2)}\n`;
-}
-
-type NewMutationScaffoldOwnedPath = { readonly absolute: string; readonly content?: string; readonly device: number; readonly inode: number };
-
-function newMutationScaffoldLstat(path: string): ReturnType<typeof lstatSync> | null {
-  try {
-    return lstatSync(path);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-    throw error;
-  }
-}
-
-function newMutationScaffoldPath(repoRoot: string, relPath: string): string {
-  const rootStat = newMutationScaffoldLstat(repoRoot);
-  if (!rootStat || rootStat.isSymbolicLink() || !rootStat.isDirectory()) throw new Error(`new mutation: repository root is not a regular directory: ${JSON.stringify(repoRoot)}`);
-  const absolute = resolve(repoRoot, relPath);
-  const escaped = relative(repoRoot, absolute).replaceAll("\\", "/");
-  if (!escaped || escaped === ".." || escaped.startsWith("../") || isAbsolute(escaped)) throw new Error(`new mutation: path escapes repository root: ${JSON.stringify(relPath)}`);
-  let cursor = repoRoot;
-  const segments = escaped.split("/");
-  for (const [index, segment] of segments.entries()) {
-    cursor = join(cursor, segment);
-    const stat = newMutationScaffoldLstat(cursor);
-    if (!stat) continue;
-    if (stat.isSymbolicLink()) throw new Error(`new mutation: symlinked path is not writable: ${JSON.stringify(relPath)}`);
-    if (index < segments.length - 1 && !stat.isDirectory()) throw new Error(`new mutation: non-directory path segment is not writable: ${JSON.stringify(relPath)}`);
-  }
-  return absolute;
-}
-
-function newMutationScaffoldOwnPath(absolute: string, content?: string): NewMutationScaffoldOwnedPath {
-  const stat = newMutationScaffoldLstat(absolute);
-  if (!stat || stat.isSymbolicLink() || !stat.isFile()) throw new Error(`new mutation: publication did not create a regular file: ${absolute}`);
-  return { absolute, content, device: stat.dev, inode: stat.ino };
-}
-
-function newMutationScaffoldRemoveOwnedFile(entry: NewMutationScaffoldOwnedPath): void {
-  try {
-    const stat = newMutationScaffoldLstat(entry.absolute);
-    if (!stat || stat.isSymbolicLink() || !stat.isFile() || stat.dev !== entry.device || stat.ino !== entry.inode) return;
-    if (entry.content !== undefined && readFileSync(entry.absolute, "utf8") !== entry.content) return;
-    rmSync(entry.absolute, { force: false });
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-  }
-}
-
-function newMutationScaffoldEnsureParents(repoRoot: string, absolute: string): NewMutationScaffoldOwnedPath[] {
-  const relParent = relative(repoRoot, dirname(absolute)).replaceAll("\\", "/");
-  if (!relParent || relParent === ".") return [];
-  const owned: NewMutationScaffoldOwnedPath[] = [];
-  let cursor = repoRoot;
-  for (const segment of relParent.split("/")) {
-    cursor = join(cursor, segment);
-    const existing = newMutationScaffoldLstat(cursor);
-    if (existing) {
-      if (existing.isSymbolicLink() || !existing.isDirectory()) throw new Error(`new mutation: parent is not a regular directory: ${cursor}`);
-      continue;
-    }
-    mkdirSync(cursor);
-    const created = newMutationScaffoldLstat(cursor);
-    if (!created || created.isSymbolicLink() || !created.isDirectory()) throw new Error(`new mutation: parent creation did not produce a regular directory: ${cursor}`);
-    owned.push({ absolute: cursor, device: created.dev, inode: created.ino });
-  }
-  return owned;
-}
-
-function newMutationScaffoldRemoveOwnedDirectory(entry: NewMutationScaffoldOwnedPath): void {
-  try {
-    const stat = newMutationScaffoldLstat(entry.absolute);
-    if (!stat || stat.isSymbolicLink() || !stat.isDirectory() || stat.dev !== entry.device || stat.ino !== entry.inode) return;
-    if (readdirSync(entry.absolute).length > 0) return;
-    rmdirSync(entry.absolute);
-  } catch (error) {
-    if (!(["ENOENT", "ENOTEMPTY"] as const).includes((error as NodeJS.ErrnoException).code as "ENOENT" | "ENOTEMPTY")) throw error;
-  }
-}
-
-function newMutationCheckCancellation(options: NewMutationScaffoldOptions): void {
-  if (options.cancelled?.()) throw new Error("new mutation: cancelled before publication.");
-}
-
-function newMutationUpdateAggregate(repoRoot: string, mutationsRel: string, name: string, parts: ReturnType<typeof newMutationSemanticParts>): { rootRel: string; before: string; source: string; updated: string[] } {
-  const rootRel = `${mutationsRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
-  const rootAbs = newMutationScaffoldPath(repoRoot, rootRel);
-  if (!existsSync(rootAbs)) throw new Error(`new mutation: missing aggregate ${rootRel}`);
-  if (!lstatSync(rootAbs).isFile()) throw new Error(`new mutation: aggregate ${rootRel} is not a regular file.`);
-  const source = readFileSync(rootAbs, "utf8");
-  const span = inspectRustMutationAggregateSpan(source);
-  if (!span) throw new Error(`new mutation: ${rootRel} must contain exactly one public aggregate Mutation enum.`);
-  const facts = inspectRustStructure(source);
-  const aggregate = facts.enums.find((item) => item.name === span.enumName);
-  if (!aggregate) throw new Error(`new mutation: ${rootRel} aggregate source map did not resolve an enum.`);
-  const mount = `#[path = "${name}/${POLICY_RS_COMPONENT_LEAF_NAME}"]\npub mod ${parts.moduleName};`;
-  const edits: string[] = [];
-  let next = source;
-  const existingMounts = inspectRustModuleGraphFacts(source).modules.filter((item) => item.modulePath.length === 1 && item.name === parts.moduleName);
-  if (existingMounts.length > 1) throw new Error(`new mutation: existing mount ${parts.moduleName} is ambiguous.`);
-  const existingMount = existingMounts[0];
-  if (existingMount && (existingMount.visibility !== "pub" || existingMount.inline || existingMount.pathTarget !== `${name}/${POLICY_RS_COMPONENT_LEAF_NAME}`)) {
-    throw new Error(`new mutation: existing mount ${parts.moduleName} does not target ${name}/${POLICY_RS_COMPONENT_LEAF_NAME}.`);
-  }
-  if (!existingMount) {
-    next = `${next.slice(0, span.declarationStart)}${mount}\n\n${next.slice(span.declarationStart)}`;
-    edits.push(`mount ${parts.moduleName}`);
-  }
-  const existingVariants = aggregate.variants.filter((item) => item.name === parts.variantName);
-  if (existingVariants.length > 1) throw new Error(`new mutation: existing variant ${parts.variantName} is ambiguous.`);
-  const existingVariant = existingVariants[0];
-  const expectedWrappedType = `${parts.moduleName}::Mutation`;
-  if (existingVariant && (existingVariant.fieldStyle !== "tuple" || existingVariant.fieldTypes.length !== 1 || existingVariant.wrappedTupleLeafType?.replaceAll(/\s+/gu, "") !== expectedWrappedType)) {
-    throw new Error(`new mutation: existing variant ${parts.variantName} does not wrap ${expectedWrappedType}.`);
-  }
-  if (!existingVariant) {
-    const refreshed = inspectRustMutationAggregateSpan(next);
-    if (!refreshed || refreshed.enumName !== span.enumName) throw new Error(`new mutation: ${rootRel} aggregate source map changed during preparation.`);
-    next = `${next.slice(0, refreshed.bodyOpen + 1)}\n    ${parts.variantName}(${parts.moduleName}::Mutation),${next.slice(refreshed.bodyOpen + 1)}`;
-    edits.push(`variant ${parts.variantName}`);
-  }
-  return { rootRel, before: source, source: next, updated: edits };
-}
-
-/** 🏗️ Scaffolds one direct mutation leaf and visibly wires its aggregate without overwriting leaves. */
-export function newScaffoldMutationTree(repoRoot: string, mutationsRel: string, name: string, options: NewMutationScaffoldOptions = {}, dryRun = false): { created: string[]; skipped: string[]; updated: string[] } {
-  const normalizedRoot = resolve(repoRoot);
-  const mutationRoot = resolve(normalizedRoot, mutationsRel);
-  const rel = relative(normalizedRoot, mutationRoot).replaceAll("\\", "/");
-  if (policyStructuralRelativeLocator(rel) === null || !rel.endsWith(`/${POLICY_MUTATIONS_FACET}`)) throw new Error(`new mutation: mutation root must be a safe repository-relative ${POLICY_MUTATIONS_FACET} directory: ${JSON.stringify(mutationsRel)}.`);
-  const taxonomy = loadTaxonomy();
-  const identity = mutationOwnerIdentity(rel, name, taxonomy);
-  if (Object.hasOwn(taxonomy.mutationDomainOwners, rel) && identity === null) throw new Error(`new mutation: owner ${rel}/${name} has no exact domain-operation registration.`);
-  const parts = newMutationSemanticParts(name, identity ?? undefined);
-  for (const sibling of policyListMutationDirs(normalizedRoot, rel)) {
-    if (sibling === name) continue;
-    const siblingParts = newMutationSemanticParts(sibling, mutationOwnerIdentity(rel, sibling, taxonomy) ?? undefined);
-    if (posix.dirname(sibling) === posix.dirname(name) && siblingParts.emoji === parts.emoji) throw new Error(`new mutation: emoji ${JSON.stringify(parts.emoji)} is already owned by ${sibling}.`);
-    if (siblingParts.semanticKind === parts.semanticKind) throw new Error(`new mutation: semantic kind ${JSON.stringify(parts.semanticKind)} is already owned by ${sibling}.`);
-    if (siblingParts.variantName === parts.variantName) throw new Error(`new mutation: aggregate variant ${parts.variantName} is already owned by ${sibling}.`);
-  }
-  const leafRel = `${rel}/${name}`;
-  const descriptorFilename = canonicalPrimaryFilenameForKind(taxonomy.mutationDescriptorFileKindId, taxonomy);
-  const proposed: { relPath: string; content: string }[] = [
-    { relPath: `${leafRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: newMutationRustLeaf(parts) },
-    { relPath: `${leafRel}/${descriptorFilename}`, content: newMutationDescriptor(leafRel, parts, options) },
-    { relPath: `${leafRel}/🧪️tests/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: `//! 🧪️ ${NEW_SCAFFOLD_MARKER}: behavioral and algebraic tests for ${parts.semanticKind}.\n` },
-    ...(options.composite ? [{ relPath: `${leafRel}/${POLICY_MUTATION_PLAN_DIR}/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: newScaffoldRustLeaf(`${parts.semanticKind} composite plan`) }] : []),
-    ...(options.text ? [{ relPath: `${leafRel}/📝️text/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: newScaffoldRustLeaf(`${parts.semanticKind} text codec contribution`) }] : []),
-    ...(options.binary ? [{ relPath: `${leafRel}/💾️binary/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: newScaffoldRustLeaf(`${parts.semanticKind} binary codec contribution`) }] : []),
-    ...(options.typescript ? [{ relPath: `${leafRel}/${POLICY_TS_COMPONENT_LEAF}`, content: newScaffoldTsLeaf(`${parts.semanticKind} mutation`) }] : []),
-    ...(options.graphql ? [{ relPath: `${leafRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🔗️graphql"].fileKindId, taxonomy)}`, content: `# 🧬️ ${NEW_SCAFFOLD_MARKER}: ${parts.variantName} GraphQL mutation input.\n` }] : []),
-    ...(options.protobuf ? [{ relPath: `${leafRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🛰️protobuf"].fileKindId, taxonomy)}`, content: `// 🧬️ ${NEW_SCAFFOLD_MARKER}: ${parts.variantName} protobuf mutation message.\n` }] : []),
-    ...(options.jsonSchema ? [{ relPath: `${leafRel}/${mutationPayloadSchemaRelativePath(taxonomy)}`, content: `${JSON.stringify({ $schema: "http://json-schema.org/draft-07/schema#", title: parts.variantName, type: "object" }, null, 2)}\n` }] : []),
-  ];
-  const aggregate = newMutationUpdateAggregate(normalizedRoot, rel, name, parts);
-  const created: { relPath: string; content: string }[] = [];
-  const skipped: string[] = [];
-  for (const entry of proposed) {
-    const absolute = newMutationScaffoldPath(normalizedRoot, entry.relPath);
-    const existing = newMutationScaffoldLstat(absolute);
-    if (!existing) created.push(entry);
-    else if (existing.isSymbolicLink() || !existing.isFile()) throw new Error(`new mutation: existing target is not a regular file: ${entry.relPath}`);
-    else skipped.push(entry.relPath);
-  }
-  newMutationCheckCancellation(options);
-  if (dryRun) return { created: created.map((entry) => entry.relPath), skipped, updated: aggregate.updated };
-  const published: NewMutationScaffoldOwnedPath[] = [];
-  const createdDirectories: NewMutationScaffoldOwnedPath[] = [];
-  let temporary: NewMutationScaffoldOwnedPath | null = null;
-  try {
-    for (const entry of created) {
-      newMutationCheckCancellation(options);
-      const absolute = newMutationScaffoldPath(normalizedRoot, entry.relPath);
-      createdDirectories.push(...newMutationScaffoldEnsureParents(normalizedRoot, absolute));
-      newMutationScaffoldPath(normalizedRoot, entry.relPath);
-      writeFileSync(absolute, entry.content, { flag: "wx" });
-      published.push(newMutationScaffoldOwnPath(absolute, entry.content));
-    }
-    if (aggregate.updated.length > 0) {
-      newMutationCheckCancellation(options);
-      const aggregateAbs = newMutationScaffoldPath(normalizedRoot, aggregate.rootRel);
-      const aggregateStat = newMutationScaffoldLstat(aggregateAbs);
-      if (!aggregateStat || aggregateStat.isSymbolicLink() || !aggregateStat.isFile()) throw new Error("new mutation: aggregate changed to a non-regular file during publication.");
-      if (readFileSync(aggregateAbs, "utf8") !== aggregate.before) throw new Error("new mutation: aggregate changed during publication.");
-      const temporaryAbs = newMutationScaffoldPath(normalizedRoot, `${aggregate.rootRel}.scaffold-${process.pid}-${randomUUID()}.tmp`);
-      writeFileSync(temporaryAbs, aggregate.source, { flag: "wx" });
-      temporary = newMutationScaffoldOwnPath(temporaryAbs, aggregate.source);
-      renameSync(temporary.absolute, aggregateAbs);
-      temporary = null;
-    }
-  } catch (error) {
-    if (temporary) newMutationScaffoldRemoveOwnedFile(temporary);
-    for (const entry of published.reverse()) newMutationScaffoldRemoveOwnedFile(entry);
-    for (const directory of createdDirectories.reverse()) newMutationScaffoldRemoveOwnedDirectory(directory);
-    throw error;
-  }
-  return { created: created.map((entry) => entry.relPath), skipped, updated: aggregate.updated };
-}
-//#endregion 🧬️MutationScaffolding
-
-/**
- * 🚪️ `new artifact|standard|subset` CLI — registered as `bun ./📜️script.ts new <kind> …` via
- * `ScriptRouter`. Existing path segments (plugin/artifact-kind/standard) are resolved the same
- * emoji-tolerant way `new surface` resolves them; the final, NEW segment is taken literally (it must
- * already carry the right emoji prefix and, for standard/subset, the taxonomy's dir prefix).
- */
-class CleanMechanismNewScript extends Script {
-  run(segments: string[]): void {
-    const kind = segments[0];
-    if (kind !== "subset" && kind !== "standard" && kind !== "artifact" && kind !== "mutation") {
-      console.error("usage: bun ./📜️script.ts new artifact <plugin> <new-artifact-dir>");
-      console.error("   or: bun ./📜️script.ts new standard <plugin> <artifact-kind> <new-standard-dir>");
-      console.error("   or: bun ./📜️script.ts new subset <plugin> <artifact-kind> <standard> <new-subset-dir> [--dry-run]");
-      console.error("   or: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [--composite] [--text] [--binary] [--typescript] [--graphql] [--protobuf] [--json-schema] [--dry-run]");
-      process.exit(1);
-      return;
-    }
-    const taxonomy = loadTaxonomy();
-    const rest = segments.slice(1);
-    const flags = new Set(rest.filter((arg) => arg.startsWith("--")));
-    const knownFlags = new Set(["--dry-run", "--composite", "--text", "--binary", "--typescript", "--graphql", "--protobuf", "--json-schema"]);
-    for (const flag of flags) if (!knownFlags.has(flag)) throw new Error(`new ${kind}: unknown option ${flag}`);
-    const dryRun = flags.has("--dry-run");
-    const positional = rest.filter((a) => !a.startsWith("--"));
-    const repoRoot = this.root;
-    const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
-
-    const resolveExisting = (parentAbs: string, arg: string, label: string): string => {
-      const dir = newResolveChildDir(parentAbs, policyStripEmoji(arg));
-      if (!dir) throw new Error(`new ${kind}: no ${label} "${arg}" under ${relative(repoRoot, parentAbs)}`);
-      return dir;
-    };
-
-    try {
-      if (kind === "mutation") {
-        if (positional.length !== 2) throw new Error("usage: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [options]");
-        const [owner, name] = positional as [string, string];
-        const result = newScaffoldMutationTree(repoRoot, owner, name, { composite: flags.has("--composite"), text: flags.has("--text"), binary: flags.has("--binary"), typescript: flags.has("--typescript"), graphql: flags.has("--graphql"), protobuf: flags.has("--protobuf"), jsonSchema: flags.has("--json-schema") }, dryRun);
-        this.report(`${owner}/${name}`, result.created, result.skipped, dryRun);
-        for (const edit of result.updated) console.log(`  ${dryRun ? "~ (dry-run)" : "~"} ${edit}`);
-        return;
-      }
-      if (kind === "artifact") {
-        if (positional.length !== 2) throw new Error("usage: bun ./📜️script.ts new artifact <plugin> <new-artifact-dir>");
-        const [pluginArg, newDir] = positional as [string, string];
-        const pluginDir = resolveExisting(pluginsRoot, pluginArg, "plugin");
-        const artifactsAbs = join(pluginsRoot, pluginDir, taxonomy.artifactsDirName);
-        const artRel = relative(repoRoot, join(artifactsAbs, newDir)).replaceAll("\\", "/");
-        const { created, skipped } = newScaffoldArtifactTree(repoRoot, artRel, dryRun);
-        this.report(artRel, created, skipped, dryRun);
-        return;
-      }
-      if (kind === "standard") {
-        if (positional.length !== 3) throw new Error("usage: bun ./📜️script.ts new standard <plugin> <artifact-kind> <new-standard-dir>");
-        const [pluginArg, artArg, newDir] = positional as [string, string, string];
-        const pluginDir = resolveExisting(pluginsRoot, pluginArg, "plugin");
-        const artifactsAbs = join(pluginsRoot, pluginDir, taxonomy.artifactsDirName);
-        const artDir = resolveExisting(artifactsAbs, artArg, "artifact kind");
-        const standardsAbs = join(artifactsAbs, artDir, taxonomy.standardsDirName);
-        if (taxonomy.standardDirPrefix && !newDir.startsWith(taxonomy.standardDirPrefix)) throw new Error(`new standard: "${newDir}" must start with standardDirPrefix "${taxonomy.standardDirPrefix}"`);
-        const standardRel = relative(repoRoot, join(standardsAbs, newDir)).replaceAll("\\", "/");
-        const { created, skipped } = newScaffoldStandardTree(repoRoot, standardRel, dryRun);
-        this.report(standardRel, created, skipped, dryRun);
-        return;
-      }
-      if (positional.length !== 4) throw new Error("usage: bun ./📜️script.ts new subset <plugin> <artifact-kind> <standard> <new-subset-dir>");
-      const [pluginArg, artArg, stdArg, newDir] = positional as [string, string, string, string];
-      const pluginDir = resolveExisting(pluginsRoot, pluginArg, "plugin");
-      const artifactsAbs = join(pluginsRoot, pluginDir, taxonomy.artifactsDirName);
-      const artDir = resolveExisting(artifactsAbs, artArg, "artifact kind");
-      const standardsAbs = join(artifactsAbs, artDir, taxonomy.standardsDirName);
-      const standardDir = resolveExisting(standardsAbs, stdArg, "standard");
-      const subsetsAbs = join(standardsAbs, standardDir, taxonomy.subsetsDirName);
-      const subsetsRel = relative(repoRoot, subsetsAbs).replaceAll("\\", "/");
-      if (subsetIdForDirectoryName(subsetsRel, newDir, taxonomy) === null) throw new Error(`new subset: "${newDir}" is not a registered semantic directory for "${subsetsRel}"`);
-      const subsetRel = relative(repoRoot, join(subsetsAbs, newDir)).replaceAll("\\", "/");
-      const { created, skipped } = newScaffoldSubsetTree(repoRoot, subsetRel, taxonomy, dryRun);
-      this.report(subsetRel, created, skipped, dryRun);
-    } catch (error) {
-      console.error((error as Error).message);
-      process.exit(1);
-    }
-  }
-
-  private report(rel: string, created: string[], skipped: string[], dryRun: boolean): void {
-    const verb = dryRun ? "would create" : "created";
-    console.log(`new: ${rel} — ${verb} ${created.length} file(s), ${skipped.length} already present.`);
-    for (const p of created) console.log(`  ${dryRun ? "+ (dry-run)" : "+"} ${p}`);
-  }
-}
-//#endregion 🔖️CleanMechanismNewScript
 
 //#region 🔖️SchemaScript
 /** 🧪️ The tracked vitest project of `framework.schema`, which declares the module's own third-party oracle specs. */
@@ -16572,7 +15464,6 @@ const POLICY_TS_FACADE_CONSTITUTIONAL_FACETS = new Set<string>([
   "📡️spr",
   "⚙️engine",
 ]);
-const POLICY_MUTATION_PLAN_DIR = "🧩️plan";
 const POLICY_ENGINE_FACET = "⚙️engine";
 const POLICY_OP_FACET = "🔧️op";
 /**
@@ -21232,17 +20123,6 @@ function policyHandcraftedSpecP3Breaches(repoRoot: string): BreachRecord[] {
   ];
 }
 
-/** 🔎️Mutation-specific direct-owner dirs under `🧬️mutations/` (skips infrastructure facets). */
-function policyListMutationDirs(repoRoot: string, mutationsRel: string): string[] {
-  const taxonomy = loadTaxonomy(), domains = taxonomy.mutationDomainOwners[mutationsRel];
-  if (domains) return Object.entries(domains).flatMap(([domain, operations]) => policyReaddirSafe(repoRoot, `${mutationsRel}/${domain}`).filter((entry) => entry.isDirectory && Object.hasOwn(operations, entry.name)).map((entry) => `${domain}/${entry.name}`)).sort();
-  const reserved = new Set<string>(["📚️examples", "💾️binary", "📝️text"]);
-  return policyReaddirSafe(repoRoot, mutationsRel)
-    .filter((e) => e.isDirectory && !reserved.has(e.name) && !e.name.startsWith("."))
-    .map((e) => e.name)
-    .sort();
-}
-
 /** 📏️Every concrete mutation directory owns one authoritative direct Rust component. */
 function policyMutationDirectOwnerBreaches(repoRoot: string, mutationRoots: readonly string[] = policyFindAllMutationsDirs(repoRoot)): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -22402,23 +21282,11 @@ function policyInferenceFamilyBreaches(repoRoot: string): BreachRecord[] {
  * via taxonomy `schemaChildDirs` / `representationDirs` / `ioDirectionDirs` in `policyTaxonomyDirsBreaches`.
  */
 
-/** 🪪Canonical field shape shared by every schemaFormats extractor. */
-export type PolicySchemaFieldCardinality = "scalar" | "list" | "fixedList" | "map";
 
-/** 🧬️One normalised field from a schema leaf. */
-export type PolicySchemaFieldShape = {
-  name: string;
-  optional: boolean;
-  cardinality: PolicySchemaFieldCardinality;
-  scalar: string;
-  state: string;
-};
 
-/** 📦Extracted top-level type + fields from one leaf. */
-export type PolicySchemaLeafExtract = {
-  typeName: string;
-  fields: PolicySchemaFieldShape[];
-};
+
+
+
 
 /** 🧭️ Canonical document facets relative to each artifact standard/subset owner. */
 const POLICY_SCHEMA_FACET_RELS = ["🧬️schema", "🧬️schema/📸️snapshot", "🧬️schema/🔺️diff"] as const;
@@ -22444,32 +21312,9 @@ export function policyDiscoverArtifactSchemaOwners(repoRoot: string): string[] {
   return owners.sort();
 }
 
-/** 🔤Normalize state-class tokens to kebab (persistent / shared-ui / …). */
-function policyCanonicalState(raw: string): string {
-  return raw.trim().toLowerCase().replace(/_/g, "-");
-}
 
-/** 🔤Map language type tokens onto §6 canonical scalar ids when exact. */
-function policyCanonicalScalar(raw: string): string {
-  const t = raw.replace(/\s+/g, "").trim();
-  const table: Record<string, string> = {
-    String: "string",
-    string: "string",
-    bool: "bool",
-    boolean: "bool",
-    Boolean: "bool",
-    i32: "int32",
-    u32: "uint32",
-    i64: "int64",
-    f32: "float32",
-    f64: "float64",
-    Int: "int32",
-    Float: "float64",
-    bytes: "bytes",
-    "Vec<u8>": "bytes",
-  };
-  return table[t] ?? t;
-}
+
+
 
 /**
  * 🏷️ The export id one schema facet declares: the `title` of its normative JSON Schema, which is also the
@@ -22489,406 +21334,31 @@ function policyDeclaredSchemaExportName(repoRoot: string, facetRel: string): str
   }
 }
 
-/**
- * 🔎Locate the declaration a schema leaf is expected to carry, strictly by name. Helper types may legally
- * precede the facet type in a leaf, so there is no positional fallback: an absent `expected` (the facet
- * declares no export id) and an `expected` the leaf never declares both resolve to nothing, and the
- * type-name-parity rule reports the leaf as missing its declared export.
- */
-function policyFindSchemaDeclaration(
-  text: string,
-  declRe: RegExp,
-  expected: string | null,
-): { typeName: string; bodyStart: number } | null {
-  if (!expected) return null;
-  const re = new RegExp(declRe.source, declRe.flags.includes("g") ? declRe.flags : `${declRe.flags}g`);
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text))) {
-    if (m[1] === expected) return { typeName: m[1]!, bodyStart: m.index + m[0].length };
-  }
-  return null;
-}
 
 
 
-/** 🧩Parse Rust type into optional/cardinality/scalar. */
-function policyParseRustFieldType(typeText: string): Pick<PolicySchemaFieldShape, "optional" | "cardinality" | "scalar"> {
-  let t = typeText.replace(/\s+/g, " ").trim();
-  let optional = false;
-  if (/^Option\s*</.test(t)) {
-    optional = true;
-    t = t.replace(/^Option\s*<\s*/, "").replace(/\s*>\s*$/, "");
-  }
-  const mapMatch = /^(?:BTreeMap|HashMap)\s*<\s*String\s*,\s*(.+)\s*>$/.exec(t);
-  if (mapMatch) {
-    return { optional, cardinality: "map", scalar: policyCanonicalScalar(mapMatch[1]!.trim()) };
-  }
-  const fixedMatch = /^\[\s*(.+?)\s*;\s*\d+\s*\]$/.exec(t);
-  if (fixedMatch) {
-    return { optional, cardinality: "fixedList", scalar: policyCanonicalScalar(fixedMatch[1]!.trim()) };
-  }
-  if (/^Vec\s*<\s*u8\s*>$/.test(t)) {
-    return { optional, cardinality: "scalar", scalar: "bytes" };
-  }
-  const vecMatch = /^Vec\s*<\s*(.+)\s*>$/.exec(t);
-  if (vecMatch) {
-    return { optional, cardinality: "list", scalar: policyCanonicalScalar(vecMatch[1]!.trim()) };
-  }
-  return { optional, cardinality: "scalar", scalar: policyCanonicalScalar(t) };
-}
 
-/**
- * 🦀️Extract pub fields of the single top-level pub struct, reading state field attributes.
- */
-export function policyExtractRustSchemaFields(text: string, expectedTypeName: string | null = null): PolicySchemaLeafExtract {
-  const decl = policyFindSchemaDeclaration(text, /\bpub\s+struct\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/, expectedTypeName);
-  if (!decl) return { typeName: "", fields: [] };
-  const { typeName, bodyStart } = decl;
-  let depth = 1;
-  let i = bodyStart;
-  for (; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === "{") depth++;
-    else if (ch === "}") {
-      depth--;
-      if (depth === 0) break;
-    }
-  }
-  const body = text.slice(bodyStart, i);
-  const fields: PolicySchemaFieldShape[] = [];
-  const fieldStartRe = /((?:(?:#\[[^\]]*\]|\/\/\/[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/)\s*)*)pub\s+([a-z][a-z0-9_]*)\s*:\s*/g;
-  let m: RegExpExecArray | null;
-  while ((m = fieldStartRe.exec(body))) {
-    const attributes = m[1] ?? "";
-    const stateRaw = /#\[state\(([^)]*)\)\]/.exec(attributes)?.[1]?.trim() ?? "";
-    const renamed = /#\[value\([^\]]*?\brename\s*=\s*"([^"\\]*)"/.exec(attributes)?.[1];
-    const snake = m[2]!;
-    let typeStart = fieldStartRe.lastIndex;
-    let depthAngle = 0;
-    let depthSquare = 0;
-    let j = typeStart;
-    for (; j < body.length; j++) {
-      const ch = body[j]!;
-      if (ch === "<") depthAngle++;
-      else if (ch === ">") depthAngle = Math.max(0, depthAngle - 1);
-      else if (ch === "[") depthSquare++;
-      else if (ch === "]") depthSquare = Math.max(0, depthSquare - 1);
-      else if (ch === "," && depthAngle === 0 && depthSquare === 0) break;
-      else if (ch === "}" && depthAngle === 0 && depthSquare === 0) break;
-    }
-    const typeText = body.slice(typeStart, j).trim();
-    fieldStartRe.lastIndex = j;
-    const parsed = policyParseRustFieldType(typeText);
-    fields.push({
-      name: renamed ?? policySnakeToCamel(snake),
-      optional: parsed.optional,
-      cardinality: parsed.cardinality,
-      scalar: parsed.scalar,
-      state: stateRaw ? policyCanonicalState(stateRaw) : "",
-    });
-  }
-  return { typeName, fields };
-}
 
-/** 🧩Parse a TypeScript property type into optional/cardinality/scalar. */
-function policyParseTsFieldType(typeText: string, optionalMark: boolean): Pick<PolicySchemaFieldShape, "optional" | "cardinality" | "scalar"> {
-  let t = typeText.replace(/\s+/g, " ").trim().replace(/;$/, "");
-  const optional = optionalMark || t.endsWith("| undefined") || t.endsWith("| null");
-  t = t.replace(/\s*\|\s*undefined$/, "").replace(/\s*\|\s*null$/, "").trim();
-  const recordMatch = /^Record\s*<\s*string\s*,\s*(.+)\s*>$/.exec(t);
-  if (recordMatch) {
-    return { optional, cardinality: "map", scalar: policyCanonicalScalar(recordMatch[1]!.trim()) };
-  }
-  const tupleMatch = /^\[\s*(.+?)\s*(?:,\s*\1\s*)+\]$/.exec(t);
-  if (tupleMatch && t.includes(",")) {
-    const inner = tupleMatch[1]!.trim();
-    return { optional, cardinality: "fixedList", scalar: policyCanonicalScalar(inner) };
-  }
-  const arrMatch = /^(?:Array\s*<\s*(.+)\s*>|(.+)\[\])$/.exec(t);
-  if (arrMatch) {
-    return { optional, cardinality: "list", scalar: policyCanonicalScalar((arrMatch[1] ?? arrMatch[2]!).trim()) };
-  }
-  return { optional, cardinality: "scalar", scalar: policyCanonicalScalar(t) };
-}
 
-/**
- * 🟦️Extract the declared exported schema, following named aliases to their owning interface.
- */
-export function policyExtractTypescriptSchemaFields(
-  text: string,
-  expectedTypeName: string | null = null,
-  resolveModule?: (specifier: string, importingModule: string) => { moduleId: string; text: string } | null,
-  moduleId = "",
-): PolicySchemaLeafExtract {
-  const seen = new Set<string>();
-  const bodyOf = (source: string, start: number): string => {
-    let depth = 1, end = start;
-    for (; end < source.length; end++) {
-      if (source[end] === "{") depth++;
-      else if (source[end] === "}" && --depth === 0) break;
-    }
-    return source.slice(start, end);
-  };
-  const find = (source: string, sourceId: string, name: string | null, exported: boolean): { text: string; typeName: string; bodyStart: number } | null => {
-    const key = JSON.stringify([sourceId, name, exported]);
-    if (seen.has(key)) return null;
-    seen.add(key);
-    try {
-      const declaration = policyFindSchemaDeclaration(source, exported ? /\bexport\s+interface\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/ : /\binterface\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/, name);
-      if (declaration) return { text: source, ...declaration };
-      if (!name) return null;
-      for (const match of source.matchAll(/\b(export\s+)?interface\s+([A-Za-z_][A-Za-z0-9_]*)\s+extends\s+([A-Za-z_][A-Za-z0-9_]*(?:\s*,\s*[A-Za-z_][A-Za-z0-9_]*)*)\s*\{/g)) {
-        if (match[2] !== name || (exported && !match[1])) continue;
-        const own = bodyOf(source, match.index! + match[0].length);
-        const inherited: string[] = [];
-        for (const base of match[3]!.split(",")) {
-          const declaration = find(source, sourceId, base.trim(), false);
-          if (!declaration) return null;
-          inherited.push(bodyOf(declaration.text, declaration.bodyStart));
-        }
-        return { text: [own, ...inherited].join("\n"), typeName: name, bodyStart: 0 };
-      }
-      const resolve = (specifier: string, target: string) => {
-        const next = resolveModule?.(specifier, sourceId);
-        return next ? find(next.text, next.moduleId, target, true) : null;
-      };
-      for (const match of source.matchAll(/\bexport\s+(?:type\s+)?\{([^}]+)\}\s*(?:from\s*["']([^"']+)["'])?/g)) {
-        for (const item of match[1]!.split(",")) {
-          const binding = /^(?:type\s+)?([A-Za-z_][A-Za-z0-9_]*)(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?$/.exec(item.trim());
-          if (binding && (binding[2] ?? binding[1]) === name) return match[2] ? resolve(match[2], binding[1]!) : find(source, sourceId, binding[1]!, false);
-        }
-      }
-      for (const match of source.matchAll(/\b(export\s+)?type\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*;/g)) {
-        if (match[2] === name && (!exported || match[1])) return find(source, sourceId, match[3]!, false);
-      }
-      if (!exported) {
-        for (const match of source.matchAll(/\bimport\s+(?:type\s+)?\{([^}]+)\}\s*from\s*["']([^"']+)["']/g)) {
-          for (const item of match[1]!.split(",")) {
-            const binding = /^(?:type\s+)?([A-Za-z_][A-Za-z0-9_]*)(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?$/.exec(item.trim());
-            if (binding && (binding[2] ?? binding[1]) === name) return resolve(match[2]!, binding[1]!);
-          }
-        }
-      }
-      return null;
-    } finally { seen.delete(key); }
-  };
-  const decl = find(text, moduleId, expectedTypeName, true);
-  if (!decl) return { typeName: "", fields: [] };
-  const { bodyStart } = decl;
-  text = decl.text;
-  const typeName = expectedTypeName ?? decl.typeName;
-  const body = bodyOf(text, bodyStart);
-  const fields: PolicySchemaFieldShape[] = [];
-  const fieldRe = /(?:\/\*\*([\s\S]*?)\*\/\s*)?([A-Za-z_][A-Za-z0-9_]*|"[^"\n]+"|'[^'\n]+')(\?)?\s*:\s*([^;]+);/g;
-  let m: RegExpExecArray | null;
-  while ((m = fieldRe.exec(body))) {
-    const parsed = policyParseTsFieldType(m[4]!.trim(), Boolean(m[3]));
-    const name = m[2]!.replace(/^["']|["']$/g, "");
-    if (fields.some((field) => field.name === name)) continue;
-    const state = /@state\s+([a-z0-9_-]+)/.exec(m[1] ?? "")?.[1];
-    fields.push({
-      name,
-      optional: parsed.optional,
-      cardinality: parsed.cardinality,
-      scalar: parsed.scalar,
-      state: state ? policyCanonicalState(state) : "",
-    });
-  }
-  return { typeName, fields };
-}
 
-/** 📂️Resolve relative schema modules without loading or executing their code. */
-function policyExtractTypescriptSchemaFile(abs: string, text: string, expectedTypeName: string | null): PolicySchemaLeafExtract {
-  return policyExtractTypescriptSchemaFields(text, expectedTypeName, (specifier, from) => {
-    if (!specifier.startsWith(".")) return null;
-    const moduleId = resolve(dirname(from), specifier);
-    return existsSync(moduleId) && statSync(moduleId).isFile() ? { moduleId, text: readFileSync(moduleId, "utf8") } : null;
-  }, abs);
-}
 
-/**
- * 🔗️Extract fields of the single GraphQL type, reading the state directive on each field.
- */
-export function policyExtractGraphqlSchemaFields(text: string, expectedTypeName: string | null = null): PolicySchemaLeafExtract {
-  text = text.replace(/"""[\s\S]*?"""|"(?:\\.|[^"\\])*"|#[^\n]*/g, (value) => value.replace(/[^\n]/g, " "));
-  const decl = policyFindSchemaDeclaration(text, /\btype\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/, expectedTypeName);
-  if (!decl) return { typeName: "", fields: [] };
-  const { typeName, bodyStart } = decl;
-  let depth = 1;
-  let i = bodyStart;
-  for (; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === "{") depth++;
-    else if (ch === "}") {
-      depth--;
-      if (depth === 0) break;
-    }
-  }
-  const body = text.slice(bodyStart, i);
-  const fields: PolicySchemaFieldShape[] = [];
-  let argumentDepth = 0;
-  const declarations = body.replace(/[\s\S]/g, (character) => {
-    if (character === "(") argumentDepth++;
-    const visible = argumentDepth === 0;
-    if (character === ")") argumentDepth--;
-    return visible ? character : " ";
-  });
-  const matches = [...declarations.matchAll(/([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(\[[^\]]+\]|[A-Za-z_][A-Za-z0-9_]*)(!)?/g)];
-  for (const [index, m] of matches.entries()) {
-    const name = m[1]!;
-    const typeTok = m[2]!;
-    const required = Boolean(m[3]);
-    const directives = body.slice(m.index! + m[0].length, matches[index + 1]?.index ?? body.length);
-    const stateRaw = /@state\s*\(\s*class\s*:\s*([A-Z_]+)\s*\)/.exec(directives)?.[1] ?? "";
-    let cardinality: PolicySchemaFieldCardinality = "scalar";
-    let scalar = typeTok;
-    const listMatch = /^\[\s*(.+?)\s*!?\s*\]$/.exec(typeTok);
-    if (listMatch) {
-      const inner = listMatch[1]!.replace(/!$/, "").trim();
-      if (/Entry$/.test(inner)) {
-        cardinality = "map";
-        scalar = inner.replace(/Entry$/, "");
-      } else {
-        cardinality = "list";
-        scalar = inner;
-      }
-    }
-    fields.push({
-      name,
-      optional: !required,
-      cardinality,
-      scalar: policyCanonicalScalar(scalar),
-      state: stateRaw ? policyCanonicalState(stateRaw) : "",
-    });
-  }
-  return { typeName, fields };
-}
 
-/** 🧩Walk a JSON Schema property schema into cardinality + scalar. */
-function policyParseJsonSchemaProperty(prop: Record<string, unknown>): Pick<PolicySchemaFieldShape, "cardinality" | "scalar"> {
-  const typ = prop.type;
-  if (typ === "array") {
-    const minItems = prop.minItems;
-    const maxItems = prop.maxItems;
-    const items = prop.items as Record<string, unknown> | undefined;
-    const scalar = items ? policyJsonSchemaScalar(items) : "unknown";
-    if (typeof minItems === "number" && minItems === maxItems) {
-      return { cardinality: "fixedList", scalar };
-    }
-    return { cardinality: "list", scalar };
-  }
-  if (typ === "object" && prop.additionalProperties != null && prop.additionalProperties !== false) {
-    const add = prop.additionalProperties;
-    const scalar = typeof add === "object" && add ? policyJsonSchemaScalar(add as Record<string, unknown>) : "unknown";
-    return { cardinality: "map", scalar };
-  }
-  return { cardinality: "scalar", scalar: policyJsonSchemaScalar(prop) };
-}
 
-/** 🔤Canonical scalar id from a JSON Schema schema object. */
-function policyJsonSchemaScalar(schema: Record<string, unknown>): string {
-  if (schema.contentEncoding === "base64") return "bytes";
-  if (schema.contentMediaType === "application/json") return "string";
-  const typ = schema.type;
-  const format = schema.format;
-  if (typ === "string") return "string";
-  if (typ === "boolean") return "bool";
-  if (typ === "integer") {
-    if (format === "int32") return "int32";
-    if (format === "uint32") return "uint32";
-    if (format === "int64") return "int64";
-    return "int32";
-  }
-  if (typ === "number") {
-    if (format === "float") return "float32";
-    if (format === "double") return "float64";
-    return "float64";
-  }
-  if (typeof schema.$ref === "string") {
-    const ref = schema.$ref as string;
-    return ref.split("/").pop() ?? ref;
-  }
-  if (typeof schema.title === "string") return schema.title;
-  return typeof typ === "string" ? typ : "unknown";
-}
 
-/**
- * 🔣️Extract properties, required, and x-semio-state from the normative JSON Schema leaf.
- */
-export function policyExtractJsonSchemaFields(text: string): PolicySchemaLeafExtract {
-  let doc: Record<string, unknown>;
-  try {
-    doc = JSON.parse(text) as Record<string, unknown>;
-  } catch {
-    return { typeName: "", fields: [] };
-  }
-  const typeName = typeof doc.title === "string" ? doc.title : "";
-  const properties = (doc.properties ?? {}) as Record<string, Record<string, unknown>>;
-  const required = new Set<string>(Array.isArray(doc.required) ? (doc.required as string[]) : []);
-  const fields: PolicySchemaFieldShape[] = [];
-  for (const [name, prop] of Object.entries(properties)) {
-    const parsed = policyParseJsonSchemaProperty(prop ?? {});
-    const stateRaw = typeof prop?.["x-semio-state"] === "string" ? (prop["x-semio-state"] as string) : "";
-    fields.push({
-      name,
-      optional: !required.has(name),
-      cardinality: parsed.cardinality,
-      scalar: parsed.scalar,
-      state: stateRaw ? policyCanonicalState(stateRaw) : "",
-    });
-  }
-  return { typeName, fields };
-}
 
-/** 🧩Parse a protobuf field type into optional/cardinality/scalar. */
-function policyParseProtoFieldType(
-  typeText: string,
-  optionalKw: boolean,
-  repeatedKw: boolean,
-): Pick<PolicySchemaFieldShape, "optional" | "cardinality" | "scalar"> {
-  const mapMatch = /^map\s*<\s*string\s*,\s*(.+)\s*>$/.exec(typeText.trim());
-  if (mapMatch) {
-    return { optional: optionalKw, cardinality: "map", scalar: policyCanonicalScalar(mapMatch[1]!.trim()) };
-  }
-  if (repeatedKw) {
-    return { optional: optionalKw, cardinality: "list", scalar: policyCanonicalScalar(typeText.trim()) };
-  }
-  return { optional: optionalKw, cardinality: "scalar", scalar: policyCanonicalScalar(typeText.trim()) };
-}
 
-/**
- * 🛰️Extract fields of the single protobuf message, reading leading state comments on each field.
- */
-export function policyExtractProtobufSchemaFields(text: string, expectedTypeName: string | null = null): PolicySchemaLeafExtract {
-  const decl = policyFindSchemaDeclaration(text, /\bmessage\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/, expectedTypeName);
-  if (!decl) return { typeName: "", fields: [] };
-  const { typeName, bodyStart } = decl;
-  let depth = 1;
-  let i = bodyStart;
-  for (; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === "{") depth++;
-    else if (ch === "}") {
-      depth--;
-      if (depth === 0) break;
-    }
-  }
-  const body = text.slice(bodyStart, i);
-  const fields: PolicySchemaFieldShape[] = [];
-  const fieldRe = /(?:\/\/\s*@state\s+([a-z0-9_-]+)\s*\n\s*)?(optional\s+)?(repeated\s+)?(map\s*<\s*string\s*,\s*[^>]+>|[\w.]+)\s+([a-z][a-z0-9_]*)\s*=\s*\d+\s*;/g;
-  let m: RegExpExecArray | null;
-  while ((m = fieldRe.exec(body))) {
-    const parsed = policyParseProtoFieldType(m[4]!, Boolean(m[2]), Boolean(m[3]));
-    fields.push({
-      name: policySnakeToCamel(m[5]!),
-      optional: parsed.optional,
-      cardinality: parsed.cardinality,
-      scalar: parsed.scalar,
-      state: m[1] ? policyCanonicalState(m[1]) : "",
-    });
-  }
-  return { typeName, fields };
-}
+
+
+
+
+
+
+
+
+
+
+
+
 
 /** 🗂️Load every schemaFormats leaf for one facet; returns null entries for missing files. */
 function policyLoadSchemaFacetLeaves(
@@ -23727,11 +22197,7 @@ function abstractionOwnershipRustCommands(source: string): string[] {
   return inspectRustStructure(source).enums.filter((item) => /(?:Command|Mutation)$/.test(item.name)).flatMap((item) => item.variants.map((variant) => variant.name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()));
 }
 
-/** 🪪️ Compares canonical field sets without treating declaration order as identity. */
-export function policySchemaFieldDifferences(reference: readonly string[], candidate: readonly string[]): { missing: string[]; extra: string[] } {
-  const expected = new Set(reference), actual = new Set(candidate);
-  return { missing: [...expected].filter((name) => !actual.has(name)).sort(), extra: [...actual].filter((name) => !expected.has(name)).sort() };
-}
+
 
 /** 🗿️ Audits exact document, snapshot and diff field names across all authored representations. */
 export function policyArtifactOwnershipFieldParity(root: string): { path: string; missing: string[]; extra: string[] }[] {
@@ -26228,11 +24694,7 @@ const POLICY_FACET_MIRROR_DRIFT_SIBLINGS = ["typescript-source", "graphql", "jso
 const POLICY_FACET_MIRROR_DRIFT_FIELD_RE = /(?:^|[\s{,(])(?:pub\s+)?([a-z][a-z0-9_]*)\s*:\s*[A-Za-z_&\[<('"]/gm;
 const POLICY_FACET_MIRROR_DRIFT_KEYWORDS = new Set(["self", "where", "if", "else", "match", "for", "while", "let", "fn", "return", "in", "as", "dyn", "mut", "ref", "impl", "type"]);
 
-/** 🔤️ Converts underscore-delimited field names to their canonical camelCase form. */
-function policySnakeToCamel(name: string): string {
-  const parts = name.split("_");
-  return parts[0] + parts.slice(1).map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
-}
+
 
 /** 🔎️CamelCased public field/variant identifiers referenced in a schema facet's Rust leaf (textual heuristic, not a parser — matches struct field decls AND enum struct-variant field decls). */
 function policyFacetRustFieldNames(content: string): string[] {

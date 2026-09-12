@@ -578,3 +578,19 @@ Three things this settles:
    That is a real finding and it is NOT the export verb's: it is the same navbar the `navbar vs dock`
    lane is moving, and it also feeds B26 §3a's `readExample`/`historyState` and §1b's
    `active_example_id`. Named here, owned there.
+
+### Note on the barrel path (cost this wave ~10 minutes of false alarm)
+
+The re-export this wave added lives in `🧑‍🎨engine/🎯️targets/⚛️react/🟦️.tsx` (48 KB) — **not** under a
+`📦️packages/🟦️typescript/` segment, which is the shape the sibling `🖱️ui` module uses. Carrying that
+segment over, on top of the `🧑‍🎨` ZWJ sequence, made `ls` and `rg` answer
+`No such file or directory` for a file that was there all along. Verify emoji paths by CONTENT
+(`os.walk` + a substring count), never by whether a shell tool could open the name:
+
+```
+4 660122 …/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts      ← import + 3 asserts
+2 339434 …/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx      ← definition + call site
+2  48444 …/🧑‍🎨engine/🎯️targets/⚛️react/🟦️.tsx              ← import + export
+```
+
+Three files, no stray fourth — in particular the `🖱️ui` barrel was NOT touched.

@@ -18,15 +18,18 @@ const inputBytes = readFileSync(join(import.meta.dir, "../../🧫️fixtures/�
 const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🪶️artifact-empty-facet-authoring/🔣️.json"), "utf8")), taxonomy = loadCatalogTaxonomy();
 const contract = taxonomy.semanticOwnedFileProjectionContracts[vector.sourceContractId];
 if (contract?.contractKind !== "semantic-facet-primary-file") throw new Error("The exact authored empty-facet contract is required");
-const registryPath = join(repoRoot, contract.authoringCommand.scriptPath), rootPath = join(repoRoot, "📜️script.ts");
-const ticket = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION"), report = join(ticket, "📓️empty-facet-authoring");
+const registryPath = join(repoRoot, contract.authoringCommand.scriptPath), artifactOwnerPath = join(library, "🏗️authoring/🗿️artifact-tree/🟦️.ts");
+const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for artifact authoring output.");
+const report = join(artifactRoot, "artifact-empty-facet-authoring");
+mkdirSync(report, { recursive: true });
 const hash = (bytes: string | Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
 const sort = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
-const identityPaths = [rootPath, registryPath, ...["🏗️builder/🟦️.ts", "📦️packages/🟦️typescript/🟦️.ts", "🔍️discovery/🟦️.ts", "🧹️normalization/🟦️.ts", "🔣️taxonomy.json"].map((path) => join(library, path)), import.meta.filename, ...["../../🧫️fixtures/🪶️artifact-empty-facet-authoring/🔣️.json", "../../🧬️schema/🪶️artifact-empty-facet-authoring/🔣️.json", "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json", "../../🧬️schema/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json", "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/📋️registration/🔣️.json", "../../🧬️schema/🪶️artifact-empty-facet-authoring/📋️registration/🔣️.json"].map((path) => join(import.meta.dir, path))];
+const identityPaths = [artifactOwnerPath, registryPath, ...["🏗️builder/🟦️.ts", "📦️packages/🟦️typescript/🟦️.ts", "🔍️discovery/🟦️.ts", "🧹️normalization/🟦️.ts", "🔣️taxonomy.json"].map((path) => join(library, path)), import.meta.filename, ...["../../🧫️fixtures/🪶️artifact-empty-facet-authoring/🔣️.json", "../../🧬️schema/🪶️artifact-empty-facet-authoring/🔣️.json", "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json", "../../🧬️schema/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json", "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/📋️registration/🔣️.json", "../../🧬️schema/🪶️artifact-empty-facet-authoring/📋️registration/🔣️.json"].map((path) => join(import.meta.dir, path))];
 const identities = (): Record<string, string> => Object.fromEntries(identityPaths.map((path) => [relative(repoRoot, path).replaceAll("\\", "/"), hash(readFileSync(path))]));
 
 test("shared artifact authoring passes the independent strict TypeScript compiler", () => {
-  const path = join(library, "🏗️builder/🟦️.ts");
+  const path = artifactOwnerPath;
   const program = ts.createProgram([path], { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, strict: true, noUncheckedIndexedAccess: true, allowImportingTsExtensions: true, skipLibCheck: true, noEmit: true, types: ["node"] });
   const source = program.getSourceFile(path);
   expect(source).toBeDefined();
@@ -109,7 +112,7 @@ let rootModule: Promise<{ newScaffoldSubsetTree: (root: string, subset: string, 
 /** 🏗️ Invokes the actual authored entrypoint, never registry generation or batch CLI routing. */
 async function author(row: Case, target: ReturnType<typeof fixture>, options?: Options): Promise<Result> {
   if (row.producer === "surface") return (await (surfaceModule ??= import(registryPath))).scaffoldSurfaceTree(target.workspace, target.subset, row.role, row.setup === "dry-run", options);
-  return (await (rootModule ??= import(rootPath))).newScaffoldSubsetTree(target.workspace, target.subset, taxonomy, row.setup === "dry-run", options);
+  return (await (rootModule ??= import(artifactOwnerPath))).newScaffoldSubsetTree(target.workspace, target.subset, taxonomy, row.setup === "dry-run", options);
 }
 
 test("empty-facet authoring has a closed independent input and existing authored disposition", () => {

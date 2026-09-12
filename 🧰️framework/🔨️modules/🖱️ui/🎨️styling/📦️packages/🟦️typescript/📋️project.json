@@ -56,7 +56,9 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts twin",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "outputs": []
     }
   }
 }

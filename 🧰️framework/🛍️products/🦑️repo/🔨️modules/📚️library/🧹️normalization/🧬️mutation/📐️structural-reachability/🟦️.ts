@@ -303,10 +303,18 @@ export interface MutationRootReachability {
 
 /** 🔗️ Proves one wrapped aggregate payload's declared source without resolving a second source graph. */
 export function inspectMutationRootReachability(repoRoot: string, mutationsRel: string, rootSource: string, leafNames: readonly string[], rustFilename: string): readonly MutationRootReachability[] {
-  const unresolved = (reason: string): readonly MutationRootReachability[] => leafNames.map((leafName) => ({ leafName, variantName: policyKebabToPascal(policyMutationSemanticIdentity(mutationsRel, leafName)), moduleName: policyMutationSemanticIdentity(mutationsRel, leafName).replaceAll("-", "_"), mounted: false, wrapped: false, origin: null, reason }));
-  const index = mutationTaxonomySourceIndex(repoRoot, {}), view = mutationTaxonomyStructuralView(index), rootLocator = policyStructuralRelativeLocator(mutationsRel), filename = policyStructuralRelativeLocator(rustFilename);
+  const unresolved = (reason: string): readonly MutationRootReachability[] => leafNames.map((leafName) => {
+    let identity: string;
+    try { identity = policyMutationSemanticIdentity(mutationsRel, leafName); } catch { identity = policyStripEmoji(leafName); }
+    return { leafName, variantName: policyKebabToPascal(identity), moduleName: identity.replaceAll("-", "_"), mounted: false, wrapped: false, origin: null, reason };
+  });
+  const rootLocator = policyStructuralRelativeLocator(mutationsRel), filename = policyStructuralRelativeLocator(rustFilename);
+  if (rootLocator === null || filename === null || filename.includes("/") || leafNames.some((leaf) => policyStructuralRelativeLocator(leaf) === null)) return unresolved("requires safe captured mutation source locators");
+  let index: ReturnType<typeof mutationTaxonomySourceIndex>;
+  try { index = mutationTaxonomySourceIndex(repoRoot, {}); } catch (error) { return unresolved(`captured source admission failed: ${error instanceof Error ? error.message : String(error)}`); }
+  const view = mutationTaxonomyStructuralView(index);
   const taxonomy = JSON.parse(view.taxonomySchema.bytes.toString("utf8")) as ReturnType<typeof loadTaxonomy>;
-  if (rootLocator === null || filename === null || filename.includes("/") || leafNames.some((leaf) => policyStructuralRelativeLocator(leaf) === null || mutationOwnerIdentity(mutationsRel, leaf, taxonomy) === null)) return unresolved("requires safe captured mutation source locators");
+  if (leafNames.some((leaf) => mutationOwnerIdentity(mutationsRel, leaf, taxonomy) === null)) return unresolved("requires safe captured mutation source locators");
   const captured = policyStructuralSource(view, `${rootLocator}/${filename}`);
   if (captured === null || captured !== rootSource) return unresolved("aggregate source is absent, changed, or outside the captured source view");
   return inspectMutationRootReachabilityView(view, rootLocator, captured, leafNames, filename);

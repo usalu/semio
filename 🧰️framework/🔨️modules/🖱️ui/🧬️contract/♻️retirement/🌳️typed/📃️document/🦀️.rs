@@ -38,15 +38,30 @@ impl UiDocumentArena {
         result
     }
 
+    /// 🧮️ Retires one unit of this document against the caller's grant, RAISED to admit the node
+    /// table's own allocation. A page is freed whole or not at all
+    /// (`PagedList::release_empty_page`, `🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs`, gated on
+    /// `items.capacity() * size_of::<T>() > maximum_bytes`), so a grant narrower than one page is a
+    /// ceiling that NO amount of further retirement can meet: the page stays reserved, the typed cursor
+    /// answers neither progress nor completion, and every owner above it spins on a value it is
+    /// forbidden to free. The caller's grant bounds the ITEMS retired per call, which stays one either
+    /// way, so raising the byte ceiling to the table's own footprint costs no extra work per call.
+    ///
+    /// 🐛️ One `UiNodeRecord` is 6 416 bytes against the reconciler's 4 096-byte copy grant
+    /// (`SURFACE_COMPONENT_COPY_WORK_BYTES`), so every published surface froze one step short of its
+    /// terminal: measured 67 667 consecutive `progressed: false, complete: false` steps on one
+    /// catalogue surface, which is the guest answering `more-work` forever while the host's refresh
+    /// reads back `unchanged` from the retained tree (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B52,
+    /// wave B50's 7 843-turn `more-work` streak with `sources=["reconcile"]`).
     fn retire_exact(&mut self, handle: UiDocumentHandle, maximum_bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         let Some(slot) = self.slot_mut(handle) else { return Ok(UiValueRetirementStep { complete: true, ..Default::default() }) };
         if !slot.retiring || slot.aliases != 0 {
-            eprintln!("[DEBUG] retire_exact blocked retiring={} aliases={} scalar={}", slot.retiring, slot.aliases, slot.retire_scalar);
             return Ok(UiValueRetirementStep::default());
         }
+        let grant = maximum_bytes.max(slot.nodes.entries.allocated_bytes());
         let mut step = match slot.retire_scalar {
-            0 => slot.retirement.advance(&mut slot.nodes.entries, 1, maximum_bytes)?,
-            1 => slot.retirement.advance(&mut slot.surface, 1, maximum_bytes)?,
+            0 => slot.retirement.advance(&mut slot.nodes.entries, 1, grant)?,
+            1 => slot.retirement.advance(&mut slot.surface, 1, grant)?,
             2 => {
                 slot.root = None;
                 UiValueRetirementStep { complete: true, progressed: true, ..Default::default() }
@@ -65,7 +80,6 @@ impl UiDocumentArena {
                 }
                 let resident = slot.resident.as_mut().ok_or("document root lost its resident permit")?;
                 let result = resident.close_step(1).map_err(|error| error.reason())?;
-                eprintln!("[DEBUG] retire_exact scalar5 result={result:?}");
                 if result.complete {
                     slot.resident = None;
                 }
@@ -81,7 +95,14 @@ impl UiDocumentArena {
             }
             _ => return Err("document retirement phase is invalid"),
         };
-        eprintln!("[DEBUG] retire_exact scalar={} step={step:?} cursor={:?} entries_empty={}", slot.retire_scalar, slot.retirement, slot.nodes.entries.terminal_is_empty());
+        if step.progressed || step.complete {
+            slot.stalled = 0;
+        } else {
+            slot.stalled += 1;
+            if slot.stalled >= UI_DOCUMENT_RETIREMENT_STALL_LIMIT {
+                return Err("document retirement made no progress for its whole stall budget");
+            }
+        }
         if step.complete {
             slot.retire_scalar += 1;
             slot.retirement = UiTypedRetirementCursor::default();
@@ -91,6 +112,13 @@ impl UiDocumentArena {
     }
 }
 
+/// 🧯️ Consecutive no-progress retirement steps a document slot may answer before the ladder is
+/// named as a livelock. A descendant waiting on an owner that a LATER step of the same ladder releases is
+/// ordinary and resolves within a handful of steps; measured stalls that never resolve spun 67 667 times
+/// on one surface, so a page of steps separates the two without ever cutting a live ladder short (ticket
+/// 26/09/02/PUZZLE-3D-END-TO-END wave B52).
+const UI_DOCUMENT_RETIREMENT_STALL_LIMIT: u16 = 4_096;
+
 pub(super) fn close_document_owner(handle: &mut Option<UiDocumentHandle>, released: &mut bool, claimed: &mut bool, maximum_items: usize, maximum_bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
     let Some(exact) = *handle else { return Ok(UiValueRetirementStep { complete: true, ..Default::default() }) };
     if maximum_items == 0 || maximum_bytes == 0 {
@@ -98,7 +126,7 @@ pub(super) fn close_document_owner(handle: &mut Option<UiDocumentHandle>, releas
     }
     let mut arena = match UI_DOCUMENT_ARENA.try_lock() {
         Ok(arena) => arena,
-        Err(std::sync::TryLockError::WouldBlock) => { eprintln!("[DEBUG] close_document_owner arena-contended"); return Ok(UiValueRetirementStep::default()) },
+        Err(std::sync::TryLockError::WouldBlock) => return Ok(UiValueRetirementStep::default()),
         Err(std::sync::TryLockError::Poisoned(_)) => return Err("document retirement arena is poisoned"),
     };
     if !arena.active(exact) {
@@ -107,7 +135,6 @@ pub(super) fn close_document_owner(handle: &mut Option<UiDocumentHandle>, releas
         return Ok(UiValueRetirementStep { complete: true, ..Default::default() });
     }
     if DOCUMENT_HANDBACKS.has_slot_pending(exact.slot) {
-        eprintln!("[DEBUG] close_document_owner consume_handback slot={}", exact.slot);
         return arena.consume_handback(exact.slot);
     }
     if !*released {
@@ -123,7 +150,6 @@ pub(super) fn close_document_owner(handle: &mut Option<UiDocumentHandle>, releas
     if !*claimed {
         let slot = arena.slot_mut(exact).unwrap();
         if !slot.retiring || slot.retirement_claimed {
-            eprintln!("[DEBUG] close_document_owner unclaimable retiring={} claimed={}", slot.retiring, slot.retirement_claimed);
             return Ok(UiValueRetirementStep::default());
         }
         slot.retirement_claimed = true;
@@ -134,7 +160,6 @@ pub(super) fn close_document_owner(handle: &mut Option<UiDocumentHandle>, releas
         return Err("document retirement lost its exact claim");
     }
     let step = arena.retire_exact(exact, maximum_bytes)?;
-    eprintln!("[DEBUG] close_document_owner retire_exact step={step:?}");
     if step.complete {
         *handle = None;
         *claimed = false;
@@ -154,16 +179,14 @@ pub(super) fn close_document_read_owner(handle: &mut Option<UiDocumentHandle>, r
     }
     let mut arena = match UI_DOCUMENT_ARENA.try_lock() {
         Ok(arena) => arena,
-        Err(std::sync::TryLockError::WouldBlock) => { eprintln!("[DEBUG] close_document_read_owner arena-contended"); return Ok(Default::default()) },
+        Err(std::sync::TryLockError::WouldBlock) => return Ok(Default::default()),
         Err(std::sync::TryLockError::Poisoned(_)) => return Err("document read retirement arena is poisoned"),
     };
     if !arena.active(exact) {
         return Err("document read lost its retained root");
     }
     if DOCUMENT_HANDBACKS.has_slot_pending(exact.slot) {
-        let step = arena.consume_handback(exact.slot);
-        eprintln!("[DEBUG] close_document_read_owner consume_handback slot={} step={:?}", exact.slot, step);
-        return step;
+        return arena.consume_handback(exact.slot);
     }
     let slot = arena.slot(exact).unwrap();
     if slot.retiring || slot.aliases == 0 {

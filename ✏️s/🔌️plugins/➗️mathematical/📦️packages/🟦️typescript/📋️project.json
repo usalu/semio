@@ -1,6 +1,15 @@
 {
   "name": "@semio-tech/mathematical-js",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🧪️tests/📣️publication-authority/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🧫️fixtures/📣️publication-authority/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🧬️schema/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/**/*"
+    ]
+  },
   "targets": {
     "test": {
       "executor": "nx:run-commands",

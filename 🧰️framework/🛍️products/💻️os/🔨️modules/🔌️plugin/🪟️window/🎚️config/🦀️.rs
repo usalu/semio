@@ -214,6 +214,10 @@ pub fn bounded_window_config_store_disposer<O: WindowConfigOwner>() -> Box<dyn A
 #[path = "🧪️tests/🪟️retained-window-config/🦀️.rs"]
 mod tests;
 
+#[cfg(test)]
+#[path = "🧪️tests/🪪️pack-identity/🦀️.rs"]
+mod pack_identity_tests;
+
 /// 📬️ One typed config mutation addressed to one exact concrete window instance.
 pub struct WindowConfigMutation {
     window_id: String,

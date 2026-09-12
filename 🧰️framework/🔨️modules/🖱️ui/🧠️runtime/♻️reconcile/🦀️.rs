@@ -402,7 +402,6 @@ impl SurfaceReconciler {
     }
 
     fn retire_one(&mut self) -> bool {
-        eprintln!("[DEBUG] current.retire_one document={} assembly_empty={} ordinals={} key_index={} retire_scalar={}", self.document.is_some(), self.assembly.terminal_is_empty(), self.ordinals.is_empty(), self.key_index.len(), self.retire_scalar);
         if let Some(document) = self.document.as_mut() {
             if document.close_read_step_with_grant(1, SURFACE_COMPONENT_COPY_WORK_BYTES).expect("canonical read retirement preserves exact fault authority").complete { self.document = None; }
             return false;
@@ -2567,9 +2566,7 @@ impl SurfaceReconcileRetained {
             self.handback = self.output_handback.take().or_else(|| try_reserve_surface_reconcile_handback(self.generation));
             if self.handback.is_none() { return false; }
         }
-        let outcome = self.close_run(items, bytes);
-        eprintln!("[DEBUG] close_admitted_run outcome={outcome} current={} source={} cursor={} candidate={} patch_empty={} retire_tree_empty={} fault={} credit={} handback={} output_handback={}", self.current.is_some(), self.source.is_some(), self.cursor.is_some(), self.candidate.is_some(), self.patch.terminal_is_empty(), self.retire_tree.is_empty(), self.fault.is_some(), self.credit.is_some(), self.handback.is_some(), self.output_handback.is_some());
-        outcome
+        self.close_run(items, bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {

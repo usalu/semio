@@ -13,6 +13,8 @@
     "test-framework-root-source-topology": "nx run @semio-tech/repo-lib:test-framework-root-source-topology",
     "test-root-artifact-dependency-source": "nx run @semio-tech/repo-lib:test-root-artifact-dependency-source",
     "test-root-taxonomy-workflow-source": "nx run @semio-tech/repo-lib:test-root-taxonomy-workflow-source",
+    "test-root-schema-field-source": "nx run @semio-tech/repo-lib:test-root-schema-field-source",
+    "test-root-clean-scaffold-source": "nx run @semio-tech/repo-lib:test-root-clean-scaffold-source",
     "test-manifestless-source-closure": "nx run @semio-tech/repo-lib:test-manifestless-source-closure",
     "test-plugin-publication-source-ownership": "nx run @semio-tech/repo-lib:test-plugin-publication-source-ownership",
     "test-repo-source-ownership": "nx run @semio-tech/repo-lib:test-repo-source-ownership",

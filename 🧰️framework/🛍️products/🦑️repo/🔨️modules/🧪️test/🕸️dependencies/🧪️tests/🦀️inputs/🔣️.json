@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "owner": "🧩️subject/🏅️standard",
+  "case": "🔬️closure",
+  "domain": "🧪️host",
+  "files": {
+    "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"🧩️subject/📦️packages/🦀️rust\", \"🔗️shared\", \"🔮️oracle\", \"🧪️host/📦️packages/🦀️rust\"]\n",
+    "🧩️subject/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"subject\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"../../🦀️.rs\"\n[dependencies]\nshared = { path = \"../../../🔗️shared\" }\n\n[[bin]]\nname = \"consumer\"\npath = \"../../consumer.rs\"\n",
+    "🧩️subject/📦️packages/🦀️rust/📋️project.json": "{\"name\": \"subject-project\"}",
+    "🧩️subject/🦀️.rs": "pub fn value() -> u32 { shared::value() }\n",
+    "🔗️shared/Cargo.toml": "[package]\nname = \"shared\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+    "🔗️shared/🦀️.rs": "pub fn value() -> u32 { 7 }\n",
+    "🔮️oracle/Cargo.toml": "[package]\nname = \"oracle\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+    "🔮️oracle/🦀️.rs": "pub fn value() -> u32 { 7 }\n",
+    "🧪️host/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"semio-repo-test-host\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"../../🦀️.rs\"\n",
+    "🧪️host/🦀️.rs": "pub fn run() {}\n",
+    "🧩️subject/🔮️oracles/🔣️.json": "{\"oracleHostPackages\": [{\"implementation\": \"rust\", \"package\": \"oracle\", \"path\": \"\\ud83d\\udd2e\\ufe0foracle\"}]}",
+    "🧩️subject/🏅️standard/🧪️tests/🔬️closure/🦀️.rs": "pub fn result() -> u32 { subject::value() }\n",
+    "🧩️subject/🏅️standard/🧪️tests/🔬️closure/🥒️.feature": "Feature: Native test input closure\n  Scenario: Mounted and transitive input changes invalidate the test\n    Given a subject outside the case owner\n    Then its Cargo compilation sources are hashed\n",
+    "🧩️subject/consumer.rs": "fn main() { println!(\"{}\", subject::value()); }\n",
+    "value.json": "7\n",
+    "📜️script.ts": "import { appendFileSync, mkdirSync, writeFileSync } from \"node:fs\";\nimport { dirname, join } from \"node:path\";\nconst root = process.cwd();\nconst output = process.argv[2] === \"generate\" ? \".generated/shared/value.txt\" : \".results/test.txt\";\nmkdirSync(dirname(join(root, output)), { recursive: true });\nif (process.argv[2] === \"generate\") writeFileSync(output, \"ready\\n\");\nelse {\n  const child = Bun.spawn([\"cargo\", \"run\", \"--locked\", \"--offline\", \"--quiet\", \"--manifest-path\", \"🧩️subject/📦️packages/🦀️rust/Cargo.toml\", \"--bin\", \"consumer\"], { cwd: root, env: { ...process.env, CARGO_TARGET_DIR: join(root, \".compiler\") }, stdout: \"pipe\", stderr: \"pipe\" });\n  const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);\n  if (code !== 0) throw new Error(stderr);\n  writeFileSync(output, stdout);\n}\nappendFileSync(\".invocations\", process.argv[2] + \"\\n\");\n",
+    "🧪️host/📜️script.ts": "import { value } from \"../🔧️runtime/🟦️.ts\";\nexport const result = value;\n",
+    "🔧️runtime/🟦️.ts": "export const value = 1;\n"
+  },
+  "projects": {
+    "🧩️subject/📦️packages/🦀️rust": "subject-project",
+    "🔗️shared": "shared",
+    "🔮️oracle": "oracle",
+    "🧪️host/📦️packages/🦀️rust": "semio-repo-test-host"
+  },
+  "subjectRoots": [
+    "subject-project",
+    "shared",
+    "oracle",
+    "semio-repo-test-host"
+  ],
+  "oracleRoots": [
+    "oracle",
+    "semio-repo-test-host"
+  ],
+  "generator": {
+    "ownership": "owned",
+    "ownerPath": "🔗️shared",
+    "target": "shared:generate",
+    "nativeConsumers": [
+      "🔗️shared"
+    ],
+    "outputRoots": [
+      ".generated/shared"
+    ]
+  },
+  "subjectInputs": [
+    "🧩️subject/🦀️.rs",
+    "🔗️shared/🦀️.rs"
+  ],
+  "nativeCache": {
+    "initial": "7\n",
+    "changed": "8\n",
+    "source": "🔗️shared/🦀️.rs",
+    "replacement": "pub fn value() -> u32 { 8 }\n",
+    "unrelated": "unrelated.txt"
+  },
+  "commandSources": [
+    "🧪️host/📜️script.ts",
+    "🔧️runtime/🟦️.ts"
+  ]
+}

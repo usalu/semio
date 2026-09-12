@@ -993,9 +993,9 @@ semio_framework_plugin::app_commands! {
     /// id (`command_id()`); the second is the kebab `#[dsl(key)]` wire keyword the codec uses — both are
     /// copied verbatim off the pre-migration `ArchitectCommand` enum, never derived from one another.
     ///
-    /// JSON blob arguments (patches, CSV, DSL payloads, node-graph edit lists, viewport JSON) stay
-    /// `String`-typed and are parsed inside each handler — mirrors `gis2d`'s `positions_json`/`camera_json`
-    /// convention for the same reason (their shapes have no `dsl::DslField` binding of their own).
+    /// JSON blob arguments (patches, CSV, DSL payloads, and node-graph edit lists) stay
+    /// `String`-typed and are parsed inside each handler. The shared `Viewport2d` record has its own
+    /// `dsl::DslField` binding and therefore crosses this boundary as a nested typed value.
     pub enum ArchitectCommand for ProgramSnapshot, ProgramMutation, ArchitectConfig, ArchitectConfigMutation {
         "selectRegister" as "select-register" => select_register::SelectRegister,
         "addRegisterItem" as "add-register-item" => add_register_item::AddRegisterItem,

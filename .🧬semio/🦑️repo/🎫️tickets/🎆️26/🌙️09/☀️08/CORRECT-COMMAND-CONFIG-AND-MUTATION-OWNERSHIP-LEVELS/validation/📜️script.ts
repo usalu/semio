@@ -21,6 +21,17 @@ if (args[0] === "verify-abstraction-ownership") {
     await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-viewport", "--lib", "viewport_ownership_", "--", "--nocapture"], root);
     await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "viewport_ownership_", "--", "--nocapture"], root);
   }
+} else if (args[0] === "framework-viewport-projection") {
+  if (args.length > 2 || (args[1] !== undefined && args[1] !== "native")) throw new Error("framework-viewport-projection accepts only the optional native phase");
+  const testRoot = root + "/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/📐️projection";
+  const { testViewport3dProjectionValues } = await import(`${testRoot}/🟦️.ts`);
+  testViewport3dProjectionValues();
+  runCmd("bun", [root + "/node_modules/prettier/bin/prettier.cjs", "--check", root + "/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🔗️.graphql"], { cwd: root });
+  runCmd("bun", [root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: root });
+  if (args[1] === "native") {
+    await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-viewport", "--lib", "viewport_projection_", "--", "--nocapture"], root);
+    await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-scene", "--lib", "viewport_projection_pack_", "--", "--nocapture"], root);
+  }
 } else if (args[0] === "framework-ui-protocol-ownership") {
   if (args.length !== 1) throw new Error("framework-ui-protocol-ownership accepts no arguments");
   const testPath = root + "/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts";
@@ -44,6 +55,12 @@ if (args[0] === "verify-abstraction-ownership") {
   runCmd("bun", [root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: root });
   await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "value::list::", "--", "--nocapture"], root);
   await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-contract", "--lib", "fixed_list_", "--", "--nocapture"], root);
+} else if (args[0] === "framework-retained-pack-ownership") {
+  runCmd("bun", [root + "/📜️script.ts", "verify", "framework-retained-pack-ownership", ...args.slice(1)], { cwd: root });
+} else if (args[0] === "window-config-pack-identity") {
+  runCmd("bun", [root + "/📜️script.ts", "verify", "window-config-pack-identity", ...args.slice(1)], { cwd: root });
+} else if (args[0] === "node-graph-viewport-ownership") {
+  runCmd("bun", [root + "/📜️script.ts", "verify", "node-graph-viewport-ownership", ...args.slice(1)], { cwd: root });
 } else if (args[0] === "framework-variant-field-casing") {
   await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-value-derive", "--test", "variant_field_casing", "--", "--nocapture"], root);
 } else if (args[0] === "framework-empty-state-contract") {
@@ -74,11 +91,11 @@ if (args[0] === "verify-abstraction-ownership") {
     } else {
       const failures: unknown[] = [];
       for (const [packageName, filters] of [
-        ["semio-s-artifact-fem-2d", ["fem2d_window_config_", "mesh_edge_authority_", "mounted_3d_element_interfaces_", "assembly_triplet_pages_", "pcg_job_"]],
+        ["semio-s-artifact-fem-2d", ["fem2d_window_config_", "mesh_edge_authority_", "mounted_3d_element_interfaces_", "assembly_triplet_pages_", "pcg_job_", "subspace_"]],
         ["semio-s-artifact-fem-3d", ["fem3d_window_config_", "live_visual::tests::"]],
       ] as const) {
         try {
-          await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--features", "component-app-assembly", "--lib", "--", "--nocapture", ...filters], root);
+          await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", ...filters], root);
         } catch (error) {
           failures.push(error);
         }

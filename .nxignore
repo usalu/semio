@@ -1,4 +1,6 @@
 # 📦️ wasm-pack output packages share npm names with their parent crates; keep them out of the nx graph.
 **/pkg/**
 /.🧬semio/🦑️repo/🎫️tickets/**
+/.🧬semio/🦑️repo/⚡️cache/**
+/.🧬semio/🗺️map/**
 **/pkg/package.json

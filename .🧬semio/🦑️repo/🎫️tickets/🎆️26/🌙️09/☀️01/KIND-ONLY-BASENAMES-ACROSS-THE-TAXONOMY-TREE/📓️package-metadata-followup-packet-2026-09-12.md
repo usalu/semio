@@ -210,4 +210,6 @@ Inspect and close the canonical anonymous output basename/URL contract along wit
 
 ## Verified Cargo Entry Constraint
 
+The concrete current execution boundary is now retained in 📓️cargo-entry-and-shortcode-extraction-packet-2026-09-12.md. It identifies both active build entries, twenty discovered text-consumer files (not twenty mandatory edits), the hard-coded build-path admission in discovery/normalization, actual WGPU schema/catalog authority, Infinite's source/lookup behavior and the root runtime-source filter that currently assumes the default basename.
+
 The new 📓️cargo-build-entry-constraint-probe-2026-09-12.md records three native offline controls: an explicit emoji build leaf fails the Cargo-derived crate identifier; an anonymous ASCII _.rs and build.rs both execute. Thus exact build.rs is configurable despite the current catalog label. The actual WGPU build.rs is already a thin include of a semantic builder; the actual OS Infinite build.rs retains 134 text lines (135 newline segments, 5,775 bytes) of shortcode projection behavior and is a separate remaining owner extraction. Follow the native constraint and exact manifest/producer consumers together; neither a broad ASCII exception nor an unsupported exact-name necessity is acceptable.

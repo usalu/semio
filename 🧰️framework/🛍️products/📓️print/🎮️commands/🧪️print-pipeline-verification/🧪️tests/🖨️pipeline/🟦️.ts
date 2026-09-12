@@ -6,10 +6,12 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, mkdirSync, writeFileSync, rmSync, copyFileSync, mkdtempSync, readdirSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { createRequire } from "node:module";
+import { createHash } from "node:crypto";
 import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { stagePrintFonts, printFontDescriptors, printFontSearchPaths } from "../../../../🔨️modules/🔤print-font-catalog/🟦️.ts";
 import { loadPrintDesignTokens, renderPrintLatexTokenStylesheet, resolvePrintPanelGlassStyle } from "../../../../🔨️modules/🎨print-design-token-paints/🟦️.ts";
-import { deriveDarkPrintTexSource, printTemplatePdfNames, registeredPrintTemplates } from "../../../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
+import { deriveDarkPrintTexSource, printTemplatePdfNames, publishPrintArtifact, registeredPrintTemplates } from "../../../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
+import { classifyPackageSource, fileKindIdForSourcePath, fixedSourceDispositionDecision, implementationLeafBasenameFinding, loadCatalogTaxonomy, scopedFileKindIdForSourcePath, taxonomyFileKindIsImplementation } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 //#region 🧪️PrintPipelineTests
 const workspaceRoot = getWorkspaceRoot();
@@ -44,7 +46,8 @@ export async function verifyPrintPipelineQuick(): Promise<void> {
   await verifyPrintDocumentCatalog();
   await verifyPrintBundleContract();
   verifyPrintToolchainManifest();
-  verifyPrintFontStaging();
+  await verifyPrintFontStaging();
+  verifyPrintMacroStaging();
   const galleryIdentities = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🗺️gallery-identities.json"), "utf8")) as Record<string, string>;
   assert.deepEqual(Object.fromEntries(visualizationTemplates().map(({ id, texPath }) => [id, basename(texPath)])), galleryIdentities);
   assert.equal(new Set(Object.values(galleryIdentities).map((name) => name.split("viz-")[0]!.replaceAll("\uFE0F", ""))).size, 81);
@@ -143,6 +146,93 @@ export async function verifyPrintPipelineQuick(): Promise<void> {
   console.log("[DEBUG] print: unit tests passed");
 }
 
+/** 📥️ Verifies canonical macro materialization and pre-mutation collision rejection. */
+export function verifyPrintMacroStaging(): void {
+  const fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/🖨️macro-staging");
+  const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
+    readonly entries: readonly string[];
+    readonly inputs: Readonly<Record<string, string>>;
+    readonly outputs: Readonly<Record<string, string>>;
+    readonly sourceKind: { readonly canonicalPath: string; readonly scopedKindId: string; readonly hostileBasenames: readonly string[]; readonly neighborPath: string; readonly neighborFileKindId: string };
+    readonly shimGrammar: { readonly contractId: string; readonly grammarId: string; readonly acceptedRole: string; readonly rejections: readonly { readonly id: string; readonly suffix?: string; readonly source?: string; readonly expectedRole: string }[] };
+    readonly collisions: readonly { readonly id: string; readonly entries: readonly string[]; readonly inputs: Readonly<Record<string, string>> }[];
+  };
+  const require = createRequire(import.meta.url), schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️schema/🔣️.json"), "utf8"));
+  const validate = new (require("ajv").default)({ strict: false }).compile(schema);
+  assert.ok(validate(fixture), JSON.stringify(validate.errors));
+  const taxonomy = loadCatalogTaxonomy(), scopedFileKindId = scopedFileKindIdForSourcePath(fixture.sourceKind.canonicalPath, taxonomy);
+  assert.equal(scopedFileKindId, fixture.sourceKind.scopedKindId);
+  assert.equal(taxonomyFileKindIsImplementation(`scoped:${scopedFileKindId}`, taxonomy), true);
+  assert.equal(implementationLeafBasenameFinding(fixture.sourceKind.canonicalPath, taxonomy), null);
+  for (const basename of fixture.sourceKind.hostileBasenames) {
+    const path = `${dirname(fixture.sourceKind.canonicalPath)}/${basename}`;
+    assert.equal(scopedFileKindIdForSourcePath(path, taxonomy), fixture.sourceKind.scopedKindId, basename);
+    assert.deepEqual(implementationLeafBasenameFinding(path, taxonomy), { breachId: "taxonomy/kind-only-basename", path, fileKindId: `scoped:${fixture.sourceKind.scopedKindId}`, actualBasename: basename, expectedBasename: "📐️.tex", exemptionAuthorityId: null });
+  }
+  assert.equal(scopedFileKindIdForSourcePath(fixture.sourceKind.neighborPath, taxonomy), null);
+  assert.equal(fileKindIdForSourcePath(fixture.sourceKind.neighborPath, taxonomy), fixture.sourceKind.neighborFileKindId);
+  assert.equal(taxonomyFileKindIsImplementation(fixture.sourceKind.neighborFileKindId, taxonomy), false);
+  const grammar = taxonomy.packageGlueGrammar[fixture.shimGrammar.grammarId]!, shim = readFileSync(join(latexRoot, "semio-graph.sty"), "utf8");
+  assert.equal(classifyPackageSource(shim, grammar).role, fixture.shimGrammar.acceptedRole);
+  assert.equal(fixedSourceDispositionDecision(fixture.shimGrammar.contractId, shim, taxonomy)?.finding, null);
+  for (const rejection of fixture.shimGrammar.rejections) {
+    const source = rejection.source ?? shim + rejection.suffix!;
+    assert.equal(classifyPackageSource(source, grammar).role, rejection.expectedRole, rejection.id);
+    assert.equal(fixedSourceDispositionDecision(fixture.shimGrammar.contractId, source, taxonomy)?.finding, "fixed-source-disposition-unresolved", rejection.id);
+  }
+  assert.equal(classifyPackageSource(readFileSync(join(productRoot, "🔨️modules/🕸️graph/📐️.tex"), "utf8"), grammar).role, "implementation");
+  mkdirSync(outputRoot, { recursive: true });
+  const root = mkdtempSync(join(outputRoot, ".macro-staging-test-"));
+  try {
+    const input = join(root, "input"), output = join(root, "output");
+    for (const [path, content] of Object.entries(fixture.inputs)) {
+      mkdirSync(dirname(join(input, path)), { recursive: true });
+      writeFileSync(join(input, path), content);
+    }
+    const staged = stagePrintSources(input, fixture.entries, output);
+    assert.equal(staged.get("🔨️modules/🕸️graph/📐️.tex"), join(output, "modules/graph/_.tex"));
+    for (const [path, content] of Object.entries(fixture.outputs)) assert.equal(readFileSync(join(output, path), "utf8"), content, path);
+    for (const collision of fixture.collisions) {
+      const source = join(root, collision.id), destination = join(root, `${collision.id}-output`);
+      for (const [path, content] of Object.entries(collision.inputs)) {
+        mkdirSync(dirname(join(source, path)), { recursive: true });
+        writeFileSync(join(source, path), content);
+      }
+      mkdirSync(destination, { recursive: true });
+      writeFileSync(join(destination, "sentinel"), collision.id);
+      assert.throws(() => stagePrintSources(source, collision.entries, destination), /colliding print source/);
+      assert.equal(readFileSync(join(destination, "sentinel"), "utf8"), collision.id);
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+  console.log("[DEBUG] Print macro staging: schema, references and collision atomicity PASS");
+}
+
+/** 🧪️ Compiles the semantic graph owner twice through the production stage and independently reads its PDF. */
+export async function verifyPrintMacroStagingNative(): Promise<void> {
+  mkdirSync(outputRoot, { recursive: true });
+  const root = mkdtempSync(join(outputRoot, ".macro-staging-native-")), sourceRoot = join(import.meta.dir, "../../🧫️fixtures/🖨️macro-staging");
+  try {
+    const outputs = [join(root, "first"), join(root, "second")];
+    for (const [index, output] of outputs.entries()) await publishPrintArtifact({ id: `graph-macro-native-${index + 1}`, sourceRoot, texPath: "🧪️control.tex", sources: ["🧪️control.tex"], output, owner: `@semio-tech/print:test-macro-staging-${index + 1}`, dark: false });
+    const pdfs = outputs.map(output => readFileSync(join(output, "🧪️control.pdf")));
+    assert.deepEqual(pdfs[0], pdfs[1]);
+    console.log(`[DEBUG] Print macro staging PDF SHA-256 ${createHash("sha256").update(pdfs[0]!).digest("hex")}`);
+    const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
+    (globalThis as { DOMMatrix?: unknown }).DOMMatrix ??= canvas.DOMMatrix;
+    const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs"), pdf = await getDocument({ data: new Uint8Array(pdfs[0]!) }).promise;
+    try {
+      const text: string[] = [];
+      for (let index = 1; index <= pdf.numPages; index++) {
+        const page = await pdf.getPage(index);
+        text.push((await page.getTextContent()).items.map(item => "str" in item ? item.str : "").join(" "));
+        page.cleanup();
+      }
+      assert.ok(text.join(" ").replace(/\s+/g, " ").includes("Graph macro staging reached"));
+    } finally { await pdf.destroy(); }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+  console.log("[DEBUG] Print macro staging: two deterministic native PDFs and independent PDF.js marker PASS");
+}
+
 /** 📖️ Consumes each restored document through the independent PDF.js page and text reader. */
 async function verifyPrintPdfs(templates: readonly { id: string; texPath: string }[], collection: "templates" | "visualizations"): Promise<void> {
   const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
@@ -183,7 +273,7 @@ export async function verifyPrintVisualizationBuild(): Promise<void> {
 }
 
 /** 🔤️ Verifies font publication against the schema and an independent native font loader. */
-export function verifyPrintFontStaging(output = outputRoot): void {
+export async function verifyPrintFontStaging(output = outputRoot): Promise<void> {
   const require = createRequire(import.meta.url), modulePath = join(productRoot, "🔨️modules/🔤print-font-catalog");
   const catalog = JSON.parse(readFileSync(join(modulePath, "🔣️.json"), "utf8"));
   assert.equal(new (require("ajv").default)({ strict: false }).validate(printSchemaModule(modulePath, "https://semio.tech/schema/print/print-font-catalog/schema.json"), catalog), true);
@@ -195,7 +285,7 @@ export function verifyPrintFontStaging(output = outputRoot): void {
       const path = join(product, "🖼️assets/🔤️font", row.directory, row.filename);
       mkdirSync(dirname(join(root, path)), { recursive: true }); copyFileSync(join(workspaceRoot, path), join(root, path));
     }
-    stagePrintFonts(root);
+    await stagePrintFonts(root);
     const staged = printFontSearchPaths(root)[0]!;
     assert.equal(staged, join(root, product, "📦️packages/🟦️typescript/dist/fonts"));
     const { GlobalFonts } = require("@napi-rs/canvas");
@@ -206,12 +296,12 @@ export function verifyPrintFontStaging(output = outputRoot): void {
       assert.ok(key, row.family); GlobalFonts.remove(key);
     }
     writeFileSync(join(staged, "stale.ttf"), "stale");
-    stagePrintFonts(root);
+    await stagePrintFonts(root);
     assert.equal(existsSync(join(staged, "stale.ttf")), false);
     assert.deepEqual(JSON.parse(readFileSync(join(staged, ".nx-artifact.json"), "utf8")).files, catalog.map((row: any) => row.texFilename).sort());
     const prior = readFileSync(join(staged, catalog[0].texFilename));
     writeFileSync(join(root, product, "🖼️assets/🔤️font", catalog[0].directory, catalog[0].filename), "invalid");
-    assert.throws(() => stagePrintFonts(root), /TTF/);
+    await assert.rejects(() => stagePrintFonts(root), /TTF/);
     assert.deepEqual(readFileSync(join(staged, catalog[0].texFilename)), prior);
   } finally { rmSync(root, { recursive: true }); }
   console.log("[DEBUG] Print fonts: schema, native loading, byte identity and atomic replacement PASS");
@@ -240,8 +330,10 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
   const validate = new (require("ajv").default)({ strict: false }).compile(printSchemaModule(join(root, modulePath), "https://semio.tech/schema/print/tectonic-template-compilation/catalog/schema.json"));
   assert.ok(validate(catalog), JSON.stringify(validate.errors));
   const api = await import(join(root, modulePath, "🟦️.ts"));
+  assert.deepEqual(api.printLibrarySources(), catalog.librarySources);
+  assert.deepEqual(api.printLibrarySources(), ["🖋️latex", "🔨️modules/🕸️graph/📐️.tex"]);
   const plugin = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"));
-  const gallery = JSON.parse(readFileSync(join(root, product, "🎮️commands/🧪️print-pipeline-verification/🧪️tests/🗺️gallery-identities.json"), "utf8"));
+  const gallery = JSON.parse(readFileSync(join(root, product, "🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/🗺️gallery-identities.json"), "utf8"));
   const documents = api.printDocuments();
   assert.equal(documents.length, 87);
   assert.deepEqual(documents.filter((row: any) => row.collection === "visualizations").map((row: any) => row.id).sort(), Object.keys(gallery).sort());
@@ -255,6 +347,7 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
     assert.equal(target.cache, true);
     assert.deepEqual([...new Set(target.inputs.flatMap((input: any) => input.externalDependencies ?? []))].sort(), ["pdfjs-dist", "sharp"]);
     assert.equal(target.inputs.includes("{workspaceRoot}/bun.lock"), false);
+    assert.ok(target.inputs.includes("{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🕸️graph/📐️.tex"));
     assert.deepEqual(target.outputs, [`{projectRoot}/dist/documents/${document.id}`]);
     assert.match(target.options.command, /📜️script\.ts build [a-z0-9-]+$/);
     assert.ok(target.dependsOn.includes("fonts"));

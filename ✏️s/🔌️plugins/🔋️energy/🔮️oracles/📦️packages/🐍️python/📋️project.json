@@ -1,6 +1,14 @@
 {
   "name": "@semio-tech/energy-oracle-py",
   "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔮️oracles/🛠️toolchain/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔮️oracles/🔣️.json"
+    ]
+  },
   "targets": {
     "oracle-setup": {
       "executor": "nx:run-commands",
