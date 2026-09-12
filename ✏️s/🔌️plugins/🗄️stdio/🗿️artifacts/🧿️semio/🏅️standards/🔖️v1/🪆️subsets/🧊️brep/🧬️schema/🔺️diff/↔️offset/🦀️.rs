@@ -12,7 +12,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::standards::v1::subsets::brep::schema::diff::blend::fillet_edges;
-use crate::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid, make_loop, make_vertex};
+use crate::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid, make_loop, make_vertex, retire_solid_scaffold};
 use crate::standards::v1::subsets::brep::schema::diff::intersect::{intersect_surface_surface, IntCurve};
 use crate::standards::v1::subsets::brep::schema::diff::primitives::{attach_face, finish_solid, line_edge};
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::{CoedgeId, EdgeId, FaceId, LoopId, SolidId, VertexId};
@@ -1156,6 +1156,16 @@ pub fn thicken_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRe
 /// outer shell reuses the original faces, the inner shell is `offset_solid`'s `-thickness` result
 /// with every face's orientation flipped, and the two nest as `outer`/`inners` on one [`crate::standards::v1::subsets::brep::schema::snapshot::topology::Solid`]
 /// — exact, no boolean cut.
+///
+/// The `-thickness` offset is only ever a SCAFFOLD here: `offset_solid_with_corner` wraps its
+/// faces in a solid of its own, and those faces are then flipped to face into the cavity. Left in
+/// the body that wrapper is a solid whose outer shell integrates to −V, which
+/// [`crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body`]
+/// reports as `shell-orientation-inward` forever after — and since `Brep::validate_gate_sync`
+/// validates the whole body, it refused EVERY preview taken from that kernel, not only the shelled
+/// solid (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`, `🐚️box-shell-preview`: the served preview
+/// reported `-4.096`, exactly the flipped inner `1.6³`, while the shelled solid itself measured the
+/// correct `+3.904`). [`euler::retire_solid_scaffold`] hands the faces over and drops the wrapper.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn shell_solid(body: &mut Body, solid: SolidId, thickness: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if !thickness.is_finite() || thickness <= 1e-15 {
@@ -1173,6 +1183,7 @@ pub fn shell_solid(body: &mut Body, solid: SolidId, thickness: f64, rec: &mut Op
             fd.flipped = !fd.flipped;
         }
     }
+    retire_solid_scaffold(body, inner_solid, rec);
     let outer_shell = add_shell(body, outer_faces, rec);
     let inner_shell = add_shell(body, inner_faces, rec);
     Ok(add_solid(body, outer_shell, vec![inner_shell], rec))

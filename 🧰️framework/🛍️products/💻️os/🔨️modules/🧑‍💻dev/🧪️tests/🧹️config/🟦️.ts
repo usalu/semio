@@ -6,13 +6,15 @@
  * @vitest-environment node
  */
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build, type Plugin } from "esbuild";
+import picomatch from "picomatch";
 import { describe, expect, it } from "vitest";
 import { stripExecutableShebang } from "../../📦️packages/🟦️typescript/🧹️executable-source/🟦️.ts";
+import { UNWATCHED_REPOSITORY_SEGMENTS, repositorySourceWatchRoots, semioSourceWatchVitePlugin, unwatchedRepositoryPathMatcher } from "../../📦️packages/🟦️typescript/🔌️vite-plugins.ts";
 
 describe("executable source transformation", () => {
   it.each([
@@ -92,5 +94,76 @@ describe("vite config module graph", () => {
     const oracle = bunConfigGraph();
     expect(oracle).toEqual(modules.filter((module) => /\.[cm]?[jt]sx?$/u.test(module)));
     for (const denied of contract.deny) expect(oracle).not.toContain(denied);
+  });
+});
+
+const watchPolicy = JSON.parse(readFileSync(join(packageDir, "../../🧫️fixtures/👁️watch-policy.json"), "utf8")) as {
+  readonly unwatchedSegments: readonly string[];
+  readonly unwatchedGlobs: readonly string[];
+  readonly unwatchedPaths: readonly string[];
+  readonly watchedPaths: readonly string[];
+  readonly requiredRoots: readonly string[];
+  readonly forbiddenRoots: readonly string[];
+};
+
+/** @emoji 🔮️ Independent oracle: `picomatch` is the glob engine chokidar itself filters with, so the
+ * fixture's equivalent ignore globs decide every path through a third-party implementation rather than
+ * through a second reading of ours. */
+const picomatchUnwatched = (relativePath: string): boolean => watchPolicy.unwatchedGlobs.some((glob) => picomatch(glob, { dot: true })(relativePath));
+
+describe("dev server watch policy", () => {
+  it.each(watchPolicy.unwatchedPaths)("keeps %s outside every dev-server watch", (relativePath) => {
+    expect(unwatchedRepositoryPathMatcher().test(relativePath)).toBe(true);
+    expect(unwatchedRepositoryPathMatcher().test(relativePath.replaceAll("/", "\\"))).toBe(true);
+  });
+
+  it.each(watchPolicy.watchedPaths)("keeps %s inside the watched source set", (relativePath) => {
+    expect(unwatchedRepositoryPathMatcher().test(relativePath)).toBe(false);
+    expect(unwatchedRepositoryPathMatcher().test(relativePath.replaceAll("/", "\\"))).toBe(false);
+  });
+
+  it("agrees with picomatch's independent glob engine on every fixture path", () => {
+    const matcher = unwatchedRepositoryPathMatcher();
+    for (const relativePath of [...watchPolicy.unwatchedPaths, ...watchPolicy.watchedPaths]) {
+      expect(matcher.test(relativePath), relativePath).toBe(picomatchUnwatched(relativePath));
+    }
+  });
+
+  it("declares exactly the fixture's unwatched segments", () => {
+    expect([...UNWATCHED_REPOSITORY_SEGMENTS].sort()).toEqual([...watchPolicy.unwatchedSegments].sort());
+  });
+
+  it("resolves source roots that cover the products and exclude every store", () => {
+    const roots = repositorySourceWatchRoots(repoRoot).map((root) => relative(repoRoot, root).replaceAll("\\", "/"));
+    for (const required of watchPolicy.requiredRoots) expect(roots).toContain(required);
+    for (const forbidden of watchPolicy.forbiddenRoots) expect(roots).not.toContain(forbidden);
+  });
+
+  it("hands Vite no chokidar watcher of its own and mounts the replacement", () => {
+    const source = readFileSync(join(repoRoot, contract.entry), "utf8");
+    expect(source, "server.watch must stay null — a chokidar watcher here consolidates onto the whole repository").toMatch(/watch:\s*null/u);
+    expect(source).toContain("semioSourceWatchVitePlugin({ repoRoot })");
+  });
+
+  it("reports source edits and stays silent for every unwatched store", async () => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-watch-policy-"));
+    const seen: string[] = [];
+    const server = { watcher: { emit: (_event: string, path: string) => (seen.push(relative(sandbox, path).replaceAll("\\", "/")), true) }, httpServer: null };
+    try {
+      for (const segment of ["🧰️framework", ...watchPolicy.forbiddenRoots, "🧰️framework/dist", "🧰️framework/🤖️generated"]) mkdirSync(join(sandbox, segment), { recursive: true });
+      semioSourceWatchVitePlugin({ repoRoot: sandbox }).configureServer(server);
+      const written = [join(sandbox, "🧰️framework/🟦️.ts"), join(sandbox, "🧰️framework/dist/🟦️.js"), join(sandbox, "🧰️framework/🤖️generated/🟦️.ts"), ...watchPolicy.forbiddenRoots.map((root) => join(sandbox, root, "noise.txt"))];
+      // ⏳️ `fs.watch` arms asynchronously, so the edit is replayed until it lands rather than written once
+      // behind an unarmed watcher — the deadline is the failure, never a fixed sleep.
+      const deadline = Date.now() + 20_000;
+      while (!seen.includes("🧰️framework/🟦️.ts") && Date.now() < deadline) {
+        for (const file of written) writeFileSync(file, `export const value = ${Date.now()};\n`);
+        await new Promise((resolve$) => setTimeout(resolve$, 100));
+      }
+      expect(seen, "the source edit must reach Vite").toContain("🧰️framework/🟦️.ts");
+      expect(seen.filter((path) => unwatchedRepositoryPathMatcher().test(path))).toEqual([]);
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
   });
 });

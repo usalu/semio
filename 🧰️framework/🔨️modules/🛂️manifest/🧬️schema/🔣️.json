@@ -417,6 +417,118 @@
         "viewer",
         "editor"
       ]
+    },
+    "ExamplePickerFixture": {
+      "description": "📚️ THE example-picker predicate, language-agnostically: which authored examples one app surface may offer. An example carries the DIALECT it was authored for, so the editor and the viewer of one artifact resolve exactly the same picker. Answered by Rust `manifest::examples_for_app` and by TypeScript `examplesForApp` (🛂️manifest/🟦️.ts).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "examples",
+        "cases"
+      ],
+      "properties": {
+        "examples": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "dialect"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "dialect": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "artifactKind",
+                  "standard",
+                  "subset"
+                ],
+                "properties": {
+                  "artifactKind": {
+                    "type": "string"
+                  },
+                  "standard": {
+                    "type": "string"
+                  },
+                  "subset": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "app",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "app": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "role",
+                  "dialect"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "enum": [
+                      "editor",
+                      "viewer"
+                    ]
+                  },
+                  "dialect": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "artifactKind",
+                      "standard",
+                      "subset"
+                    ],
+                    "properties": {
+                      "artifactKind": {
+                        "type": "string"
+                      },
+                      "standard": {
+                        "type": "string"
+                      },
+                      "subset": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "expected": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

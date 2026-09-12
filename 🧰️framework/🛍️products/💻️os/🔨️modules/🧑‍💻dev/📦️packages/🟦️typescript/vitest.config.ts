@@ -43,7 +43,7 @@ export default defineConfig({
     environment: process.env.SEMIO_BUILD_INSPECTION_OUTPUT ? "node" : testLevelAtLeast("long") ? "jsdom" : "node",
     // 🩹️ In-source files belong only in `includeSource`; listing them in BOTH keys made Vitest
     // collect them twice. Dedicated regression files remain ordinary `include` entries.
-    include: ["../../🧪️tests/🧹️config/🟦️.ts"],
+    include: ["../../🧪️tests/🧹️config/🟦️.ts", "../../🧪️tests/🔌️staging-root/🟦️.ts"],
     includeSource: inSource,
     coverage: { include: ["📜️script.ts", ...WIT_MAPPING_IN_SOURCE] },
   },

@@ -30,7 +30,8 @@
     },
     "public-member-open-handoff-source": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts public-member-open-handoff-source",
         "cwd": "{projectRoot}",
@@ -99,7 +100,8 @@
     },
     "member-history-identity-source": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts member-history-identity-source",
         "cwd": "{projectRoot}",

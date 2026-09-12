@@ -821,8 +821,14 @@ fn loop_has_only_straight_edges(body: &Body, loop_id: crate::standards::v1::subs
     body.loop_coedges(loop_id).into_iter().all(|coedge| body.coedges.get(coedge).and_then(|co| body.edges.get(co.edge)).and_then(|edge| body.curves3.get(edge.curve)).is_some_and(|curve| matches!(curve, Curve3::Line { .. })))
 }
 
+/// ⚖️ ONE face's divergence-theorem contribution to the signed volume of the shell that owns it —
+/// the atomic unit [`shell_signed_volume`] sums, and therefore the smallest piece of that sum a
+/// budgeted validator can do per step. Exposed so a resumable pass
+/// ([`crate::standards::v1::subsets::brep::schema::inferences::validation_report::body::BodyValidationJob`])
+/// can accumulate the same total one face at a time instead of paying the whole shell in one
+/// non-preemptible call (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn face_volume_contribution(body: &Body, face: FaceId, chord_tol: f64) -> Result<f64, KernelError> {
+pub fn face_volume_contribution(body: &Body, face: FaceId, chord_tol: f64) -> Result<f64, KernelError> {
     let Some(face_ent) = body.faces.get(face) else {
         return Err(KernelError::MissingEntity("face".into()));
     };

@@ -33,6 +33,39 @@ enum PreparedGpuPresentPhase {
     Closing,
 }
 
+/// ⏱️ One prepared-present opportunity's wall ceiling. A breach names the PHASE it measured and the
+/// microseconds it took: a verdict that cannot say what it measured is undiagnosable from the fault
+/// banner alone (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+const PREPARED_GPU_OPPORTUNITY_CEILING_US: u64 = 2_000;
+
+/// 🫧 Resolves one `DrawMeasureCursor::Glass` command page against the draw list it was measured
+/// on. `advance_pipeline` emits one command page per MEASURED step, and the step that retires the
+/// glass section is measured too: `Glass(index)` with `index == glass_regions.len()` sets the cursor
+/// `Complete` and reports zero usage (`📦️prepared.rs`'s own boundary rule). That terminal page
+/// therefore addresses no region by construction — a document with no glass at all publishes exactly
+/// one `Glass(0)` page against an empty list — so `Ok(None)` is "nothing to encode", and only an
+/// index PAST the terminal one is a genuinely stale cursor (`Err` carrying the length it measured).
+/// Treating the terminal page as stale failed every first present of the wgpu browser shell
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn address_prepared_glass_region(region: usize, len: usize) -> Result<Option<usize>, usize> {
+    if region < len {
+        return Ok(Some(region));
+    }
+    if region == len { Ok(None) } else { Err(len) }
+}
+
+/// ⚖️ Admits ONE measured opportunity against [`PREPARED_GPU_OPPORTUNITY_CEILING_US`]. `Ok` carries
+/// the cursor's new consecutive-overrun run (`0` once an opportunity fits); `Err` carries the run
+/// that reached [`semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS`] and is therefore
+/// terminal. Pure so the law is testable without a GPU adapter.
+fn admit_prepared_gpu_opportunity(run: u32, elapsed_us: u64) -> Result<u32, u32> {
+    if elapsed_us <= PREPARED_GPU_OPPORTUNITY_CEILING_US {
+        return Ok(0);
+    }
+    let run = run.saturating_add(1);
+    if run >= semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS { Err(run) } else { Ok(run) }
+}
+
 const PREPARED_GPU_ABANDONMENT_SLOTS: usize = 64;
 static PREPARED_GPU_ABANDONMENT_STATE: [AtomicU8; PREPARED_GPU_ABANDONMENT_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_GPU_ABANDONMENT_SLOTS];
 static PREPARED_GPU_ABANDONMENT_OWNER: [AtomicPtr<PreparedGpuPresentCursor>; PREPARED_GPU_ABANDONMENT_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_GPU_ABANDONMENT_SLOTS];
@@ -48,6 +81,7 @@ pub struct PreparedGpuPresentCursor {
     view: Option<wgpu::TextureView>,
     phase: PreparedGpuPresentPhase,
     abandonment_slot: u8,
+    overrun_run: u32,
 }
 
 impl PreparedGpuPresentCursor {
@@ -56,7 +90,7 @@ impl PreparedGpuPresentCursor {
             return None;
         }
         let slot = PREPARED_GPU_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_ok())?;
-        Some(Self { scene_revision, preview_generation, command: 0, glass_command: 0, blur_mip: 1, frame: None, view: None, phase: PreparedGpuPresentPhase::EnsureTarget, abandonment_slot: slot as u8 })
+        Some(Self { scene_revision, preview_generation, command: 0, glass_command: 0, blur_mip: 1, frame: None, view: None, phase: PreparedGpuPresentPhase::EnsureTarget, abandonment_slot: slot as u8, overrun_run: 0 })
     }
 
     fn matches(&self, packet: &PreparedRenderPacket) -> bool {
@@ -144,6 +178,7 @@ impl Drop for PreparedGpuPresentCursor {
             view: self.view.take(),
             phase: PreparedGpuPresentPhase::Closing,
             abandonment_slot: self.abandonment_slot,
+            overrun_run: self.overrun_run,
         });
         self.scene_revision = 0;
         self.preview_generation = 0;
@@ -411,11 +446,21 @@ impl GpuContext {
     }
 
     /// 🚦 Advances one fixed command scalar or one bounded platform submission opportunity.
+    ///
+    /// ⚖️ A single over-ceiling wall sample is a MEASUREMENT, not a verdict — the ratified law of
+    /// [`semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS`]. The first frame of a cold surface
+    /// pays the platform's pipeline warm-up inside one opportunity (measured on Apple metal-3 through
+    /// a browser `OffscreenCanvas`: `ClearScene` 2 601 µs against the 2 000 µs ceiling), and failing
+    /// that one sample quarantined the whole surface before it had ever presented
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Only a RUN of consecutive over-ceiling
+    /// opportunities — a cursor that is genuinely not converging — is terminal; any admitted
+    /// opportunity clears the run.
     pub fn prepared_present_step(&mut self, packet: &PreparedRenderPacket, cursor: &mut PreparedGpuPresentCursor) -> Result<bool, String> {
         if !cursor.matches(packet) || cursor.phase == PreparedGpuPresentPhase::Closing {
             return Err("prepared GPU cursor was stale, uncredited, or closing".to_string());
         }
         let started = semio_framework_job::default_now_us().ok_or_else(|| "GPU opportunity requires a real monotonic clock".to_string())?;
+        let opportunity = cursor.phase;
         match cursor.phase {
             PreparedGpuPresentPhase::EnsureTarget => {
                 self.ensure_scene_color();
@@ -478,13 +523,17 @@ impl GpuContext {
                     return Ok(false);
                 };
                 if let Some(DrawMeasureCursor::Glass(region)) = command.draw_cursor() {
-                    let draw = if command.packet_overlay() { packet.overlay.as_ref().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { &packet.draw };
-                    let region = draw.glass_regions.get(region).ok_or_else(|| "prepared glass region cursor was stale".to_string())?;
-                    let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
-                    let Some(view) = cursor.view.as_ref() else { return Err("prepared surface view was missing".to_string()) };
-                    let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_glass_scalar") });
-                    self.pipelines.encode_prepared_glass_scalar(&self.device, &self.queue, &mut encoder, view, scene, &mut self.frame_buffers, region).map_err(str::to_owned)?;
-                    self.queue.submit(Some(encoder.finish()));
+                    let overlay_owner = command.packet_overlay();
+                    let draw = if overlay_owner { packet.overlay.as_ref().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { &packet.draw };
+                    let addressed = address_prepared_glass_region(region, draw.glass_regions.len())
+                        .map_err(|len| format!("prepared glass region cursor was stale: region {region} of {len} on the {} owner", if overlay_owner { "overlay" } else { "draw" }))?;
+                    if let Some(glass) = addressed.and_then(|index| draw.glass_regions.get(index)) {
+                        let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
+                        let Some(view) = cursor.view.as_ref() else { return Err("prepared surface view was missing".to_string()) };
+                        let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_glass_scalar") });
+                        self.pipelines.encode_prepared_glass_scalar(&self.device, &self.queue, &mut encoder, view, scene, &mut self.frame_buffers, glass).map_err(str::to_owned)?;
+                        self.queue.submit(Some(encoder.finish()));
+                    }
                 }
                 cursor.glass_command = cursor.glass_command.checked_add(1).ok_or_else(|| "prepared glass command cursor exhausted".to_string())?;
             }
@@ -500,8 +549,12 @@ impl GpuContext {
         if !cursor.matches(packet) {
             return Err("prepared GPU cursor became stale after a platform call".to_string());
         }
-        if semio_framework_job::default_now_us().and_then(|now| now.checked_sub(started)).is_none_or(|elapsed| elapsed > 2_000) {
-            return Err("prepared GPU opportunity exceeded the two millisecond ceiling".to_string());
+        let Some(elapsed) = semio_framework_job::default_now_us().and_then(|now| now.checked_sub(started)) else {
+            return Err("prepared GPU opportunity lost its monotonic clock".to_string());
+        };
+        match admit_prepared_gpu_opportunity(cursor.overrun_run, elapsed) {
+            Ok(run) => cursor.overrun_run = run,
+            Err(run) => return Err(format!("prepared GPU opportunity exceeded the two millisecond ceiling for {run} consecutive opportunities: {opportunity:?} took {elapsed} us")),
         }
         Ok(cursor.phase == PreparedGpuPresentPhase::Complete)
     }

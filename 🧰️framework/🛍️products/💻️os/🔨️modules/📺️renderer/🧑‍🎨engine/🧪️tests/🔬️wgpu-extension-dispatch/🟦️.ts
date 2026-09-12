@@ -83,9 +83,12 @@ describe("wgpu contributions command ingress", () => {
   it("crosses one slim-view pack under the 64-page shard ceiling", () => {
     const json = `[{"pluginId":"flow-extension-brep","pad":"${"p".repeat(190700)}"}]`;
     const command = wgpuSetContributionsCommand("procedural", "s.procedural.generation3d@1/*#editor", json);
-    const live = { locale: "en", terminology: "native", contributionsJson: "n".repeat(laws.laws.commandIngress.payloadChars) };
+    // 📌️ `panelJson` is the ONE long field a view context still carries (contributions left the
+    // contract entirely — `🪟️view-context/🧬️schema/🔣️.json`), so it is what a slim view must drop.
+    const live = { locale: "en", terminology: "native", panelJson: "n".repeat(laws.laws.commandIngress.payloadChars) };
     const slim = wgpuContributionsIngressSize(command, wgpuSlimContributionsView(live));
     const fat = wgpuContributionsIngressSize(command, live);
+    expect(wgpuSlimContributionsView(live).panelJson).toBeUndefined();
     expect(wgpuSlimContributionsView(live).contributionsJson).toBeUndefined();
     expect(json.length).toBeGreaterThan(laws.laws.commandIngress.payloadChars);
     expect(slim.ingressPages).toBeGreaterThan(0);

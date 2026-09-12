@@ -3,7 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { flushSync } from "react-dom";
 import type { BackboneWorkerResponse } from "@semio-tech/framework-os";
 import { applyPatch } from "fast-json-patch";
-import { Layout, UIDialog, createTutorialClock, uiI18n } from "@semio-tech/ui-react";
+import { Layout, UIDialog, childElementId, createTutorialClock, isElementId, uiI18n } from "@semio-tech/ui-react";
+import { createWorldProjectionTemplates, worldProjectionSwitchTreeItems } from "@semio-tech/infinite-world-r3f";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🔣️.json";
 import {
@@ -25,13 +26,19 @@ import {
   type SpaceArtifactCreationCatalogAuthorityV1,
   type SpaceArtifactCreationOwnerV1,
 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import { DOWNLOAD_MEDIA_EXPORT_REVOKE_MS, EMPTY_APP_LABELS_OVERLAY, SET_ACTIVE_EXAMPLE_ACTION_ID, buildActiveExampleAction, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1, interactionViewFromLeftoverOutput, leftoverInteractionStateV1, leftoverWorldGumballPoseV1, historyPatchShouldApplyV1, historyRefreshNeededV1, undeclaredActionDiagnostic, downloadMediaExport, mediaExportEncodingText, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition, world3dMarqueeOverlayShape } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import { FRAMEWORK_HISTORY_BODY_KEY, resolveUiDirtyScope } from "@semio-tech/framework";
-import { hostArmedViewContext, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { DOWNLOAD_MEDIA_EXPORT_REVOKE_MS, EMPTY_APP_LABELS_OVERLAY, SET_ACTIVE_EXAMPLE_ACTION_ID, buildActiveExampleAction, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1, interactionViewFromLeftoverOutput, leftoverInteractionStateV1, leftoverWorldGumballPoseV1, historyPatchShouldApplyV1, historyRefreshNeededV1, undeclaredActionDiagnostic, downloadMediaExport, mediaExportEncodingText, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition, world3dMarqueeOverlayShape, windowMeasuresChrome, windowMeasureDomId, qualifyWindowMeasureIds } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { FRAMEWORK_HISTORY_BODY_KEY, resolveUiDirtyScope, type UiDirtyScope } from "@semio-tech/framework";
+import { hostArmedViewContext, parseResolvedPluginViewState, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { createContinuationScheduler, createVirtualContinuationHost } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
+import { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, SHARD_WORKER_URL, shardWorkerUrl } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
+/** 🗣️ The resolver every `makeEffectDispatchOne` owner passes — the shell's `resolvedTargetViewState`, reduced to what a test session needs: both host preferences always stamped. */
+const resolvedViewStateFixture = (session: { readonly viewState?: unknown }) => parseResolvedPluginViewState({ ...(session.viewState as Record<string, unknown> | undefined), locale: "en", terminology: "native" }) as never;
 import { openSurfaceContextMenu, uiNodeDomId } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { contextMenuItemClassName } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️.tsx";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json";
+import extensionInvocationWireFixture from "../../../../🌊️flow/🧩️extensions/🕸️wasm/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json";
+import extensionEvaluateFaultFixture from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/💥️extension-evaluate-fault.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import mountedGisMapProbeFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔬️mounted-gis-map-probe-v1/🔣️.json";
 import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
@@ -56,9 +63,11 @@ import kernelFixtureSchema from "../../../../../../../🔨️modules/🎠️kern
 import { createInstance as createTranslationOracle } from "i18next";
 import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🔣️label-resolution.json";
 import tutorialInteractionFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🎥️tutorial-interaction/🔣️.json";
+import pluginAvailabilityRouteFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🔁️plugin-availability-route/🔣️.json";
 import interactionSchema from "../../../../../../../🔨️modules/🕹️interaction/🧬️schema/🔣️.json";
 import manifestFixtureSchema from "../../../../../../../🔨️modules/🛂️manifest/🧬️schema/🔣️.json";
 import actionSemanticsFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/⚖️action-semantics.json";
+import examplePickerFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📚️example-picker.json";
 import tutorialDocumentFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🎞️tutorial-document-track.json";
 import boardSessionFixture from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧫️fixtures/🔣️session-factory.json";
 import boardSessionSchema from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
@@ -70,6 +79,7 @@ import { createRequire } from "node:module";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES } from "@semio-tech/framework-replication";
 import { unresolvedActionArgs } from "@semio-tech/framework";
+import { examplesForApp, examplesForDialect, surfaceAppId, type AppRole } from "@semio-tech/framework";
 import choiceFixture from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧫️fixtures/🔽️choices/🔣️.json";
 import choiceSchema from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧬️schema/🔣️.json";
 
@@ -499,7 +509,7 @@ describe("Shell dialog origin", () => {
     let complete!: (response: { requestedEffects: readonly unknown[] }) => void;
     const plugin = { handle: { handleAction: () => new Promise((done) => { complete = done; }) } } as unknown as LoadedProgramState;
     const session = { pluginId: source.pluginId, instanceId: source.sessionInstanceId, app: { id: source.appId, controllerId: source.controllerId, modes: [], windowKinds: [], commands: [] }, viewState: {} } as unknown as Parameters<typeof makeEffectDispatchOne>[1];
-    const pending = makeEffectDispatchOne(plugin, session, applyEffects, () => shellEffectSourceIsCurrentV1(source, source, primary, members))("lateAction");
+    const pending = makeEffectDispatchOne(plugin, session, applyEffects, () => shellEffectSourceIsCurrentV1(source, source, primary, members), resolvedViewStateFixture)("lateAction");
     members = [];
     complete({ requestedEffects: [{ navigate: { uri: "/wrong" } }, { setPanel: { panelJson: "{}" } }] });
     await pending;
@@ -606,7 +616,7 @@ describe("Shell dialog origin", () => {
     const plugin = { handle: { handleAction } } as unknown as LoadedProgramState;
     const session = { pluginId: "space", instanceId: 7, app: { id: "space.editor", controllerId: "space.editor", windowKinds: [], commands: [], modes: [] }, viewState: {} } as unknown as Parameters<typeof makeEffectDispatchOne>[1];
     const applyEffects = vi.fn(async () => {});
-    const invoke = makeEffectDispatchOne(plugin, session, applyEffects, () => current);
+    const invoke = makeEffectDispatchOne(plugin, session, applyEffects, () => current, resolvedViewStateFixture);
     const pending = invoke("openCreateArtifact", {});
     expect(handleAction).toHaveBeenCalledTimes(1);
     current = false;
@@ -1097,6 +1107,18 @@ describe("mounted GIS map probe", () => {
 });
 
 //#region 🩺️RuntimeDiagnostics
+/** 🩺️ The module that GENERATES the shard worker, read as text. `import.meta.url` is not a file URL
+ * under this suite's transform and the module itself cannot be imported here (it reaches the repo
+ * library's `bun:sqlite` lease store, which a jsdom bundle refuses), so it is located by walking up
+ * from the runner's cwd — the same shape the world3d-host law above uses. */
+function readGeneratedShardWorkerOwnerSource(): string {
+  const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts";
+  let root = process.cwd();
+  for (let hop = 0; hop < 12 && !existsSync(`${root}/${relative}`); hop += 1) root = `${root}/..`;
+  expect(existsSync(`${root}/${relative}`)).toBe(true);
+  return readFileSync(`${root}/${relative}`, "utf8");
+}
+
 describe("shell runtime diagnostics switch", () => {
   afterEach(() => {
     setRuntimeDiagnostics(undefined);
@@ -1106,6 +1128,45 @@ describe("shell runtime diagnostics switch", () => {
     // 🪞️ `RUNTIME_DIAGNOSTICS_ENV` in `🧰️framework/🔨️modules/⏱️trace/🦀️.rs` — one name, two languages.
     expect(RUNTIME_DIAGNOSTICS_KEY).toBe("SEMIO_RUNTIME_DIAGNOSTICS");
     expect(runtimeDiagnosticsEnabled()).toBe(false);
+  });
+
+  // ⚖️ LAW: the key is spelled once per realm that has to resolve it — the shell, the shard-worker
+  // bootstrap, and the generated worker/host-shim source — and all of them must agree, because the
+  // guest's own `RUNTIME_DIAGNOSTICS_ENV` is the only reader and it matches on the exact string
+  // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-guest-tick-cost-2026-09-12.md` §4 rank 1).
+  it("spells the same diagnostics key in every realm that resolves it", () => {
+    expect(SHARD_RUNTIME_DIAGNOSTICS_KEY).toBe(RUNTIME_DIAGNOSTICS_KEY);
+    // 🔌️ The generated shard worker's own copy lives in `🔌️plugin/📦️packages/🟦️typescript/🟦️.ts`,
+    // which this jsdom suite cannot import (it reaches the repo library's `bun:sqlite` lease store),
+    // so it is read as text — the same shape `⏱️wgpu-ui-turn-budget` uses for `ShellHost`.
+    const pluginPackage = readGeneratedShardWorkerOwnerSource();
+    expect(pluginPackage).toContain(`export const SHARD_RUNTIME_DIAGNOSTICS_KEY = "${RUNTIME_DIAGNOSTICS_KEY}"`);
+    expect(pluginPackage).toContain(`export const SHARD_WORKER_DIAGNOSTICS_PARAM = "${SHARD_WORKER_DIAGNOSTICS_PARAM}"`);
+  });
+
+  // ⚖️ LAW: an unarmed page boots the shard worker at the bare url, and an armed one stamps the
+  // parameter the worker reads back — the ONLY channel the switch has into a Worker realm, which
+  // owns no `localStorage`. The generated worker must read that same parameter and seed
+  // `wasi:cli/environment` from it, which is what makes the guest's `[DEBUG]` sites reachable.
+  it("carries the armed switch into the worker realm on the worker url", () => {
+    const stored = new Map<string, string>();
+    const original = globalThis.localStorage;
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: { getItem: (key: string) => stored.get(key) ?? null, setItem: (key: string, value: string) => void stored.set(key, value), removeItem: (key: string) => void stored.delete(key) },
+    });
+    try {
+      expect(shardWorkerUrl()).toBe(SHARD_WORKER_URL);
+      stored.set(SHARD_RUNTIME_DIAGNOSTICS_KEY, "1");
+      expect(shardWorkerUrl()).toBe(`${SHARD_WORKER_URL}?${SHARD_WORKER_DIAGNOSTICS_PARAM}=1`);
+    } finally {
+      if (original === undefined) Reflect.deleteProperty(globalThis, "localStorage");
+      else Object.defineProperty(globalThis, "localStorage", { configurable: true, value: original });
+    }
+    const pluginPackage = readGeneratedShardWorkerOwnerSource();
+    expect(pluginPackage).toContain('searchParams.get("${SHARD_WORKER_DIAGNOSTICS_PARAM}")');
+    expect(pluginPackage).toContain('_setEnv({ "${SHARD_RUNTIME_DIAGNOSTICS_KEY}": "1" })');
+    expect(pluginPackage.indexOf("await armGuestRuntimeDiagnostics()")).toBeLessThan(pluginPackage.indexOf("const bridge = await import("));
   });
 
   it("an explicit host override outranks every resolved source, in both directions", () => {
@@ -1120,6 +1181,11 @@ describe("shell runtime diagnostics switch", () => {
 //#endregion 🩺️RuntimeDiagnostics
 
 //#region 🔁️ExtensionInvocation
+/** 📦️ What a capability actually answers across the door: BYTES in the capability's own encoding
+ * (`evaluate_invoke_json` emits JSON text), never a JS string — `PluginWasmHandle.invoke` returns the
+ * guest's `respond` OK pack verbatim and the shell re-encodes it once, on the completion. */
+const extensionAnswerBytes = (answer: unknown): Uint8Array => new TextEncoder().encode(JSON.stringify(answer));
+
 describe("extension invocation completion ownership", () => {
   const fixture = extensionInvocationFixture;
   const entry = (handle: Record<string, unknown>) => ({ handle, manifest: {} }) as unknown as LoadedProgramState;
@@ -1149,7 +1215,7 @@ describe("extension invocation completion ownership", () => {
   });
 
   it("refuses a missing completion capability before executing the extension", async () => {
-    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    const invoke = vi.fn(async () => extensionAnswerBytes(fixture.response));
     await expect(call(entry({}), entry({ invoke }))).rejects.toThrow("extension.completion-unavailable");
     expect(invoke).not.toHaveBeenCalled();
   });
@@ -1169,7 +1235,7 @@ describe("extension invocation completion ownership", () => {
   it("propagates a failed completion without retrying it as a second fault completion", async () => {
     const failure = new Error("completion transport refused");
     const complete = vi.fn(async () => { throw failure; });
-    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    const invoke = vi.fn(async () => extensionAnswerBytes(fixture.response));
     await expect(call(entry(completionHandle(complete)), entry({ invoke }))).rejects.toBe(failure);
     expect(invoke).toHaveBeenCalledOnce();
     expect(complete).toHaveBeenCalledOnce();
@@ -1178,19 +1244,60 @@ describe("extension invocation completion ownership", () => {
   it("returns the requesting actor's completion publication to its host owner", async () => {
     const response = { output: fixture.response, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] }, requestedEffects: [{ notify: { message: fixture.completion.notification } }], uiScope: fixture.completion.uiScope, historyPatch: fixture.completion.historyPatch };
     const complete = vi.fn(async () => response);
-    expect(await call(entry(completionHandle(complete)), entry({ invoke: async () => JSON.stringify(fixture.response) }))).toBe(response);
+    expect(await call(entry(completionHandle(complete)), entry({ invoke: async () => extensionAnswerBytes(fixture.response) }))).toBe(response);
     expect(complete).toHaveBeenCalledOnce();
+  });
+
+  // 💥️ The preview status a refused `evaluate` publishes, over the SAME fixture the guest law
+  // `an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_install_clears_it` drives
+  // (`🧊️generation3d/…/✏️editor/🧪️tests/🔬️unit/🦀️.rs`). The host never authors this object — it
+  // renders it — so what this pins is the shape and the both-languages rule the surface depends on.
+  it("pins the localized evaluate-fault the preview status publishes", () => {
+    const fixture = extensionEvaluateFaultFixture;
+    expect(fixture.code).toBe("flow.extension-evaluate-failed");
+    expect(new Set(fixture.phases).size).toBe(fixture.phases.length);
+    for (const row of fixture.answers) {
+      expect(fixture.phases).toContain(row.phase);
+      expect(row.publishesFault).toBe(row.phase === "faulted");
+      expect(row.publishesFault).toBe(row.ok === false && row.faultCode.length > 0);
+    }
+    const languages = Object.keys(fixture.labels);
+    expect(languages).toEqual(["en", "de"]);
+    expect(new Set(Object.values(fixture.labels)).size).toBe(languages.length);
+    for (const text of Object.values(fixture.labels)) expect(text).toContain(fixture.extensionId);
+    expect(fixture.clearedByContributionInstall).toBe(true);
+  });
+
+  // 🔁️ The Rust law over the SAME fixture is `evaluate_invoke_json`'s
+  // `the_evaluate_wire_answers_every_fixture_row` (`🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🦀️.rs`):
+  // it produces the answer bytes, this twin proves the shell classifies and packs exactly those.
+  it.each(extensionInvocationWireFixture.rows)("classifies the $name evaluate answer the way the extension SDK produced it", async (row) => {
+    const { decodePackValue } = await import("@semio-tech/framework-os");
+    const request = JSON.parse(row.requestJson) as Record<string, unknown>;
+    const present = extensionInvocationWireFixture.requestFields.filter((field) => request[field] !== undefined);
+    expect(present.length === extensionInvocationWireFixture.requestFields.length).toBe(row.outcome === "ok");
+    const answer = row.outcome === "ok"
+      ? Object.fromEntries((row.outputKeys ?? []).map((key) => [key, row.outputEmpty ? {} : { value: 1 }]))
+      : undefined;
+    const complete = vi.fn(async () => {});
+    const invoke = vi.fn(async () => { if (answer === undefined) throw new Error(row.fault); return extensionAnswerBytes(answer); });
+    await runInvokeExtensionEffect(entry(completionHandle(complete)), entry({ invoke }), fixture.instanceId, fixture.extensionId, extensionInvocationWireFixture.capability, row.requestJson, BigInt(fixture.requestId));
+    expect(invoke).toHaveBeenCalledExactlyOnceWith(extensionInvocationWireFixture.capability, row.requestJson, { originInstanceId: fixture.instanceId });
+    const [, , outcome] = complete.mock.calls[0] as unknown as [number, bigint, { ok?: Uint8Array; fault?: Uint8Array }];
+    expect("ok" in outcome ? "ok" : "fault").toBe(row.outcome);
+    if (row.outcome === "ok") expect(decodePackValue(outcome.ok!)).toEqual(answer);
+    else expect(decodePackValue(outcome.fault!)).toMatchObject({ code: "extension.invoke-failed", message: row.fault });
   });
 
   it.each(fixture.genericRequests)("dispatches $capability without requiring unrelated domain fields", async ({ capability, request }) => {
     const complete = vi.fn(async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }));
-    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    const invoke = vi.fn(async () => extensionAnswerBytes(fixture.response));
     const requester = entry({ pluginId: "requester", ...completionHandle(complete) });
     const extension = entry({ pluginId: fixture.extensionId, invoke });
     const requestJson = JSON.stringify(request);
     const publish = vi.fn(async () => {});
     await dispatchInvokeExtensionEffect([requester, extension], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability, requestJson }, publish);
-    expect(invoke).toHaveBeenCalledExactlyOnceWith(capability, requestJson);
+    expect(invoke).toHaveBeenCalledExactlyOnceWith(capability, requestJson, { originInstanceId: fixture.instanceId });
     expect(complete).toHaveBeenCalledOnce();
     expect(publish).toHaveBeenCalledExactlyOnceWith(requester, await complete.mock.results[0]!.value);
   });
@@ -1203,7 +1310,7 @@ describe("extension invocation completion ownership", () => {
   // and every flow evaluation stalled (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
   it("resolves the extension actor by plugin id and faults a flow-domain address", async () => {
     const { decodePackValue, decodeFaultFromWire } = await import("@semio-tech/framework-os");
-    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    const invoke = vi.fn(async () => extensionAnswerBytes(fixture.response));
     const address = async (extensionId: string) => {
       const complete = vi.fn(async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }));
       const requester = entry({ pluginId: "requester", ...completionHandle(complete) });
@@ -1227,7 +1334,7 @@ describe("extension invocation completion ownership", () => {
     const refusal = new Error("extension.requester-retired");
     const complete = vi.fn(async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }));
     const requester = entry({ pluginId: "requester", ...completionHandle(complete) });
-    const extension = entry({ pluginId: fixture.extensionId, invoke: async () => JSON.stringify(fixture.response) });
+    const extension = entry({ pluginId: fixture.extensionId, invoke: async () => extensionAnswerBytes(fixture.response) });
     await expect(dispatchInvokeExtensionEffect([requester, extension], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) }, async () => { throw refusal; })).rejects.toBe(refusal);
     expect(complete).toHaveBeenCalledOnce();
   });
@@ -1235,7 +1342,7 @@ describe("extension invocation completion ownership", () => {
   it("decodes a real response without losing the owning method receiver", async () => {
     const { decodePackValue } = await import("@semio-tech/framework-os");
     const complete = vi.fn(async () => {});
-    const handle = { response: fixture.response, invoke: async function () { return JSON.stringify(this.response); } };
+    const handle = { response: fixture.response, invoke: async function () { return extensionAnswerBytes(this.response); } };
     await call(entry(completionHandle(complete)), entry(handle));
     const [instance, req, outcome] = complete.mock.calls[0] as unknown as [number, bigint, { ok: Uint8Array }];
     expect([instance, req]).toEqual([fixture.instanceId, BigInt(fixture.requestId)]);
@@ -1249,7 +1356,7 @@ describe("extension invocation completion ownership", () => {
       events.push("capture");
       return { instanceId, req, assertActive: () => {}, complete };
     });
-    const invoke = vi.fn(async () => { events.push("invoke"); return JSON.stringify(fixture.response); });
+    const invoke = vi.fn(async () => { events.push("invoke"); return extensionAnswerBytes(fixture.response); });
     await call(entry({ captureExtensionCompletion: capture }), entry({ invoke }));
     expect(events).toEqual(["capture", "invoke", "complete"]);
     expect(capture).toHaveBeenCalledExactlyOnceWith(fixture.instanceId, BigInt(fixture.requestId));
@@ -1258,7 +1365,7 @@ describe("extension invocation completion ownership", () => {
 
   it("does not evaluate when initial activation capture is refused", async () => {
     const failure = new Error("actor-activation.revoked");
-    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    const invoke = vi.fn(async () => extensionAnswerBytes(fixture.response));
     const complete = vi.fn(async () => ({ output: null }));
     await expect(call(entry({ captureExtensionCompletion: () => { throw failure; } }), entry({ invoke }))).rejects.toBe(failure);
     expect(invoke).not.toHaveBeenCalled();
@@ -1267,7 +1374,7 @@ describe("extension invocation completion ownership", () => {
 
   it.each(fixture.completionFailures)("refuses $kind before extension execution", async ({ kind, code }) => {
     const complete = vi.fn(async () => ({ output: null }));
-    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    const invoke = vi.fn(async () => extensionAnswerBytes(fixture.response));
     const capture = (instanceId: number, req: bigint) => kind === "missing-lease" ? null : {
       instanceId: kind === "foreign-instance" ? instanceId + 1 : instanceId,
       req: kind === "foreign-request" ? req + 1n : req,
@@ -1281,7 +1388,7 @@ describe("extension invocation completion ownership", () => {
 
   it("does not deliver a result to an activation replaced during extension evaluation", async () => {
     const entered = Promise.withResolvers<void>();
-    const release = Promise.withResolvers<string>();
+    const release = Promise.withResolvers<Uint8Array>();
     let generation = 1;
     const complete = vi.fn(async () => ({ output: null }));
     const capture = (instanceId: number, req: bigint) => {
@@ -1292,7 +1399,7 @@ describe("extension invocation completion ownership", () => {
     const observed = expect(pending).rejects.toThrow("actor-activation.revoked");
     await entered.promise;
     generation += 1;
-    release.resolve(JSON.stringify(fixture.response));
+    release.resolve(extensionAnswerBytes(fixture.response));
     await observed;
     expect(complete).not.toHaveBeenCalled();
   });
@@ -1308,7 +1415,7 @@ describe("extension invocation completion ownership", () => {
       return { instanceId, req, assertActive: () => { if (captured !== generation) throw new Error("actor-activation.revoked"); }, complete };
     });
     const requester = entry({ pluginId: "requester", captureExtensionCompletion: capture });
-    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    const invoke = vi.fn(async () => extensionAnswerBytes(fixture.response));
     const held = serializePerActor(`requester:${fixture.instanceId}`, async () => { entered.resolve(); await release.promise; });
     await entered.promise;
     const publish = vi.fn(async () => {});
@@ -1610,7 +1717,7 @@ import {
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
-import { parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverOverlayArmedUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, retainWorldBrushPreviewJsonV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverOverlayArmedUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, retainWorldBrushPreviewJsonV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
@@ -1658,6 +1765,17 @@ import {
   world3dMarkerInteractionTarget,
   nodeGraphViewportActionArgs,
   nodeGraphPickChannel,
+  dagContentBounds,
+  dagContentCoverage,
+  dagEllipsizeByMeasure,
+  dagFitCamera,
+  dagStartupCamera,
+  nodeGraphContentSignature,
+  paintDagLabelOverlays,
+  DAG_CONTENT_FIT_PADDING_PX,
+  DAG_CONTENT_FRAMED_MIN_COVERAGE,
+  DAG_CONTENT_REFIT_MAX_COVERAGE,
+  DAG_LABEL_ELLIPSIS,
   parseCatalogueAppDragPayload,
   parseDagSliderOverlays,
   GraphSliderOverlays,
@@ -1688,6 +1806,7 @@ import {
   worldSuggestionMenuOwnsWindow,
   resolveWorldMergeMode,
   resolveWorldContextMenuTarget,
+  world3dContextMenuSurfaceV1,
   shouldReattachWorldViewportCamera,
   worldCameraPoseApproxEqual,
   buildWorldCameraDispatchArgs,
@@ -1751,6 +1870,7 @@ import {
   mergeRecordPreservingIdentity,
   parseSpaceShellPath,
   parseShellRoute,
+  pluginAvailabilityRouteV1,
   pluginShouldReceiveContributions,
   pluginShouldEstablishSession,
   shellActorId,
@@ -1884,7 +2004,7 @@ import {
   peerIdsHovering,
   SyncAttachCard,
 } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
-import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, browserActorDispatchUiScopeV1, browserActorWindowConfigDispatchUiScopeV1, captureTutorialUiSnapshot, clipboardWriteFragmentFromEffect, pasteActionWithRetainedFragment, pasteArgsFragment, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, browserActorDispatchUiScopeV1, browserActorWindowConfigDispatchUiScopeV1, captureTutorialUiSnapshot, clipboardWriteFragmentFromEffect, createUiRefreshCoalescerV1, hostEffectRefreshScopeV1, mergeUiDirtyScopeV1, pasteActionWithRetainedFragment, pasteArgsFragment, programArmedToolRevealV1, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌️jsdom polyfills
@@ -1913,6 +2033,25 @@ describe("plugin session ownership", () => {
     expect(pluginShouldReceiveContributions("demonstrator", "demonstrator", false)).toBe(true);
     expect(pluginShouldReceiveContributions("cad", "demonstrator", false)).toBe(false);
     expect(pluginShouldReceiveContributions("cad", "demonstrator", true)).toBe(true);
+  });
+
+  it("never hot-swaps a live plugin for a replayed availability snapshot", () => {
+    for (const row of pluginAvailabilityRouteFixture.rows) {
+      expect(pluginAvailabilityRouteV1(row.alreadyLoaded, row.loadedRebuiltAt ?? undefined, row.eventRebuiltAt ?? undefined), row.id).toBe(row.route);
+    }
+    const loaded = new Map<string, number | undefined>();
+    const tally = { install: 0, "hot-swap": 0, drop: 0 };
+    for (let connect = 0; connect < pluginAvailabilityRouteFixture.replay.connects; connect += 1) {
+      for (const plugin of pluginAvailabilityRouteFixture.replay.snapshot) {
+        const route = pluginAvailabilityRouteV1(loaded.has(plugin.pluginId), loaded.get(plugin.pluginId), plugin.rebuiltAt);
+        tally[route] += 1;
+        if (route !== "drop") loaded.set(plugin.pluginId, plugin.rebuiltAt);
+      }
+    }
+    expect(tally.install).toBe(pluginAvailabilityRouteFixture.replay.expected.installs);
+    expect(tally["hot-swap"]).toBe(pluginAvailabilityRouteFixture.replay.expected.hotSwaps);
+    expect(tally.drop).toBe(pluginAvailabilityRouteFixture.replay.expected.drops);
+    console.log(`[DEBUG] plugin availability route: rows=${pluginAvailabilityRouteFixture.rows.length} connects=${pluginAvailabilityRouteFixture.replay.connects} installs=${tally.install} hot-swaps=${tally["hot-swap"]} drops=${tally.drop}`);
   });
 });
 //#endregion 🔌️PluginSessionOwnership
@@ -2267,6 +2406,219 @@ describe("coalescing action dispatcher", () => {
     expect(calls).toEqual(["a", "b"]);
     send("b");
     expect(calls).toEqual(["a", "b"]);
+  });
+
+  // 🏁️ The hover twin of the fill tick's "a discarded dispatch promise gates nothing" law. `World3dHost`'s
+  // `dispatch` returns void — it drops the `onAction` promise that settles on the guest's
+  // `OperationCompleted` frame — so a hover dispatcher wired to it coalesced NOTHING: wave B33 measured one
+  // 70-move brush hover storm enqueuing 72 `interactionHover` + 85 `suggestionsTick` guest turns with 11/10
+  // of them settled, after which the next user command (`addTargetVolume`) waited behind the whole backlog
+  // and lost its 30 s budget (`📓️2026-09-12-wave-B33-full-run-vs-fresh-lane.md` §3). Same storm, same slow
+  // guest, only the return value differs — so the shape cannot silently regress.
+  it("gates on exactly what the dispatch returns — a swallowed round trip coalesces nothing", async () => {
+    const storm = ["a", "b", "c", "d", "e"] as const;
+    const drive = async (shape: (value: string, sent: readonly string[]) => unknown) => {
+      const sent: string[] = [];
+      const send = createCoalescingActionDispatcher<string>((value) => shape(value, (sent.push(value), sent)));
+      for (const value of storm) {
+        send(value);
+        await Promise.resolve();
+        await Promise.resolve();
+      }
+      return sent;
+    };
+
+    const pending = new Promise<void>(() => {});
+    const swallowed = await drive(() => {
+      void pending;
+    });
+    expect(swallowed, "a hover dispatcher whose callback drops the round trip sends one turn per pointer move").toEqual([...storm]);
+
+    const awaited = await drive(() => pending);
+    expect(awaited, "returning the round trip is what keeps exactly ONE hover outstanding while the guest is busy").toEqual(["a"]);
+  });
+
+  // 🩹️ A refused round trip must free the gate rather than wedge the lane closed — and must not surface as an
+  // unhandled rejection now that the caller hands over a real awaitable (wave B33 §4).
+  it("keeps flushing after a rejected round trip", async () => {
+    const calls: string[] = [];
+    const send = createCoalescingActionDispatcher<string>((value) => {
+      calls.push(value);
+      return calls.length === 1 ? Promise.reject(new Error("[DEBUG] refused hover")) : Promise.resolve();
+    });
+    send("a");
+    expect(calls).toEqual(["a"]);
+    await Promise.resolve();
+    await Promise.resolve();
+    send("b");
+    await Promise.resolve();
+    expect(calls, "a refusal clears the in-flight flag, so the next hover still reaches the guest").toEqual(["a", "b"]);
+  });
+});
+
+describe("ui refresh coalescing lane", () => {
+  type LaneRequest = { readonly scope: UiDirtyScope; readonly utilities: Readonly<Record<string, string>>; readonly replaceBodies: boolean };
+  const mergeLane = (owed: LaneRequest, next: LaneRequest): LaneRequest => ({ scope: mergeUiDirtyScopeV1(owed.scope, next.scope), utilities: next.utilities, replaceBodies: owed.replaceBodies || next.replaceBodies });
+  /** 🧪️ One lane plus a hand-held pass: `settle()` finishes the pass the lane is currently running, so a
+   * law can hold a pass open for exactly as long as it needs and read what the FOLLOW-UP carried. */
+  const lane = () => {
+    const taken: LaneRequest[] = [];
+    let finish: { resolve: () => void; reject: (error: unknown) => void } | null = null;
+    const coalescer = createUiRefreshCoalescerV1<LaneRequest>((request) => {
+      taken.push(request);
+      return new Promise<void>((resolve, reject) => {
+        finish = { resolve, reject };
+      });
+    }, mergeLane);
+    const settle = async (error?: unknown) => {
+      const pass = finish;
+      finish = null;
+      if (error === undefined) pass?.resolve();
+      else pass?.reject(error);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    };
+    return { coalescer, taken, settle };
+  };
+  const partial = (windowBodies: readonly string[], flags: Partial<UiDirtyScope & { readonly utilities: boolean }> = {}): UiDirtyScope => ({ kind: "partial", windowBodies: [...windowBodies], ...flags }) as UiDirtyScope;
+
+  it("turns every refresh asked for during an in-flight pass into exactly ONE follow-up carrying their union", async () => {
+    // 🤝️ Wave B37. The predecessor read its owed slot AFTER `await pass` with no `catch` between, and
+    // joiners awaited the RUNNING pass rather than the one that covers them — so "my scope was re-taken"
+    // was never true for a joiner, and one throw dropped the follow-up entirely.
+    const { coalescer, taken, settle } = lane();
+    const first = coalescer.request({ scope: partial(["world"]), utilities: {}, replaceBodies: false });
+    expect(taken.map((request) => request.scope), "the starter's own request is what the first pass runs").toEqual([partial(["world"])]);
+    let firstSettled = false;
+    void first.then(() => {
+      firstSettled = true;
+    });
+
+    const second = coalescer.request({ scope: partial(["panel"], { utilities: true }), utilities: { "world-1": "brush" }, replaceBodies: true });
+    let secondSettled = false;
+    void second.then(() => {
+      secondSettled = true;
+    });
+    void coalescer.request({ scope: partial(["measures-only"], { measures: true }), utilities: { "world-1": "brush" }, replaceBodies: false });
+    expect(taken, "neither request may start a second pass while one is crossing into the guest").toHaveLength(1);
+
+    await settle();
+    expect(firstSettled, "the starter's promise settles on the pass that covered it, not on the whole drain").toBe(true);
+    expect(secondSettled, "a joiner is only covered by the FOLLOW-UP, so it may not settle on the pass that was already running").toBe(false);
+    expect(taken, "two requests during one pass owe exactly one follow-up").toHaveLength(2);
+    expect(taken[1]!.scope, "the follow-up carries the union of everything asked for while the pass ran — a dropped field is a section that never repaints").toEqual({
+      kind: "partial",
+      windowBodies: ["panel", "measures-only"],
+      panelBodies: [],
+      utilities: true,
+      tools: false,
+      engagements: false,
+      measures: true,
+      labels: false,
+    });
+    expect(taken[1]!.replaceBodies, "a replace-bodies request may not be downgraded by merging").toBe(true);
+
+    await settle();
+    expect(secondSettled).toBe(true);
+    expect(coalescer.passes(), "three requests, two passes — never one per request").toBe(2);
+    expect(coalescer.busy()).toBe(false);
+    console.warn("[DEBUG] b37 lane union", JSON.stringify({ passes: coalescer.passes(), scopes: taken.map((request) => request.scope) }));
+  });
+
+  it("carries a utility armed by a host effect while a pass was in flight into the very next pass", async () => {
+    // 🧰️ The measured defect: `engagementSubmit`'s typed `brush` verb emits `Effect::SetActiveUtility`,
+    // `applyHostEffects` arms the host's utility map and then asks for the refresh that publishes it. With
+    // a pass already crossing into the guest, that request is a JOIN — and the follow-up it is owed is the
+    // only thing that can ever push the armed map. `runUiRefreshPass` re-derives
+    // `activeUtilityByWindowId` from the live ref, so the union pass carries `brush` as long as it runs.
+    const { coalescer, taken, settle } = lane();
+    const armed: Record<string, string> = {};
+    void coalescer.request({ scope: { kind: "full" }, utilities: { ...armed }, replaceBodies: false });
+    expect(taken[0]!.utilities, "the pass that was already running predates the arm").toEqual({});
+
+    armed["puzzle3d-main-perspective"] = "brush";
+    void coalescer.request({ scope: { kind: "full" }, utilities: { ...armed }, replaceBodies: false });
+    await settle();
+    expect(taken, "the effect's own refresh is owed a pass — losing it leaves the armed pane publishing `select`").toHaveLength(2);
+    expect(taken[1]!.utilities).toEqual({ "puzzle3d-main-perspective": "brush" });
+    await settle();
+    expect(coalescer.passes()).toBe(2);
+    console.warn("[DEBUG] b37 lane armed utility", JSON.stringify({ passes: coalescer.passes(), utilities: taken.map((request) => request.utilities) }));
+  });
+
+  it("answers a 50-request hover storm during one in-flight pass with exactly one follow-up", async () => {
+    const { coalescer, taken, settle } = lane();
+    void coalescer.request({ scope: partial(["world"]), utilities: {}, replaceBodies: false });
+    for (let index = 0; index < 50; index += 1) void coalescer.request({ scope: partial(["world"]), utilities: {}, replaceBodies: false });
+    expect(taken, "a storm behind a running pass costs nothing while it runs").toHaveLength(1);
+    await settle();
+    expect(taken, "50 requests during one pass owe ONE follow-up, never 50").toHaveLength(2);
+    await settle();
+    expect(coalescer.passes()).toBe(2);
+    expect(coalescer.owedScope()).toBeNull();
+    console.warn("[DEBUG] b37 lane hover storm", JSON.stringify({ requests: 51, passes: coalescer.passes() }));
+  });
+
+  it("runs the owed follow-up after a pass that REJECTED, and rejects only the requests that pass covered", async () => {
+    const { coalescer, taken, settle } = lane();
+    const starter = coalescer.request({ scope: partial(["world"]), utilities: {}, replaceBodies: false });
+    const starterOutcome = starter.then(() => "resolved" as const).catch((error: unknown) => `rejected:${String(error)}`);
+    const joiner = coalescer.request({ scope: partial(["panel"]), utilities: {}, replaceBodies: false });
+    const joinerOutcome = joiner.then(() => "resolved" as const).catch((error: unknown) => `rejected:${String(error)}`);
+
+    await settle(new Error("[DEBUG] guest refused the refresh"));
+    // 🧯️ Asserted BEFORE awaiting either outcome: a lane that drops its owed work on a throw leaves both
+    // promises pending forever, and this is what makes that a failed assertion instead of a hung suite.
+    expect(taken, "a failed pass may not take the lane down with it").toHaveLength(2);
+    expect(taken[1]!.scope).toEqual(partial(["panel"]));
+    expect(await starterOutcome, "the boot refresh turns its own rejection into the session fault card — it must still arrive").toBe("rejected:Error: [DEBUG] guest refused the refresh");
+    await settle();
+    expect(await joinerOutcome).toBe("resolved");
+    console.warn("[DEBUG] b37 lane after rejection", JSON.stringify({ passes: coalescer.passes(), scopes: taken.map((request) => request.scope) }));
+  });
+
+  it("serves a request made from INSIDE a pass with the next pass instead of wedging the lane", async () => {
+    // 🔁️ `runUiRefreshPass`'s own `requestedEffects` (a `flowEvalTick`, a `SetActiveUtility`) re-enter
+    // this lane from inside the pass. A re-entrant caller that joined the RUNNING pass was waiting on the
+    // promise its own pass resolves: the in-flight marker stayed pinned and nothing repainted again.
+    const taken: UiDirtyScope[] = [];
+    const finishers: Array<() => void> = [];
+    let reentrant: Promise<void> | null = null;
+    const coalescer = createUiRefreshCoalescerV1<LaneRequest>((request) => {
+      taken.push(request.scope);
+      return new Promise<void>((resolve) => {
+        finishers.push(resolve);
+        if (taken.length === 1) reentrant = coalescer.request({ scope: partial(["world"]), utilities: {}, replaceBodies: false });
+      });
+    }, mergeLane);
+    void coalescer.request({ scope: { kind: "full" }, utilities: {}, replaceBodies: false });
+    expect(taken).toHaveLength(1);
+    let reentrantSettled = false;
+    void reentrant!.then(() => {
+      reentrantSettled = true;
+    });
+
+    finishers[0]!();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(taken, "the pass's own request is owed the next pass").toEqual([{ kind: "full" }, partial(["world"])]);
+    expect(reentrantSettled, "a re-entrant request is never settled by the pass that made it").toBe(false);
+    finishers[1]!();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(reentrantSettled).toBe(true);
+    expect(coalescer.busy()).toBe(false);
+    console.warn("[DEBUG] b37 lane reentrant", JSON.stringify({ passes: coalescer.passes(), scopes: taken }));
+  });
+
+  it("asks for nothing at all on a none scope", async () => {
+    const { coalescer, taken } = lane();
+    await coalescer.request({ scope: { kind: "none" }, utilities: {}, replaceBodies: false });
+    expect(taken).toHaveLength(0);
+    expect(coalescer.passes()).toBe(0);
+    expect(coalescer.busy()).toBe(false);
   });
 });
 
@@ -3365,7 +3717,7 @@ describe("framework plugin runtime", () => {
     const handle = await adaptPluginHandle("mock-action", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
     const instanceId = await handle.createApp("main");
     const invocation = { address: { pluginId: "mock-action", appId: "main", modeId: "edit", windowKindId: "main", windowInstanceId: "main", actionId: "addShot" }, arguments: { format: "png" } };
-    const response = await handle.handleAction(instanceId, JSON.stringify(invocation), {});
+    const response = await handle.handleAction(instanceId, JSON.stringify(invocation), { locale: "en", terminology: "native" });
     expect(response.output).toEqual({ echo: invocation });
     expect(response.requestedEffects).toEqual([]);
     expect(response.uiScope).toEqual({ kind: "partial", windowBodies: ["graph"], utilities: false });
@@ -5656,6 +6008,15 @@ describe("framework renderer hosts", () => {
     expect(resolveWorldContextMenuTarget({}, {})).toBeNull();
   });
 
+  it("carries the right-clicked world entity as the request's own hit, so no target-recording dispatch precedes the menu", () => {
+    expect(world3dContextMenuSurfaceV1({ kind: "vortex", id: "seed-left-001:v0" }, { ids: ["seed-left-001"], componentIds: [] })).toEqual({
+      hits: [{ domain: "vortex", id: "seed-left-001:v0" }],
+      selection: [{ domain: "object", ids: ["seed-left-001"] }],
+    });
+    expect(world3dContextMenuSurfaceV1(null, { ids: [], componentIds: [7] })).toEqual({ hits: [], selection: [{ domain: "feature", ids: ["7"] }] });
+    expect(world3dContextMenuSurfaceV1(null, { ids: [], componentIds: [] })).toEqual({ hits: [], selection: [] });
+  });
+
   it("titles context menus from the specific hit before falling back to the surface", () => {
     const request = (domain?: string, kind = "world3d") => ({
       menu: { id: kind, args: null },
@@ -7591,6 +7952,31 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(transformRotate?.args.angle).toBeCloseTo(Math.PI / 2, 5);
   });
 
+  it("a gumball drag whose pose never moved commits nothing — no fabricated axis step", async () => {
+    const { readFileSync, existsSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    // 📄️ `import.meta.url` is not a file URL under this suite's transform, so the host source is located by
+    // walking up from the runner's cwd to the repo root that actually holds it — and the existence check is
+    // an assertion, so a moved file fails the law instead of silently skipping it.
+    const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx";
+    let root = process.cwd();
+    for (let hop = 0; hop < 12 && !existsSync(resolve(root, relative)); hop += 1) root = resolve(root, "..");
+    expect(existsSync(resolve(root, relative))).toBe(true);
+    const source = readFileSync(resolve(root, relative), "utf8");
+    const start = source.indexOf("const dispatchGumballPoseDelta");
+    expect(start).toBeGreaterThan(0);
+    const branch = source.slice(start, source.indexOf("[dispatch, selection.transformMode, selectionArgs]", start));
+    const skipped = branch.indexOf('"[DEBUG] gumball pose delta skipped"');
+    expect(skipped).toBeGreaterThan(0);
+    const zeroDelta = branch.slice(skipped);
+    // 🧯️ Wave B31: the zero-delta branch used to mint `translateSelection` with a hardcoded 0.5 step along
+    // the handle's axis — a document edit the user never made, minted precisely when the gesture said
+    // nothing, and a green `gumball-scene-delta` that measured the fabrication rather than the drag.
+    expect(zeroDelta).not.toMatch(/dispatch\(\s*["']translateSelection["']/);
+    expect(zeroDelta).not.toMatch(/synthesized/);
+    expect(gumballTransformDeltaBetweenPoses("transform", { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { mode: "mesh", ids: ["obj-1"] }, "moveY")).toBeNull();
+  });
+
   it("gumballLivePreviewDeltaBetweenPoses applies local start→current deltas for instant mid-drag preview", () => {
     expect(gumballLivePreviewDeltaBetweenPoses("move", { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [4, 2, 5], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] })).toEqual({ kind: "translate", dx: 3, dy: 0, dz: 2 });
     const rotate = gumballLivePreviewDeltaBetweenPoses("rotate", { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [0, 0, 0], quaternion: [0, 0.7071067811865476, 0, 0.7071067811865476], scale: [1, 1, 1] });
@@ -7606,6 +7992,14 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(world3dRelocateDragTargetV1("obj-1", ["obj-1", "obj-2"])).toBe("obj-1");
     expect(world3dRelocateDragTargetV1("obj-3", ["obj-1", "obj-2"])).toBeNull();
     expect(world3dRelocateDragTargetV1(null, [])).toBeNull();
+    // 🎯️ Wave B34: an empty-ground press with a live selection is the gesture's BASE POINT, not a miss —
+    // `world3dRelocateDispatchArgsV1` below computes `origin + (to - from)`, a travel delta, so the base
+    // point never had to be on the object. Measured on `:6013` (wasm #53): the utility was armed, the
+    // selection was `["seed-left-001"]`, the ground point resolved — and the press was refused for being
+    // 265 px away from the one object on screen, which is why `relocate-pose-delta` sat red at its 30 s
+    // budget across four waves (`📓️2026-09-12-wave-B34-interaction-scope.md` §2).
+    expect(world3dRelocateDragTargetV1(null, ["seed-left-001"])).toBe("seed-left-001");
+    expect(world3dRelocateDragTargetV1(undefined, ["obj-1", "obj-2"])).toBe("obj-1");
     const selected = world3dGumballSelectionArgsV1({ ids: ["obj-1"], selectionMode: "object" });
     expect(world3dRelocateDragTargetV1("obj-1", selected.ids)).toBe("obj-1");
     expect(world3dRelocateDispatchArgsV1("obj-1", [1, 2, 3], [10, 10, 0], [14, 7, 0])).toEqual({ objectId: "obj-1", position: [5, -1, 3] });
@@ -7613,6 +8007,49 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(world3dRelocateDispatchArgsV1("obj-2", [0, 0, 0], [0, 0, 0], [1.4, -2.6, 0], { gridSnapEnabled: false, gridFactor: 1 })).toEqual({ objectId: "obj-2", position: [1.4, -2.6, 0] });
     expect(world3dRelocateDispatchArgsV1("obj-1", [1, 2, 3], [10, 10, 0], [10, 10, 0])).toBeNull();
     expect(world3dRelocateDispatchArgsV1("obj-1", [1, 2, 3], [10, 10, 0], [10.0000001, 10, 0])).toBeNull();
+  });
+
+  // 🏁️ Wave B33: EVERY hover and background-tick lane of the world host hands its gate the awaitable twin
+  // (`dispatchSettled`), because `dispatch` drops the `onAction` promise the gate measures. Measured on wasm
+  // #51: one 70-move brush hover storm enqueued 72 `interactionHover` + 85 `suggestionsTick` guest turns with
+  // 11/10 settled, and the `addTargetVolume` behind them lost its 30 s budget while the queue drained at
+  // ~3.5 turns/s (`📓️2026-09-12-wave-B33-full-run-vs-fresh-lane.md` §3). The behavioural halves are the
+  // "coalescing action dispatcher" and "in-flight skipping interval" laws; this is the wiring half, so a
+  // future edit cannot quietly hand a gate the void `dispatch` again.
+  it("every self-gating world lane dispatches through the awaitable twin", async () => {
+    const { readFileSync, existsSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx";
+    let root = process.cwd();
+    for (let hop = 0; hop < 12 && !existsSync(resolve(root, relative)); hop += 1) root = resolve(root, "..");
+    expect(existsSync(resolve(root, relative))).toBe(true);
+    const source = readFileSync(resolve(root, relative), "utf8");
+    const twin = source.indexOf("const dispatchSettled = useCallback(");
+    expect(twin, "[DEBUG] the awaitable twin of dispatch is gone").toBeGreaterThan(0);
+    const twinBody = source.slice(twin, twin + 500);
+    expect(twinBody, "[DEBUG] the twin must return onAction's own promise — that is the settle the gates measure").toContain("Promise.resolve(");
+    expect(twinBody).toContain("onAction({");
+    for (const site of [
+      'return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId, interactionGranularity, target));',
+      'return dispatchSettled("interactionHover", args);',
+      'return dispatchSettled("suggestionsTick");',
+      'return dispatchSettled("fillBuildTick");',
+    ]) {
+      expect(source.includes(site), `[DEBUG] a gated lane must read: ${site}`).toBe(true);
+    }
+    for (const swallowed of ['void dispatch("suggestionsTick")', 'void dispatch("fillBuildTick")', 'return dispatch("suggestionsTick")', 'return dispatch("fillBuildTick")', 'dispatch("interactionHover"']) {
+      expect(source.includes(swallowed), `[DEBUG] ${swallowed} hands the in-flight gate a discarded promise — use dispatchSettled`).toBe(false);
+    }
+    // 🕰️ A per-gesture tick may only be REQUESTED on the single-flight lane, never dispatched straight into
+    // the serialized guest queue — and the request must carry a distinct value, or the coalescer dedupes
+    // every later gesture onto the first tick and the preview stops updating.
+    expect(source).toContain("const sendSuggestionsTick = useMemo(() => createCoalescingActionDispatcher<number>(() => dispatchSettled(\"suggestionsTick\")), [dispatchSettled]);");
+    const request = source.indexOf("const requestSuggestionsTick = useCallback(");
+    expect(request).toBeGreaterThan(0);
+    const requestBody = source.slice(request, request + 240);
+    expect(requestBody).toContain("suggestionsTickSeqRef.current += 1;");
+    expect(requestBody).toContain("sendSuggestionsTick(suggestionsTickSeqRef.current);");
+    for (const site of ["if (brushMode) requestSuggestionsTick();"]) expect(source.includes(site), `[DEBUG] a per-gesture tick must read: ${site}`).toBe(true);
   });
 
   it("Volume-Brush Alt+click reads the ground through the host, not an occludable canvas plane", () => {
@@ -7899,6 +8336,20 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     const armedByProgram = reconcileToolTabSelection(idle, "fill", null);
     expect(armedByProgram.effect).toEqual({ kind: "select", toolId: "fill" });
     expect(reconcileToolTabSelection(armedByProgram.next, null, "fill").effect).toEqual({ kind: "select", toolId: null });
+  });
+
+  // 🛠️ Wave B29 §14 `engagement-fill-verb`: typing `fill 3` answers `Effect::SetActiveTool { fill }`, and
+  // the reconciliation above is skipped wholesale while the Tool category is not the active root — so the
+  // tool went live with NO `tool.fill` leaf mounted anywhere, its options unreachable and nothing on
+  // screen saying it had armed. A program-driven arming reveals its own leaf; a user who armed a tool and
+  // then browsed the Command palette is left alone.
+  it("a tool the program arms reveals its own leaf tab, and a tool the user browsed away from does not", () => {
+    expect(programArmedToolRevealV1(null, "fill", false)).toBe(true);
+    expect(programArmedToolRevealV1(null, "fill", true)).toBe(false);
+    expect(programArmedToolRevealV1("fill", "fill", false)).toBe(false);
+    expect(programArmedToolRevealV1("fill", null, false)).toBe(false);
+    expect(programArmedToolRevealV1("fill", "brush", false)).toBe(true);
+    expect(programArmedToolRevealV1(null, null, false)).toBe(false);
   });
 
   it("reconcileToolTabSelection self-heals a refused activation instead of looping", () => {
@@ -8214,6 +8665,54 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     console.warn("[DEBUG] world surface identity", JSON.stringify({ identities, published: worldSurfaceSelectionDomV1(painted, interaction), guestPublished }));
   });
 
+  it("the leftover world overlay is per window INSTANCE: arming one pane leaves its sibling's record untouched", async () => {
+    const { default: identity } = await import("../../🧱️elements/🌐️World3dHost/🧫️fixtures/🪪️world-surface-identity.json");
+    const { surfaceHostIdentityV1 } = await import("../../🧱️elements/🗣️Interpreter/🟦️.tsx");
+    const world = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const [perspective, top] = identity.panes.map((pane) => pane.window);
+    const surfaces = identity.panes.map((pane) => surfaceHostIdentityV1(pane.documentSurface, pane.recordKey, pane.recordId).surfaceId);
+    expect(new Set(surfaces).size, "two panes of one document bind two records").toBe(2);
+
+    const idle = { ids: [] as readonly string[], hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "select", activeToolId: null };
+    world.publishLeftoverWorldSelectionV1(idle, { kind: "allWindows" });
+    world.publishLeftoverWorldSelectionV1({ ...idle, activeUtility: "brush", hoveredId: "seed-left-001:v0", hoveredDomain: "vortex", brushPreviewJson: '{"targetVortexFullId":"seed-left-001:v0"}' }, { kind: "window", windowId: perspective });
+
+    const paneRecord = (windowId: string) => world.worldSurfaceSelectionDomV1({ method: "rectangle", ids: [] }, mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, world.leftoverWorldWindowOverlayV1(windowId)));
+    expect(paneRecord(perspective).activeUtility, "the armed pane's own record").toBe("brush");
+    expect(paneRecord(top).activeUtility, "its sibling must NOT read the arm back — one shared overlay is what made both panes publish one value").toBe("select");
+    expect(paneRecord(perspective)).not.toEqual(paneRecord(top));
+    expect(world.leftoverWorldWindowOverlayV1(top)?.brushPreviewJson ?? null, "nor the armed pane's brush preview").toBeNull();
+    expect(world.leftoverWorldArmedWindowOverlayV1()?.activeUtility, "the host's brush-preview lane still finds the one armed pane").toBe("brush");
+
+    world.publishLeftoverWorldSelectionV1({ ...idle, ids: ["seed-left-001"], gumballActive: true, gumballAnchorId: "seed-left-001" }, { kind: "document" });
+    expect(paneRecord(perspective).activeUtility, "a windowless leftover carries the document selection, never another pane's utility").toBe("brush");
+    expect(paneRecord(perspective).selectedIds, "while the document's selection reaches every pane").toEqual([]);
+    expect(world.leftoverWorldWindowOverlayV1(top)?.ids).toEqual(["seed-left-001"]);
+    expect(world.leftoverWorldSelectionOverlayV1()?.ids, "the document-scoped readers (Outliner/Inspection) see it too").toEqual(["seed-left-001"]);
+
+    world.publishLeftoverWorldSelectionV1({ ...idle, activeUtility: "fill", activeToolId: "fill" }, { kind: "allWindows" });
+    expect(paneRecord(perspective).activeUtility, "a mode-level tool is the ONE authority that speaks for every pane").toBe("fill");
+    expect(paneRecord(top).activeUtility).toBe("fill");
+    console.warn("[DEBUG] leftover per-instance overlay", JSON.stringify({ surfaces, perspective: paneRecord(perspective).activeUtility, top: paneRecord(top).activeUtility }));
+    world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
+    expect(world.leftoverWorldWindowOverlayV1(perspective)).toBeNull();
+  });
+
+  it("one arm authority publishes the armed pane's own overlay, and every leftover publication names its scope", async () => {
+    const { default: shellSource } = await import("../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw");
+    const authority = shellSource.slice(shellSource.indexOf("const setActiveUtilityForWindow = useCallback("));
+    const body = authority.slice(0, authority.indexOf("}, []);"));
+    expect(body, "the ONE place a window's arm changes must publish that pane's leftover overlay — a `setActiveUtility` EFFECT (an engagement verb's brush) otherwise armed the host map while the pane's stale `select` overlay kept masking the guest's own armed body").toContain("publishLeftoverWorldSelectionV1(");
+    expect(body).toContain('{ kind: "window", windowId }');
+    expect(shellSource, "the effect route must share that authority, never mirror the arm on its own").toContain("setActiveUtilityForWindow(windowId, utilityId || null)");
+    const publications = [...shellSource.matchAll(/publishLeftoverWorldSelectionV1\(/g)];
+    expect(publications.length, "every publication site is accounted for").toBeGreaterThanOrEqual(3);
+    for (const match of publications) {
+      expect(shellSource.slice(match.index!, match.index! + 700), `the publication at ${match.index} must name its scope`).toMatch(/\{ kind: "(window|document|allWindows)"/);
+    }
+    console.warn("[DEBUG] leftover publication authority", JSON.stringify({ publications: publications.length }));
+  });
+
   it("leftover fill tool overlays guest select so fillBuildTick still arms", () => {
     const leftover = { ids: [] as const, hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "select", activeToolId: "fill" };
     expect(leftoverOverlayArmedUtilityV1(leftover)).toBe("fill");
@@ -8335,6 +8834,54 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(typedOperationCompletionRefreshV1({ uiScope: { kind: "none" }, historyPatch: undefined, requestedEffects: ["requestSync"] })).toEqual({ kind: "none" });
   });
 
+  it("makes an effect that rewrites a guest render input earn its own pass, and leaves host chrome paying nothing", () => {
+    // 🧰️ Wave B37, the measured defect. `engagementSubmit`'s typed `brush` verb dirties NOTHING in the
+    // guest — it arms `scene.active_utility`, whose only carrier to the next render is the host's own
+    // utility map — so the completion declares `none`, `typedOperationCompletionRefreshV1` forwards that
+    // `none` (correctly), and `refreshUi({kind:"none"})` asks for nothing at all. Live console on :6013,
+    // wasm #53: `engagementSubmit … effects:1` → the host armed `puzzle3d-main-perspective → brush` →
+    // the next `refresh-ui` crossing was 30 s later on an unrelated keystroke, with BOTH world panes
+    // publishing `activeUtility=select` for the whole interval (`engagement-brush-verb FAIL
+    // activeUtility=select waitedMs=30347`).
+    const bodyKeys = ["puzzle.3d.play.viewport"] as const;
+    const declared = typedOperationCompletionRefreshV1({ uiScope: { kind: "none" }, historyPatch: undefined, requestedEffects: [{ setActiveUtility: { windowId: "puzzle3d-main-perspective", utilityId: "brush" } }] });
+    expect(declared, "the completion's own scope is still what the GUEST dirtied").toEqual({ kind: "none" });
+    const earned = hostEffectRefreshScopeV1([{ setActiveUtility: { windowId: "puzzle3d-main-perspective", utilityId: "brush" } }], declared!, bodyKeys);
+    expect(earned, "arming a utility is a host-owned render input — the pass that applies it owes the render that publishes it").toEqual({
+      kind: "partial",
+      windowBodies: ["puzzle.3d.play.viewport"],
+      panelBodies: [],
+      utilities: true,
+      tools: true,
+      engagements: false,
+      measures: true,
+      labels: false,
+    });
+    expect(hostEffectRefreshScopeV1([{ setActiveTool: { toolId: "fill" } }], { kind: "none" }, bodyKeys), "a programmatic tool switch is the same shape as a utility arm").toEqual(earned);
+    expect(hostEffectRefreshScopeV1([{ setPanel: { panelJson: "{}" } }], { kind: "none" }, bodyKeys), "`setPanel` names no body of its own — `panelJson` feeds every section").toEqual({ kind: "full" });
+
+    // 🫥️ …and the no-storm half, which is why this is a filter and not `{kind:"full"}` for every effect
+    // pass: a `notify` banner is host React state, a clipboard write never reaches a projection, and a
+    // `dispatchAction` comes back through shell dispatch carrying its own scope. None of them may upgrade
+    // a `none` completion into a pass — a retained operation completes on every drain poll (18 per idle
+    // 10 s, wave B27).
+    expect(hostEffectRefreshScopeV1([{ notify: { message: "refused" } }], { kind: "none" }, bodyKeys)).toEqual({ kind: "none" });
+    expect(hostEffectRefreshScopeV1([{ clipboardWrite: { text: "x" } }, { dispatchAction: { actionId: "x" } }, "requestSync"], { kind: "none" }, bodyKeys)).toEqual({ kind: "none" });
+    const documentScope = { kind: "partial", panelBodies: ["puzzle.3d.play.document"], measures: true } as const;
+    expect(hostEffectRefreshScopeV1([{ notify: { message: "done" } }], documentScope, bodyKeys), "an effect that earns nothing must leave a declared scope exactly as it is").toBe(documentScope);
+    expect(hostEffectRefreshScopeV1([{ setActiveUtility: { windowId: "w", utilityId: "brush" } }], documentScope, bodyKeys), "the earned scope is UNIONED with the declared one, never substituted for it").toEqual({
+      kind: "partial",
+      windowBodies: ["puzzle.3d.play.viewport"],
+      panelBodies: ["puzzle.3d.play.document"],
+      utilities: true,
+      tools: true,
+      engagements: false,
+      measures: true,
+      labels: false,
+    });
+    console.warn("[DEBUG] b37 effect scope", JSON.stringify({ declared, earned }));
+  });
+
   it("retains last brush preview JSON for the leftover hover after a guest no-target wipe", () => {
     const published = JSON.stringify({ targetVortexFullId: "seed-left-001:v3", objectKindId: "Capsule", origin: [0, 0, 0], orientation: [0, 0, 0, 1] });
     const warm = retainWorldBrushPreviewJsonV1(published, "seed-left-001:v3", {});
@@ -8346,12 +8893,40 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(other.json).toBe("");
   });
 
+  // 📚️ The language-agnostic half of the picker: which examples a surface may offer at all. Rust
+  // `manifest::examples_for_dialect` answers the SAME rows in
+  // `🛂️manifest/🧪️tests/🔬️example-picker/🦀️.rs` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+  it("resolves the example picker by dialect, so an editor and its viewer offer exactly the same examples", () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(manifestFixtureSchema).compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/ExamplePickerFixture` });
+    expect(validate(examplePickerFixture), JSON.stringify(validate.errors)).toBe(true);
+    for (const useCase of examplePickerFixture.cases) {
+      expect(surfaceAppId(useCase.app.dialect, useCase.app.role as AppRole), useCase.name).toBe(useCase.app.id);
+      expect(examplesForDialect(examplePickerFixture.examples, useCase.app.dialect).map((example) => example.id), useCase.name).toEqual(useCase.expected);
+      expect(examplesForApp(examplePickerFixture.examples, useCase.app).map((example) => example.id), useCase.name).toEqual(useCase.expected);
+    }
+    const editor = examplePickerFixture.cases.find((useCase) => useCase.name === "editor-of-the-dialect-offers-every-example-of-it")!;
+    const viewer = examplePickerFixture.cases.find((useCase) => useCase.name === "viewer-of-the-same-dialect-offers-exactly-the-same-picker")!;
+    expect(viewer.expected).toEqual(editor.expected);
+    expect(viewer.app.id).not.toBe(editor.app.id);
+    // 🧭️ An app whose dialect is absent (a pre-registration stub) resolves no picker rather than the
+    // whole manifest — the empty-picker branch `ShellHost`'s `exampleOptions` relies on.
+    expect(examplesForApp(examplePickerFixture.examples, {})).toEqual([]);
+  });
+
   it("the example picker dispatches the chosen example id and its completion refreshes the whole shell", () => {
     // 🎨️ The picker writes the LABEL through `SET_ACTIVE_EXAMPLE_ID` and reaches the program through
     // exactly one descriptor — boot #11 changed the label while the flow window kept the previous
     // fixture, so both halves are pinned here (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     expect(buildActiveExampleAction("s.procedural.generation3d@1/*#editor", "box-shell-preview")).toEqual({
       controllerId: "s.procedural.generation3d@1/*#editor",
+      action: SET_ACTIVE_EXAMPLE_ACTION_ID,
+      args: { exampleId: "box-shell-preview" },
+    });
+    // 👁️ The read-only surface takes the exact same descriptor, addressed at ITS controller — the
+    // viewer declares `setActiveExample` as a `View` action and loads the example onto its own
+    // config lane (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    expect(buildActiveExampleAction("s.procedural.generation3d@1/*#viewer", "box-shell-preview")).toEqual({
+      controllerId: "s.procedural.generation3d@1/*#viewer",
       action: SET_ACTIVE_EXAMPLE_ACTION_ID,
       args: { exampleId: "box-shell-preview" },
     });
@@ -8671,24 +9246,67 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
     });
   });
 
-  it("scheduleDispatchAction (D2): fires dispatchOne with action/args only after delayMs elapses", () => {
-    vi.useFakeTimers();
+  it("scheduleDispatchAction (D2): a positive delayMs is a real deadline, honoured to the millisecond", () => {
+    const host = createVirtualContinuationHost();
     const dispatchOne = vi.fn().mockResolvedValue(undefined);
-    scheduleDispatchAction("advanceReconstruction", { jobId: "job-1" }, 250, dispatchOne);
+    scheduleDispatchAction("advanceReconstruction", { jobId: "job-1" }, 250, dispatchOne, createContinuationScheduler(host.ports));
     expect(dispatchOne).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(249);
+    host.drain(249);
     expect(dispatchOne).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(1);
+    host.drain(250);
     expect(dispatchOne).toHaveBeenCalledExactlyOnceWith("advanceReconstruction", { jobId: "job-1" });
   });
 
-  it("scheduleDispatchAction (D2): delayMs 0 still defers to a scheduled tick, not a synchronous call", () => {
-    vi.useFakeTimers();
+  it("scheduleDispatchAction (D2): delayMs 0 defers to a continuation and never arms a host timer", () => {
+    const host = createVirtualContinuationHost();
+    const armed: number[] = [];
     const dispatchOne = vi.fn().mockResolvedValue(undefined);
-    scheduleDispatchAction("tick", undefined, 0, dispatchOne);
+    scheduleDispatchAction("tick", undefined, 0, dispatchOne, createContinuationScheduler({ ...host.ports, setTimer: (run, delayMs) => { armed.push(delayMs); return host.ports.setTimer(run, delayMs); } }));
     expect(dispatchOne).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(0);
+    host.drain();
     expect(dispatchOne).toHaveBeenCalledExactlyOnceWith("tick", undefined);
+    expect(armed).toEqual([]);
+    expect(host.nowMs()).toBe(0);
+  });
+
+  // 🪃️ THE regression law for ticket 26/09/09/PROCEDURAL-3D-END-TO-END's ~24 s extension hop. The guest
+  // re-arms with `Effect::DispatchAction { delay_ms: 0 }` from inside the previous dispatch's own
+  // callback; on a nested `setTimeout` chain a hidden/unfocused/headless Chrome renderer clamps that to
+  // ~1 tick/s, which is what turned a 0.58 s native chain into 112 s in the browser. This simulates the
+  // clamp by making EVERY `globalThis.setTimeout` a second late and then asserts the ten-hop chain still
+  // finishes in well under one clamped tick — impossible unless the re-arm avoids timers entirely.
+  it("scheduleDispatchAction (D2): a ten-hop re-arm chain beats a throttled setTimeout by two orders of magnitude", async () => {
+    vi.useRealTimers();
+    const realSetTimeout = globalThis.setTimeout;
+    const THROTTLE_MS = 1_000;
+    const HOPS = 10;
+    let throttledCalls = 0;
+    globalThis.setTimeout = ((handler: TimerHandler, timeout?: number, ...args: unknown[]) => {
+      throttledCalls += 1;
+      return realSetTimeout(handler as () => void, (timeout ?? 0) + THROTTLE_MS, ...(args as []));
+    }) as unknown as typeof globalThis.setTimeout;
+    try {
+      const patchProbe = throttledCalls;
+      globalThis.setTimeout(() => {}, 0);
+      expect(throttledCalls).toBe(patchProbe + 1);
+      const before = throttledCalls;
+      const startedAtMs = Date.now();
+      const hops: string[] = [];
+      await new Promise<void>((resolve) => {
+        const dispatchOne = async (action: string): Promise<void> => {
+          hops.push(action);
+          if (hops.length >= HOPS) return resolve();
+          scheduleDispatchAction(`hop#${hops.length + 1}`, undefined, 0, dispatchOne);
+        };
+        scheduleDispatchAction("hop#1", undefined, 0, dispatchOne);
+      });
+      const elapsedMs = Date.now() - startedAtMs;
+      expect(hops).toEqual(Array.from({ length: HOPS }, (_, index) => `hop#${index + 1}`));
+      expect(throttledCalls).toBe(before);
+      expect(elapsedMs).toBeLessThan(THROTTLE_MS / 4);
+    } finally {
+      globalThis.setTimeout = realSetTimeout;
+    }
   });
 
   it("dispatchOpenedFiles (D3): single-file (multiple=false) makes exactly one call with {payload, name} and no index/total", async () => {
@@ -9041,6 +9659,99 @@ describe("renderWindowMeasuresTree", () => {
     expect(markup).toContain("Grid");
     expect(markup).toContain("checked");
     expect(markup).not.toContain('data-state="on"');
+  });
+});
+
+describe("per-window element ids", () => {
+  const domIds = (markup: string): string[] => Array.from(markup.matchAll(/\sid="([^"]+)"/g)).map((match) => match[1]!);
+  const duplicates = (ids: readonly string[]): string[] => ids.filter((id, index) => ids.indexOf(id) !== index);
+  const threePoint = { mode: { kind: "threePoint" as const, fov: 50 }, orientation: { type: "free" as const } };
+  const mountUnfoldedPane = (windowElementSegment: string): void => {
+    render(createElement(WorldOrbitProjectionSwitchPane, { spec: threePoint, onSpecChange: () => undefined, windowElementSegment }) as ReactElement);
+    const toggle = document.getElementById(childElementId(world3dProjectionPaneElementId(windowElementSegment), "pane", "fold"));
+    expect(toggle).not.toBeNull();
+    fireEvent.click(toggle!);
+  };
+  const mountedDomIds = (): string[] => Array.from(document.querySelectorAll("[id]")).map((element) => element.id);
+  const authoredMeasures = (): WindowMeasure[] => [
+    {
+      kind: "group",
+      id: "puzzle3d-measure-projection-parallel",
+      label: "Parallel",
+      defaultOpen: true,
+      children: [
+        { kind: "select", id: "puzzle3d-measure-projection-orthographic-view", value: "plan", items: [{ id: "plan", value: "plan", label: "Plan" }], onChange: { controllerId: "puzzle3d-play", action: "setProjection" } },
+        { kind: "slider", id: "puzzle3d-measure-projection-oblique-angle", label: "Angle", value: 45, min: 5, max: 90, step: 1, onChange: { controllerId: "puzzle3d-play", action: "setProjectionParam" } },
+      ],
+    },
+    { kind: "toggle", id: "puzzle3d-play-grid-visible", iconId: "layout-grid", label: "Visible", pressed: true, onChange: { controllerId: "puzzle3d-play", action: "setGridVisible" } },
+  ];
+  const measuresMarkup = (windowId: string): string => renderToStaticMarkup(windowMeasuresChrome(authoredMeasures(), undefined, windowId, () => undefined).measures as ReactElement);
+
+  // 🪪️ Wave B41: `framework.worldOrbit.projection` was a HARDCODED id on a pane rendered once per world
+  // surface, and a world surface is mounted once per open window instance — so the two-pane default layout
+  // put the pane root and both of `Pane`'s derived fold-control ids in the document TWICE, and every row of
+  // the projection switch tree with them. Two surfaces must share no DOM id at all.
+  it("renders two world surfaces with no duplicate DOM id", () => {
+    mountUnfoldedPane("puzzle3d-main-top");
+    const top = mountedDomIds();
+    mountUnfoldedPane("puzzle3d-main-perspective");
+    const all = mountedDomIds();
+    const perspective = all.filter((id) => !top.includes(id));
+    // 🌲️ Unfolded, each pane carries its root, its fold toggle, its close control and every projection
+    // switch row — the whole id surface the folded rail used to hide.
+    expect(top.length).toBeGreaterThan(8);
+    expect(perspective.length).toBe(top.length);
+    expect(duplicates(all)).toEqual([]);
+    expect(all).toContain(world3dProjectionPaneElementId("puzzle3d-main-top"));
+    expect(all).toContain(world3dProjectionPaneElementId("puzzle3d-main-perspective"));
+    expect(all.every((id) => isElementId(id))).toBe(true);
+    cleanup();
+  });
+
+  // 🌲️ The pure half of the same invariant, so a regression is reported by the id builder and not only by
+  // a mounted pane: every projection-switch row id is a child of the pane that owns it.
+  it("qualifies every projection switch row id by its owning pane", () => {
+    const templates = createWorldProjectionTemplates({ controllerId: "projection-switch" });
+    const rows = (paneId: string): string[] => {
+      const walk = (items: readonly { readonly id: string; readonly items?: readonly unknown[] }[]): string[] => items.flatMap((item) => [item.id, ...walk((item.items ?? []) as readonly { readonly id: string; readonly items?: readonly unknown[] }[])]);
+      return walk(worldProjectionSwitchTreeItems(paneId, templates, () => undefined) as readonly { readonly id: string; readonly items?: readonly unknown[] }[]);
+    };
+    const top = rows(world3dProjectionPaneElementId("puzzle3d-main-top"));
+    const perspective = rows(world3dProjectionPaneElementId("puzzle3d-main-perspective"));
+    expect(top.length).toBeGreaterThan(8);
+    expect(duplicates([...top, ...perspective])).toEqual([]);
+    expect(top.every((id) => id.startsWith(`${world3dProjectionPaneElementId("puzzle3d-main-top")}.`) && isElementId(id))).toBe(true);
+  });
+
+  // 🪪️ The same defect on the measures rail: a window kind's measure tree is authored ONCE for the kind
+  // (puzzle3d passes the literal `"puzzle3d"` prefix to `world3d_projection_measures`) and rendered once
+  // per instance, so the authored ids collided as soon as a second rail was unfolded.
+  it("renders two windows' measures rails with no duplicate DOM id and keeps the authored id as the tail", () => {
+    const top = domIds(measuresMarkup("puzzle3d-main-top"));
+    const perspective = domIds(measuresMarkup("puzzle3d-main-perspective"));
+    expect(top.length).toBeGreaterThan(1);
+    expect(duplicates([...top, ...perspective])).toEqual([]);
+    expect(top).toContain(windowMeasureDomId("puzzle3d-main-top", "puzzle3d-play-grid-visible"));
+    expect(perspective).toContain(windowMeasureDomId("puzzle3d-main-perspective", "puzzle3d-play-grid-visible"));
+    for (const authored of ["puzzle3d-play-grid-visible", "puzzle3d-measure-projection-orthographic-view"]) {
+      expect(perspective.filter((id) => id.endsWith(`/${authored}`))).toHaveLength(1);
+    }
+  });
+
+  // 🎓️ Qualification must not reach the AUTHORED tree: `windowMeasureTreeContainsId` (which decides whose
+  // window an introduction anchor belongs to) and the program's own `activeUtilityId` routing both speak
+  // the authored id, so the qualifier is a pure projection that leaves its input untouched.
+  it("qualifies ids without mutating the authored measure tree or any other field", () => {
+    const authored = authoredMeasures();
+    const qualified = qualifyWindowMeasureIds(authored, "puzzle3d-main-top");
+    expect(authored).toEqual(authoredMeasures());
+    expect(windowMeasureTreeContainsId(authored, "puzzle3d-play-grid-visible")).toBe(true);
+    const group = qualified[0] as Extract<WindowMeasure, { kind: "group" }>;
+    expect(group.id).toBe("puzzle3d-main-top/puzzle3d-measure-projection-parallel");
+    expect(group.label).toBe("Parallel");
+    expect(group.children.map((child) => child.id)).toEqual(["puzzle3d-main-top/puzzle3d-measure-projection-orthographic-view", "puzzle3d-main-top/puzzle3d-measure-projection-oblique-angle"]);
+    expect(group.children[0]!.onChange).toEqual(authoredMeasures()[0]!.kind === "group" ? (authoredMeasures()[0] as Extract<WindowMeasure, { kind: "group" }>).children[0]!.onChange : undefined);
   });
 });
 
@@ -9713,6 +10424,10 @@ describe("node-graph surface attachment in a hidden tab", () => {
       // 📏️ A frame that carries no size of its own must not collapse the store the host measured.
       for (const canvas of canvases) expect([canvas.width, canvas.height]).toEqual([966, 836]);
       expect(painted.get(canvases[0]!)).toContain("clearRect(0,0,966,836)");
+      // 🚫️ The placeholder this replaced drew one `fillRect(x-60,y-24,120,48)` per widget at RAW
+      // world coordinates, in the 2D default black because it never set a fill style. A frame that
+      // carries no draw list must now paint nothing at all rather than invent a picture.
+      expect((painted.get(canvases[0]!) ?? []).filter((operation) => operation.startsWith("fillRect("))).toEqual([]);
       expect(frame).not.toHaveBeenCalled();
     } finally {
       view.unmount();
@@ -9721,6 +10436,114 @@ describe("node-graph surface attachment in a hidden tab", () => {
       context.mockRestore();
       frame.mockRestore();
       hidden.mockRestore();
+      bounds.mockRestore();
+      await runtime.close().catch(() => {});
+    }
+  });
+
+  it("replaces a canvas that can no longer give a 2D context and re-attaches its surface to the successor", async () => {
+    // 🚨️ The live defect this pins: `wgpu` binds a `webgpu` context to the element before it finds
+    // out there is no adapter, and a canvas admits exactly one context kind for its whole life — so
+    // the frame correctly falls back to `present: "2d"` onto an element that can never give a 2D
+    // context, and the graph stays blank forever with nothing in the console. A frame that reports
+    // `unpresentable` must retire that element and let the presentation be decided again for a new
+    // one. Measured on 6018 before this: canvas 0 `not-2d`, 0 ink pixels, every frame.
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 966, 836));
+    const frame = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 0);
+    const painted = new Map<HTMLCanvasElement, string[]>();
+    const poisoned = new Set<HTMLCanvasElement>();
+    const context = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(function (this: HTMLCanvasElement) {
+      if (poisoned.has(this)) return null;
+      const operations = painted.get(this) ?? [];
+      painted.set(this, operations);
+      return recordingCanvasContext(operations);
+    } as unknown as HTMLCanvasElement["getContext"]);
+    const bridge = new MockFlowBridge(new WebAssembly.Memory({ initial: 400 }));
+    // 🖥️ The surface must really be presenting on the GPU, because only a canvas that was handed to
+    // the WebGPU presenter can be poisoned — a host that never had a device is a host with no 2D
+    // canvas either, and replacing its element would remount forever.
+    let boundToTheGpuPresenter = 0;
+    const runtime = await createFlowBrowserRuntime({ source: bridge.exports, bindings: { flowAttachSurfaceCanvas: async () => { boundToTheGpuPresenter += 1; return boundToTheGpuPresenter === 1; } } });
+    vi.stubGlobal("navigator", { ...globalThis.navigator, gpu: { requestAdapter: async () => ({}) } });
+    const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockImplementation(async () => runtime.openSession() as unknown as flowSessionLoader.FlowWasmSession);
+    vi.stubGlobal("devicePixelRatio", 1);
+    const view = render(createElement(FlowGraphCanvasHost, {
+      scene: hexagonalMushroomColumnScene(),
+      controllerId: "procedural", surfaceId: "procedural.main", editable: true, onAction: noopAction,
+    }));
+    try {
+      const first = view.container.querySelectorAll("canvas")[0]!;
+      poisoned.add(first);
+      const attaches = () => bridge.operations.filter((operation) => operation === flowAbi.operations.attachSurface).length;
+      await waitFor(() => expect(attaches()).toBeGreaterThanOrEqual(2));
+      const successor = view.container.querySelectorAll("canvas")[0]!;
+      expect(successor).not.toBe(first);
+      expect(view.container.querySelectorAll("canvas").length).toBe(2);
+      expect([successor.width, successor.height]).toEqual([966, 836]);
+      await waitFor(() => expect((painted.get(successor) ?? []).some((operation) => operation.startsWith("clearRect("))).toBe(true));
+      expect(painted.has(first)).toBe(false);
+      // 🔚️ Exactly one successor: it re-attaches without a device, so it stays 2D-capable and the
+      // host never asks for another. A replacement loop is the failure mode this bound rules out.
+      await new Promise((settle) => setTimeout(settle, 50));
+      expect(view.container.querySelectorAll("canvas")[0]).toBe(successor);
+      expect(attaches()).toBe(2);
+    } finally {
+      view.unmount();
+      vi.unstubAllGlobals();
+      session.mockRestore();
+      context.mockRestore();
+      frame.mockRestore();
+      bounds.mockRestore();
+      await runtime.close().catch(() => {});
+    }
+  });
+
+  /** 🪪️ The host half of the surface-retention law (`🧫️fixtures/🪪️surface-host-retention.json`): a
+   * refresh is a SCENE change, never a lifecycle event. Every refresh of `window:procedural-main`
+   * carries a different eval status map, and the host must answer each of them by patching the flow
+   * session it already owns — one `createFlowSession`, one `attachSurface`, one wasm-side surface —
+   * and never by opening a second one. Measured on the live page before the reconciliation-key fix:
+   * two mounts, two sessions and `flow surface created surface=2`, costing 5.7 s of attach and a
+   * graph that stayed blank for 39 s (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+  it("retained surface host — patches the session it already owns across consecutive refreshes, one session and one attach", async () => {
+    const retention = (await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🪪️surface-host-retention.json")).default;
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 966, 836));
+    const context = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => recordingCanvasContext([]) as never);
+    const bridge = new MockFlowBridge(new WebAssembly.Memory({ initial: 400 }));
+    const runtime = await createFlowBrowserRuntime({ source: bridge.exports });
+    const opened: unknown[] = [];
+    const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockImplementation(async () => {
+      const next = runtime.openSession();
+      opened.push(next);
+      return next as unknown as flowSessionLoader.FlowWasmSession;
+    });
+    vi.stubGlobal("devicePixelRatio", 1);
+    const sceneFor = (statusJson: string) => ({ ...hexagonalMushroomColumnScene(), statusJson });
+    const view = render(createElement(FlowGraphCanvasHost, {
+      scene: sceneFor(retention.refreshes[0]!.statusJson),
+      controllerId: "29", surfaceId: retention.surface, editable: true, onAction: noopAction,
+    }));
+    try {
+      await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.attachSurface));
+      for (let index = 1; index < retention.refreshes.length; index += 1) {
+        const refresh = retention.refreshes[index]!;
+        // 🪪️ `controllerId` is the DFS-minted record id, and it MOVES with the body (29 → 33 on the
+        // measured refresh). A host that re-attached on it would fail here and nowhere else.
+        view.rerender(createElement(FlowGraphCanvasHost, {
+          scene: sceneFor(refresh.statusJson),
+          controllerId: String(29 + index * 2), surfaceId: retention.surface, editable: true, onAction: noopAction,
+        }));
+        await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.synchronizeDocumentJson));
+      }
+      const attaches = bridge.operations.filter((operation: number) => operation === flowAbi.operations.attachSurface).length;
+      expect(attaches, `${retention.refreshes.length} refreshes must dispatch exactly one attach`).toBe(retention.expected.surfaceAttaches);
+      expect(opened.length, "one flow session per window instance, never one per refresh").toBe(retention.expected.surfaceHostMounts);
+      expect(view.container.querySelectorAll("canvas").length, "the two canvases the host owns, never a second pair").toBe(2);
+    } finally {
+      view.unmount();
+      vi.unstubAllGlobals();
+      session.mockRestore();
+      context.mockRestore();
       bounds.mockRestore();
       await runtime.close().catch(() => {});
     }
@@ -10090,3 +10913,214 @@ describe("history patch apply", () => {
     console.log("[DEBUG] History patch apply: equal-cursor-upserts=1 newer=1 older-skipped=1 equal-empty-skipped=1 replace=1 example-refresh=1 example-has-upserts=0 undo-skip=1");
   });
 });
+
+//#region 🎨️ExampleSwitchHostCaching
+// 🎨️ The HOST half of the example-switch runtime law (`🧫️fixtures/🎨️example-switch.json` answers the
+// guest half in Rust). Picking an example replaces the artifact's fixture through a RETAINED typed
+// operation, so the flow window's new body reaches the shell only through that operation's
+// completion — and only if the completion's own `UiDirtyScope` asks for the window body. The trap
+// this block pins: a completion that dirties nothing but carries a history patch refreshes ONLY the
+// reserved history panel, which repaints the History list while the flow window keeps the previous
+// example's graph and nothing faults anywhere (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+describe("example switch — the completion's scope is what re-takes the flow window body", () => {
+  const generation3dWindows = [
+    { id: "procedural-main", bodyKey: "procedural.play.main" },
+    { id: "procedural-preview", bodyKey: "procedural.play.preview" },
+  ];
+  const historyPanel = [{ kind: { kind: "app" as const, id: "framework.panel.history" }, bodyKey: FRAMEWORK_HISTORY_BODY_KEY }];
+
+  it("a full-scope completion re-takes the flow window body, and a history-only completion never does", () => {
+    const full = typedOperationCompletionRefreshV1({ uiScope: { kind: "full" }, historyPatch: { cursor: 4 }, requestedEffects: [] });
+    expect(full).toEqual({ kind: "full" });
+    expect(buildUiRefreshRequest(full!, generation3dWindows, historyPanel, {}, new Map())?.windows?.map((entry) => entry.bodyKey)).toEqual(["procedural.play.main", "procedural.play.preview"]);
+    const historyOnly = typedOperationCompletionRefreshV1({ uiScope: { kind: "none" }, historyPatch: { cursor: 4 }, requestedEffects: [] });
+    expect(historyOnly).toEqual({ kind: "partial", panelBodies: [FRAMEWORK_HISTORY_BODY_KEY] });
+    expect(buildUiRefreshRequest(historyOnly!, generation3dWindows, historyPanel, {}, new Map())?.windows ?? []).toEqual([]);
+    console.log("[DEBUG] example switch host caching: full-scope-windows=2 history-only-windows=0");
+  });
+
+  it("the guest's new graph replaces the cached flow body while the untouched preview body keeps its identity", () => {
+    const cache: UiRefreshCache = new Map([
+      ["window:procedural-main", { hash: "hex-column-hash", value: { type: "nodeGraph", value: "hexagonal-mushroom-column" } }],
+      ["window:procedural-preview", { hash: "preview-hash", value: { type: "world3d", value: "preview" } }],
+    ]);
+    const previousBodies = { "procedural-main": cache.get("window:procedural-main")!.value, "procedural-preview": cache.get("window:procedural-preview")!.value } as Readonly<Record<string, unknown>>;
+    const request = buildUiRefreshRequest({ kind: "full" }, generation3dWindows, historyPanel, {}, cache);
+    expect(request?.windows?.find((entry) => entry.key === "procedural-main")?.hash).toBe("hex-column-hash");
+    applyUiRefreshResponseToCache(cache, {
+      windows: [
+        { key: "procedural-main", hash: "box-shell-hash", value: { type: "nodeGraph", value: "box-shell-preview" } },
+        { key: "procedural-preview", hash: "preview-hash" },
+      ],
+    });
+    const merged = mergeRecordPreservingIdentity(previousBodies, generation3dWindows.map((instance) => [instance.id, cache.get(`window:${instance.id}`)?.value ?? previousBodies[instance.id]] as const));
+    expect(merged["procedural-main"]).toEqual({ type: "nodeGraph", value: "box-shell-preview" });
+    expect(merged["procedural-preview"]).toBe(previousBodies["procedural-preview"]);
+    console.log("[DEBUG] example switch host caching: flow-body-replaced=1 preview-body-identity-kept=1");
+  });
+
+  it("a guest that re-renders the PREVIOUS example answers the same hash, so the shell keeps showing it — the failure this law names", () => {
+    const cache: UiRefreshCache = new Map([["window:procedural-main", { hash: "hex-column-hash", value: { type: "nodeGraph", value: "hexagonal-mushroom-column" } }]]);
+    applyUiRefreshResponseToCache(cache, { windows: [{ key: "procedural-main", hash: "hex-column-hash" }] });
+    expect(cache.get("window:procedural-main")?.value).toEqual({ type: "nodeGraph", value: "hexagonal-mushroom-column" });
+    console.log("[DEBUG] example switch host caching: unchanged-hash-keeps-previous-graph=1");
+  });
+
+  it("a refresh asked for while one is already crossing is coalesced onto the union, never dropped", () => {
+    expect(mergeUiDirtyScopeV1({ kind: "partial", windowBodies: ["procedural.play.main"] }, { kind: "partial", windowBodies: ["procedural.play.preview"], measures: true })).toEqual({
+      kind: "partial",
+      windowBodies: ["procedural.play.main", "procedural.play.preview"],
+      panelBodies: [],
+      utilities: false,
+      tools: false,
+      engagements: false,
+      measures: true,
+      labels: false,
+    });
+    expect(mergeUiDirtyScopeV1({ kind: "partial", windowBodies: ["procedural.play.main"] }, { kind: "full" })).toEqual({ kind: "full" });
+    expect(mergeUiDirtyScopeV1({ kind: "full" }, { kind: "partial", windowBodies: [] })).toEqual({ kind: "full" });
+    expect(mergeUiDirtyScopeV1({ kind: "none" }, { kind: "partial", windowBodies: ["procedural.play.main"] })).toEqual({ kind: "partial", windowBodies: ["procedural.play.main"] });
+    expect(mergeUiDirtyScopeV1({ kind: "partial", panelBodies: [FRAMEWORK_HISTORY_BODY_KEY] }, { kind: "none" })).toEqual({ kind: "partial", panelBodies: [FRAMEWORK_HISTORY_BODY_KEY] });
+    // ⚖️ The union of two window-body passes still asks the guest for BOTH bodies — the whole point
+    // of coalescing instead of letting the newer pass supersede (and discard) the older one.
+    const union = mergeUiDirtyScopeV1({ kind: "partial", windowBodies: ["procedural.play.main"] }, { kind: "partial", windowBodies: ["procedural.play.preview"] });
+    expect(buildUiRefreshRequest(union, generation3dWindows, historyPanel, {}, new Map())?.windows?.map((entry) => entry.bodyKey)).toEqual(["procedural.play.main", "procedural.play.preview"]);
+    console.log("[DEBUG] example switch host caching: coalesced-union-windows=2");
+  });
+});
+//#endregion 🎨️ExampleSwitchHostCaching
+
+//#region 📷️CameraAndLabelFitTwins
+import cameraFitFixture from "../../../../♾️infinite/🖼️canvas/🧪️tests/📷️camera-fit/🔣️.json" with { type: "json" };
+import labelFitFixture from "../../../../♾️infinite/🖼️canvas/🧪️tests/🏷️label-fit/🔣️.json" with { type: "json" };
+
+/** 📏️ The fixture's own synthetic advance — the ONE measure both implementations are driven with, so
+ * a row pins the clipping algorithm rather than a font file. Mirror of `synthetic_measure` in
+ * `♾️infinite/🖼️canvas/🧪️tests/🏷️label-fit/🦀️.rs`. */
+function syntheticLabelMeasure(text: string, charWidth: number): number {
+  return [...text].length * charWidth;
+}
+
+/** 🖋️ A 2D context that records every call and measures text as `charWidth * glyphs` at the font it
+ * was last given — enough to prove what `paintDagLabelOverlays` actually draws, with no font files. */
+function recordingLabelContext(charWidthPerPx: number) {
+  const calls: { readonly op: string; readonly args: readonly unknown[] }[] = [];
+  let fontPx = 0;
+  const context = {
+    get font() {
+      return `${fontPx}px sans-serif`;
+    },
+    set font(value: string) {
+      fontPx = Number.parseFloat(value) || 0;
+      calls.push({ op: "font", args: [value] });
+    },
+    fillStyle: "",
+    globalAlpha: 1,
+    textAlign: "center",
+    textBaseline: "middle",
+    measureText: (text: string) => ({ width: [...text].length * fontPx * charWidthPerPx }),
+    fillText: (text: string, x: number, y: number) => calls.push({ op: "fillText", args: [text, x, y, fontPx] }),
+    clearRect: () => calls.push({ op: "clearRect", args: [] }),
+    setTransform: () => calls.push({ op: "setTransform", args: [] }),
+    save: () => calls.push({ op: "save", args: [] }),
+    restore: () => calls.push({ op: "restore", args: [] }),
+    translate: () => calls.push({ op: "translate", args: [] }),
+    rotate: () => calls.push({ op: "rotate", args: [] }),
+  };
+  return { context, calls, drawn: () => calls.filter((call) => call.op === "fillText") };
+}
+
+function labelCanvasStub(charWidthPerPx: number) {
+  const recorder = recordingLabelContext(charWidthPerPx);
+  const canvas = { width: 0, height: 0, style: {} as Record<string, string>, getContext: () => recorder.context } as unknown as HTMLCanvasElement;
+  return { canvas, ...recorder };
+}
+
+describe("node-graph caption clipping (2D replay twin)", () => {
+  it("clips every fixture row to the string the shared law names", () => {
+    const rows = labelFitFixture.rows;
+    expect(rows.length).toBeGreaterThanOrEqual(8);
+    expect(labelFitFixture.provenance.ellipsis).toBe(DAG_LABEL_ELLIPSIS);
+    for (const row of rows) {
+      const fitted = dagEllipsizeByMeasure(row.text, row.maxWidth, (candidate) => syntheticLabelMeasure(candidate, row.charWidth));
+      expect([row.name, fitted]).toEqual([row.name, row.expect]);
+      expect(syntheticLabelMeasure(fitted, row.charWidth)).toBeLessThanOrEqual(Math.max(row.maxWidth, 0) + 1e-9);
+      expect([...fitted].filter((glyph) => glyph === DAG_LABEL_ELLIPSIS).length).toBeLessThanOrEqual(1);
+    }
+    console.log("[DEBUG] node-graph caption clipping reproduced all %s shared fixture rows", rows.length);
+  });
+
+  it("draws a node title clipped at its measured width instead of shrinking the font into a smudge", () => {
+    // 🏷️ The live defect's shape: a 40-world-unit node at zoom 1.78 gives a ~63px caption budget and
+    // the title is far wider. Before the fix the overlay binary-searched the font down to 4px.
+    const stub = labelCanvasStub(0.6);
+    const state = JSON.stringify({
+      camera: { x: 0, y: 0, zoom: 1.7844325616011099 },
+      width: 483,
+      height: 814,
+      labels: [{ id: "extrude", text: "Brep.solid.extrude", layout: "horizontal", x: 0, y: 0, nodeW: 40, nodeH: 28, fontScreenPx: 13.085838785074808, ghost: false }],
+    });
+    paintDagLabelOverlays(state, stub.canvas, 483, 814, 1, { selectedIds: [], preselect: { ids: [], removedIds: [] }, hoveredId: null });
+    const drawn = stub.drawn();
+    expect(drawn).toHaveLength(1);
+    const [text, , , fontPx] = drawn[0]!.args as [string, number, number, number];
+    expect(fontPx).toBeGreaterThanOrEqual(8);
+    expect(text.endsWith(DAG_LABEL_ELLIPSIS)).toBe(true);
+    expect(text.startsWith("Brep")).toBe(true);
+    expect([...text].length * fontPx * 0.6).toBeLessThanOrEqual(40 * 1.7844325616011099 * 0.88 + 1e-9);
+    console.log("[DEBUG] node-graph caption drawn as %o at %spx", text, fontPx);
+  });
+
+  it("draws a title that fits whole, which is what the live generation3d operator names do", () => {
+    const stub = labelCanvasStub(0.6);
+    const state = JSON.stringify({
+      camera: { x: 0, y: 0, zoom: 1.7844325616011099 },
+      width: 483,
+      height: 814,
+      labels: [{ id: "extrude", text: "Extrude", layout: "horizontal", x: 0, y: 0, nodeW: 40, nodeH: 28, fontScreenPx: 13.085838785074808, ghost: false }],
+    });
+    paintDagLabelOverlays(state, stub.canvas, 483, 814, 1, { selectedIds: [], preselect: { ids: [], removedIds: [] }, hoveredId: null });
+    expect((stub.drawn()[0]!.args as [string])[0]).toBe("Extrude");
+  });
+});
+
+describe("node-graph opening camera (renderer twin)", () => {
+  it("opens on the camera the shared law names for every fixture row", () => {
+    const rows = cameraFitFixture.rows;
+    expect(rows.length).toBeGreaterThanOrEqual(8);
+    expect(cameraFitFixture.provenance.constants.paddingPx).toBe(DAG_CONTENT_FIT_PADDING_PX);
+    expect(cameraFitFixture.provenance.constants.minCoverage).toBe(DAG_CONTENT_FRAMED_MIN_COVERAGE);
+    expect(cameraFitFixture.provenance.constants.refitMaxCoverage).toBe(DAG_CONTENT_REFIT_MAX_COVERAGE);
+    for (const row of rows) {
+      const { camera, fitted } = dagStartupCamera(row.stored, row.content, row.viewport.width, row.viewport.height);
+      expect([row.name, camera.x, camera.y, camera.zoom, fitted]).toEqual([row.name, row.expect.camera.x, row.expect.camera.y, row.expect.camera.zoom, row.expect.fitted]);
+      if (row.content && row.stored) {
+        const coverage = dagContentCoverage(row.content, row.stored, row.viewport.width, row.viewport.height);
+        expect([row.name, coverage]).toEqual([row.name, row.expect.coverage]);
+        expect([row.name, coverage <= DAG_CONTENT_REFIT_MAX_COVERAGE]).toEqual([row.name, row.expect.refits]);
+      }
+    }
+    console.log("[DEBUG] node-graph opening camera reproduced all %s shared fixture rows", rows.length);
+  });
+
+  it("derives the graph bounds a fit frames from the scene's own node records", () => {
+    const nodes = [
+      { id: "a", x: 0, y: 0, width: 40, height: 20, inputs: [], outputs: [] },
+      { id: "b", x: 200, y: -100, width: 40, height: 20, inputs: [], outputs: [] },
+    ];
+    expect(dagContentBounds(nodes)).toEqual({ minX: -20, minY: -110, maxX: 220, maxY: 10 });
+    expect(dagContentBounds([])).toBeNull();
+    expect(dagContentBounds(undefined)).toBeNull();
+    const fitted = dagFitCamera(dagContentBounds(nodes)!, 483, 814);
+    expect(dagContentCoverage(dagContentBounds(nodes)!, fitted, 483, 814)).toBeCloseTo(1, 9);
+  });
+
+  it("re-frames only on a layout change, never on hover, selection or evaluation churn", () => {
+    const nodes = [{ id: "a", x: 0, y: 0, width: 40, height: 20, inputs: [], outputs: [] }];
+    const same = [{ id: "a", x: 0, y: 0, width: 40, height: 20, inputs: [{ id: "a@in", label: "in" }], outputs: [] }];
+    const moved = [{ id: "a", x: 900, y: 0, width: 40, height: 20, inputs: [], outputs: [] }];
+    expect(nodeGraphContentSignature(nodes)).toBe(nodeGraphContentSignature(same));
+    expect(nodeGraphContentSignature(nodes)).not.toBe(nodeGraphContentSignature(moved));
+  });
+});
+//#endregion 📷️CameraAndLabelFitTwins

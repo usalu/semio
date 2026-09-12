@@ -1043,3 +1043,40 @@ mod semantic_document_tests {
         assert_eq!(queue.shutdown_step(0), (true, 1, 0));
     }
 }
+
+/// 🧱️ The `boxed_fixed_slots` law for this module's fixed slot tables, against the one committed
+/// budget every implementation of it reads (`semio_framework_async::BOXED_FIXED_SLOTS_FIXTURE`).
+///
+/// Asserts the measured shape of each table (capacity, one slot's bytes, the owner's own bytes)
+/// against that record, that each owner is smaller than the table it owns — the structural proof the
+/// slots are heap-first rather than an inline `[T; N]` field — and then constructs them on a thread
+/// holding only the fixture's `boundedThreadStackBytes`. `Builder::stack_size` overrides
+/// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
+#[test]
+fn kernel_runtime_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_async::BOXED_FIXED_SLOTS_FIXTURE).expect("🧱️ the committed fixed-slot-table budget parses");
+    let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
+        .as_array()
+        .expect("🧱️ the budget lists its tables")
+        .iter()
+        .filter(|table| table["guard"] == "renderer::kernel_runtime")
+        .map(|table| semio_framework_async::FixedSlotTableBudget::new(table["owner"].as_str().expect("owner"), table["capacity"].as_u64().expect("capacity") as usize, table["elementSizeBytes"].as_u64().expect("element bytes") as usize, table["ownerSizeBytes"].as_u64().expect("owner bytes") as usize))
+        .collect();
+    let measured = vec![
+        semio_framework_async::FixedSlotTableBudget::new("kernel_runtime::RetainedSurfaceRegistry", RETAINED_SURFACE_CAPACITY, size_of::<Option<RetainedSurfaceSlot>>(), size_of::<RetainedSurfaceRegistry>()),
+        semio_framework_async::FixedSlotTableBudget::new("kernel_runtime::CommandDocumentRetirementRegistry", COMMAND_DOCUMENT_RETIREMENT_CAPACITY, size_of::<Option<CommandDocumentRetirementState>>(), size_of::<CommandDocumentRetirementRegistry>()),
+        semio_framework_async::FixedSlotTableBudget::new("kernel_runtime::MountedTypedOperationResultExchange", MOUNTED_TYPED_OPERATION_RESULT_PAGES, size_of::<Option<MountedTypedOperationResultPage>>(), size_of::<MountedTypedOperationResultExchange>()),
+    ];
+    semio_framework_async::assert_fixed_slot_tables(
+        "renderer::kernel_runtime",
+        fixture["boundedThreadStackBytes"].as_u64().expect("bounded stack budget") as usize,
+        fixture["conversionThresholdBytes"].as_u64().expect("conversion threshold") as usize,
+        &declared,
+        &measured,
+        || {
+            drop(RetainedSurfaceRegistry::new());
+            drop(CommandDocumentRetirementRegistry::new());
+            drop(MountedTypedOperationResultExchange::new());
+        },
+    );
+}

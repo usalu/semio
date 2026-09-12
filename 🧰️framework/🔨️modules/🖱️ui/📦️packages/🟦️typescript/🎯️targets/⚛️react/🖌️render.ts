@@ -30,6 +30,31 @@ export type UiTestEventInit = Readonly<Record<string, unknown>>;
 //#region 🔌️TestingLibraryAdapter
 import { act as testingAct, cleanup as testingCleanup, fireEvent as testingFireEvent, render as testingRender, screen as testingScreen, waitFor as testingWaitFor, within as testingWithin } from "@testing-library/react";
 
+/** 🖱️ jsdom ships no `PointerEvent`, and the adapter below picks its constructor by event-type name — so
+ * without this every `pointerDown`/`pointerMove`/`pointerUp`/`pointerCancel` degrades to a bare `Event`
+ * that carries no `button`, `clientX`/`clientY` or `pointerId`. A host that opens a gesture on
+ * `event.button === 0` then reads `undefined` and silently takes no press, so a pointer-driven law reads
+ * green while proving nothing. Registered once, only when the environment genuinely lacks the class. */
+function installPointerEventClass(): void {
+  const view = globalThis as { PointerEvent?: unknown; MouseEvent?: typeof MouseEvent };
+  if (view.PointerEvent !== undefined || view.MouseEvent === undefined) return;
+  class TestPointerEvent extends view.MouseEvent {
+    readonly pointerId: number;
+    readonly pointerType: string;
+    readonly isPrimary: boolean;
+    readonly pressure: number;
+    constructor(type: string, init: MouseEventInit & { readonly pointerId?: number; readonly pointerType?: string; readonly isPrimary?: boolean; readonly pressure?: number } = {}) {
+      super(type, init);
+      this.pointerId = init.pointerId ?? 1;
+      this.pointerType = init.pointerType ?? "mouse";
+      this.isPrimary = init.isPrimary ?? true;
+      this.pressure = init.pressure ?? 0;
+    }
+  }
+  view.PointerEvent = TestPointerEvent;
+}
+installPointerEventClass();
+
 /** 🧪️ Renders a UI fixture behind the repository-owned DOM-test boundary. */
 export function render(node: unknown): UiTestRenderResult {
   const result = testingRender(node as Parameters<typeof testingRender>[0]);
@@ -52,8 +77,10 @@ export const fireEvent = {
   change(target: Element, init?: UiTestEventInit): boolean {
     return testingFireEvent.change(target, init);
   },
-  click(target: Element): boolean {
-    return testingFireEvent.click(target);
+  /** 🖱️ `init` carries the modifier state a selection law turns on — a click boundary that dropped it
+   * could only ever prove the unmodified `replace` branch. */
+  click(target: Element, init?: UiTestEventInit): boolean {
+    return testingFireEvent.click(target, init);
   },
   dragOver(target: Element, init?: UiTestEventInit): boolean {
     return testingFireEvent.dragOver(target, init);

@@ -9,6 +9,7 @@ import { BundleScript, ScriptRouter, getWorkspaceRoot, runBundleScriptMain, runE
 import { stageArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { ensurePreview2ShimVendorAt, hostShimSource, PLUGIN_HOST_SHIM_FILE, PREVIEW2_VENDOR_RELATIVE, pluginComponentBridgeSource, SHARD_WORKER_FILE, shardWorkerSource, transpilePluginComponentAsync } from "./🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../📇️registry/📦️deployment/🟦️.ts";
+import { pluginModulesRoot } from "../../../🧑‍💻dev/♻️activation/🟦️.ts";
 
 const SCRIPT_ROOT = dirname(fileURLToPath(import.meta.url));
 export const ACTOR_COMPONENT_EXPORTS = JSON.parse(readFileSync(join(SCRIPT_ROOT, "../../🧫️fixtures/🛂️actor-exports/🔣️.json"), "utf8")) as Record<string, string[]>;
@@ -54,7 +55,6 @@ function componentProfile(value: string | undefined): Profile {
   return value;
 }
 
-export function browserModuleRoot(profile: Profile): string { return join(SCRIPT_ROOT, "dist", profile, "🔌️plugin-modules"); }
 
 /** 📦️ Enumerates regular staged files without admitting symlinks or unrelated mutable state. */
 export function artifactFiles(root: string): Map<string, string> {
@@ -81,7 +81,7 @@ async function fileDigest(path: string): Promise<string> {
 class SupportScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length !== 1) throw new Error("Usage: support <dev|release>");
-    const profile = componentProfile(args[0]), root = browserModuleRoot(profile);
+    const profile = componentProfile(args[0]), root = pluginModulesRoot(profile);
     mkdirSync(root, { recursive: true });
     const temporary = mkdtempSync(join(root, ".support-"));
     try {
@@ -106,7 +106,7 @@ class MaterializeScript extends BundleScript {
     if (typeof identity !== "string" || !/^semio:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(identity) || !["plugin", "extension"].includes(metadata.semio?.role)) throw new Error("Expected a Cargo plugin or extension component");
     const pluginId = identity.slice(6), crate = manifest.package.name.replaceAll("-", "_"), componentBase = crate + "_component";
     const artifact = join(dirname(manifestPath), "dist", `component-${profile}`, crate + ".wasm");
-    const root = browserModuleRoot(profile), output = join(root, moduleDirectoryName(pluginId)), vendor = join(root, PREVIEW2_VENDOR_RELATIVE);
+    const root = pluginModulesRoot(profile), output = join(root, moduleDirectoryName(pluginId)), vendor = join(root, PREVIEW2_VENDOR_RELATIVE);
     if (!existsSync(artifact) || !existsSync(join(vendor, ".nx-artifact.json"))) throw new Error("Missing component or browser support prerequisite; run the materialize target through Nx");
     const controller = new AbortController(), cancel = (): void => controller.abort();
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
@@ -130,7 +130,12 @@ class MaterializeScript extends BundleScript {
       writeFileSync(join(temporary, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, crate + ".wasm"));
       controller.signal.throwIfAborted();
       stageArtifacts(output, relative(repo, manifestPath).split(sep).join("/") + `:browser:${profile}`, artifactFiles(temporary));
-      console.log(`Materialized ${pluginId} ${profile}: browser bridge and descriptor staged`);
+      console.log(`Materialized ${pluginId} ${profile}: browser bridge and descriptor staged -> ${output}`);
+      // 📣️ A served dev session reads THIS directory directly, so a plugin is live the moment it is
+      // staged; an extension is not — the runtime install root (`/🧩️extension-modules`) is written by
+      // `activate-<variant>-<renderer>-<profile>`. Saying so is the difference between "the rebuild
+      // did not take" and one more command (26/09/09 `📓️extension-invoke-door-2026-09-12.md` §6.3).
+      if (metadata.semio.role === "extension") console.log(`Extension ${pluginId} is staged but NOT published to any runtime install root — run: bun nx run @semio-tech/framework-os-dev:activate-<variant>-<react|wgpu>-${profile}`);
     } finally {
       process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel);
       rmSync(temporary, { recursive: true, force: true });

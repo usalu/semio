@@ -1,0 +1,31 @@
+{
+  "format": "semio.generation3d.contribution-gated-arming",
+  "version": 1,
+  "note": "Who may arm a flowEvalTick while the live flow extension registry cannot serve the graph. An uncontributed operator kind is not slow work, it is work no tick can advance: the evaluator answers 'unknown kind', the error is never cached, and the next tick recomputes the same miss. Only setContributions resumes the chain.",
+  "unservedKind": "witness.contribution-gate.absent",
+  "servedKindCandidates": ["math.add", "math.vector", "brep.curve.polygon", "brep.solid.extrude"],
+  "tickStepBudget": 512,
+  "cases": [
+    {
+      "id": "uncontributed-graph-arms-nothing",
+      "kindSource": "unservedKind",
+      "widgets": 600,
+      "unfinishedTick": true,
+      "mayRearm": false,
+      "armedTicks": 0
+    },
+    {
+      "id": "served-graph-keeps-its-chain",
+      "kindSource": "servedKindCandidates",
+      "widgets": 600,
+      "unfinishedTick": true,
+      "mayRearm": true,
+      "armedTicks": 1
+    }
+  ],
+  "resume": {
+    "command": "setContributions",
+    "rearmsPerAttachedPreview": 1,
+    "attachedPreviewWindows": 1
+  }
+}

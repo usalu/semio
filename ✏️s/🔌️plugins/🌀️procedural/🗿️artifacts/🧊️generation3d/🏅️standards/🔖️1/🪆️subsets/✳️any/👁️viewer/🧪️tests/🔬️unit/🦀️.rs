@@ -14,16 +14,34 @@ fn viewer_dialect_matches_the_artifact_coordinate() {
     assert_eq!(<Generation3dViewer as ArtifactViewer>::DIALECT, GENERATION3D_DIALECT);
 }
 
-/// 🧾️ The four tables that must agree or a viewer action is silently dead: the typed command
-/// enum's own ids, the retained tool-id list, the factory's per-tool publication contracts, and the
-/// bounded first-step proofs.
+/// ⚖️ LAW: the brep kernel's mesh transfer unit fits the wire bound the VIEWER's own
+/// `flowTessellateResolve` declares — the same law the editor surface states about its own chain
+/// route, so an LOD the editor can paint is never one the viewer silently cannot. While this route
+/// carried the 8 KiB gesture quota the transfer unit collapsed to 4 KiB of base64 per whole
+/// `flowEvalTick`, i.e. ten round trips for one `sphere-cut-with-torus` body
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️preview-mesh-delivery-2026-09-12.md`).
+#[test]
+fn view_tessellate_envelope_fits_the_declared_wire_bound() {
+    let maximum = semio_framework_os_flow::brep_geometry::tessellate_envelope_maximum_bytes();
+    assert!(maximum <= GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES, "one tessellate step envelope is at most {maximum} bytes but the viewer's declared wire bound is {GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES}");
+    assert!(maximum > GENERATION3D_VIEW_RAW_BYTES, "a transfer unit that still fits the gesture quota needs no route of its own");
+    assert_eq!(generation3d_view_flow_eval_contract().max_raw_wire_bytes, GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES, "the registered contract and the factory-side wire cap are one bound");
+}
+
+/// 🧾️ The four tables that must agree or a viewer route is silently dead: the typed command enum's
+/// own ids, the three retained tool-id lists (view actions, the host contributions push and the
+/// runtime evaluation chain), the factories' per-tool publication contracts, and the bounded
+/// first-step proofs.
 #[test]
 fn every_viewer_tool_id_is_declared_in_all_four_tables() {
     let commands: std::collections::BTreeSet<&str> = Generation3dViewCommand::TOOL_JOB_IDS.iter().copied().collect();
-    let retained: std::collections::BTreeSet<&str> = GENERATION3D_VIEW_TOOL_IDS.iter().chain(GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.iter()).copied().collect();
+    let retained: std::collections::BTreeSet<&str> =
+        GENERATION3D_VIEW_TOOL_IDS.iter().chain(GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.iter()).chain(GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.iter()).chain(GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.iter()).copied().collect();
     let published: std::collections::BTreeSet<&str> = <Generation3dViewBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
         .iter()
         .chain(<Generation3dViewContributionsJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
+        .chain(<Generation3dViewExampleJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
+        .chain(<Generation3dViewFlowEvalJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
         .map(|contract| contract.tool_id)
         .collect();
     let proved: std::collections::BTreeSet<String> = <Generation3dViewer as ArtifactViewer>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id().to_string()).collect();
@@ -39,6 +57,8 @@ fn no_viewer_tool_publishes_on_the_artifact_lane() {
     for contract in <Generation3dViewBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
         .iter()
         .chain(<Generation3dViewContributionsJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
+        .chain(<Generation3dViewExampleJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
+        .chain(<Generation3dViewFlowEvalJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
     {
         assert!(!contract.lanes.is_empty(), "{} declares no publication lane", contract.tool_id);
         assert!(!contract.lanes.contains(&ArtifactToolPublicationLane::Artifact), "viewer tool {} must never publish on the artifact lane", contract.tool_id);
@@ -48,11 +68,16 @@ fn no_viewer_tool_publishes_on_the_artifact_lane() {
 
 /// 🕹️ Every declared action must be `Migrated`, the only UI-dispatchable classification — an
 /// unclassified viewer action is rejected at dispatch with `interactive-job.not-ui-safe`.
+///
+/// 🎨️ `setActiveExample` is in this law too: it is an app-scoped verb `build_definition` copies onto
+/// every window kind, so it reaches the SAME `window.actions` table the seven window verbs do — and
+/// its `ActionKind` must be `View`, never `Mutation`, or `ShellHost`'s read-only gate swallows every
+/// pick on this surface (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
 fn every_declared_viewer_action_is_migrated() {
     let def = create_generation3d_viewer();
     let window = def.window_kinds.iter().find(|window| window.id == preview::WINDOW_KIND_ID).expect("the viewer declares its preview window kind");
-    for tool_id in GENERATION3D_VIEW_TOOL_IDS {
+    for tool_id in GENERATION3D_VIEW_TOOL_IDS.iter().chain(GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.iter()) {
         let action = window.actions.iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("tool {tool_id} has no declared action"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "action {tool_id} is not Migrated");
         assert_eq!(action.kind, ActionKind::View, "a viewer action must be a View action");
@@ -115,6 +140,11 @@ async fn every_viewer_action_dispatches_live_and_never_mutates_the_document() {
         Generation3dViewCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 120.0 }),
         Generation3dViewCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 42.0 }),
         Generation3dViewCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 2.0 }),
+        // 🎨️ The navbar example picker's verb belongs in this law too: loading an example into a
+        // read-only surface is a CONFIG edit, and it must stay one
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        Generation3dViewCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_SHELL.into() }),
+        Generation3dViewCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }),
     ];
     for command in commands {
         let id = command.command_id();

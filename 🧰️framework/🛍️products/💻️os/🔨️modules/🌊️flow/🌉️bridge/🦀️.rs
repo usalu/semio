@@ -318,6 +318,12 @@ pub(crate) fn build_channel_eval_json(fixture: &FlowFixture, channels: &EvalChan
             }
         }
         widgets.insert(id.to_string(), crate::os_pack::json::Value::Object(entry));
+        // 🧹️ `merge` MINTS a dictionary (`ColdDictionaryBuilder::finish`), so a neuron that carries
+        // params leaves this projection owning the only copy — and `Dictionary::drop` fail-closes on
+        // exactly that. Retire it here rather than at the loop's end: the leak is per widget, and it
+        // trapped the guest on any graph whose neurons carry inline params
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        neural::ColdRetire::retire_cold(input_dict);
     }
     crate::os_pack::json::to_string(&crate::os_pack::json::Value::Object(widgets))
 }

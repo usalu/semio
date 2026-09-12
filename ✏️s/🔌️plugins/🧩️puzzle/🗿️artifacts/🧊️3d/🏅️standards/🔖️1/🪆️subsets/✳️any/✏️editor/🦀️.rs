@@ -40,7 +40,7 @@ use semio_framework_job::{CommitCandidate, InteractiveJob, InteractiveJobCloseSt
 use semio_framework_plugin::{
     mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactOwnedToolJobFactory,
     ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Dialect, DialogDefinition, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
-    ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionWrite, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, PluginCloseStep,
+    ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionVerb, InteractionWrite, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, PluginCloseStep,
     MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolRef, WindowEngagement,
     WindowMeasure, FRAMEWORK_HISTORY_BODY_KEY, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
@@ -2262,6 +2262,21 @@ pub fn puzzle3d_document_panel_bodies() -> Vec<String> {
     bodies
 }
 
+/// 🕹️ The scope a SELECTION change invalidates: the world body every window renders the marks into,
+/// [`puzzle3d_selection_panel_bodies`] (inspector + outliner rows + history) and the window measures
+/// whose Select controls bind the active mode/granularity. Never the catalogue, never the settings
+/// panel, never the utilities/tools/engagements rails, never the label overlay.
+pub fn puzzle3d_selection_scope() -> UiDirtyScope {
+    UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: puzzle3d_selection_panel_bodies(), utilities: false, tools: false, engagements: false, measures: true, labels: false }
+}
+
+/// 🪜️ Switching a domain's selection MODE or GRANULARITY moves no selection and no document — it moves
+/// the window's own Select chrome (the measures rail binds both controls) and what the world body
+/// highlights at the new level of detail. No panel renders either field.
+pub fn puzzle3d_interaction_chrome_scope() -> UiDirtyScope {
+    UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: true, labels: false }
+}
+
 /// @emoji 🐢️ What class of shell state one declared command invalidates — the ONE place this app
 /// decides a `UiDirtyScope`, next to the command catalogue whose ids it keys on.
 ///
@@ -2293,6 +2308,10 @@ pub enum Puzzle3dScopeClass {
     WindowOption,
     /// 🕹️ Selection changed: world body + [`puzzle3d_selection_panel_bodies`] + window measures.
     Selection,
+    /// 🎮️ One of the framework's six interaction verbs ([`InteractionVerb`]). These never reach
+    /// `dispatch_step` — the framework's `dispatch_interaction_action` owns them — so this app declares
+    /// them back through `ArtifactEditor::interaction_scope` instead, out of the SAME table.
+    Interaction(InteractionVerb),
     /// 📝️ Document edited: world body + [`puzzle3d_document_panel_bodies`] + window measures.
     Document,
     /// 🏛️ Anything that can move the shell chrome itself — utilities, tools, engagements, labels, or
@@ -2309,9 +2328,10 @@ pub fn puzzle3d_scope(class: Puzzle3dScopeClass) -> UiDirtyScope {
         Puzzle3dScopeClass::FillOptions => puzzle3d_fill_options_scope(),
         Puzzle3dScopeClass::SuggestionsTick => puzzle3d_suggestions_tick_scope(),
         Puzzle3dScopeClass::WindowOption => puzzle3d_window_option_scope(),
-        Puzzle3dScopeClass::Selection => {
-            UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: puzzle3d_selection_panel_bodies(), utilities: false, tools: false, engagements: false, measures: true, labels: false }
-        }
+        Puzzle3dScopeClass::Selection => puzzle3d_selection_scope(),
+        Puzzle3dScopeClass::Interaction(InteractionVerb::Hover) => puzzle3d_viewport_scope(),
+        Puzzle3dScopeClass::Interaction(InteractionVerb::Select | InteractionVerb::ClearSelection | InteractionVerb::SelectAll) => puzzle3d_selection_scope(),
+        Puzzle3dScopeClass::Interaction(InteractionVerb::SetSelectionMode | InteractionVerb::SetGranularity) => puzzle3d_interaction_chrome_scope(),
         Puzzle3dScopeClass::Document => {
             UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: puzzle3d_document_panel_bodies(), utilities: false, tools: false, engagements: false, measures: true, labels: false }
         }
@@ -3867,6 +3887,19 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     self.ephemeral = Some(shell.1);
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(shell.0));
                 }
+                // 📤️ `exportFixture` reads the document and publishes a download; it owns no mutation, no
+                // precompute session and no placement scene, so it resolves here, from the snapshot, and
+                // picks its lane by payload size: one inline effect under the guest's contiguous-request
+                // ceiling, the framework's segmented-download lane above it (a 145 714 B Nakagin export
+                // reached no file as an inline effect — B36 §5, B38 §2).
+                if command.action_id() == "exportFixture" {
+                    self.stage = Puzzle3dWindowCommandStage::Complete;
+                    self.ephemeral = Some(EphemeralEmit::default());
+                    return match export_fixture::puzzle3d_export_publication(&puzzle3d_fixture_from_snapshot(snapshot.typed()), &runtime.active_example_id)? {
+                        export_fixture::Puzzle3dExportPublication::Inline(effect) => Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::effect(effect))),
+                        export_fixture::Puzzle3dExportPublication::Segmented(download) => Ok(crate::retained_command::PuzzleCommandWorkStep::Download(download)),
+                    };
+                }
                 self.prologue.scene_step(command.action_id(), snapshot, &runtime, Some(view), Some(window_id));
                 self.stage = Puzzle3dWindowCommandStage::Sync;
                 Ok(Self::progress("puzzle3d-action-scene", "Reading the document", "Dokument wird gelesen"))
@@ -4349,8 +4382,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dAddObjectKindStage::Publish => {
                 let payload = self.payload.take().ok_or_else(|| Fault::from("puzzle3d-add-kind-payload-owner"))?;
+                let object_id = self.object_id.take().ok_or_else(|| Fault::from("puzzle3d-add-kind-object-owner"))?;
                 let object = crate::Puzzle3dObject {
-                    id: self.object_id.take().ok_or_else(|| Fault::from("puzzle3d-add-kind-object-owner"))?,
+                    id: object_id.clone(),
                     label: Some(payload.kind_id.clone()),
                     object_kind: Some(payload.kind_id),
                     anchor: Default::default(),
@@ -4365,7 +4399,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 self.mutation = Some(crate::standards::v1::subsets::any::schema::mutations::create_object(object, None));
                 self.stage = Puzzle3dAddObjectKindStage::Complete;
                 let artifact_mutations = self.catalog_mutation.take().into_iter().chain(self.mutation.take()).collect();
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations, ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("addObjectKind")), ..Default::default() }))
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations,
+                    ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("addObjectKind")),
+                    interaction_writes: vec![InteractionWrite::replace(PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_GRANULARITY_OBJECT, [object_id])],
+                    ..Default::default()
+                }))
             }
             Puzzle3dAddObjectKindStage::Complete => Err(Fault::from("puzzle3d-add-kind-complete-repolled")),
             Puzzle3dAddObjectKindStage::Closing => Err(Fault::from("puzzle3d-add-kind-closing")),
@@ -7114,10 +7153,10 @@ impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "addTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "acceptSuggestion", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "addBrushObject", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
-        ArtifactToolPublicationContract { tool_id: "addObjectKind", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "addObjectKind", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "createAttraction", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "deleteAttraction", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "deleteTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "duplicateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "exportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -7703,6 +7742,16 @@ impl ArtifactEditor for Puzzle3dPlayApp {
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         window_ownership::register_config(registry)
+    }
+
+    /// 🎮️ The six framework interaction verbs, answered out of this app's OWN scope table
+    /// ([`Puzzle3dScopeClass::Interaction`]) instead of the framework's blanket `UiDirtyScope::Full`: a
+    /// hover repaints the world body alone, a pick adds the inspector + outliner rows + history panel,
+    /// a mode/granularity switch only the window's Select chrome. A verb that touched any domain this
+    /// app does not declare — or none at all — answers `None`, and the framework keeps its widest scope.
+    fn interaction_scope(verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
+        let declared = !domains.is_empty() && domains.iter().all(|domain| *domain == PUZZLE3D_INTERACTION_DOMAIN);
+        declared.then(|| puzzle3d_scope(Puzzle3dScopeClass::Interaction(verb)))
     }
 
     fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {

@@ -1,0 +1,79 @@
+{
+  "provenance": {
+    "ticket": "26/09/09/PROCEDURAL-3D-END-TO-END",
+    "what": "One node-graph picture — camera, grid, wires, node bodies, ports — described once, so every implementation that turns a canvas::Scene into draw calls can be measured against the same expectation.",
+    "producers": [
+      "rust: semio-framework-os-infinite, canvas::draw_list::scene_draw_list_json over a Scene built by 🧪️tests/🎬️draw-list/🦀️.rs::paint_fixture_scene",
+      "javascript: replayFlowDrawList in 🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🖥️flow-host.js, recorded by 🌊️flow/🕸️wasm/🧪️tests/🎬️draw-list/🟨️.js"
+    ],
+    "paintOrder": "pushClipLayer(viewport) → grid lines → wires → node bodies (fill then stroke) → ports (fill then stroke) → popLayer",
+    "cameraLaw": "Every command carries its own affine, already composed with canvas::camera::camera_content_affine(camera, viewport). A replayer applies the affine verbatim and adds only its own device-pixel base transform — it never re-derives the camera."
+  },
+  "version": 1,
+  "camera": { "x": 120.0, "y": -40.0, "zoom": 1.25 },
+  "viewport": { "width": 640, "height": 400, "dpr": 1.0 },
+  "grid": {
+    "strokeWidth": 0.8,
+    "color": [58, 62, 70, 255],
+    "lines": [
+      [-200.0, -200.0, -200.0, 200.0],
+      [0.0, -200.0, 0.0, 200.0],
+      [-200.0, 0.0, 200.0, 0.0]
+    ]
+  },
+  "wires": [
+    {
+      "id": "number→add",
+      "color": [122, 162, 247, 255],
+      "strokeWidth": 2.0,
+      "curve": [-120.0, -40.0, -60.0, -40.0, -20.0, 20.0, 40.0, 20.0]
+    },
+    {
+      "id": "add→extrude",
+      "color": [158, 206, 106, 255],
+      "strokeWidth": 2.0,
+      "curve": [140.0, 20.0, 180.0, 20.0, 200.0, 96.0, 240.0, 96.0]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "number",
+      "x": -180.0,
+      "y": -40.0,
+      "width": 120.0,
+      "height": 56.0,
+      "radius": 10.0,
+      "fill": [30, 32, 40, 255],
+      "stroke": [96, 102, 114, 255],
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "add",
+      "x": 90.0,
+      "y": 20.0,
+      "width": 100.0,
+      "height": 48.0,
+      "radius": 8.0,
+      "fill": [30, 32, 40, 255],
+      "stroke": [187, 154, 247, 255],
+      "strokeWidth": 2.5
+    },
+    {
+      "id": "extrude",
+      "x": 300.0,
+      "y": 96.0,
+      "width": 132.0,
+      "height": 64.0,
+      "radius": 12.0,
+      "fill": [30, 32, 40, 255],
+      "stroke": [96, 102, 114, 255],
+      "strokeWidth": 1.5
+    }
+  ],
+  "ports": [
+    { "id": "number@value", "x": -120.0, "y": -40.0, "radius": 6.0, "fill": [122, 162, 247, 255], "stroke": [16, 17, 21, 255], "strokeWidth": 1.0 },
+    { "id": "add@left", "x": 40.0, "y": 20.0, "radius": 6.0, "fill": [122, 162, 247, 255], "stroke": [16, 17, 21, 255], "strokeWidth": 1.0 },
+    { "id": "add@sum", "x": 140.0, "y": 20.0, "radius": 6.0, "fill": [158, 206, 106, 255], "stroke": [16, 17, 21, 255], "strokeWidth": 1.0 },
+    { "id": "extrude@profile", "x": 234.0, "y": 96.0, "radius": 6.0, "fill": [158, 206, 106, 255], "stroke": [16, 17, 21, 255], "strokeWidth": 1.0 }
+  ]
+}

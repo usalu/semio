@@ -1,0 +1,94 @@
+{
+  "$comment": "🔁️ Language-agnostic statement of the CSS animation-scope contract. The cost of a CSS animation is the size of the style invalidation it causes, not the number of animations: an animated registered custom property declared `inherits: true` and started on the document root re-resolves the computed style of EVERY element on EVERY frame. Measured on the generation3d procedural example (ticket 2026/09/09/PROCEDURAL-3D-END-TO-END, report 📓️host-reconcile-silence-2026-09-12.md): nine such clocks on `:root` cost 112.3 s of style recalculation out of 129.0 s of main-thread task time and paced the plugin host's more-work→poll continuation at one macrotask per frame, so the example converged in 110 s instead of 12.5 s. Any implementation that reads a stylesheet must answer these cases identically.",
+  "laws": [
+    "no-document-root-clock",
+    "animated-custom-properties-are-non-inherited",
+    "every-paint-owns-its-clock"
+  ],
+  "cases": [
+    {
+      "name": "a document-root clock on an inherited property breaks every law",
+      "css": "@property --ring-angle { syntax: \"<angle>\"; inherits: true; initial-value: 0deg; }\n@keyframes ring-spin { to { --ring-angle: 360deg; } }\n:root { animation: ring-spin 1.6s linear infinite; }\n.ring::after { background: conic-gradient(from var(--ring-angle), red); }\n",
+      "expect": {
+        "animatedCustomProperties": ["--ring-angle"],
+        "keyframesByProperty": { "--ring-angle": ["ring-spin"] },
+        "propertyInheritance": { "--ring-angle": true },
+        "rootClockSelectors": [":root"],
+        "clocks": [{ "selector": ":root", "keyframes": ["ring-spin"] }],
+        "paints": [{ "selector": ".ring::after", "properties": ["--ring-angle"] }],
+        "violations": [
+          "no-document-root-clock",
+          "animated-custom-properties-are-non-inherited",
+          "every-paint-owns-its-clock"
+        ]
+      }
+    },
+    {
+      "name": "an element-scoped clock on a non-inherited property conforms",
+      "css": "@property --ring-angle { syntax: \"<angle>\"; inherits: false; initial-value: 0deg; }\n@keyframes ring-spin { to { --ring-angle: 360deg; } }\n.ring::after { animation: ring-spin 1.6s linear infinite; background: conic-gradient(from var(--ring-angle), red); }\n",
+      "expect": {
+        "animatedCustomProperties": ["--ring-angle"],
+        "keyframesByProperty": { "--ring-angle": ["ring-spin"] },
+        "propertyInheritance": { "--ring-angle": false },
+        "rootClockSelectors": [],
+        "clocks": [{ "selector": ".ring::after", "keyframes": ["ring-spin"] }],
+        "paints": [{ "selector": ".ring::after", "properties": ["--ring-angle"] }],
+        "violations": []
+      }
+    },
+    {
+      "name": "a rule that only forwards the phase into another custom property is not a paint",
+      "css": "@property --ring-angle { syntax: \"<angle>\"; inherits: false; initial-value: 0deg; }\n@keyframes ring-spin { to { --ring-angle: 360deg; } }\n.host { --ring-conic: conic-gradient(from var(--ring-angle), red); }\n.host .line { background-image: var(--ring-conic); animation: ring-spin 1.6s linear infinite; }\n",
+      "expect": {
+        "animatedCustomProperties": ["--ring-angle"],
+        "keyframesByProperty": { "--ring-angle": ["ring-spin"] },
+        "propertyInheritance": { "--ring-angle": false },
+        "rootClockSelectors": [],
+        "clocks": [{ "selector": ".host .line", "keyframes": ["ring-spin"] }],
+        "paints": [{ "selector": ".host .line", "properties": ["--ring-angle"] }],
+        "violations": []
+      }
+    },
+    {
+      "name": "a nested utility resolves its pseudo-element path and `animation: none` starts no clock",
+      "css": "@property --ring-opacity { syntax: \"<number>\"; inherits: false; initial-value: 1; }\n@keyframes ring-pulse { 50% { --ring-opacity: 0.5; } }\n@utility border-ring {\n  &::after {\n    opacity: var(--ring-opacity);\n    animation: ring-pulse 1.6s ease-in-out infinite;\n  }\n  @media (prefers-reduced-motion: reduce) {\n    &::after {\n      animation: none;\n      opacity: 1;\n    }\n  }\n}\n",
+      "expect": {
+        "animatedCustomProperties": ["--ring-opacity"],
+        "keyframesByProperty": { "--ring-opacity": ["ring-pulse"] },
+        "propertyInheritance": { "--ring-opacity": false },
+        "rootClockSelectors": [],
+        "clocks": [{ "selector": "@utility border-ring &::after", "keyframes": ["ring-pulse"] }],
+        "paints": [{ "selector": "@utility border-ring &::after", "properties": ["--ring-opacity"] }],
+        "violations": []
+      }
+    },
+    {
+      "name": "a paint whose clock is missing is named even when nothing animates the root",
+      "css": "@property --ring-angle { syntax: \"<angle>\"; inherits: false; initial-value: 0deg; }\n@keyframes ring-spin { to { --ring-angle: 360deg; } }\n.ring::after { background: conic-gradient(from var(--ring-angle), red); }\n",
+      "expect": {
+        "animatedCustomProperties": ["--ring-angle"],
+        "keyframesByProperty": { "--ring-angle": ["ring-spin"] },
+        "propertyInheritance": { "--ring-angle": false },
+        "rootClockSelectors": [],
+        "clocks": [],
+        "paints": [{ "selector": ".ring::after", "properties": ["--ring-angle"] }],
+        "violations": ["every-paint-owns-its-clock"]
+      }
+    }
+  ],
+  "stylesheet": {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui.css",
+    "keyframesByProperty": {
+      "--celebrate-border-angle": ["celebrate-border-spin"],
+      "--celebrate-border-padding": ["celebrate-border-burst"],
+      "--introduced-border-width": ["introduced-border-pulse"],
+      "--loading-border-angle": ["loading-border-spin"],
+      "--loading-border-dashoffset": ["window-silhouette-border-loading-dash"],
+      "--loading-border-pulse-opacity": ["loading-border-pulse"],
+      "--waiting-border-angle": ["waiting-border-spin"],
+      "--waiting-border-dashoffset": ["window-silhouette-border-waiting-dash"],
+      "--waiting-border-pulse-opacity": ["waiting-border-pulse"]
+    },
+    "violations": []
+  }
+}

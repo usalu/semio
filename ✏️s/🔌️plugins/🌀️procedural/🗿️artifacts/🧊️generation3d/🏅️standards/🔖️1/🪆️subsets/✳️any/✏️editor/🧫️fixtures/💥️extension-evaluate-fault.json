@@ -1,0 +1,18 @@
+{
+  "code": "flow.extension-evaluate-failed",
+  "extensionId": "flow-extension-math",
+  "capability": "evaluate",
+  "faultCode": "extension.invoke-unavailable",
+  "faultMessage": "extension.invoke-unavailable",
+  "labels": {
+    "en": "Geometry extension 'flow-extension-math' could not evaluate",
+    "de": "Geometrie-Erweiterung 'flow-extension-math' konnte nicht auswerten"
+  },
+  "answers": [
+    { "name": "fault", "ok": false, "faultCode": "extension.invoke-unavailable", "faultMessage": "extension.invoke-unavailable", "phase": "faulted", "publishesFault": true },
+    { "name": "ok", "ok": true, "faultCode": "", "faultMessage": "", "phase": "idle", "publishesFault": false },
+    { "name": "unflagged-answer", "ok": false, "faultCode": "", "faultMessage": "", "phase": "idle", "publishesFault": false }
+  ],
+  "clearedByContributionInstall": true,
+  "phases": ["idle", "samplingEdges", "meshingFaces", "packingEdges", "transferring", "complete", "cancelled", "invalid", "failed", "faulted"]
+}

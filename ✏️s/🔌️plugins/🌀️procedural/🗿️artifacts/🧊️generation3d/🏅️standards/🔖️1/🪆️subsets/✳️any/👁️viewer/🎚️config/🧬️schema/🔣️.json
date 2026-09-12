@@ -8,7 +8,8 @@
     "lodMode",
     "showMode",
     "previewCamera",
-    "sunJson"
+    "sunJson",
+    "activeExampleId"
   ],
   "properties": {
     "lodMode": {
@@ -24,6 +25,10 @@
       "x-semio-state": "config"
     },
     "sunJson": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "activeExampleId": {
       "type": "string",
       "x-semio-state": "config"
     }

@@ -38,19 +38,28 @@ async fn generation3d_editor_and_viewer_share_dialect() {
 }
 
 /// 📚️ Ticket 26/09/03/PROCEDURAL-3D-END-TO-END — `.editor_with_examples::<Generation3dPlayApp>`
-/// must stamp the eight `semio_s_artifact_procedural_generation3d::editor::generation3d::examples()` fixtures onto the manifest,
-/// `app_id`-addressed to the gen3d editor surface, or the react shell's example dropdown
+/// must stamp the eight `semio_s_artifact_procedural_generation3d::editor::generation3d::examples()`
+/// fixtures onto the manifest addressed to the gen3d DIALECT, or the react shell's example dropdown
 /// (`activePluginManifest.examples`) stays hidden for `generation3d`.
+///
+/// 👁️ The same eight resolve for BOTH surfaces of that dialect: `manifest::examples_for_app` answers
+/// the editor and the viewer identically, which is what gives the read-only surface its own picker
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
-fn generation3d_manifest_examples_are_registered_on_the_editor_surface() {
+fn generation3d_manifest_examples_are_registered_on_the_dialect_for_both_surfaces() {
     let plugin = super::plugin().expect("procedural plugin manifest should build synchronously");
-    let editor_app_id = semio_s_artifact_procedural_generation3d::editor::generation3d::create_generation3d_app().id;
-    assert_eq!(editor_app_id, "s.procedural.generation3d@1/*#editor");
-    let registered_ids: Vec<&str> = plugin.manifest.examples.iter().filter(|example| example.app_id == editor_app_id).map(|example| example.id.as_str()).collect();
+    let editor = semio_s_artifact_procedural_generation3d::editor::generation3d::create_generation3d_app();
+    let viewer = semio_s_artifact_procedural_generation3d::viewer::generation3d::create_generation3d_viewer();
+    assert_eq!(editor.id, "s.procedural.generation3d@1/*#editor");
+    assert_eq!(viewer.id, "s.procedural.generation3d@1/*#viewer");
+    assert_eq!(editor.dialect, viewer.dialect, "both surfaces are bound to one dialect");
     let expected_sources = semio_s_artifact_procedural_generation3d::editor::generation3d::examples();
     let expected_ids: Vec<&str> = expected_sources.iter().map(|source| source.id()).collect();
-    assert_eq!(registered_ids.len(), 8);
-    assert_eq!(registered_ids, expected_ids);
+    for app in [&editor, &viewer] {
+        let registered_ids: Vec<&str> = semio_framework_plugin::manifest::examples_for_app(&plugin.manifest.examples, app).into_iter().map(|example| example.id.as_str()).collect();
+        assert_eq!(registered_ids.len(), 8, "{} must offer all eight bundled examples", app.id);
+        assert_eq!(registered_ids, expected_ids, "{} must offer the authored example order", app.id);
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -61,9 +70,9 @@ async fn assembly_editor_and_viewer_share_dialect() {
 #[test]
 fn assembly_manifest_examples_are_registered_on_the_editor_surface() {
     let plugin = super::plugin().expect("procedural plugin manifest should build synchronously");
-    let editor_app_id = semio_s_artifact_procedural_assembly::editor::assembly::create_assembly_editor().id;
-    assert_eq!(editor_app_id, "s.assembly@1/*#editor");
-    let registered_ids: Vec<&str> = plugin.manifest.examples.iter().filter(|example| example.app_id == editor_app_id).map(|example| example.id.as_str()).collect();
+    let editor = semio_s_artifact_procedural_assembly::editor::assembly::create_assembly_editor();
+    assert_eq!(editor.id, "s.assembly@1/*#editor");
+    let registered_ids: Vec<&str> = semio_framework_plugin::manifest::examples_for_app(&plugin.manifest.examples, &editor).into_iter().map(|example| example.id.as_str()).collect();
     let sources = semio_s_artifact_procedural_assembly::examples::sources();
     let expected_ids: Vec<&str> = sources.iter().map(|source| source.id()).collect();
     assert_eq!(registered_ids, expected_ids);

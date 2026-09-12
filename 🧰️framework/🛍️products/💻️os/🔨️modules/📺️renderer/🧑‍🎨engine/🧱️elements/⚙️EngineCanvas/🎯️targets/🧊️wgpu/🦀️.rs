@@ -157,7 +157,7 @@ struct EngineSurfaceRegistry {
 
 impl Default for EngineSurfaceRegistry {
     fn default() -> Self {
-        Self { slots: Box::new(std::array::from_fn(|_| EngineSurfaceSlot { id: None, generation: 0, exhausted: false, value: None, retirement: None })), faulted: false }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| EngineSurfaceSlot { id: None, generation: 0, exhausted: false, value: None, retirement: None }), faulted: false }
     }
 }
 
@@ -744,7 +744,7 @@ struct StagedEngineScenes {
 
 impl Default for StagedEngineScenes {
     fn default() -> Self {
-        Self { slots: Box::new([const { None }; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]), len: 0, faulted: false }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), len: 0, faulted: false }
     }
 }
 
@@ -822,8 +822,8 @@ impl Default for EngineCanvasBuildContext {
             document_generation: 0,
             #[cfg(test)]
             scene_revision: 0,
-            packets: Box::new([const { None }; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]),
-            rejected: Box::new([const { None }; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]),
+            packets: semio_framework_async::boxed_fixed_slots(|| None),
+            rejected: semio_framework_async::boxed_fixed_slots(|| None),
             len: 0,
             rejected_len: 0,
             reservation_sequence: 0,
@@ -1200,7 +1200,7 @@ pub(crate) struct EngineCanvasPresenter {
 
 impl Default for EngineCanvasPresenter {
     fn default() -> Self {
-        Self { slots: ManuallyDrop::new(Some(Box::new(std::array::from_fn(|_| EngineGpuSlot::new())))), primary_metrics_generation: 0, metrics_invalidation_scan: None }
+        Self { slots: ManuallyDrop::new(Some(semio_framework_async::boxed_fixed_slots(EngineGpuSlot::new))), primary_metrics_generation: 0, metrics_invalidation_scan: None }
     }
 }
 
@@ -1895,6 +1895,7 @@ fn node_graph_apply_hover(engine: &mut NodeGraphEngine, node_id: Option<&str>, p
 /// @see `🧱️elements/🕸️NodeGraph/🟦️.tsx` — `syncFlowSessionStructureFromScene`/`syncFlowSessionEvalFromScene`
 fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyncCache, graph: &ui_wgpu::wgpu::NodeGraphScene) -> bool {
     let mut changed = false;
+    let mut fixture_changed = false;
     if let NodeGraphEngine::Flow(host) = engine {
         let operator_ids: Vec<String> = graph.operators.iter().map(|record| record.id.clone()).collect();
         if !operator_ids.is_empty() && cache.operator_ids.as_ref() != Some(&operator_ids) {
@@ -1907,6 +1908,7 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
                 host.resync_fixture_from_scene(fixture);
             }
             cache.fixture_json = graph.fixture_json.clone();
+            fixture_changed = true;
             changed = true;
         }
     }
@@ -1917,6 +1919,7 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
                 let _ = host.sync_from_scene_json(json);
             }
             cache.scene_pack = Some(payload);
+            fixture_changed = true;
             changed = true;
         }
     }
@@ -1957,15 +1960,34 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
         cache.lod_json = graph.lod_json.clone();
         changed = true;
     }
+    // 🖼️ The opening camera is a DECISION, not a copy: a stored camera that does not frame this
+    // graph is replaced by a fit. Every later viewport the plugin publishes is one this renderer
+    // itself persisted from a gesture, so it is adopted verbatim. Twin of `dagStartupCamera` in
+    // `🧱️elements/🕸️NodeGraph/🟦️.tsx`.
     if cache.viewport.as_ref() != graph.viewport.as_ref() {
+        let first = cache.viewport.is_none();
         if let Some(viewport) = graph.viewport.as_ref() {
             match engine {
+                NodeGraphEngine::Flow(host) if first => {
+                    host.dag.adopt_camera_or_fit(viewport.x, viewport.y, viewport.zoom);
+                }
                 NodeGraphEngine::Flow(host) => host.set_camera(viewport.x, viewport.y, viewport.zoom),
+                NodeGraphEngine::Dag(host) if first => {
+                    host.dag.adopt_camera_or_fit(viewport.x, viewport.y, viewport.zoom);
+                }
                 NodeGraphEngine::Dag(host) => host.dag.set_camera(viewport.x, viewport.y, viewport.zoom),
             }
         }
         cache.viewport = graph.viewport.clone();
         changed = true;
+    } else if fixture_changed {
+        // 🔀️ An example switch can move the whole graph out from under a live camera; only then is
+        // the camera the viewer set re-fitted (`CONTENT_REFIT_MAX_COVERAGE`).
+        let refitted = match engine {
+            NodeGraphEngine::Flow(host) => host.dag.refit_camera_if_content_left_view(),
+            NodeGraphEngine::Dag(host) => host.dag.refit_camera_if_content_left_view(),
+        };
+        changed |= refitted;
     }
     changed | sync_node_graph_evaluation(engine, cache, graph)
 }
@@ -2936,19 +2958,26 @@ fn label_chrome_from_graph(host: &GraphHost) -> LabelInteractionChrome {
     LabelInteractionChrome { selected_ids, highlighted_ids, hovered_id: host.dag.hovered_node_id(), dimmed_ids: Vec::new() }
 }
 
-fn clamp_label_font_px(atlas: &mut FontAtlas, text: &str, target_px: f32, max_w: f32, max_h: f32) -> f32 {
-    let px = target_px.max(4.0).round();
-    let (w, h) = atlas.measure_text(text, px);
-    if w <= max_w && h * 1.2 <= max_h {
+/// 🔠️ Smallest font an overlay label is allowed to shrink to. Below this a caption is a smudge, not
+/// a word — which is why width is answered by `canvas::text::ellipsize_by_measure` and never by
+/// shrinking further.
+const LABEL_LEGIBLE_MIN_PX: f32 = ui_styling::metrics::label::LEGIBLE_MIN_PX as f32;
+
+/// 📐️ Overlay label font size: the row's own target, shrunk ONLY to fit the row's height, never
+/// below {@link LABEL_LEGIBLE_MIN_PX}. Width is not a font decision — see
+/// {@link fit_overlay_label_text}. This used to binary-search the font down to 4 px on width too,
+/// which is how a node title wider than its body became an unreadable smear.
+fn clamp_label_font_px(atlas: &mut FontAtlas, text: &str, target_px: f32, max_h: f32) -> f32 {
+    let px = target_px.max(LABEL_LEGIBLE_MIN_PX).round();
+    if atlas.measure_text(text, px).1 * 1.2 <= max_h {
         return px;
     }
-    let mut low = 4.0_f32;
+    let mut low = LABEL_LEGIBLE_MIN_PX;
     let mut high = px;
-    let mut best = 4.0_f32;
+    let mut best = LABEL_LEGIBLE_MIN_PX;
     while low <= high {
         let mid = ((low + high) * 0.5).floor();
-        let (w, h) = atlas.measure_text(text, mid);
-        if w <= max_w && h * 1.2 <= max_h {
+        if atlas.measure_text(text, mid).1 * 1.2 <= max_h {
             best = mid;
             low = mid + 1.0;
         } else {
@@ -2958,26 +2987,11 @@ fn clamp_label_font_px(atlas: &mut FontAtlas, text: &str, target_px: f32, max_w:
     best
 }
 
-fn clamp_port_label_font_px(atlas: &mut FontAtlas, text: &str, target_px: f32, max_w: f32, max_h: f32) -> f32 {
-    let px = target_px.max(8.0).round();
-    let (w, _) = atlas.measure_text(text, px);
-    if w <= max_w && px * 1.25 <= max_h {
-        return px;
-    }
-    let mut low = 8.0_f32;
-    let mut high = px;
-    let mut best = 8.0_f32;
-    while low <= high {
-        let mid = ((low + high) * 0.5).floor();
-        let (w, _) = atlas.measure_text(text, mid);
-        if w <= max_w {
-            best = mid;
-            low = mid + 1.0;
-        } else {
-            high = mid - 1.0;
-        }
-    }
-    best
+/// ✂️ The wgpu shell's half of the shared caption law: clip by the GLYPH ATLAS's own measure. Its
+/// browser twin is `dagEllipsizeOverlayLabel` in `🕸️NodeGraph/🟦️.tsx`, and both are pinned to the
+/// rows of `♾️infinite/🖼️canvas/🧪️tests/🏷️label-fit/🔣️.json`.
+fn fit_overlay_label_text(atlas: &mut FontAtlas, text: &str, font_px: f32, max_w: f32) -> String {
+    canvas::text::ellipsize_by_measure(text, f64::from(max_w), |candidate| f64::from(atlas.measure_text(candidate, font_px).0))
 }
 
 fn label_overlay_fill(theme: &Theme, node_id: &str, ghost: bool, chrome: &LabelInteractionChrome) -> Rgba {
@@ -3012,14 +3026,22 @@ fn paint_label_overlay_row(ctx: &mut FrameworkWidgetContext<'_>, inner: Rect, ca
     let node_id = row.get("id").and_then(|v| v.as_str()).unwrap_or("");
     let is_port = row.get("kind").and_then(|v| v.as_str()) == Some("port") || matches!(align, Some("left") | Some("right"));
     let zoom_f = zoom.max(0.05) as f32;
-    let max_w = (node_w * f64::from(zoom_f) * f64::from(LABEL_INSET)).max(4.0) as f32;
+    // 📐️ The host publishes the caption's own screen budget (`maxScreenW`) because only it knows
+    // whether the caption sits INSIDE the node body or above it; `nodeW` is the fallback.
+    let max_w = row
+        .get("maxScreenW")
+        .and_then(|v| v.as_f64())
+        .filter(|w| *w > 0.0)
+        .unwrap_or_else(|| (node_w * f64::from(zoom_f) * f64::from(LABEL_INSET)).max(4.0)) as f32;
     let max_h = if is_port {
         row.get("maxScreenH").and_then(|v| v.as_f64()).filter(|h| *h > 0.0).map(|h| h as f32).unwrap_or((node_h * f64::from(zoom_f) * f64::from(LABEL_INSET)).max(4.0) as f32)
     } else {
         (node_h * f64::from(zoom_f) * f64::from(LABEL_INSET)).max(4.0) as f32
     };
     let target_px = row.get("fontScreenPx").and_then(|v| v.as_f64()).filter(|px| *px > 0.0).map(|px| px as f32).unwrap_or(DAG_LABEL_SCREEN_PX);
-    let font_px = if is_port { clamp_port_label_font_px(&mut ctx.atlas, text, target_px, max_w, max_h) } else { clamp_label_font_px(&mut ctx.atlas, text, target_px, max_w, max_h) };
+    let font_px = clamp_label_font_px(&mut ctx.atlas, text, target_px, max_h);
+    let fitted = fit_overlay_label_text(&mut ctx.atlas, text, font_px, max_w);
+    let text = fitted.as_str();
     let (anchor_x, anchor_y) = world_to_screen_inner(inner, cam_x, cam_y, zoom, wx, wy);
     let (text_w, text_h) = ctx.atlas.measure_text(text, font_px);
     let tx = match align {

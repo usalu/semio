@@ -169,8 +169,8 @@ describe("contributions pack crossing", () => {
 
   it("published example graphs recover operator kinds when ReadDocument is genesis", () => {
     const sources = exampleArtifactSources(
-      [{ id: "box-shell-preview", appId: "s.procedural.generation3d@1/*#editor", artifactJson: "neuron-kind=brep.prim3d.box neuron-kind=brep.solid.shell" }],
-      "s.procedural.generation3d@1/*#editor",
+      [{ id: "box-shell-preview", dialect: { artifactKind: "s.procedural.generation3d", standard: "1", subset: "*" }, artifactJson: "neuron-kind=brep.prim3d.box neuron-kind=brep.solid.shell" }],
+      { artifactKind: "s.procedural.generation3d", standard: "1", subset: "*" },
     );
     const scope = resolveDocumentOperatorKinds(sources);
     expect(scope).toEqual({ status: "resolved", kinds: ["brep.prim3d.box", "brep.solid.shell"] });

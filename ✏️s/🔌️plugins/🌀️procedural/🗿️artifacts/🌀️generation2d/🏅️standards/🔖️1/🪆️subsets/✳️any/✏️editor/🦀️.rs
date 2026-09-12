@@ -1536,7 +1536,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// — but it is still pointless before the first `Event::SurfaceVisible`, when `view` is `None`
     /// and nothing is mounted to render what it computes, so the chain waits instead of spinning
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn pending_effects(doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
+    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
         if view.is_none_or(|view| view.window_instances.is_empty()) {
             return Vec::new();
         }

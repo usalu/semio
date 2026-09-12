@@ -1,0 +1,112 @@
+{
+  "schema": "flow.extension-manifest-admission",
+  "pluginId": "flow-extension-admission",
+  "faultCode": "flow.extension-manifest-invalid",
+  "requiredManifestTextKeys": [
+    "schema",
+    "id",
+    "name",
+    "version"
+  ],
+  "requiredManifestListKeys": [
+    "activationEvents"
+  ],
+  "requiredManifestRecordKeys": [
+    "contributes"
+  ],
+  "requiredContributesListKeys": [
+    "schemas",
+    "operators"
+  ],
+  "requiredOperatorTextKeys": [
+    "id",
+    "extension",
+    "name",
+    "abbreviation",
+    "icon",
+    "summary"
+  ],
+  "requiredSchemaTextKeys": [
+    "id",
+    "module",
+    "name",
+    "icon",
+    "summary"
+  ],
+  "generationBump": {
+    "why": "installing this manifest is how a law moves the process-wide registry generation without depending on any other law's extension id",
+    "pluginId": "flow-extension-baseline-law",
+    "extensionId": "baseline-law",
+    "manifestJson": "{\"schema\": \"flow.extension\", \"id\": \"baseline-law\", \"name\": \"Baseline Law\", \"version\": \"1\", \"activationEvents\": [\"onStartup\"], \"contributes\": {\"schemas\": [], \"operators\": [], \"widgets\": [], \"commands\": [], \"settings\": []}}"
+  },
+  "rows": [
+    {
+      "id": "valid-full",
+      "why": "a complete manifest registers every operator and schema it declares",
+      "accepted": true,
+      "operators": [
+        "admission.echo"
+      ],
+      "schemas": [
+        "admission"
+      ],
+      "manifestJson": "{\"schema\": \"flow.extension\", \"id\": \"admission\", \"name\": \"Admission\", \"version\": \"1\", \"activationEvents\": [\"onStartup\"], \"contributes\": {\"schemas\": [{\"id\": \"admission\", \"module\": \"admission\", \"name\": \"Admission\", \"icon\": \"emoji:🧪️\", \"summary\": \"Contributed schema\", \"fields\": [{\"key\": \"nested\", \"value\": {\"kind\": \"any\"}, \"default\": {\"label\": \"schema default\"}, \"label\": null}]}], \"operators\": [{\"id\": \"admission.echo\", \"extension\": \"admission\", \"name\": \"Echo\", \"abbreviation\": \"E\", \"icon\": \"emoji:🧪️\", \"summary\": \"Contributed operator\", \"inputs\": [{\"code\": \"I\", \"abbreviation\": \"In\", \"name\": \"input\", \"fullName\": \"Input\", \"cardinality\": \"?\"}], \"outputs\": []}], \"widgets\": [], \"commands\": [], \"settings\": []}}"
+    },
+    {
+      "id": "valid-empty-operators",
+      "why": "declaring nothing is legal — an empty contribution is not a decode failure",
+      "accepted": true,
+      "operators": [],
+      "schemas": [],
+      "manifestJson": "{\"schema\": \"flow.extension\", \"id\": \"admission\", \"name\": \"Admission\", \"version\": \"1\", \"activationEvents\": [\"onStartup\"], \"contributes\": {\"schemas\": [], \"operators\": [], \"widgets\": [], \"commands\": [], \"settings\": []}}"
+    },
+    {
+      "id": "truncated-mid-object",
+      "why": "a payload cut mid-object is not JSON at all",
+      "accepted": false,
+      "operators": [],
+      "schemas": [],
+      "manifestJson": "{\"schema\": \"flow.extension\", \"id\": \"admission\", \"name\": \"Admission\", \"version\": \"1\", \"activationEvents\": [\"onStartup\"], \"contributes\": {\"schemas\": [{\"id\": \"admi"
+    },
+    {
+      "id": "metadata-only",
+      "why": "id/name/version alone pass the contribution fold's metadata probe, so ONLY the full manifest decode can catch this one",
+      "accepted": false,
+      "operators": [],
+      "schemas": [],
+      "manifestJson": "{\"schema\": \"flow.extension\", \"id\": \"admission\", \"name\": \"Admission\", \"version\": \"1\", \"activationEvents\": [\"onStartup\"]}"
+    },
+    {
+      "id": "contributes-renamed-operators",
+      "why": "a producer that writes `nodes` where the contract says `operators` contributes nothing",
+      "accepted": false,
+      "operators": [],
+      "schemas": [],
+      "manifestJson": "{\"schema\": \"flow.extension\", \"id\": \"admission\", \"name\": \"Admission\", \"version\": \"1\", \"activationEvents\": [\"onStartup\"], \"contributes\": {\"schemas\": [], \"nodes\": [{\"id\": \"admission.echo\", \"extension\": \"admission\", \"name\": \"Echo\", \"abbreviation\": \"E\", \"icon\": \"emoji:🧪️\", \"summary\": \"Contributed operator\", \"inputs\": [{\"code\": \"I\", \"abbreviation\": \"In\", \"name\": \"input\", \"fullName\": \"Input\", \"cardinality\": \"?\"}], \"outputs\": []}], \"widgets\": [], \"commands\": [], \"settings\": []}}"
+    },
+    {
+      "id": "contributes-not-an-object",
+      "why": "`contributes` is a record, never a list",
+      "accepted": false,
+      "operators": [],
+      "schemas": [],
+      "manifestJson": "{\"schema\": \"flow.extension\", \"id\": \"admission\", \"name\": \"Admission\", \"version\": \"1\", \"activationEvents\": [\"onStartup\"], \"contributes\": []}"
+    },
+    {
+      "id": "missing-activation-events",
+      "why": "every declared field of the manifest is required, not defaulted",
+      "accepted": false,
+      "operators": [],
+      "schemas": [],
+      "manifestJson": "{\"schema\": \"flow.extension\", \"id\": \"admission\", \"name\": \"Admission\", \"version\": \"1\", \"contributes\": {\"schemas\": [], \"operators\": [], \"widgets\": [], \"commands\": [], \"settings\": []}}"
+    },
+    {
+      "id": "operator-missing-abbreviation",
+      "why": "strictness reaches into every contributed operator, not just the envelope",
+      "accepted": false,
+      "operators": [],
+      "schemas": [],
+      "manifestJson": "{\"schema\": \"flow.extension\", \"id\": \"admission\", \"name\": \"Admission\", \"version\": \"1\", \"activationEvents\": [\"onStartup\"], \"contributes\": {\"schemas\": [], \"operators\": [{\"id\": \"admission.echo\", \"extension\": \"admission\", \"name\": \"Echo\", \"icon\": \"emoji:🧪️\", \"summary\": \"Contributed operator\", \"inputs\": [{\"code\": \"I\", \"abbreviation\": \"In\", \"name\": \"input\", \"fullName\": \"Input\", \"cardinality\": \"?\"}], \"outputs\": []}], \"widgets\": [], \"commands\": [], \"settings\": []}}"
+    }
+  ]
+}

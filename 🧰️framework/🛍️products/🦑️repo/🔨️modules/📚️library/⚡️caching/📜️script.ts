@@ -17,7 +17,7 @@ import { readInventoryGraph, type InventoryProject } from "./📇️inventory/�
 import { repoCacheDirectory } from "./🟦️.ts";
 import { cargoDirectories } from "./🦀️cargo/🟦️.ts";
 import { acquireResourceLease } from "./🔒️leases/🟦️.ts";
-import { planCachePrune, scanCargoBuildUnits, scanCargoTargetUnits, scanDirectoryUnits, deleteUnit, formatBytes, type CacheAreaInput, type CacheUnit, type PrunePlan } from "./🧹️pruning/🟦️.ts";
+import { planCachePrune, scanCargoBuildUnits, scanCargoIncrementalUnits, scanCargoTargetUnits, scanDirectoryUnits, deleteUnit, formatBytes, type CacheAreaInput, type CacheUnit, type PrunePlan } from "./🧹️pruning/🟦️.ts";
 
 const SCRIPT_ROOT = dirname(fileURLToPath(import.meta.url));
 const POLICY = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🔣️policy.json"), "utf8"));
@@ -303,25 +303,34 @@ async function pruneTestEvidence(repoRoot: string, dry: boolean): Promise<string
   return formatGcReport(collectGarbage(repoRoot, loadOracleRegistry(repoRoot), { dry, olderThanMs: POLICY.storage.tests.unusedAgeMs }));
 }
 
-/** ⚡️ Scans the one shared cache root's bounded areas: Cargo's combined build+target budget, Vite consumer caches, stray agent scratch dirs. Nx governs its own `nx/` dir via `maxCacheSize`. */
+/**
+ * ⚡️ Scans the one shared cache root's bounded areas: Cargo's compiled build+target budget, Cargo's separately
+ * (and much more tightly) bounded incremental crate dirs, unconditionally reclaimable stale finalized incremental
+ * sessions, Vite consumer caches, stray agent scratch dirs. Nx governs its own `nx/` dir via `maxCacheSize`.
+ */
 function scanCacheAreas(repoRoot: string, signal: AbortSignal, onUnit?: (area: string, unit: CacheUnit) => void): CacheAreaInput[] {
   const storage = POLICY.storage;
   const dirs = cargoDirectories(repoRoot);
   const progress = (area: string) => (unit: CacheUnit) => onUnit?.(area, unit);
   const buildUnits = scanCargoBuildUnits(dirs.build, signal, progress("cargo"));
   const targetUnits = dirs.target === dirs.build ? [] : scanCargoTargetUnits(dirs.target, signal, progress("cargo"));
+  const incremental = scanCargoIncrementalUnits(dirs.build, signal, (unit) => onUnit?.(unit.kind === "cargo-incremental-session" ? "cargo-incremental-sessions" : "cargo-incremental", unit));
   const viteUnits = scanDirectoryUnits(repoCacheDirectory(repoRoot, "vite"), signal, new Set(), progress("vite"));
   const agentUnits = scanDirectoryUnits(repoCacheDirectory(repoRoot, "agents"), signal, new Set(["resource-leases"]), progress("agents"));
   return [
     { name: "cargo", budgetBytes: storage.cargo.budgetBytes, unusedAgeMs: storage.cargo.unusedAgeMs, units: [...buildUnits, ...targetUnits] },
+    { name: "cargo-incremental", budgetBytes: storage.cargo.incremental.budgetBytes, unusedAgeMs: storage.cargo.incremental.unusedAgeMs, guardAgeMs: storage.cargo.incremental.guardAgeMs, units: incremental.units },
+    { name: "cargo-incremental-sessions", budgetBytes: null, unusedAgeMs: 0, units: incremental.staleSessions },
     { name: "vite", budgetBytes: null, unusedAgeMs: storage.vite.unusedAgeMs, units: viteUnits },
     { name: "agents", budgetBytes: null, unusedAgeMs: storage.agents.unusedAgeMs, units: agentUnits },
   ];
 }
 
+const CARGO_AREAS = new Set(["cargo", "cargo-incremental", "cargo-incremental-sessions"]);
+
 /** 🗺️ Resolves the real directory a scanned unit's relative path was measured against, so deletion targets exactly what was scanned. */
 function areaUnitRoot(repoRoot: string, area: string, unit: CacheUnit): string {
-  if (area === "cargo") { const dirs = cargoDirectories(repoRoot); return unit.kind === "cargo-target-file" ? dirs.target : dirs.build; }
+  if (CARGO_AREAS.has(area)) { const dirs = cargoDirectories(repoRoot); return unit.kind === "cargo-target-file" ? dirs.target : dirs.build; }
   return repoCacheDirectory(repoRoot, area);
 }
 

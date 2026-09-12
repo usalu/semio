@@ -6,7 +6,7 @@
 //! `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
 
 use crate::editor::generation3d::commands::{
-    add_generation, add_widget, cancel_preview_eval, delete_selection, flow_eval_resolve, flow_eval_tick, flow_tessellate_resolve, move_media_node, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
+    add_generation, add_widget, cancel_preview_eval, delete_selection, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, move_media_node, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
     scale_selection, select_generation, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection,
     update_generation_values,
 };
@@ -90,6 +90,7 @@ semio_framework_plugin::app_commands! {
         "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
         "flowTessellateResolve" as "flow-tessellate-resolve" => flow_tessellate_resolve::FlowTessellateResolve,
         "cancelPreviewEval" as "cancel-preview-eval" => cancel_preview_eval::CancelPreviewEval,
+        "flowTessellateCancelResolve" as "flow-tessellate-cancel-resolve" => flow_tessellate_cancel_resolve::FlowTessellateCancelResolve,
         "setContributions" as "set-contributions" => set_contributions::SetContributions}
 }
 
@@ -260,9 +261,11 @@ fn generation3d_render_body(
 }
 
 //#region 🧵️RetainedCommands
-/// 🧾️ Every gen3d tool id, in `Generation3dCommand` declaration order — a bijection with
-/// `Generation3dCommand`'s 29 rows (asserted by `retained_route_dispositions_are_exact_and_exhaustive`
-/// below) and with `Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS`.
+/// 🧾️ Every gen3d GESTURE tool id, in `Generation3dCommand` declaration order. Together with
+/// [`GENERATION3D_FLOW_EVAL_TOOL_IDS`] and [`GENERATION3D_CONTRIBUTIONS_TOOL_IDS`] this is a
+/// bijection with `Generation3dCommand`'s 29 rows (asserted by
+/// `retained_route_dispositions_are_exact_and_exhaustive` below) and with
+/// `Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS`.
 const GENERATION3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setActiveExample",
     "nodeGraphEdit",
@@ -288,13 +291,25 @@ const GENERATION3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setSunIntensity",
     "setCamera",
     "selectGeneration",
-    "flowEvalTick",
-    "flowEvalResolve",
-    "flowTessellateResolve",
-    "cancelPreviewEval",
 ];
+/// ⏱️ The preview chain's own tool ids — a HOST route, never a user gesture: nobody clicks a tick,
+/// and the mesh body an extension answer carries is nothing like a gesture's wire payload. Split
+/// out of [`GENERATION3D_RETAINED_TOOL_IDS`] for exactly the reason
+/// [`GENERATION3D_CONTRIBUTIONS_TOOL_IDS`] was, and in exactly the shape the sibling viewer surface
+/// already declares (`GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS`): one factory registers ONE execution
+/// contract for all its keys, so a chain that must carry 48 KiB of `pack` body cannot live under
+/// the 8 KiB gesture quota without widening 24 unrelated routes with it
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️preview-mesh-delivery-2026-09-12.md`).
+const GENERATION3D_FLOW_EVAL_TOOL_IDS: &[&str] = &["flowEvalTick", "flowEvalResolve", "flowTessellateResolve", "cancelPreviewEval", "flowTessellateCancelResolve"];
 const GENERATION3D_RETAINED_PAYLOAD_SCHEMA: &str = "generation.3d.tool-command.v1";
+const GENERATION3D_FLOW_EVAL_PAYLOAD_SCHEMA: &str = "generation.3d.flow-eval-command.v1";
 const GENERATION3D_RETAINED_RAW_BYTES: usize = 8_192;
+/// 🎒️ Real bound for one preview-chain hop's wire payload: a `flowTessellateResolve` carries one
+/// whole `tessellate` envelope, i.e. one [`MESH_PACK_CHUNK_BASE64_CHARS`] mesh-body chunk plus its
+/// accounting header — pinned to `brep_geometry::tessellate_envelope_maximum_bytes()` by
+/// `tessellate_envelope_fits_the_declared_wire_bound`, so the transfer unit and this bound are one
+/// fact. 64 KiB is the guest-contiguous page the answer already crosses in, never a rubber stamp.
+const GENERATION3D_FLOW_EVAL_RAW_BYTES: usize = 65_536;
 const GENERATION3D_PREVIEW_TOOL_IDS: &[&str] = &["setActiveExample", "addGeneration", "removeGeneration", "renameGeneration", "updateGenerationValues", "selectGeneration"];
 /// 🧮️ The ONE declared quantity of every generation3d retained route: at most 32 point-invertible
 /// durable items per gesture. Everything the runtime compares is read off it and nothing is ever
@@ -306,7 +321,7 @@ const GENERATION3D_PREVIEW_TOOL_IDS: &[&str] = &["setActiveExample", "addGenerat
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 const GENERATION3D_RETAINED_CAPACITY: ArtifactRetainedWorkCapacity = ArtifactRetainedWorkCapacity::for_invertible_items(32);
 const GENERATION3D_RETAINED_WORK_ITEMS: usize = GENERATION3D_RETAINED_CAPACITY.work_items();
-/// 🧺️ The ONE fold-contract footprint BOTH durable lanes of all 28 retained routes declare —
+/// 🧺️ The ONE fold-contract footprint BOTH durable lanes of all 29 retained routes declare —
 /// artifact and config alike, never a second literal. `store::ArtifactStore::fold_batch_item`
 /// rejects a candidate whose `forwards.len() + inverse.len()` exceeds the gesture-wide footprint
 /// this preflight declared, and every `Generation3dMutation`/`Generation3dConfigMutation` inverse is
@@ -327,7 +342,7 @@ const GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
 /// selected generation, and sun JSON remains bounded independently of computed preview output.
 const GENERATION3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 262_144;
 
-/// 🧾️ The ONE execution contract all 28 routes publish — the factory's `execution_contract()` and
+/// 🧾️ The ONE execution contract all 29 routes publish — the factory's `execution_contract()` and
 /// every row of `bounded_first_step_tool_proofs!` alike, so the proof catalogue can never drift from
 /// the factory it proves. Its work-unit budget is the route capacity itself; `max_decoded_items`
 /// stays its own quantity (decoded JSON items on the wire, not staged edit rows).
@@ -369,6 +384,10 @@ fn generation3d_bounded_extent(_command: &Generation3dCommand, _snapshot: &Gener
 
 struct Generation3dPreviewCommandWork {
     tool_id: &'static str,
+    /// 🔒️ The app instance's retained evaluation session, reached ONLY to arm the preview chain
+    /// through its per-window latch — a gesture that changed what the evaluation would produce owes
+    /// every attached preview a tick, and owes it at most once.
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     emit: Option<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>>,
     host: Option<FlowHost>,
     /// 🧹️ The host's explicit retirement ladder, armed by `close_step` when the evaluation host is
@@ -382,8 +401,16 @@ struct Generation3dPreviewCommandWork {
 }
 
 impl Generation3dPreviewCommandWork {
-    fn new(tool_id: &'static str) -> Self {
-        Self { tool_id, emit: None, host: None, host_retirement: None, session: None, started: false, complete: false, closing: false }
+    fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+        Self { tool_id, instance_owner, emit: None, host: None, host_retirement: None, session: None, started: false, complete: false, closing: false }
+    }
+
+    /// 🔒️ Every attached preview window this gesture owes a restart to, latched on the RETAINED
+    /// session so two gestures in a row (or a gesture racing the refresh poll) still leave exactly
+    /// one pending tick per window.
+    fn rearm_attached_previews(&self, view: Option<&semio_framework_plugin::ViewModel>) -> Result<Vec<Effect>, Fault> {
+        let windows = generation3d_preview_windows(view);
+        self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| owner.with_session(|session| set_active_example::rearm_attached_previews(session, &windows)))
     }
 
     fn complete(&mut self) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
@@ -424,13 +451,19 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
                 let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
                 let cfg = ConfigView { snapshot: input.config, window: None };
                 let mut emit = set_active_example::emit(payload, &doc, &cfg)?;
-                emit.effects.extend(set_active_example::rearm_attached_previews(&generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()))));
+                // 🔁️ Only a switch that actually MOVED the graph owes the preview chains a restart.
+                // An id the dialect never published, and a re-pick of the example already open, both
+                // emit zero artifact mutations — arming there pays a full evaluation round trip for a
+                // fixture no widget of which changed (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+                if !emit.artifact_mutations.is_empty() {
+                    emit.effects.extend(self.rearm_attached_previews(input.context.and_then(|context| context.view_state.as_ref()))?);
+                }
                 self.emit = Some(emit);
                 return self.complete();
             }
             let result = crate::editor::generation3d::commands::generation::generation_command_result_for(input.command, input.snapshot, input.config).ok_or_else(|| Fault::from("generation3d-preview-command-unowned"))?;
             let mut emit = result.emit;
-            emit.effects.extend(set_active_example::rearm_attached_previews(&generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()))));
+            emit.effects.extend(self.rearm_attached_previews(input.context.and_then(|context| context.view_state.as_ref()))?);
             if let Some(fixture) = result.preview_fixture {
                 fixture.retire_cold();
             }
@@ -584,7 +617,7 @@ fn generation3d_retained_reduce(
     operation: &AppOperationContext,
     session: &mut FlowEvalSession,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>, Fault> {
-    if !GENERATION3D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
+    if !GENERATION3D_RETAINED_TOOL_IDS.contains(&command.command_id()) && !GENERATION3D_FLOW_EVAL_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::from("generation3d-command-retained-route-rejected"));
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
@@ -721,6 +754,74 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBounded
         ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
+    ];
+}
+
+//#region ⏱️FlowEvalRoute
+/// ⏱️ The preview chain's OWN route: its own tool ids, its own factory and its own execution
+/// contract, because what it carries is nothing like a gesture. `flowTessellateResolve` folds one
+/// `tessellate` envelope — up to one whole [`MESH_PACK_CHUNK_BASE64_CHARS`] mesh-body chunk — and
+/// under the 8 KiB gesture quota that envelope had to be cut into 4 KiB slices, one per
+/// `flowEvalTick` round trip. Five of the eight bundled examples therefore never painted: at
+/// seconds per round trip a ten-chunk body is minutes of streaming with `phase: idle` on the
+/// surface the whole time (`📓️preview-mesh-delivery-2026-09-12.md`).
+fn generation3d_flow_eval_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(GENERATION3D_FLOW_EVAL_RAW_BYTES, GENERATION3D_RETAINED_DECODED_ITEMS, GENERATION3D_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
+}
+
+struct Generation3dFlowEvalJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Generation3dFlowEvalJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: GENERATION3D_FLOW_EVAL_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for Generation3dFlowEvalJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<Generation3dPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<Generation3dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        GENERATION3D_FLOW_EVAL_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        generation3d_flow_eval_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > GENERATION3D_FLOW_EVAL_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Generation3d flow-eval command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dFlowEvalJobFactory {
+    type Owner = EditorApp<Generation3dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = GENERATION3D_FLOW_EVAL_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         // ⏱️ The tick's ONLY store lane is the addressed preview window's OWN transient
         // (`Generation3dFlowEvalWindowWork::step`'s `CompleteWithEphemeral`); its self-redispatch
         // effects and extension invocations are not store lanes at all and need no declaration.
@@ -734,8 +835,25 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBounded
         ArtifactToolPublicationContract { tool_id: "flowEvalResolve", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "flowTessellateResolve", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "cancelPreviewEval", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "flowTessellateCancelResolve", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ];
 }
+
+struct Generation3dFlowEvalJobFactoryProofs;
+
+impl Generation3dFlowEvalJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<Generation3dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.procedural.generation3d@1/*#editor",
+        document_schema: "generation.3d",
+        factory: "Generation3dFlowEvalJobFactory",
+        factory_type: Generation3dFlowEvalJobFactory,
+        contract: generation3d_flow_eval_contract(),
+        tools: ["flowEvalTick", "flowEvalResolve", "flowTessellateResolve", "cancelPreviewEval", "flowTessellateCancelResolve"]
+    }
+}
+//#endregion ⏱️FlowEvalRoute
 
 struct Generation3dBoundedCommandJobFactoryProofs;
 
@@ -773,10 +891,6 @@ impl Generation3dBoundedCommandJobFactoryProofs {
             "setSunIntensity",
             "setCamera",
             "selectGeneration",
-            "flowEvalTick",
-            "flowEvalResolve",
-            "flowTessellateResolve",
-            "cancelPreviewEval",
         ]
     }
 }
@@ -807,7 +921,7 @@ const GENERATION3D_CONTRIBUTIONS_RAW_BYTES: usize = semio_framework::PUBLIC_INVO
 
 /// 🧾️ The contributions route's ONE execution contract — deliberately NOT
 /// [`generation3d_bounded_contract`]: raising the 8 KiB gesture quota every interactive command
-/// lives under, just to let a boot-time host push through, would widen 28 unrelated routes.
+/// lives under, just to let a boot-time host push through, would widen 29 unrelated routes.
 fn generation3d_contributions_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(GENERATION3D_CONTRIBUTIONS_RAW_BYTES, GENERATION3D_RETAINED_DECODED_ITEMS, GENERATION3D_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
 }
@@ -1367,11 +1481,12 @@ impl ArtifactEditor for Generation3dPlayApp {
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(Generation3dBoundedCommandJobFactory::new(&controller))?;
+        registry.register(Generation3dFlowEvalJobFactory::new(&controller))?;
         registry.register(Generation3dContributionsJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !GENERATION3D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) && !GENERATION3D_CONTRIBUTIONS_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        if !GENERATION3D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) && !GENERATION3D_FLOW_EVAL_TOOL_IDS.contains(&request.tool_id.as_str()) && !GENERATION3D_CONTRIBUTIONS_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
@@ -1385,7 +1500,7 @@ impl ArtifactEditor for Generation3dPlayApp {
             } else if tool_id == "flowEvalTick" {
                 Box::new(Generation3dFlowEvalWindowWork::new(request.instance_operation_owner))
             } else if GENERATION3D_PREVIEW_TOOL_IDS.contains(&tool_id) {
-                Box::new(Generation3dPreviewCommandWork::new(tool_id))
+                Box::new(Generation3dPreviewCommandWork::new(tool_id, request.instance_operation_owner))
             } else {
                 Box::new(Generation3dSessionCommandWork::new(tool_id, request.instance_operation_owner))
             };
@@ -1409,7 +1524,13 @@ impl ArtifactEditor for Generation3dPlayApp {
                 completion: request.completion,
             },
             Generation3dCommand::command_id,
-            if contributions { GENERATION3D_CONTRIBUTIONS_RAW_BYTES } else { GENERATION3D_RETAINED_RAW_BYTES },
+            if contributions {
+                GENERATION3D_CONTRIBUTIONS_RAW_BYTES
+            } else if GENERATION3D_FLOW_EVAL_TOOL_IDS.contains(&tool_id) {
+                GENERATION3D_FLOW_EVAL_RAW_BYTES
+            } else {
+                GENERATION3D_RETAINED_RAW_BYTES
+            },
             GENERATION3D_RETAINED_WORK_ITEMS,
             work,
         )?;
@@ -1421,6 +1542,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// and not proved (or proved and not registered) fails the app closed at boot.
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = Generation3dBoundedCommandJobFactoryProofs::bounded_first_step_tool_proofs();
+        proofs.extend(Generation3dFlowEvalJobFactoryProofs::bounded_first_step_tool_proofs());
         proofs.extend(Generation3dContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
         proofs
     }
@@ -1583,6 +1705,10 @@ impl ArtifactEditor for Generation3dPlayApp {
                 window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
                 node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
                 output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
+                extension_id: str_arg(&["extensionId", "extension_id"]).unwrap_or_default(),
+                ok: args.get("ok").and_then(dsl::DslValue::as_bool).unwrap_or(false),
+                fault_code: str_arg(&["faultCode", "fault_code"]).unwrap_or_default(),
+                fault_message: str_arg(&["faultMessage", "fault_message"]).unwrap_or_default(),
             })),
             "flowTessellateResolve" => Ok(Generation3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
@@ -1590,7 +1716,16 @@ impl ArtifactEditor for Generation3dPlayApp {
                 node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
                 output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
             })),
-            "cancelPreviewEval" => Ok(Generation3dCommand::CancelPreviewEval(cancel_preview_eval::CancelPreviewEval {})),
+            "cancelPreviewEval" => Ok(Generation3dCommand::CancelPreviewEval(cancel_preview_eval::CancelPreviewEval {
+                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
+                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
+            })),
+            "flowTessellateCancelResolve" => Ok(Generation3dCommand::FlowTessellateCancelResolve(flow_tessellate_cancel_resolve::FlowTessellateCancelResolve {
+                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
+                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
+                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
+                ok: args.get("ok").and_then(dsl::DslValue::as_bool).unwrap_or(false),
+            })),
             "setContributions" => Ok(Generation3dCommand::SetContributions(set_contributions::SetContributions {
                 json: str_arg(&["json"]).unwrap_or_default(),
                 page: u64_arg(&["page"]).unwrap_or_default(),
@@ -1667,29 +1802,42 @@ impl ArtifactEditor for Generation3dPlayApp {
         InteractionTopology { domains }
     }
 
-    /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes AND a
-    /// preview window is actually attached to hold the evaluation it will publish.
+    /// 🧵️ Arms a `flowEvalTick` chain for every attached preview window that OWES one — and for no
+    /// other window, and never twice.
     ///
     /// 🪟️ The tick is a window-scoped retained route, so the effect must name its window: an
     /// unaddressed `Effect::DispatchAction` is redispatched by the shell under the CURRENT window —
     /// the flow window `procedural-main` in the served app — and the route's own work then refuses
     /// it, on every refresh, forever (`📓️work-capacity-2026-09-10.md` §7). Before the first
     /// `Event::SurfaceVisible` the host has no roster at all (`view` is `None`) and there is nothing
-    /// to publish into: this arms NOTHING and waits, rather than spinning a chain that cannot land
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn pending_effects(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
+    /// to publish into: this arms NOTHING and waits, rather than spinning a chain that cannot land.
+    ///
+    /// 🔒️ The question "does this window owe a tick" is answered by the app instance's RETAINED
+    /// evaluation session, through `FlowEvalSession::arm_owed_window_tick`. It used to be answered
+    /// by a throwaway `FlowEvalSession::new()` whose own `tick_scheduled` latch was always clear, so
+    /// every host refresh armed one more tick per preview window on top of the chain that was
+    /// already running — 298 `flowEvalTick` invocations against 111 settles in 80 s of live console,
+    /// each extension answer waiting ~16 s behind the queue. The owner handle is what makes the
+    /// retained latch reachable from here (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
         let windows = generation3d_preview_windows(view);
         if windows.is_empty() {
             return Vec::new();
         }
-        with_scratch_session(|session| {
-            let pending = crate::standards::v1::subsets::any::schema::with_host_session(&doc.snapshot.fixture, session, |host, session| session.sync(host));
-            if pending {
-                windows.iter().map(|(window_id, window_kind_id)| flow_eval_tick::rearm(window_id, window_kind_id, 104)).collect()
-            } else {
-                Vec::new()
-            }
-        })
+        // 🚧️ A graph the live registry cannot serve is not slow work: the tick would recompute the
+        // identical `flow.extension-not-contributed` miss and settle into another refresh. Only
+        // `setContributions` can move it, and it re-arms every attached preview itself.
+        if !flow_eval_tick::may_rearm(&doc.snapshot.fixture) {
+            return Vec::new();
+        }
+        owner
+            .with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
+                owner.with_session(|session| {
+                    session.retain_window_tick_latches(&windows.iter().map(|(window_id, _)| *window_id).collect::<Vec<_>>());
+                    windows.iter().filter(|(window_id, _)| session.arm_owed_window_tick(window_id)).map(|(window_id, window_kind_id)| flow_eval_tick::rearm(window_id, window_kind_id, 104)).collect::<Vec<_>>()
+                })
+            })
+            .unwrap_or_default()
     }
 
     /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
@@ -1808,6 +1956,7 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung aufnehmen"), "runtime", ActionKind::View) }))
             .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowTessellateResolve", LocalizedLabel::native("Resolve Preview Tessellation", "Vorschau-Tessellierung aufnehmen"), "runtime", ActionKind::View) }))
             .command(migrated_command(CommandDefinition::bounded_catalog("cancelPreviewEval", LocalizedLabel::native("Cancel Preview Computation", "Vorschauberechnung abbrechen"), "runtime", ActionKind::View)))
+            .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowTessellateCancelResolve", LocalizedLabel::native("Resolve Preview Cancellation", "Vorschauabbruch aufnehmen"), "runtime", ActionKind::View) }))
             .command(migrated_command(CommandDefinition {
                 in_palette: false,
                 ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([
@@ -1889,6 +2038,7 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("flowEvalResolve", InteractiveJobClassification::Migrated)
             .action_interactive_job("flowTessellateResolve", InteractiveJobClassification::Migrated)
             .action_interactive_job("cancelPreviewEval", InteractiveJobClassification::Migrated)
+            .action_interactive_job("flowTessellateCancelResolve", InteractiveJobClassification::Migrated)
             .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
             .action_args("addWidget", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
@@ -2041,17 +2191,23 @@ pub async fn generation3d_io() -> semio_framework_plugin::AppIo {
 /// every function here references [`Generation3dConfig`] (directly, or is reachable only from a
 /// function that does), which made this app behavior, not artifact-schema-pure document compute; the
 /// snapshot-pure fixture/gumball helpers stayed in `crate::standards::v1::subsets::any::schema` instead.
-/// ⏱️ Face/edge units one `tessellate` round trip may spend. Deliberately small: the reactor faults
-/// an instance whose single `maintenance_step` runs past 8 ms, so the preview buys many cheap round
-/// trips instead of one uncancellable synchronous solve.
-pub const PREVIEW_TESSELLATE_STEP_BUDGET: u32 = 24;
 
-pub fn preview_tolerance(lod_mode: &str) -> f64 {
-    match lod_mode {
-        "coarse" => 0.15,
-        "fine" => 0.02,
-        _ => 0.05,
-    }
+/// 🧵️ The surface-neutral half of this pipeline lives in [`crate::preview_eval`], shared verbatim
+/// with `👁️viewer` — the geometry-handle grammar, the channel walk, the marker meshes, the show-mode
+/// filter, the LOD ladder, the mesh-pack decode, the pending-handle scan and the tessellate producer
+/// are ONE implementation, not an editor original plus a read-only twin. Re-exported here so this
+/// surface's own call sites (and `📌️panels`, `🎭️modes`, the io bridge) keep naming them unqualified
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub use crate::preview_eval::{
+    apply_show_mode_mesh, decode_preview_mesh_pack, geometry_extension_address, is_brep_geometry_handle, mesh_data_for_preview_handle, mesh_has_preview_geometry, pending_preview_tessellate_handles, point_marker_mesh, preview_channel_items_for_widget,
+    preview_tolerance, vector_marker_mesh, widget_previews, PreviewChannelItem, PreviewInlineGeometry, GENERATION_3D_GEOMETRY_EXTENSION_ID, PREVIEW_TESSELLATE_STEP_BUDGET,
+};
+
+/// 📨 Extension invocations that tessellate this surface's pending preview handles — the editor's
+/// binding of [`crate::preview_eval::preview_tessellate_invocations`], which reads the deflection
+/// off this surface's own config LOD.
+pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, fixture: &semio_framework_artifact_flow_flow::FlowFixture, cfg: &Generation3dConfig) -> Vec<semio_framework_plugin::ExtensionInvocation> {
+    crate::preview_eval::preview_tessellate_invocations(window_id, window_kind_id, session, fixture, preview_tolerance(&cfg.lod_mode))
 }
 
 pub fn preview_camera_json(cfg: &Generation3dConfig) -> String {
@@ -2192,418 +2348,10 @@ pub fn preview_selection_json(cfg: &Generation3dConfig, active_utility: &str, pa
     dsl::json::to_string(&value)
 }
 
-fn merge_status_json(computing: Option<String>, preview_status: Option<String>) -> Option<String> {
-    match (computing, preview_status) {
-        (Some(c), Some(p)) => {
-            let mut computing_object = dsl::json::parse(&c).ok().and_then(|value| value.as_object().cloned()).unwrap_or_else(|| {
-                let mut fallback = dsl::json::Object::new();
-                fallback.insert("computing", dsl::json::Value::Bool(true));
-                fallback
-            });
-            let preview_object = dsl::json::parse(&p).ok().and_then(|value| value.as_object().cloned()).unwrap_or_default();
-            for (key, value) in preview_object.iter() {
-                computing_object.insert(key, value.clone());
-            }
-            Some(dsl::json::to_string(&dsl::json::Value::Object(computing_object)))
-        }
-        (Some(c), None) => Some(c),
-        (None, Some(p)) => Some(p),
-        (None, None) => None,
-    }
-}
-
-/// 👁️ Merges the session's live "still computing" flag, the resumable tessellation's progress and a
-/// fresh `preview_status_json` result into the one status object the preview window publishes.
-pub fn preview_scene_status_json(session: &FlowEvalSession, preview_status: Option<String>) -> Option<String> {
-    let computing = session.pending().then(|| r#"{"computing":true}"#.to_string());
-    merge_status_json(merge_status_json(computing, Some(preview_progress_status_json(session))), preview_status)
-}
-
-/// 📈 The schema-first tessellation progress object: `phase` (wire tag) and its `phaseLabel`
-/// English/German pair, the monotone `progress` counters and ratio, `cancellable` (drives the
-/// `cancelPreviewEval` affordance) and any typed validate-gate `diagnostics`.
-///
-/// 🪪️ An unaddressable geometry kernel outranks whatever the tessellation ledger last recorded:
-/// nothing was ever invoked, so the ledger's `idle` is a lie the surface cannot act on. The miss is
-/// resolved through the SAME [`geometry_extension_address`] the invocation producer uses — read
-/// live, never cached — and published as `phase: "faulted"` plus a `fault` object naming the flow
-/// extension id and every `<manifest id> → <owning plugin id>` translation the session does carry.
-pub fn preview_progress_status_json(session: &FlowEvalSession) -> String {
-    preview_progress_status_json_for(session, geometry_extension_address())
-}
-
-/// 📈 The projection itself, over an ALREADY RESOLVED geometry address — pure in both its inputs, so
-/// the unaddressable branch is provable without mutating the process-global contribution table (a
-/// test that uninstalls and reinstalls it poisons the flow catalogue's cache lock and leaves the
-/// neural registry unretired for every later test in the binary).
-pub fn preview_progress_status_json_for(session: &FlowEvalSession, address: Result<String, semio_framework_os_flow::FlowExtensionAddressMiss>) -> String {
-    let status = session.preview_tessellate_status();
-    let phase = if address.is_err() { semio_framework_os_flow::PreviewTessellatePhase::Faulted } else { status.phase };
-    let (english, german) = phase.labels();
-    let mut label = dsl::json::Object::new();
-    label.insert("en", dsl::json::Value::String(english.to_string()));
-    label.insert("de", dsl::json::Value::String(german.to_string()));
-    let mut progress = dsl::json::Object::new();
-    progress.insert("unitsDone", dsl::json::Value::from(u64::from(status.units_done)));
-    progress.insert("unitsTotal", dsl::json::Value::from(u64::from(status.units_total)));
-    progress.insert("facesDone", dsl::json::Value::from(u64::from(status.faces_done)));
-    progress.insert("facesTotal", dsl::json::Value::from(u64::from(status.faces_total)));
-    progress.insert("inFlight", dsl::json::Value::from(u64::from(status.in_flight)));
-    progress.insert("ratio", dsl::json::Value::from(status.ratio()));
-    let mut object = dsl::json::Object::new();
-    object.insert("phase", dsl::json::Value::String(phase.tag().to_string()));
-    object.insert("phaseLabel", dsl::json::Value::Object(label));
-    object.insert("progress", dsl::json::Value::Object(progress));
-    object.insert("cancellable", dsl::json::Value::Bool(phase.is_cancellable()));
-    object.insert("cancelAction", dsl::json::Value::String("cancelPreviewEval".to_string()));
-    if let Err(miss) = address {
-        let (english, german) = miss.labels();
-        let mut message = dsl::json::Object::new();
-        message.insert("en", dsl::json::Value::String(english));
-        message.insert("de", dsl::json::Value::String(german));
-        let mut fault = dsl::json::Object::new();
-        fault.insert("code", dsl::json::Value::String(semio_framework_os_flow::FlowExtensionAddressMiss::CODE.to_string()));
-        fault.insert("extensionId", dsl::json::Value::String(miss.extension_id));
-        fault.insert("message", dsl::json::Value::Object(message));
-        fault.insert(
-            "contributed",
-            dsl::json::Value::Array(
-                miss.contributed
-                    .into_iter()
-                    .map(|(extension_id, plugin_id)| {
-                        let mut entry = dsl::json::Object::new();
-                        entry.insert("extensionId", dsl::json::Value::String(extension_id));
-                        entry.insert("pluginId", dsl::json::Value::String(plugin_id));
-                        dsl::json::Value::Object(entry)
-                    })
-                    .collect(),
-            ),
-        );
-        object.insert("fault", dsl::json::Value::Object(fault));
-    }
-    if status.diagnostics > 0 {
-        object.insert("diagnosticCount", dsl::json::Value::from(u64::from(status.diagnostics)));
-        let entries: Vec<dsl::json::Value> = session
-            .preview_diagnostic_entries()
-            .into_iter()
-            .map(|(handle, issues)| {
-                let mut entry = dsl::json::Object::new();
-                entry.insert("handle", dsl::json::Value::String(handle.to_string()));
-                entry.insert("issues", dsl::json::parse(issues).unwrap_or(dsl::json::Value::Array(Vec::new())));
-                dsl::json::Value::Object(entry)
-            })
-            .collect();
-        object.insert("diagnostics", dsl::json::Value::Array(entries));
-    }
-    dsl::json::to_string(&dsl::json::Value::Object(object))
-}
-
-pub fn is_brep_geometry_handle(handle: &str) -> bool {
-    if handle.is_empty() {
-        return false;
-    }
-    if handle.starts_with("solid-")
-        || handle.starts_with("shell-")
-        || handle.starts_with("face-")
-        || handle.starts_with("wire-")
-        || handle.starts_with("edge-")
-        || handle.starts_with("vertex-")
-        || handle.starts_with("compound-")
-        || handle.starts_with("curve-")
-        || handle.starts_with("surface-")
-    {
-        return true;
-    }
-    // Blake3 hex digests minted by `BrepKernel::mint` (no kind prefix).
-    handle.len() == 64 && handle.as_bytes().iter().all(u8::is_ascii_hexdigit)
-}
-
-/// 🔌️ Point/vector geometry synthesized without a kernel round-trip, for a math-style output
-/// channel that carries `x`/`y`/`z` coordinates instead of a brep handle.
-#[derive(Clone, Debug, PartialEq)]
-pub enum PreviewInlineGeometry {
-    Point { x: f64, y: f64, z: f64 },
-    Vector { x: f64, y: f64, z: f64 },
-}
-
-/// 🔌️ One previewable value found on one output channel of one widget — the channel-aware
-/// replacement for the old unordered handle flattening, so preview instance ids can be
-/// channel-qualified (`{widgetId}@{channel}#{index}`, see `preview_payload`).
-#[derive(Clone, Debug, PartialEq)]
-pub struct PreviewChannelItem {
-    pub channel: String,
-    pub index: usize,
-    pub handle: String,
-    pub inline: Option<PreviewInlineGeometry>,
-}
-
-/// 🔎️ A `$schema: "list"` dictionary's entries in index order (`"0"`, `"1"`, …) — the wire form
-/// `semio_framework_artifact_flow_flow::neural::Dictionary` lists actually take (an object with numeric-string keys, not a JSON
-/// array), so ordering has to be recovered by parsing the keys rather than trusting map iteration.
-fn preview_channel_list_entries(map: &dsl::json::Object) -> Vec<&dsl::json::Value> {
-    let mut entries: Vec<(usize, &dsl::json::Value)> = map.iter().filter_map(|(key, value)| key.parse::<usize>().ok().map(|index| (index, value))).collect();
-    entries.sort_by_key(|(index, _)| *index);
-    entries.into_iter().map(|(_, value)| value).collect()
-}
-
-/// 🔎️ Depth-first walk of one channel's evaluated value, emitting one [`PreviewChannelItem`] per
-/// geometry-bearing leaf in encounter order. Arrays and `$schema: "list"` dictionaries recurse;
-/// a handle passing `is_brep_geometry_handle` or an `x`/`y`/`z` point/vector is a leaf; everything
-/// else (numbers, strings, booleans, plain dictionaries) is pure data and yields nothing.
-fn collect_preview_channel_items(channel: &str, value: &dsl::json::Value, index: &mut usize, items: &mut Vec<PreviewChannelItem>) {
-    match value {
-        dsl::json::Value::Object(map) => {
-            if let Some(handle) = map.get("handle").and_then(dsl::json::Value::as_str) {
-                if is_brep_geometry_handle(handle) {
-                    items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: handle.into(), inline: None });
-                    *index += 1;
-                    return;
-                }
-            }
-            if map.get("$schema").and_then(dsl::json::Value::as_str) == Some("list") {
-                for entry in preview_channel_list_entries(map) {
-                    collect_preview_channel_items(channel, entry, index, items);
-                }
-                return;
-            }
-            let coords = ["x", "y", "z"].into_iter().map(|key| map.get(key).and_then(dsl::json::Value::as_f64)).collect::<Option<Vec<_>>>();
-            if let Some(coords) = coords {
-                let (x, y, z) = (coords[0], coords[1], coords[2]);
-                let inline = if map.get("$schema").and_then(dsl::json::Value::as_str) == Some("vector") { PreviewInlineGeometry::Vector { x, y, z } } else { PreviewInlineGeometry::Point { x, y, z } };
-                items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: String::new(), inline: Some(inline) });
-                *index += 1;
-            }
-        }
-        dsl::json::Value::Array(list) => {
-            for entry in list {
-                collect_preview_channel_items(channel, entry, index, items);
-            }
-        }
-        _ => {}
-    }
-}
-
-/// 🔌️ Channel-by-channel enumeration of one widget's preview-bearing values: sorted `"out"`
-/// channel keys (falling back to `"in"` only when the widget has no `"out"` at all), each walked
-/// depth-first into its geometry-bearing leaves. Replaced the old flat,
-/// unordered handle collection — every call site that needs handles/points/vectors for preview routes
-/// through this one function now.
-pub fn preview_channel_items_for_widget(eval: &dsl::json::Value, widget_id: &str) -> Vec<PreviewChannelItem> {
-    let Some(widget_eval) = eval.get(widget_id) else {
-        return Vec::new();
-    };
-    let Some(channels) = widget_eval.get("out").or_else(|| widget_eval.get("in")) else {
-        return Vec::new();
-    };
-    let Some(map) = channels.as_object() else {
-        return Vec::new();
-    };
-    let mut keys: Vec<&str> = map.iter().map(|(key, _)| key).collect();
-    keys.sort();
-    let mut items = Vec::new();
-    for key in keys {
-        let mut index = 0usize;
-        if let Some(value) = map.get(key) {
-            collect_preview_channel_items(key, value, &mut index, &mut items);
-        }
-    }
-    items
-}
-
-/// 👁️ Whether a widget contributes preview geometry at all. A `Neuron` carries its own author-set
-/// `preview` toggle; an `OutputPreview` is a preview by construction; a `Cluster` has no toggle of
-/// its own (`semio_framework_artifact_flow_flow::neural::Neuron` — its inner neurons — carries none either), so its contract
-/// output channels always preview, which is the only way a grouped sub-graph's geometry reaches
-/// the 3D world at all.
-pub fn widget_previews(widget: &semio_framework_artifact_flow_flow::Widget) -> bool {
-    matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { preview: true, .. } | semio_framework_artifact_flow_flow::Widget::OutputPreview { .. } | semio_framework_artifact_flow_flow::Widget::Cluster { .. })
-}
-
-fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
-    (!data.indices.is_empty() && data.positions.len() >= 9) || data.edge_positions.len() >= 6 || (data.positions.len() >= 3 && data.indices.is_empty())
-}
-
-/// 🔌️ Half-extent (world units) of the axis cross drawn for a `PreviewInlineGeometry::Point`.
-const PREVIEW_POINT_MARKER_HALF_EXTENT: f64 = 0.05;
-
-/// 🔌️ A small axis cross at `(x, y, z)` — the point-channel preview marker, built without a
-/// kernel round-trip. Carries both `positions` (so `"points"` show mode still has something to
-/// draw once `apply_show_mode_mesh` strips `edge_positions`) and the cross itself as edges.
-fn point_marker_mesh(x: f64, y: f64, z: f64) -> semio_framework_plugin::MeshData {
-    let (x, y, z) = (x as f32, y as f32, z as f32);
-    let e = PREVIEW_POINT_MARKER_HALF_EXTENT as f32;
-    semio_framework_plugin::MeshData { positions: vec![x, y, z], edge_positions: vec![x - e, y, z, x + e, y, z, x, y - e, z, x, y + e, z, x, y, z - e, x, y, z + e], ..Default::default() }
-}
-
-/// 🔌️ A line segment from the world origin to `(x, y, z)` — the vector-channel preview marker,
-/// built without a kernel round-trip.
-fn vector_marker_mesh(x: f64, y: f64, z: f64) -> semio_framework_plugin::MeshData {
-    let (x, y, z) = (x as f32, y as f32, z as f32);
-    semio_framework_plugin::MeshData { positions: vec![0.0, 0.0, 0.0, x, y, z], edge_positions: vec![0.0, 0.0, 0.0, x, y, z], ..Default::default() }
-}
-
-fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &str) -> semio_framework_plugin::MeshData {
-    let show_mode = match show_mode {
-        "solid" | "shaded" | "shaded+edges" | "wireframe" | "points" => show_mode,
-        _ => "shaded",
-    };
-    match show_mode {
-        "wireframe" => {
-            data.positions.clear();
-            data.normals.clear();
-            data.indices.clear();
-            data.face_ids.clear();
-            data
-        }
-        "points" => {
-            data.indices.clear();
-            data.normals.clear();
-            data.edge_positions.clear();
-            data
-        }
-        _ => data,
-    }
-}
-
-pub fn preview_status_json(eval_json: &str, fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> Option<String> {
-    let eval = dsl::json::parse(eval_json).ok()?;
-    if eval.get("error").and_then(dsl::json::Value::as_str).is_some() {
-        let mut error_object = dsl::json::Object::new();
-        error_object.insert("error", eval.get("error").cloned().unwrap_or(dsl::json::Value::Null));
-        return Some(dsl::json::to_string(&dsl::json::Value::Object(error_object)));
-    }
-    let mut errors = dsl::json::Object::new();
-    for widget in &fixture.widgets {
-        let id = crate::widget_id(widget).to_string();
-        let Some(entry) = eval.get(&id) else { continue };
-        if let Some(error) = entry.get("error").and_then(dsl::json::Value::as_str) {
-            errors.insert(id, dsl::json::Value::String(error.to_string()));
-        }
-    }
-    if errors.is_empty() {
-        None
-    } else {
-        let mut wrapper = dsl::json::Object::new();
-        wrapper.insert("widgetErrors", dsl::json::Value::Object(errors));
-        Some(dsl::json::to_string(&dsl::json::Value::Object(wrapper)))
-    }
-}
-
-/// 🧵️ Pure per-render mesh lookup: the session's resolved `pack` mesh body decodes into typed
-/// arrays (no JSON number-array parse), and only a session-free caller falls back to tessellating.
-fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Option<&FlowEvalSession>) -> Option<semio_framework_plugin::MeshData> {
-    if let Some(session) = session {
-        if let Some(pack) = session.preview_mesh_pack(handle) {
-            if let Some(data) = decode_preview_mesh_pack(pack) {
-                if mesh_has_preview_geometry(&data) {
-                    return Some(data);
-                }
-            }
-        }
-        if session.preview_diagnostics(handle).is_some() {
-            return None;
-        }
-    }
-    let data = semio_framework_os_flow::tessellate_geometry(handle, tolerance).ok()?;
-    mesh_has_preview_geometry(&data).then_some(data)
-}
-
-/// 🎒️ Decodes a base64 `pack` mesh body the extension shipped back — the single decode seam every
-/// preview reader goes through.
-fn decode_preview_mesh_pack(base64_body: &str) -> Option<semio_framework_plugin::MeshData> {
-    let bytes = semio_framework_os_flow::brep_geometry::decode_base64(base64_body).ok()?;
-    semio_framework_os_flow::brep_geometry::decode_mesh_pack(&bytes).ok()
-}
-
-/// 🧊 Geometry handles on preview widgets that still need an extension tessellate. Takes the ALREADY
-/// PARSED evaluation: its only caller parses the same document one line earlier to collect the live
-/// handle set, and re-parsing a whole eval session per tick is the cost this path exists to avoid.
-pub fn pending_preview_tessellate_handles(eval: &dsl::json::Value, fixture: &semio_framework_artifact_flow_flow::FlowFixture, session: &FlowEvalSession) -> Vec<String> {
-    let mut handles = Vec::new();
-    for widget in &fixture.widgets {
-        let preview = widget_previews(widget);
-        if !preview {
-            continue;
-        }
-        let id = crate::widget_id(widget).to_string();
-        for handle in preview_channel_items_for_widget(eval, &id).into_iter().filter_map(|item| (!item.handle.is_empty()).then_some(item.handle)) {
-            if session.preview_diagnostics(&handle).is_some() {
-                continue;
-            }
-            let ready = session.preview_mesh_pack(&handle).and_then(|pack| {
-                let data = decode_preview_mesh_pack(pack)?;
-                mesh_has_preview_geometry(&data).then_some(())
-            });
-            if ready.is_none() {
-                handles.push(handle);
-            }
-        }
-    }
-    handles
-}
-
-/// 🧊️ The flow-domain id of the geometry extension whose kernel tessellates every preview handle.
-/// It is NOT an invocation address: the host resolves an extension actor by the CONTRIBUTING
-/// PLUGIN's id, which [`semio_framework_os_flow::flow_extension_invocation_address`] — the ONE
-/// translation surface — looks up from the live contribution table
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub const GENERATION_3D_GEOMETRY_EXTENSION_ID: &str = "brep";
-
-/// 🧊️ The geometry kernel's invocation address, resolved through the one translation surface every
-/// producer and every status projection in this app shares. Both callers own the same typed miss,
-/// so an unaddressable kernel reaches the preview window as `phase: "faulted"` with its own
-/// English/German label instead of a per-tick `eprintln!` nobody reads.
-fn geometry_extension_address() -> Result<String, semio_framework_os_flow::FlowExtensionAddressMiss> {
-    semio_framework_os_flow::flow_extension_invocation_address(GENERATION_3D_GEOMETRY_EXTENSION_ID)
-}
-
-/// 📨 Extension invocations that tessellate preview handles inside the owning brep extension kernel.
-/// Each one names `flowTessellateResolve` as its response action, so the SDK's request registry mints
-/// the `req`, parks the continuation and dispatches the mesh JSON straight back into this app — the
-/// hand-minted `RequestId` this used to write owned no registry slot, so every tessellation result
-/// was discarded and the 3d preview could never paint.
-pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, fixture: &semio_framework_artifact_flow_flow::FlowFixture, cfg: &Generation3dConfig) -> Vec<semio_framework_plugin::ExtensionInvocation> {
-    let Ok(geometry_extension_address) = geometry_extension_address() else {
-        return Vec::new();
-    };
-    let tolerance = preview_tolerance(&cfg.lod_mode);
-    let tolerance_bits = tolerance.to_bits();
-    let (live, pending) = {
-        let eval_json = session.eval_json();
-        if eval_json.is_empty() {
-            return Vec::new();
-        }
-        let eval = dsl::json::parse(eval_json).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
-        let mut live = std::collections::HashSet::new();
-        for widget in &fixture.widgets {
-            let id = crate::widget_id(widget).to_string();
-            for item in preview_channel_items_for_widget(&eval, &id) {
-                if !item.handle.is_empty() {
-                    live.insert(item.handle);
-                }
-            }
-        }
-        (live, pending_preview_tessellate_handles(&eval, fixture, session))
-    };
-    session.retain_preview_meshes(&live);
-    let mut invocations = Vec::new();
-    for handle in pending {
-        let node_hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance_bits);
-        if session.note_pending_tessellate(node_hash, handle.clone()) {
-            let mut request_object = dsl::json::Object::new();
-            request_object.insert("handle", dsl::json::Value::String(handle));
-            request_object.insert("tolerance", dsl::json::Value::from(tolerance));
-            request_object.insert("nodeHash", dsl::json::Value::from(node_hash));
-            request_object.insert("budget", dsl::json::Value::from(u64::from(PREVIEW_TESSELLATE_STEP_BUDGET)));
-            request_object.insert("chunk", dsl::json::Value::from(u64::from(session.next_tessellate_chunk(node_hash))));
-            request_object.insert("windowId", dsl::json::Value::String(window_id.to_string()));
-            request_object.insert("windowKindId", dsl::json::Value::String(window_kind_id.to_string()));
-            let request_json = dsl::json::to_string(&dsl::json::Value::Object(request_object));
-            invocations.push(semio_framework_plugin::ExtensionInvocation::new(geometry_extension_address.clone(), "tessellate", request_json, "flowTessellateResolve"));
-        }
-    }
-    invocations
-}
+/// 📈️ The status projection ALL THREE World3d preview windows publish (edit, generate, view) lives
+/// in the surface-neutral [`crate::preview_eval`] — one schema, one place. Re-exported here so this
+/// surface's own windows keep naming it unqualified (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub use crate::preview_eval::{preview_progress_status_json, preview_progress_status_json_for, preview_scene_status_json, preview_status_json, preview_window_status_json, PreviewStatusDebug};
 
 /// 👁️ One preview render's world-3d payload: the handle-deduplicated mesh table, the per-channel
 /// instance table, and the instance ids the live `graph` marks resolved to — so the scene's

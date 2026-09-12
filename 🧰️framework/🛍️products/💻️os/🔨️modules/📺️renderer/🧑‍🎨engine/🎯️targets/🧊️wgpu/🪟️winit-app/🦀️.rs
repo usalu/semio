@@ -180,6 +180,17 @@ impl OsHost {
         let runtime = self.runtime.clone();
         let frame_build = &mut self.frame_build;
         let _ = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation));
+        // 🖼️ Drive the present cursor for the rest of this tick's interactive share instead of one
+        // phase per redraw. `AppPresentCursor` walks begin-GPU → engine surfaces → uploads → command
+        // pages → submit one phase at a time; at one phase per browser frame a single presentation
+        // took seconds, during which `admit_next_frame` refuses to build the next frame at all, so
+        // the shell advanced roughly one frame every two seconds. Every prepared GPU opportunity
+        // inside the loop is still priced by its own two-millisecond ceiling
+        // (`🖱️ui/…/🎯️targets/🧊️wgpu/🖥️gpu.rs` `admit_prepared_gpu_opportunity`), so the loop cannot
+        // hide an over-ceiling submit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        #[cfg(target_arch = "wasm32")]
+        let present_deadline_us = semio_framework_job::default_now_us().map(|now| now.saturating_add(semio_framework_job::INTERACTIVE_STEP_CEILING_US / 2));
+        loop {
         match self.presenter.present_step() {
             Ok(crate::AppPresentStep::Complete { generation, cursor, fullscreen, cursor_wake }) => {
                 if generation.0 != self.frame_generation {
@@ -200,13 +211,21 @@ impl OsHost {
                 self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, semio_cursor_to_request(cursor), None));
             }
             Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
-            Ok(crate::AppPresentStep::Idle) => {}
+            Ok(crate::AppPresentStep::Idle) => return,
             Err(error) => {
                 self.present_fault = Some(error);
                 if self.presenter.has_pending_presentation() {
                     self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
                 }
+                return;
             }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        return;
+        #[cfg(target_arch = "wasm32")]
+        if present_deadline_us.is_none_or(|deadline| semio_framework_job::default_now_us().is_none_or(|now| now >= deadline)) {
+            return;
+        }
         }
     }
 

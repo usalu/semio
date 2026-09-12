@@ -43,8 +43,9 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
             let handle = request.get("handle").and_then(dsl::json::Value::as_str).ok_or_else(|| bad_request("tessellate", "missing field `handle`"))?;
             let tolerance = request.get("tolerance").and_then(dsl::json::Value::as_f64).unwrap_or(0.05);
             let budget = request.get("budget").and_then(dsl::json::Value::as_f64).map_or(24, |value| (value as usize).max(1));
+            let wall_micros = request.get("wallMicros").and_then(dsl::json::Value::as_f64).map_or(semio_framework_os_flow::brep_geometry::TESSELLATE_STEP_WALL_MICROS, |value| value.max(0.0) as u64);
             let chunk = request.get("chunk").and_then(dsl::json::Value::as_f64).map_or(0, |value| value.max(0.0) as usize);
-            Ok(semio_framework_os_flow::brep_geometry::tessellate_step_envelope_json(handle, tolerance, budget, chunk).into_bytes())
+            Ok(semio_framework_os_flow::brep_geometry::tessellate_step_envelope_json(handle, tolerance, budget, wall_micros, chunk).into_bytes())
         }
         (extension, capability) => Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.missing"), format!("no loaded plugin is addressed by '{extension}' (capability '{capability}')"))),
     }

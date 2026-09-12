@@ -79,13 +79,24 @@ fn fault(ctx: &mut Puzzle3dActionCtx<'_>, url: &str, rejection: Puzzle3dMeshUplo
 /// `interactionJson.meshReuploadUrls`, which the client answers with the page run.
 ///
 /// The scope is widened from the action's declared [`Puzzle3dScopeClass::Quiet`] to the viewport scope
-/// for exactly this exit: the request is worthless until the world body carrying it is republished,
-/// and a refusal is rare by construction — every one of them ends in the bytes arriving.
+/// for exactly the exit that RECORDS a new request: that world body carries something it did not carry
+/// before. A re-announcement of an id already in the standing set leaves the published set byte-identical
+/// (`request_mesh_reupload` is idempotent and sorted for exactly that reason), so it stays `Quiet`.
+///
+/// 🐢️ Widening unconditionally is a self-sustaining refresh storm and was the whole of wave B32's
+/// convergent defect: the announcement republishes the world body, the republished body re-drives the
+/// client's `BrushMeshRegistrar`, the re-announcement is refused again, and every turn of that loop cost
+/// a full guest re-render of all three world bodies. Measured live on `:6013`: 21 `registerBrushMesh`
+/// ingresses and 23 viewport-scope completions in 75 s with four user actions, 23 of 31 refresh passes
+/// answering every world body `unchanged`, and one `translateSelection` taking 8–15 s to reach
+/// `data-instances-json` behind them (ticket 26/09/02/PUZZLE-3D-END-TO-END,
+/// `📓️2026-09-12-wave-B32-world-lane-after-completion.md`).
 ///
 /// [`Puzzle3dScopeClass::Quiet`]: crate::editor::puzzle3d::Puzzle3dScopeClass::Quiet
 fn request_reupload(ctx: &mut Puzzle3dActionCtx<'_>, url: &str) {
-    ctx.app.precompute.borrow_mut().request_mesh_reupload(url);
-    *ctx.ui_scope = crate::editor::puzzle3d::puzzle3d_viewport_scope();
+    if ctx.app.precompute.borrow_mut().request_mesh_reupload(url) {
+        *ctx.ui_scope = crate::editor::puzzle3d::puzzle3d_viewport_scope();
+    }
 }
 
 const MAX_LEAF_BYTES: usize = 4 * 1024;

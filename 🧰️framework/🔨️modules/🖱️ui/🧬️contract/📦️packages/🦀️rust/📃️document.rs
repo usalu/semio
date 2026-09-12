@@ -815,6 +815,9 @@ mod pending_whole_patch_tests;
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️document-unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "../../../🧪️tests/📃️document-lease-owner-move/🦀️.rs"]
+mod document_lease_owner_move_tests;
 //#endregion 🧪️Tests
 
 //#endregion 🔖️Document

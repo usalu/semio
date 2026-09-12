@@ -121,3 +121,7 @@ path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests
 [[test]]
 name = "brep_analytic_blend"
 path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🎨️analytic-blend/🦀️.rs"
+
+[[test]]
+name = "brep_shell_orientation"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🐚️shell-orientation/🦀️.rs"

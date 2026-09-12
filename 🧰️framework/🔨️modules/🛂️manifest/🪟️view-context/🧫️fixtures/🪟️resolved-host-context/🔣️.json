@@ -79,6 +79,31 @@
           "right": 32
         }
       }
+    },
+    {
+      "name": "contributions-in-view-state",
+      "set": {
+        "contributionsJson": "[]"
+      }
+    },
+    {
+      "name": "oversized-panel",
+      "repeat": {
+        "field": "panelJson",
+        "character": "p",
+        "count": 65537
+      }
+    }
+  ],
+  "panelCapacityChars": 65536,
+  "guestDecode": [
+    {
+      "name": "missing-locale",
+      "fault": "missing field `locale`"
+    },
+    {
+      "name": "missing-terminology",
+      "fault": "missing field `terminology`"
     }
   ]
 }

@@ -353,7 +353,7 @@
     },
     "preview-generated": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/🔨️modules/👥️actor-network/📜️script.ts",
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📎️anhang/📇️akteursnetz-erweiterung-kandidaten.md",

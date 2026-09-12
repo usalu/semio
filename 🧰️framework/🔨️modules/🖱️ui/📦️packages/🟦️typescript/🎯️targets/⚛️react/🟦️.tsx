@@ -1469,7 +1469,7 @@ export {
 // #endregion UiDriver
 
 // #region ⌨️UiKeybindings
-import { parseKeybindingChords, formatKeybindingShortcut } from "../../../../🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts";
+import { parseKeybindingChords, formatKeybindingShortcut, ariaKeyshortcutsText } from "../../../../🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts";
 import { formatControlTooltipText } from "../../../../🔨️modules/💡️control-tooltip-presentation/🟦️.ts";
 import {
   buildKeysByActionId,
@@ -1492,6 +1492,7 @@ import { readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides } fro
 export {
   parseKeybindingChords,
   formatKeybindingShortcut,
+  ariaKeyshortcutsText,
   formatControlTooltipText,
   buildKeysByActionId,
   SHELL_KEYBINDINGS,
@@ -2766,6 +2767,7 @@ export const uiChromeTranslationBundles = {
           languageDocument: { label: { normal: "{{language}}-Dokument", beginner: "{{language}}-Dokument" } },
           iconShot: { label: { normal: "Symbolbild", beginner: "Symbolbild" } },
           projection: { label: { normal: "Projektion", beginner: "Projektion" } },
+          frameVisible: { label: { normal: "Sichtbares einpassen", beginner: "Sichtbares einpassen" } },
           perspective: { label: { normal: "Perspektivisch", beginner: "Perspektivisch" } },
           orthographic: { label: { normal: "Orthografisch", beginner: "Orthografisch" } },
         },
@@ -2876,6 +2878,9 @@ export const uiChromeTranslationBundles = {
           typeToAdd: { label: { normal: "Zum Hinzufügen tippen…", beginner: "Zum Hinzufügen tippen…" } },
           collapseSuggestions: { label: { normal: "Vorschläge einklappen", beginner: "Vorschläge einklappen" } },
           showAllSuggestions: { label: { normal: "Alle Vorschläge anzeigen", beginner: "Alle Vorschläge anzeigen" } },
+        },
+        nodeGraph: {
+          fitGraph: { label: { normal: "Graph einpassen", beginner: "Ganzen Graph zeigen" } },
         },
         sync: {
           attach: { label: { normal: "Verbinden", beginner: "Verbinden" } },
@@ -3593,6 +3598,7 @@ export const uiChromeTranslationBundles = {
           languageDocument: { label: { normal: "{{language}} document", beginner: "{{language}} document" } },
           iconShot: { label: { normal: "Icon shot", beginner: "Icon shot" } },
           projection: { label: { normal: "Projection", beginner: "Projection" } },
+          frameVisible: { label: { normal: "Frame visible", beginner: "Frame visible" } },
           perspective: { label: { normal: "Perspective", beginner: "Perspective" } },
           orthographic: { label: { normal: "Orthographic", beginner: "Orthographic" } },
         },
@@ -3701,6 +3707,9 @@ export const uiChromeTranslationBundles = {
           typeToAdd: { label: { normal: "Type to add…", beginner: "Type to add…" } },
           collapseSuggestions: { label: { normal: "Collapse suggestions", beginner: "Collapse suggestions" } },
           showAllSuggestions: { label: { normal: "Show all suggestions", beginner: "Show all suggestions" } },
+        },
+        nodeGraph: {
+          fitGraph: { label: { normal: "Fit graph", beginner: "Show the whole graph" } },
         },
         sync: {
           attach: { label: { normal: "Attach", beginner: "Attach" } },
@@ -7946,6 +7955,13 @@ export {
   useWindowContentDeadLineScroll,
 };
 
+/** @emoji 🚧️ Block offset that clears a window's floating chrome control row — the single rule for
+ * anything a window's CONTENT anchors to a top corner (a scene overlay button, a status chip, the folded
+ * engagement's quick-action rail). Reads the live clearance the enclosing {@link Window} publishes
+ * ({@link windowChromeScrollClearanceVar}, measured off the mounted engagement/search/measures overlays)
+ * and falls back to the chrome row's own token height, so content can never paint over a pane toggle. */
+export const windowChromeClearedTopOffset = `calc(var(${windowChromeScrollClearanceVar}, calc(var(--size-medium) + var(--spacing-single))) + var(--spacing-single))`;
+
 /** @emoji 🏝️ Full-bleed scroll surface for chrome-aware window bodies (writer hosts, forms, tables). */
 export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(({ className, children, ...props }, ref) => {
   const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
@@ -9962,6 +9978,27 @@ export function focusActiveSearchInput(): boolean {
   return true;
 }
 
+/** @emoji ✍️ One local edit of a controlled search line: the text the user typed plus the published value
+ * that stood when the edit began. */
+export interface SearchLineEdit {
+  readonly text: string;
+  readonly base: string;
+}
+
+/**
+ * @emoji ✍️ Which line a controlled window search field shows. The published value is a program's
+ * property, and a program that stores the line without republishing it (or that answers a full round trip
+ * later) used to make the field unwritable: every keystroke dispatched `onChange` and the field snapped
+ * straight back to the stale `value`, so every submit carried an empty line. The local edit therefore
+ * LEADS, and the published value only wins once it moved away from what stood when the edit began — which
+ * is exactly the case where the program authored the line itself (a completed submit, an abort, a
+ * program-side rewrite) and the user's draft is stale instead.
+ */
+export function searchControlledLineV1(published: string, edit: SearchLineEdit | null): string {
+  if (!edit) return published;
+  return published === edit.base ? edit.text : published;
+}
+
 /** @emoji ✅️ True when Space/Enter should pick the active filtered {@link SearchPossible} instead of submitting the raw draft. */
 export function shouldActivateSearchPossibleOnConfirm(draft: string, showPossiblesList: boolean, filteredCount: number): boolean {
   if (!filteredCount) return false;
@@ -10221,8 +10258,10 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
   const suggestionsAriaLabel = useLabel(UI_WINDOW_SEARCH.suggestions);
   const noMatchesLabel = useLabel(UI_WINDOW_SEARCH.noMatches);
   const [uncontrolledDraft, setUncontrolledDraft] = reactHostPort.useState("");
+  const [controlledEdit, setControlledEdit] = reactHostPort.useState<SearchLineEdit | null>(null);
   const isControlledInput = !!input?.onChange;
-  const draft = normalizeEngagementActionText(isControlledInput ? (input?.value ?? "") : uncontrolledDraft);
+  const publishedLine = normalizeEngagementActionText(input?.value ?? "");
+  const draft = isControlledInput ? searchControlledLineV1(publishedLine, controlledEdit) : normalizeEngagementActionText(uncontrolledDraft);
   const actionPlaceholder = input?.placeholder ?? (sessionActive ? actionActivePlaceholderLabel : actionPlaceholderLabel);
   const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
@@ -10245,11 +10284,23 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
   const applyDraft = reactHostPort.useCallback(
     (value: string) => {
       const normalized = normalizeEngagementActionText(value);
-      if (isControlledInput) input?.onChange?.(normalized);
-      else setUncontrolledDraft(normalized);
+      if (!isControlledInput) {
+        setUncontrolledDraft(normalized);
+        return;
+      }
+      setControlledEdit((previous) => ({ text: normalized, base: previous?.base ?? publishedLine }));
+      input?.onChange?.(normalized);
     },
-    [input, isControlledInput],
+    [input, isControlledInput, publishedLine],
   );
+  /** 🧹️ Hands the line back to the program on confirm or abort: the published value leads again from
+   * here, so a command line the program empties (`engagement_submit` clears `engagement_input`) clears,
+   * and a field the program keeps a standing value in keeps it. Never writes a value of its own — that
+   * would leave the field empty forever against a program that publishes one. */
+  const releaseDraft = reactHostPort.useCallback(() => {
+    setControlledEdit(null);
+    setUncontrolledDraft("");
+  }, []);
 
   const pickingPossibleIdRef = reactHostPort.useRef<string | null>(null);
   const selectPossible = reactHostPort.useCallback(
@@ -10322,6 +10373,7 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
                         event.preventDefault();
                         event.stopPropagation();
                         input!.onAbort();
+                        releaseDraft();
                       }
                       return;
                     }
@@ -10343,13 +10395,14 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
                     if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
                       event.preventDefault();
                       if (shouldActivateSearchPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
-                      applySearchSpaceAction(input!, draft, sessionActive);
+                      if (applySearchSpaceAction(input!, draft, sessionActive)) releaseDraft();
                       return;
                     }
                     if (event.key === "Enter") {
                       event.preventDefault();
                       if (shouldActivateSearchPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
                       input!.onSubmit?.(draft);
+                      releaseDraft();
                     }
                   }}
                   placeholder={actionPlaceholder}
@@ -10865,7 +10918,7 @@ export {
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../../../../🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx");
-  await registerTests1(import.meta.vitest, { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef }, { directory: import.meta.dir, url: import.meta.url });
 }
 
 // #endregion 🔍️Window Components

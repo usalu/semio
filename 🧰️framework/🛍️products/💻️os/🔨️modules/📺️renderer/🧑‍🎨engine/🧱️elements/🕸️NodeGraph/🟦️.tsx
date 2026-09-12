@@ -1186,6 +1186,9 @@ export type DagLabelOverlayRow = {
   readonly nodeW: number;
   readonly nodeH: number;
   readonly fontScreenPx?: number;
+  /** 📐️ The caption's own screen-width budget, published by the host: only it knows whether a
+   * caption sits inside the node body or above it. */
+  readonly maxScreenW?: number;
   readonly maxScreenH?: number;
   readonly ghost?: boolean;
 };
@@ -1263,6 +1266,99 @@ export function dagScreenToWorld(camera: DagCameraState, width: number, height: 
 }
 //#endregion DagOverlayGeometry
 
+//#region 📷️ContentFraming
+/** 🖼️ Screen margin a fit leaves around the graph it frames, per side. Twin of
+ * `canvas::camera::CONTENT_FIT_PADDING_PX`. */
+export const DAG_CONTENT_FIT_PADDING_PX = 24;
+/** 🖼️ How much of the graph a STORED camera must already show to be adopted on a first attach. */
+export const DAG_CONTENT_FRAMED_MIN_COVERAGE = 0.85;
+/** 🖼️ How little of the graph has to be left on screen before a graph that CHANGED under a live
+ * camera (an example switch) is re-fitted. Far below {@link DAG_CONTENT_FRAMED_MIN_COVERAGE}: a
+ * camera the viewer set is never yanked back for an ordinary edit. */
+export const DAG_CONTENT_REFIT_MAX_COVERAGE = 0.05;
+const DAG_CAMERA_ZOOM_MIN = 0.05;
+const DAG_CAMERA_ZOOM_MAX = 32;
+
+export type DagContentBounds = { readonly minX: number; readonly minY: number; readonly maxX: number; readonly maxY: number };
+
+/** 🖼️ World bounds of every node a scene carries — what a fit frames. `null` for an empty graph,
+ * which has nothing to frame. Twin of `DagHost::content_world_bounds`. */
+export function dagContentBounds(nodes: readonly NodeGraphNodeRecord[] | undefined): DagContentBounds | null {
+  let bounds: { minX: number; minY: number; maxX: number; maxY: number } | null = null;
+  for (const node of nodes ?? []) {
+    const halfW = (Number(node.width) || 0) * 0.5;
+    const halfH = (Number(node.height) || 0) * 0.5;
+    const x = Number(node.x) || 0;
+    const y = Number(node.y) || 0;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+    bounds = bounds
+      ? { minX: Math.min(bounds.minX, x - halfW), minY: Math.min(bounds.minY, y - halfH), maxX: Math.max(bounds.maxX, x + halfW), maxY: Math.max(bounds.maxY, y + halfH) }
+      : { minX: x - halfW, minY: y - halfH, maxX: x + halfW, maxY: y + halfH };
+  }
+  return bounds;
+}
+
+/** 🔖️ Identity of the LAYOUT a camera was framed against: the node ids and their boxes, nothing
+ * else. An example switch changes it; hovering, evaluating or selecting never does, which is what
+ * keeps a re-fit from firing on an ordinary edit. */
+export function nodeGraphContentSignature(nodes: readonly NodeGraphNodeRecord[] | undefined): string {
+  return (nodes ?? []).map((node) => `${node.id}:${node.x},${node.y},${node.width},${node.height}`).join("|");
+}
+
+/** 🖼️ Fraction (`0..1`) of the graph's own area a camera currently shows. Degenerate content (a
+ * single node, a row of nodes at one `y`) is measured on whichever axes have extent, so a
+ * zero-height graph never reads as invisible. Twin of `canvas::camera::content_coverage`. */
+export function dagContentCoverage(content: DagContentBounds, camera: DagCameraState, width: number, height: number): number {
+  const zoom = Math.max(camera.zoom, 1e-9);
+  const halfW = Math.max(width, 1) / (2 * zoom);
+  const halfH = Math.max(height, 1) / (2 * zoom);
+  const view = { minX: camera.x - halfW, minY: camera.y - halfH, maxX: camera.x + halfW, maxY: camera.y + halfH };
+  const contentW = Math.max(content.maxX - content.minX, 0);
+  const contentH = Math.max(content.maxY - content.minY, 0);
+  const overlapX = Math.max(Math.min(content.maxX, view.maxX) - Math.max(content.minX, view.minX), 0);
+  const overlapY = Math.max(Math.min(content.maxY, view.maxY) - Math.max(content.minY, view.minY), 0);
+  const insideX = content.minX >= view.minX && content.maxX <= view.maxX;
+  const insideY = content.minY >= view.minY && content.maxY <= view.maxY;
+  if (contentW > 0 && contentH > 0) return (overlapX * overlapY) / (contentW * contentH);
+  if (contentW > 0) return (insideY ? 1 : 0) * (overlapX / contentW);
+  if (contentH > 0) return (insideX ? 1 : 0) * (overlapY / contentH);
+  return insideX && insideY ? 1 : 0;
+}
+
+/** 🖼️ The camera that frames the whole graph with `paddingPx` of screen margin per side, zoom
+ * clamped to the canvas camera range. Twin of `canvas::camera::fit_camera`. */
+export function dagFitCamera(content: DagContentBounds, width: number, height: number, paddingPx = DAG_CONTENT_FIT_PADDING_PX): DagCameraState {
+  const usableW = Math.max(Math.max(width, 1) - paddingPx * 2, 1);
+  const usableH = Math.max(Math.max(height, 1) - paddingPx * 2, 1);
+  const contentW = Math.max(content.maxX - content.minX, 0);
+  const contentH = Math.max(content.maxY - content.minY, 0);
+  const zoomX = contentW > 0 ? usableW / contentW : Number.POSITIVE_INFINITY;
+  const zoomY = contentH > 0 ? usableH / contentH : Number.POSITIVE_INFINITY;
+  const zoom = Math.min(zoomX, zoomY);
+  return {
+    x: (content.minX + content.maxX) * 0.5,
+    y: (content.minY + content.maxY) * 0.5,
+    zoom: Math.min(Math.max(Number.isFinite(zoom) ? zoom : 1, DAG_CAMERA_ZOOM_MIN), DAG_CAMERA_ZOOM_MAX),
+  };
+}
+
+/** 🖼️ The camera a node-graph surface OPENS on — the law this window used to lack. A stored camera
+ * is honoured only when it already frames the graph it was stored for; otherwise (and whenever
+ * there is no stored camera) the graph is fitted, and `fitted` tells the caller to persist that the
+ * same way it persists a pan or a zoom gesture. Twin of `canvas::camera::startup_camera`. */
+export function dagStartupCamera(
+  stored: DagCameraState | null | undefined,
+  content: DagContentBounds | null,
+  width: number,
+  height: number,
+  minCoverage = DAG_CONTENT_FRAMED_MIN_COVERAGE,
+): { readonly camera: DagCameraState; readonly fitted: boolean } {
+  if (!content) return { camera: stored ?? { x: 0, y: 0, zoom: 1 }, fitted: false };
+  if (stored && stored.zoom > 0 && dagContentCoverage(content, stored, width, height) >= minCoverage) return { camera: stored, fitted: false };
+  return { camera: dagFitCamera(content, width, height), fitted: true };
+}
+//#endregion 📷️ContentFraming
+
 //#region DagOverlayPaint
 const DAG_LABEL_SCREEN_PX = 11;
 const DAG_LABEL_FONT_FAMILY = "ui-sans-serif, system-ui, sans-serif";
@@ -1332,43 +1428,56 @@ export function parseDagLabelRows(stateJson: string): DagLabelOverlayRow[] {
   }
 }
 
-function dagClampLabelFontPx(ctx: CanvasRenderingContext2D, text: string, targetPx: number, maxW: number, maxH: number): number {
-  let px = Math.max(4, Math.round(targetPx));
-  ctx.font = `${px}px ${DAG_LABEL_FONT_FAMILY}`;
-  if (ctx.measureText(text).width <= maxW && px * 1.2 <= maxH) {
-    return px;
+/** ✂️ The one glyph a clipped caption ends on — the same character every presentation of this repo
+ * appends (`canvas::text::LABEL_ELLIPSIS`). */
+export const DAG_LABEL_ELLIPSIS = "…";
+/** 🔠️ Smallest font an overlay caption may shrink to. Below this a caption is a smudge, not a word,
+ * which is why width is answered by {@link dagEllipsizeByMeasure} and never by shrinking further. */
+const DAG_LABEL_LEGIBLE_MIN_PX = 8;
+
+/** ✂️ Longest prefix of `text` that still fits `maxWidth` once {@link DAG_LABEL_ELLIPSIS} is
+ * appended, measured by the CALLER's own measure. The JavaScript twin of
+ * `canvas::text::ellipsize_by_measure`; both are pinned to the rows of
+ * `♾️infinite/🖼️canvas/🧪️tests/🏷️label-fit/🔣️.json`.
+ *
+ * Empty text and a non-positive budget draw nothing; a budget too narrow for even one glyph plus
+ * the ellipsis draws the bare ellipsis, so a clipped caption is always visibly clipped. */
+export function dagEllipsizeByMeasure(text: string, maxWidth: number, measure: (candidate: string) => number): string {
+  const trimmed = text.trim();
+  if (!trimmed || maxWidth <= 0) return "";
+  if (measure(trimmed) <= maxWidth) return trimmed;
+  const glyphs = [...trimmed];
+  let best = "";
+  for (let index = 1; index <= glyphs.length; index += 1) {
+    const candidate = glyphs.slice(0, index).join("") + DAG_LABEL_ELLIPSIS;
+    if (measure(candidate) > maxWidth) break;
+    best = candidate;
   }
-  let low = 4;
-  let high = px;
-  let best = 4;
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    ctx.font = `${mid}px ${DAG_LABEL_FONT_FAMILY}`;
-    const w = ctx.measureText(text).width;
-    const h = mid * 1.2;
-    if (w <= maxW && h <= maxH) {
-      best = mid;
-      low = mid + 1;
-    } else {
-      high = mid - 1;
-    }
-  }
-  return best;
+  return best || DAG_LABEL_ELLIPSIS;
 }
 
-function dagClampPortLabelFontPx(ctx: CanvasRenderingContext2D, text: string, targetPx: number, maxW: number, maxH: number): number {
-  let px = Math.max(8, Math.round(targetPx));
+/** ✂️ {@link dagEllipsizeByMeasure} driven by the overlay canvas's own `measureText` at `fontPx`. */
+function dagEllipsizeOverlayLabel(ctx: CanvasRenderingContext2D, text: string, fontPx: number, maxW: number): string {
+  ctx.font = `${fontPx}px ${DAG_LABEL_FONT_FAMILY}`;
+  return dagEllipsizeByMeasure(text, maxW, (candidate) => ctx.measureText(candidate).width);
+}
+
+/** 📐️ Overlay caption font size: the row's own target, shrunk ONLY to fit the row's height, never
+ * below {@link DAG_LABEL_LEGIBLE_MIN_PX}. Width is not a font decision — see
+ * {@link dagEllipsizeOverlayLabel}. This used to binary-search the font down to 4px on width too,
+ * which is how a caption wider than its node body became an unreadable smear. */
+function dagClampLabelFontPx(ctx: CanvasRenderingContext2D, text: string, targetPx: number, maxH: number): number {
+  const px = Math.max(DAG_LABEL_LEGIBLE_MIN_PX, Math.round(targetPx));
   ctx.font = `${px}px ${DAG_LABEL_FONT_FAMILY}`;
-  if (ctx.measureText(text).width <= maxW && px * 1.25 <= maxH) {
+  if (px * 1.2 <= maxH) {
     return px;
   }
-  let low = 8;
+  let low = DAG_LABEL_LEGIBLE_MIN_PX;
   let high = px;
-  let best = 8;
+  let best = DAG_LABEL_LEGIBLE_MIN_PX;
   while (low <= high) {
     const mid = Math.floor((low + high) / 2);
-    ctx.font = `${mid}px ${DAG_LABEL_FONT_FAMILY}`;
-    if (ctx.measureText(text).width <= maxW) {
+    if (mid * 1.2 <= maxH) {
       best = mid;
       low = mid + 1;
     } else {
@@ -1580,11 +1689,20 @@ export function paintDagLabelOverlays(stateJson: string, canvas: HTMLCanvasEleme
       continue;
     }
     const isPort = row.kind === "port" || row.align === "left" || row.align === "right";
-    const maxW = Math.max(4, Number(row.nodeW) * zoom * inset);
+    // 📐️ The host publishes the caption's own screen budget (`maxScreenW`) because only it knows
+    // whether the caption sits INSIDE the node body or above it. The `nodeW` derivation is the
+    // fallback for a row that predates that field.
+    const publishedW = Number(row.maxScreenW);
+    const maxW = Number.isFinite(publishedW) && publishedW > 0 ? publishedW : Math.max(4, Number(row.nodeW) * zoom * inset);
     const maxH = Math.max(4, isPort && Number.isFinite(Number(row.maxScreenH)) && Number(row.maxScreenH) > 0 ? Number(row.maxScreenH) : Number(row.nodeH) * zoom * inset);
     const fontScreenPx = Number(row.fontScreenPx);
     const targetPx = Number.isFinite(fontScreenPx) && fontScreenPx > 0 ? fontScreenPx : DAG_LABEL_SCREEN_PX;
-    const fontPx = isPort ? dagClampPortLabelFontPx(ctx, row.text, targetPx, maxW, maxH) : dagClampLabelFontPx(ctx, row.text, targetPx, maxW, maxH);
+    const fontPx = dagClampLabelFontPx(ctx, row.text, targetPx, maxH);
+    // ✂️ A rotated caption runs along the node's HEIGHT; the host already publishes that as its
+    // `maxScreenW`, so the fallback is the only place the axis has to be chosen here.
+    const textBudget = Number.isFinite(publishedW) && publishedW > 0 ? publishedW : row.layout === "vertical" ? Math.max(4, Number(row.nodeH) * zoom * inset) : maxW;
+    const text = dagEllipsizeOverlayLabel(ctx, row.text, fontPx, textBudget);
+    if (!text) continue;
     ctx.font = `${fontPx}px ${DAG_LABEL_FONT_FAMILY}`;
     ctx.fillStyle = dagOverlayLabelFillHex(row.id, row.ghost === true, interaction.hoveredId, chrome, dimmedIds);
     ctx.globalAlpha = row.ghost ? 0.85 : dimmedIds.includes(row.id) ? 0.5 : 1;
@@ -1594,13 +1712,13 @@ export function paintDagLabelOverlays(stateJson: string, canvas: HTMLCanvasEleme
       ctx.rotate(-Math.PI / 2);
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(row.text, 0, 0);
+      ctx.fillText(text, 0, 0);
       ctx.restore();
     } else {
       const align = row.align === "left" || row.align === "right" ? row.align : "center";
       ctx.textAlign = align;
       ctx.textBaseline = "middle";
-      ctx.fillText(row.text, anchor.x, anchor.y);
+      ctx.fillText(text, anchor.x, anchor.y);
     }
     ctx.globalAlpha = 1;
   }
@@ -1777,13 +1895,15 @@ export function SelectionAlignChrome({ bounds, onAlign }: { readonly bounds: Dag
 //#region 🔖️flow-graph-canvas-host
 
 //#region Sync
-// @emoji 🎥️ `applyCamera` must stay false for every resync after the first: live pan/zoom lives in the
+// @emoji 🎥️ The camera is NEVER copied from `scene.viewport` on a resync: live pan/zoom lives in the
 // FlowWasmSession (and plugin runtime via `nodeGraphViewport`), while `scene.viewport` often lags.
 // Applying it on hover/eval/edit-triggered synchronization would snap the camera; document
-// preserves the live camera so fixture content reloads never reset the view.
+// preserves the live camera so fixture content reloads never reset the view. The ONE moment a
+// stored camera is considered at all is the surface's first attach, and even there it is a
+// decision, not a copy — see `applyFlowStartupCamera`.
 const activeFlowTasks = new WeakMap<FlowWasmSession, Map<string, FlowTask<unknown>>>();
 
-function observeFlowTask<T>(session: FlowWasmSession, feature: string, task: FlowTask<T>, consume?: (value: T) => void): () => void {
+function observeFlowTask<T>(session: FlowWasmSession, feature: string, task: FlowTask<T>, consume?: (value: T) => void, settled?: (delivered: boolean) => void): () => void {
   let features = activeFlowTasks.get(session);
   if (!features) {
     features = new Map();
@@ -1792,11 +1912,16 @@ function observeFlowTask<T>(session: FlowWasmSession, feature: string, task: Flo
   features.get(feature)?.cancel();
   features.set(feature, task as FlowTask<unknown>);
   const unsubscribe = task.subscribe(() => {});
+  let delivered = false;
   void task.result
-    .then((value) => consume?.(value))
+    .then((value) => {
+      delivered = true;
+      consume?.(value);
+    })
     .catch(() => {})
     .finally(() => {
       unsubscribe();
+      settled?.(delivered);
       if (features?.get(feature) === task) features.delete(feature);
     });
   return () => {
@@ -1818,6 +1943,44 @@ async function readFlowTask<T>(task: FlowTask<T>): Promise<T> {
 async function readObservedFlowTask<T>(session: FlowWasmSession, feature: string, task: FlowTask<T>): Promise<T> {
   observeFlowTask(session, feature, task);
   return task.result;
+}
+
+/** 📄️ Payloads a session has already been handed, and the ones being handed to it right now.
+ *
+ * `observeFlowTask` keeps ONE task per feature key and cancels the previous — right for a query whose
+ * answer is superseded, fatal for a payload the guest has to APPLY. The scene changes on every
+ * `flowEvalTick` (measured roughly 700 ms apart on a live graph), so an unguarded re-issue cancelled
+ * the document sync and the operator-kind table before the guest ever applied them: the session kept
+ * its default three-widget fixture and its kind-less operator names for the whole session, while the
+ * scene had carried seven nodes since the first frame. The same pre-emption defect the paint lane
+ * fixed for `renderCanvas`, on the state half of the sync.
+ *
+ * An identical payload is therefore never re-sent — and a send that did NOT deliver clears the
+ * record, so a cancelled or failed send is retried by the next scene pass rather than lost. */
+const flowSessionDeliveredPayloads = new WeakMap<FlowWasmSession, Map<string, string>>();
+const flowSessionSendingPayloads = new WeakMap<FlowWasmSession, Map<string, string>>();
+
+function flowSessionPayloadRecord(map: WeakMap<FlowWasmSession, Map<string, string>>, session: FlowWasmSession): Map<string, string> {
+  let record = map.get(session);
+  if (!record) {
+    record = new Map();
+    map.set(session, record);
+  }
+  return record;
+}
+
+/** 📤️ Sends `payload` under `feature` exactly once per distinct value — see the docstring above. */
+function sendFlowPayloadOnce(session: FlowWasmSession, feature: string, payload: string, issue: (payload: string) => FlowTask<unknown>): void {
+  const delivered = flowSessionPayloadRecord(flowSessionDeliveredPayloads, session);
+  const sending = flowSessionPayloadRecord(flowSessionSendingPayloads, session);
+  if (delivered.get(feature) === payload || sending.get(feature) === payload) return;
+  sending.set(feature, payload);
+  observeFlowTask(session, feature, issue(payload), undefined, (landed) => {
+    if (sending.get(feature) !== payload) return;
+    sending.delete(feature);
+    if (landed) delivered.set(feature, payload);
+    else delivered.delete(feature);
+  });
 }
 
 function cancelFlowTasks(session: FlowWasmSession): void {
@@ -1859,7 +2022,7 @@ function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraph
 function syncFlowOperatorInfos(session: FlowWasmSession, catalogue: AppCatalogue, scene: NodeGraphScene): void {
   const infos = [...(catalogue.operators ?? []), ...(scene.operators ?? [])];
   if (infos.length === 0) return;
-  observeFlowTask(session, "setNeuronKindInfosJson", session.setNeuronKindInfosJson(JSON.stringify(infos)));
+  sendFlowPayloadOnce(session, "setNeuronKindInfosJson", JSON.stringify(infos), (json) => session.setNeuronKindInfosJson(json));
 }
 
 /** 🛍️ Installs the app-static catalogue on a flow session: the operator kind infos the canvas lays
@@ -1867,20 +2030,12 @@ function syncFlowOperatorInfos(session: FlowWasmSession, catalogue: AppCatalogue
  * rather than per scene sync — see {@link AppCatalogueContext}. */
 function syncFlowSessionAppCatalogue(session: FlowWasmSession, catalogue: AppCatalogue, scene: NodeGraphScene): void {
   syncFlowOperatorInfos(session, catalogue, scene);
-  if (catalogue.sections) observeFlowTask(session, "setCatalogueJson", session.setCatalogueJson(JSON.stringify(catalogue.sections)));
+  if (catalogue.sections) sendFlowPayloadOnce(session, "setCatalogueJson", JSON.stringify(catalogue.sections), (json) => session.setCatalogueJson(json));
 }
 
-function syncFlowSessionStructureFromScene(
-  session: FlowWasmSession,
-  scene: NodeGraphScene,
-  catalogue: AppCatalogue,
-  applyCamera: boolean,
-  skipFixture = false,
-): void {
+function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: NodeGraphScene, catalogue: AppCatalogue, skipFixture = false): void {
   if (scene.operators?.length) syncFlowOperatorInfos(session, catalogue, scene);
-  if (!skipFixture && scene.fixtureJson) {
-    observeFlowTask(session, "synchronizeDocumentJson", session.synchronizeDocumentJson(scene.fixtureJson));
-  }
+  if (!skipFixture && scene.fixtureJson) sendFlowPayloadOnce(session, "synchronizeDocumentJson", scene.fixtureJson, (json) => session.synchronizeDocumentJson(json));
   if (scene.selection) observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify(scene.selection)));
   applyNodeGraphHoverFromScene(session, scene.hover);
   if (scene.previewOffJson) observeFlowTask(session, "setPreviewOff", session.setPreviewOff(scene.previewOffJson));
@@ -1893,13 +2048,33 @@ function syncFlowSessionStructureFromScene(
       /* ignore */
     }
   }
-  if (!applyCamera) return;
-  const viewport = scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT;
-  observeFlowTask(session, "setCamera", session.setCamera(viewport.x, viewport.y, viewport.zoom));
 }
 
-function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene, catalogue: AppCatalogue, applyCamera: boolean): void {
-  syncFlowSessionStructureFromScene(session, scene, catalogue, applyCamera);
+/** 🖼️ The opening camera of a node-graph surface: the stored one when it already frames this graph,
+ * the fit otherwise. Returns the camera it installed together with whether the fit won — the caller
+ * persists a fit exactly the way it persists a pan or a zoom gesture, so the next open honours it.
+ *
+ * Twin of `DagHost::adopt_camera_or_fit`; the law itself is {@link dagStartupCamera}, pinned by
+ * `♾️infinite/🖼️canvas/🧪️tests/📷️camera-fit/🔣️.json`. */
+function applyFlowStartupCamera(session: FlowWasmSession, scene: NodeGraphScene, width: number, height: number): { readonly camera: DagCameraState; readonly fitted: boolean } {
+  const stored = scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT;
+  const decision = dagStartupCamera(stored, dagContentBounds(scene.nodes), width, height);
+  observeFlowTask(session, "setCamera", session.setCamera(decision.camera.x, decision.camera.y, decision.camera.zoom));
+  return decision;
+}
+
+/** 🔀️ A graph that CHANGED under a live camera — an example switch — is re-framed only when the
+ * change left essentially nothing on screen. Twin of `DagHost::refit_camera_if_content_left_view`. */
+function refitFlowCameraIfContentLeftView(session: FlowWasmSession, scene: NodeGraphScene, camera: DagCameraState, width: number, height: number): DagCameraState | null {
+  const content = dagContentBounds(scene.nodes);
+  if (!content || dagContentCoverage(content, camera, width, height) > DAG_CONTENT_REFIT_MAX_COVERAGE) return null;
+  const fitted = dagFitCamera(content, width, height);
+  observeFlowTask(session, "setCamera", session.setCamera(fitted.x, fitted.y, fitted.zoom));
+  return fitted;
+}
+
+function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene, catalogue: AppCatalogue): void {
+  syncFlowSessionStructureFromScene(session, scene, catalogue);
   // 🧵️ Apply results from the plugin's off-main-thread `flowEvalTick` chain BEFORE computingJson —
   // applyEvalOutputsJson clears computing chrome, so applying computingJson first would have it
   // immediately wiped by this call on the same sync pass.
@@ -1910,6 +2085,23 @@ function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScen
 //#region FlowGraphCanvasHost
 export function flowSurfaceRenderAllowed(surfaceReady: boolean): boolean {
   return surfaceReady;
+}
+
+/** 🪧️ The one frame verdict this host has to act on — `FlowPresentation.unpresentable` in
+ * `🖥️flow-host.js`, spelled here the way every other flow surface word (`"created"`,
+ * `"cancelled"`, `"device-lost"`) is spelled on both sides of the byte ABI.
+ *
+ * It means the frame wants the 2D draw-list replay and the canvas element cannot give a 2D context:
+ * a WebGPU context is bound to it and its device is gone (or a bring-up bound one and then failed).
+ * A canvas admits exactly one context kind for its whole life, so that element is finished — the
+ * presentation can only be decided again for a NEW one, which is what {@link flowSurfaceCanvasKey}
+ * mints. */
+const flowUnpresentablePresentation = "unpresentable";
+
+/** 🔑️ React key for the flow scene canvas. A new generation is a new DOM element, which is the only
+ * way a surface that lost its device can be presented again. */
+export function flowSurfaceCanvasKey(surfaceId: string, generation: number): string {
+  return `${surfaceId}#${generation}`;
 }
 
 export function FlowGraphCanvasHost({
@@ -1935,12 +2127,20 @@ export function FlowGraphCanvasHost({
   const gpuCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // 🔁️ One presentation decision per canvas ELEMENT: bumping the generation mints a new element,
+  // which re-runs the attach effect and lets the guest decide GPU-or-replay again for it.
+  const [canvasGeneration, setCanvasGeneration] = useState(0);
+  // 🖼️ The layout the live camera was last framed against — see `nodeGraphContentSignature`.
+  const framedGraphSignatureRef = useRef<string | null>(null);
+  const attachedSurfaceRef = useRef<{ readonly surface: number; readonly surfaceGeneration: number; readonly presentsOnGpu: boolean } | null>(null);
+  const replaceUnpresentableCanvasRef = useRef<() => void>(() => {});
   const [contextMenu, setContextMenu] = useState<SurfaceContextMenuResult & {
     readonly x: number;
     readonly y: number;
     readonly widgetId?: string;
   } | null>(null);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.flow");
+  const fitGraphLabel = useLabel("ui.nodeGraph.fitGraph");
   const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
   const [labelStateJson, setLabelStateJson] = useState("{}");
@@ -1971,6 +2171,12 @@ export function FlowGraphCanvasHost({
     },
     [controllerId, onAction, surfaceId],
   );
+
+  // 📮️ Effects that must NOT re-run per render (attach, scene sync) reach the dispatcher through this
+  // ref: `dispatch`'s identity follows the `onAction` prop, and depending on it would re-attach the
+  // canvas — and re-issue `synchronizeDocumentJson` — on every parent render.
+  const dispatchRef = useRef(dispatch);
+  dispatchRef.current = dispatch;
 
   const flowMenuKeysByActionId = useAppKeybindingsByActionId();
   const shellContextMenuFallback = useShellContextMenuFallback();
@@ -2007,11 +2213,31 @@ export function FlowGraphCanvasHost({
     schedulerRef.current?.beginContinuous("gesture");
   }, []);
 
+  /** 🏷️ Paints the label/slider/selection overlay, and COALESCES instead of pre-empting — the same
+   * law `renderFlow` below carries, on the other canvas of this surface.
+   *
+   * Each pass reads ten session queries through `observeFlowTask`, which keeps one task per feature
+   * key and cancels the previous. A second pass starting while the first is in flight therefore
+   * cancelled the first pass's own reads, its `Promise.all` rejected, and the overlay was NOT
+   * painted. Since every invalidation calls this, the overlay painted exactly ONCE per session:
+   * measured live as three `fillText` calls in a 60 s run, showing the node-graph's pre-sync picture
+   * (the default two-widget fixture) for the whole session while the guest already held all seven.
+   *
+   * An in-flight pass is therefore left alone and a request arriving during one is re-issued when it
+   * settles: at most one extra pass, never a dropped one. */
+  const overlayInFlightRef = useRef(false);
+  const overlayDirtyRef = useRef(false);
+  const paintOverlaysRef = useRef<() => void>(() => {});
   const paintOverlays = useCallback(() => {
     const session = sessionRef.current;
     const labelCanvas = labelCanvasRef.current;
     const container = containerRef.current;
     if (!session || !labelCanvas || !container) return;
+    if (overlayInFlightRef.current) {
+      overlayDirtyRef.current = true;
+      return;
+    }
+    overlayInFlightRef.current = true;
     const rect = container.getBoundingClientRect();
     const dpr = globalThis.devicePixelRatio || 1;
     setContainerSize((prev) => (prev.w === rect.width && prev.h === rect.height ? prev : { w: rect.width, h: rect.height }));
@@ -2049,19 +2275,88 @@ export function FlowGraphCanvasHost({
       setSliderStateJson((prev) => (prev === nextSliderJson ? prev : nextSliderJson));
       setSelectionBounds(parseDagSelectionUnionBoundsScreen(flowJsonText(boundsValue)));
       setMarquee(computeDagMarqueeOverlay(flowJsonText(pointsValue), flowBoolean(crossingValue), typeof methodValue === "string" ? methodValue : undefined));
-    }).catch(() => {});
+    })
+      .catch(() => {})
+      .finally(() => {
+        overlayInFlightRef.current = false;
+        if (!overlayDirtyRef.current) return;
+        overlayDirtyRef.current = false;
+        paintOverlaysRef.current();
+      });
   }, []);
+  paintOverlaysRef.current = paintOverlays;
 
+  /** 🖼️ Presents one frame, and coalesces instead of pre-empting.
+   *
+   * `observeFlowTask` keeps ONE task per feature key and cancels the previous one, which is right for
+   * a query whose answer is superseded — and wrong for the paint. A render reply is what actually puts
+   * pixels on the canvas, and a resize has just cleared the backing store; cancelling the in-flight
+   * render leaves the canvas blank until the NEXT render completes uncancelled, so a burst of
+   * invalidations (mount, ResizeObserver, scene sync, theme sync — all of which arrive together)
+   * repeatedly emptied a canvas the engine had in fact painted. Measured live: `render_frame` ran on
+   * every invalidation (`[DEBUG] dag draw lod=detail zoom=1.784` repeating) while `renderFlowCanvas`
+   * ran exactly once for the whole session. So an in-flight render is left alone and a request that
+   * arrives during one is remembered and re-issued when it settles — at most one extra frame, never a
+   * dropped one. */
+  const renderInFlightRef = useRef(false);
+  const renderDirtyRef = useRef(false);
+  const renderFlowRef = useRef<() => void>(() => {});
   const renderFlow = useCallback(() => {
     const session = sessionRef.current;
     const canvas = gpuCanvasRef.current;
     if (!session || !canvas || !flowSurfaceRenderAllowed(surfaceReadyRef.current)) return;
-    observeFlowTask(session, "renderCanvas", session.renderCanvas(canvas), () => {
+    if (renderInFlightRef.current) {
+      renderDirtyRef.current = true;
+      return;
+    }
+    renderInFlightRef.current = true;
+    const task = session.renderCanvas(canvas);
+    observeFlowTask(session, "renderCanvas", task, () => {
       if (drewOnceRef.current) return;
       drewOnceRef.current = true;
       console.log("[DEBUG] node-graph first draw surface=%s store=%sx%s", surfaceId, canvas.width, canvas.height);
     });
+    void task.result
+      .then((state) => {
+        if ((state as { presentation?: string } | undefined)?.presentation === flowUnpresentablePresentation) replaceUnpresentableCanvasRef.current();
+      })
+      .catch(() => {})
+      .finally(() => {
+        renderInFlightRef.current = false;
+        if (!renderDirtyRef.current) return;
+        renderDirtyRef.current = false;
+        renderFlowRef.current();
+      });
   }, [surfaceId]);
+  renderFlowRef.current = renderFlow;
+
+  /** ♻️ Retires a canvas that can no longer be presented onto and mints its successor.
+   *
+   * The guest owns exactly one surface at a time and refuses a replacement that was not closed
+   * first (`attach_surface` → `Flow surface requires exact close before replacement`), so the old
+   * surface is cancelled — which also releases its `CanvasGpuSession` — before the new element's
+   * attach effect runs. Idempotent per generation: a burst of frames all reporting the same dead
+   * canvas must mint ONE successor, not one each.
+   *
+   * Only a canvas that WAS presenting on the GPU can be resurrected this way, and that bound is the
+   * whole termination argument: a successor re-attaches, and an attach that finds no adapter leaves
+   * the element 2D-capable, so there is at most one replacement per device loss. An element that
+   * refuses a 2D context while its surface never had a device is not poisoned — it is an
+   * environment with no 2D canvas at all (jsdom, a stripped embedder), where a successor would
+   * refuse in exactly the same way and the host would remount forever. */
+  const replaceUnpresentableCanvas = useCallback(() => {
+    const session = sessionRef.current;
+    const retired = attachedSurfaceRef.current;
+    if (!retired?.presentsOnGpu) return;
+    attachedSurfaceRef.current = null;
+    surfaceReadyRef.current = false;
+    console.warn("[DEBUG] node-graph canvas unpresentable surface=%s retiring flow surface=%s", surfaceId, retired.surface);
+    // 🚪️ `"cancelled"`, not `"device-lost"`: the latter parks the surface as recoverable and keeps it
+    // occupying the session's single slot, so the successor's `attachSurface` would be refused.
+    if (session) observeFlowTask(session, "surfaceStatus:unpresentable", session.surfaceStatus({ surface: retired.surface, surfaceGeneration: retired.surfaceGeneration, status: "cancelled" }));
+    setCanvasGeneration((generation) => generation + 1);
+  }, [surfaceId]);
+  replaceUnpresentableCanvasRef.current = replaceUnpresentableCanvas;
 
   /** 📏️ Single owner of both canvases' backing-store size: measures the container and writes the
    * device-pixel store synchronously, then forwards the logical size to the wasm surface when one is
@@ -2100,7 +2395,7 @@ export function FlowGraphCanvasHost({
     schedulerRef.current?.invalidate();
     const session = sessionRef.current;
     if (session) {
-      syncFlowSessionStructureFromScene(session, sceneRef.current, appCatalogueRef.current, false, true);
+      syncFlowSessionStructureFromScene(session, sceneRef.current, appCatalogueRef.current, true);
       renderFlow();
       paintOverlays();
     }
@@ -2142,6 +2437,9 @@ export function FlowGraphCanvasHost({
     });
     return () => {
       cancelled = true;
+      // 🪪️ A retained surface host unmounts exactly once, when its window closes. A second `host mount`
+      // after this line means the React subtree was re-keyed — see `uiSiblingReactKeys`.
+      console.log("[DEBUG] node-graph host unmount surface=%s", surfaceId);
       // 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: was never freed on unmount — the wasm-side
       // session (and everything it retains) leaked for the rest of the document's lifetime.
       if (sessionRef.current) {
@@ -2171,11 +2469,23 @@ export function FlowGraphCanvasHost({
     const attachment = session.attachCanvas(canvas, Math.round(rect.width), Math.round(rect.height), dpr);
     const unsubscribeAttachment = attachment.subscribe(() => schedulerRef.current?.invalidate());
     void attachment.result
-      .then(() => {
+      .then((attached) => {
         if (cancelled) return;
+        // 🪪️ Kept so a canvas that turns out to be unpresentable can cancel exactly this surface.
+        const handle = attached as { readonly surface?: number; readonly surfaceGeneration?: number; readonly presentsOnGpu?: boolean } | undefined;
+        attachedSurfaceRef.current = typeof handle?.surface === "number" && typeof handle.surfaceGeneration === "number" ? { surface: handle.surface, surfaceGeneration: handle.surfaceGeneration, presentsOnGpu: handle.presentsOnGpu === true } : null;
         surfaceReadyRef.current = true;
         console.log("[DEBUG] node-graph surface ready surface=%s nodes=%s edges=%s", surfaceId, sceneRef.current.nodes?.length ?? 0, sceneRef.current.edges?.length ?? 0);
-        syncFlowSessionFromScene(session, sceneRef.current, appCatalogueRef.current, true);
+        syncFlowSessionFromScene(session, sceneRef.current, appCatalogueRef.current);
+        // 🖼️ The opening camera is decided HERE, once per surface, against the pane it actually got:
+        // a stored camera that does not frame this graph loses to the fit, and the fit is persisted
+        // as a viewport gesture so the next open honours it.
+        const opening = applyFlowStartupCamera(session, sceneRef.current, Math.round(rect.width), Math.round(rect.height));
+        framedGraphSignatureRef.current = nodeGraphContentSignature(sceneRef.current.nodes);
+        if (opening.fitted) {
+          console.log("[DEBUG] node-graph fit on open surface=%s %s", surfaceId, JSON.stringify(opening.camera));
+          dispatchRef.current(nodeGraphActions.viewport, nodeGraphViewportActionArgs(JSON.stringify(opening.camera)));
+        }
         syncFlowCanvasTheme(session);
         // 📏️ The container observer above already owns both backing stores; this only hands the freshly
         // attached surface its first logical size and paints it.
@@ -2204,11 +2514,12 @@ export function FlowGraphCanvasHost({
     return () => {
       cancelled = true;
       surfaceReadyRef.current = false;
+      attachedSurfaceRef.current = null;
       unsubscribeAttachment();
       attachment.cancel();
       cleanupAttached?.();
     };
-  }, [sessionReady, paintOverlays, renderFlow, surfaceId, syncSurfaceSize]);
+  }, [sessionReady, paintOverlays, renderFlow, surfaceId, syncSurfaceSize, canvasGeneration]);
 
   useEffect(() => {
     const session = sessionRef.current;
@@ -2218,12 +2529,36 @@ export function FlowGraphCanvasHost({
     // (new slider seeds + old channel outputs) and wipe computing chrome mid-drag. Full resync waits for
     // `handleGesturePointerUp`.
     if (!isGestureActiveRef.current) {
-      syncFlowSessionFromScene(session, scene, appCatalogueRef.current, false);
+      syncFlowSessionFromScene(session, scene, appCatalogueRef.current);
+      // 🔀️ An example switch replaces the whole graph under a live camera. Only when the new graph
+      // left the view entirely is the camera re-framed — an ordinary edit never moves it.
+      const signature = nodeGraphContentSignature(scene.nodes);
+      if (surfaceReadyRef.current && framedGraphSignatureRef.current !== null && framedGraphSignatureRef.current !== signature) {
+        framedGraphSignatureRef.current = signature;
+        const container = containerRef.current;
+        const rect = container?.getBoundingClientRect();
+        if (rect) {
+          readObservedFlowTask(session, "cameraJson:refit", session.cameraJson())
+            .then((value) => {
+              const live = sessionRef.current;
+              if (!live) return;
+              const fitted = refitFlowCameraIfContentLeftView(live, sceneRef.current, parseDagCameraState(flowJsonText(value)), Math.round(rect.width), Math.round(rect.height));
+              if (!fitted) return;
+              console.log("[DEBUG] node-graph refit after graph change surface=%s %s", surfaceId, JSON.stringify(fitted));
+              dispatchRef.current(nodeGraphActions.viewport, nodeGraphViewportActionArgs(JSON.stringify(fitted)));
+              renderFlow();
+              paintOverlays();
+            })
+            .catch(() => {
+              /* a cancelled read is a closed session, not a framing decision */
+            });
+        }
+      }
     }
     renderFlow();
     paintOverlays();
     schedulerRef.current?.invalidate();
-  }, [sceneSignature, paintOverlays, renderFlow, scene, sessionReady]);
+  }, [sceneSignature, paintOverlays, renderFlow, scene, sessionReady, surfaceId]);
 
   const flowGraphCanvasHostShellScope = useShellScopeOptional();
   useCanvasAppearanceSync(
@@ -2471,10 +2806,35 @@ export function FlowGraphCanvasHost({
     });
   }, [appCatalogue, sessionReady, spotlight]);
 
+  /** 🖼️ `Fit graph`: frames the whole graph in the pane and persists the result exactly the way a pan
+   * or a zoom gesture is persisted (`nodeGraphViewport`), so the next open honours it. */
+  const fitGraphToView = useCallback(() => {
+    const session = sessionRef.current;
+    const container = containerRef.current;
+    if (!session || !container) return;
+    const content = dagContentBounds(sceneRef.current.nodes);
+    if (!content) return;
+    const rect = container.getBoundingClientRect();
+    const camera = dagFitCamera(content, Math.round(rect.width), Math.round(rect.height));
+    observeFlowTask(session, "setCamera", session.setCamera(camera.x, camera.y, camera.zoom));
+    framedGraphSignatureRef.current = nodeGraphContentSignature(sceneRef.current.nodes);
+    dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(JSON.stringify(camera)));
+    renderFlow();
+    paintOverlays();
+    schedulerRef.current?.invalidate();
+  }, [dispatch, paintOverlays, renderFlow]);
+
   return (
     <div
       ref={containerRef}
       className="relative h-full w-full"
+      onKeyDown={(event) => {
+        if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+        if (isEditableGraphKeyTarget(event.target)) return;
+        if (event.key !== "f" && event.key !== "F") return;
+        event.preventDefault();
+        fitGraphToView();
+      }}
       onDragOver={onDragOverCanvas}
       onDragLeave={() => {
         if (!editable) return;
@@ -2545,8 +2905,19 @@ export function FlowGraphCanvasHost({
         })();
       }}
     >
-      <canvas ref={gpuCanvasRef} className="absolute inset-0 block h-full w-full" />
+      <canvas key={flowSurfaceCanvasKey(surfaceId, canvasGeneration)} ref={gpuCanvasRef} className="absolute inset-0 block h-full w-full" />
       <canvas ref={labelCanvasRef} className="pointer-events-none absolute inset-0 z-40" />
+      <button
+        type="button"
+        className="absolute left-2 top-2 z-50 rounded border border-border bg-panel/90 px-2 py-1 text-xs text-foreground hover:bg-active-base focus-visible:outline focus-visible:outline-2"
+        aria-keyshortcuts="F"
+        aria-label={fitGraphLabel}
+        title={fitGraphLabel}
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={fitGraphToView}
+      >
+        {fitGraphLabel}
+      </button>
       <GraphSliderOverlays
         scopeId={JSON.stringify([windowInstanceId, controllerId, surfaceId])}
         stateJson={sliderStateJson}

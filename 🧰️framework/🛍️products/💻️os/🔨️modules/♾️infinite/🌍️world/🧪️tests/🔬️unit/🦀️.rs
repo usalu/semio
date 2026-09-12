@@ -1674,10 +1674,18 @@ fn runtime_draw_flags_clear_stale_instance_selected_when_selection_is_empty() {
     assert!(!state.draws[0].instances[0].hovered, "empty hover must clear a stale instancesJson hovered bit");
 }
 
+/// 🎯️ The component-pick merge speaks the ONE `MergeMode` vocabulary (`🕹️interaction/🧬️schema/🔣️.json`,
+/// fixture `🎯️merge-modes.json`) — ticket 26/09/09/PROCEDURAL-3D-END-TO-END deleted this file's
+/// private `add`/`remove`/`toggle` spelling, which is unrepresentable now the mode is decoded.
 #[test]
-fn merge_u32_ids_supports_add_and_toggle() {
-    assert_eq!(merge_u32_ids(&["1".into()], &["2".into()], "add"), vec![1, 2]);
-    assert_eq!(merge_u32_ids(&["1".into(), "2".into()], &["2".into(), "3".into()], "toggle"), vec![1, 3]);
+fn merge_u32_ids_speaks_the_one_schema_merge_vocabulary() {
+    assert_eq!(merge_u32_ids(&["1".into()], &["2".into()], MergeMode::Additive), vec![1, 2]);
+    assert_eq!(merge_u32_ids(&["1".into(), "2".into()], &["2".into(), "3".into()], MergeMode::Invertive), vec![1, 3]);
+    assert_eq!(merge_u32_ids(&["1".into(), "2".into()], &["2".into()], MergeMode::Subtractive), vec![1]);
+    assert_eq!(merge_u32_ids(&["1".into()], &["2".into()], MergeMode::Replace), vec![2]);
+    for word in ["add", "remove", "toggle"] {
+        assert!(MergeMode::from_wire_label(word).is_none(), "the deleted word '{word}' must decode to nothing");
+    }
 }
 
 #[test]
@@ -2901,3 +2909,36 @@ fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
     assert_eq!(args["targets"][0]["id"].as_str(), Some(instance_id.as_str()));
 }
 //#endregion 🌉️World3dSceneBridge
+
+/// 🧱️ The `boxed_fixed_slots` law for this module's fixed slot tables, against the one committed
+/// budget every implementation of it reads (`semio_framework_async::BOXED_FIXED_SLOTS_FIXTURE`).
+///
+/// Asserts the measured shape of each table (capacity, one slot's bytes, the owner's own bytes)
+/// against that record, that each owner is smaller than the table it owns — the structural proof the
+/// slots are heap-first rather than an inline `[T; N]` field — and then constructs them on a thread
+/// holding only the fixture's `boundedThreadStackBytes`. `Builder::stack_size` overrides
+/// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
+#[test]
+fn world_interaction_object_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_async::BOXED_FIXED_SLOTS_FIXTURE).expect("🧱️ the committed fixed-slot-table budget parses");
+    let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
+        .as_array()
+        .expect("🧱️ the budget lists its tables")
+        .iter()
+        .filter(|table| table["guard"] == "infinite::world")
+        .map(|table| semio_framework_async::FixedSlotTableBudget::new(table["owner"].as_str().expect("owner"), table["capacity"].as_u64().expect("capacity") as usize, table["elementSizeBytes"].as_u64().expect("element bytes") as usize, table["ownerSizeBytes"].as_u64().expect("owner bytes") as usize))
+        .collect();
+    let measured = vec![
+        semio_framework_async::FixedSlotTableBudget::new("world::WorldInteractionObjectRegistry", WORLD_INTERACTION_OBJECT_CAPACITY, size_of::<Option<WorldInteractionObjectSlot>>(), size_of::<WorldInteractionObjectRegistry>()),
+    ];
+    semio_framework_async::assert_fixed_slot_tables(
+        "infinite::world",
+        fixture["boundedThreadStackBytes"].as_u64().expect("bounded stack budget") as usize,
+        fixture["conversionThresholdBytes"].as_u64().expect("conversion threshold") as usize,
+        &declared,
+        &measured,
+        || {
+            drop(WorldInteractionObjectRegistry::default());
+        },
+    );
+}

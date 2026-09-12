@@ -125,6 +125,7 @@
       "target": "catalog-smoke",
       "cache": true,
       "continuous": false,
+      "authored": true,
       "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify catalog"
     },
     {
@@ -135,9 +136,53 @@
     },
     {
       "target": "artifact-field-parity-report",
+      "cache": true,
+      "continuous": false,
+      "authored": true,
+      "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify artifact-field-parity report"
+    },
+    {
+      "target": "verify-taxonomy-report",
+      "cache": true,
+      "continuous": false,
+      "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify taxonomy report"
+    },
+    {
+      "target": "build-report",
+      "cache": true,
+      "continuous": false,
+      "command": "bun ./\ud83d\udcdc\ufe0fscript.ts build report"
+    },
+    {
+      "target": "reset-document-ownership",
+      "cache": true,
+      "continuous": false,
+      "authored": true,
+      "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify reset-document-ownership"
+    },
+    {
+      "target": "verify-dependencies-freeze-write-baseline",
+      "cache": true,
+      "continuous": false,
+      "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify dependencies write-baseline"
+    },
+    {
+      "target": "hub-live-catalog-check",
+      "cache": true,
+      "continuous": false,
+      "command": "bun ./\ud83d\udcdc\ufe0fscript.ts hub-live-catalog-check"
+    },
+    {
+      "target": "admin-live-journey-check",
       "cache": false,
       "continuous": false,
-      "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify artifact-field-parity report"
+      "command": "bun ./\ud83d\udcdc\ufe0fscript.ts admin-live-journey-check"
+    },
+    {
+      "target": "cache-report",
+      "cache": false,
+      "continuous": false,
+      "command": "bun ./\ud83d\udcdc\ufe0fscript.ts cache-report"
     }
   ],
   "pluginGraph": {

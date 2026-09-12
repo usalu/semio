@@ -1,0 +1,98 @@
+{
+  "schema": "framework.plugin.publication-retirement-authority.v1",
+  "note": "The retirement law every one of the seven typed-operation publication lanes obeys once its own store has REJECTED it (a superseding mutation moved the store past the generation the publication captured). A rejected publication drains its rejection reason one scalar per bounded turn, so the turns before the terminal one are ordinary retirement progress, NOT faults: answering them with an error re-raised the same rejection on every turn and the host saw `typed-operation failed: <lane> publication is retiring a rejected authority` forever instead of a publication that retires. The rejection surfaces exactly once, at the terminal turn. Window-transient is the one lenient lane: its authority is per-window ephemeral state the next turn re-captures against the live generation, so a cleanly retired superseded publication owes the host nothing. Language-agnostic: an implementation in any language must answer these exact rows.",
+  "grant": {
+    "maximumItems": 1,
+    "maximumBytes": 512
+  },
+  "law": {
+    "incompleteRetirementTurnIsOk": true,
+    "minimumIncompleteTurnsWhileRejected": 2,
+    "rejectionSurfacesOnceAtTheTerminalTurn": true,
+    "terminalTurnRequiresTerminalEmptiness": true
+  },
+  "lanes": [
+    {
+      "id": "artifact",
+      "lane": "Artifact",
+      "storeLabel": "artifact-store",
+      "supersededFault": "batched publication became stale before commit",
+      "rejectionIsFatal": true,
+      "terminalOutcome": "rejected",
+      "rejectedFault": "artifact-store publication rejected stale or cancelled authority",
+      "falseTerminalFault": "artifact-store publication closed without terminal emptiness"
+    },
+    {
+      "id": "config",
+      "lane": "Config",
+      "storeLabel": "config-store",
+      "supersededFault": "batched publication became stale before commit",
+      "rejectionIsFatal": true,
+      "terminalOutcome": "rejected",
+      "rejectedFault": "config-store publication rejected stale or cancelled authority",
+      "falseTerminalFault": "config-store publication closed without terminal emptiness"
+    },
+    {
+      "id": "draft",
+      "lane": "Draft",
+      "storeLabel": "draft-store",
+      "supersededFault": "batched publication became stale before commit",
+      "rejectionIsFatal": true,
+      "terminalOutcome": "rejected",
+      "rejectedFault": "draft-store publication rejected stale or cancelled authority",
+      "falseTerminalFault": "draft-store publication closed without terminal emptiness"
+    },
+    {
+      "id": "presence",
+      "lane": "Presence",
+      "storeLabel": "presence-store",
+      "supersededFault": "presence publication became stale before commit",
+      "rejectionIsFatal": true,
+      "terminalOutcome": "rejected",
+      "rejectedFault": "presence-store publication rejected stale or cancelled authority",
+      "falseTerminalFault": "presence-store publication closed without terminal emptiness"
+    },
+    {
+      "id": "transient",
+      "lane": "Transient",
+      "storeLabel": "transient-store",
+      "supersededFault": "transient publication became stale before commit",
+      "rejectionIsFatal": true,
+      "terminalOutcome": "rejected",
+      "rejectedFault": "transient-store publication rejected stale or cancelled authority",
+      "falseTerminalFault": "transient-store publication closed without terminal emptiness"
+    },
+    {
+      "id": "windowConfig",
+      "lane": "WindowConfig",
+      "storeLabel": "window-config",
+      "supersededFault": "batched publication became stale before commit",
+      "rejectionIsFatal": true,
+      "terminalOutcome": "rejected",
+      "rejectedFault": "window-config publication rejected stale or cancelled authority",
+      "falseTerminalFault": "window-config publication closed without terminal emptiness"
+    },
+    {
+      "id": "windowTransient",
+      "lane": "WindowTransient",
+      "storeLabel": "window-transient",
+      "supersededFault": "transient publication became stale before commit",
+      "rejectionIsFatal": false,
+      "terminalOutcome": "retired",
+      "rejectedFault": null,
+      "falseTerminalFault": "window-transient publication closed without terminal emptiness"
+    }
+  ],
+  "windowTransientReBegin": {
+    "note": "After the rejected publication has fully retired, the SAME window must become publishable again. The authority captured at command admission is stale by construction — the superseding write moved the partition generation — so the publication site must refresh it against the live generation before it begins, which is exactly what the window-transient emission branch does before `begin`.",
+    "windowKindId": "publication-retirement-window",
+    "windowId": "publication-retirement-window-left",
+    "capturedRevision": 11,
+    "supersedingRevision": 12,
+    "rejectedRevision": 13,
+    "reBeginRevision": 14,
+    "staleAuthorityBeginAccepted": false,
+    "refreshedAuthorityBeginAccepted": true,
+    "refreshedGenerationExceedsCaptured": true
+  }
+}

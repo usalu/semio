@@ -51,6 +51,19 @@ const log = (m: string) => {
 const t0 = Date.now();
 
 const consoleBuf: string[] = [];
+/** 🔢️ Console lines this run has SEEN, ever. `consoleBuf` is a bounded ring that `shift()`s, so a mark
+ * taken as `consoleBuf.length` addresses a line the ring has since dropped: once saturated,
+ * `consoleBuf.slice(mark)` reads `[]` forever and a starved guest reply is indistinguishable from a
+ * command that never dispatched. That single defect produced every `tail=[]`, `ingressesWhileWaiting=0`
+ * and `guestTaps=[]` in battery #51 (wave B33 §7.1). Readers hold a SEQUENCE from {@link consoleCursor}
+ * and slice with {@link consoleSince}, which maps it back through the lines already dropped. */
+const CONSOLE_RING_LINES = 4000;
+let consoleSeq = 0;
+/** 🔖️ The sequence a reader takes BEFORE a gesture, valid for the whole run however long it grows. */
+const consoleCursor = () => consoleSeq;
+/** 🪟️ Every retained console line at or after `mark` — clamped to what the ring still holds, so a mark
+ * older than the window reads the oldest retained lines instead of nothing. */
+const consoleSince = (mark: number) => consoleBuf.slice(Math.max(0, mark - (consoleSeq - consoleBuf.length)));
 const faults: string[] = [];
 /** ☠️ The guest-death family B13 decoded out of `shard 0 worker fault [handler/turn] actor=puzzle#1`
  * (`📓️2026-09-11-wave-B13-export-history-locale.md` §5): the reactor-close trap itself, the
@@ -58,6 +71,10 @@ const faults: string[] = [];
  * once the handle is gone. Every one of these means the actor behind the world surfaces is dead, so every
  * later step measures a corpse — they are HARD, never collateral, wherever they appear in the console. */
 const GUEST_DEATH_RE = /reactor-close-authority|native close terminal unavailable|actor-activation\.revoked|Agent disconnected/i;
+/** 🎯️ Pointer travel one gumball axis drag spends ALONG the axis as the camera projects it. Long enough
+ * that the world delta is unmistakable at any plausible camera distance, short enough to stay inside the
+ * pane at every press fraction of the origin→tip segment. */
+const AXIS_DRAG_PX = 96;
 const FAULT_RE =
   /intake-budget-exhausted|fixed-capacity|section-root-mismatch|native-owner-required|terminal-fault|unreachable|shard .* (lost|terminated)|did not publish|missing field|malformed|admission failed|worker fault|\[semio-plugin panic\]|Credits \{|NodeCapacity|SemioFaultError|reactor-close-authority|native close terminal unavailable|actor-activation\.revoked|Agent disconnected/i;
 /** 💥️ The subset of {@link FAULT_RE} that means the runtime itself broke — a guest trap, a dead worker, a
@@ -95,7 +112,8 @@ const port = process.argv.find((a) => a.startsWith("--port="))?.slice(7) ?? "601
 await page.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: `http://127.0.0.1:${port}` });
 page.on("console", (msg) => {
   const text = msg.text().slice(0, 400);
-  if (consoleBuf.length >= 4000) consoleBuf.shift();
+  consoleSeq += 1;
+  if (consoleBuf.length >= CONSOLE_RING_LINES) consoleBuf.shift();
   consoleBuf.push(`${msg.type()}: ${text}`);
   if (FAULT_RE.test(text)) noteFault(text);
 });
@@ -108,10 +126,10 @@ const NAVIGATION_RACE_RE = /Execution context was destroyed|Most likely the page
 /** 🧭️ Runs one `page.evaluate` through a navigation-safe retry: on a navigation race it waits for the new
  * document's `domcontentloaded` and evaluates once more, and only then falls back. Every boot, snapshot and
  * poll helper reads the page through this, so a reload can never take the run down with it. */
-const evalSafe = async <T>(body: () => T, fallback: T): Promise<T> => {
+const evalSafe = async <T, A = undefined>(body: (arg: A) => T, fallback: T, arg?: A): Promise<T> => {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      return await page.evaluate(body);
+      return await page.evaluate(body as (value: unknown) => T, arg as unknown);
     } catch (error) {
       if (!NAVIGATION_RACE_RE.test(String(error))) throw error;
       log(`evaluate raced a navigation (attempt ${attempt + 1}) — awaiting domcontentloaded`);
@@ -130,6 +148,21 @@ const countSafe = async (locator: ReturnType<typeof page.locator>): Promise<numb
     await page.waitForLoadState("domcontentloaded").catch(() => {});
     return 0;
   }
+};
+/** ⏳️ Polls one reading until it satisfies `settled`, up to `budgetMs`, and reports how long it waited.
+ * One mutation round trip on this shell spans 0.9–18 s (`📓️2026-09-12-wave-B28-host-routes-regressions.md`
+ * §2: Hide 9.2 s, context-menu rows 18 s, Show 0.9 s), so the fixed 1.5–3.5 s sample every mutation and
+ * census verdict used to take was scoring the machine's load rather than the feature — a red at 3 s said
+ * nothing about 10 s, and a green said nothing about how close it came. Every such verdict now carries
+ * `waitedMs`, so a green that needed 18 s is visible as such and a red is provably a red at the budget. */
+const settleFor = async <T>(read: () => Promise<T>, settled: (value: T) => boolean, budgetMs = 30000, stepMs = 500): Promise<{ value: T; waitedMs: number; ok: boolean }> => {
+  const start = Date.now();
+  let value = await read();
+  while (!settled(value) && Date.now() - start < budgetMs) {
+    await page.waitForTimeout(stepMs);
+    value = await read();
+  }
+  return { value, waitedMs: Date.now() - start, ok: settled(value) };
 };
 /** 🔁️ The one navigation this probe performs: a cold load of the puzzle3d serve, awaited to
  * `domcontentloaded` on BOTH the goto and the settled load state before any evaluate runs against it. */
@@ -253,9 +286,22 @@ if (booted && interact) {
   type PlanEntry = { readonly name: string; readonly section: string; readonly group: StepGroup; readonly run: () => Promise<void> };
   const plan: PlanEntry[] = [];
   /** 🗂️ Registers one step. Under `--only=` the named set is the ONLY gate; otherwise `gate` (the step's own
-   * flag, OR'd with `--battery`) decides. Registration order is preserved inside each group. */
+   * flag, OR'd with `--battery`) decides. Registration order is preserved inside each group, except for
+   * {@link STEP_LEADS_ITS_GROUP}. */
   const add = (name: string, section: string, group: StepGroup, gate: boolean, run: () => Promise<void>) => {
     if (only ? only.has(name) : gate) plan.push({ name, section, group, run });
+  };
+  /** 🥇 Steps whose PRECONDITION is a viewport with nothing armed, hoisted to the front of their group.
+   * `context-menu-rows` measures the OBJECT vocabulary, and with Brush armed plus a hovered vortex the
+   * right-click opens the *suggestion* menu instead (`World3dHost`'s
+   * `world3dSuggestionsGestureArmed(alt, hover) || brushArmed`), so after `brush-stroke` the rows it asks
+   * for can never be present (wave B33 §7.2). The step is self-contained — it frames, selects through the
+   * outliner and disarms the utility itself — so leading the group costs it nothing. */
+  const STEP_LEADS_ITS_GROUP: readonly string[] = ["context-menu-rows"];
+  const groupEntries = (group: StepGroup) => {
+    const entries = plan.filter((entry) => entry.group === group);
+    const leads = entries.filter((entry) => STEP_LEADS_ITS_GROUP.includes(entry.name));
+    return [...leads, ...entries.filter((entry) => !leads.includes(entry))];
   };
   const verdicts: string[] = [];
   let passCount = 0;
@@ -291,6 +337,65 @@ if (booted && interact) {
     const collapse = page.locator("button", { hasText: /collapse/i }).first();
     if (await collapse.count()) await collapse.click({ timeout: 2000 }).catch(() => {});
     await page.keyboard.press("Escape").catch(() => {});
+  };
+  /** 🗂️ The body a panel tab reveals, per tab id — the observable that says "this panel is OPEN",
+   * as opposed to "its tab exists". Authored per panel because a panel body carries the SURFACE's
+   * own id prefix (`panel:puzzle3d-play-inspector/…`), which is not derivable from the tab id. */
+  const PANEL_BODY_SELECTORS: Readonly<Record<string, string>> = {
+    "framework.panel.inspection": '[id^="panel:puzzle3d-play-inspector/"]',
+    "framework.panel.history": '[id^="framework.history.entry."], [id="framework.history.commands"]',
+    "framework.panel.artifact": '[id^="panel:puzzle3d-play-document/"]',
+    "framework.settings": '[id="framework.settings.language"]',
+    "puzzle3d.panel.settings": '[id*="puzzle3d-play-settings."]',
+    "puzzle3d.panel.kinds": '[id^="puzzle3d-play-kinds"]',
+    "puzzle3d.panel.inspection": '[id^="panel:puzzle3d-play-inspector/"]',
+    "puzzle3d.panel.document": '[id^="panel:puzzle3d-play-document/"]',
+  };
+  /** 🗂️ Brings one panel into view WITHOUT ever toggling it shut — wave B36 §7.1's recipe.
+   *
+   * 🧯️ A panel tab is a TOGGLE (`history patch applied labels=["Toggle Panel"]`), and the shell ALSO
+   * auto-reveals Inspection on every selection change, so a bare tab click used as "ensure open" CLOSES
+   * the panel whenever a predecessor — or the shell itself — already opened it. That single mechanism
+   * owned six of battery #53's thirteen reds (`inspection-object-fields`, `inspection-locked-flag-row`,
+   * `locked-flag-row`, `locked-refusal-notice`, `camera-emits-no-artifact-history`,
+   * `outliner-hide-control-present`): the selection was live the whole time and the PANEL was gone.
+   *
+   * 🪜️ Reads first, clicks only when the tab is not the active one or its body is absent, then POLLS for
+   * the body instead of sleeping — the reveal and the click race, and the loser used to invert the winner. */
+  const ensurePanel = async (tabId: string, bodySelector?: string) => {
+    const body = bodySelector ?? PANEL_BODY_SELECTORS[tabId];
+    const bodyCount = async () => (body ? evalSafe((selector) => document.querySelectorAll(selector).length, 0, body) : 0);
+    const tabActive = async () =>
+      evalSafe(
+        (id) => {
+          const tab = document.getElementById(id);
+          if (!tab) return null;
+          const button = (tab.closest('[role="tab"], [data-slot="panel-tab-button"]') ?? tab) as HTMLElement;
+          const state = `${button.getAttribute("aria-selected") ?? ""}${button.getAttribute("data-state") ?? ""}${button.getAttribute("data-active") ?? ""}`;
+          return /true|active|selected|open/i.test(state);
+        },
+        null as boolean | null,
+        tabId,
+      );
+    // 🧾️ The BODY is the authority whenever one is known — a panel that renders its rows IS open, and a
+    // branch tab that mounts its `order: 0` child never carries `aria-selected` itself (`framework.settings`).
+    // The tab's own state is the fallback for a panel whose body selector nobody has measured yet.
+    const isOpen = (state: { active: boolean | null; body: number }) => (body ? state.body > 0 : state.active === true);
+    const present = await evalSafe((id) => Boolean(document.getElementById(id)), false, tabId);
+    const before = { active: await tabActive(), body: await bodyCount() };
+    if (isOpen(before)) {
+      log(`ensurePanel ${tabId} already-open active=${String(before.active)} body=${before.body} clicked=false`);
+      return { opened: true, clicked: false, present, body: before.body, waitedMs: 0 };
+    }
+    if (!present) {
+      const tabs = await evalSafe(() => Array.from(document.querySelectorAll('[data-slot="panel-tab-button"]')).map((b) => b.id), [] as string[]);
+      log(`ensurePanel ${tabId} ABSENT tabs=${JSON.stringify(tabs).slice(0, 700)}`);
+      return { opened: false, clicked: false, present, body: 0, waitedMs: 0 };
+    }
+    await page.locator(`[data-slot="panel-tab-button"][id="${tabId}"], [id="${tabId}"]`).first().click({ force: true, timeout: 4000 }).catch(() => {});
+    const settled = await settleFor(async () => ({ active: await tabActive(), body: await bodyCount() }), isOpen, 8000);
+    log(`ensurePanel ${tabId} clicked=true active=${String(settled.value.active)} body=${settled.value.body} waitedMs=${settled.waitedMs}`);
+    return { opened: settled.ok, clicked: true, present, body: settled.value.body, waitedMs: settled.waitedMs };
   };
   add("activate-perspective", "§1", "read", true, async () => {
     const c = page.locator("canvas").last();
@@ -491,7 +596,36 @@ if (booted && interact) {
     page.evaluate(() => {
       const q = (sel: string) => Array.from(document.querySelectorAll(sel));
       const inspection = document.querySelector("#framework.panel.inspection, [id*='inspection']") as HTMLElement | null;
-      const selected = q('[aria-selected="true"], [data-selected="true"], [data-state="selected"]').map((e) => `${e.id || e.tagName}=${(e as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 80)}`).slice(0, 20);
+      // 🎯️ The ARIA `selected` state belongs to every tablist too — the mode dock's window tabs and the
+      // panel tab strips all carry `aria-selected="true"`, so an unscoped sweep answered
+      // `["mode-dock-tab-0-puzzle3d-main-top=Top", "mode-dock-tab-1-puzzle3d-main-perspective=Perspective"]`
+      // for a document with a freshly added object selected in it, and any verdict asking "is the new
+      // object selected" could only ever read false. Tab strips are excluded, and the world's OWN
+      // selection (`data-interaction-json`, the guest's view plus the host's leftover overlay) is folded
+      // in, because that is the selection truth the document-level verdicts are actually asking about.
+      const inTabStrip = (el: Element) => Boolean(el.closest('[role="tablist"], [data-slot="mode-dock-tabs"], [data-slot="panel-tabs"], [data-slot="mode-dock-tab"], [data-slot="panel-tab-button"]'));
+      // 🌳️ The ARIA half is the OUTLINER's rows only. An unscoped sweep answered with Display-panel chips
+      // (`puzzle3d-play-distribution=Distribution`, battery #53) and with every other `aria-selected` widget
+      // in the shell, so "is the new object selected" could read true for a chip and false for the object.
+      const ariaSelected = q('[aria-selected="true"], [data-selected="true"], [data-state="selected"]')
+        .filter((e) => !inTabStrip(e))
+        .filter((e) => Boolean(e.closest('[id^="panel:puzzle3d-play-document/"], [id^="puzzle3d-play-document"]')) || e.id.startsWith("panel:puzzle3d-play-document/"))
+        .map((e) => `${e.id || e.tagName}=${(e as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 80)}`);
+      // 🔦️ The world half is `data-selection-json` — wave B20 defect 1's `worldSurfaceSelectionDomV1`, the
+      // guest's `selectionJson` lane with the host's leftover overlay merged over it. It used to read
+      // `data-interaction-json`'s `view.selection.ids`, a field `WorldInteractionRecord` HAS NEVER CARRIED
+      // (that record is the utility/brush/fill record — B20 §1.3 states it twice), so the world half was
+      // dead code and `catalogue-add-selects-new-object` / `duplicate-reselects-clone` were measuring the
+      // reader, not the guest.
+      const worldSelected = q("[data-selection-json]").flatMap((e) => {
+        try {
+          const painted = JSON.parse(e.getAttribute("data-selection-json") || "{}") as { selectedIds?: string[]; targetVolumeIds?: string[] };
+          return [...(painted.selectedIds ?? []), ...(painted.targetVolumeIds ?? [])].map((id) => `${e.getAttribute("data-window-instance-id") ?? e.getAttribute("data-surface-id") ?? "?"}=${id}`);
+        } catch {
+          return ["parse-failed"];
+        }
+      });
+      const selected = [...worldSelected, ...ariaSelected].slice(0, 20);
       const census = (document.body?.innerText || "").match(/\d+\s+Objects[^|]{0,40}/g) ?? [];
       const inspectorIds = q("[id*='inspector'], [id*='Inspection'], [id*='inspection']").map((e) => e.id).filter(Boolean).slice(0, 30);
       const locked = q("[id*='locked'], [id*='lock']").map((e) => `${e.id}=${(e as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 40)}`).slice(0, 20);
@@ -769,7 +903,10 @@ if (booted && interact) {
         } catch {
           parsed = [];
         }
-        return { count: parsed.length, ids: parsed.slice(0, 16).map((o) => o.id ?? "?") };
+        // 🧮️ EVERY id, not the first sixteen: `catalogue-add-selects-new-object` asks whether the selection
+        // names one of these, and on a 180-object document the object just added sits well past index 16 —
+        // a cap here made that verdict unfalsifiable, and made a census diff name the wrong arrival.
+        return { count: parsed.length, ids: parsed.map((o) => o.id ?? "?") };
       },
       { count: 0, ids: [] as string[] },
     );
@@ -939,18 +1076,48 @@ if (booted && interact) {
       const z = h.ndcZ ?? 2;
       return sx >= 8 && sy >= 8 && sx <= box.width - 8 && sy <= box.height - 8 && z >= -1 && z <= 1;
     });
-    const handle = onscreen.find((h) => h.kind === "moveX") ?? onscreen[0];
-    log(`gumball handle ${JSON.stringify(handle)} onscreen=${onscreen.length}`);
+    const handle = onscreen.find((h) => h.kind === "moveX") ?? onscreen.find((h) => h.kind !== "origin") ?? onscreen[0];
+    const origin = dump.hits.find((h) => h.kind === "origin");
+    log(`gumball handle ${JSON.stringify(handle)} origin=${JSON.stringify(origin)} onscreen=${onscreen.length}`);
     if (!handle || handle.sx == null || handle.sy == null) return { handle: null, entered: false };
-    await c.hover({ position: { x: handle.sx, y: handle.sy }, timeout: 4000 }).catch(() => {});
-    await page.waitForTimeout(200);
-    await page.mouse.move(box.x + handle.sx, box.y + handle.sy);
-    await page.mouse.down();
-    await page.mouse.move(box.x + handle.sx + 72, box.y + handle.sy + 72, { steps: 16 });
-    await page.mouse.up();
-    await page.waitForTimeout(800);
-    const after = await gumballHits();
-    return { handle, entered: after.entered };
+    // 🎯️ `WorldGumballHitStamp` projects the handle's ARROW TIP (`scale * 0.85` along the axis), while the
+    // pickable arrow geometry is a shaft that starts at the gumball origin — one fixed point on the tip
+    // can miss the mesh entirely once the camera distance changes the gumball's own scale. Walk the
+    // projected segment origin→tip and press where the pointer actually lands on the handle: the flag
+    // `handleGumballDragStart` sets (`__gumballDragEntered`) is the only truth for "the handle took it".
+    // 🧨️ Every read happens AFTER `mouse.up()`, never between `down` and `up`: a `page.evaluate` issued
+    // mid-drag deadlocked this step for 33 minutes at 0 % CPU on a loaded machine (wave B28), and a probe
+    // that can hang holding the single-tab lease is worse than one that measures nothing.
+    // 🎯️ An axis handle answers ONLY the component of the pointer's movement that lies along the axis as
+    // the camera projects it (`UnifiedGumball`'s `gumballProjectRayOntoAxis`, then
+    // `param - startAxisParam`). B28/B29's fixed `+72,+72` diagonal is almost perpendicular to that
+    // projection for this camera — measured origin `(474,418)` → moveX tip `(449,447)`, so a `(1,1)` drag
+    // keeps ~11 % of its length and the world delta lands at noise level, which is what
+    // `gumball pose delta skipped {dx: 0, dy: 0}` reported. The drag now runs ALONG origin→tip (outward,
+    // past the tip — the projection is a ray, the pointer does not have to stay on the mesh), so the
+    // gesture states a real axis movement instead of a mostly-orthogonal one.
+    const axis = origin?.sx != null && origin.sy != null ? { dx: handle.sx! - origin.sx, dy: handle.sy! - origin.sy } : { dx: 0, dy: 0 };
+    const axisLen = Math.hypot(axis.dx, axis.dy);
+    const stride = axisLen > 1 ? { dx: (axis.dx / axisLen) * AXIS_DRAG_PX, dy: (axis.dy / axisLen) * AXIS_DRAG_PX } : { dx: AXIS_DRAG_PX, dy: AXIS_DRAG_PX };
+    const candidates = origin?.sx != null && origin.sy != null ? [1, 0.8, 0.6, 0.4].map((f) => ({ x: origin.sx! + (handle.sx! - origin.sx!) * f, y: origin.sy! + (handle.sy! - origin.sy!) * f, f })) : [{ x: handle.sx, y: handle.sy, f: 1 }];
+    log(`gumball axis projection len=${Math.round(axisLen)} stride=${Math.round(stride.dx)},${Math.round(stride.dy)}`);
+    const tried: string[] = [];
+    for (const candidate of candidates) {
+      await page.mouse.move(box.x + candidate.x, box.y + candidate.y);
+      await page.waitForTimeout(200);
+      await page.mouse.down();
+      await page.mouse.move(box.x + candidate.x + stride.dx, box.y + candidate.y + stride.dy, { steps: 16 });
+      await page.mouse.up();
+      await page.waitForTimeout(700);
+      const after = await gumballHits();
+      tried.push(`${candidate.f}@${Math.round(candidate.x)},${Math.round(candidate.y)}=${after.entered}`);
+      if (after.entered) {
+        log(`gumball grabbed tried=${JSON.stringify(tried)} stride=${Math.round(stride.dx)},${Math.round(stride.dy)}`);
+        return { handle, entered: true };
+      }
+    }
+    log(`gumball no fraction of the projected axis grabbed the handle tried=${JSON.stringify(tried)}`);
+    return { handle, entered: false };
   };
   const clickVortexHits = async (box: { x: number; y: number; width: number; height: number }) => {
     const dump = await vortexHits();
@@ -987,6 +1154,39 @@ if (booted && interact) {
       },
       { rootPresent: false, folded: null as string | null, rootText: null as string | null, rows: [] as string[] },
     );
+  /** 🫥️ Whether a pane-chrome toggle is reachable by a real pointer, and what covers it when it is not.
+   * The perspective window's Actions/Search pane chrome and the mode dock's own tab bar occupy the SAME
+   * viewport band, so `elementFromPoint` at the toggle's centre answers a `mode-dock-tab-*` button — a
+   * `page.mouse` click (and `locator.click({force:true})`, which only skips actionability checks, not
+   * hit-testing) lands on the dock tab, never on the toggle. */
+  const paneToggleObstruction = async (toggleId: string) =>
+    evalSafe(
+      (id: string) => {
+        const button = document.getElementById(id);
+        const rect = button?.getBoundingClientRect();
+        if (!button || !rect) return { present: false, covered: false, chain: [] as string[] };
+        const top = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+        const chain: string[] = [];
+        for (let node = top as Element | null; node && chain.length < 6; node = node.parentElement) chain.push(`${node.tagName}#${node.id || "-"}[${node.getAttribute("data-slot") ?? "-"}]`);
+        return { present: true, covered: !(top !== null && button.contains(top)), chain };
+      },
+      { present: false, covered: false, chain: [] as string[] },
+      toggleId,
+    );
+  /** 🎛️ Presses one window pane's fold toggle with a REAL pointer and waits for `data-folded` to clear.
+   * B28 fell back to the button's own `click()` when the toggle was covered, which turned an unreachable
+   * control into a green; the obstruction is the defect, so the fallback is gone and a covered toggle now
+   * leaves the pane folded — the downstream verdict fails with {@link paneToggleObstruction}'s chain in
+   * its note, naming whatever covers it. */
+  const unfoldWindowPane = async (paneId: string) => {
+    const toggleId = `${paneId}.toggle`;
+    const folded = async () => (await evalSafe((id: string) => document.getElementById(id)?.getAttribute("data-folded") ?? "absent", "eval-failed", paneId)) === "true";
+    if (!(await folded())) return { unfolded: true, obstruction: await paneToggleObstruction(toggleId), waitedMs: 0 };
+    const obstruction = await paneToggleObstruction(toggleId);
+    await page.locator(`[id="${toggleId}"]`).first().click({ timeout: 4000 }).catch(() => {});
+    const settle = await settleFor(async () => !(await folded()), (open) => open, 10000);
+    return { unfolded: settle.value, obstruction, waitedMs: settle.waitedMs };
+  };
   /** 📤️ Drives one window action through the route a USER has: unfold the window's Actions pane
    * (`framework.window.<window>.engagement.toggle`), then press the action's own row (`action.<id>`,
    * `windowActionPaneSections` in `🛠️ShellHelpers/🟦️.tsx`). `exportFixture` and `openImportFixture` are
@@ -997,12 +1197,12 @@ if (booted && interact) {
   const activateWindowFileAction = async (actionId: "exportFixture" | "openImportFixture") => {
     await page.keyboard.press("Escape").catch(() => {});
     const row = page.locator(`[id="action.${actionId}"]`);
-    const toggle = page.locator('[id="framework.window.puzzle3dMainPerspective.engagement.toggle"]').first();
-    if ((await countSafe(row)) === 0 && (await countSafe(toggle)) > 0) {
-      await toggle.click({ force: true, timeout: 4000 }).catch(() => {});
+    let unfold: Awaited<ReturnType<typeof unfoldWindowPane>> | null = null;
+    if ((await countSafe(row)) === 0) {
+      unfold = await unfoldWindowPane("framework.window.puzzle3dMainPerspective.engagement");
       for (let attempt = 0; attempt < 10 && (await countSafe(row)) === 0; attempt++) await page.waitForTimeout(600);
     }
-    log(`action-pane ${actionId} rows=${await countSafe(row)} pane=${JSON.stringify(await actionPaneState()).slice(0, 700)}`);
+    log(`action-pane ${actionId} rows=${await countSafe(row)} unfold=${JSON.stringify(unfold).slice(0, 320)} pane=${JSON.stringify(await actionPaneState()).slice(0, 700)}`);
     await row.first().click({ force: true, timeout: 6000 }).catch((error) => log(`action-pane ${actionId} click failed ${String(error).slice(0, 120)}`));
   };
 
@@ -1025,21 +1225,26 @@ if (booted && interact) {
         tree,
       };
     });
+  /** 📜️ Brings the History panel into view and leaves every section EXPANDED — idempotently, and without
+   * touching the document.
+   *
+   * 🧯️ Wave B31: the old body pressed the tab unconditionally, so a second call toggled the panel shut and
+   * the verdict that followed read `sections:[]` (`import-distinct-records-history before=3 after=0`, wave
+   * B30's handover). Worse, it then pressed `#framework.history.undo` and re-clicked the already-expanded
+   * section headers — a helper whose job is to LOOK at the history was undoing the mutation under test and
+   * collapsing the rows it was about to count. It now presses only what is not already in the state it
+   * wants: the tab when it is not the active one, and a disclosure only while `aria-expanded="false"`. */
   const openHistory = async () => {
-    const tab = page.locator('#framework.panel.history, [data-slot="panel-tab-button"][id="framework.panel.history"]').first();
-    if (await tab.count()) await tab.click({ timeout: 5000 }).catch(() => {});
-    else await page.locator("button", { hasText: /^\s*history\s*$/i }).first().click({ timeout: 5000 }).catch(() => {});
-    await page.waitForTimeout(800);
-    await page.locator("#framework.history.actions").first().click({ timeout: 2000 }).catch(() => {});
-    await page.locator("#framework.history.undo").first().click({ timeout: 2000 }).catch(() => {});
+    const ensured = await ensurePanel("framework.panel.history");
     for (const sel of ["#framework.history.commands", "#framework.history.actions"]) {
-      const loc = page.locator(sel).first();
-      if (await loc.count()) await loc.click({ timeout: 2000 }).catch(() => {});
+      const collapsedSection = page.locator(`${sel}[aria-expanded="false"], ${sel} [aria-expanded="false"]`).first();
+      if (await collapsedSection.count()) await collapsedSection.click({ timeout: 2000 }).catch(() => {});
     }
     const collapsed = page.locator('[role="treeitem"][aria-expanded="false"], [data-slot="tree-item"][aria-expanded="false"]');
     const n = await collapsed.count();
     for (let i = 0; i < Math.min(n, 6); i++) await collapsed.nth(i).click({ timeout: 1500 }).catch(() => {});
     await page.waitForTimeout(600);
+    log(`history panel opened=${ensured.opened} clicked=${ensured.clicked} rows=${ensured.body} expanded=${Math.min(n, 6)}`);
   };
   add("fill-history", "§12", "mutate", process.argv.includes("--fill") || battery, async () => {
     await openHistory();
@@ -1147,20 +1352,19 @@ if (booted && interact) {
     add("selection-surfaces", "§6/§16", "mutate", process.argv.includes("--selection") || family, async () => {
       await dismissChrome();
       const framed = await frameForestTableAfterCensus();
-      const inspection = page.locator("#framework.panel.inspection, button").filter({ hasText: /^inspection$/i }).first();
-      if (await inspection.count()) await inspection.click({ timeout: 4000 }).catch(() => {});
-      await page.waitForTimeout(600);
+      log(`selection inspection panel: ${JSON.stringify(await ensurePanel("framework.panel.inspection"))}`);
       log(`selection before: ${JSON.stringify(await selectionState()).slice(0, 1000)}`);
       log(`inspection before: ${JSON.stringify(await inspectionPopulate()).slice(0, 1400)}`);
       const leftoverBefore = leftoverLaneCensus().leftoverCount;
-      const hit = await clickForestTable();
-      log(`selection clicks box=${JSON.stringify(hit.box)} spots=${JSON.stringify(hit.spots)}`);
-      const c = page.locator("canvas").last();
-      await c.click({ position: { x: framed.table.x, y: framed.table.y }, timeout: 5000 }).catch(() => {});
+      const picked = await ensureWorldSelection("selection", framed.table);
       await waitLeftoverInteractionView("selection");
+      verdict("selection-precondition", picked.ids.length > 0, `ids=${JSON.stringify(picked.ids).slice(0, 160)} via=${picked.via} — every §6/§16 verdict below asks about the object this selected`);
       const debug = await page.evaluate(() => (window as unknown as { __abDebug?: string[] }).__abDebug ?? []);
       log(`selection debug: ${JSON.stringify(debug)}`);
       log(`selection after: ${JSON.stringify(await selectionState()).slice(0, 1200)}`);
+      // 🗂️ Re-ensured AFTER the pick, never re-clicked: the shell auto-reveals Inspection on a selection
+      // change, so the panel is normally already open here and a second press would collapse it (B36 §1.1).
+      log(`selection inspection panel after pick: ${JSON.stringify(await ensurePanel("framework.panel.inspection"))}`);
       log(`inspection after: ${JSON.stringify(await inspectionPopulate()).slice(0, 1800)}`);
       const inspect = await waitInspectionPopulated("selection");
       verdict("inspection-object-fields", inspect.populated && !inspect.emptyPresent, `populated=${inspect.populated} empty=${inspect.emptyPresent} id=${inspect.objectId}`, inspect.populated ? undefined : 42);
@@ -1175,8 +1379,13 @@ if (booted && interact) {
     add("clipboard-copy-paste", "§21", "mutate", process.argv.includes("--clipboard") || family, async () => {
       await dismissChrome();
       const framed = await frameForestTableAfterCensus();
-      await clickForestTable();
-      await page.locator("canvas").last().click({ position: { x: framed.table.x, y: framed.table.y }, timeout: 5000 }).catch(() => {});
+      // 📋️ The guest's `copy` arm answers an EMPTY selection with `Emit::default()` and nothing else — no
+      // effect, no notice, no fault (`✏️editor/🦀️.rs` `Puzzle3dClipboardJob::emit`). A step whose pick
+      // missed therefore reads exactly like a broken clipboard, so the precondition is established through
+      // the same `data-selection-json` reader every other selection verdict uses and named in its own
+      // verdict before `mod+c` is pressed at all.
+      const picked = await ensureWorldSelection("clipboard", framed.table);
+      verdict("clipboard-precondition", picked.ids.length > 0, `ids=${JSON.stringify(picked.ids).slice(0, 160)} via=${picked.via} — the guest's copy arm refuses an empty selection silently, so this must hold before mod+c means anything`);
       await waitLeftoverInteractionView("clipboard");
       log(`clipboard inspection: ${JSON.stringify(await waitInspectionPopulated("clipboard")).slice(0, 1200)}`);
       const debug = await page.evaluate(() => (window as unknown as { __abDebug?: string[] }).__abDebug ?? []);
@@ -1185,42 +1394,72 @@ if (booted && interact) {
       const censusBefore = await dumpInstances();
       log(`clipboard before: ${JSON.stringify(before).slice(0, 800)}`);
       log(`clipboard census before: ${JSON.stringify(censusBefore)}`);
-      const actions = page.locator("button", { hasText: /^actions$/i }).last();
-      if (await actions.count()) await actions.click({ timeout: 3000 }).catch(() => {});
-      await page.waitForTimeout(400);
-      const copyById = page.locator("[id*='action.copy'], [data-menu-action='copy'], [id*='copySelection'], [id*='copy.execute']").first();
-      const copyBtn = page.locator("button, [role='menuitem']").filter({ hasText: /^copy$/i }).first();
-      log(`copyBtn=${await copyBtn.count()} copyById=${await copyById.count()}`);
-      if (await copyById.count()) await copyById.click({ force: true, timeout: 3000 }).catch(() => {});
-      else if (await copyBtn.count()) await copyBtn.click({ force: true, timeout: 3000 }).catch(() => {});
-      else {
-        const command = page.locator("button").filter({ hasText: /^command$/i }).last();
-        if (await command.count()) {
-          await command.click({ timeout: 3000 }).catch(() => {});
-          await page.waitForTimeout(400);
-          const box = page.locator("input, [role='textbox']").last();
-          if (await box.count()) await box.fill("copy").catch(() => {});
-          await page.keyboard.press("Enter");
-          await page.waitForTimeout(600);
-        }
-      }
+      // 📋️ `mod+c` / `mod+v` are the ONLY route: the three clipboard verbs are framework-reserved
+      // (`copy`/`cut`/`paste`, `🛂️manifest/🦀️.rs` `clipboard_action_definitions`) and neither the guest nor
+      // the shell authors a Copy control anywhere, so the control census below is an OBSERVABLE, not a
+      // route. The old body pressed the last button labelled "actions", which FOLDS the Actions pane
+      // (B26 §1a), and then typed "copy" into the command palette — two gestures that could only add
+      // state to a step whose whole question is whether one hotkey reaches the guest.
+      const clipboardControls = await evalSafe(
+        () =>
+          Array.from(document.querySelectorAll<HTMLElement>("[id]"))
+            .filter((element) => /action\.(copy|cut|paste)|copySelection|pasteSelection/i.test(element.id))
+            .map((element) => `${element.id}=${element.innerText.replace(/\n/g, " ").trim().slice(0, 24)}`)
+            .slice(0, 12),
+        [] as string[],
+      );
+      log(`clipboard controls=${JSON.stringify(clipboardControls)} (none is expected: copy/cut/paste are reserved hotkey-only verbs)`);
+      /** 📋️ Every hop of the route, each read off the host's own console, so a red names the hop that broke:
+       * the copy invocation, whether it answered with an effect at all (the guest refuses an empty selection
+       * with `Emit::default()` — zero effects), the `clipboardWrite` the host needs to fill
+       * `clipboardFragmentRef`, and the paste invocation. */
+      const clipboardHops = (since: number) => {
+        const lines = consoleSince(since);
+        const settled = (id: string) => lines.filter((row) => row.includes("performInvocation settled") && row.includes(`"actionId":"${id}"`));
+        const effectsOf = (rows: string[]) => rows.map((row) => row.match(/"effects":(\d+)/)?.[1] ?? "?");
+        return {
+          copyTurns: settled("copy").length,
+          copyEffects: effectsOf(settled("copy")),
+          pasteTurns: settled("paste").length,
+          pasteEffects: effectsOf(settled("paste")),
+          clipboardWrite: lines.filter((row) => /clipboardWrite|clipboard-write/i.test(row)).length,
+          unmapped: lines.filter((row) => /unmapped effect/.test(row)).slice(-4),
+        };
+      };
+      const copyMark = consoleCursor();
       await page.keyboard.press("Meta+c");
       await page.waitForTimeout(600);
       await page.keyboard.press("Control+c");
-      await page.waitForTimeout(800);
-      const afterCopy = await page.evaluate(() => (window as unknown as { __abDebug?: string[] }).__abDebug ?? []);
-      log(`clipboard after-copy debug: ${JSON.stringify(afterCopy)}`);
-      const copyLane = consoleBuf.filter((l) => /actionId=copy|actionId=paste|clipboard-write|unmapped effect|leftover effects|performInvocation settled/.test(l)).slice(-28);
-      log(`clipboard copy-lane: ${JSON.stringify(copyLane).slice(0, 2400)}`);
+      // 🧾️ `copy`'s arm pushes exactly ONE effect and only one — `Effect::ClipboardWrite { fragment }` —
+      // and answers a refusal with `Emit::default()`, i.e. zero. So `"effects":1` on a settled `copy`
+      // invocation IS the fragment, measured host-side. There is no console tap on the host's own
+      // `clipboardFragmentRef` assignment, so its count is carried as a note, never as the predicate.
+      const copySettle = await settleFor(async () => clipboardHops(copyMark), (hops) => hops.copyTurns > 0 && hops.copyEffects.every((count) => count === "1"), 15000);
+      log(`clipboard copy hops=${JSON.stringify(copySettle.value)} waitedMs=${copySettle.waitedMs}`);
+      verdict(
+        "clipboard-copy-writes-a-fragment",
+        copySettle.ok,
+        `copyTurns=${copySettle.value.copyTurns} copyEffects=${JSON.stringify(copySettle.value.copyEffects)} clipboardWriteLogLines=${copySettle.value.clipboardWrite} unmapped=${JSON.stringify(copySettle.value.unmapped)} waitedMs=${copySettle.waitedMs} — mod+c must reach the guest AND come back with the one ClipboardWrite effect the host retains as the paste fragment`,
+        copySettle.ok ? undefined : 42,
+      );
+      const pasteMark = consoleCursor();
       await page.keyboard.press("Meta+v");
       await page.waitForTimeout(600);
       await page.keyboard.press("Control+v");
-      await page.waitForTimeout(1500);
-      const pasteLane = consoleBuf.filter((l) => /actionId=paste|clipboard-write|CreateObject|leftover effects|performInvocation settled/.test(l)).slice(-16);
-      log(`clipboard paste-lane: ${JSON.stringify(pasteLane).slice(0, 1600)}`);
+      const pasteSettle = await settleFor(async () => clipboardHops(pasteMark), (hops) => hops.pasteTurns > 0, 15000);
+      log(`clipboard paste hops=${JSON.stringify(pasteSettle.value)} waitedMs=${pasteSettle.waitedMs}`);
+      verdict(
+        "clipboard-paste-reaches-the-guest",
+        pasteSettle.ok,
+        `pasteTurns=${pasteSettle.value.pasteTurns} pasteEffects=${JSON.stringify(pasteSettle.value.pasteEffects)} waitedMs=${pasteSettle.waitedMs} — with no retained fragment the shell opens the STAGED paste form instead of executing (🏛️ShellHost/🟦️.tsx handleAppKeydown), which is a dispatch that never happens`,
+        pasteSettle.ok ? undefined : 42,
+      );
       const exec = page.locator("#framework.window.puzzle3dMainPerspective.action.paste.execute, button", { hasText: /^execute$/i }).first();
-      if (await exec.count()) await exec.click({ force: true, timeout: 4000 }).catch(() => {});
-      await page.waitForTimeout(3000);
+      const execCount = await countSafe(exec);
+      log(`clipboard staged-paste execute controls=${execCount}`);
+      if (execCount) await exec.click({ force: true, timeout: 4000 }).catch(() => {});
+      const pasteCensus = await settleFor(censusTrace("clipboard-paste", censusBefore.ids), (census) => census.count > censusBefore.count, 15000);
+      log(`clipboard paste census waitedMs=${pasteCensus.waitedMs}`);
       await openHistory();
       const censusAfter = await dumpInstances();
       log(`clipboard after: ${JSON.stringify(await chromeState()).slice(0, 800)}`);
@@ -1251,35 +1490,53 @@ if (booted && interact) {
     add("locked-refusal", "§8/§16", "mutate", process.argv.includes("--locked") || family, async () => {
       await dismissChrome();
       const framed = await frameForestTableAfterCensus();
-      const c = page.locator("canvas").last();
-      await clickForestTable();
-      await c.click({ position: { x: framed.table.x, y: framed.table.y }, timeout: 5000 }).catch(() => {});
+      const picked = await ensureWorldSelection("locked", framed.table);
       await waitLeftoverInteractionView("locked");
-      const inspection = page.locator("#framework.panel.inspection").first();
-      if (await inspection.count()) await inspection.click({ timeout: 4000 }).catch(() => {});
-      await page.waitForTimeout(800);
+      log(`locked precondition ids=${JSON.stringify(picked.ids).slice(0, 160)} via=${picked.via}`);
+      log(`locked inspection panel: ${JSON.stringify(await ensurePanel("framework.panel.inspection"))}`);
       const inspect = await waitInspectionPopulated("locked");
       log(`locked inspection: ${JSON.stringify(inspect).slice(0, 1800)}`);
       verdict("locked-flag-row", inspect.lockChromePresent, `lockChrome=${inspect.lockChromePresent}`, inspect.lockChromePresent ? undefined : 42);
+      // 🔒️ The lock is the step's PRECONDITION, not a side gesture: the guest's refusal
+      // (`refuse_when_locked`) only fires for an object whose `locked` flag is actually set, so the flag row
+      // (`📌️panels/🔍️inspection/🦀️.rs` `flag_row`, whose rendered value text IS the flag) is pressed and
+      // then POLLED until it reads `true`. Before wave B31 the press was fire-and-forget, so a refusal that
+      // never fired could not be told apart from an object that was never locked.
       const lock = page.locator("[id$='puzzle3d-play-inspector.object.locked']").first();
       const lockCount = await lock.count();
       log(`lock controls=${lockCount}`);
+      const lockedFlag = async () =>
+        page.evaluate(() => {
+          const row = Array.from(document.querySelectorAll("[id]")).find((node) => node.id.endsWith("puzzle3d-play-inspector.object.locked"));
+          return (row as HTMLElement | undefined)?.innerText.replace(/\s+/g, " ").trim().toLowerCase() ?? "";
+        });
       if (lockCount) {
         const toggle = lock.locator("button, [role='switch'], [role='checkbox']").first();
         if (await toggle.count()) await toggle.click({ force: true, timeout: 4000 }).catch(() => {});
         else await lock.click({ force: true, timeout: 4000 }).catch(() => {});
       }
+      const lockSettle = await settleFor(lockedFlag, (text) => /\btrue\b/.test(text), 15000);
+      log(`lock flag row="${lockSettle.value}" locked=${lockSettle.ok} waitedMs=${lockSettle.waitedMs}`);
       await unfoldPerspectiveUtilities();
       const move = page.locator("#move, button").filter({ hasText: /^move$/i }).first();
       if (await move.count()) await move.click({ timeout: 3000 }).catch(() => {});
-      const box = await c.boundingBox();
+      // 🧯️ Wave B41: this read a `c` that belongs to the `marquee-click` step's own block, so the step
+      // threw `ReferenceError: c is not defined` before it ever dragged — the same canvas locator every
+      // sibling gesture step uses is declared here instead.
+      const canvas = page.locator("canvas").last();
+      const box = await canvas.boundingBox();
       if (box) await dragGumballMoveX(box);
-      await page.waitForTimeout(1500);
-      const after = await chromeState();
-      const notices = (after.notices ?? []).filter((n: string) => !isCollateralNotice(n));
-      const notice = notices.some((n: string) => /locked/i.test(n));
-      log(`locked after: ${JSON.stringify(after).slice(0, 1000)}`);
-      verdict("locked-refusal-notice", notice, `notices=${JSON.stringify(notices).slice(0, 200)}`, notice ? undefined : 42);
+      // 🔔️ The refusal notice auto-dismisses after 4000 ms (`🏛️ShellHost/🟦️.tsx` SET_TRANSIENT_NOTICE), so
+      // this polls the notice list rather than the elapsed time: the round trip that produces it is the
+      // same `translateSelection` commit the gumball lane measures at up to 18 s, and the old fixed 1.5 s
+      // sample ran out long before the dispatch landed.
+      const noticeSettle = await settleFor(
+        async () => ((await chromeState()).notices ?? []).filter((n: string) => !isCollateralNotice(n)) as string[],
+        (rows) => rows.some((n) => /locked/i.test(n)),
+      );
+      const notices = noticeSettle.value;
+      log(`locked after: ${JSON.stringify(await chromeState()).slice(0, 1000)} waitedMs=${noticeSettle.waitedMs}`);
+      verdict("locked-refusal-notice", noticeSettle.ok, `locked=${lockSettle.ok} flag="${lockSettle.value}" notices=${JSON.stringify(notices).slice(0, 200)} waitedMs=${noticeSettle.waitedMs}`, noticeSettle.ok ? undefined : 42);
     });
   }
   {
@@ -1298,9 +1555,12 @@ if (booted && interact) {
       log(`gumball pose before len=${poseBefore.length}`);
       const box = await c.boundingBox();
       const drag = box ? await dragGumballMoveX(box) : { handle: null, entered: false };
-      await page.waitForTimeout(1500);
+      const poseSettle = await settleFor(
+        () => page.evaluate(() => document.querySelector("#puzzle3d-main-perspective [data-instances-json]")?.getAttribute("data-instances-json") ?? ""),
+        (pose) => pose.length > 0 && pose !== poseBefore,
+      );
       await openHistory();
-      const poseAfter = await page.evaluate(() => document.querySelector("#puzzle3d-main-perspective [data-instances-json]")?.getAttribute("data-instances-json") ?? "");
+      const poseAfter = poseSettle.value;
       const enteredLogs = consoleBuf.filter((l) => /\[DEBUG\] gumball drag entered/.test(l));
       const deltaLogs = consoleBuf.filter((l) => /\[DEBUG\] gumball pose delta/.test(l));
       const entered = drag.entered || enteredLogs.length > 0;
@@ -1311,7 +1571,7 @@ if (booted && interact) {
       log(`gumball history: ${JSON.stringify(await historyState()).slice(0, 800)}`);
       const moveEntered = enteredLogs.some((l) => /kind: move/.test(l));
       verdict("gumball-handle-enter", entered && moveEntered, `handle=${JSON.stringify(drag.handle)} entered=${drag.entered} moveEntered=${moveEntered} taps=${enteredLogs.length}`);
-      verdict("gumball-scene-delta", sceneDelta, `sceneDelta=${sceneDelta} poseLen=${poseAfter.length}`);
+      verdict("gumball-scene-delta", sceneDelta, `sceneDelta=${sceneDelta} poseLen=${poseAfter.length} waitedMs=${poseSettle.waitedMs}`);
     });
   }
   {
@@ -1392,7 +1652,7 @@ if (booted && interact) {
       const afterV = await dumpVorticesJson();
       log(`brush vortices after clicks: ${JSON.stringify(afterV)}`);
       await page.keyboard.press("Escape").catch(() => {});
-      await page.locator('#framework.panel.history, [data-slot="panel-tab-button"][id="framework.panel.history"]').first().click({ timeout: 2000 }).catch(() => {});
+      await ensurePanel("framework.panel.history");
       await page.keyboard.press("Escape").catch(() => {});
     });
   }
@@ -1460,7 +1720,8 @@ if (booted && interact) {
       // (`PUZZLE3D_EXAMPLE_CONCRETE_FOREST = "concrete-forest"`,
       // `PUZZLE3D_EXAMPLE_NAKAGIN = "nakagin-capsule-tower"`), so this stays a pure read of the chrome.
       const activeExample = String((await chromeState()).example ?? "").replace(/\s+/g, " ").trim();
-      const expectedExportName = `${activeExample.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.json`;
+      const exampleSlug = activeExample.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const expectedExportName = exampleSlug ? `${exampleSlug}.json` : null;
       const [download] = await Promise.all([
         page.waitForEvent("download", { timeout: 20000 }).catch(() => null),
         activateWindowFileAction("exportFixture"),
@@ -1471,10 +1732,16 @@ if (booted && interact) {
         log(`export saved ${dest}`);
       }
       verdict("export-only", Boolean(download), `download=${download ? download.suggestedFilename() : "none"} dest=${dest}`);
+      // 🏷️ An unresolved picker is its OWN finding, never an expectation of ".json": comparing a real
+      // download against a name built from an empty slug reported the guest as wrong for a reading the
+      // probe failed to take. This is the replace group, i.e. after `--reload-between-groups`, where
+      // `#playground.navbar.fixture` came back with empty `innerText` in the #50 battery.
       verdict(
         "export-names-the-example",
-        Boolean(download) && download?.suggestedFilename() === expectedExportName,
-        `download=${download ? download.suggestedFilename() : "none"} expected=${expectedExportName} — exporting Concrete Forest and Nakagin must not both land as one constant name`,
+        Boolean(download) && expectedExportName !== null && download?.suggestedFilename() === expectedExportName,
+        expectedExportName === null
+          ? `download=${download ? download.suggestedFilename() : "none"} example=UNRESOLVED — #playground.navbar.fixture named no example, so this step could not form an expectation; the download name itself is not judged here`
+          : `download=${download ? download.suggestedFilename() : "none"} expected=${expectedExportName} — exporting Concrete Forest and Nakagin must not both land as one constant name`,
       );
       await page.waitForTimeout(600);
       let [chooser] = await Promise.all([
@@ -1629,15 +1896,10 @@ if (booted && interact) {
    * `setCamera` round trip, so the old fixed 1.2 s/1.6 s waits sampled a pose that had not moved yet and
    * read a false negative (wave B12 §4.1). Returns the last reading either way, so a real "never moved"
    * still fails. */
-  const cameraSettled = async (id: string, previous: string | null, budgetMs = 5000) => {
-    const deadline = Date.now() + budgetMs;
-    let latest = await cameraOf(id);
-    while (latest === previous && Date.now() < deadline) {
-      await page.waitForTimeout(250);
-      latest = await cameraOf(id);
-    }
-    log(`camera settle ${id} moved=${latest !== previous} waitedMs=${budgetMs - Math.max(0, deadline - Date.now())}`);
-    return latest;
+  const cameraSettled = async (id: string, previous: string | null, budgetMs = 30000) => {
+    const settle = await settleFor(() => cameraOf(id), (latest) => latest !== previous, budgetMs, 250);
+    log(`camera settle ${id} moved=${settle.ok} waitedMs=${settle.waitedMs}`);
+    return { camera: settle.value, moved: settle.ok, waitedMs: settle.waitedMs };
   };
   /** 🛰️ Orbits the Perspective pane's camera AWAY from wherever it currently stands, and returns the
    * settled pose. The precondition every focus/zoom assertion needs: `focusSelection` frames the
@@ -1659,9 +1921,10 @@ if (booted && interact) {
     await page.mouse.move(cx + 180, cy + 90, { steps: 20 });
     await page.mouse.up({ button: "right" });
     await page.keyboard.up("Alt").catch(() => {});
-    const after = await cameraSettled("puzzle3d-main-perspective", before);
+    const settled = await cameraSettled("puzzle3d-main-perspective", before);
+    const after = settled.camera;
     await page.keyboard.press("Escape").catch(() => {});
-    log(`orbit-away moved=${after !== before} before=${String(before).slice(0, 100)} after=${String(after).slice(0, 100)}`);
+    log(`orbit-away moved=${settled.moved} waitedMs=${settled.waitedMs} before=${String(before).slice(0, 100)} after=${String(after).slice(0, 100)}`);
     return after;
   };
   /** 📷️ Whether a published pose is a real one — `Puzzle3dCamera::default()` is all zeros, i.e. a camera
@@ -1690,28 +1953,34 @@ if (booted && interact) {
     }, authored);
   const targetVolumeCount = async () => (await windowHostState()).find((w) => w.id === "puzzle3d-main-perspective")?.volumes ?? -1;
   /** 🕰️ History entry count WITHOUT touching undo/redo — `openHistory()` deliberately clicks
-   * `#framework.history.undo` to expand its sections, which would mutate the document from a read-only step. */
+   * `#framework.history.undo` to expand its sections, which would mutate the document from a read-only step.
+   *
+   * 🧯️ Wave B38: goes through {@link ensurePanel}. The old body clicked the History tab unconditionally, so
+   * the `before` read of `camera-gestures` CLOSED the panel and the `after` read reopened it — and then
+   * reported seven PRE-EXISTING rows as new (`camera-emits-no-artifact-history before=0 after=7`, B36 §1.2).
+   * A reader must never move what it measures. */
   const readHistoryEntryIds = async () => {
-    const tab = page.locator('[data-slot="panel-tab-button"][id="framework.panel.history"], #framework.panel.history').first();
-    if (await tab.count()) await tab.click({ timeout: 4000 }).catch(() => {});
-    await page.waitForTimeout(900);
+    await ensurePanel("framework.panel.history");
     return page.evaluate(() => Array.from(document.querySelectorAll('[id^="framework.history.entry."]')).map((r) => r.id));
   };
   /** 🕰️ Entry ids present after an action that were not present before — paging-robust, unlike a raw count
    * (the 21:28 coordination entry found the history panel's own row paging faked a 4→106 "regression"). */
   const newHistoryEntries = (before: string[], after: string[]) => after.filter((id) => !before.includes(id));
-  /** 🗂️ Opens a panel tab by id or visible text, logging the whole tab inventory on a miss so the next reader
-   * gets the real id instead of another guess. */
-  const openPanel = async (match: RegExp) => {
+  /** 🗂️ Resolves a panel tab by id or visible text and hands it to {@link ensurePanel}, logging the whole tab
+   * inventory on a miss so the next reader gets the real id instead of another guess.
+   *
+   * 🧯️ Wave B38: the click itself moved into `ensurePanel`, so this never closes an already-open panel. The
+   * regex stays the ADDRESS ONLY — a step that needs a specific tab out of two carrying the same label (the
+   * two "Settings" of B13 §3a) must call `ensurePanel` with the exact id instead. */
+  const openPanel = async (match: RegExp, bodySelector?: string) => {
     const tabs = await page.evaluate(() =>
       Array.from(document.querySelectorAll('[data-slot="panel-tab-button"]')).map((b) => ({ id: b.id, text: (b as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 40) })),
     );
     const hit = tabs.find((t) => match.test(t.id) || match.test(t.text));
     log(`openPanel ${match} hit=${JSON.stringify(hit)} tabs=${JSON.stringify(tabs).slice(0, 900)}`);
     if (!hit) return { opened: false, tabs, id: null as string | null };
-    await page.locator(`[data-slot="panel-tab-button"][id="${hit.id}"]`).first().click({ force: true, timeout: 4000 }).catch(() => {});
-    await page.waitForTimeout(1200);
-    return { opened: true, tabs, id: hit.id };
+    const ensured = await ensurePanel(hit.id, bodySelector);
+    return { opened: ensured.opened, tabs, id: hit.id };
   };
   /** 🎚️ Unfolds the perspective window's measures rail (§3/§4's entry point) and dumps every puzzle3d measure
    * id it exposes, so a missing control is reported as "absent from the rail", not as a silent skip. */
@@ -1730,7 +1999,7 @@ if (booted && interact) {
     await page.waitForTimeout(1200);
     const dump = await page.evaluate(() => {
       const container = document.getElementById("framework.window.puzzle3dMainPerspective.measures");
-      const measures = Array.from(document.querySelectorAll('[id^="puzzle3d-measure-"], [id^="puzzle3d-play-"], [id^="puzzle3d-voxel-"]'))
+      const measures = Array.from(document.querySelectorAll('[id*="puzzle3d-measure-"], [id*="puzzle3d-play-"], [id*="puzzle3d-voxel-"]'))
         .map((el) => `${el.id}|${el.getAttribute("data-slot") ?? el.tagName.toLowerCase()}|${el.getAttribute("aria-pressed") ?? (el as HTMLInputElement).value ?? ""}`)
         .slice(0, 90);
       return {
@@ -1745,10 +2014,26 @@ if (booted && interact) {
     log(`measures rail unfoldControl=${found} ${JSON.stringify(dump)}`);
     return dump.measures;
   };
-  /** 🎚️ One window-measure control's observable value — `aria-pressed` for toggles, `value` for sliders and
-   * steppers, the trigger's own text for selects. */
-  const readMeasure = async (id: string) =>
+  /** 🪪️ Resolves an AUTHORED window-measure id to the id it actually carries in the document. Wave B41
+   * made a measure's DOM id `${windowInstanceId}/${authoredId}` (`windowMeasureDomId`), the same rule
+   * `uiNodeDomId` already applied to authored body keys: a window kind's measure tree is authored once for
+   * the KIND (puzzle3d hands `world3d_projection_measures` the literal `"puzzle3d"` prefix) and rendered
+   * once per open INSTANCE, so the bare authored id stood in the document once per unfolded rail. Every
+   * §3/§4 locator therefore matches on the AUTHORED TAIL — the same rule §19's settings locators already
+   * follow — and prefers the Perspective pane, which is the one `unfoldMeasures` unfolds. Idempotent on an
+   * id that is already live, so a candidate dump can be fed straight back in. */
+  const resolveMeasureId = async (authored: string) =>
     page.evaluate((target: string) => {
+      const matches = Array.from(document.querySelectorAll<HTMLElement>("[id]")).filter((el) => el.id === target || el.id.endsWith(`/${target}`));
+      const preferred = matches.find((el) => el.closest('[id="framework.window.puzzle3dMainPerspective"], [id="puzzle3d-main-perspective"]')) ?? matches.find((el) => el.id.startsWith("puzzle3d-main-perspective/"));
+      return (preferred ?? matches[0])?.id ?? null;
+    }, authored);
+  /** 🎚️ One window-measure control's observable value — `aria-pressed` for toggles, `value` for sliders and
+   * steppers, the trigger's own text for selects. Takes the AUTHORED id (see {@link resolveMeasureId}). */
+  const readMeasure = async (authored: string) => {
+    const id = await resolveMeasureId(authored);
+    if (!id) return null;
+    return page.evaluate((target: string) => {
       const el = document.getElementById(target) as HTMLElement | null;
       if (!el) return null;
       const input = el as HTMLInputElement;
@@ -1764,11 +2049,13 @@ if (booted && interact) {
         text: (el.innerText || "").replace(/\n/g, " ").trim().slice(0, 60),
       };
     }, id);
+  };
   /** 🎚️ Drives one measure the way a user would and returns before/after readings — sliders get keyboard
    * arrows (their thumb has no stable headless hit box), selects get their last option, toggles get a click. */
-  const nudgeMeasure = async (id: string) => {
-    const before = await readMeasure(id);
-    if (!before) return { before: null, after: null };
+  const nudgeMeasure = async (authored: string) => {
+    const before = await readMeasure(authored);
+    if (!before) return { before: null, after: null, waitedMs: 0 };
+    const id = (await resolveMeasureId(authored))!;
     const loc = page.locator(`[id="${id}"]`).first();
     if (before.slot === "tree-action-checkbox" || (before.tag === "input" && before.checked !== null)) {
       await loc.click({ force: true, timeout: 4000 }).catch(() => {});
@@ -1810,8 +2097,8 @@ if (booted && interact) {
     } else {
       await loc.click({ force: true, timeout: 4000 }).catch(() => {});
     }
-    await page.waitForTimeout(1800);
-    return { before, after: await readMeasure(id) };
+    const settle = await settleFor(() => readMeasure(id), (after) => JSON.stringify(after) !== JSON.stringify(before));
+    return { before, after: settle.value, waitedMs: settle.waitedMs };
   };
   /** 🧰️ Unfolds the utility bar and activates one utility by its literal id (`brush`, `transform`,
    * `volumeBrush`, `worldRelocate` — the `UTILITY_ID` const each `🪛️utilities` leaf declares). */
@@ -1866,7 +2153,7 @@ if (booted && interact) {
       await page.mouse.move(cx + dx, cy + dy, { steps: 20 });
       await page.mouse.up({ button });
       if (modifier) await page.keyboard.up(modifier).catch(() => {});
-      const settled = await cameraSettled("puzzle3d-main-perspective", previous);
+      const settled = (await cameraSettled("puzzle3d-main-perspective", previous)).camera;
       await dismissChrome();
       return settled;
     };
@@ -1876,7 +2163,7 @@ if (booted && interact) {
     verdict("camera-pan", Boolean(afterPan) && afterPan !== afterOrbit, `before=${String(afterOrbit).slice(0, 110)} after=${String(afterPan).slice(0, 110)}`);
     await page.mouse.move(cx, cy);
     await page.mouse.wheel(0, -700);
-    const afterZoom = await cameraSettled("puzzle3d-main-perspective", afterPan);
+    const afterZoom = (await cameraSettled("puzzle3d-main-perspective", afterPan)).camera;
     verdict("camera-zoom", Boolean(afterZoom) && afterZoom !== afterPan, `before=${String(afterPan).slice(0, 110)} after=${String(afterZoom).slice(0, 110)}`);
     const alive = await snapshot().catch(() => null);
     verdict("camera-lane-responsive", Boolean(alive && alive.windows.length >= 2), `windows=${alive?.windows.length ?? "unreachable"}`);
@@ -1893,16 +2180,66 @@ if (booted && interact) {
   add("projection-options", "§3", "read", process.argv.includes("--projection") || battery, async () => {
     await dismissChrome();
     await unfoldMeasures();
-    const ids = await page.evaluate(() => Array.from(document.querySelectorAll('[id^="puzzle3d-measure-projection"], [id="framework.worldOrbit.projection"]')).map((el) => el.id));
-    log(`projection measure ids=${JSON.stringify(ids)}`);
+    // 🎚️ CONTROLS only, and the perspective window's own. Wave B36 §7.3: `ids[0]` used to be
+    // `framework.worldOrbit.projection`, which is a `data-slot="pane"` — a COLLAPSED disclosure, one per
+    // window. The step "flipped" it by expanding it (`text:"Projection"` → `"Projection Collapse Parallel
+    // Orthographic…"`) and then asked the camera to have changed, so `projection-repaints-camera` could only
+    // ever read false. A pane hit is a LOCATOR MISS and is now reported as one.
+    const CONTROL_SLOTS = ["select-trigger", "slider", "tree-action-checkbox", "toggle-group-item", "numberStepper"];
+    const candidates = await evalSafe(
+      (slots) =>
+        Array.from(document.querySelectorAll<HTMLElement>('[id*="puzzle3d-measure-projection"], [id^="framework.worldOrbit.projection"]')).map((el) => ({
+          id: el.id,
+          slot: el.getAttribute("data-slot"),
+          role: el.getAttribute("role"),
+          isControl: slots.includes(el.getAttribute("data-slot") ?? "") || ["combobox", "slider", "checkbox", "switch", "spinbutton"].includes(el.getAttribute("role") ?? "") || el.tagName.toLowerCase() === "input",
+          inPerspective: Boolean(el.closest('[id="puzzle3d-main-perspective"], [id="framework.window.puzzle3d-main-perspective"], [id="framework.window.puzzle3dMainPerspective"]')),
+          text: (el.innerText || "").replace(/\n/g, " ").trim().slice(0, 50),
+        })),
+      [] as { id: string; slot: string | null; role: string | null; isControl: boolean; inPerspective: boolean; text: string }[],
+      CONTROL_SLOTS,
+    );
+    const ids = candidates.map((entry) => entry.id);
+    log(`projection measure candidates=${JSON.stringify(candidates).slice(0, 1200)}`);
     verdict("projection-measures-present", ids.length > 0, `ids=${JSON.stringify(ids).slice(0, 260)}`);
     if (!ids.length) return;
+    // 🎯️ The orthographic view is what §3 is about, so it leads the preference order; then any other real
+    // control in the perspective subtree, then any real control at all.
+    const controls = candidates.filter((entry) => entry.isControl);
+    const target =
+      controls.find((entry) => entry.id.includes("puzzle3d-measure-projection-orthographic-view") && entry.inPerspective) ??
+      controls.find((entry) => entry.id.includes("puzzle3d-measure-projection-orthographic-view")) ??
+      controls.find((entry) => entry.inPerspective) ??
+      controls[0];
+    if (!target) {
+      const note = `no projection CONTROL is addressable — every hit is chrome: ${JSON.stringify(candidates).slice(0, 600)}`;
+      verdict("projection-control-flips", false, note);
+      verdict("projection-repaints-camera", false, note);
+      return;
+    }
     const cameraBefore = await cameraOf("puzzle3d-main-perspective");
-    const moved = await nudgeMeasure(ids[0]);
-    log(`projection nudge ${ids[0]}: ${JSON.stringify(moved)}`);
-    verdict("projection-control-flips", JSON.stringify(moved.before) !== JSON.stringify(moved.after), `id=${ids[0]} before=${JSON.stringify(moved.before)} after=${JSON.stringify(moved.after)}`);
-    const cameraAfter = await cameraOf("puzzle3d-main-perspective");
-    verdict("projection-repaints-camera", Boolean(cameraBefore) && cameraBefore !== cameraAfter, `before=${String(cameraBefore).slice(0, 100)} after=${String(cameraAfter).slice(0, 100)}`);
+    const moved = await nudgeMeasure(target.id);
+    log(`projection nudge ${target.id} (slot=${target.slot} perspective=${target.inPerspective}): ${JSON.stringify(moved)}`);
+    // 🕰️ Wave B41 (B40 §2.2's handover): score the flip on the control's `value`, NEVER on its `text`. The
+    // rail holds an optimistic draft for the whole round trip (`useWindowMeasureDraft`: 0.7 s idle, seconds
+    // on a busy app), and that draft moves the trigger's rendered TEXT first — B38's own run shows
+    // `after={"value":"","text":"Plan"}`, i.e. `projection-control-flips` passing on the draft alone while
+    // the program had answered nothing. `value` is the published value the program owns.
+    verdict(
+      "projection-control-flips",
+      Boolean(moved.after) && (moved.before?.value ?? null) !== (moved.after?.value ?? null),
+      `id=${target.id} slot=${target.slot} beforeValue=${JSON.stringify(moved.before?.value ?? null)} afterValue=${JSON.stringify(moved.after?.value ?? null)} before=${JSON.stringify(moved.before)} after=${JSON.stringify(moved.after)}`,
+    );
+    // 📷️ And WAIT for the pose: a projection flip crosses the guest, republishes the window lane and only
+    // then reaches `data-camera-json`, exactly like the `camera-gestures` lane's own gestures. The bare
+    // read this verdict used sampled the pre-dispatch pose ~100 ms after the click (B38 `[22.4s]`→`[22.5s]`)
+    // and could only ever report "bit-identical".
+    const settled = await cameraSettled("puzzle3d-main-perspective", cameraBefore);
+    verdict(
+      "projection-repaints-camera",
+      Boolean(cameraBefore) && settled.moved,
+      `id=${target.id} slot=${target.slot} waitedMs=${settled.waitedMs} before=${String(cameraBefore).slice(0, 100)} after=${String(settled.camera).slice(0, 100)}`,
+    );
   });
 
   const WINDOW_OPTION_IDS = [
@@ -1948,7 +2285,7 @@ if (booted && interact) {
 
   add("settings-panel", "§19", "read", process.argv.includes("--settings") || battery, async () => {
     await dismissChrome();
-    const opened = await openPanel(/settings/i);
+    const opened = await openPanel(/settings/i, '[id*="puzzle3d-play-settings."]');
     verdict("settings-panel-opens", opened.opened, `tab=${opened.id} tabs=${JSON.stringify(opened.tabs).slice(0, 400)}`);
     if (!opened.opened) return;
     // 🪪️ Authored ids are namespaced `${surface}/${key}` by `uiNodeDomId`, so every §19 locator matches on
@@ -2038,7 +2375,7 @@ if (booted && interact) {
   /** 🌍️ Reads the outliner's own section labels plus the grid/LOD rail labels — the DOM translation of
    * checklist §25's `document_json.contains("Baukomponenten")` assertion. */
   const readLocaleLabels = async () => {
-    await openPanel(/document|artifact|outliner|puzzle3d-play-document/i);
+    await openPanel(/document|artifact|outliner|puzzle3d-play-document/i, '[id^="panel:puzzle3d-play-document/"]');
     const read = async () =>
       page.evaluate(() => {
         const root = document.querySelector('[id^="puzzle3d-play-document"]') as HTMLElement | null;
@@ -2056,23 +2393,62 @@ if (booted && interact) {
     }
     return last;
   };
+  /** 🗣️ The DE cell of the `objects` section label, PER TERMINOLOGY — the probe-side mirror of the guest's
+   * authored table (`✏️editor/🗣️terminology/🦀️.rs:11`: `objects: native_en "Objects", native_de "Objekte",
+   * reuse_en "Building components", reuse_de "Baukomponenten"`). Wave B40 §5: this lane switches the
+   * LANGUAGE only, the shell runs `native` terminology throughout it, and `native_de` is "Objekte" — so
+   * demanding "Baukomponenten" scored an axis nobody had selected. Per CLAUDE.md an unauthored axis must
+   * never fall back, so the verdict asserts the cell of the ACTIVE terminology instead. */
+  const OBJECTS_SECTION_LABEL_DE = { native: "Objekte", reuse: "Baukomponenten" } as const;
+  /** 🗣️ The terminology the shell is actually running: the persisted chrome preference
+   * (`UI_CHROME_TERMINOLOGY_STORAGE_KEY`, whose own default is `native`), cross-checked against the
+   * `framework.settings.terminology` control's rendered text so the log carries both readings. */
+  const readActiveTerminology = async () =>
+    page.evaluate(() => {
+      const stored = (() => {
+        try {
+          return window.localStorage.getItem("ui.chrome.terminology");
+        } catch {
+          return null;
+        }
+      })();
+      const control = document.querySelector('[id="framework.settings.terminology"]') as HTMLElement | null;
+      const controlText = (control?.innerText || "").replace(/\n/g, " ").trim().slice(0, 60);
+      const terminology: "native" | "reuse" = stored === "reuse" || /baukomponent|wiederverw|reuse/i.test(controlText) ? "reuse" : "native";
+      return { terminology, stored, controlText };
+    });
   add("locale-switch", "§25", "read", process.argv.includes("--locale") || battery, async () => {
     await dismissChrome();
     const english = await readLocaleLabels();
     log(`locale en labels=${JSON.stringify(english)}`);
+    /** 🌍️ Addresses the FRAMEWORK settings branch by its exact id, never by the label "Settings".
+     *
+     * 🧯️ Wave B36 §7.2 / B13 §3a: two tabs render the text "Settings" — the app's own
+     * `puzzle3d.panel.settings` (which has no language row) precedes the shell's `framework.settings` in
+     * the roster, so `openPanel(/settings/i)` always took the app one and `framework.settings.language`
+     * was measured absent at boot, absent with the app panel open, and present (count=2) only after the
+     * `framework.settings` tab itself. The id is the only stable handle; one press descends to the
+     * branch's `order: 0` child, and `framework.settings.general` is pressed only when the row is still
+     * absent afterwards. */
     const setLanguage = async (label: RegExp) => {
-      const opened = await openPanel(/settings/i);
-      const trigger = page.locator('[id="framework.settings.language"]').last();
-      const count = await trigger.count();
-      if (!count) return { switched: false, tabs: opened.tabs };
+      const opened = await ensurePanel("framework.settings");
+      const tabs = await page.evaluate(() => Array.from(document.querySelectorAll('[data-slot="panel-tab-button"]')).map((b) => b.id));
+      if (!opened.opened) {
+        const general = await ensurePanel("framework.settings.general", '[id="framework.settings.language"]');
+        log(`locale framework-settings fallback general=${JSON.stringify(general)}`);
+      }
+      const trigger = page.locator('[id="framework.settings.language"][role="combobox"], [id="framework.settings.language"] [role="combobox"], [id="framework.settings.language"]').first();
+      const count = await countSafe(trigger);
+      log(`locale language control panel=${JSON.stringify(opened)} triggers=${count}`);
+      if (!count) return { switched: false, tabs };
       await trigger.click({ force: true, timeout: 4000 }).catch(() => {});
       await page.waitForTimeout(700);
       const option = page.locator('[role="option"]').filter({ hasText: label }).first();
-      const optionCount = await option.count();
+      const optionCount = await countSafe(option);
       if (optionCount) await option.click({ timeout: 3000 }).catch(() => {});
       else await page.keyboard.press("Escape").catch(() => {});
       await page.waitForTimeout(3000);
-      return { switched: optionCount > 0, tabs: opened.tabs };
+      return { switched: optionCount > 0, tabs };
     };
     const toGerman = await setLanguage(/deutsch|german/i);
     verdict("locale-control-present", toGerman.switched, `switched=${toGerman.switched} tabs=${JSON.stringify(toGerman.tabs ?? []).slice(0, 320)}`);
@@ -2080,7 +2456,14 @@ if (booted && interact) {
     const german = await readLocaleLabels();
     log(`locale de labels=${JSON.stringify(german)}`);
     verdict("locale-flips-document-labels", german.rootText.length > 0 && german.rootText !== english.rootText, `en=${english.rootText.slice(0, 170)} de=${german.rootText.slice(0, 170)}`);
-    verdict("locale-de-document-section-label", /Baukomponenten/i.test(german.rootText), `de=${german.rootText.slice(0, 220)} — checklist §25 expects "Baukomponenten"`);
+    const active = await readActiveTerminology();
+    const expectedSectionLabel = OBJECTS_SECTION_LABEL_DE[active.terminology];
+    log(`locale active terminology=${JSON.stringify(active)} expectedSectionLabel=${expectedSectionLabel}`);
+    verdict(
+      "locale-de-document-section-label",
+      new RegExp(expectedSectionLabel, "i").test(german.rootText),
+      `terminology=${active.terminology} expected="${expectedSectionLabel}" stored=${JSON.stringify(active.stored)} control=${JSON.stringify(active.controlText)} de=${german.rootText.slice(0, 220)}`,
+    );
     verdict("locale-no-english-leak", german.rootText.length > 0 && !/\b(Objects|References|Attractions|Target Volumes)\b/.test(german.rootText), `de=${german.rootText.slice(0, 220)}`);
     const back = await setLanguage(/english|englisch/i);
     const restored = await readLocaleLabels();
@@ -2099,12 +2482,12 @@ if (booted && interact) {
     await page.keyboard.down("Alt").catch(() => {});
     await canvas.click({ position: { x: framed.table.x, y: framed.table.y }, modifiers: ["Alt"], timeout: 4000, force: true }).catch(() => {});
     await page.keyboard.up("Alt").catch(() => {});
-    await page.waitForTimeout(3000);
-    const after = await targetVolumeCount();
-    log(`volume-brush volumes before=${before} after=${after} instances=${JSON.stringify(await dumpInstances())}`);
-    verdict("volume-brush-add-target-volume", after > before, `before=${before} after=${after}`);
+    const census = await settleFor(targetVolumeCount, (count) => count > before);
+    const after = census.value;
+    log(`volume-brush volumes before=${before} after=${after} waitedMs=${census.waitedMs} instances=${JSON.stringify(await dumpInstances())}`);
+    verdict("volume-brush-add-target-volume", census.ok, `before=${before} after=${after} waitedMs=${census.waitedMs}`);
     const voxel = await nudgeMeasure("puzzle3d-voxel-w");
-    verdict("volume-brush-voxel-dims", Boolean(voxel.before) && JSON.stringify(voxel.before) !== JSON.stringify(voxel.after), `before=${JSON.stringify(voxel.before)} after=${JSON.stringify(voxel.after)}`);
+    verdict("volume-brush-voxel-dims", Boolean(voxel.before) && JSON.stringify(voxel.before) !== JSON.stringify(voxel.after), `before=${JSON.stringify(voxel.before)} after=${JSON.stringify(voxel.after)} waitedMs=${voxel.waitedMs}`);
   });
 
   add("relocate", "§11", "mutate", process.argv.includes("--relocate") || battery, async () => {
@@ -2123,11 +2506,11 @@ if (booted && interact) {
     await page.mouse.down();
     await page.mouse.move(box.x + framed.table.x - 130, box.y + framed.table.y - 70, { steps: 24 });
     await page.mouse.up();
-    await page.waitForTimeout(3500);
-    const poseAfter = await readPose();
+    const poseSettle = await settleFor(readPose, (pose) => pose.length > 0 && pose !== poseBefore);
+    const poseAfter = poseSettle.value;
     const instances = await dumpInstances();
-    log(`relocate poseBeforeLen=${poseBefore.length} poseAfterLen=${poseAfter.length} instances=${JSON.stringify(instances)}`);
-    verdict("relocate-pose-delta", poseAfter.length > 0 && poseBefore !== poseAfter, `beforeLen=${poseBefore.length} afterLen=${poseAfter.length} instances=${instances.count}`);
+    log(`relocate poseBeforeLen=${poseBefore.length} poseAfterLen=${poseAfter.length} waitedMs=${poseSettle.waitedMs} instances=${JSON.stringify(instances)}`);
+    verdict("relocate-pose-delta", poseSettle.ok, `beforeLen=${poseBefore.length} afterLen=${poseAfter.length} instances=${instances.count} waitedMs=${poseSettle.waitedMs}`);
     verdict(
       "relocate-no-hard-fault",
       hardFaults.length === hardBefore,
@@ -2148,31 +2531,9 @@ if (booted && interact) {
     // toggle click below FOLDED an already-open pane on every run that started with one.
     const inputSelector =
       '[id="framework.window.puzzle3dMainPerspective.search"] input, [id="framework.window.puzzle3dMainPerspective.search"] [role="textbox"], [id="framework.window.puzzle3dMainPerspective.search"] textarea, [id="ui.windowSearch.action"], input[placeholder*="fill" i], input[placeholder*="brush" i], [role="textbox"][placeholder*="fill" i]';
-    const foldState = async () =>
-      evalSafe(
-        () => {
-          const el = document.getElementById("framework.window.puzzle3dMainPerspective.engagement");
-          const search = document.getElementById("framework.window.puzzle3dMainPerspective.search");
-          const btn = document.getElementById("framework.window.puzzle3dMainPerspective.engagement.toggle");
-          const rect = btn?.getBoundingClientRect();
-          const top = rect ? document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) : null;
-          return {
-            folded: el?.getAttribute("data-folded") ?? null,
-            searchFolded: search?.getAttribute("data-folded") ?? null,
-            toggle: btn ? `${btn.tagName}|${btn.getAttribute("aria-pressed") ?? ""}|${btn.getAttribute("disabled") ?? ""}` : "absent",
-            rect: rect ? `${Math.round(rect.x)},${Math.round(rect.y)} ${Math.round(rect.width)}x${Math.round(rect.height)}` : "none",
-            covered: top ? !(btn?.contains(top) ?? false) : true,
-            top: top ? `${top.tagName}#${top.id || "-"}[${top.getAttribute("data-slot") ?? "-"}]` : "none",
-          };
-        },
-        { folded: null as string | null, searchFolded: null as string | null, toggle: "eval-failed", rect: "none", covered: true, top: "none" },
-      );
-    for (let attempt = 0; attempt < 6 && (await countSafe(page.locator(inputSelector))) === 0; attempt++) {
-      log(`[DEBUG] engagement fold attempt=${attempt} before=${JSON.stringify(await foldState())}`);
-      if (toggleCount) await toggle.click({ force: true, timeout: 4000 }).catch((error) => log(`[DEBUG] engagement toggle click failed ${String(error).slice(0, 120)}`));
-      await page.waitForTimeout(1200);
-      log(`[DEBUG] engagement fold attempt=${attempt} after=${JSON.stringify(await foldState())}`);
-    }
+    const unfold = await unfoldWindowPane("framework.window.puzzle3dMainPerspective.engagement");
+    for (let attempt = 0; attempt < 8 && (await countSafe(page.locator(inputSelector))) === 0; attempt++) await page.waitForTimeout(600);
+    log(`engagement unfold=${JSON.stringify(unfold)}`);
     const pane = await page.evaluate(() => {
       const root = document.getElementById("framework.window.puzzle3dMainPerspective.engagement");
       const search = document.getElementById("framework.window.puzzle3dMainPerspective.search");
@@ -2190,28 +2551,79 @@ if (booted && interact) {
     const inputCount = await input.count();
     const placeholder = inputCount ? await input.getAttribute("placeholder") : null;
     log(`engagement toggle=${toggleCount} input=${inputCount} placeholder=${placeholder}`);
-    verdict("engagement-input-present", inputCount > 0, `toggle=${toggleCount} input=${inputCount} placeholder=${placeholder} pane=${JSON.stringify(pane).slice(0, 400)}`);
+    verdict(
+      "engagement-input-present",
+      inputCount > 0,
+      `toggle=${toggleCount} input=${inputCount} placeholder=${placeholder} unfold=${JSON.stringify(unfold).slice(0, 260)} pane=${JSON.stringify(pane).slice(0, 300)}`,
+    );
     if (!inputCount) return;
-    verdict("engagement-placeholder-has-no-dead-verbs", !/clear|rectangle|lasso/i.test(placeholder ?? ""), `placeholder=${placeholder} — checklist §14: clear/rectangle/lasso were dropped but stayed advertised`);
+    // 🗣️ The predicate is inverted from checklist §14's guess and from B28's reading of it: `clear`,
+    // `rectangle` and `lasso` are NOT dead — the guest law `every_advertised_engagement_verb_is_implemented`
+    // (`✏️editor/🧪️tests/🔬️unit/🦀️.rs`) drives all three end to end, and the placeholder is DERIVED from
+    // `PUZZLE3D_ENGAGEMENT_VERBS`, so an advertised verb with no arm cannot exist. What this verdict can
+    // still catch in the browser is DRIFT: a placeholder advertising a verb the guest's list does not carry.
+    const advertised = (placeholder ?? "").split(",").map((verb) => verb.trim()).filter(Boolean);
+    const implemented = ["brush", "fill <n>", "zoom", "clear", "pick", "rectangle", "lasso"];
+    const dead = advertised.filter((verb) => !implemented.includes(verb));
+    verdict("engagement-placeholder-has-no-dead-verbs", advertised.length > 0 && dead.length === 0, `placeholder=${placeholder} advertised=${JSON.stringify(advertised)} dead=${JSON.stringify(dead)}`);
     const submit = async (text: string) => {
-      await input.fill(text).catch(() => {});
+      const mark = consoleCursor();
+      await input.fill(text, { timeout: 6000 }).catch((error) => log(`engagement fill failed ${String(error).slice(0, 120)}`));
+      // ✍️ The field is CONTROLLED by the guest's `input.value`; `searchControlledLineV1` keeps the typed
+      // draft while that value stands still, so the line the Enter carries is readable here BEFORE the
+      // submit rather than inferred from an empty `value` afterwards (B28 §3b).
+      const typed = await input.inputValue({ timeout: 4000 }).catch(() => "?");
       await page.keyboard.press("Enter").catch(() => {});
-      await page.waitForTimeout(3000);
+      log(`engagement typed=${JSON.stringify(typed)} for=${JSON.stringify(text)}`);
+      log(
+        `engagement submit=${JSON.stringify(text)} value=${JSON.stringify(await input.inputValue({ timeout: 4000 }).catch(() => "?"))} tools=${JSON.stringify(
+          await evalSafe(() => Array.from(document.querySelectorAll('[id^="tool."]')).map((el) => `${el.id}=${el.getAttribute("aria-pressed") ?? "-"}`).slice(0, 12), [] as string[]),
+        )} console=${JSON.stringify(consoleSince(mark).filter((row) => /engagementSubmit|engagementInput|dropped action|activeTool/i.test(row)).slice(-5)).slice(0, 800)}`,
+      );
     };
     await submit("brush");
-    const brushPreview = await dumpBrushPreview();
-    verdict("engagement-brush-verb", brushPreview.utility === "brush", `activeUtility=${brushPreview.utility}`);
+    // 🧰️ The PERSPECTIVE pane is the one the engagement line belongs to, and the only pane this verb arms;
+    // reading "whichever host has the longest brush-preview attribute" can land on an unarmed sibling that
+    // is publishing `select` perfectly correctly.
+    const brushSettle = await settleFor(paneUtilities, (panes) => panes.some((pane) => pane.window === "puzzle3d-main-perspective" && pane.activeUtility === "brush"));
+    verdict(
+      "engagement-brush-verb",
+      brushSettle.ok,
+      `activeUtility=${brushSettle.value.find((pane) => pane.window === "puzzle3d-main-perspective")?.activeUtility ?? "pane absent"} panes=${JSON.stringify(brushSettle.value)} heuristic=${(await dumpBrushPreview()).utility} waitedMs=${brushSettle.waitedMs}`,
+    );
     const beforeClear = JSON.stringify(await dumpInstances());
     await submit("clear");
-    const afterClear = JSON.stringify(await dumpInstances());
-    verdict("engagement-clear-is-a-noop", afterClear === beforeClear, `before=${beforeClear} after=${afterClear}`);
+    // 🧹️ A NEGATIVE assertion, so the budget is what the verdict spends proving nothing happened: it waits
+    // for a census change and passes when none arrives inside the window.
+    const clearSettle = await settleFor(async () => JSON.stringify(await dumpInstances()), (census) => census !== beforeClear, 10000);
+    verdict("engagement-clear-is-a-noop", !clearSettle.ok, `before=${beforeClear} after=${clearSettle.value} waitedMs=${clearSettle.waitedMs}`);
     await submit("fill 5");
-    const fillPressed = await page.evaluate(() => document.getElementById("tool.fill")?.getAttribute("aria-pressed") ?? null);
-    verdict("engagement-fill-verb", fillPressed === "true", `#tool.fill aria-pressed=${fillPressed}`);
+    // 🛠️ `#tool.fill` only exists while the footer Tool category is the active root, and a program-armed
+    // tool now reveals its own leaf (`programArmedToolRevealV1`, `🛠️ShellHelpers/🟦️.tsx`), so the mount of
+    // the tab and its pressed state are the same observable and both are polled here.
+    const fillSettle = await settleFor(
+      () => evalSafe(() => document.getElementById("tool.fill")?.getAttribute("aria-pressed") ?? null, null as string | null),
+      (pressed) => pressed === "true",
+    );
+    verdict("engagement-fill-verb", fillSettle.ok, `#tool.fill aria-pressed=${fillSettle.value} waitedMs=${fillSettle.waitedMs}`);
+    // 🛑️ Re-arms the utility this verdict aborts, so `rearmed` separates "nothing was armed" from "the
+    // abort did not disarm". Measured on wasm #50 (wave B29): the re-arm lands (`utility=brush`,
+    // `map_hit=true`) and the Escape that follows still reaches the guest reading `utility=fill
+    // map_hit=false` — `puzzle3d_fill_tool_active(ctx.config)` is still true from the `fill 5` above
+    // because the host's utility/tool mutual exclusion has not round-tripped into `active_tool_id` yet,
+    // and `engagement_abort` RETURNS untouched in that case (`🎮️commands/🛑️engagement-abort/🦀️.rs`:
+    // leaving fill is exclusively the host's own `setActiveTool ""`). The hop only became measurable at
+    // all once the typed line started reaching the guest, so this red is newly VISIBLE, not newly broken.
+    await submit("brush");
+    // 🧰️ Pane-scoped for the same reason the brush verb above is: an unarmed sibling pane publishing
+    // `select` made `rearmed=false` and then satisfied the abort's own `!== "brush"` predicate in the same
+    // breath, i.e. the verdict could pass without any disarm ever happening (wave B35).
+    const perspectiveUtility = async () => (await paneUtilities()).find((pane) => pane.window === "puzzle3d-main-perspective")?.activeUtility ?? null;
+    const rearmed = await settleFor(perspectiveUtility, (utility) => utility === "brush");
+    log(`engagement re-armed brush=${rearmed.ok} activeUtility=${rearmed.value} waitedMs=${rearmed.waitedMs}`);
     await page.keyboard.press("Escape").catch(() => {});
-    await page.waitForTimeout(2000);
-    const aborted = await dumpBrushPreview();
-    verdict("engagement-abort", aborted.utility !== "brush", `activeUtility=${aborted.utility}`);
+    const abortSettle = await settleFor(perspectiveUtility, (utility) => utility !== "brush", 15000);
+    verdict("engagement-abort", rearmed.ok && abortSettle.ok, `rearmed=${rearmed.ok} activeUtility=${abortSettle.value} waitedMs=${abortSettle.waitedMs}`);
     await dismissChrome();
   });
 
@@ -2248,11 +2660,31 @@ if (booted && interact) {
         }),
       [] as { surface: string; window: string; selectedIds: string[]; hovered: string | null; selectedInstances: string[] }[],
     );
+  /** 🧰️ The armed utility EVERY world pane publishes, keyed by its own window instance. `dumpBrushPreview`
+   * resolves one host by heuristic (`#puzzle3d-main-perspective [data-brush-preview-json]`, else the node
+   * with the longest preview attribute), which cannot distinguish "the armed pane publishes select" from
+   * "the read landed on the unarmed pane" — and the guest publishes one record PER pane
+   * (`puzzle3d.brushPreview.lane utility=brush` for the armed one interleaved with `utility=` for the
+   * others). A verdict about arming has to name its pane. */
+  const paneUtilities = async () =>
+    evalSafe(
+      () =>
+        Array.from(document.querySelectorAll<HTMLElement>("[data-interaction-json]")).map((element) => {
+          let activeUtility: string | null = null;
+          try {
+            activeUtility = (JSON.parse(element.getAttribute("data-interaction-json") || "{}") as { activeUtility?: string }).activeUtility ?? null;
+          } catch {
+            activeUtility = "parse-failed";
+          }
+          return { window: element.getAttribute("data-window-instance-id") ?? "?", surface: element.getAttribute("data-surface-id") ?? "?", activeUtility };
+        }),
+      [] as { window: string; surface: string; activeUtility: string | null }[],
+    );
   /** 🪜️ `ShellHost.applyLeftoverInteractionView` prints `[DEBUG] leftover InteractionView` the moment it
    * turns a guest response's `output` into the leftover overlay. Its presence after a row click pins the
    * failure to the RENDER hop; its absence pins it to the DISPATCH hop, which is the whole point of
    * measuring it instead of guessing. */
-  const leftoverViewTail = (since: number) => consoleBuf.slice(since).filter((row) => row.includes("leftover InteractionView")).slice(-4);
+  const leftoverViewTail = (since: number) => consoleSince(since).filter((row) => row.includes("leftover InteractionView")).slice(-4);
   /** 🔖️ Hands {@link clickTreeRowPoint}'s evaluate the row and part to measure — a page global rather than an
    * argument so the helper body stays closure-free and {@link evalSafe} can retry it verbatim. */
   const markTreeRowTarget = async (id: string, part: "label" | "background") => {
@@ -2313,7 +2745,7 @@ if (booted && interact) {
    * to the whole `role="treeitem"` shell, so an object row (which nests its vortices, hence a group row)
    * answered a centre click with nothing at all. */
   const selectViaOutliner = async () => {
-    await openPanel(/document|artifact|outliner|puzzle3d-play-document/i);
+    await openPanel(/document|artifact|outliner|puzzle3d-play-document/i, '[id^="panel:puzzle3d-play-document/"]');
     // 🌳️ A tree ROW, not the first node whose id happens to start with the outliner's surface prefix —
     // that one is the section wrapper, which owns no selection and swallowed the click. `treeitem`/
     // `tree-item` is what the interpreter marks a selectable row with.
@@ -2334,7 +2766,7 @@ if (booted && interact) {
     log(`selectViaOutliner treeRows=${JSON.stringify(rows).slice(0, 400)} target=${targetId ?? "none"} outlinerIds=${JSON.stringify(fallback).slice(0, 400)}`);
     const attempt = async (part: "label" | "background") => {
       if (!targetId) return { part, spot: null, interaction: [] as Awaited<ReturnType<typeof worldInteraction>>, leftover: [] as string[], ariaSelected: [] as string[] };
-      const consoleMark = consoleBuf.length;
+      const consoleMark = consoleCursor();
       const spot = await clickTreeRowPoint(targetId, part);
       await page.waitForTimeout(2500);
       const interaction = await worldInteraction();
@@ -2370,6 +2802,44 @@ if (booted && interact) {
       hop,
       selectedIds,
     };
+  };
+
+  /** 🎯️ The ONE precondition every selection-scoped verdict shares: something is selected, proven through the
+   * one reader those verdicts use — `data-selection-json` (wave B20 defect 1's `worldSurfaceSelectionDomV1`).
+   *
+   * 🧯️ A canvas press at a hardcoded pane fraction hits an instance only for the camera the framing happens to
+   * land on: after `catalogue-panel` adds objects, or after the actor restarts and the pane reframes, all three
+   * presses land on empty space and the step reads `before=n after=n` — indistinguishable from a refusing
+   * guest (B36 §1.4 M3, and this wave's own `inspection-object-fields populated=false` behind a live and OPEN
+   * panel). The outliner row is the fallback, and a precondition that could not be established at all is named
+   * as one in the verdict instead of being reported as the command's failure. */
+  const ensureWorldSelection = async (label: string, spot: { x: number; y: number }, attempts = 3) => {
+    const canvas = page.locator("canvas").last();
+    const worldSelectedIds = async () => (await worldInteraction()).flatMap((surface) => [...surface.selectedIds, ...surface.selectedInstances]);
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      await clickForestTable();
+      await canvas.click({ position: { x: spot.x, y: spot.y }, timeout: 5000 }).catch(() => {});
+      const settled = await settleFor(worldSelectedIds, (ids) => ids.length > 0, 8000);
+      if (settled.ok) {
+        log(`${label} precondition attempt=${attempt} via=pane-fraction ids=${JSON.stringify(settled.value).slice(0, 160)} state=${JSON.stringify((await selectionState()).selected).slice(0, 200)} waitedMs=${settled.waitedMs}`);
+        return { ids: settled.value, via: "pane-fraction" as const };
+      }
+      log(`${label} precondition attempt=${attempt} via=pane-fraction EMPTY waitedMs=${settled.waitedMs}`);
+    }
+    const row = await selectViaOutliner();
+    const settled = await settleFor(worldSelectedIds, (ids) => ids.length > 0, 8000);
+    log(`${label} precondition via=outliner row=${row.clicked} ids=${JSON.stringify(settled.value).slice(0, 160)} state=${JSON.stringify((await selectionState()).selected).slice(0, 200)} waitedMs=${settled.waitedMs} hop=${row.hop}`);
+    return { ids: settled.value, via: "outliner" as const };
+  };
+
+  /** 🧮️ One census per poll, WITH ids, so a late arrival names itself (`+["object-3"]`) instead of turning
+   * up as an unexplained `after=7` (B36 §1.4, the one `+1` that wave could not attribute). */
+  const censusTrace = (label: string, baseline: readonly string[]) => async () => {
+    const census = await dumpInstances();
+    const added = census.ids.filter((id) => !baseline.includes(id));
+    const removed = baseline.filter((id) => !census.ids.includes(id));
+    log(`${label} census count=${census.count} +${JSON.stringify(added).slice(0, 160)} -${JSON.stringify(removed).slice(0, 160)}`);
+    return census;
   };
 
   /** 🎯️ Projects one rendered instance's world position onto the Perspective pane's canvas, out of the two
@@ -2465,6 +2935,17 @@ if (booted && interact) {
 
   add("context-menu-rows", "§15", "mutate", process.argv.includes("--contextmenu") || battery, async () => {
     await dismissChrome();
+    // 🚫️ This step reads the OBJECT vocabulary, and with a utility armed the right-click opens the
+    // *suggestion* menu instead (`World3dHost`: `world3dSuggestionsGestureArmed(alt, hover) || brushArmed`).
+    // Leading the group ({@link STEP_LEADS_ITS_GROUP}) is not enough on its own — `--only=` can still put a
+    // brush lane first — so the precondition is also STATED here: puzzle3d has no `select` utility (the
+    // default is the empty id, published as `select`), so disarming is a second click on whatever is armed.
+    const armedBeforeMenu = (await dumpBrushPreview()).utility ?? "select";
+    if (armedBeforeMenu !== "select" && armedBeforeMenu !== "") {
+      await armUtility(armedBeforeMenu);
+      const disarmed = await settleFor(dumpBrushPreview, (preview) => (preview.utility ?? "select") === "select", 15000);
+      log(`context-menu disarm from=${armedBeforeMenu} to=${disarmed.value.utility ?? "select"} waitedMs=${disarmed.waitedMs}`);
+    }
     const framed = await frameForestTableAfterCensus();
     const picked = await selectViaOutliner();
     verdict(
@@ -2491,7 +2972,7 @@ if (booted && interact) {
       await page.mouse.click(point.x, point.y).catch(() => {});
       await page.waitForTimeout(1500);
     }
-    const consoleMark = consoleBuf.length;
+    const consoleMark = consoleCursor();
     await page.mouse.click(point.x, point.y, { button: "right" }).catch(() => {});
     await page.waitForTimeout(1500);
     const menuRows = async () =>
@@ -2527,10 +3008,9 @@ if (booted && interact) {
     const rows = [...merged.values()];
     log(`context-menu rows=${JSON.stringify(rows).slice(0, 1400)} groupsExpanded=${JSON.stringify(groups.map((group) => group.id))}`);
     log(`context-menu selectionAtRightClick=${JSON.stringify(await worldInteraction()).slice(0, 300)} chrome=${JSON.stringify((await chromeState()).menus).slice(0, 400)}`);
-    log(`context-menu console tail=${JSON.stringify(consoleBuf.slice(consoleMark).filter((row) => /context.?menu/i.test(row)).slice(-8)).slice(0, 800)}`);
-    log(`[DEBUG] context-menu console ingress=${JSON.stringify(consoleBuf.slice(consoleMark).filter((row) => /world3d-contextmenu/i.test(row)).slice(0, 8)).slice(0, 1400)}`);
+    log(`context-menu console tail=${JSON.stringify(consoleSince(consoleMark).filter((row) => /context.?menu/i.test(row)).slice(-8)).slice(0, 800)}`);
     log(
-      `[DEBUG] context-menu dom=${JSON.stringify(
+      `context-menu dom=${JSON.stringify(
         await evalSafe(
           () => ({
             menus: document.querySelectorAll('[role="menu"]').length,
@@ -2543,8 +3023,17 @@ if (booted && interact) {
         ),
       ).slice(0, 1200)}`,
     );
-    log(`[DEBUG] context-menu console menuish=${JSON.stringify(consoleBuf.slice(consoleMark).filter((row) => /menu|dropped|surface|refus|Error|error/i.test(row)).slice(0, 14)).slice(0, 2200)}`);
-    verdict("context-menu-opens", rows.length > 0, `rows=${rows.length}`);
+    // 🚦 `ContextMenuController` opens only on the GUEST's reply (`AppChannelClient.contextMenu`, one
+    // `AppFrame::ContextMenu`), which queues behind every already-serialized command ingress for the
+    // same actor. Measured in isolation: ~18 polls. Measured inside a full battery with 11 vortices
+    // and a hovered vortex: still nothing at 30. Counting the ingresses that overtook it is what
+    // separates "the route is broken" from "the reply is starved".
+    const ingressBacklog = consoleSince(consoleMark).filter((row) => /command ingress lane/.test(row)).length;
+    verdict(
+      "context-menu-opens",
+      rows.length > 0,
+      `rows=${rows.length} polls=${polls} ingressesWhileWaiting=${ingressBacklog} armedBefore=${armedBeforeMenu} armedAtRightClick=${(await dumpBrushPreview()).utility ?? "select"} — the menu waits on one guest reply queued behind these; a short poll budget reads a starved reply as a missing one`,
+    );
     const ids = new Set(rows.map((r) => r.id));
     const missing = ["duplicate", "select-same-kind", "zoom", "delete", "hide-show", "lock-unlock"].filter((id) => !ids.has(id));
     verdict("context-menu-object-vocabulary", rows.length > 0 && missing.length === 0, `missing=${JSON.stringify(missing)} present=${JSON.stringify([...ids])}`);
@@ -2559,19 +3048,19 @@ if (booted && interact) {
       // only one pane is sampled (wave B20 defect 2).
       const panesBefore = await windowHostState();
       const cameraBefore = panesBefore.find((pane) => pane.id === "puzzle3d-main-perspective")?.camera ?? null;
-      const zoomMark = consoleBuf.length;
+      const zoomMark = consoleCursor();
       await page.locator('[id="zoom"]').last().click({ force: true, timeout: 4000 }).catch(() => {});
-      await page.waitForTimeout(3000);
-      const panesAfter = await windowHostState();
+      const zoomSettle = await settleFor(windowHostState, (panes) => (panes.find((pane) => pane.id === "puzzle3d-main-perspective")?.camera ?? null) !== cameraBefore);
+      const panesAfter = zoomSettle.value;
       const cameraAfter = panesAfter.find((pane) => pane.id === "puzzle3d-main-perspective")?.camera ?? null;
       const movedPanes = panesAfter.filter((pane) => pane.camera !== (panesBefore.find((other) => other.id === pane.id)?.camera ?? null)).map((pane) => pane.id);
       log(`zoom panes before=${JSON.stringify(panesBefore.map((pane) => ({ id: pane.id, surface: pane.surface, camera: String(pane.camera).slice(0, 90) })))}`);
       log(`zoom panes after=${JSON.stringify(panesAfter.map((pane) => ({ id: pane.id, surface: pane.surface, camera: String(pane.camera).slice(0, 90) })))} moved=${JSON.stringify(movedPanes)}`);
-      log(`zoom console tail=${JSON.stringify(consoleBuf.slice(zoomMark).filter((row) => /focus|camera|window-required|windowConfig/i.test(row)).slice(-10)).slice(0, 1000)}`);
+      log(`zoom console tail=${JSON.stringify(consoleSince(zoomMark).filter((row) => /focus|camera|window-required|windowConfig/i.test(row)).slice(-10)).slice(0, 1000)}`);
       verdict(
         "context-menu-zoom-moves-camera",
         Boolean(cameraBefore) && cameraBefore !== cameraAfter,
-        `before=${String(cameraBefore).slice(0, 100)} after=${String(cameraAfter).slice(0, 100)} movedPanes=${JSON.stringify(movedPanes)} newFaults=${faults.length - faultsBefore} newHardFaults=${hardFaults.length - hardBefore}`,
+        `before=${String(cameraBefore).slice(0, 100)} after=${String(cameraAfter).slice(0, 100)} movedPanes=${JSON.stringify(movedPanes)} waitedMs=${zoomSettle.waitedMs} newFaults=${faults.length - faultsBefore} newHardFaults=${hardFaults.length - hardBefore}`,
       );
     }
     await dismissChrome();
@@ -2579,7 +3068,7 @@ if (booted && interact) {
 
   add("outliner-rows", "§17", "mutate", process.argv.includes("--outliner") || battery, async () => {
     await dismissChrome();
-    const opened = await openPanel(/document|artifact|outliner|puzzle3d-play-document/i);
+    const opened = await openPanel(/document|artifact|outliner|puzzle3d-play-document/i, '[id^="panel:puzzle3d-play-document/"]');
     verdict("outliner-panel-opens", opened.opened, `tab=${opened.id} tabs=${JSON.stringify(opened.tabs).slice(0, 400)}`);
     if (!opened.opened) return;
     const rowDump = async () =>
@@ -2627,21 +3116,18 @@ if (booted && interact) {
         [] as { surface: string; hidden: string[] }[],
       );
     const hiddenBefore = await hiddenScales();
-    const hideMark = consoleBuf.length;
+    const hideMark = consoleCursor();
     await target.click({ force: true, timeout: 4000 }).catch(() => {});
     // 🕰️ POLLED, not a fixed wait: the document mutation, its history patch and the `refreshUi` that
     // repaints the panel are three separate round trips, so a single 3 s sample cannot tell "never
     // repainted" from "had not repainted yet".
-    let afterHide = await rowDump();
-    for (let attempt = 0; attempt < 8 && JSON.stringify(afterHide) === JSON.stringify(before); attempt++) {
-      await page.waitForTimeout(1000);
-      afterHide = await rowDump();
-    }
+    const hideSettle = await settleFor(rowDump, (rows) => JSON.stringify(rows) !== JSON.stringify(before));
+    const afterHide = hideSettle.value;
     const hiddenAfter = await hiddenScales();
-    log(`outliner hide clicked=${JSON.stringify(clicked)} worldHiddenBefore=${JSON.stringify(hiddenBefore)} worldHiddenAfter=${JSON.stringify(hiddenAfter)}`);
-    log(`outliner hide console tail=${JSON.stringify(consoleBuf.slice(hideMark).filter((row) => /selectionFlag|performInvocation|command ingress|ui-refresh|refreshUi|unchanged|dirty|scope|panel:|puzzle\.3d\.play\.document/i.test(row)).slice(-28)).slice(0, 4000)}`);
+    log(`outliner hide clicked=${JSON.stringify(clicked)} waitedMs=${hideSettle.waitedMs} worldHiddenBefore=${JSON.stringify(hiddenBefore)} worldHiddenAfter=${JSON.stringify(hiddenAfter)}`);
+    log(`outliner hide console tail=${JSON.stringify(consoleSince(hideMark).filter((row) => /selectionFlag|performInvocation|command ingress|ui-refresh|refreshUi|unchanged|dirty|scope|panel:|puzzle\.3d\.play\.document/i.test(row)).slice(-28)).slice(0, 4000)}`);
     const hideApplied = JSON.stringify(afterHide) !== JSON.stringify(before);
-    verdict("outliner-hide-applies", hideApplied, `beforeHead=${JSON.stringify(before.slice(0, 3))} afterHead=${JSON.stringify(afterHide.slice(0, 3))} worldHidden=${JSON.stringify(hiddenAfter)} clicked=${JSON.stringify(clicked)}`);
+    verdict("outliner-hide-applies", hideApplied, `beforeHead=${JSON.stringify(before.slice(0, 3))} afterHead=${JSON.stringify(afterHide.slice(0, 3))} worldHidden=${JSON.stringify(hiddenAfter)} clicked=${JSON.stringify(clicked)} waitedMs=${hideSettle.waitedMs}`);
     if (!hideApplied) {
       verdict("outliner-show-restores", false, "not reachable — the Hide row action itself never changed the row, so Show has nothing to restore");
       return;
@@ -2657,18 +3143,21 @@ if (booted && interact) {
       return;
     }
     await showButton.click({ force: true, timeout: 4000 }).catch(() => {});
-    await page.waitForTimeout(3000);
-    const afterShow = await rowDump();
+    // 🕰️ Polled like the Hide half above: B27 §5.2 measured this restore at 864 ms on an idle page and the
+    // Hide half at 9.2 s under load, so the fixed 3 s sample scored the machine, not the restore. The old
+    // note's `flag_args hardcodes value:true` guess is gone — B10 §6's law proves the row asks for the
+    // inverse of the state it renders.
+    const showSettle = await settleFor(rowDump, (rows) => JSON.stringify(rows) === JSON.stringify(before));
     verdict(
       "outliner-show-restores",
-      JSON.stringify(afterShow) === JSON.stringify(before),
-      `restored=${JSON.stringify(afterShow) === JSON.stringify(before)} afterShowHead=${JSON.stringify(afterShow.slice(0, 3))} — checklist §17 predicts flag_args hardcodes value:true so Show is a no-op`,
+      showSettle.ok,
+      `restored=${showSettle.ok} afterShowHead=${JSON.stringify(showSettle.value.slice(0, 3))} waitedMs=${showSettle.waitedMs}`,
     );
   });
 
   add("catalogue-panel", "§18", "mutate", process.argv.includes("--catalogue") || battery, async () => {
     await dismissChrome();
-    const opened = await openPanel(/kinds|catalogue|catalog|bauteil/i);
+    const opened = await openPanel(/kinds|catalogue|catalog|bauteil/i, '[id^="puzzle3d-play-kinds"]');
     verdict("catalogue-panel-opens", opened.opened, `tab=${opened.id} tabs=${JSON.stringify(opened.tabs).slice(0, 400)}`);
     if (!opened.opened) return;
     const beforeAdd = await dumpInstances();
@@ -2696,7 +3185,7 @@ if (booted && interact) {
       // label, and fall back to the shell. Both observables are recorded: whether the click reached the
       // action channel at all (`performInvocation actionId:"addObjectKind"`), and whether the guest
       // answered (the ingress lane, a refusal notice, a fault).
-      const addMark = consoleBuf.length;
+      const addMark = consoleCursor();
       const label = row.locator('[data-slot="tree-label"]').first();
       // 🎯️ What is actually ON TOP of the row's label, before pressing it. `click({force:true})` skips
       // the "receives pointer events" check, so an overlay covering the panel eats the press and the
@@ -2724,15 +3213,13 @@ if (booted && interact) {
       }, null as { label: string; top: string | null; covered: boolean; activatableRow: string | null; topChain: string[] } | null);
       log(`catalogue add hit-test=${JSON.stringify(hit)}`);
       await ((await countSafe(label)) ? label : row).click({ force: true, timeout: 4000 }).catch(() => {});
-      let afterAdd = await dumpInstances();
-      for (let attempt = 0; attempt < 8 && afterAdd.count === beforeAdd.count; attempt++) {
-        await page.waitForTimeout(1000);
-        afterAdd = await dumpInstances();
-      }
-      log(`catalogue add console tail=${JSON.stringify(consoleBuf.slice(addMark).filter((line) => /addObjectKind|performInvocation|command ingress|dropped action|refus|fault|notice|window-required|puzzle3d-add-kind/i.test(line)).slice(-20)).slice(0, 3000)}`);
-      verdict("catalogue-add-object-kind", afterAdd.count > beforeAdd.count, `before=${beforeAdd.count} after=${afterAdd.count} ids=${JSON.stringify(afterAdd.ids).slice(0, 200)} hitTest=${JSON.stringify(hit).slice(0, 600)}`);
-      const sel = await selectionState();
-      verdict("catalogue-add-selects-new-object", afterAdd.count > beforeAdd.count && sel.selected.some((row) => afterAdd.ids.some((objectId) => row.includes(objectId))), `added=${afterAdd.count - beforeAdd.count} selected=${JSON.stringify(sel.selected).slice(0, 220)} ids=${JSON.stringify(afterAdd.ids)}`);
+      const addSettle = await settleFor(dumpInstances, (census) => census.count > beforeAdd.count);
+      const afterAdd = addSettle.value;
+      log(`catalogue add console tail=${JSON.stringify(consoleSince(addMark).filter((line) => /addObjectKind|performInvocation|command ingress|dropped action|refus|fault|notice|window-required|puzzle3d-add-kind/i.test(line)).slice(-20)).slice(0, 3000)}`);
+      verdict("catalogue-add-object-kind", addSettle.ok, `before=${beforeAdd.count} after=${afterAdd.count} waitedMs=${addSettle.waitedMs} ids=${JSON.stringify(afterAdd.ids).slice(0, 200)} hitTest=${JSON.stringify(hit).slice(0, 600)}`);
+      const selSettle = await settleFor(selectionState, (state) => addSettle.ok && state.selected.some((row) => afterAdd.ids.some((objectId) => row.includes(objectId))), 15000);
+      const sel = selSettle.value;
+      verdict("catalogue-add-selects-new-object", selSettle.ok, `added=${afterAdd.count - beforeAdd.count} selected=${JSON.stringify(sel.selected).slice(0, 220)} ids=${JSON.stringify(afterAdd.ids)} waitedMs=${selSettle.waitedMs}`);
     }
     const beforeDrop = await dumpInstances();
     const dropped = await page.evaluate(() => {
@@ -2751,32 +3238,30 @@ if (booted && interact) {
       source.dispatchEvent(new DragEvent("dragend", { bubbles: true, dataTransfer: transfer }));
       return { ran: true, payload: payload.slice(0, 120) };
     });
-    await page.waitForTimeout(3500);
-    const afterDrop = await dumpInstances();
-    log(`catalogue drag-drop ${JSON.stringify(dropped)} before=${JSON.stringify(beforeDrop)} after=${JSON.stringify(afterDrop)}`);
-    verdict("catalogue-drag-drop", dropped.ran && afterDrop.count > beforeDrop.count, `ran=${dropped.ran} payload=${dropped.payload} before=${beforeDrop.count} after=${afterDrop.count}`);
+    const dropSettle = await settleFor(dumpInstances, (census) => census.count > beforeDrop.count);
+    const afterDrop = dropSettle.value;
+    log(`catalogue drag-drop ${JSON.stringify(dropped)} before=${JSON.stringify(beforeDrop)} after=${JSON.stringify(afterDrop)} waitedMs=${dropSettle.waitedMs}`);
+    verdict("catalogue-drag-drop", dropped.ran && dropSettle.ok, `ran=${dropped.ran} payload=${dropped.payload} before=${beforeDrop.count} after=${afterDrop.count} waitedMs=${dropSettle.waitedMs}`);
   });
 
   add("selection-keybindings", "§22", "mutate", process.argv.includes("--keys") || battery, async () => {
     await dismissChrome();
     const framed = await frameForestTableAfterCensus();
-    const canvas = page.locator("canvas").last();
-    const select = async () => {
-      await clickForestTable();
-      await canvas.click({ position: { x: framed.table.x, y: framed.table.y }, timeout: 5000 }).catch(() => {});
-      await page.waitForTimeout(1500);
-    };
-    await select();
+    // 🎯️ Every verdict in this lane has "something is selected" as its precondition; {@link ensureWorldSelection}
+    // establishes it, proves it through `data-selection-json`, and names the route it took.
+    const select = async () => (await ensureWorldSelection("keybindings", framed.table)).ids;
+    const selectedForDup = await select();
     const beforeDup = await dumpInstances();
+    const dupCensus = censusTrace("duplicate", beforeDup.ids);
     await page.keyboard.press("Meta+d").catch(() => {});
-    await page.waitForTimeout(3000);
-    let afterDup = await dumpInstances();
-    if (afterDup.count === beforeDup.count) {
+    let dup = await settleFor(dupCensus, (census) => census.count > beforeDup.count, 15000);
+    if (!dup.ok) {
       await page.keyboard.press("Control+d").catch(() => {});
-      await page.waitForTimeout(3000);
-      afterDup = await dumpInstances();
+      const retry = await settleFor(dupCensus, (census) => census.count > beforeDup.count, 15000);
+      dup = { value: retry.value, waitedMs: dup.waitedMs + retry.waitedMs, ok: retry.ok };
     }
-    verdict("duplicate-selection", afterDup.count > beforeDup.count, `before=${beforeDup.count} after=${afterDup.count}`);
+    const afterDup = dup.value;
+    verdict("duplicate-selection", dup.ok, `selected=${JSON.stringify(selectedForDup).slice(0, 120)} before=${beforeDup.count} after=${afterDup.count} added=${JSON.stringify(afterDup.ids.filter((id) => !beforeDup.ids.includes(id))).slice(0, 120)} waitedMs=${dup.waitedMs}`);
     const sel = await selectionState();
     verdict("duplicate-reselects-clone", afterDup.count > beforeDup.count && sel.selected.length > 0, `selected=${JSON.stringify(sel.selected).slice(0, 220)}`);
     await select();
@@ -2788,29 +3273,33 @@ if (booted && interact) {
     await orbitPerspectiveAway();
     const cameraBefore = await cameraOf("puzzle3d-main-perspective");
     await page.keyboard.press("f").catch(() => {});
-    const cameraAfter = await cameraSettled("puzzle3d-main-perspective", cameraBefore, 8000);
+    const focus = await cameraSettled("puzzle3d-main-perspective", cameraBefore);
     verdict(
       "focus-selection",
-      Boolean(cameraBefore) && cameraBefore !== cameraAfter,
-      `selected=${JSON.stringify(focusSelected).slice(0, 120)} before=${String(cameraBefore).slice(0, 100)} after=${String(cameraAfter).slice(0, 100)}`,
+      Boolean(cameraBefore) && focus.moved,
+      `selected=${JSON.stringify(focusSelected).slice(0, 120)} before=${String(cameraBefore).slice(0, 100)} after=${String(focus.camera).slice(0, 100)} waitedMs=${focus.waitedMs}`,
     );
-    await select();
+    const selectedForDelete = await select();
     const beforeDelete = await dumpInstances();
+    const deleteCensus = censusTrace("delete", beforeDelete.ids);
     await page.keyboard.press("Delete").catch(() => {});
-    await page.waitForTimeout(3000);
-    let afterDelete = await dumpInstances();
-    if (afterDelete.count === beforeDelete.count) {
+    let removal = await settleFor(deleteCensus, (census) => census.count < beforeDelete.count, 15000);
+    if (!removal.ok) {
       await page.keyboard.press("Backspace").catch(() => {});
-      await page.waitForTimeout(3000);
-      afterDelete = await dumpInstances();
+      const retry = await settleFor(deleteCensus, (census) => census.count < beforeDelete.count, 15000);
+      removal = { value: retry.value, waitedMs: removal.waitedMs + retry.waitedMs, ok: retry.ok };
     }
-    verdict("delete-selection", afterDelete.count < beforeDelete.count, `before=${beforeDelete.count} after=${afterDelete.count}`);
+    verdict(
+      "delete-selection",
+      removal.ok && selectedForDelete.length > 0,
+      `selected=${JSON.stringify(selectedForDelete).slice(0, 120)} before=${beforeDelete.count} after=${removal.value.count} removed=${JSON.stringify(beforeDelete.ids.filter((id) => !removal.value.ids.includes(id))).slice(0, 120)} arrived=${JSON.stringify(removal.value.ids.filter((id) => !beforeDelete.ids.includes(id))).slice(0, 120)} waitedMs=${removal.waitedMs}`,
+    );
   });
 
-  log(`plan: ${JSON.stringify(GROUP_ORDER.map((group) => ({ group, steps: plan.filter((entry) => entry.group === group).map((entry) => entry.name) })))}`);
+  log(`plan: ${JSON.stringify(GROUP_ORDER.map((group) => ({ group, steps: groupEntries(group).map((entry) => entry.name) })))}`);
   let ranGroup = false;
   for (const group of GROUP_ORDER) {
-    const entries = plan.filter((entry) => entry.group === group);
+    const entries = groupEntries(group);
     if (!entries.length) continue;
     if (ranGroup && reloadBetweenGroups) {
       log(`reloading page before group ${group}`);

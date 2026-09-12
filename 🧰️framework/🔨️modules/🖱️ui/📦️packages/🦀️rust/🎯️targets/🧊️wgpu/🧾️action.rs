@@ -1,7 +1,7 @@
 //! 🧾 Fixed-credit action construction and FIFO ownership for interactive renderer input.
 
 use crate::wgpu::ActionDescriptor;
-use dsl::DslValue;
+use dsl::{DslValue, Number};
 
 pub const ACTION_QUEUE_ITEM_CAPACITY: usize = 256;
 pub const ACTION_BATCH_ITEM_CAPACITY: usize = 16;
@@ -43,11 +43,14 @@ struct TextSpan {
     len: u16,
 }
 
+/// 🔢️ Carries `dsl::Number` variant-for-variant rather than a widened `f64`, so an integer queued
+/// through the ring rehydrates as the same integer `copy_value` flattened — `{"value": 7}` came back
+/// as `7.0` while this held `f64`.
 #[derive(Clone, Copy, Debug)]
 enum FlatValue {
     Null,
     Bool(bool),
-    Number(f64),
+    Number(Number),
     String(TextSpan),
     Array,
     Object,
@@ -105,7 +108,7 @@ impl BoundedAction {
         match node.value {
             FlatValue::Null => Ok(DslValue::Null),
             FlatValue::Bool(value) => Ok(DslValue::Bool(value)),
-            FlatValue::Number(value) => Ok(DslValue::float(value)),
+            FlatValue::Number(value) => Ok(DslValue::Number(value)),
             FlatValue::String(span) => Ok(DslValue::String(self.text(span)?.to_owned())),
             FlatValue::Array => {
                 let mut values = Vec::with_capacity(self.child_count(node)?);
@@ -209,7 +212,7 @@ impl BoundedActionBuilder {
     }
 
     pub fn number(&mut self, key: Option<&str>, value: f64) -> Result<(), BoundedActionFault> {
-        self.push_leaf(key, FlatValue::Number(value))
+        self.push_leaf(key, FlatValue::Number(Number::Float(value)))
     }
 
     pub fn string(&mut self, key: Option<&str>, value: &str) -> Result<(), BoundedActionFault> {
@@ -281,7 +284,7 @@ impl BoundedActionBuilder {
         match value {
             DslValue::Null => self.null(key),
             DslValue::Bool(value) => self.boolean(key, *value),
-            DslValue::Number(value) => self.number(key, value.as_f64()),
+            DslValue::Number(value) => self.push_leaf(key, FlatValue::Number(*value)),
             DslValue::String(value) => self.string(key, value),
             DslValue::Array(values) => {
                 self.begin_array(key)?;

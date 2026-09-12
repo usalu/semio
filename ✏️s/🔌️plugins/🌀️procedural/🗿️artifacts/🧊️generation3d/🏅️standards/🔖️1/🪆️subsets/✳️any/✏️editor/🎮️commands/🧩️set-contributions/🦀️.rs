@@ -56,7 +56,7 @@ pub fn apply(
     if !session.invalidate_for_flow_extension_registry(generation) {
         return Ok(Emit::default());
     }
-    Ok(Emit { effects: preview_windows.iter().map(|(window_id, window_kind_id)| super::flow_eval_tick::rearm(window_id, window_kind_id, 105)).collect(), ..Default::default() })
+    Ok(Emit { effects: crate::preview_eval::rearm_attached_previews(session, preview_windows), ..Default::default() })
 }
 
 /// 🧩️ The `app_commands!` row. Its `handle(payload, doc, cfg, ctx)` signature is framework-fixed and

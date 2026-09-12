@@ -1,0 +1,549 @@
+{
+  "format": "semio.generation3d.preview-cancel",
+  "version": 1,
+  "note": "The CANCELLATION law of the self-dispatched flowEvalTick chain. `🔒️tick-latch.json` says whether a tick may be armed; this says what an explicit cancelPreviewEval gesture does to work already in flight — in this process, in the geometry extension's process, and in the status object the preview window publishes. Language-agnostic: an implementation in any language must replay these sequences and answer the same statuses, the same emitted invocations and the same resumability.",
+  "cancelAction": "cancelPreviewEval",
+  "cancelCapability": [
+    "evaluateCancel",
+    "tessellateCancel"
+  ],
+  "cancelResponseAction": "flowTessellateCancelResolve",
+  "geometryExtensionId": "brep",
+  "phaseLabels": {
+    "idle": {
+      "en": "Idle",
+      "de": "Bereit"
+    },
+    "samplingEdges": {
+      "en": "Sampling edges",
+      "de": "Kanten werden abgetastet"
+    },
+    "meshingFaces": {
+      "en": "Meshing faces",
+      "de": "Flächen werden vernetzt"
+    },
+    "cancelled": {
+      "en": "Cancelled",
+      "de": "Abgebrochen"
+    },
+    "faulted": {
+      "en": "Geometry extension unavailable",
+      "de": "Geometrie-Erweiterung nicht verfügbar"
+    }
+  },
+  "laws": {
+    "cancellableMeansWorkInFlight": "`cancellable` is true whenever ANY work a cancel would stop is outstanding — a tessellation in flight, an extension answer outstanding on any window, or a scheduled tick. The tessellation ledger alone is not enough: an `evaluate` round trip admits no tessellation, so a ledger-only predicate reads `idle`/not-cancellable through the slowest half of a boolean preview.",
+    "cancelFreezesProgress": "A cancel stamps `phase: \"cancelled\"` and leaves unitsDone/unitsTotal/facesDone/facesTotal exactly where they were. Progress is evidence of work already paid for; a cancel retires the work, never the record of it.",
+    "cancelIsNotCancellable": "Once cancelled, nothing is left to stop, so `cancellable` is false until work resumes.",
+    "cancelReachesTheExtensionActor": "The kernel jobs live in the geometry extension's own wasm instance behind its own process-global registries, so the guest's linked copies are always empty from the app's side. The gesture therefore emits exactly TWO invocations addressed at the geometry extension — `evaluateCancel` for the parked budgeted operator evaluations and `tessellateCancel` for the mesh jobs — both answering on `flowTessellateCancelResolve`. Two doors, because there are two registries and each names its own; a boolean stopped mid-validation is in the first and in neither of the others.",
+    "unaddressableKernelEmitsNothing": "An unaddressable geometry extension has no actor to tell; the local half of the cancel still happens and no invocation is emitted.",
+    "cancelQuiescesTheLatch": "Every window's arming latch falls back to armed=false, inFlight=0, owed=false, unfinished=false. Removing the latch outright would make the host refresh poll read `this window never ticked` and re-arm the very chain the user stopped.",
+    "noStaleChunksSurviveACancel": "The half-received mesh body AND the chunk cursor that addresses it are dropped together. Keeping the cursor makes the next evaluation of the same handle ask for chunk n and concatenate it onto nothing — a silently truncated pack body.",
+    "aLaterGestureResumes": "Only a gesture resumes a cancelled chain. The first tick that actually begins clears the cancelled banner.",
+    "everyPreviewWindowPublishesTheContract": "The status object is a property of a World3d PREVIEW WINDOW, not of a surface: all three of them — the editor's edit-mode preview, the editor's generate-mode generation preview and the viewer's read-only preview — publish the identical schema from the identical projection. A window that renders meshes while publishing no phase/progress/cancellable is the defect this section exists to forbid: the user can watch nothing and stop nothing, and the shell has no cancelAction to declare.",
+    "theCancelVerbIsLearnedFromTheStatus": "The shell never learns the cancel verb from code — it reads `cancelAction` off the published status and declares it for exactly as long as `cancellable` holds. A surface that publishes the contract must therefore also DECLARE that command in its manifest, or the gesture is dropped by the host's declaredAction gate before the app ever sees it.",
+    "aSessionlessWindowStillPublishes": "A preview window rendered without a retained evaluation session (a surface's marks-free render entry point) publishes the SAME schema with idle phase, zero progress and nothing to cancel. Publishing nothing is never an option."
+  },
+  "rows": [
+    {
+      "id": "cancel-mid-tessellation-freezes-progress",
+      "why": "The headline case: two handles admitted, one step folded, then the user stops it.",
+      "sequence": [
+        {
+          "event": "admit",
+          "handle": "brep:solid-1"
+        },
+        {
+          "event": "admit",
+          "handle": "brep:solid-2"
+        },
+        {
+          "event": "step",
+          "handle": "brep:solid-1",
+          "phase": "meshingFaces",
+          "unitsDone": 7,
+          "unitsTotal": 24,
+          "facesDone": 2,
+          "facesTotal": 9
+        },
+        {
+          "event": "cancel"
+        }
+      ],
+      "statusBefore": {
+        "phase": "meshingFaces",
+        "cancellable": true,
+        "unitsDone": 7,
+        "unitsTotal": 24,
+        "facesDone": 2,
+        "facesTotal": 9,
+        "inFlight": 1
+      },
+      "statusAfter": {
+        "phase": "cancelled",
+        "cancellable": false,
+        "unitsDone": 7,
+        "unitsTotal": 24,
+        "facesDone": 2,
+        "facesTotal": 9,
+        "inFlight": 0
+      },
+      "invocations": [
+        {
+          "extension": "brep",
+          "capability": "evaluateCancel",
+          "responseAction": "flowTessellateCancelResolve"
+        },
+        {
+          "extension": "brep",
+          "capability": "tessellateCancel",
+          "responseAction": "flowTessellateCancelResolve"
+        }
+      ],
+      "ticksAfterCancel": 0,
+      "chunkCursorAfterCancel": 0,
+      "resumesOnGesture": true,
+      "surfaces": [
+        "editor",
+        "viewer"
+      ]
+    },
+    {
+      "id": "cancel-during-evaluate-is-still-cancellable",
+      "why": "A cancel raised before any tessellation was admitted — the ledger has no row to stamp, so a ledger-only status would publish `idle` and swallow the gesture.",
+      "sequence": [
+        {
+          "event": "parkExtension",
+          "count": 1
+        },
+        {
+          "event": "cancel"
+        }
+      ],
+      "statusBefore": {
+        "phase": "idle",
+        "cancellable": true,
+        "unitsDone": 0,
+        "unitsTotal": 0,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0
+      },
+      "statusAfter": {
+        "phase": "cancelled",
+        "cancellable": false,
+        "unitsDone": 0,
+        "unitsTotal": 0,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0
+      },
+      "invocations": [
+        {
+          "extension": "brep",
+          "capability": "evaluateCancel",
+          "responseAction": "flowTessellateCancelResolve"
+        },
+        {
+          "extension": "brep",
+          "capability": "tessellateCancel",
+          "responseAction": "flowTessellateCancelResolve"
+        }
+      ],
+      "ticksAfterCancel": 0,
+      "chunkCursorAfterCancel": 0,
+      "resumesOnGesture": true,
+      "surfaces": [
+        "editor",
+        "viewer"
+      ]
+    },
+    {
+      "id": "cancel-drops-the-chunk-cursor-with-the-body",
+      "why": "A multi-chunk transfer stopped halfway. The next evaluation must ask for chunk 0 again.",
+      "sequence": [
+        {
+          "event": "admit",
+          "handle": "brep:solid-3"
+        },
+        {
+          "event": "chunk",
+          "handle": "brep:solid-3",
+          "chunk": 0,
+          "chunks": 3
+        },
+        {
+          "event": "parkExtension",
+          "count": 1
+        },
+        {
+          "event": "cancel"
+        }
+      ],
+      "statusBefore": {
+        "phase": "transferring",
+        "cancellable": true,
+        "unitsDone": 24,
+        "unitsTotal": 24,
+        "facesDone": 9,
+        "facesTotal": 9,
+        "inFlight": 0
+      },
+      "statusAfter": {
+        "phase": "cancelled",
+        "cancellable": false,
+        "unitsDone": 24,
+        "unitsTotal": 24,
+        "facesDone": 9,
+        "facesTotal": 9,
+        "inFlight": 0
+      },
+      "invocations": [
+        {
+          "extension": "brep",
+          "capability": "evaluateCancel",
+          "responseAction": "flowTessellateCancelResolve"
+        },
+        {
+          "extension": "brep",
+          "capability": "tessellateCancel",
+          "responseAction": "flowTessellateCancelResolve"
+        }
+      ],
+      "ticksAfterCancel": 0,
+      "chunkCursorAfterCancel": 0,
+      "resumesOnGesture": true,
+      "surfaces": [
+        "editor",
+        "viewer"
+      ]
+    },
+    {
+      "id": "cancelling-twice-is-idempotent",
+      "why": "The gesture is a state, not a delta.",
+      "sequence": [
+        {
+          "event": "admit",
+          "handle": "brep:solid-4"
+        },
+        {
+          "event": "cancel"
+        },
+        {
+          "event": "cancel"
+        }
+      ],
+      "statusBefore": {
+        "phase": "samplingEdges",
+        "cancellable": true,
+        "unitsDone": 0,
+        "unitsTotal": 0,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 1
+      },
+      "statusAfter": {
+        "phase": "cancelled",
+        "cancellable": false,
+        "unitsDone": 0,
+        "unitsTotal": 0,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0
+      },
+      "invocations": [
+        {
+          "extension": "brep",
+          "capability": "evaluateCancel",
+          "responseAction": "flowTessellateCancelResolve"
+        },
+        {
+          "extension": "brep",
+          "capability": "tessellateCancel",
+          "responseAction": "flowTessellateCancelResolve"
+        },
+        {
+          "extension": "brep",
+          "capability": "evaluateCancel",
+          "responseAction": "flowTessellateCancelResolve"
+        },
+        {
+          "extension": "brep",
+          "capability": "tessellateCancel",
+          "responseAction": "flowTessellateCancelResolve"
+        }
+      ],
+      "ticksAfterCancel": 0,
+      "chunkCursorAfterCancel": 0,
+      "resumesOnGesture": true,
+      "surfaces": [
+        "editor",
+        "viewer"
+      ]
+    },
+    {
+      "id": "a-stale-answer-after-a-cancel-is-ignored",
+      "why": "The in-flight request the host had already sent still answers. It must not revive the chain.",
+      "sequence": [
+        {
+          "event": "admit",
+          "handle": "brep:solid-5"
+        },
+        {
+          "event": "cancel"
+        },
+        {
+          "event": "lateAnswer",
+          "handle": "brep:solid-5"
+        }
+      ],
+      "statusBefore": {
+        "phase": "samplingEdges",
+        "cancellable": true,
+        "unitsDone": 0,
+        "unitsTotal": 0,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 1
+      },
+      "statusAfter": {
+        "phase": "cancelled",
+        "cancellable": false,
+        "unitsDone": 0,
+        "unitsTotal": 0,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0
+      },
+      "invocations": [
+        {
+          "extension": "brep",
+          "capability": "evaluateCancel",
+          "responseAction": "flowTessellateCancelResolve"
+        },
+        {
+          "extension": "brep",
+          "capability": "tessellateCancel",
+          "responseAction": "flowTessellateCancelResolve"
+        }
+      ],
+      "ticksAfterCancel": 0,
+      "chunkCursorAfterCancel": 0,
+      "resumesOnGesture": true,
+      "surfaces": [
+        "editor",
+        "viewer"
+      ]
+    }
+  ],
+  "hostDoor": {
+    "note": "The host half. `driveInboundRequest` reads its AbortSignal at TURN BOUNDARIES, so a cancel retires a parked multi-turn request and never half-abandons a turn already handed to the worker. `PluginWasmHandle.invoke` forwards `context.signal` into it; the shell registers one AbortController per in-flight extension request, keyed by the REQUESTING actor, and the surface's declared cancel action aborts that actor's set.",
+    "answerStatus": "cancelled",
+    "faultCode": "extension.request-cancelled",
+    "abortedAtTurnBoundary": true
+  },
+  "statusContract": {
+    "note": "The status object every World3d preview window publishes on `World3dScene.statusJson`, in the four states a preview can be in. Language-agnostic: an implementation in any language must reach the same object from the same session sequence.",
+    "objectKeys": [
+      "phase",
+      "phaseLabel",
+      "progress",
+      "cancellable",
+      "cancelAction",
+      "debug"
+    ],
+    "progressKeys": [
+      "unitsDone",
+      "unitsTotal",
+      "facesDone",
+      "facesTotal",
+      "inFlight",
+      "evalUnitsDone",
+      "evalUnitsTotal",
+      "ratio"
+    ],
+    "debugKeys": [
+      "evalLen",
+      "meshesLen",
+      "instancesLen",
+      "evalHead"
+    ],
+    "ratioLaw": "ratio = (unitsDone + chunksDone) / (unitsTotal + chunksTotal); a zero total is 1 when nothing is in flight and 0 otherwise.",
+    "evaluateFaultCode": "flow.extension-evaluate-failed",
+    "addressMissCode": "flow.extension-not-contributed",
+    "surfaces": [
+      {
+        "surface": "editor",
+        "windowKindId": "procedural-preview",
+        "cancelAction": "cancelPreviewEval",
+        "declaresCancelCommand": true
+      },
+      {
+        "surface": "generate",
+        "windowKindId": "generation3d-generate-preview",
+        "cancelAction": "cancelPreviewEval",
+        "declaresCancelCommand": true
+      },
+      {
+        "surface": "viewer",
+        "windowKindId": "procedural-view-preview",
+        "cancelAction": "cancelPreviewEval",
+        "declaresCancelCommand": true
+      }
+    ],
+    "states": [
+      {
+        "id": "idle",
+        "why": "Nothing admitted and nothing in flight. The contract is still published, in full — this is the state the viewer preview used to publish as nothing at all.",
+        "addressable": true,
+        "sequence": [],
+        "status": {
+          "phase": "idle",
+          "cancellable": false,
+          "unitsDone": 0,
+          "unitsTotal": 0,
+          "facesDone": 0,
+          "facesTotal": 0,
+          "inFlight": 0,
+          "ratio": {
+            "done": 0,
+            "total": 0
+          }
+        },
+        "fault": null
+      },
+      {
+        "id": "computing",
+        "why": "Two handles admitted, one step folded: work a cancel would stop, so the affordance is offered.",
+        "addressable": true,
+        "sequence": [
+          {
+            "event": "admit",
+            "handle": "brep:solid-1"
+          },
+          {
+            "event": "admit",
+            "handle": "brep:solid-2"
+          },
+          {
+            "event": "step",
+            "handle": "brep:solid-1",
+            "phase": "meshingFaces",
+            "unitsDone": 7,
+            "unitsTotal": 24,
+            "facesDone": 2,
+            "facesTotal": 9
+          }
+        ],
+        "status": {
+          "phase": "meshingFaces",
+          "cancellable": true,
+          "unitsDone": 7,
+          "unitsTotal": 24,
+          "facesDone": 2,
+          "facesTotal": 9,
+          "inFlight": 1,
+          "ratio": {
+            "done": 7,
+            "total": 24
+          }
+        },
+        "fault": null
+      },
+      {
+        "id": "faulted-evaluate",
+        "why": "A CONTRIBUTED geometry extension that refuses an evaluate. The live fault outranks the ledger phase and retires the affordance.",
+        "addressable": true,
+        "sequence": [
+          {
+            "event": "evaluateFault",
+            "faultCode": "extension.invoke-unavailable",
+            "faultMessage": "extension.invoke-unavailable"
+          }
+        ],
+        "status": {
+          "phase": "faulted",
+          "cancellable": false,
+          "unitsDone": 0,
+          "unitsTotal": 0,
+          "facesDone": 0,
+          "facesTotal": 0,
+          "inFlight": 0,
+          "ratio": {
+            "done": 0,
+            "total": 0
+          }
+        },
+        "fault": {
+          "code": "flow.extension-evaluate-failed",
+          "extensionId": "flow-extension-brep",
+          "capability": "evaluate"
+        }
+      },
+      {
+        "id": "faulted-unaddressable-kernel",
+        "why": "No loaded plugin contributes the geometry extension, so nothing was ever invoked: the ledger's idle is a lie the surface cannot act on.",
+        "addressable": false,
+        "sequence": [],
+        "status": {
+          "phase": "faulted",
+          "cancellable": false,
+          "unitsDone": 0,
+          "unitsTotal": 0,
+          "facesDone": 0,
+          "facesTotal": 0,
+          "inFlight": 0,
+          "ratio": {
+            "done": 0,
+            "total": 0
+          }
+        },
+        "fault": {
+          "code": "flow.extension-not-contributed",
+          "extensionId": "brep"
+        }
+      },
+      {
+        "id": "cancelled",
+        "why": "The gesture outranks the ledger and freezes the progress already paid for.",
+        "addressable": true,
+        "sequence": [
+          {
+            "event": "admit",
+            "handle": "brep:solid-1"
+          },
+          {
+            "event": "admit",
+            "handle": "brep:solid-2"
+          },
+          {
+            "event": "step",
+            "handle": "brep:solid-1",
+            "phase": "meshingFaces",
+            "unitsDone": 7,
+            "unitsTotal": 24,
+            "facesDone": 2,
+            "facesTotal": 9
+          },
+          {
+            "event": "cancel"
+          }
+        ],
+        "status": {
+          "phase": "cancelled",
+          "cancellable": false,
+          "unitsDone": 7,
+          "unitsTotal": 24,
+          "facesDone": 2,
+          "facesTotal": 9,
+          "inFlight": 0,
+          "ratio": {
+            "done": 7,
+            "total": 24
+          }
+        },
+        "fault": null
+      }
+    ]
+  }
+}

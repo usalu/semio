@@ -1,0 +1,83 @@
+{
+  "format": "semio.generation3d.example-switch",
+  "version": 1,
+  "note": "The RUNTIME law of the navbar example picker, declared as data. `📚️example-picker.json` (🛂️manifest) says WHICH examples one surface may offer; this says what picking one MUST do. One row is one pick on a live surface: the flow window must republish exactly the picked example's authored widget ids, no widget of the example before it may survive, every attached preview window's evaluation chain must be re-armed by the gesture itself, and the preview's retained evaluation must stop being the previous example's. The empty id is the picker's own `No example` row (`NavbarExampleSelect` normalizes its `__none__` sentinel to `\"\"`), and it CLEARS the graph — a label that promises no example must not silently load one. Language-agnostic: an implementation in any language replays these picks and answers the same published/retired/armed lists.",
+  "windowKinds": {
+    "flow": "procedural-main",
+    "preview": "procedural-preview",
+    "generatePreview": "generation3d-generate-preview"
+  },
+  "examples": {
+    "hexagonal-mushroom-column": ["height", "radius", "sides", "profile", "extrusion-axis", "extrude", "column-preview"],
+    "rectangle-extrude-volume": ["width", "height", "distance", "rect", "vector", "extrude", "volume"],
+    "sphere-cut-with-torus": ["slider_2", "brep_prim3d_sphere_3", "brep_prim3d_torus_4", "brep_bool_cut_5", "brep_measure_volume_2", "preview_3"],
+    "box-fillet-preview": ["size", "radius", "box", "fillet", "preview"],
+    "sphere-box-fuse": ["radius", "size", "sphere", "box", "fuse", "preview"],
+    "face-sweep-extrude": ["width", "height", "distance", "rect", "face", "vector", "extrude"],
+    "rectangle-wire-preview": ["width", "height", "rect"],
+    "box-shell-preview": ["size", "thickness", "box", "shell"],
+    "": []
+  },
+  "rows": [
+    {
+      "id": "the-boot-example-is-the-hexagonal-mushroom-column",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "picks": [],
+      "published": ["height", "radius", "sides", "profile", "extrusion-axis", "extrude", "column-preview"],
+      "armed": [],
+      "why": "A fresh editor instance opens the plugin's default document, and the picker's value is the example that document IS."
+    },
+    {
+      "id": "one-pick-republishes-the-flow-window-and-rearms-the-preview",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "picks": ["box-shell-preview"],
+      "published": ["size", "thickness", "box", "shell"],
+      "retired": ["height", "radius", "sides", "profile", "extrusion-axis", "column-preview"],
+      "armed": ["preview"],
+      "previewEvaluationChanged": true,
+      "why": "Boot #11 of `📓️runtime-verification-2026-09-09.md`: the picker label changed to Box Shell Preview while the flow window kept the hexagonal-mushroom-column node ids and no fault appeared anywhere. The switch owes both windows its own consequence, never a host refresh's."
+    },
+    {
+      "id": "a-pick-that-shares-widget-ids-with-the-previous-example-still-republishes-only-its-own",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "picks": ["box-fillet-preview", "box-shell-preview"],
+      "published": ["size", "thickness", "box", "shell"],
+      "retired": ["radius", "fillet", "preview"],
+      "armed": ["preview"],
+      "previewEvaluationChanged": true,
+      "why": "`size` and `box` exist in BOTH examples with different parameters, so an id-keyed survivor check would pass on a graph that still holds the previous example's fillet chain. Only the exact published set is the answer."
+    },
+    {
+      "id": "every-attached-preview-window-gets-its-own-chain",
+      "attached": [
+        { "id": "preview", "kind": "preview" },
+        { "id": "generate", "kind": "generatePreview" }
+      ],
+      "picks": ["rectangle-wire-preview"],
+      "published": ["width", "height", "rect"],
+      "retired": ["sides", "profile", "extrusion-axis", "extrude", "column-preview"],
+      "armed": ["preview", "generate"],
+      "previewEvaluationChanged": true,
+      "why": "Each preview window owns its own retained evaluation publication, so the switch owes each one a restart — and owes each exactly one (`🔒️tick-latch.json`)."
+    },
+    {
+      "id": "no-example-clears-the-graph",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "picks": ["box-shell-preview", ""],
+      "published": [],
+      "retired": ["size", "thickness", "box", "shell", "height", "radius", "sides", "profile", "extrusion-axis", "extrude", "column-preview"],
+      "armed": ["preview"],
+      "previewEvaluationChanged": true,
+      "why": "`NavbarExampleSelect`'s `No example` row dispatches `setActiveExample` with an empty id. Resolving that to the app's DEFAULT document loaded the hexagonal mushroom column — itself a bundled example — so the row silently did the opposite of what it says (measured live 2026-09-12: `setActiveExample {exampleId: }` settled with one config upsert and zero artifact mutations, and the column stayed on screen)."
+    },
+    {
+      "id": "an-unpublished-example-id-changes-nothing",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "picks": ["not-a-bundled-example"],
+      "published": ["height", "radius", "sides", "profile", "extrusion-axis", "extrude", "column-preview"],
+      "armed": [],
+      "previewEvaluationChanged": false,
+      "why": "The picker can only ever offer declared ids, so an id it never published is a no-op rather than a blanked graph — and it owes no re-arm, because nothing about the evaluation moved."
+    }
+  ]
+}

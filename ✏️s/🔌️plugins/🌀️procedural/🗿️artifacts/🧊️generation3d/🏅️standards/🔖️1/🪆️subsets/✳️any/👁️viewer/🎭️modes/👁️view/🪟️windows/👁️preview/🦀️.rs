@@ -138,149 +138,20 @@ impl Generation3dViewMarks {
 //#endregion 🔖️Marks
 
 //#region 🔖️Geometry
-/// 👁️ Read-only twin of the sibling surface's own `is_brep_geometry_handle`.
-fn is_brep_geometry_handle(handle: &str) -> bool {
-    if handle.is_empty() {
-        return false;
-    }
-    if handle.starts_with("solid-")
-        || handle.starts_with("shell-")
-        || handle.starts_with("face-")
-        || handle.starts_with("wire-")
-        || handle.starts_with("edge-")
-        || handle.starts_with("vertex-")
-        || handle.starts_with("compound-")
-        || handle.starts_with("curve-")
-        || handle.starts_with("surface-")
-    {
-        return true;
-    }
-    // Blake3 hex digests minted by `BrepKernel::mint` (no kind prefix).
-    handle.len() == 64 && handle.as_bytes().iter().all(u8::is_ascii_hexdigit)
-}
+/// 🧊️ The geometry half of a preview payload is NOT a read-only twin any more: the handle grammar,
+/// the channel walk, the marker meshes, the show-mode filter, the LOD ladder and the mesh lookup
+/// all come from `🧵️preview-eval`, the surface-neutral chain both surfaces run. Importing it is
+/// legal for a viewer — it is mounted at the ARTIFACT level (`crate::preview_eval`), never reached
+/// through the sibling `✏️editor` module, which `policyViewerPurityBreaches` forbids outright
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+use crate::preview_eval::{self, PreviewChannelItem, PreviewInlineGeometry};
 
-/// 👁️ Read-only twin of the sibling surface's own `PreviewInlineGeometry`.
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum PreviewInlineGeometry {
-    Point { x: f64, y: f64, z: f64 },
-    Vector { x: f64, y: f64, z: f64 },
-}
-
-/// 👁️ Read-only twin of the sibling surface's own `PreviewChannelItem`.
-struct PreviewChannelItem {
-    channel: String,
-    index: usize,
-    handle: String,
-    inline: Option<PreviewInlineGeometry>,
-}
-
-/// 👁️ Read-only twin of the sibling surface's own `preview_channel_list_entries`.
-fn preview_channel_list_entries(map: &Object) -> Vec<&Value> {
-    let mut entries: Vec<(usize, &Value)> = map.iter().filter_map(|(key, value)| key.parse::<usize>().ok().map(|index| (index, value))).collect();
-    entries.sort_by_key(|(index, _)| *index);
-    entries.into_iter().map(|(_, value)| value).collect()
-}
-
-/// 👁️ Read-only twin of the sibling surface's own `collect_preview_channel_items`.
-fn collect_preview_channel_items(channel: &str, value: &Value, index: &mut usize, items: &mut Vec<PreviewChannelItem>) {
-    match value {
-        Value::Object(map) => {
-            if let Some(handle) = map.get("handle").and_then(Value::as_str) {
-                if is_brep_geometry_handle(handle) {
-                    items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: handle.into(), inline: None });
-                    *index += 1;
-                    return;
-                }
-            }
-            if map.get("$schema").and_then(Value::as_str) == Some("list") {
-                for entry in preview_channel_list_entries(map) {
-                    collect_preview_channel_items(channel, entry, index, items);
-                }
-                return;
-            }
-            let coords = ["x", "y", "z"].into_iter().map(|key| map.get(key).and_then(Value::as_f64)).collect::<Option<Vec<_>>>();
-            if let Some(coords) = coords {
-                let (x, y, z) = (coords[0], coords[1], coords[2]);
-                let inline = if map.get("$schema").and_then(Value::as_str) == Some("vector") { PreviewInlineGeometry::Vector { x, y, z } } else { PreviewInlineGeometry::Point { x, y, z } };
-                items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: String::new(), inline: Some(inline) });
-                *index += 1;
-            }
-        }
-        Value::Array(list) => {
-            for entry in list {
-                collect_preview_channel_items(channel, entry, index, items);
-            }
-        }
-        _ => {}
-    }
-}
-
-/// 👁️ Read-only twin of the sibling surface's own `preview_channel_items_for_widget`.
-fn preview_channel_items_for_widget(eval: &Value, widget_id: &str) -> Vec<PreviewChannelItem> {
-    let Some(widget_eval) = eval.get(widget_id) else {
-        return Vec::new();
-    };
-    let Some(channels) = widget_eval.get("out").or_else(|| widget_eval.get("in")) else {
-        return Vec::new();
-    };
-    let Some(map) = channels.as_object() else {
-        return Vec::new();
-    };
-    let mut keys: Vec<&str> = map.iter().map(|(key, _)| key).collect();
-    keys.sort();
-    let mut items = Vec::new();
-    for key in keys {
-        let mut index = 0usize;
-        if let Some(value) = map.get(key) {
-            collect_preview_channel_items(key, value, &mut index, &mut items);
-        }
-    }
-    items
-}
-
-fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
-    (!data.indices.is_empty() && data.positions.len() >= 9) || data.edge_positions.len() >= 6 || (data.positions.len() >= 3 && data.indices.is_empty())
-}
-
-/// 👁️ Half-extent (world units) of the axis cross drawn for a `PreviewInlineGeometry::Point`.
-const PREVIEW_POINT_MARKER_HALF_EXTENT: f64 = 0.05;
-
-/// 👁️ Read-only twin of the sibling surface's own `point_marker_mesh`.
-fn point_marker_mesh(x: f64, y: f64, z: f64) -> semio_framework_plugin::MeshData {
-    let (x, y, z) = (x as f32, y as f32, z as f32);
-    let e = PREVIEW_POINT_MARKER_HALF_EXTENT as f32;
-    semio_framework_plugin::MeshData { positions: vec![x, y, z], edge_positions: vec![x - e, y, z, x + e, y, z, x, y - e, z, x, y + e, z, x, y, z - e, x, y, z + e], ..Default::default() }
-}
-
-/// 👁️ Read-only twin of the sibling surface's own `vector_marker_mesh`.
-fn vector_marker_mesh(x: f64, y: f64, z: f64) -> semio_framework_plugin::MeshData {
-    let (x, y, z) = (x as f32, y as f32, z as f32);
-    semio_framework_plugin::MeshData { positions: vec![0.0, 0.0, 0.0, x, y, z], edge_positions: vec![0.0, 0.0, 0.0, x, y, z], ..Default::default() }
-}
-
-/// 👁️ Read-only twin of the sibling surface's own `apply_show_mode_mesh` — the shading mode decides
-/// which mesh channels survive into the payload at all, so wireframe/points really are cheaper.
-fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &str) -> semio_framework_plugin::MeshData {
-    match show_mode {
-        "wireframe" => {
-            data.positions.clear();
-            data.normals.clear();
-            data.indices.clear();
-            data.face_ids.clear();
-            data
-        }
-        "points" => {
-            data.indices.clear();
-            data.normals.clear();
-            data.edge_positions.clear();
-            data
-        }
-        _ => data,
-    }
-}
-
-/// 🧮️ Evaluates the whole fixture once. Callers prefer the viewer's ephemeral `preview_eval_text`
-/// and only fall back here when no command has computed it yet.
+/// 🧮️ Evaluates the whole fixture once, IN PROCESS. TEST-ONLY and never on the live path: the
+/// served chain evaluates through `ExtensionInvocation` because a guest links no operators at all,
+/// while a `--lib` test binary does link them — so a law that needs an evaluation without standing
+/// up the whole chain builds one here. `#[cfg(test)]` is the compile-time half of "render never
+/// evaluates" (`render_without_a_published_evaluation_paints_the_empty_world`).
+#[cfg(test)]
 pub fn evaluate_fixture(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> String {
     crate::standards::v1::subsets::any::schema::with_host(fixture, |host| host.evaluate().unwrap_or_default())
 }
@@ -331,25 +202,43 @@ pub fn reset_preview_mesh_table() {
 }
 
 /// 🔒 What a built mesh table is valid for: the evaluation it was tessellated from, the deflection
-/// its LOD asked for, the shading mode applied to it, and the preview widgets it covered.
-fn preview_mesh_signature(eval_json: &str, tolerance_bits: u64, show_mode: &str, preview_ids: &[String]) -> u64 {
+/// its LOD asked for, the shading mode applied to it, the preview widgets it covered — and the
+/// chain's own answers so far.
+///
+/// ⏱️ That last term is what makes the retained table correct under the ADDRESSED chain: a
+/// `flowTessellateResolve` folds one more mesh pack into the session without moving the evaluation
+/// text one byte, so a signature that ignored the session would pin the first (empty) table and no
+/// arriving mesh would ever reach the screen. The pack BODIES are never hashed — only each
+/// handle's resolved length, which is O(handles) per render and changes exactly when a round trip
+/// lands (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn preview_mesh_signature(eval_json: &str, tolerance_bits: u64, show_mode: &str, preview_ids: &[String], eval: &Value, session: Option<&semio_framework_os_flow::FlowEvalSession>) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     eval_json.hash(&mut hasher);
     tolerance_bits.hash(&mut hasher);
     show_mode.hash(&mut hasher);
     preview_ids.hash(&mut hasher);
+    if let Some(session) = session {
+        for id in preview_ids {
+            for item in preview_eval::preview_channel_items_for_widget(eval, id) {
+                if item.handle.is_empty() {
+                    continue;
+                }
+                session.preview_mesh_pack(&item.handle).map_or(0usize, str::len).hash(&mut hasher);
+            }
+        }
+    }
     hasher.finish()
 }
 
 /// 🧊️ Tessellates every preview handle exactly once, in the declaration order the instance table
 /// replays. Only reached when [`preview_mesh_signature`] says the retained table is stale.
-fn build_preview_mesh_table(signature: u64, eval: &Value, preview_ids: &[String], tolerance: f64, show_mode: &str) -> PreviewMeshTable {
+fn build_preview_mesh_table(signature: u64, eval: &Value, preview_ids: &[String], tolerance: f64, show_mode: &str, session: Option<&semio_framework_os_flow::FlowEvalSession>) -> PreviewMeshTable {
     let mut meshes: Vec<Value> = Vec::new();
     let mut mesh_ids = std::collections::BTreeSet::new();
     let mut mesh_id_by_handle = std::collections::BTreeMap::new();
     for id in preview_ids {
-        for item in preview_channel_items_for_widget(eval, id) {
+        for item in preview_eval::preview_channel_items_for_widget(eval, id) {
             let PreviewChannelItem { channel, index, handle, inline } = item;
             let own_mesh_id = format!("eval-{id}@{channel}#{index}");
             let mesh_id = if handle.is_empty() { own_mesh_id } else { mesh_id_by_handle.get(&handle).cloned().unwrap_or(own_mesh_id) };
@@ -357,14 +246,21 @@ fn build_preview_mesh_table(signature: u64, eval: &Value, preview_ids: &[String]
                 continue;
             }
             let data = match inline {
-                Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(x, y, z)),
-                Some(PreviewInlineGeometry::Vector { x, y, z }) => Some(vector_marker_mesh(x, y, z)),
-                None => {
-                    PREVIEW_TESSELLATIONS.with(|count| count.set(count.get() + 1));
-                    semio_framework_os_flow::tessellate_geometry(&handle, tolerance).ok()
-                }
+                Some(PreviewInlineGeometry::Point { x, y, z }) => Some(preview_eval::point_marker_mesh(x, y, z)),
+                Some(PreviewInlineGeometry::Vector { x, y, z }) => Some(preview_eval::vector_marker_mesh(x, y, z)),
+                // ⏱️ The CHAIN's answer first: a served guest links no geometry kernel at all, so
+                // `flowTessellateResolve`'s mesh pack is the only mesh a viewer can ever paint.
+                // Reaching the in-process kernel is counted, and only a session-free caller (a law
+                // measuring a cold render) ever gets there.
+                None => match session.and_then(|session| preview_eval::session_preview_mesh(&handle, session)) {
+                    Some(data) => Some(data),
+                    None => {
+                        PREVIEW_TESSELLATIONS.with(|count| count.set(count.get() + 1));
+                        preview_eval::mesh_data_for_preview_handle(&handle, tolerance, session)
+                    }
+                },
             };
-            let Some(data) = data.map(|data| apply_show_mode_mesh(data, show_mode)).filter(mesh_has_preview_geometry) else {
+            let Some(data) = data.map(|data| preview_eval::apply_show_mode_mesh(data, show_mode)).filter(preview_eval::mesh_has_preview_geometry) else {
                 continue;
             };
             let mut mesh_object = Object::new();
@@ -380,7 +276,7 @@ fn build_preview_mesh_table(signature: u64, eval: &Value, preview_ids: &[String]
     PreviewMeshTable { signature, meshes_json: dsl::json::to_string(&Value::Array(meshes)), mesh_ids, mesh_id_by_handle }
 }
 
-pub fn preview_payload(eval_json: &str, fixture: &semio_framework_artifact_flow_flow::FlowFixture, config: &Generation3dViewConfig, marks: &Generation3dViewMarks) -> ViewPreviewPayload {
+pub fn preview_payload(eval_json: &str, fixture: &semio_framework_artifact_flow_flow::FlowFixture, config: &Generation3dViewConfig, session: Option<&semio_framework_os_flow::FlowEvalSession>, marks: &Generation3dViewMarks) -> ViewPreviewPayload {
     if eval_json.is_empty() {
         return ViewPreviewPayload::default();
     }
@@ -390,24 +286,19 @@ pub fn preview_payload(eval_json: &str, fixture: &semio_framework_artifact_flow_
     };
     let tolerance = config.tolerance();
     let show_mode = config.effective_show_mode();
-    let preview_ids: Vec<String> = fixture
-        .widgets
-        .iter()
-        .filter(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { preview: true, .. } | semio_framework_artifact_flow_flow::Widget::OutputPreview { .. }))
-        .map(|widget| crate::widget_id(widget).to_string())
-        .collect();
-    let signature = preview_mesh_signature(eval_json, tolerance.to_bits(), show_mode, &preview_ids);
+    let preview_ids = preview_eval::preview_widget_ids(fixture);
+    let signature = preview_mesh_signature(eval_json, tolerance.to_bits(), show_mode, &preview_ids, &eval, session);
     PREVIEW_MESH_TABLE.with(|retained| {
         let mut retained = retained.borrow_mut();
         if retained.as_ref().is_none_or(|table| table.signature != signature) {
-            *retained = Some(build_preview_mesh_table(signature, &eval, &preview_ids, tolerance, show_mode));
+            *retained = Some(build_preview_mesh_table(signature, &eval, &preview_ids, tolerance, show_mode, session));
         }
         let table = retained.as_ref().expect("preview mesh table was just built");
         let mut instances: Vec<Value> = Vec::new();
         let mut selected_ids: Vec<String> = Vec::new();
         let mut hovered_id: Option<String> = None;
         for id in &preview_ids {
-            for item in preview_channel_items_for_widget(&eval, id) {
+            for item in preview_eval::preview_channel_items_for_widget(&eval, id) {
                 let PreviewChannelItem { channel, index, handle, .. } = item;
                 let own_mesh_id = format!("eval-{id}@{channel}#{index}");
                 let mesh_id = if handle.is_empty() { own_mesh_id } else { table.mesh_id_by_handle.get(&handle).cloned().unwrap_or(own_mesh_id) };
@@ -466,14 +357,26 @@ pub fn preview_selection_json(config: &Generation3dViewConfig, payload: &ViewPre
 /// 👁️ Pure `(Generation3dSnapshot, Generation3dViewConfig, marks) -> BuiltNode` read: the camera,
 /// shading mode, LOD and sun all come from the viewer's own config, hover/selection from the
 /// framework-owned `graph` domain, geometry from the ephemeral evaluation when one exists.
-pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, marks: &Generation3dViewMarks) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let payload = preview_payload(eval_json.unwrap_or_default(), &document.fixture, config, marks);
+pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_framework_os_flow::FlowEvalSession>, marks: &Generation3dViewMarks) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let eval_json = eval_json.unwrap_or_default();
+    let payload = preview_payload(eval_json, &document.fixture, config, session, marks);
     let selection_json = preview_selection_json(config, &payload);
+    // 📈️ The SAME projection both editor preview windows publish — the surface-neutral
+    // `🧵️preview-eval` one, reached at the artifact level and never through `::editor::`. A viewer
+    // that published no status left the shell with no phase to show and no cancel affordance to
+    // offer, while its meshes rendered fine (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    let status_json = preview_eval::preview_window_status_json(
+        session,
+        preview_eval::preview_status_json(eval_json, &document.fixture),
+        &preview_eval::PreviewStatusDebug { eval_json, meshes_json: &payload.meshes_json, instances_json: &payload.instances_json },
+        None,
+    );
     let sun = config.sun();
     crate::scene_surface(
         SURFACE_ID,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
         &semio_framework_ui::wgpu::World3dScene {
+            status_json,
             domain_id: Some(GENERATION3D_VIEW_INTERACTION_DOMAIN.into()),
             domain_granularity_id: Some(GENERATION3D_VIEW_INTERACTION_GRANULARITY.into()),
             ..world3d_scene(

@@ -2,7 +2,7 @@
 
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
-use semio_framework_plugin::app::{ArtifactToolCompletion, ArtifactToolCompletionRejection, EphemeralEmit, InteractionHoverState};
+use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactToolCompletion, ArtifactToolCompletionRejection, EphemeralEmit, InteractionHoverState};
 use semio_framework_plugin::{ArtifactApp, Emit, Fault, ToolJobFactoryError, ViewModel, WindowConfigSnapshot, WindowTransientSnapshot};
 use std::sync::Arc;
 
@@ -34,6 +34,12 @@ pub type PuzzleCommandExtent<A> = fn(&<A as ArtifactApp>::Command, &<A as Artifa
 pub enum PuzzleCommandWorkStep<A: ArtifactApp> {
     Progress { stage: &'static str, en: &'static str, de: &'static str },
     Complete(Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>),
+    /// ⬇️ Terminal SEGMENTED download instead of a store emission — the framework's
+    /// `segmented_downloads` lane (`🏛️ShellHost/🟦️.tsx`'s `drainSegmentedMediaExport`), for a payload too
+    /// large to ride inline inside one `Effect::DownloadMediaExport`. A download is a HostOnly
+    /// publication, so this step carries no mutation at all: a work object that owes both must publish
+    /// them as two steps.
+    Download(ArtifactDownloadOutput),
 }
 
 pub trait PuzzleCommandWork<A: ArtifactApp>: Send {
@@ -303,6 +309,9 @@ pub struct RetainedPuzzleCommandJob<A: ArtifactApp> {
     checkpoint_pending: bool,
     restore_target: Option<PuzzleCommandCheckpointState>,
     emit: Option<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>,
+    /// ⬇️ The segmented download this command resolved instead of a store emission, held for exactly one
+    /// `Publish` phase — see [`PuzzleCommandWorkStep::Download`].
+    download: Option<ArtifactDownloadOutput>,
     ephemeral: Option<EphemeralEmit<A>>,
     pending_completion_rejection: Option<ArtifactToolCompletionRejection<A>>,
     phase: PuzzleCommandPhase,
@@ -382,6 +391,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
             checkpoint_pending: false,
             restore_target: None,
             emit: None,
+            download: None,
             ephemeral: None,
             pending_completion_rejection: None,
             phase,
@@ -556,6 +566,12 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                         self.phase = PuzzleCommandPhase::Publish;
                         self.preview(cx, "Publishing result", "Ergebnis wird veröffentlicht")
                     }
+                    Ok(PuzzleCommandWorkStep::Download(download)) => {
+                        self.download = Some(download);
+                        self.ephemeral = Some(work.take_ephemeral());
+                        self.phase = PuzzleCommandPhase::Publish;
+                        self.preview(cx, "Streaming the download", "Download wird übertragen")
+                    }
                     Err(_) => self.fault(cx, b"puzzle command reducer rejected the admitted operation"),
                 }
             }
@@ -571,8 +587,15 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                 if !completion.has_mounted_consumer() {
                     return self.fault(cx, b"puzzle command completion consumer is absent");
                 }
-                let Some(emit) = self.emit.take() else { return self.fault(cx, b"puzzle command result owner is absent") };
                 let Some(ephemeral) = self.ephemeral.take() else { return self.fault(cx, b"puzzle command ephemeral result owner is absent") };
+                if let Some(download) = self.download.take() {
+                    if completion.complete_download(Ok(download), ephemeral).is_err() {
+                        return self.fault(cx, b"puzzle command download publication was rejected");
+                    }
+                    self.phase = PuzzleCommandPhase::Complete;
+                    return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
+                }
+                let Some(emit) = self.emit.take() else { return self.fault(cx, b"puzzle command result owner is absent") };
                 if let Err(rejected) = completion.complete(Ok(emit), ephemeral) {
                     self.pending_completion_rejection = Some(rejected);
                     return self.fault(cx, b"puzzle command result publication was rejected");
@@ -689,6 +712,7 @@ impl<A: ArtifactApp> InteractiveJob for RetainedPuzzleCommandJob<A> {
             };
         }
         retire_one!(emit);
+        retire_one!(download);
         retire_one!(ephemeral);
         if let Some(work) = self.work.as_mut() {
             let step = work.close_step(maximum_items.min(1), maximum_bytes);
@@ -727,6 +751,7 @@ impl<A: ArtifactApp> InteractiveJob for RetainedPuzzleCommandJob<A> {
             && self.checkpoint_input.is_none()
             && self.pending_completion_rejection.is_none()
             && self.emit.is_none()
+            && self.download.is_none()
             && self.ephemeral.is_none()
             && self.work.is_none()
             && self.command.is_none()

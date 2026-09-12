@@ -4769,14 +4769,18 @@ export function buildInteractionReplSearch(inputs: InteractionReplEngagementInpu
   };
 }
 
+/** @emoji 🪪️ Element id of the CAD editor's projection pane — dot-separated camelCase, the grammar `Pane`'s own
+ * `assertElementId` demands and `childElementId` extends for the two fold controls it derives. */
+const CAD_ORBIT_PROJECTION_PANE_ID = "cad.orbitProjection";
+
 /** @emoji 🔀️ Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`). Defaults to bottom-right under the navigation cube; the unfolded pane grows over it. Falls back to a local overlay when no pane host is available. */
 function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
   const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-right");
   const [folded, setFolded] = reactHostPort.useState(true);
   const projectionLabel = useLabel("ui.host.projection");
   const pane = (
-    <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon={worldProjectionSpecIconId(spec) as IconName} label={projectionLabel}>
-      <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
+    <Pane id={CAD_ORBIT_PROJECTION_PANE_ID} anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon={worldProjectionSpecIconId(spec) as IconName} label={projectionLabel}>
+      <WorldProjectionKindSwitch id={CAD_ORBIT_PROJECTION_PANE_ID} spec={spec} onSpecChange={onSpecChange} />
     </Pane>
   );
   const portaled = usePaneSlot(pane);

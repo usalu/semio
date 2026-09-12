@@ -95,7 +95,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts rust-taxonomy-mounts-check"
       },
-      "cache": false
+      "cache": true,
+      "parallelism": false,
+      "outputs": [
+        "{projectRoot}/dist/rust-taxonomy-mounts-check"
+      ]
     },
     "plugin-root-ownership-check": {
       "executor": "nx:run-commands",
@@ -103,7 +107,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts plugin-root-ownership-check"
       },
-      "cache": false
+      "cache": true,
+      "parallelism": false,
+      "outputs": [
+        "{projectRoot}/dist/plugin-root-ownership-check"
+      ]
     }
   },
   "tags": [

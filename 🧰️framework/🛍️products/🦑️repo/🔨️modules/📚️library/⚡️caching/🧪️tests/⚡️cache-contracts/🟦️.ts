@@ -197,7 +197,7 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   for (const profile of pipeline.profiles) {
     const preparation = project.targets[`prepare-${profile}`];
     assert.ok(preparation, `Missing Demonstrator ${profile} preparation`);
-    assert.equal(preparation.cache, false);
+    assert.equal(preparation.cache, true, `prepare-${profile} only validates already Nx-materialized bytes and writes nothing`);
     assert.deepEqual(preparation.dependsOn, pipeline.variants.map((variant: string) => `${pipeline.preparationProject}:prepare-${variant}-react-${profile}`));
   }
   const { demonstratorRuntimeAssetSources } = await import(pathToFileURL(join(directory, "📦️assets/🟦️.ts")).href);
@@ -640,13 +640,23 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.equal(cacheInternals.matchesUncached("os", policy), true);
     assert.equal(cacheInternals.matchesUncached("os-dev", policy), false);
     assert.equal(cacheInternals.matchesUncached("setup-git", policy), true);
+    assert.equal(cacheInternals.matchesUncached("cache-report", policy), true);
     assert.equal(cacheInternals.cacheableFamily("format-check"), true);
     assert.equal(cacheInternals.cacheableFamily("generator-inputs"), false);
+    assert.equal(cacheInternals.mutatingName("build-report"), false, "a document id that happens to be named 'report' must not be treated as a mutating report writer");
+    assert.equal(cacheInternals.mutatingName("verify-dependencies-freeze-write-baseline"), false, "a deterministic baseline writer must not be blanket-matched by 'write-baseline'");
+    assert.equal(cacheInternals.mutatingName("reset-document-ownership"), false, "a cargo test proving reset behavior is not itself a mutating reset");
+    assert.equal(cacheInternals.mutatingName("cache-prune"), true);
+    assert.equal(cacheInternals.mutatingName("stdio-fuzz"), true);
+    assert.equal(cacheInternals.liveName("hub-live-catalog-check"), true, "the name heuristic stays domain-neutral");
+    assert.equal(cacheInternals.targetPolicy("hub-live-catalog-check", { cache: false }, policy).cache, true, "policy cachedExact overrides a name that only collides with the live heuristic");
+    assert.equal(cacheInternals.liveName("admin-live-journey-check"), true, "a genuine live-browser/live-server journey stays uncached");
+    assert.equal(cacheInternals.liveName("collab-e2e"), true);
     for (const row of vectors.policies) {
       const enabled = cacheInternals.targetPolicy(row.target, { cache: true, options: { command: `bun ./📜️script.ts ${row.target}` } }, policy);
       const disabled = cacheInternals.targetPolicy(row.target, { cache: false, options: { command: `bun ./📜️script.ts ${row.target}` } }, policy);
       assert.deepEqual({ cache: enabled.cache, continuous: enabled.continuous ?? false }, { cache: row.cache, continuous: row.continuous }, row.target);
-      assert.equal(disabled.cache, row.cache, `${row.target} must not keep authored cache when policy is authoritative`);
+      assert.equal(disabled.cache, row.authored ? false : row.cache, row.authored ? `${row.target}: an unclassified name honors its owner's authored cache: false` : `${row.target} must not keep authored cache when policy is authoritative`);
       assert.equal(isCacheableTask({ cache: enabled.cache, continuous: enabled.continuous === true, target: { project: "probe", target: row.target }, overrides: {} }), row.cache, `${row.target}: nx isCacheableTask`);
     }
     const selectionApi = await import("../../../🎮️playground/🟦️.ts");
@@ -775,14 +785,20 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         assert.ok(preparation.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*" && input.transitive), `${targetName} must hash its whole transitive dependency closure`);
         const wgpuTargetName = `prepare-${playground.variant}-wgpu-${profile}`, wgpuPreparation = preparationProject.targets[wgpuTargetName];
         assert.ok(wgpuPreparation, `${wgpuTargetName} needs declared prerequisites`);
-        assert.equal(wgpuPreparation.cache, false, `${wgpuTargetName} writes into the shared, live PLUGIN_MODULES_ROOT and cannot be replayed`);
-        assert.deepEqual(wgpuPreparation.outputs, []);
+        assert.equal(wgpuPreparation.cache, true, `${wgpuTargetName} only publishes this lane's extensions out of the ONE staging root its closure wrote and is safe to replay`);
+        assert.deepEqual(wgpuPreparation.outputs, [], `${wgpuTargetName} must mirror no module: the trunk bundle and the native runner both read pluginModulesRoot(profile)`);
+        assert.ok(wgpuPreparation.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*" && input.transitive), `${wgpuTargetName} must hash its whole transitive dependency closure`);
         const activationName = `activate-${playground.variant}-react-${profile}`, activationTarget = preparationProject.targets[activationName];
         assert.ok(activationTarget, `${activationName} must follow completed preparation`);
-        assert.equal(activationTarget.cache, false);
-        assert.deepEqual(activationTarget.outputs, []);
+        assert.equal(activationTarget.cache, true, `${activationName} publishes into a variant/profile-scoped runtime root and is safe to replay`);
+        assert.deepEqual(activationTarget.outputs, [`{projectRoot}/dist/runtime/${profile}/${playground.variant}`]);
         assert.deepEqual(activationTarget.dependsOn, [targetName]);
         assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${activationName}`).length, 1);
+        const wgpuActivationName = `activate-${playground.variant}-wgpu-${profile}`, wgpuActivationTarget = preparationProject.targets[wgpuActivationName];
+        assert.ok(wgpuActivationTarget, `${wgpuActivationName} must follow completed preparation`);
+        assert.equal(wgpuActivationTarget.cache, true, `${wgpuActivationName} does no work beyond prepare (activation IS preparation for wgpu) and is safe to replay`);
+        assert.deepEqual(wgpuActivationTarget.outputs, []);
+        assert.deepEqual(wgpuActivationTarget.dependsOn, [wgpuTargetName]);
         for (const command of ["serve", "dev"]) {
           const serverName = `${command}-${playground.variant}-react-${profile}`, server = preparationProject.targets[serverName];
           assert.ok(server, `${serverName} needs an Nx server owner`);
@@ -821,7 +837,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     console.log("[DEBUG] Editor and playground contracts passed; checking lifecycle and compiler contracts");
     const mcpRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp";
     const mcp = await import(join(root, mcpRoot, "🟦️.ts"));
-    const binaryVectors = JSON.parse(readFileSync(join(root, mcpRoot, "🧫️fixtures/🧱️binary-gate.json"), "utf8"));
+    const binaryVectors = JSON.parse(readFileSync(join(root, mcpRoot, "🎚️config/🧱️binary-gate.json"), "utf8"));
     const pathOracle = createRequire(testSource.url)("node:path");
     for (const row of binaryVectors.pathCases) {
       assert.equal(mcp.resolveMcpBinaryPath(row.repoRoot, row.environment, row.platform), row.expected);

@@ -65,6 +65,53 @@ export async function createSegmentedDownloadSink(filename: string, mimeType: st
   return { write: (chunk) => writable.write(chunk), close: () => writable.close(), abort: (reason) => writable.abort(reason) };
 }
 
+/** 🧺 Assembles the drained chunks in memory and hands the finished bytes to `deliver` on close.
+ *
+ * 🧯 The streaming sink above is the memory-bounded one, and it FAILS CLOSED where the File System Access
+ * API is absent — which is every browser without `showSaveFilePicker`, and every automated context where a
+ * native Save-As dialog cannot be answered. Without a second sink a segmented download is therefore silence,
+ * exactly the symptom the segmented lane exists to remove. The assembled path is bounded by the drain's own
+ * total cap ({@link MAX_SEGMENTED_DOWNLOAD_BYTES}), so "in memory" here is at most 32 MiB, and it delivers
+ * through the same blob-and-anchor mechanism the INLINE `download-media-export` lane already uses — one
+ * download, no dialog, whatever the payload size.
+ *
+ * 🧾 `abort` drops the buffer and delivers nothing: a partially drained payload must never reach the user as
+ * a file that looks complete. */
+export function createBufferedDownloadSink(filename: string, mimeType: string, deliver: (filename: string, mimeType: string, bytes: Uint8Array) => void): SegmentedDownloadSink {
+  let blocks: Uint8Array[] = [];
+  let bytes = 0;
+  return {
+    write: async (chunk) => {
+      blocks.push(chunk.slice());
+      bytes += chunk.byteLength;
+    },
+    close: async () => {
+      const assembled = new Uint8Array(bytes);
+      let cursor = 0;
+      for (const block of blocks) {
+        assembled.set(block, cursor);
+        cursor += block.byteLength;
+      }
+      blocks = [];
+      deliver(filename, mimeType, assembled);
+    },
+    abort: async () => {
+      blocks = [];
+    },
+  };
+}
+
+/** 🌊 The factory a shell passes to {@link drainSegmentedMediaExport}: the ASSEMBLED sink, because a
+ * segmented download must reach the user as the same kind of file the inline lane produces.
+ *
+ * 🧾 {@link createSegmentedDownloadSink} stays exported for a caller that genuinely wants the File System
+ * Access stream — it opens a native Save-As dialog and is unavailable outside Chromium, so it can neither be
+ * the default for a plain "Export" press nor the thing an automated check drives. Everything the drain admits
+ * is bounded by {@link MAX_SEGMENTED_DOWNLOAD_BYTES}, so assembling is bounded too. */
+export function segmentedDownloadSinkFactory(deliver: (filename: string, mimeType: string, bytes: Uint8Array) => void): SegmentedDownloadSinkFactory {
+  return async (filename, mimeType) => createBufferedDownloadSink(filename, mimeType, deliver);
+}
+
 /** 🧵 Drains exactly one capped producer chunk per awaited turn, preserving order and cancellation. */
 export async function drainSegmentedMediaExport(
   filename: string,

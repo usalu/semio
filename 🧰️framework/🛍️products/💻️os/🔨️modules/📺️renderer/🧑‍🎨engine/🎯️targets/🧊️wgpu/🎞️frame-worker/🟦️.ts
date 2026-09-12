@@ -11,9 +11,16 @@ import { loadPluginModule, pluginHandleForBridge, primeContributionManifest } fr
 import { meshAssetTransportUrl } from "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
 
 //#region 🔖️Bindings
+/** @emoji 🔢️ `generation` and `sequence` are `u64` on the renderer's own `#[wasm_bindgen]` exports
+ * (`🌐️browser-worker/🦀️.rs` `enqueue_batch`/`tick`), and wasm-bindgen lowers a `u64` parameter
+ * straight into the wasm `i64` slot — a JS `number` there throws
+ * `TypeError: Cannot convert <n> to a BigInt` out of the generated glue, faulting the Worker on its
+ * FIRST frame batch (`frame-runtime-fault`). Declaring them `bigint` here is what makes that ABI
+ * checkable at the seam instead of at runtime; the transport's own counters stay `number`, which is
+ * what a structured-cloned protocol message carries. */
 type BrowserRendererWorkerHandle = {
-  enqueueBatch(eventsJson: string, generation: number): void;
-  tick(timestampMs: number, sequence: number, generation: number): string;
+  enqueueBatch(eventsJson: string, generation: bigint): void;
+  tick(timestampMs: number, sequence: bigint, generation: bigint): string;
   pollAssetRequest(): string;
   reserveAssetResponse(byteCredits: number): void;
   pushAssetResponsePage(bytes: Uint8Array): void;
@@ -278,8 +285,8 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
   let outcome: TurnOutcome | undefined;
   try {
     const result = ownedStep("frame-step", () => {
-      runtime!.enqueueBatch(JSON.stringify({ replaceable: message.replaceable, lossless: message.lossless }), message.generation);
-      return JSON.parse(runtime!.tick(message.timestampMs, message.sequence, message.generation)) as Omit<Extract<BrowserFrameWorkerMessage, { kind: "frame" }>, "kind" | "lifecycle" | "sequence" | "generation" | "workerDurationMs">;
+      runtime!.enqueueBatch(JSON.stringify({ replaceable: message.replaceable, lossless: message.lossless }), BigInt(message.generation));
+      return JSON.parse(runtime!.tick(message.timestampMs, BigInt(message.sequence), BigInt(message.generation))) as Omit<Extract<BrowserFrameWorkerMessage, { kind: "frame" }>, "kind" | "lifecycle" | "sequence" | "generation" | "workerDurationMs">;
     });
     outcome = lastStepOutcome;
     lastFrame = { cursor: result.cursor, fullscreen: result.fullscreen };

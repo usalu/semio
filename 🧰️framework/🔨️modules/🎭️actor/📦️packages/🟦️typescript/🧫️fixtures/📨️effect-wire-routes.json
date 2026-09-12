@@ -1,0 +1,63 @@
+{
+  "why": "Who owns a `send-message` effect once a turn hands it back. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END: every `interactionSelect` completion left two of them in the browser console as `[DEBUG] wireEffectToFriendly: unmapped effect \"send-message\" dropped — unverified wasm-boundary conversion`, which read like lost work. It was not: `route_app_frame` (`⚛️reactor/🔄️turn/🦀️.rs`) wraps EVERY non-`UiPatch` `AppFrame` reply in `Effect::SendMessage{Shell{instance}}`, the reserved-tool-job completion turn parks them in `pendingTurnEffects`, and `invocationFromFrames` already applies them through `leftoverShellInvocationFrames` (the history patch the console logs one line later) before handing the SAME list to the friendly mapping. A shell or backbone send-message is transport with an owner; anything else has no host route at all and must stay loud.",
+  "instanceId": 7,
+  "routedTargets": ["shell", "backbone"],
+  "cases": [
+    {
+      "id": "shell-reply-frame-for-this-instance",
+      "why": "The `interactionSelect` shape: an AppFrame reply addressed at the calling instance. `shellFrameBytes` hands back its payload and the friendly mapping must stay silent.",
+      "effect": { "tag": "send-message", "val": { "target": { "tag": "shell", "val": "7" }, "payload": [1, 2, 3] } },
+      "friendly": null,
+      "warns": false,
+      "shellFramePayload": [1, 2, 3]
+    },
+    {
+      "id": "shell-reply-frame-for-another-instance",
+      "why": "`shellFrameBytes` declines a frame addressed elsewhere, but it is still transport owned by that other instance's own drain — never a friendly effect this instance should act on, and never a warning.",
+      "effect": { "tag": "send-message", "val": { "target": { "tag": "shell", "val": "9" }, "payload": [4] } },
+      "friendly": null,
+      "warns": false,
+      "shellFramePayload": null
+    },
+    {
+      "id": "backbone-document-port",
+      "why": "`routeHostEffects` already pushed this out the bound document port before the friendly mapping ran.",
+      "effect": { "tag": "send-message", "val": { "target": { "tag": "backbone", "val": "actor://space-1" }, "payload": [5, 6] } },
+      "friendly": null,
+      "warns": false,
+      "shellFramePayload": null
+    },
+    {
+      "id": "topic-endpoint-has-no-host-route",
+      "why": "The real hole the old blanket drop was hiding: no consumer anywhere routes a topic-addressed message, so this one MUST stay loud.",
+      "effect": { "tag": "send-message", "val": { "target": { "tag": "topic", "val": "t" }, "payload": [7] } },
+      "friendly": null,
+      "warns": true,
+      "shellFramePayload": null
+    },
+    {
+      "id": "send-message-with-no-endpoint",
+      "why": "A target-less send-message is malformed, not transport.",
+      "effect": { "tag": "send-message", "val": { "payload": [8] } },
+      "friendly": null,
+      "warns": true,
+      "shellFramePayload": null
+    },
+    {
+      "id": "genuinely-unknown-effect-kind",
+      "why": "The default arm keeps its meaning: an effect kind with no case at all is still an honest, loud drop.",
+      "effect": { "tag": "teleport", "val": {} },
+      "friendly": null,
+      "warns": true,
+      "shellFramePayload": null
+    },
+    {
+      "id": "mapped-effect-still-maps",
+      "why": "Control row — the new case must not shadow a real friendly projection.",
+      "effect": { "tag": "notify", "val": { "message": "refused" } },
+      "friendly": { "notify": { "message": "refused" } },
+      "warns": false,
+      "shellFramePayload": null
+    }
+  ]
+}

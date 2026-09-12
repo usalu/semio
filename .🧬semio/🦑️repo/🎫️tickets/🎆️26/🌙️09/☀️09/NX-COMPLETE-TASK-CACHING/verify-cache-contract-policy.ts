@@ -15,15 +15,15 @@ assert.equal(validate(vectors, schema).valid, true, JSON.stringify(validate.erro
 const pluginModule = await import('/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs');
 const cacheInternals = pluginModule.cacheInternals;
 const plugin = pluginModule.default;
-assert.equal(cacheInternals.matchesUncached("format-check", policy.uncached), false);
-assert.equal(cacheInternals.matchesUncached("format", policy.uncached), true);
+assert.equal(cacheInternals.matchesUncached("format-check", policy), false);
+assert.equal(cacheInternals.matchesUncached("format", policy), true);
 assert.equal(cacheInternals.cacheableFamily("format-check"), true);
 assert.equal(cacheInternals.cacheableFamily("generator-inputs"), false);
 for (const row of vectors.policies) {
   const enabled = cacheInternals.targetPolicy(row.target, { cache: true, options: { command: `bun ./📜️script.ts ${row.target}` } }, policy);
   const disabled = cacheInternals.targetPolicy(row.target, { cache: false, options: { command: `bun ./📜️script.ts ${row.target}` } }, policy);
   assert.deepEqual({ cache: enabled.cache, continuous: enabled.continuous ?? false }, { cache: row.cache, continuous: row.continuous }, row.target);
-  assert.equal(disabled.cache, row.cache, row.target);
+  assert.equal(disabled.cache, row.authored ? false : row.cache, row.target);
   assert.equal(isCacheableTask({ cache: enabled.cache, continuous: enabled.continuous === true, target: { project: "probe", target: row.target }, overrides: {} }), row.cache, row.target);
 }
 const graph = vectors.pluginGraph;

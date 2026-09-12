@@ -185,12 +185,12 @@ async fn interaction_select_publishes_through_the_retained_typed_path() {
     let _serial = test_support::lock();
     let mut app = app_with_registry().await;
     let node_id = testkit::snapshot(&app).fixture.widgets.first().map(crate::widget_id).expect("default fixture node").to_string();
-    let targets = serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: "node".into(), id: node_id.clone() }]).expect("selection targets");
-    let args: dsl::DslValue = serde_json::json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" }).into();
-    app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &semio_framework_plugin::testkit::meta("local")).await.expect("interactionSelect dispatches");
-    let receipt = testkit::settle(&mut app).await;
-    assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "interactionSelect published a fault lane");
+    // 🧯️ `interactionSelect` is a framework-reserved TOOL JOB (`FrameworkInteractionSelectJob`), so
+    // `handle_action` alone only admits its `Effect::SpawnJob` — the selection lands when the host
+    // drives that job, which is what `select_graph` does. A `settle_registered_typed_operation`
+    // cannot: it settles a typed operation, and the reserved spawn is not one.
+    let settled = testkit::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
-    eprintln!("[DEBUG] interactionSelect published: lanes={:?} completions={}", receipt.lanes, receipt.completions);
+    eprintln!("[DEBUG] interactionSelect published: effects={}", settled.requested_effects.len());
     semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
 }

@@ -20,13 +20,15 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
     assert.equal(resolve(workspace, hook.command_arguments.at(-1)!), join(dirname(join(workspace, path)), "Cargo.toml"));
     const project = JSON.parse(readFileSync(join(dirname(join(workspace, path)), "📋️project.json"), "utf8")), target = project.targets[fixture.target];
     assert.equal(project.name, fixture.project);
-    assert.equal(target.cache, false);
     assert.deepEqual(target.outputs, []);
     assert.ok(target.options.command.includes("native cargo metadata --manifest"));
     const { cacheInternals } = await import("../../../🟨️.mjs");
     const projectRoot = fixture.configs[0].slice(0, -"/Trunk.toml".length);
     const prepared = cacheInternals.withNativePreparation({ ...structuredClone(project), root: projectRoot }, workspace, { fixture: { ownership: "owned", target: "fixture:generate", nativeConsumers: [projectRoot] } });
     assert.deepEqual(prepared.targets[fixture.target].dependsOn ?? [], [], "Cargo metadata must not schedule native source generators");
+    assert.equal(cacheInternals.targetPolicy(fixture.target, target).cache, true, "the lock guard replays once every manifest it validates is hashed");
+    assert.deepEqual(cacheInternals.nativeLockInputs(target.options.command), ["{workspaceRoot}/**/Cargo.toml", "{workspaceRoot}/Cargo.lock"], "cargo metadata --locked validates the lock against every workspace manifest");
+    assert.deepEqual(cacheInternals.nativeLockInputs('bun "script.ts" native cargo check --manifest "Cargo.toml"'), []);
     for (const file of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
       const editor = Bun.JSONC.parse(readFileSync(join(workspace, file), "utf8"));
       assert.equal(editor.configurations.filter((value: any) => value.command === `bun nx run ${fixture.project}:${fixture.target}`).length, 1, file);

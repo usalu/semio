@@ -1,0 +1,393 @@
+{
+ "why": "The gesture→action law of a domain-bound world viewport, written once and read by two implementations: the React `World3dHost` mounted in jsdom (🧪️tests/🖱️world3d-interaction) and the language-neutral Node oracle (`world3dPointerGestureOracle`, the react target's 📜️script.ts). Until this fixture existed the 6.4k-line host had only pure-function and SSR-snapshot coverage: nothing proved that a pick reaches `interactionSelect`, that a move reaches `interactionHover`, that a background click clears, that a completed orbit debounces into exactly one `setCamera`, or that a marquee release replaces the selection with the deduplicated topology targets.",
+ "scene": {
+  "surfaceId": "procedural-preview",
+  "controllerId": "generation3d",
+  "windowInstanceId": "procedural-preview:1",
+  "domainId": "graph",
+  "domainGranularityId": "handle",
+  "camera": {
+   "position": [
+    6,
+    -6,
+    4
+   ],
+   "target": [
+    0,
+    0,
+    0
+   ],
+   "zoom": 1,
+   "fov": 45
+  },
+  "meshes": [
+   {
+    "id": "eval-extrude@solid#0",
+    "data": {
+     "positions": [
+      -1,
+      -1,
+      0,
+      1,
+      -1,
+      0,
+      1,
+      1,
+      0,
+      -1,
+      1,
+      0
+     ],
+     "normals": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1
+     ],
+     "indices": [
+      0,
+      1,
+      2,
+      0,
+      2,
+      3
+     ]
+    }
+   }
+  ],
+  "instances": [
+   {
+    "id": "extrude@solid#0",
+    "meshId": "eval-extrude@solid#0",
+    "interactionId": "extrude@solid",
+    "position": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "extrude@solid#1",
+    "meshId": "eval-extrude@solid#0",
+    "interactionId": "extrude@solid",
+    "position": [
+     2.5,
+     0,
+     0
+    ]
+   }
+  ],
+  "selectionJson": "{\"ids\":[]}",
+  "interactionJson": "{\"activeUtility\":\"select\"}"
+ },
+ "viewport": {
+  "left": 0,
+  "top": 0,
+  "width": 800,
+  "height": 600
+ },
+ "cameraDebounceMs": 120,
+ "marqueeDragThresholdPx": 4,
+ "gestures": [
+  {
+   "id": "instance-pick-replaces",
+   "why": "A bare pick on a rendered instance selects the TOPOLOGY id the instance stands for (`interactionId`), never the render id, at object granularity.",
+   "kind": "instance-pick",
+   "instanceId": "extrude@solid#0",
+   "modifiers": {
+    "shiftKey": false,
+    "ctrlKey": false,
+    "metaKey": false
+   },
+   "expect": {
+    "action": "interactionSelect",
+    "domainId": "graph",
+    "merge": "replace",
+    "method": "pick",
+    "targets": [
+     {
+      "granularity": "object",
+      "id": "extrude@solid"
+     }
+    ]
+   }
+  },
+  {
+   "id": "instance-pick-additive",
+   "why": "Shift is the additive modifier, and the resolved `MergeMode` goes on the wire VERBATIM — no host-side translation. Live defect 2026-09-12 (`📓️selection-merge-vocabulary-2026-09-12.md`): the host translated `additive` into a private word `add`, which the framework's `parse_merge_mode` rejects, so every shift-click on this scene faulted with `interactionSelect: unknown merge 'add'`.",
+   "kind": "instance-pick",
+   "instanceId": "extrude@solid#1",
+   "modifiers": {
+    "shiftKey": true,
+    "ctrlKey": false,
+    "metaKey": false
+   },
+   "expect": {
+    "action": "interactionSelect",
+    "domainId": "graph",
+    "merge": "additive",
+    "method": "pick",
+    "targets": [
+     {
+      "granularity": "object",
+      "id": "extrude@solid"
+     }
+    ]
+   }
+  },
+  {
+   "id": "instance-pick-subtractive",
+   "why": "Ctrl (and cmd on macOS) is the subtractive modifier — `resolveWorldMergeMode` → `subtractive`, on the wire unchanged.",
+   "kind": "instance-pick",
+   "instanceId": "extrude@solid#0",
+   "modifiers": {
+    "shiftKey": false,
+    "ctrlKey": true,
+    "metaKey": false
+   },
+   "expect": {
+    "action": "interactionSelect",
+    "domainId": "graph",
+    "merge": "subtractive",
+    "method": "pick",
+    "targets": [
+     {
+      "granularity": "object",
+      "id": "extrude@solid"
+     }
+    ]
+   }
+  },
+  {
+   "id": "instance-pick-subtractive-on-command",
+   "why": "cmd is ctrl's platform twin — the SAME mode, so a macOS user and a Windows user select identically.",
+   "kind": "instance-pick",
+   "instanceId": "extrude@solid#0",
+   "modifiers": {
+    "shiftKey": false,
+    "ctrlKey": false,
+    "metaKey": true
+   },
+   "expect": {
+    "action": "interactionSelect",
+    "domainId": "graph",
+    "merge": "subtractive",
+    "method": "pick",
+    "targets": [
+     {
+      "granularity": "object",
+      "id": "extrude@solid"
+     }
+    ]
+   }
+  },
+  {
+   "id": "instance-pick-invertive",
+   "why": "shift+ctrl is the invertive chord — the third multi-select word, and the last one the old `add`/`remove`/`toggle` translation could reach.",
+   "kind": "instance-pick",
+   "instanceId": "extrude@solid#1",
+   "modifiers": {
+    "shiftKey": true,
+    "ctrlKey": true,
+    "metaKey": false
+   },
+   "expect": {
+    "action": "interactionSelect",
+    "domainId": "graph",
+    "merge": "invertive",
+    "method": "pick",
+    "targets": [
+     {
+      "granularity": "object",
+      "id": "extrude@solid"
+     }
+    ]
+   }
+  },
+  {
+   "id": "second-instance-of-one-topology-id-pick",
+   "why": "The scene renders ONE topology id as two instances. A single click on the second one selects that id ONCE — a selection is a set of topology ids, so a pick can never publish the same id twice (live defect 2026-09-12: the guest published selectedIds [\"extrude@solid\",\"extrude@solid\"]).",
+   "kind": "instance-pick",
+   "instanceId": "extrude@solid#1",
+   "modifiers": {
+    "shiftKey": false,
+    "ctrlKey": false,
+    "metaKey": false
+   },
+   "expect": {
+    "action": "interactionSelect",
+    "domainId": "graph",
+    "merge": "replace",
+    "method": "pick",
+    "targets": [
+     {
+      "granularity": "object",
+      "id": "extrude@solid"
+     }
+    ]
+   }
+  },
+  {
+   "id": "repeated-ids-collapse-in-the-args-builder",
+   "why": "The wire-args builder itself is the host's set boundary: handed the same topology id twice (two rendered instances of one channel, or a batch no caller ran through `interactionTargetsForInstances`), it emits ONE target. Proving it at the builder — not only at one call site — is what makes a duplicate unrepresentable on the host side.",
+   "kind": "selection-args",
+   "granularity": "object",
+   "ids": [
+    "extrude@solid",
+    "extrude@solid"
+   ],
+   "expect": {
+    "action": "interactionSelect",
+    "domainId": "graph",
+    "merge": "replace",
+    "method": "pick",
+    "targets": [
+     {
+      "granularity": "object",
+      "id": "extrude@solid"
+     }
+    ]
+   }
+  },
+  {
+   "id": "instance-hover",
+   "why": "Hover reports the scene's OWN declared granularity (`domainGranularityId`), not the object granularity a pick uses, and travels on the `pointer` channel.",
+   "kind": "instance-hover",
+   "instanceId": "extrude@solid#0",
+   "expect": {
+    "action": "interactionHover",
+    "domainId": "graph",
+    "channel": "pointer",
+    "targets": [
+     {
+      "granularity": "handle",
+      "id": "extrude@solid"
+     }
+    ]
+   }
+  },
+  {
+   "id": "background-click-clears",
+   "why": "A click that hits no instance clears the domain selection — an EMPTY target list at the scene granularity, never a missing dispatch.",
+   "kind": "background-click",
+   "modifiers": {
+    "shiftKey": false,
+    "ctrlKey": false,
+    "metaKey": false
+   },
+   "expect": {
+    "action": "interactionSelect",
+    "domainId": "graph",
+    "merge": "replace",
+    "method": "pick",
+    "targets": []
+   }
+  },
+  {
+   "id": "orbit-completes-into-one-setcamera",
+   "why": "Orbit/pan/zoom drives the local rig every frame; only the COMPLETED gesture crosses to the guest, trailing-debounced so a wheel burst costs one dispatch, and the pose nests under `camera` (never spread flat beside `windowId`).",
+   "kind": "camera-gesture",
+   "steps": [
+    {
+     "position": [
+      7,
+      -5,
+      4
+     ],
+     "target": [
+      0,
+      0,
+      0
+     ],
+     "zoom": 1
+    },
+    {
+     "position": [
+      8,
+      -3,
+      5
+     ],
+     "target": [
+      0,
+      0,
+      0
+     ],
+     "zoom": 1.25
+    }
+   ],
+   "expect": {
+    "action": "setCamera",
+    "dispatches": 1,
+    "camera": {
+     "position": [
+      8,
+      -3,
+      5
+     ],
+     "target": [
+      0,
+      0,
+      0
+     ],
+     "zoom": 1.25
+    }
+   }
+  },
+  {
+   "id": "marquee-release-replaces",
+   "why": "A marquee release always REPLACES, and several rendered instances of one channel collapse onto that channel's single topology target (`interactionTargetsForInstances` dedup).",
+   "kind": "marquee",
+   "path": [
+    {
+     "x": 8,
+     "y": 8
+    },
+    {
+     "x": 400,
+     "y": 300
+    },
+    {
+     "x": 792,
+     "y": 592
+    }
+   ],
+   "expect": {
+    "action": "interactionSelect",
+    "domainId": "graph",
+    "merge": "replace",
+    "method": "pick",
+    "targets": [
+     {
+      "granularity": "object",
+      "id": "extrude@solid"
+     }
+    ]
+   }
+  }
+ ],
+ "wiring": {
+  "why": "Source-level anchors the Node oracle re-checks so a refactor cannot quietly move a gesture onto a different verb while the mounted suite still passes on a stale mock.",
+  "selectionArgsBuilder": "world3dSelectionActionArgs",
+  "hoverArgsBuilder": "world3dHoverActionArgs",
+  "cameraArgsBuilder": "worldCameraSetCameraDispatchArgs",
+  "targetsBuilder": "interactionTargetsForInstances",
+  "selectionTargetsAreASet": "const targets = [...new Set(ids)].map((id) => ({ granularity, id }));",
+  "mergeVocabularyFixture": "🧰️framework/🔨️modules/🕹️interaction/🧫️fixtures/🎯️merge-modes.json",
+  "mergeIsNotTranslated": "export function world3dSelectionActionArgs(domainId: string, granularity: string, ids: readonly string[], merge: MergeMode) {",
+  "deletedMergeBuilders": [
+   "instanceMergeArg",
+   "componentMergeArg"
+  ],
+  "deadVerbs": [
+   "graphPointerDown"
+  ]
+ }
+}

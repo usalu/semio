@@ -1286,6 +1286,11 @@ fn dag_lod_band_floor_zoom(lod_index: usize) -> f64 {
 /// 🔵️ Port dot world radius; screen size grows with camera zoom like node geometry.
 const DAG_HANDLE_WORLD_RADIUS: f64 = ui_styling::radii::DAG_HANDLE_WORLD;
 
+/// 🏷️ Share of a caption's own slot the text may occupy, leaving a hairline of breathing room. The
+/// same number both presentations used to derive privately; it is published on the row now
+/// (`maxScreenW`) so the budget is decided once, by the host that knows the layout.
+const DAG_LABEL_SCREEN_INSET: f64 = 0.88;
+
 const DAG_NODE_STROKE_SCREEN_PX: f64 = ui_styling::strokes::DAG_NODE;
 const DAG_NODE_STROKE_SELECTED_SCREEN_PX: f64 = ui_styling::strokes::DAG_NODE_SELECTED;
 const DAG_NODE_STROKE_HOVERED_SCREEN_PX: f64 = ui_styling::strokes::DAG_NODE_HOVERED;
@@ -3457,18 +3462,12 @@ impl DagHost {
         self.engine.cancel_area_select()
     }
 
-    // #region 🔖️MinimapWidget
-    /// 🗺️ Toggles the bottom-right flow minimap navigator.
-    pub fn set_minimap_widget_visible(&mut self, visible: bool) {
-        self.minimap_widget_visible = visible;
-    }
-
-    fn minimap_widget_content_bounds(&self) -> Option<WorldBox> {
-        if self.fixture.nodes.is_empty() {
-            return None;
-        }
-        let pad = ui_styling::metrics::dag::MINIMAP_WIDGET_CONTENT_PAD;
-        let mut union = Self::dag_node_world_bounds(&self.fixture.nodes[0]);
+    // #region 🔖️ContentFraming
+    /// 🖼️ World bounds of every node this board holds — what a fit frames and what the minimap maps.
+    /// `None` for an empty graph, which has nothing to frame.
+    pub fn content_world_bounds(&self) -> Option<canvas::camera::ContentBounds> {
+        let first = self.fixture.nodes.first()?;
+        let mut union = Self::dag_node_world_bounds(first);
         for node in self.fixture.nodes.iter().skip(1) {
             let b = Self::dag_node_world_bounds(node);
             union.min_x = union.min_x.min(b.min_x);
@@ -3476,7 +3475,65 @@ impl DagHost {
             union.max_x = union.max_x.max(b.max_x);
             union.max_y = union.max_y.max(b.max_y);
         }
-        Some(WorldBox { min_x: union.min_x - pad, min_y: union.min_y - pad, max_x: union.max_x + pad, max_y: union.max_y + pad })
+        Some(canvas::camera::ContentBounds { min_x: union.min_x, min_y: union.min_y, max_x: union.max_x, max_y: union.max_y })
+    }
+
+    fn camera_viewport(&self) -> canvas::camera::Viewport {
+        canvas::camera::Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) }
+    }
+
+    fn camera_state(&self) -> canvas::camera::Camera {
+        canvas::camera::Camera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }
+    }
+
+    /// 🖼️ Fraction of the graph's own area the live camera currently shows — `1.0` when the whole
+    /// graph is framed, `0.0` when none of it is. An empty graph is framed by definition.
+    pub fn camera_content_coverage(&self) -> f64 {
+        self.content_world_bounds().map_or(1.0, |content| canvas::camera::content_coverage(&content, &self.camera_state(), &self.camera_viewport()))
+    }
+
+    /// 🖼️ Moves the camera so the whole graph is framed with the shared screen padding. `false` when
+    /// there is no graph to frame.
+    pub fn fit_camera_to_content(&mut self) -> bool {
+        let Some(content) = self.content_world_bounds() else { return false };
+        let camera = canvas::camera::fit_camera(&content, &self.camera_viewport(), canvas::camera::CONTENT_FIT_PADDING_PX);
+        self.set_camera(camera.x, camera.y, camera.zoom);
+        true
+    }
+
+    /// 🖼️ The opening camera law: a STORED camera is adopted only when it already frames the graph
+    /// it was stored for; otherwise the graph is fitted. Returns `true` when the fit won — the
+    /// caller persists that exactly the way it persists a pan or a zoom gesture.
+    pub fn adopt_camera_or_fit(&mut self, x: f64, y: f64, zoom: f64) -> bool {
+        let stored = canvas::camera::Camera { x, y, zoom };
+        let content = self.content_world_bounds();
+        let (camera, fitted) =
+            canvas::camera::startup_camera(Some(&stored), content.as_ref(), &self.camera_viewport(), canvas::camera::CONTENT_FIT_PADDING_PX, canvas::camera::CONTENT_FRAMED_MIN_COVERAGE);
+        self.set_camera(camera.x, camera.y, camera.zoom);
+        fitted
+    }
+
+    /// 🖼️ Re-fits a graph that CHANGED under a live camera (an example switch) only when the change
+    /// left essentially nothing on screen. A camera the viewer set themselves is never yanked back
+    /// for an ordinary edit — see `canvas::camera::CONTENT_REFIT_MAX_COVERAGE`.
+    pub fn refit_camera_if_content_left_view(&mut self) -> bool {
+        if self.content_world_bounds().is_none() || self.camera_content_coverage() > canvas::camera::CONTENT_REFIT_MAX_COVERAGE {
+            return false;
+        }
+        self.fit_camera_to_content()
+    }
+    // #endregion 🔖️ContentFraming
+
+    // #region 🔖️MinimapWidget
+    /// 🗺️ Toggles the bottom-right flow minimap navigator.
+    pub fn set_minimap_widget_visible(&mut self, visible: bool) {
+        self.minimap_widget_visible = visible;
+    }
+
+    fn minimap_widget_content_bounds(&self) -> Option<WorldBox> {
+        let pad = ui_styling::metrics::dag::MINIMAP_WIDGET_CONTENT_PAD;
+        let content = self.content_world_bounds()?;
+        Some(WorldBox { min_x: content.min_x - pad, min_y: content.min_y - pad, max_x: content.max_x + pad, max_y: content.max_y + pad })
     }
 
     /// 🗺️ Thin wrapper over `ui_wgpu::wgpu::minimap::content_fully_visible` — pure layout math relocated there
@@ -5291,14 +5348,28 @@ impl DagHost {
         let paint_px = dag_label_paint_px(zoom, lod_index);
         let mut labels = Vec::new();
         if let Some(text) = Self::node_label_text(node, lod).map(str::to_string) {
+            // 🏷️ `above_body` is the computation/slider layout, where the caption is drawn ABOVE the
+            // node rather than inside it (`computation_name_world_center`) — nothing there is clipped
+            // by the body's own width, and nodes are laid out far enough apart to overhang it. Its
+            // budget is therefore `NODE_TITLE_WIDTH_FACTOR` node widths, while a caption INSIDE the
+            // body (the compact tier) and a rotated one keep the extent they actually sit in.
+            let above_body = !lod.node_label_is_horizontal()
+                && ((uses_computation_layout(&node.kind) && lod.shows_computation_layout()) || (matches!(node.kind, DagNodeKind::Slider { .. }) && lod.shows_controls()));
             let (layout, x, y) = if lod.node_label_is_horizontal() {
                 ("horizontal", node.x, node.y)
-            } else if (uses_computation_layout(&node.kind) && lod.shows_computation_layout()) || (matches!(node.kind, DagNodeKind::Slider { .. }) && lod.shows_controls()) {
+            } else if above_body {
                 let (lx, ly) = computation_name_world_center(node, &text, paint_px, zoom);
                 ("horizontal", lx, ly)
             } else {
                 let (lx, ly) = io_widget_label_center(node);
                 ("vertical", lx, ly)
+            };
+            let world_budget = if above_body {
+                node.width * ui_styling::metrics::dag::NODE_TITLE_WIDTH_FACTOR
+            } else if layout == "vertical" {
+                node.height
+            } else {
+                node.width
             };
             labels.push(os_pack::json::object([
                 ("id".to_string(), Value::from(node.id.clone())),
@@ -5308,6 +5379,7 @@ impl DagHost {
                 ("y".to_string(), Value::from(y)),
                 ("nodeW".to_string(), Value::from(node.width)),
                 ("nodeH".to_string(), Value::from(node.height)),
+                ("maxScreenW".to_string(), Value::from(world_budget * zoom.max(0.05) * DAG_LABEL_SCREEN_INSET)),
                 ("fontScreenPx".to_string(), Value::from(paint_px)),
                 ("ghost".to_string(), Value::from(ghost)),
             ]));
@@ -5363,6 +5435,7 @@ impl DagHost {
                 ("y".to_string(), Value::from(world_y)),
                 ("nodeW".to_string(), Value::from(input_column_w)),
                 ("nodeH".to_string(), Value::from(DAG_CHANNEL_ROW_HEIGHT)),
+                ("maxScreenW".to_string(), Value::from(input_column_w * zoom.max(0.05) * DAG_LABEL_SCREEN_INSET)),
                 ("fontScreenPx".to_string(), Value::from(port_layout_px)),
                 ("maxScreenH".to_string(), Value::from(port_layout_px * 1.3)),
             ]));
@@ -5393,6 +5466,7 @@ impl DagHost {
                 ("y".to_string(), Value::from(world_y)),
                 ("nodeW".to_string(), Value::from(column_w)),
                 ("nodeH".to_string(), Value::from(DAG_CHANNEL_ROW_HEIGHT)),
+                ("maxScreenW".to_string(), Value::from(column_w * zoom.max(0.05) * DAG_LABEL_SCREEN_INSET)),
                 ("fontScreenPx".to_string(), Value::from(port_layout_px)),
                 ("maxScreenH".to_string(), Value::from(port_layout_px * 1.3)),
             ]));
@@ -5662,7 +5736,6 @@ impl DagHost {
         }
         let text = match lod.node_label() {
             DagNodeLabel::None => return None,
-            DagNodeLabel::Abbreviation => node.abbreviation.trim(),
             DagNodeLabel::Name => node.name.trim(),
         };
         if text.is_empty() {

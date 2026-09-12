@@ -11,6 +11,7 @@
 
 // #region 🔌️Adapters
 import type { ShellDialogV1 } from "../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
+import { segmentedDownloadSinkFactory, type SegmentedDownloadSinkFactory } from "../📤️SegmentedDownload/🟦️.ts";
 import React, {
   type KeyboardEvent,
   type ReactElement,
@@ -117,6 +118,7 @@ import {
 } from "@semio-tech/framework-os";
 import { type UiPreferencesConfigMutation, setAppearance, setDriver, setLayout, setLocale, setTerminology, setTheme } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import type { DomainSelection, InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
+import { hostContinuations, type ContinuationCancel, type ContinuationScheduler } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
 import {
   decodeWorldProjectionTemplateId,
 } from "@semio-tech/infinite-world-r3f";
@@ -618,7 +620,28 @@ export function downloadMediaExport(filename: string, mimeType: string, data: st
   }, DOWNLOAD_MEDIA_EXPORT_REVOKE_MS);
 }
 
+/** @emoji 📥️ Host delivery of already-assembled bytes — the blob-and-anchor half of {@link downloadMediaExport}, reached by the segmented lane once its chunks are drained. */
+export function downloadMediaExportBytes(filename: string, mimeType: string, bytes: Uint8Array): void {
+  if (typeof document === "undefined") return;
+  const blob = new Blob([bytes], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  anchor.click();
+  window.setTimeout(() => {
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }, DOWNLOAD_MEDIA_EXPORT_REVOKE_MS);
+}
+
+/** @emoji 🌊 The sink factory every shell drain uses: assembled chunks delivered as one file through {@link downloadMediaExportBytes}. */
+export const shellSegmentedDownloadSinkFactory: SegmentedDownloadSinkFactory = segmentedDownloadSinkFactory(downloadMediaExportBytes);
+
 export {
+  createBufferedDownloadSink,
   createSegmentedDownloadSink,
   drainSegmentedMediaExport,
   MAX_SEGMENTED_DOWNLOAD_BYTES,
@@ -711,20 +734,32 @@ export function encodeEffectCommandInvocation(baseSession: ActiveSession, comman
 
 /** 🔁️ Builds an {@link EffectDispatchOne} bound to one plugin instance + `applyHostEffects` closure;
  * declared app commands re-enter the typed command channel and framework/window actions retain their
- * scoped action channel. */
+ * scoped action channel.
+ *
+ * 🗣️ `resolveViewState` is REQUIRED, and is the reason this takes a resolver instead of reading
+ * `baseSession.viewState`: an `ActiveSession`'s stored view state is the shell's own partial
+ * projection (`{ activeModeId }` at session establishment) and carries no `locale`/`terminology`,
+ * while the guest's `ViewModel` declares both NON-optional. A recursively requested effect
+ * (`dispatchAction`, `requestFileOpen`'s import, `requestMediaFrames`) dispatched with that raw
+ * projection faulted in the guest with the anonymous `missing field \`locale\`` — and a
+ * `scheduleDispatchAction` one is `void`-dispatched, so the fault surfaced only as an unhandled
+ * `SemioFaultError` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, the deferred `flowEvalTick` re-arm).
+ * Host owners pass `resolvedTargetViewState`, the single admission that stamps both preferences. */
 export function makeEffectDispatchOne(
   pluginEntry: LoadedProgramState,
   baseSession: ActiveSession,
   applyEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope?: UiDirtyScope) => Promise<void>,
   isCurrent: () => boolean,
+  resolveViewState: (session: ActiveSession) => ViewModel,
 ): EffectDispatchOne {
   return async (action, args) => {
     if (!isCurrent()) return;
+    const viewState = resolveViewState(baseSession);
     const isAppCommand = (baseSession.app.commands ?? []).some((command) => command.id === action);
     const response = isAppCommand && pluginEntry.handle.handleCommand
-      ? await pluginEntry.handle.handleCommand(baseSession.instanceId, encodeEffectCommandInvocation(baseSession, action, args), baseSession.viewState)
-      : await pluginEntry.handle.handleAction(baseSession.instanceId, encodeEffectActionInvocation(baseSession, action, args), baseSession.viewState);
-    if (isCurrent()) await applyEffects(response.requestedEffects ?? [], baseSession, resolveUiDirtyScope(response.uiScope));
+      ? await pluginEntry.handle.handleCommand(baseSession.instanceId, encodeEffectCommandInvocation(baseSession, action, args), viewState)
+      : await pluginEntry.handle.handleAction(baseSession.instanceId, encodeEffectActionInvocation(baseSession, action, args), viewState);
+    if (isCurrent()) await applyEffects(response.requestedEffects ?? [], { ...baseSession, viewState }, resolveUiDirtyScope(response.uiScope));
   };
 }
 
@@ -744,17 +779,32 @@ export async function dispatchOpenedFiles(
   }
 }
 
-/** 🔁️ D2: schedules `action` onto `dispatchOne` after `delayMs` (0 = next tick) via `schedule` (real
- * callers pass `setTimeout`; tests pass `vi.useFakeTimers()`-driven `setTimeout` or a synchronous stub). */
+/** 🔁️ D2: schedules `action` onto `dispatchOne` after `delayMs` through the host's ONE
+ * {@link ContinuationScheduler} — `delayMs <= 0` is an unthrottled macrotask, never a timer; a
+ * positive `delayMs` is a real deadline. Tests pass {@link createContinuationScheduler} over
+ * {@link createVirtualContinuationHost}'s ports instead of driving fake timers. Returns the cancel.
+ *
+ * 🛑️ Why this is not `setTimeout`: every `rearm()` in the flow/generation2d/generation3d command set
+ * asks for `delay_ms: 0`, and the host answers each one by re-entering `applyHostEffects` from inside
+ * the PREVIOUS dispatch's callback — a textbook nested zero-delay chain. Chrome clamps exactly that
+ * shape to ~1 tick/s in a hidden, unfocused or headless renderer, which is where this ticket's
+ * measured ~24 s per extension hop came from (two silent ~11-13 s gaps per hop against a 0.58 s
+ * native baseline, `📓️audit-extension-hop-latency-2026-09-12.md`). Evaluation must keep converging
+ * when nobody is looking at the tab; only paint may stop.
+ *
+ * 🩺 The scheduled dispatch has no awaiting caller, so its rejection is reported HERE and named — an
+ * unnamed unhandled `SemioFaultError` is exactly how the deferred `flowEvalTick` re-arm's
+ * `missing field \`locale\`` reached the page with nothing pointing at the dispatch that raised it
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 export function scheduleDispatchAction(
   action: string,
   args: Record<string, unknown> | undefined,
   delayMs: number,
   dispatchOne: EffectDispatchOne,
-  schedule: (fn: () => void, delayMs: number) => void = (fn, ms) => setTimeout(fn, ms),
-): void {
-  schedule(() => {
-    void dispatchOne(action, args);
+  scheduler: ContinuationScheduler = hostContinuations,
+): ContinuationCancel {
+  return scheduler.schedule(() => {
+    void dispatchOne(action, args).catch((error: unknown) => console.error(`scheduled dispatch of "${action}" failed`, error));
   }, delayMs);
 }
 
@@ -1264,41 +1314,10 @@ export function appWindowLabel(app: Pick<AppDefinition, "label" | "breadcrumb" |
   return override?.[override.length - 1]?.trim() || resolveManifestLabel(app.label, terminology, locale).trim();
 }
 
-export function buildSpacePanelState(programs: readonly SpaceProgramEntry[], spawnedApps: readonly SpawnedAppEntry[], activePanelTab = "s-play-catalogue", activeSpawnedId?: string): SpacePanelState {
-  return { activePanelTab, programs, spawnedApps, activeSpawnedId };
-}
-
-export function panelJsonFromState(state: SpacePanelState): string {
-  return packValueToBase64(state);
-}
-
-export function parsePanelState(viewState: ViewModel): SpacePanelState | null {
-  if (!viewState.panelJson) return null;
-  try {
-    return packValueFromBase64(viewState.panelJson) as SpacePanelState;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * @emoji 🪟️ Returns a studio panel with `spawned` present and focused as `activeSpawnedId`.
- * Host-effect application must fold this into the in-flight `nextViewState` before the final
- * `SET_SESSION` write — a separate panel dispatch is overwritten by that write and leaves the shell
- * stuck on the studio surface.
- * @see Effect.openPluginInstance
- */
-export function studioPanelFocusingSpawned(panel: SpacePanelState, spawned: SpawnedAppEntry): SpacePanelState {
-  const spawnedApps = panel.spawnedApps.some((entry) => entry.id === spawned.id)
-    ? panel.spawnedApps.map((entry) => (entry.id === spawned.id ? spawned : entry))
-    : [...panel.spawnedApps, spawned];
-  return buildSpacePanelState(panel.programs, spawnedApps, panel.activePanelTab, spawned.id);
-}
-
-/** @emoji 🐚️ Commits a studio panel into a view state's `panelJson` for a single host-effect session write. */
-export function viewStateWithSpacePanel(viewState: ViewModel, panel: SpacePanelState): ViewModel {
-  return { ...viewState, panelJson: panelJsonFromState(panel) };
-}
+// 📌️ The panel carriage moved to its own cycle-free module (`📌️panel/🟦️.ts`) so a law can drive
+// it — importing this file from a test hits the `ShellHelpers → Shell → ShellHost` cycle. Re-exported
+// here so every existing call site keeps one import.
+export { buildSpacePanelState, panelJsonFromState, parsePanelState, studioPanelFocusingSpawned, viewStateWithSpacePanel } from "./📌️panel/🟦️.ts";
 
 /** @emoji 🧭️ Default anchor a plugin-declared panel-tab `group` docks into — groups only ever map to the four corners; the four edge-middle anchors start empty and are user-populated via drag-and-drop or a dock skeleton override. */
 export function panelAnchorForGroup(group: string): Anchor {
@@ -1660,10 +1679,34 @@ export function pluginShouldEstablishSession(pluginId: string, primaryPluginId: 
   return !hasSession && pluginId === primaryPluginId;
 }
 
+/** 🔁️ What one `PluginSource` availability event is worth: a first `install`, a `hot-swap` of the
+ * artifact already loaded, or a `drop` because the event names nothing this shell does not already run. */
+export type PluginAvailabilityRouteV1 = "install" | "hot-swap" | "drop";
+
+/** 🔁️ The routing rule the availability pump obeys — the ONE place that decides whether an event may
+ * destroy a live instance.
+ *
+ * A `PluginSource` streams AVAILABILITY, never commands: `subscribe` opens a fresh stream and the dev
+ * source's SSE endpoint answers every connect with a full `snapshot` of what is already built, so the
+ * same `rebuiltAt` arrives again on every reconnect. Routing a replay to `hot-swap` destroys the
+ * session-owning plugin's live instance and its document (`actor-activation.revoked`, then `no channel
+ * for instance N`) — measured in ticket 26/09/02 wave B38 §1.7 and diagnosed in wave B40, where a
+ * language switch was re-running the subscription effect and thereby replaying the whole snapshot.
+ *
+ * `loadedRebuiltAt === undefined` is the first load's unbusted artifact (see `PluginSource.moduleUrl`):
+ * it names no build, so any event that DOES name one is newer. An event carrying no `rebuiltAt` names no
+ * newer artifact than whatever is loaded, so it can only ever be a first `install`. */
+export function pluginAvailabilityRouteV1(alreadyLoaded: boolean, loadedRebuiltAt: number | undefined, eventRebuiltAt: number | undefined): PluginAvailabilityRouteV1 {
+  if (!alreadyLoaded) return "install";
+  if (eventRebuiltAt === undefined) return "drop";
+  return loadedRebuiltAt === undefined || eventRebuiltAt > loadedRebuiltAt ? "hot-swap" : "drop";
+}
+
 /** 🧭️ Studio configures its catalogue; a focused shell configures only its active aggregate. */
 export function pluginShouldReceiveContributions(pluginId: string, sessionPluginId: string, hostMode: boolean): boolean {
   return hostMode || pluginId === sessionPluginId;
 }
+
 
 export async function loadPluginModuleResilient(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle | null> {
   const startedAtMs = Date.now();
@@ -2046,6 +2089,22 @@ const SURFACE_ROLE_CHIP_LABEL: Readonly<Record<AppRole, FrozenLabel>> = {
 export function surfaceRoleChipText(role: AppRole, locale: string): string {
   return frozenLabelText(SURFACE_ROLE_CHIP_LABEL[role], locale);
 }
+
+/** 👁️✏️ Accessible name of the navbar role `ButtonGroup` (`playground.navbar.roles`) — the group needs
+ * its OWN name because each button is named by the target app's own `AppDefinition.label`
+ * ("Editor"/"Viewer"), which says what you switch TO but not what axis the group controls. */
+const SURFACE_ROLE_GROUP_LABEL: FrozenLabel = { en: "Surface role", de: "Oberflächenrolle" };
+export function surfaceRoleGroupText(locale: string): string {
+  return frozenLabelText(SURFACE_ROLE_GROUP_LABEL, locale);
+}
+
+/** 🎛️ Accessible name of the navbar mode `ButtonGroup` (`playground.navbar.modes`) — same reasoning as
+ * {@link surfaceRoleGroupText}: the items are named by the plugin's own mode labels. */
+const APP_MODE_GROUP_LABEL: FrozenLabel = { en: "Mode", de: "Modus" };
+export function appModeGroupText(locale: string): string {
+  return frozenLabelText(APP_MODE_GROUP_LABEL, locale);
+}
+
 
 const OPEN_ARTIFACT_WITH_LABEL: FrozenLabel = { en: "Open with…", de: "Öffnen mit…" };
 export function openArtifactWithText(locale: string): string {
@@ -2725,6 +2784,85 @@ export function world3dMarqueeOverlayShape(method: string): "rect" | "polygon" |
 }
 //#endregion RevealCutoffStore
 
+//#region 🛑️ExtensionRequestCancellation
+/**
+ * @emoji 🛑️ Every extension request currently in flight, keyed by the REQUESTING actor
+ * (`<pluginId>:<instanceId>`) — the same key `serializePerActor` already serializes those requests
+ * under, because they are the same set of calls.
+ *
+ * 🚪️ Why the host owns this and not the guest: all of one instance's extension invocations are
+ * serialized under that one key, so a cancel the guest emitted could not overtake the request it
+ * means to stop — it would queue BEHIND it. Only the host, outside that queue, can abort a call
+ * already handed to the door. `driveInboundRequest` reads the signal at turn boundaries, so a parked
+ * multi-turn request is retired and a turn already handed to the worker is never half-abandoned.
+ */
+const inFlightExtensionRequestsByActor = new Map<string, Set<AbortController>>();
+
+/**
+ * @emoji 🛑️ Action ids a mounted surface has DECLARED as its cancel affordance — the surface reads
+ * the id off its own status contract (`World3dScene.statusJson`'s `cancelAction`) and registers it
+ * here while that status says `cancellable`. This is what keeps the shell domain-neutral: it never
+ * learns a plugin's verb from code, only from the surface that is currently offering it.
+ */
+const declaredSurfaceCancelActions = new Map<string, number>();
+
+/** 🛑️ Registers one in-flight extension request and hands back its signal plus a retirement. */
+export function beginCancellableExtensionRequest(actorKey: string): { readonly signal: AbortSignal; readonly finish: () => void } {
+  const controller = new AbortController();
+  let live = inFlightExtensionRequestsByActor.get(actorKey);
+  if (!live) {
+    live = new Set();
+    inFlightExtensionRequestsByActor.set(actorKey, live);
+  }
+  live.add(controller);
+  return {
+    signal: controller.signal,
+    finish: () => {
+      const set = inFlightExtensionRequestsByActor.get(actorKey);
+      if (!set) return;
+      set.delete(controller);
+      if (set.size === 0) inFlightExtensionRequestsByActor.delete(actorKey);
+    },
+  };
+}
+
+/** 🛑️ Aborts every extension request `actorKey` has in flight. Returns how many were aborted. */
+export function abortExtensionRequestsForActor(actorKey: string, reason: string): number {
+  const live = inFlightExtensionRequestsByActor.get(actorKey);
+  if (!live || live.size === 0) return 0;
+  const aborted = live.size;
+  for (const controller of [...live]) controller.abort(new Error(reason));
+  inFlightExtensionRequestsByActor.delete(actorKey);
+  return aborted;
+}
+
+/** 🔎️ How many extension requests `actorKey` has in flight — readable so a law can state it. */
+export function inFlightExtensionRequestCount(actorKey: string): number {
+  return inFlightExtensionRequestsByActor.get(actorKey)?.size ?? 0;
+}
+
+/** 🛑️ Declares `actionId` as a mounted surface's live cancel affordance; call the returned
+ * retirement when the surface stops offering it (it unmounted, or its status stopped being
+ * cancellable). Reference-counted, because two preview windows may offer the same verb. */
+export function declareSurfaceCancelAction(actionId: string): () => void {
+  if (!actionId) return () => undefined;
+  declaredSurfaceCancelActions.set(actionId, (declaredSurfaceCancelActions.get(actionId) ?? 0) + 1);
+  let retired = false;
+  return () => {
+    if (retired) return;
+    retired = true;
+    const count = (declaredSurfaceCancelActions.get(actionId) ?? 1) - 1;
+    if (count <= 0) declaredSurfaceCancelActions.delete(actionId);
+    else declaredSurfaceCancelActions.set(actionId, count);
+  };
+}
+
+/** 🔎️ Whether `actionId` is a cancel affordance some mounted surface is currently offering. */
+export function isDeclaredSurfaceCancelAction(actionId: string): boolean {
+  return declaredSurfaceCancelActions.has(actionId);
+}
+//#endregion 🛑️ExtensionRequestCancellation
+
 /**
  * @emoji 🚦️ Fires `run` at most once at a time — interval ticks that arrive while a previous run is still
  * in flight are dropped (not queued). Used by World3dHost's `suggestionsTick`/`fillBuildTick` loops so a
@@ -2772,10 +2910,15 @@ export function createCoalescingActionDispatcher<T>(dispatch: (value: T) => unkn
     if (lastSent !== undefined && isEqual(lastSent, next)) return;
     lastSent = next;
     inFlight = true;
-    void Promise.resolve(dispatch(next)).finally(() => {
+    // 🩹️ A REFUSED round trip frees the gate exactly like a settled one, and its rejection is already
+    // reported through the runtime's own fault channel — one `then(release, release)` handles both in the
+    // SAME microtask hop a bare `finally` took, so a caller that now hands over a real awaitable
+    // (wave B33 §4) cannot turn a refused hover into an unhandled rejection or a wedged lane.
+    const release = () => {
       inFlight = false;
       flush();
-    });
+    };
+    void Promise.resolve(dispatch(next)).then(release, release);
   };
   return (value: T) => {
     if (pending === undefined && lastSent !== undefined && isEqual(lastSent, value)) return;
@@ -3312,13 +3455,39 @@ export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }:
   );
 }
 
+/** @emoji 🪪️ THE DOM identity of one window-measure control: the WINDOW INSTANCE it is rendered for, then the
+ * program-authored measure id. Same rule and same separator as `uiNodeDomId` — a window kind's measure tree is
+ * authored ONCE for the kind (`world3d_projection_measures` takes a kind-level `id_prefix`, and puzzle3d passes
+ * the literal `"puzzle3d"`) and then rendered once per OPEN INSTANCE of that kind, so the authored id alone puts
+ * `puzzle3d-measure-projection-orthographic-view` in the document once per pane the moment more than one
+ * measures rail is unfolded. Duplicate ids are invalid HTML, they make the control unaddressable through
+ * `<label for>`/`aria-labelledby`/automation, and they also collapse the rail's own fold state
+ * (`WindowMeasureTreeGroup` keys `useTreeOpenState` on the group id), so unfolding "Parallel" in one pane
+ * unfolded it in the other. */
+export function windowMeasureDomId(windowId: string, measureId: string): string {
+  return `${windowId}/${measureId}`;
+}
+
+/** @emoji 🪪️ {@link windowMeasureDomId} applied to a whole authored measure subtree — ids only, every other field
+ * (labels, values, `reveal` group, `onChange`) verbatim, so the authored id stays the one integration key the
+ * program, `windowMeasureTreeContainsId` and the `activeUtilityId` routing all speak. */
+export function qualifyWindowMeasureIds(measures: readonly WindowMeasure[], windowId: string): WindowMeasure[] {
+  return measures.map((measure) =>
+    measure.kind === "group"
+      ? { ...measure, id: windowMeasureDomId(windowId, measure.id), children: qualifyWindowMeasureIds(measure.children, windowId) }
+      : { ...measure, id: windowMeasureDomId(windowId, measure.id) },
+  );
+}
+
 export function windowMeasuresChrome(
   measures: readonly WindowMeasure[] | undefined,
   activeUtilityId: string | undefined,
   windowId: string,
   onAction: (action: ActionDescriptor) => unknown,
 ): { readonly measures: ReactNode | undefined; readonly utilityOptions: ReactNode | undefined } {
-  const { general, utilityOptions } = partitionWindowMeasures(measures ?? [], activeUtilityId);
+  const partitioned = partitionWindowMeasures(measures ?? [], activeUtilityId);
+  const general = qualifyWindowMeasureIds(partitioned.general, windowId);
+  const utilityOptions = qualifyWindowMeasureIds(partitioned.utilityOptions, windowId);
   // 🪟️ Stamps this chrome's owning `windowId` onto every measure action, mirroring `tagSetActiveUtilityWindow`
   // for the utility bar — the generic `onAction` dispatch path reads it back out to target the plugin call's
   // `view_state.windowId`, so a grid/LOD/selection toggle only ever mutates ITS OWN window's options.
@@ -4267,6 +4436,20 @@ export function reconcileToolTabSelection(previous: ToolTabSelection | null, act
   return { next: last, effect: { kind: "idle" } };
 }
 
+/**
+ * 🛠️ Whether a tool the PROGRAM just armed has to reveal its own `tool.<id>` leaf. {@link
+ * reconcileToolTabSelection} is skipped wholesale while the Tool category is not the active root — which
+ * is right for a tool the user armed and then browsed away from, and wrong for one a program arms on its
+ * own (typing `fill 3` on the window's engagement line answers `Effect::SetActiveTool { fill }`): the
+ * tool went live with no leaf tab mounted anywhere, so its options were unreachable and nothing on screen
+ * said it had armed. Only a MOVE to a real tool reveals — an idle category, a disarm and a re-render on
+ * the same tool all owe nothing.
+ */
+export function programArmedToolRevealV1(previousToolId: string | null, activeToolId: string | null, toolCategoryActive: boolean): boolean {
+  if (toolCategoryActive) return false;
+  return activeToolId !== null && activeToolId !== previousToolId;
+}
+
 /** 🛠️ The mode tool a footer tab id (`tool.<id>`) names — the selected leaf and the active tool are reconciled by {@link reconcileToolTabSelection}. */
 export function toolIdFromPanelTabId(tabId: string | undefined): string | null {
   if (!tabId?.startsWith("tool.")) return null;
@@ -4449,6 +4632,172 @@ export function typedOperationCompletionRefreshV1(completion: {
   if (scope.kind !== "none") return scope;
   if (completion.historyPatch !== undefined) return { kind: "partial", panelBodies: [FRAMEWORK_HISTORY_BODY_KEY] };
   return completion.requestedEffects.length > 0 ? scope : null;
+}
+
+/** 🧰️ Host effects that rewrite host-owned state the GUEST reads back on its next render. The host's
+ * per-window utility map and active tool ride into every `refresh-ui` as `ViewModel
+ * .activeUtilityByWindowId`/`activeToolId`, and `setPanel` rewrites `panelJson` — so applying one of
+ * these changes what every subsequent render MUST produce, and the pass that applies it owes that render.
+ *
+ * Everything else an effect pass can do is host chrome or re-enters a route that owns its own scope: a
+ * `notify` banner is host React state, `clipboardWrite`/`downloadMediaExport` never reach a projection,
+ * `dispatchAction`/`replayShellCommand` come back through shell dispatch with their own `UiDirtyScope`,
+ * and `navigate`/`spawnPluginInstance`/`openPluginInstance` switch sessions (a session switch forces a
+ * full fetch of its own). Those earn NOTHING here — that is what keeps {@link
+ * typedOperationCompletionRefreshV1}'s no-storm property intact. */
+const HOST_EFFECTS_REWRITING_GUEST_RENDER_INPUTS = ["setActiveUtility", "setActiveTool", "setPanel", "loadDocument"] as const;
+
+/**
+ * 🧰️ The scope a host-effect pass owes ON TOP of what its dispatch or completion declared.
+ *
+ * The measured defect (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B37): the typed `brush` engagement verb
+ * arms `scene.active_utility`, its epilogue emits `Effect::SetActiveUtility`, and the operation completes
+ * with no mutation, no history patch and `UiDirtyScope::None` — so {@link
+ * typedOperationCompletionRefreshV1} answers `none` (correctly: the GUEST re-took nothing) and
+ * `applyHostEffects` handed that `none` straight to `refreshUi`, which asks for nothing at all. Live
+ * console, `engagementSubmit` at `effects:1`: the host armed `puzzle3d-main-perspective → brush` and the
+ * NEXT `refresh-ui` crossing happened 30 s later on an unrelated keystroke, with both world panes
+ * publishing `select` for the whole interval.
+ *
+ * The scope a completion declares is what the GUEST dirtied. What the HOST dirtied by applying the
+ * completion's own effects is this — and the two are unioned, never substituted.
+ */
+/** 🖼️ Whether this effect pass rewrote a guest render input at all — the same question {@link
+ * hostEffectRefreshScopeV1} answers with a scope, asked where a boolean is what is needed: the follow-up
+ * must ALSO land in the live built-node stores the mounted surfaces read (`ShellHost`'s
+ * `forceReloadLiveUiStoresV1`, gated on `replaceBodies`). Without that the armed body is fetched, cached
+ * and dispatched while the mounted world pane keeps publishing the previous `data-interaction-json`, which
+ * is the same red one hop further down. */
+export function hostEffectsRewriteGuestRenderInputsV1(effects: readonly unknown[]): boolean {
+  return effects.some((effect) => typeof effect === "object" && effect !== null && HOST_EFFECTS_REWRITING_GUEST_RENDER_INPUTS.some((key) => key in effect));
+}
+
+export function hostEffectRefreshScopeV1(effects: readonly unknown[], declared: UiDirtyScope, windowBodyKeys: readonly string[]): UiDirtyScope {
+  if (!hostEffectsRewriteGuestRenderInputsV1(effects)) return declared;
+  const rewriting = effects.filter((effect) => typeof effect === "object" && effect !== null && HOST_EFFECTS_REWRITING_GUEST_RENDER_INPUTS.some((key) => key in effect));
+  // 🪟️ `setPanel`/`loadDocument` name no body of their own — `panelJson` feeds every section, so the only
+  // honest answer is the widest one, which a hash-conditional fetch makes cheap for the unchanged parts.
+  const widest = rewriting.some((effect) => "setPanel" in (effect as object) || "loadDocument" in (effect as object));
+  const earned: UiDirtyScope = widest
+    ? { kind: "full" }
+    : { kind: "partial", windowBodies: [...windowBodyKeys], panelBodies: [], utilities: true, tools: true, engagements: false, measures: true, labels: false };
+  return mergeUiDirtyScopeV1(declared, earned);
+}
+
+/** 🤝️ The scope one refresh pass must cover when a SECOND pass was asked for while the first was
+ * still crossing into the guest — the union, never the newer alone.
+ *
+ * `ShellHost.refreshUi` used to abandon a superseded pass outright: it bumps a generation on every
+ * call and drops its own response when the generation moved under an await. That is correct only
+ * while a pass is faster than the cadence that triggers passes. It is not: a converging preview's
+ * `flowEvalTick` completions each demand a full pass, and one guest crossing during a brep solve was
+ * measured at 15-16 s on the served procedural editor while completions arrived every few seconds —
+ * so EVERY response was superseded before it could be applied and the flow window kept the previous
+ * example's graph for as long as the evaluation ran, with no fault anywhere
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Coalescing onto this union is what turns that livelock
+ * into one in-flight pass plus at most one owed follow-up, exactly the way the guest's own
+ * `FlowEvalSession` latch admits at most one pending tick per window.
+ */
+export function mergeUiDirtyScopeV1(first: UiDirtyScope, second: UiDirtyScope): UiDirtyScope {
+  if (first.kind === "full" || second.kind === "full") return { kind: "full" };
+  if (first.kind === "none") return second;
+  if (second.kind === "none") return first;
+  return {
+    kind: "partial",
+    windowBodies: [...new Set([...(first.windowBodies ?? []), ...(second.windowBodies ?? [])])],
+    panelBodies: [...new Set([...(first.panelBodies ?? []), ...(second.panelBodies ?? [])])],
+    utilities: Boolean(first.utilities || second.utilities),
+    tools: Boolean(first.tools || second.tools),
+    engagements: Boolean(first.engagements || second.engagements),
+    measures: Boolean(first.measures || second.measures),
+    labels: Boolean(first.labels || second.labels),
+  };
+}
+
+/** 🤝️ One ui-refresh lane: at most ONE pass running, at most ONE owed follow-up carrying the union of
+ * everything asked for while it ran, and a follow-up that is NEVER lost — whatever the pass did.
+ *
+ * The three properties, and the live defect each one answers:
+ *
+ * 1. **Every request is owed until a pass covers it.** The starter is not a special case: it registers
+ *    into the same owed slot every joiner does, and the drain loop takes it from there. A caller's
+ *    promise settles when the pass that covered ITS request settled, so `await refreshUi(…)` means "my
+ *    scope has been re-taken", not "somebody else's pass finished".
+ * 2. **A failed pass never ends the lane.** The rejection reaches exactly the requests that pass
+ *    covered (the boot refresh turns one into the session's fault card), and the loop still runs
+ *    whatever was owed behind it. The predecessor `while` loop read its owed slot AFTER `await pass`,
+ *    so one rejected pass dropped the follow-up on the floor — invisibly, since the owed entry is then
+ *    cleared by the next unrelated starter.
+ * 3. **A pass may ASK for another pass; it may never WAIT for one.** A host effect applied from inside
+ *    a pass (`ShellHost`'s `pendingRefreshEffects`) re-enters this lane, and its request is served by
+ *    the NEXT iteration — so the pass itself must never await that re-entrant work, or it is waiting on
+ *    itself. The predecessor made the re-entrant caller `await` the very promise the pass resolves: the
+ *    lane wedged with its in-flight marker pinned forever and NOTHING repainted again, which is the
+ *    shape measured on the served puzzle 3d editor as an armed `SetActiveUtility` whose world pane still
+ *    published `select` 30 s later (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B37). `ShellHost` keeps
+ *    its half by applying a pass's own owed effects OUTSIDE the pass.
+ *
+ * `merge` is injected ({@link mergeUiDirtyScopeV1} plus whatever else the caller's request record
+ * carries) so this lane owns sequencing only and knows nothing about sessions or window instances.
+ */
+export interface UiRefreshCoalescerV1<TRequest> {
+  /** 🤝️ Asks for a pass covering `next`; resolves once a pass that covered it has settled. A `none` scope asks for nothing and resolves at once. */
+  readonly request: (next: TRequest) => Promise<void>;
+  /** 🩺️ Whether the drain loop owns the lane right now. */
+  readonly busy: () => boolean;
+  /** 🩺️ The scope owed to the next iteration, `null` when nothing is. */
+  readonly owedScope: () => UiDirtyScope | null;
+  /** 🩺️ Passes this lane has run, ever — the no-storm counter every coalescing law measures. */
+  readonly passes: () => number;
+}
+
+export function createUiRefreshCoalescerV1<TRequest extends { readonly scope: UiDirtyScope }>(
+  run: (request: TRequest) => Promise<void>,
+  merge: (owed: TRequest, next: TRequest) => TRequest,
+  onDecision?: (decision: "owed" | "merged" | "pass" | "failed", scope: UiDirtyScope, passes: number) => void,
+): UiRefreshCoalescerV1<TRequest> {
+  let owed: TRequest | null = null;
+  let waiters: { resolve: () => void; reject: (error: unknown) => void }[] = [];
+  let draining = false;
+  let passes = 0;
+  const drain = async (): Promise<void> => {
+    while (owed) {
+      const pending = owed;
+      const covered = waiters;
+      owed = null;
+      waiters = [];
+      passes += 1;
+      onDecision?.("pass", pending.scope, passes);
+      try {
+        await run(pending);
+        for (const waiter of covered) waiter.resolve();
+      } catch (error) {
+        onDecision?.("failed", pending.scope, passes);
+        for (const waiter of covered) waiter.reject(error);
+      }
+    }
+  };
+  return {
+    request: (next: TRequest): Promise<void> => {
+      if (next.scope.kind === "none") return Promise.resolve();
+      onDecision?.(owed ? "merged" : "owed", next.scope, passes);
+      owed = owed ? merge(owed, next) : next;
+      const joined = new Promise<void>((resolve, reject) => waiters.push({ resolve, reject }));
+      // 🔁️ The flag is raised BEFORE the loop is entered, never after: `run`'s own synchronous prologue is
+      // allowed to re-enter `request` (that is property 3), and a marker written after the call would let
+      // that re-entrant request start a SECOND drain — two passes crossing into the same guest at once.
+      if (!draining) {
+        draining = true;
+        void drain().finally(() => {
+          draining = false;
+        });
+      }
+      return joined;
+    },
+    busy: () => draining,
+    owedScope: () => owed?.scope ?? null,
+    passes: () => passes,
+  };
 }
 
 function uiRefreshWantsWindow(scope: UiDirtyScope, bodyKey: string): boolean {

@@ -1,0 +1,238 @@
+{
+  "law": "A retained surface host is created once per window instance and survives every refresh. builtNodeToSnapshot mints UiNodeIds by pre-order DFS over the whole window body, so a refresh that grows the body ahead of a surface renumbers that surface; reconciliation must therefore key a sibling run on each node's AUTHORED key, never on the minted id, or the surface subtree is unmounted and rebuilt for a change that never touched it.",
+  "measuredOn": "http://127.0.0.1:6018/?plugin=generation3d window:procedural-main, ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 2026-09-12",
+  "surface": "window:procedural-main",
+  "surfaceKey": "procedural.play",
+  "canvasKey": "procedural-play-main.canvas",
+  "expected": {
+    "surfaceHostMounts": 1,
+    "surfaceAttaches": 1,
+    "surfaceDomId": "window:procedural-main/procedural.play",
+    "canvasDomId": "window:procedural-main/procedural-play-main.canvas",
+    "surfaceReactKeyPath": ["k:procedural-play-main.canvas", "k:procedural.play"],
+    "surfaceNodeIdByRefresh": [30, 34, 34, 30],
+    "bodyNodeCountByRefresh": [30, 34, 34, 30]
+  },
+  "siblingKeyCases": [
+    {
+      "name": "authored-keys-win",
+      "why": "Every sibling carries an authored key, so none of them is addressed by a number that renumbers.",
+      "siblings": [{ "id": 2, "key": "procedural-play-graph" }, { "id": 29, "key": "procedural-play-main.canvas" }],
+      "expected": ["k:procedural-play-graph", "k:procedural-play-main.canvas"]
+    },
+    {
+      "name": "renumbered-siblings-keep-their-keys",
+      "why": "The SAME two siblings one refresh later, renumbered by four inserted port rows upstream. The keys are byte-identical to the case above: that is the whole point.",
+      "siblings": [{ "id": 2, "key": "procedural-play-graph" }, { "id": 33, "key": "procedural-play-main.canvas" }],
+      "expected": ["k:procedural-play-graph", "k:procedural-play-main.canvas"]
+    },
+    {
+      "name": "keyless-falls-back-to-the-minted-id",
+      "why": "A keyless node has no stable identity to offer; the minted id is still sibling-unique, so reconciliation stays correct — only not stable.",
+      "siblings": [{ "id": 7, "key": "" }, { "id": 8, "key": "" }],
+      "expected": ["#7", "#8"]
+    },
+    {
+      "name": "ambiguous-keys-fall-back-to-the-minted-id",
+      "why": "React needs sibling-local uniqueness. Two siblings authoring one key would collide, so BOTH take the id — never one of each, which would silently reorder them against each other.",
+      "siblings": [{ "id": 4, "key": "row" }, { "id": 5, "key": "row" }, { "id": 6, "key": "other" }],
+      "expected": ["#4", "#5", "k:other"]
+    },
+    {
+      "name": "a-key-never-collides-with-an-id-fallback",
+      "why": "A node may author the literal key \"7\". Namespacing the two spellings keeps it off its keyless sibling's fallback.",
+      "siblings": [{ "id": 3, "key": "7" }, { "id": 7, "key": "" }],
+      "expected": ["k:7", "#7"]
+    }
+  ],
+  "refreshes": [
+    {
+      "name": "boot",
+      "why": "First body. Every operator row shows only the ports its status map has so far.",
+      "statusJson": "{\"height\":{\"status\":\"ok\"},\"radius\":{\"status\":\"ok\"},\"sides\":{\"status\":\"ok\"},\"profile\":{\"status\":\"queued\"},\"extrusion-axis\":{\"status\":\"computing\"},\"extrude\":{\"status\":\"blocked\",\"ports\":[\"wire\"]},\"column-preview\":{\"status\":\"ok\"}}",
+      "body": {
+        "key": "procedural-play-main.body",
+        "component": "container",
+        "children": [
+          {
+            "key": "procedural-play-graph",
+            "component": "tree",
+            "children": [
+              {
+                "key": "procedural-play-graph.nodes",
+                "component": "treeSection",
+                "children": [
+                  { "key": "height", "component": "treeItem", "children": [{ "key": "height@number", "component": "treeItem", "children": [] }] },
+                  { "key": "radius", "component": "treeItem", "children": [{ "key": "radius@number", "component": "treeItem", "children": [] }] },
+                  { "key": "sides", "component": "treeItem", "children": [{ "key": "sides@number", "component": "treeItem", "children": [] }] },
+                  { "key": "profile", "component": "treeItem", "children": [{ "key": "profile@radius", "component": "treeItem", "children": [] }, { "key": "profile@sides", "component": "treeItem", "children": [] }] },
+                  { "key": "extrusion-axis", "component": "treeItem", "children": [{ "key": "extrusion-axis@x", "component": "treeItem", "children": [] }, { "key": "extrusion-axis@y", "component": "treeItem", "children": [] }, { "key": "extrusion-axis@z", "component": "treeItem", "children": [] }] },
+                  { "key": "extrude", "component": "treeItem", "children": [{ "key": "extrude@wire", "component": "treeItem", "children": [] }, { "key": "extrude@vector", "component": "treeItem", "children": [] }] },
+                  { "key": "column-preview", "component": "treeItem", "children": [{ "key": "column-preview@", "component": "treeItem", "children": [] }] }
+                ]
+              },
+              {
+                "key": "procedural-play-graph.wires",
+                "component": "treeSection",
+                "children": [
+                  { "key": "e1", "component": "treeItem", "children": [] },
+                  { "key": "e2", "component": "treeItem", "children": [] },
+                  { "key": "e3", "component": "treeItem", "children": [] },
+                  { "key": "e4", "component": "treeItem", "children": [] },
+                  { "key": "e5", "component": "treeItem", "children": [] },
+                  { "key": "e6", "component": "treeItem", "children": [] }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "procedural-play-main.canvas",
+            "component": "container",
+            "children": [{ "key": "procedural.play", "component": "surface", "children": [] }]
+          }
+        ]
+      }
+    },
+    {
+      "name": "first-eval-settle",
+      "why": "The measured refresh that broke retention: `profile` gained an output port, `extrusion-axis` gained an input and an error row, `extrude` gained its solid. Four treeItems ahead of the surface in DFS order moved it from id 30 to 34 and its container from 29 to 33.",
+      "statusJson": "{\"height\":{\"status\":\"ok\"},\"radius\":{\"status\":\"ok\"},\"sides\":{\"status\":\"ok\"},\"profile\":{\"status\":\"ok\"},\"extrusion-axis\":{\"status\":\"computing\"},\"extrude\":{\"status\":\"blocked\",\"ports\":[\"wire\"]},\"column-preview\":{\"status\":\"ok\"}}",
+      "body": {
+        "key": "procedural-play-main.body",
+        "component": "container",
+        "children": [
+          {
+            "key": "procedural-play-graph",
+            "component": "tree",
+            "children": [
+              {
+                "key": "procedural-play-graph.nodes",
+                "component": "treeSection",
+                "children": [
+                  { "key": "height", "component": "treeItem", "children": [{ "key": "height@number", "component": "treeItem", "children": [] }] },
+                  { "key": "radius", "component": "treeItem", "children": [{ "key": "radius@number", "component": "treeItem", "children": [] }] },
+                  { "key": "sides", "component": "treeItem", "children": [{ "key": "sides@number", "component": "treeItem", "children": [] }] },
+                  { "key": "profile", "component": "treeItem", "children": [{ "key": "profile@radius", "component": "treeItem", "children": [] }, { "key": "profile@sides", "component": "treeItem", "children": [] }, { "key": "profile@wire", "component": "treeItem", "children": [] }] },
+                  { "key": "extrusion-axis", "component": "treeItem", "children": [{ "key": "extrusion-axis@vector", "component": "treeItem", "children": [] }, { "key": "extrusion-axis@x", "component": "treeItem", "children": [] }, { "key": "extrusion-axis@y", "component": "treeItem", "children": [] }, { "key": "extrusion-axis@z", "component": "treeItem", "children": [] }, { "key": "extrusion-axis@errors", "component": "treeItem", "children": [] }] },
+                  { "key": "extrude", "component": "treeItem", "children": [{ "key": "extrude@wire", "component": "treeItem", "children": [] }, { "key": "extrude@vector", "component": "treeItem", "children": [] }, { "key": "extrude@solid", "component": "treeItem", "children": [] }] },
+                  { "key": "column-preview", "component": "treeItem", "children": [{ "key": "column-preview@", "component": "treeItem", "children": [] }] }
+                ]
+              },
+              {
+                "key": "procedural-play-graph.wires",
+                "component": "treeSection",
+                "children": [
+                  { "key": "e1", "component": "treeItem", "children": [] },
+                  { "key": "e2", "component": "treeItem", "children": [] },
+                  { "key": "e3", "component": "treeItem", "children": [] },
+                  { "key": "e4", "component": "treeItem", "children": [] },
+                  { "key": "e5", "component": "treeItem", "children": [] },
+                  { "key": "e6", "component": "treeItem", "children": [] }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "procedural-play-main.canvas",
+            "component": "container",
+            "children": [{ "key": "procedural.play", "component": "surface", "children": [] }]
+          }
+        ]
+      }
+    },
+    {
+      "name": "status-only-settle",
+      "why": "Same shape, different status map — the common case, which must stay retained for the obvious reason too.",
+      "statusJson": "{\"height\":{\"status\":\"ok\"},\"radius\":{\"status\":\"ok\"},\"sides\":{\"status\":\"ok\"},\"profile\":{\"status\":\"ok\"},\"extrusion-axis\":{\"status\":\"ok\"},\"extrude\":{\"status\":\"computing\"},\"column-preview\":{\"status\":\"stale\"}}",
+      "body": {
+        "key": "procedural-play-main.body",
+        "component": "container",
+        "children": [
+          {
+            "key": "procedural-play-graph",
+            "component": "tree",
+            "children": [
+              {
+                "key": "procedural-play-graph.nodes",
+                "component": "treeSection",
+                "children": [
+                  { "key": "height", "component": "treeItem", "children": [{ "key": "height@number", "component": "treeItem", "children": [] }] },
+                  { "key": "radius", "component": "treeItem", "children": [{ "key": "radius@number", "component": "treeItem", "children": [] }] },
+                  { "key": "sides", "component": "treeItem", "children": [{ "key": "sides@number", "component": "treeItem", "children": [] }] },
+                  { "key": "profile", "component": "treeItem", "children": [{ "key": "profile@radius", "component": "treeItem", "children": [] }, { "key": "profile@sides", "component": "treeItem", "children": [] }, { "key": "profile@wire", "component": "treeItem", "children": [] }] },
+                  { "key": "extrusion-axis", "component": "treeItem", "children": [{ "key": "extrusion-axis@vector", "component": "treeItem", "children": [] }, { "key": "extrusion-axis@x", "component": "treeItem", "children": [] }, { "key": "extrusion-axis@y", "component": "treeItem", "children": [] }, { "key": "extrusion-axis@z", "component": "treeItem", "children": [] }, { "key": "extrusion-axis@errors", "component": "treeItem", "children": [] }] },
+                  { "key": "extrude", "component": "treeItem", "children": [{ "key": "extrude@wire", "component": "treeItem", "children": [] }, { "key": "extrude@vector", "component": "treeItem", "children": [] }, { "key": "extrude@solid", "component": "treeItem", "children": [] }] },
+                  { "key": "column-preview", "component": "treeItem", "children": [{ "key": "column-preview@", "component": "treeItem", "children": [] }] }
+                ]
+              },
+              {
+                "key": "procedural-play-graph.wires",
+                "component": "treeSection",
+                "children": [
+                  { "key": "e1", "component": "treeItem", "children": [] },
+                  { "key": "e2", "component": "treeItem", "children": [] },
+                  { "key": "e3", "component": "treeItem", "children": [] },
+                  { "key": "e4", "component": "treeItem", "children": [] },
+                  { "key": "e5", "component": "treeItem", "children": [] },
+                  { "key": "e6", "component": "treeItem", "children": [] }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "procedural-play-main.canvas",
+            "component": "container",
+            "children": [{ "key": "procedural.play", "component": "surface", "children": [] }]
+          }
+        ]
+      }
+    },
+    {
+      "name": "ports-retracted",
+      "why": "Shrinking is the same hazard with the sign flipped — a cancelled evaluation drops the four rows again and renumbers the surface back to 30.",
+      "statusJson": "{\"height\":{\"status\":\"ok\"},\"radius\":{\"status\":\"ok\"},\"sides\":{\"status\":\"ok\"},\"profile\":{\"status\":\"stale\"},\"extrusion-axis\":{\"status\":\"stale\"},\"extrude\":{\"status\":\"blocked\",\"ports\":[\"wire\"]},\"column-preview\":{\"status\":\"ok\"}}",
+      "body": {
+        "key": "procedural-play-main.body",
+        "component": "container",
+        "children": [
+          {
+            "key": "procedural-play-graph",
+            "component": "tree",
+            "children": [
+              {
+                "key": "procedural-play-graph.nodes",
+                "component": "treeSection",
+                "children": [
+                  { "key": "height", "component": "treeItem", "children": [{ "key": "height@number", "component": "treeItem", "children": [] }] },
+                  { "key": "radius", "component": "treeItem", "children": [{ "key": "radius@number", "component": "treeItem", "children": [] }] },
+                  { "key": "sides", "component": "treeItem", "children": [{ "key": "sides@number", "component": "treeItem", "children": [] }] },
+                  { "key": "profile", "component": "treeItem", "children": [{ "key": "profile@radius", "component": "treeItem", "children": [] }, { "key": "profile@sides", "component": "treeItem", "children": [] }] },
+                  { "key": "extrusion-axis", "component": "treeItem", "children": [{ "key": "extrusion-axis@x", "component": "treeItem", "children": [] }, { "key": "extrusion-axis@y", "component": "treeItem", "children": [] }, { "key": "extrusion-axis@z", "component": "treeItem", "children": [] }] },
+                  { "key": "extrude", "component": "treeItem", "children": [{ "key": "extrude@wire", "component": "treeItem", "children": [] }, { "key": "extrude@vector", "component": "treeItem", "children": [] }] },
+                  { "key": "column-preview", "component": "treeItem", "children": [{ "key": "column-preview@", "component": "treeItem", "children": [] }] }
+                ]
+              },
+              {
+                "key": "procedural-play-graph.wires",
+                "component": "treeSection",
+                "children": [
+                  { "key": "e1", "component": "treeItem", "children": [] },
+                  { "key": "e2", "component": "treeItem", "children": [] },
+                  { "key": "e3", "component": "treeItem", "children": [] },
+                  { "key": "e4", "component": "treeItem", "children": [] },
+                  { "key": "e5", "component": "treeItem", "children": [] },
+                  { "key": "e6", "component": "treeItem", "children": [] }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "procedural-play-main.canvas",
+            "component": "container",
+            "children": [{ "key": "procedural.play", "component": "surface", "children": [] }]
+          }
+        ]
+      }
+    }
+  ]
+}

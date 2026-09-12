@@ -306,7 +306,7 @@ pub mod app {
         },
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
         start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode, FaultFrom, FaultOrigin, IconName,
-        InteractionDefinition, InteractionRef, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest,
+        InteractionDefinition, InteractionRef, InteractionVerb, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest,
         ToolDefinition, ToolRef, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID,
         RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID,
         START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
@@ -580,16 +580,12 @@ pub mod app {
 
     /// 🕹️ Decodes `interactionSelect`'s `merge` select-arg — defaults to `Replace` (a plain pick) when
     /// absent, matching the un-modified-click case every renderer's modifier→merge policy falls back to.
+    /// The vocabulary is NOT spelled here: [`protocol::MergeMode::from_wire_label`] is the single codec
+    /// over this module's own schema enum (`🕹️interaction/🧬️schema/🔣️.json`), pinned by
+    /// `🕹️interaction/🧫️fixtures/🎯️merge-modes.json`.
     async fn parse_merge_mode(args: Option<&DslValue>) -> Result<protocol::MergeMode, Fault> {
         let raw = args.and_then(|value| value.get("merge")).and_then(DslValue::as_str).unwrap_or("replace");
-        match raw {
-            "replace" => Ok(protocol::MergeMode::Replace),
-            "additive" => Ok(protocol::MergeMode::Additive),
-            "subtractive" => Ok(protocol::MergeMode::Subtractive),
-            "invertive" => Ok(protocol::MergeMode::Invertive),
-            "range" => Ok(protocol::MergeMode::Range),
-            other => Err(plugin_sdk_fault(format!("interactionSelect: unknown merge '{other}'"))),
-        }
+        protocol::MergeMode::from_wire_label(raw).ok_or_else(|| plugin_sdk_fault(format!("interactionSelect: unknown merge '{raw}'")))
     }
 
     /// 🕹️ Decodes `setSelectionMode`'s `mode` select-arg.
@@ -6449,6 +6445,10 @@ pub mod app {
     #[path = "🧪️tests/🧬️mutation-fixtures/🦀️.rs"]
     pub(crate) mod mutation_fixture;
 
+    #[cfg(test)]
+    #[path = "🧪️tests/♻️publication-retirement-authority/🦀️.rs"]
+    mod publication_retirement_authority;
+
     //#region 🔖️Testkit
     pub mod testkit {
         //! 🧪️ Generic test-harness helpers for `ArtifactApp` implementors. Factors out the ~24x duplicated
@@ -7235,8 +7235,8 @@ pub mod app {
                 V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction)
             }
 
-            fn pending_effects(doc: &super::ArtifactView<'_, Self::Snapshot>, cfg: &super::ConfigView<'_, Self::Config>, view: Option<&super::ViewModel>) -> Vec<super::Effect> {
-                V::pending_effects(doc, cfg, view)
+            fn pending_effects(owner: &super::ArtifactInstanceOperationOwnerHandle, doc: &super::ArtifactView<'_, Self::Snapshot>, cfg: &super::ConfigView<'_, Self::Config>, view: Option<&super::ViewModel>) -> Vec<super::Effect> {
+                V::pending_effects(owner, doc, cfg, view)
             }
 
             fn window_engagements(doc: &super::ArtifactView<'_, Self::Snapshot>, cfg: &super::ConfigView<'_, Self::Config>, view_state: &super::ViewModel) -> std::collections::HashMap<String, super::WindowEngagement> {
@@ -7494,21 +7494,13 @@ pub mod app {
             &self.document_json
         }
 
-        /// 🧬️ Converts into a manifest [`ExampleDefinition`] (`app_id` filled at plugin registration).
-        pub fn into_example_definition(self) -> ExampleDefinition {
-            ExampleDefinition { id: self.id, label: self.label, icon_id: self.icon_id, artifact_json: self.document_json, app_id: String::new() }
-        }
-    }
-
-    impl From<ExampleSource> for ExampleDefinition {
-        fn from(source: ExampleSource) -> Self {
-            source.into_example_definition()
-        }
-    }
-
-    impl From<&ExampleSource> for ExampleDefinition {
-        fn from(source: &ExampleSource) -> Self {
-            ExampleDefinition { id: source.id.clone(), label: source.label.clone(), icon_id: source.icon_id, artifact_json: source.document_json.clone(), app_id: String::new() }
+        /// 🧬️ Converts into a manifest [`ExampleDefinition`] for `dialect` — the coordinate the
+        /// example is authored against, taken from the registering surface's own
+        /// `AppDefinition.dialect` (see `Plugin::register_app_factory`). There is deliberately no
+        /// `From<ExampleSource> for ExampleDefinition`: a source alone cannot know its dialect, and
+        /// an unstamped definition would be a manifest row no picker can resolve.
+        pub fn into_example_definition(self, dialect: ArtifactDialect) -> ExampleDefinition {
+            ExampleDefinition { id: self.id, label: self.label, icon_id: self.icon_id, artifact_json: self.document_json, dialect }
         }
     }
 
@@ -7522,9 +7514,12 @@ pub mod app {
     include!("🧪️tests/🔬️app-example-source/🦀️.rs");
     //#endregion 📚️ExampleSource
 
+    /// 📚️ `examples` stays a `Vec<ExampleSource>` all the way to registration: an example belongs to
+    /// a DIALECT, and the dialect is only known where `definition` is (ticket
+    /// 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub struct App {
         pub definition: AppDefinition,
-        pub examples: Vec<ExampleDefinition>,
+        pub examples: Vec<ExampleSource>,
     }
 
     impl App {
@@ -7546,7 +7541,7 @@ pub mod app {
 
         /// 📚️ Registers an example from a definition-leaf [`ExampleSource`] (canonical path).
         pub async fn example_source(mut self, source: impl Into<ExampleSource>) -> Self {
-            self.examples.push(ExampleDefinition::from(source.into()));
+            self.examples.push(source.into());
             self
         }
 
@@ -9279,6 +9274,28 @@ pub mod app {
         EMPTY.get_or_init(protocol::DomainHover::default)
     }
 
+    /// 🧮️ The ONE flat projection of an `InteractionState`'s selection half: every domain's ids as a
+    /// SET — each topology id at most once, in first-seen domain order. A selection is a set of
+    /// topology ids, so the flattened publication must be one too: `overlay_leftover_ids_into_vortex`
+    /// deliberately republishes another domain's ids under a second `vortex` key, so a plain flatten
+    /// reports a single pick once per mirroring domain. Measured live on 2026-09-12 (ticket
+    /// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️selection-dedupe-2026-09-12.md`): one click on the
+    /// generation3d preview published `selectedIds: ["extrude@solid","extrude@solid"]` while `locked`
+    /// — an object, so keyed by construction — carried the id exactly once.
+    // 🚫️async: E1 pure fold over an owned map, consumed by `InteractionView::leftover_selected_ids`
+    // and `leftover_interaction_view_from`'s sync bodies — see R9.
+    pub(crate) fn leftover_selected_ids_of(state: &protocol::InteractionState) -> Vec<String> {
+        let mut ids: Vec<String> = Vec::new();
+        for selection in state.selection.values() {
+            for id in &selection.ids {
+                if !ids.iter().any(|existing| existing == id) {
+                    ids.push(id.clone());
+                }
+            }
+        }
+        ids
+    }
+
     /// 🕹️ Read-only view of the framework-owned INTERACTION mechanism (hover + selection + active
     /// mode/granularity per domain) — threaded into `ArtifactApp::handle`/`copy_fragment`/
     /// `cut_operations` so an app reads its own current selection/hover instead of ever storing it
@@ -9303,18 +9320,11 @@ pub mod app {
             self.state.selection.get(domain).unwrap_or_else(|| empty_domain_selection())
         }
 
-        /// 🕹️ Leftover.ids for Inspection: flatten every domain's selected ids. A pick can land on leftover
-        /// `selectedIds` while `selection(vortex)` is still the empty persist snapshot.
+        /// 🕹️ Leftover.ids for Inspection: every domain's selected ids as a SET (see
+        /// {@link leftover_selected_ids_of}). A pick can land on leftover `selectedIds` while
+        /// `selection(vortex)` is still the empty persist snapshot.
         pub fn leftover_selected_ids(&self) -> Vec<String> {
-            let mut ids = Vec::new();
-            for selection in self.state.selection.values() {
-                for id in &selection.ids {
-                    if !ids.iter().any(|existing| existing == id) {
-                        ids.push(id.clone());
-                    }
-                }
-            }
-            ids
+            leftover_selected_ids_of(self.state)
         }
 
         /// 🐁️ `domain`'s current hover on `channel` — empty when nothing is hovered on that channel
@@ -11009,6 +11019,21 @@ pub mod app {
         fn retained_window_transient_target(_command: &Self::Command) -> Option<(&str, &'static str)> {
             None
         }
+        /// @emoji 🐢️ What one framework-owned interaction verb (`InteractionVerb`) dirties in THIS app,
+        /// for the domains it actually touched — the app half of `dispatch_interaction_action`'s
+        /// refresh scope. `None` means "not declared", and the framework then keeps the widest,
+        /// always-correct answer ([`UiDirtyScope::Full`]).
+        ///
+        /// 🌪️ Why this is a hook and not a constant: `interactionHover` fires on pointer motion, so a
+        /// blanket `Full` makes every mouse move repaint every window body, every panel body, the
+        /// utilities/tools/engagements rails, labels and measures — measured at 24 interaction
+        /// ingresses and 3 whole-shell completions per 80 s lane, which is what a document mutation's
+        /// own refresh pass then queues behind (ticket 26/09/02 `📓️2026-09-12-wave-B32-…md` §3.2).
+        /// Only the app knows which of its bodies render a hover or a selection, so only the app can
+        /// answer; the framework owns the verbs and the default.
+        fn interaction_scope(_verb: InteractionVerb, _domains: &[&str]) -> Option<UiDirtyScope> {
+            None
+        }
         /// 🧳️ Builds one operation owner retained by the concrete VCS app instance. The owner is
         /// never process-global and closes only after every mounted typed command has retired.
         fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
@@ -11317,7 +11342,7 @@ pub mod app {
         /// window's id in its `args` instead of landing on whichever window happens to be current
         /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). `None` means no surface is mounted yet: an app
         /// with window-scoped work must arm NOTHING and wait for the first `Event::SurfaceVisible`.
-        async fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
+        async fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
             Vec::new()
         }
         // 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): return type flipped
@@ -12776,7 +12801,11 @@ pub mod app {
     }
 
     impl ArtifactInstanceOperationOwnerHandle {
-        fn new(owner: Box<dyn ArtifactInstanceOperationOwner>) -> Self {
+        /// 🧳️ Wraps an owner the CALLER built. It confers no authority of its own — `with_mut`
+        /// downcasts to the concrete type the caller passed in — so an app's own laws can build the
+        /// handle their retained work expects instead of reaching into a live instance
+        /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        pub fn new(owner: Box<dyn ArtifactInstanceOperationOwner>) -> Self {
             Self { inner: std::sync::Arc::new(std::sync::Mutex::new(owner)) }
         }
 
@@ -12978,6 +13007,12 @@ pub mod app {
     }
 
     impl ArtifactOutputChunks {
+        /// 📏️ The exact byte cap [`Self::push`] enforces on ONE chunk — the wire constant an app must slice its
+        /// payload by. Exported because every app that fills a segmented output re-declared it as its own
+        /// literal, and a literal that drifts from `push`'s check turns a correct producer into a
+        /// `segmented-output-limit` fault at runtime.
+        pub const CHUNK_BYTES: usize = ARTIFACT_OUTPUT_CHUNK_BYTES;
+
         pub fn new(maximum: usize) -> Self {
             let slots = maximum / ARTIFACT_OUTPUT_CHUNK_BYTES + usize::from(!maximum.is_multiple_of(ARTIFACT_OUTPUT_CHUNK_BYTES));
             Self {
@@ -16515,6 +16550,85 @@ pub mod app {
                 Self::WindowTransient(publication) => publication.terminal_is_empty(),
             }
         }
+
+        /// 🏷️ The one result lane this pending publication answers under, paired with the store label
+        /// its own retirement faults are worded with.
+        fn lane(&self) -> (TypedOperationResultLane, &'static str) {
+            match self {
+                Self::Artifact(_) => (TypedOperationResultLane::Artifact, "artifact-store"),
+                Self::Config(_) => (TypedOperationResultLane::Config, "config-store"),
+                Self::Draft(_) => (TypedOperationResultLane::Draft, "draft-store"),
+                Self::Presence(_) => (TypedOperationResultLane::Presence, "presence-store"),
+                Self::Transient(_) => (TypedOperationResultLane::Transient, "transient-store"),
+                Self::WindowConfig(_) => (TypedOperationResultLane::WindowConfig, "window-config"),
+                Self::WindowTransient(_) => (TypedOperationResultLane::WindowTransient, "window-transient"),
+            }
+        }
+
+        /// ♻️ Whether the owning store already moved this publication into its retirement phase.
+        fn is_closing(&self) -> bool {
+            let phase = match self {
+                Self::Artifact(publication) => publication.phase(),
+                Self::Config(publication) => publication.phase(),
+                Self::Draft(publication) => publication.phase(),
+                Self::Presence(publication) => publication.phase(),
+                Self::Transient(publication) => publication.phase(),
+                Self::WindowConfig(publication) => publication.phase(),
+                Self::WindowTransient(publication) => publication.phase(),
+            };
+            phase == store::ArtifactStoreOneItemPublicationPhase::Closing
+        }
+
+        /// 💥️ The owning store's own rejection reason, for as long as the retirement still retains it.
+        fn fault(&self) -> Option<&str> {
+            match self {
+                Self::Artifact(publication) => publication.fault(),
+                Self::Config(publication) => publication.fault(),
+                Self::Draft(publication) => publication.fault(),
+                Self::Presence(publication) => publication.fault(),
+                Self::Transient(publication) => publication.fault(),
+                Self::WindowConfig(publication) => publication.fault(),
+                Self::WindowTransient(publication) => publication.fault(),
+            }
+        }
+
+        /// ♻️ ONE bounded retirement turn of a publication already in `Closing`, shared verbatim by all
+        /// seven store lanes.
+        ///
+        /// An incomplete step is [`PendingArtifactStorePublicationRetirement::Retiring`] — **never** a
+        /// fault — even while [`Self::fault`] is still `Some`: a rejected authority drains its reason
+        /// one scalar per turn, so answering the turn with `Err` re-raised the SAME rejection on every
+        /// turn of the drain and the host saw `typed-operation failed: … is retiring a rejected
+        /// authority` instead of a retiring publication
+        /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️invoke-extension-rejected-authority-2026-09-11.md`).
+        /// The rejection surfaces exactly once, when the retirement is terminal.
+        ///
+        /// Window-transient is deliberately the lenient lane: its authority is per-window ephemeral
+        /// state that the very next turn re-captures against the live generation, so a superseded
+        /// publication that retired cleanly owes the host no fault at all.
+        fn retirement_turn(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PendingArtifactStorePublicationRetirement, Fault> {
+            let (lane, label) = self.lane();
+            let rejected = self.fault().is_some();
+            match self.close_step(maximum_items, maximum_bytes)? {
+                store::SnapshotRetirementStep::Complete if !self.terminal_is_empty() => Err(plugin_sdk_fault(format!("{label} publication closed without terminal emptiness"))),
+                store::SnapshotRetirementStep::Complete if rejected && lane != TypedOperationResultLane::WindowTransient => {
+                    Ok(PendingArtifactStorePublicationRetirement::Rejected(plugin_sdk_fault(format!("{label} publication rejected stale or cancelled authority"))))
+                }
+                store::SnapshotRetirementStep::Complete => Ok(PendingArtifactStorePublicationRetirement::Retired),
+                _ => Ok(PendingArtifactStorePublicationRetirement::Retiring),
+            }
+        }
+    }
+
+    /// ♻️ Outcome of ONE [`PendingArtifactStorePublication::retirement_turn`].
+    #[derive(Debug)]
+    enum PendingArtifactStorePublicationRetirement {
+        /// 🔁️ The publication owes more retirement turns; the operation keeps its slot and yields.
+        Retiring,
+        /// ✅️ The publication retired terminal-empty and owes the host nothing.
+        Retired,
+        /// 💥️ The publication retired terminal-empty after its store rejected it; the operation fails.
+        Rejected(Fault),
     }
 
     struct MountedTypedCommandFullOperation<A: ArtifactApp> {
@@ -19165,7 +19279,7 @@ pub mod app {
 
     /// 🕹️ The six framework-owned interaction actions `dispatch_action` intercepts before any of the
     /// other framework-reserved branches — see `dispatch_interaction_action`'s own doc comment.
-    const INTERACTION_ACTION_IDS: [&str; 6] = [INTERACTION_SELECT_ACTION_ID, INTERACTION_HOVER_ACTION_ID, CLEAR_SELECTION_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID];
+    pub(crate) const INTERACTION_ACTION_IDS: [&str; 6] = [INTERACTION_SELECT_ACTION_ID, INTERACTION_HOVER_ACTION_ID, CLEAR_SELECTION_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID];
 
     pub(crate) fn is_framework_reserved_action_id(action: &str) -> bool {
         HISTORY_ACTION_IDS.contains(&action)
@@ -19269,6 +19383,40 @@ pub mod app {
         Some("store-readback-lost")
     }
 
+    /// 🧹️ Retires the leftover selection overlay for the domains an APP-authored selection write just
+    /// moved, and answers the pair `(overlay, leftover_ids)` that must replace the live ones.
+    ///
+    /// The overlay exists to paper over one specific hole: a pick whose ids the interaction store has
+    /// not answered with yet, or that `validate_state` pruned, still has to reach the render
+    /// ([`VcsArtifactApp::interaction_selection_snapshot`] lays it over an EMPTY store selection). It
+    /// is written only by the framework-reserved pick route, so before this rule existed it also
+    /// papered over a deliberate emptying: an app that empties its own selection through
+    /// `Emit.interaction_writes` (`MergeMode::Subtractive` — every `ctx.clear_selection()` in every
+    /// plugin) had the store answer `[]` correctly and then read the PRE-write ids straight back off
+    /// the overlay, forever. Measured 2026-09-12 in-process (ticket 26/09/02/PUZZLE-3D-END-TO-END wave
+    /// B31): `write merge=Subtractive current=[object] next=[]`, `persisted=Some([])`, then
+    /// `snapshot store=Some([]) overlay=Some([object])` — puzzle3d's `deleteSelection` kept its own
+    /// victim selected and its `clear` verb could not clear.
+    ///
+    /// A write names the newest truth for its domain, so that domain's overlay entry BECOMES the
+    /// freshly computed selection (empty included) and the flat leftover ids keep only what is still
+    /// selected somewhere. Domains the write never named are untouched, so an unrelated pick in flight
+    /// keeps its cover.
+    pub(crate) fn leftover_after_app_selection_write_v1(overlay: Option<&protocol::InteractionState>, leftover_ids: &[String], next: &protocol::InteractionState, domains: &[String]) -> (Option<protocol::InteractionState>, Vec<String>) {
+        let retired = overlay.map(|overlay| {
+            let mut retired = overlay.clone();
+            for domain in domains {
+                match next.selection.get(domain) {
+                    Some(selection) => retired.selection.insert(domain.clone(), selection.clone()),
+                    None => retired.selection.remove(domain),
+                };
+            }
+            retired
+        });
+        let live: Vec<&String> = next.selection.values().flat_map(|selection| selection.ids.iter()).collect();
+        (retired, leftover_ids.iter().filter(|id| live.contains(id)).cloned().collect())
+    }
+
     /// 🕳️ Records one selection loss on a channel the BROWSER actually shows.
     ///
     /// Deliberately not [`crate::plugin_runtime::debug_runtime_line`]: that channel is gated on
@@ -19300,6 +19448,37 @@ pub mod app {
         assert_eq!(interaction_selection_loss_v1(picked, nothing, nothing, true), Some("validate-state-pruned"), "validate_state dropped the pick against its topology");
         assert_eq!(interaction_selection_loss_v1(picked, picked, nothing, false), Some("persist-skipped"), "the validated half compared equal so no edit was minted and the pick never reached the render");
         assert_eq!(interaction_selection_loss_v1(picked, picked, nothing, true), Some("store-readback-lost"), "the store took the edit and did not answer with it");
+    }
+
+    /// 🔬️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B31 — an app-authored selection write owns the
+    /// leftover overlay for the domains it names, so a deliberate emptying survives the very next read
+    /// while an unrelated domain's in-flight pick keeps its cover.
+    #[cfg(test)]
+    #[test]
+    fn an_app_selection_write_retires_the_leftover_overlay_of_the_domains_it_names() {
+        let selection = |ids: &[&str]| protocol::DomainSelection { granularity: "object".to_string(), ids: ids.iter().map(|id| id.to_string()).collect(), anchor_id: ids.last().map(|id| id.to_string()) };
+        let state = |entries: &[(&str, &[&str])]| protocol::InteractionState {
+            selection: entries.iter().map(|(domain, ids)| (domain.to_string(), selection(ids))).collect(),
+            hover: BTreeMap::new(),
+            active_mode: BTreeMap::new(),
+            active_granularity: BTreeMap::new(),
+        };
+        let overlay = state(&[("vortex", &["object-1"]), ("tree", &["node-7"])]);
+        let leftover_ids = vec!["object-1".to_string(), "node-7".to_string()];
+        let cleared = state(&[("vortex", &[]), ("tree", &["node-7"])]);
+        let (retired, kept) = leftover_after_app_selection_write_v1(Some(&overlay), &leftover_ids, &cleared, &["vortex".to_string()]);
+        let retired = retired.expect("an overlay that existed stays present");
+        assert_eq!(retired.selection.get("vortex").map(|domain| domain.ids.clone()), Some(Vec::new()), "the written domain's overlay entry becomes the freshly computed selection, empty included");
+        assert_eq!(retired.selection.get("tree").map(|domain| domain.ids.clone()), Some(vec!["node-7".to_string()]), "a domain the write never named keeps its cover");
+        assert_eq!(kept, vec!["node-7".to_string()], "the flat leftover ids keep only what is still selected somewhere");
+
+        let reselected = state(&[("vortex", &["clone-2"]), ("tree", &["node-7"])]);
+        let (retired, kept) = leftover_after_app_selection_write_v1(Some(&overlay), &leftover_ids, &reselected, &["vortex".to_string()]);
+        assert_eq!(retired.expect("overlay").selection.get("vortex").map(|domain| domain.ids.clone()), Some(vec!["clone-2".to_string()]), "a re-select publishes the new ids, not the pre-write ones");
+        assert_eq!(kept, vec!["node-7".to_string()], "the replaced id leaves the flat leftover list with it");
+
+        let (retired, kept) = leftover_after_app_selection_write_v1(None, &[], &cleared, &["vortex".to_string()]);
+        assert!(retired.is_none() && kept.is_empty(), "no overlay in flight means nothing to retire");
     }
 
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
@@ -22268,6 +22447,10 @@ pub mod app {
                 state.active_mode.insert(write.domain.clone(), mode);
             }
             state.hover = self.interaction_hover.clone();
+            let domains: Vec<String> = writes.iter().map(|write| write.domain.clone()).collect();
+            let (overlay, leftover_ids) = leftover_after_app_selection_write_v1(self.interaction_leftover_selection.as_ref(), &self.interaction_leftover_ids, &state, &domains);
+            self.interaction_leftover_selection = overlay;
+            self.interaction_leftover_ids = leftover_ids;
             self.revalidate_and_persist_interaction_state(state, meta, InteractionRevalidateOrigin::Pick).await
         }
 
@@ -22275,17 +22458,19 @@ pub mod app {
         /// (`INTERACTION_ACTION_IDS`) — the ONE place any app's hover/selection ever mutates. Runs the
         /// pure os-kernel machine (`next_selection`/`next_hover`), re-validates+persists via
         /// `revalidate_and_persist_interaction_state`, records the command-log row under `ActionKind::Interaction`
-        /// (kept out of the history panel — `finish_recorded`'s `skip_history_panel` check), and always
-        /// returns `UiDirtyScope::Full` (mirrors the history actions' own reasoning: a selection/hover
-        /// change can affect the interacted tree/viewport plus every peer's presence overlay across
-        /// multiple window kinds — narrower scoping would need per-window interaction-domain bookkeeping
-        /// this wave doesn't build).
+        /// (kept out of the history panel — `finish_recorded`'s `skip_history_panel` check), and closes
+        /// on the APP-DECLARED refresh scope for the dispatched verb and the domains it actually
+        /// touched (`A::interaction_scope`, one entry per `InteractionVerb`), falling back to
+        /// `UiDirtyScope::Full` for every app that declares none. `touched` is the single domain the
+        /// verb names, or every declared domain for the two whole-app verbs
+        /// (`clearSelection`/`selectAll`) — the exact set the arms above wrote.
         async fn dispatch_interaction_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
             self.validate_framework_reserved_commit(action, permit).await?;
             self.refresh_cache().await?;
             let mut state = self.interaction_selection_snapshot();
-            match action {
-                _ if action == INTERACTION_SELECT_ACTION_ID => {
+            let verb = InteractionVerb::of_action(action).ok_or_else(|| plugin_sdk_fault(format!("{action} is not one of the six framework interaction verbs")))?;
+            match verb {
+                InteractionVerb::Select => {
                     let domain_id = interaction_domain_id_arg(args, action).await?;
                     let def = self.registry.interaction(&domain_id).await.cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
                     let targets = parse_interaction_targets(args, action).await?;
@@ -22313,7 +22498,7 @@ pub mod app {
                     state.selection.insert(domain_id.clone(), next);
                     state.active_mode.insert(domain_id, mode);
                 }
-                _ if action == INTERACTION_HOVER_ACTION_ID => {
+                InteractionVerb::Hover => {
                     let domain_id = interaction_domain_id_arg(args, action).await?;
                     let def = self.registry.interaction(&domain_id).await.cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
                     let channel = args.and_then(|value| value.get("channel")).and_then(DslValue::as_str).unwrap_or("pointer").to_string();
@@ -22329,12 +22514,12 @@ pub mod app {
                         self.interaction_hover.insert(domain_id, next);
                     }
                 }
-                _ if action == CLEAR_SELECTION_ACTION_ID => {
+                InteractionVerb::ClearSelection => {
                     for domain_id in self.registry.interactions().await.map(|def| def.id.clone()).collect::<Vec<_>>() {
                         state.selection.remove(&domain_id);
                     }
                 }
-                _ if action == SELECT_ALL_ACTION_ID => {
+                InteractionVerb::SelectAll => {
                     for def in self.registry.interactions().await.cloned().collect::<Vec<_>>() {
                         let granularity = state.active_granularity.get(&def.id).cloned().unwrap_or_else(|| def.granularities.first().map(|granularity| granularity.id.clone()).unwrap_or_default());
                         let mode = state.active_mode.get(&def.id).copied().unwrap_or_else(|| def.selection.modes.first().copied().unwrap_or(protocol::SelectionMode::Multiple));
@@ -22349,7 +22534,7 @@ pub mod app {
                         state.active_mode.insert(def.id.clone(), mode);
                     }
                 }
-                _ if action == SET_SELECTION_MODE_ACTION_ID => {
+                InteractionVerb::SetSelectionMode => {
                     let domain_id = interaction_domain_id_arg(args, action).await?;
                     let def = self.registry.interaction(&domain_id).await.cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
                     let raw = args.and_then(|value| value.get("mode")).and_then(DslValue::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing mode")))?;
@@ -22359,7 +22544,7 @@ pub mod app {
                     }
                     state.active_mode.insert(domain_id, mode);
                 }
-                _ if action == SET_INTERACTION_GRANULARITY_ACTION_ID => {
+                InteractionVerb::SetGranularity => {
                     let domain_id = interaction_domain_id_arg(args, action).await?;
                     let def = self.registry.interaction(&domain_id).await.cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
                     let granularity_id = args.and_then(|value| value.get("granularityId")).and_then(DslValue::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing granularityId")))?.to_string();
@@ -22368,10 +22553,13 @@ pub mod app {
                     }
                     state.active_granularity.insert(domain_id, granularity_id);
                 }
-                _ => unreachable!("dispatch_interaction_action called for non-interaction action {action} — INTERACTION_ACTION_IDS out of sync"),
             }
+            let touched = match verb {
+                InteractionVerb::ClearSelection | InteractionVerb::SelectAll => self.registry.interactions().await.map(|def| def.id.clone()).collect::<Vec<String>>(),
+                _ => vec![interaction_domain_id_arg(args, action).await?],
+            };
             state.hover = self.interaction_hover.clone();
-            if action == INTERACTION_HOVER_ACTION_ID {
+            if verb == InteractionVerb::Hover {
                 let current_empty = state.selection.values().all(|selection| selection.ids.is_empty());
                 if current_empty {
                     if let Some(prior) = &self.interaction_leftover_selection {
@@ -22404,7 +22592,9 @@ pub mod app {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled before interaction publication")));
             }
             self.record_command(action, ActionKind::Interaction, None, None, None, None).await;
-            let mut result = Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::Full).await;
+            let declared: Vec<&str> = touched.iter().map(String::as_str).collect();
+            let scope = A::interaction_scope(verb, &declared).unwrap_or(UiDirtyScope::Full);
+            let mut result = Self::empty_result(action, meta, Vec::new(), Vec::new(), scope).await;
             result.output = leftover;
             Ok(result)
         }
@@ -22425,14 +22615,8 @@ pub mod app {
         }
 
         fn leftover_interaction_view_from(state: &protocol::InteractionState, hover: &InteractionHoverState) -> DslValue {
-            let mut selected_ids = Vec::new();
-            let mut locked = Vec::new();
-            for selection in state.selection.values() {
-                for id in &selection.ids {
-                    selected_ids.push(id.clone());
-                    locked.push((id.clone(), DslValue::Bool(false)));
-                }
-            }
+            let selected_ids = leftover_selected_ids_of(state);
+            let locked: Vec<(String, DslValue)> = selected_ids.iter().map(|id| (id.clone(), DslValue::Bool(false))).collect();
             let hover_target = hover.iter().find_map(|(domain, hover)| {
                 hover.ids.first().map(|id| DslValue::object([("domain".to_string(), DslValue::String(domain.clone())), ("channel".to_string(), DslValue::String(hover.channel.clone())), ("id".to_string(), DslValue::String(id.clone()))]))
             });
@@ -23861,113 +24045,28 @@ pub mod app {
             }
             if let Some(pending) = mounted.pending_artifact_publication.as_mut() {
                 let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES };
-                let pending_lane = match pending {
-                    PendingArtifactStorePublication::Artifact(_) => TypedOperationResultLane::Artifact,
-                    PendingArtifactStorePublication::Config(_) => TypedOperationResultLane::Config,
-                    PendingArtifactStorePublication::Draft(_) => TypedOperationResultLane::Draft,
-                    PendingArtifactStorePublication::Presence(_) => TypedOperationResultLane::Presence,
-                    PendingArtifactStorePublication::Transient(_) => TypedOperationResultLane::Transient,
-                    PendingArtifactStorePublication::WindowConfig(_) => TypedOperationResultLane::WindowConfig,
-                    PendingArtifactStorePublication::WindowTransient(_) => TypedOperationResultLane::WindowTransient,
-                };
+                let (pending_lane, _) = pending.lane();
+                if pending.is_closing() {
+                    return match pending.retirement_turn(grant.maximum_items, grant.maximum_bytes)? {
+                        PendingArtifactStorePublicationRetirement::Retiring => Ok(()),
+                        PendingArtifactStorePublicationRetirement::Retired => {
+                            mounted.pending_artifact_publication = None;
+                            Ok(())
+                        }
+                        PendingArtifactStorePublicationRetirement::Rejected(fault) => {
+                            mounted.pending_artifact_publication = None;
+                            Err(fault)
+                        }
+                    };
+                }
                 let advance = match pending {
-                    PendingArtifactStorePublication::Artifact(publication) => {
-                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
-                            let failed = publication.fault().is_some();
-                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
-                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
-                                    mounted.pending_artifact_publication = None;
-                                    return if failed { Err(plugin_sdk_fault("artifact-store publication rejected stale or cancelled authority")) } else { Ok(()) };
-                                }
-                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("artifact-store publication closed without terminal emptiness")),
-                                _ => return Ok(()),
-                            }
-                        }
-                        self.store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?
-                    }
-                    PendingArtifactStorePublication::Config(publication) => {
-                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
-                            let failed = publication.fault().is_some();
-                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
-                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
-                                    mounted.pending_artifact_publication = None;
-                                    return if failed { Err(plugin_sdk_fault("config-store publication rejected stale or cancelled authority")) } else { Ok(()) };
-                                }
-                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("config-store publication closed without terminal emptiness")),
-                                _ => return Ok(()),
-                            }
-                        }
-                        self.config_store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?
-                    }
-                    PendingArtifactStorePublication::Draft(publication) => {
-                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
-                            let failed = publication.fault().is_some();
-                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
-                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
-                                    mounted.pending_artifact_publication = None;
-                                    return if failed { Err(plugin_sdk_fault("draft-store publication rejected stale or cancelled authority")) } else { Ok(()) };
-                                }
-                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("draft-store publication closed without terminal emptiness")),
-                                _ => return Ok(()),
-                            }
-                        }
-                        self.draft_store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?
-                    }
-                    PendingArtifactStorePublication::Presence(publication) => {
-                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
-                            let failed = publication.fault().is_some();
-                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
-                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
-                                    mounted.pending_artifact_publication = None;
-                                    return if failed { Err(plugin_sdk_fault("presence-store publication rejected stale or cancelled authority")) } else { Ok(()) };
-                                }
-                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("presence-store publication closed without terminal emptiness")),
-                                _ => return Ok(()),
-                            }
-                        }
-                        self.presence_store.advance_publish_one(publication, grant).map_err(plugin_sdk_fault)?
-                    }
-                    PendingArtifactStorePublication::Transient(publication) => {
-                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
-                            let failed = publication.fault().is_some();
-                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
-                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
-                                    mounted.pending_artifact_publication = None;
-                                    return if failed { Err(plugin_sdk_fault("transient-store publication rejected stale or cancelled authority")) } else { Ok(()) };
-                                }
-                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("transient-store publication closed without terminal emptiness")),
-                                _ => return Ok(()),
-                            }
-                        }
-                        self.transient_store.advance_publish_one(publication, grant).map_err(plugin_sdk_fault)?
-                    }
-                    PendingArtifactStorePublication::WindowConfig(publication) => {
-                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
-                            let failed = publication.fault().is_some();
-                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
-                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
-                                    mounted.pending_artifact_publication = None;
-                                    return if failed { Err(plugin_sdk_fault("window-config publication rejected stale or cancelled authority")) } else { Ok(()) };
-                                }
-                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("window-config publication closed without terminal emptiness")),
-                                _ => return Ok(()),
-                            }
-                        }
-                        self.window_config_store.advance(publication.as_mut(), grant)?
-                    }
-                    PendingArtifactStorePublication::WindowTransient(publication) => {
-                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
-                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
-                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
-                                    mounted.pending_artifact_publication = None;
-                                    return Ok(());
-                                }
-                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("window-transient publication closed without terminal emptiness")),
-                                _ => return Ok(()),
-                            }
-                        }
-                        self.window_transient_store.advance(publication.as_mut(), grant)?
-                    }
+                    PendingArtifactStorePublication::Artifact(publication) => self.store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                    PendingArtifactStorePublication::Config(publication) => self.config_store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                    PendingArtifactStorePublication::Draft(publication) => self.draft_store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                    PendingArtifactStorePublication::Presence(publication) => self.presence_store.advance_publish_one(publication, grant).map_err(plugin_sdk_fault)?,
+                    PendingArtifactStorePublication::Transient(publication) => self.transient_store.advance_publish_one(publication, grant).map_err(plugin_sdk_fault)?,
+                    PendingArtifactStorePublication::WindowConfig(publication) => self.window_config_store.advance(publication.as_mut(), grant)?,
+                    PendingArtifactStorePublication::WindowTransient(publication) => self.window_transient_store.advance(publication.as_mut(), grant)?,
                 };
                 return match advance {
                     store::ArtifactStoreOneItemAdvance::Published(receipt) => {
@@ -25112,20 +25211,28 @@ pub mod app {
                 }
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
+            // 🧾️ A stage that reports `Complete` HANDED OFF: one retained authority really did cross the
+            // close boundary, so the ladder owes `released_items: 1`, not `Pending { 0, 0 }` — the same
+            // convention `ArtifactStoreEnvelopeRetirement::close_step` was corrected to on 2026-09-10.
+            // `Pending { 0, 0 }` is what the structural livelock accountant reads as "this ladder is
+            // stuck" (`RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT = 8`), and three consecutive hand-offs plus a
+            // couple of real waits spend that whole credit on a ladder that was making progress the
+            // entire time — reproduced intermittently by the close-cost fixture's eight-document session
+            // as `plugin.internal.zero-progress` (ticket 26/09/09).
             if self.local_interaction_query.is_some() {
                 let step = self.advance_local_interaction_query_one(maximum_items, maximum_bytes)?;
                 drop(self.take_local_interaction_query_reply());
-                return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } } else { step });
+                return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
             }
             if !self.snapshot_read_returns_terminal_is_empty() {
                 let step = self.advance_snapshot_read_returns_one(maximum_bytes)?;
-                return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } } else { step });
+                return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
             }
             if !self.presence_store.retirement_started() && !self.presence_store.local_read_maintenance_is_idle() {
                 return self.presence_store.maintenance_local_reads_step(1, maximum_bytes).map_err(Fault::from).map(|step| match step {
                     store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
                     store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "presence returned local owner is held during app close" },
-                    store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                    store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
                 });
             }
             if let Some(instance_id) = self.live_runtime_instance_id {
@@ -25138,10 +25245,14 @@ pub mod app {
                 }
             }
             if self.close_cancellation_cursor < TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS {
-                let released = self.tool_cancellations.cleanup_slot(self.close_cancellation_cursor)?;
-                self.close_cancellation_cursor = self.close_cancellation_cursor.saturating_add(1);
-                let _ = released;
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                let ceiling = self.close_cancellation_cursor.saturating_add(maximum_items).min(TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS);
+                let mut released_items = 0;
+                while self.close_cancellation_cursor < ceiling {
+                    let _ = self.tool_cancellations.cleanup_slot(self.close_cancellation_cursor)?;
+                    self.close_cancellation_cursor = self.close_cancellation_cursor.saturating_add(1);
+                    released_items += 1;
+                }
+                return Ok(PluginCloseStep::Pending { released_items, released_bytes: 0 });
             }
             if !self.latest_wins_keys.terminal_is_empty() {
                 self.latest_wins_keys.begin_close();
@@ -25167,8 +25278,13 @@ pub mod app {
             }
             if self.close_media_cursor < ARTIFACT_LIVE_OUTPUT_SLOTS {
                 let Some(operation_id) = self.media_exports.id_at(self.close_media_cursor) else {
-                    self.close_media_cursor = self.close_media_cursor.saturating_add(1);
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    let ceiling = self.close_media_cursor.saturating_add(maximum_items).min(ARTIFACT_LIVE_OUTPUT_SLOTS);
+                    let mut released_items = 0;
+                    while self.close_media_cursor < ceiling && self.media_exports.id_at(self.close_media_cursor).is_none() {
+                        self.close_media_cursor = self.close_media_cursor.saturating_add(1);
+                        released_items += 1;
+                    }
+                    return Ok(PluginCloseStep::Pending { released_items, released_bytes: 0 });
                 };
                 let step = self
                     .media_exports
@@ -25190,8 +25306,13 @@ pub mod app {
             }
             if self.close_media_cleanup_cursor < ARTIFACT_LIVE_OUTPUT_SLOTS {
                 let Some(operation_id) = self.media_closures.id_at(self.close_media_cleanup_cursor) else {
-                    self.close_media_cleanup_cursor = self.close_media_cleanup_cursor.saturating_add(1);
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    let ceiling = self.close_media_cleanup_cursor.saturating_add(maximum_items).min(ARTIFACT_LIVE_OUTPUT_SLOTS);
+                    let mut released_items = 0;
+                    while self.close_media_cleanup_cursor < ceiling && self.media_closures.id_at(self.close_media_cleanup_cursor).is_none() {
+                        self.close_media_cleanup_cursor = self.close_media_cleanup_cursor.saturating_add(1);
+                        released_items += 1;
+                    }
+                    return Ok(PluginCloseStep::Pending { released_items, released_bytes: 0 });
                 };
                 let step = self
                     .media_closures
@@ -25213,8 +25334,13 @@ pub mod app {
             }
             if self.close_segment_cursor < ARTIFACT_LIVE_OUTPUT_SLOTS {
                 let Some(operation_id) = self.segmented_downloads.id_at(self.close_segment_cursor) else {
-                    self.close_segment_cursor = self.close_segment_cursor.saturating_add(1);
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    let ceiling = self.close_segment_cursor.saturating_add(maximum_items).min(ARTIFACT_LIVE_OUTPUT_SLOTS);
+                    let mut released_items = 0;
+                    while self.close_segment_cursor < ceiling && self.segmented_downloads.id_at(self.close_segment_cursor).is_none() {
+                        self.close_segment_cursor = self.close_segment_cursor.saturating_add(1);
+                        released_items += 1;
+                    }
+                    return Ok(PluginCloseStep::Pending { released_items, released_bytes: 0 });
                 };
                 if maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES {
                     return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
@@ -25242,8 +25368,13 @@ pub mod app {
             }
             if self.close_segment_cleanup_cursor < ARTIFACT_LIVE_OUTPUT_SLOTS {
                 let Some(operation_id) = self.segmented_closures.id_at(self.close_segment_cleanup_cursor) else {
-                    self.close_segment_cleanup_cursor = self.close_segment_cleanup_cursor.saturating_add(1);
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    let ceiling = self.close_segment_cleanup_cursor.saturating_add(maximum_items).min(ARTIFACT_LIVE_OUTPUT_SLOTS);
+                    let mut released_items = 0;
+                    while self.close_segment_cleanup_cursor < ceiling && self.segmented_closures.id_at(self.close_segment_cleanup_cursor).is_none() {
+                        self.close_segment_cleanup_cursor = self.close_segment_cleanup_cursor.saturating_add(1);
+                        released_items += 1;
+                    }
+                    return Ok(PluginCloseStep::Pending { released_items, released_bytes: 0 });
                 };
                 if maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES {
                     return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
@@ -25273,8 +25404,13 @@ pub mod app {
             }
             if self.close_snapshot_cursor < ARTIFACT_LIVE_OUTPUT_SLOTS {
                 let Some(operation_id) = self.snapshot_retirements.id_at(self.close_snapshot_cursor) else {
-                    self.close_snapshot_cursor = self.close_snapshot_cursor.saturating_add(1);
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    let ceiling = self.close_snapshot_cursor.saturating_add(maximum_items).min(ARTIFACT_LIVE_OUTPUT_SLOTS);
+                    let mut released_items = 0;
+                    while self.close_snapshot_cursor < ceiling && self.snapshot_retirements.id_at(self.close_snapshot_cursor).is_none() {
+                        self.close_snapshot_cursor = self.close_snapshot_cursor.saturating_add(1);
+                        released_items += 1;
+                    }
+                    return Ok(PluginCloseStep::Pending { released_items, released_bytes: 0 });
                 };
                 let step = self
                     .snapshot_retirements
@@ -26890,11 +27026,17 @@ pub mod app {
             } else {
                 None
             };
+            // 🔒️ The app instance's RETAINED operation owner, handed to the poll for the same
+            // reason `render_with_request_context` gets it: window-scoped background work an app
+            // arms from here is latched on state only that owner holds, and a poll that cannot see
+            // it re-arms an already-pending chain once per refresh
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+            let instance_operation_owner = self.instance_operation_owner.clone();
             let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, snapshot_read).await;
             let cfg = ConfigView { snapshot: config.as_ref(), window: None };
-            A::pending_effects(&doc, &cfg, view).await
+            A::pending_effects(&instance_operation_owner, &doc, &cfg, view).await
         }
 
         /// 🗂️ Every context menu is organized (D2 of the grouped-context-menu mechanism design) at this
@@ -27176,11 +27318,12 @@ pub mod app {
             let (mut factory_definition, factory_create) = factory;
             join_framework_shared_action_dispositions(&mut app.definition);
             join_framework_shared_action_dispositions(&mut factory_definition);
-            let app_id = app.definition.id.clone();
+            // 📚️ An example is a document of the registering surface's DIALECT, shared by every app
+            // bound to it (editor and viewer alike) — never a property of this one app id.
+            let dialect = app.definition.dialect.clone();
             self.manifest.apps.push(app.definition);
-            for mut example in app.examples {
-                example.app_id = app_id.clone();
-                self.manifest.examples.push(example);
+            for source in app.examples {
+                self.manifest.examples.push(source.into_example_definition(dialect.clone()));
             }
             self.apps.insert(self.manifest.apps.last().unwrap().id.clone(), (factory_definition, factory_create));
             self
@@ -27947,6 +28090,12 @@ pub mod app {
             None
         }
 
+        /// 🐢️ This editor's declared interaction refresh scope — forwarded verbatim to
+        /// `ArtifactApp::interaction_scope` by `EditorApp<Self>`, where the contract lives.
+        fn interaction_scope(_verb: InteractionVerb, _domains: &[&str]) -> Option<UiDirtyScope> {
+            None
+        }
+
         fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
             Box::new(EmptyArtifactInstanceOperationOwner)
         }
@@ -28151,7 +28300,7 @@ pub mod app {
         fn paste_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             Ok(Vec::new())
         }
-        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
+        fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
             Vec::new()
         }
         fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree>;
@@ -28410,6 +28559,12 @@ pub mod app {
             None
         }
 
+        /// 🐢️ This viewer's declared interaction refresh scope — forwarded verbatim to
+        /// `ArtifactApp::interaction_scope` by `ViewerApp<Self>`, where the contract lives.
+        fn interaction_scope(_verb: InteractionVerb, _domains: &[&str]) -> Option<UiDirtyScope> {
+            None
+        }
+
         fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
             Box::new(EmptyArtifactInstanceOperationOwner)
         }
@@ -28504,7 +28659,7 @@ pub mod app {
             let _ = (transient, interaction);
             Self::render(body_key, doc, cfg, view_state)
         }
-        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
+        fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
             Vec::new()
         }
         fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
@@ -28684,6 +28839,9 @@ pub mod app {
         fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
             E::retained_window_transient_target(command)
         }
+        fn interaction_scope(verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
+            E::interaction_scope(verb, domains)
+        }
         fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
             E::build_instance_operation_owner()
         }
@@ -28832,8 +28990,8 @@ pub mod app {
         async fn paste_operations(doc: &ArtifactView<'_, Self::Snapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             E::paste_operations(doc, fragment, placement)
         }
-        async fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&ViewModel>) -> Vec<Effect> {
-            E::pending_effects(doc, cfg, view)
+        async fn pending_effects(owner: &ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&ViewModel>) -> Vec<Effect> {
+            E::pending_effects(owner, doc, cfg, view)
         }
         async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
             E::render(body_key, doc, cfg, view_state)
@@ -29022,6 +29180,9 @@ pub mod app {
         fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
             V::retained_window_transient_target(command)
         }
+        fn interaction_scope(verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
+            V::interaction_scope(verb, domains)
+        }
         fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
             V::build_instance_operation_owner()
         }
@@ -29106,8 +29267,8 @@ pub mod app {
         ) -> UiAssemblyResult<ComponentTree> {
             V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction)
         }
-        async fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&ViewModel>) -> Vec<Effect> {
-            V::pending_effects(doc, cfg, view)
+        async fn pending_effects(owner: &ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&ViewModel>) -> Vec<Effect> {
+            V::pending_effects(owner, doc, cfg, view)
         }
         async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             V::window_engagements(doc, cfg, view_state)
@@ -29735,7 +29896,10 @@ pub mod app {
                     for subset in &standard.subsets {
                         for surface in [&subset.editor, &subset.viewer] {
                             let definition = surface.definition.clone();
-                            let examples = if surface.definition.role == AppRole::Editor { subset.examples.iter().map(ExampleDefinition::from).collect() } else { Vec::new() };
+                            // 📚️ The subset's examples are registered ONCE — through the editor row —
+                            // and stamped with the subset's dialect there, which is what makes them
+                            // resolve for the viewer surface too (`manifest::examples_for_app`).
+                            let examples = if surface.definition.role == AppRole::Editor { subset.examples.to_vec() } else { Vec::new() };
                             result.app_defs.push((App { definition: definition.clone(), examples }, (definition, surface.factory)));
                             result.app_schema_descriptors.push(surface.app_schema);
                             result.capabilities.extend(capability_rows_for(surface));
@@ -30715,8 +30879,22 @@ pub mod plugin_runtime {
         }
     }
 
-    const RUNTIME_CLOSE_ITEMS_PER_STEP: usize = 1;
-    const RUNTIME_CLOSE_BYTES_PER_STEP: usize = 4_096;
+    /// 🚪️ Items one app close step may retire. Priced per PAGE, not per item: the app close ladder
+    /// walks FIXED slot geometry (`TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS` = 1 088
+    /// cancellation slots, then five 64-slot output cursors), and at one item per step that geometry
+    /// alone cost 1 088 close steps — each one a pool pump the guest only gets 64 of per reactor turn
+    /// on wasm, i.e. a browser worker round trip every 64 slots. The stages that own real per-item
+    /// work (a media export's own byte budget, one download segment and one chunk) keep their own
+    /// `.min(1)` grant, so this page only collapses the cursor SWEEPS.
+    const RUNTIME_CLOSE_ITEMS_PER_STEP: usize = 1_024;
+    /// 🚪️ Bytes one app close/maintenance step may retire — one PAGE, the same unit the reactor turn's
+    /// own retirement ladder is priced in (`PATCH_RETIREMENT_BYTES_PER_UNIT`). At 4 096 it was exactly
+    /// `ARTIFACT_OUTPUT_CHUNK_BYTES`, so a retained item larger than one output chunk — a tessellated
+    /// preview mesh in a displaced window transient — could not be released by ANY number of steps and
+    /// the ladder answered `Pending { 0, 0 }` until the structural accountant killed the close with
+    /// `plugin.internal.zero-progress` (reproduced by the close-cost fixture's eight-document session,
+    /// ticket 26/09/09).
+    const RUNTIME_CLOSE_BYTES_PER_STEP: usize = 32 * 1_024;
     const RUNTIME_CLOSE_INNER_GRANT_US: u64 = 2_000;
     const RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT: u8 = 8;
 
@@ -31070,10 +31248,26 @@ pub mod plugin_runtime {
                     }
                 };
                 runtime_close_phase(&state, 10);
-                let progress = maintenance.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                // 🧹️ The live-maintenance session's own retirement is walked in BULK, not one item per
+                // job step: a job step is a pool pump, and the guest only gets a bounded number of
+                // those per reactor turn, so one item per step made the live pump's retained payload
+                // cost one browser round trip per item — the O(session) half of the 62–87 s close
+                // measured on 6018 (`🗑️generated/journey-5/console.txt`). Cut short by this step's own
+                // microsecond grant, so the batch is bounded in COST, never in items.
+                let mut progress = maintenance.close_step(RUNTIME_CLOSE_ITEMS_PER_STEP, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let mut released_items = 0usize;
+                let mut released_bytes = 0usize;
+                while let semio_framework_job::InteractiveJobCloseStep::Pending { released_items: items, released_bytes: bytes } = progress {
+                    released_items = released_items.saturating_add(items);
+                    released_bytes = released_bytes.saturating_add(bytes);
+                    if (items == 0 && bytes == 0) || maintenance.terminal_is_empty() || cx.deadline_exceeded() {
+                        break;
+                    }
+                    progress = maintenance.close_step(RUNTIME_CLOSE_ITEMS_PER_STEP, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                }
                 runtime_close_phase(&state, 11);
                 match progress {
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
+                    semio_framework_job::InteractiveJobCloseStep::Pending { .. } => {
                         self.progress = Some(crate::app::PluginCloseStep::Pending { released_items, released_bytes });
                     }
                     semio_framework_job::InteractiveJobCloseStep::Blocked => self.contended = true,
@@ -35502,16 +35696,24 @@ pub mod world3d_host {
         }
     }
 
-    pub async fn merge_world_selection_ids(existing: &SelectionSet, incoming: &[String], merge: &str) -> SelectionSet {
+    /// 🎯️ The non-domain world path's set algebra — `worldPick`/`worldVortexSelect`, the surfaces that
+    /// bind no app `InteractionDefinition` and so never reach `next_selection`. It takes a decoded
+    /// [`protocol::MergeMode`], not a word: the vocabulary is the schema enum
+    /// (`🕹️interaction/🧬️schema/🔣️.json`, fixture `🎯️merge-modes.json`), the same five words the
+    /// domain path speaks, so the two paths can no longer disagree about what a shift-click means.
+    /// `Range` has no meaning without an ordered topology (this path carries none — see the fixture's
+    /// `range.unorderedDomains`), so it degrades to the documented single-batch replace exactly as
+    /// `next_selection` does for an unordered domain.
+    pub async fn merge_world_selection_ids(existing: &SelectionSet, incoming: &[String], merge: protocol::MergeMode) -> SelectionSet {
         match merge {
-            "add" => {
+            protocol::MergeMode::Additive => {
                 let mut merged = existing.clone();
                 for id in incoming {
                     merged.push_unique(id.clone());
                 }
                 merged
             }
-            "toggle" | "invertive" => {
+            protocol::MergeMode::Invertive => {
                 let mut merged = existing.clone();
                 for id in incoming {
                     if merged.index.remove(id) {
@@ -35522,7 +35724,7 @@ pub mod world3d_host {
                 }
                 merged
             }
-            "remove" | "subtractive" => {
+            protocol::MergeMode::Subtractive => {
                 let mut merged = existing.clone();
                 for id in incoming {
                     if merged.index.remove(id) {
@@ -35531,7 +35733,7 @@ pub mod world3d_host {
                 }
                 merged
             }
-            _ => SelectionSet::from_ids(incoming.to_vec()),
+            protocol::MergeMode::Replace | protocol::MergeMode::Range => SelectionSet::from_ids(incoming.to_vec()),
         }
     }
 

@@ -9,6 +9,8 @@ message Generation3dViewConfig {
   Generation3dViewCamera preview_camera = 3;
   // @state config
   string sun_json = 4;
+  // @state config
+  string active_example_id = 5;
 }
 message Generation3dViewCamera {
   repeated double position = 1;

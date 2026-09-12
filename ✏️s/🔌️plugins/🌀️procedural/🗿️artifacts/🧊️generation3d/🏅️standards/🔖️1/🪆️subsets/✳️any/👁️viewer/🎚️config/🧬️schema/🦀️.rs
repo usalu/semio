@@ -17,6 +17,8 @@ pub struct Generation3dViewConfig {
     pub preview_camera: Generation3dViewCamera,
     #[state(config)]
     pub sun_json: String,
+    #[state(config)]
+    pub active_example_id: String,
 }
 
 //#region 🔁️Re-exports

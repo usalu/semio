@@ -30,7 +30,7 @@ mod plugin_builder_contract_tests {
     use semio_framework::Fault;
     use semio_framework::kernel::ArtifactHandle;
     use semio_framework::kernel::{AppEvent, ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement, UiDirtyScope};
-    use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, CommandDefinition, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
+    use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, CommandDefinition, InteractionVerb, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
     use semio_framework_job::InteractiveJob as _;
     mod local_interaction_dispatch {
         include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs"));
@@ -55,6 +55,10 @@ mod plugin_builder_contract_tests {
     /// pre-migration `"synthetic-play"` string, so `test_app_surface_id` and `TestApp::APP_ID` can
     /// never independently drift (guarded by `test_app_id_matches_its_own_dialect` below).
     const TEST_APP_DIALECT: Dialect = Dialect { artifact_kind: "s.test.synthetic", standard: StandardId("1"), subset: SubsetId::ANY };
+
+    /// 🪟️ The one window body key `interaction_registry`'s `window_kind("main", …)` declares — the lane
+    /// `TestApp::interaction_scope` names, so the fixture and the law can never disagree about it.
+    const TEST_APP_WINDOW_BODY_KEY: &str = "synthetic.main";
 
     std::thread_local! {
         static RENDER_CONTEXT_PROBE: std::cell::RefCell<Option<(String, ViewModel)>> = const { std::cell::RefCell::new(None) };
@@ -781,6 +785,26 @@ mod plugin_builder_contract_tests {
 
         fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
             Some(std::sync::Arc::new(PublicationPresenceRetirementFactory))
+        }
+
+        /// 🐢️ Wave B34: the synthetic app's DECLARED interaction scope, the fixture behind
+        /// `interaction_hover_dirties_only_the_hovering_windows_own_lane`. `SetGranularity` is left
+        /// deliberately undeclared so the framework's `UiDirtyScope::Full` fallback — the answer every
+        /// app that declares nothing still gets — stays under law in the same fixture.
+        fn interaction_scope(verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
+            if domains != ["items"] || verb == InteractionVerb::SetGranularity {
+                return None;
+            }
+            let panel_bodies = if verb == InteractionVerb::Hover { Vec::new() } else { vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()] };
+            Some(UiDirtyScope::Partial {
+                window_bodies: vec![TEST_APP_WINDOW_BODY_KEY.to_string()],
+                panel_bodies,
+                utilities: false,
+                tools: false,
+                engagements: false,
+                measures: verb == InteractionVerb::SetSelectionMode,
+                labels: false,
+            })
         }
         // 🪪️ Must equal `test_app_surface_id()` — a hand-typed `&'static str` because the runtime
         // `ArtifactApp::APP_ID` const (contract §2.1, "kept") cannot call a heap-allocating fn at
@@ -2493,7 +2517,7 @@ mod plugin_builder_contract_tests {
                 .document(["state"])
                 .mode("edit", LocalizedLabel::data("Edit"), "pencil")
                 .await
-                .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                .window_kind("main", LocalizedLabel::data("Main"), TEST_APP_WINDOW_BODY_KEY, SurfaceKind::Canvas2d, IconName::AppWindow)
                 .await
                 .interaction(InteractionDefinition {
                     id: "items".into(),
@@ -2539,6 +2563,18 @@ mod plugin_builder_contract_tests {
         if let DslValue::Object(entries) = &mut object {
             entries.retain(|(key, _)| key != "targets");
             entries.push(("targets".to_string(), DslValue::String("[]".into())));
+        }
+        object
+    }
+
+    /// 🧪️ Same wire shape as {@link interaction_target_args} for a BATCH of targets — the shape a
+    /// marquee release (or a pick that resolved several rendered instances) carries.
+    fn interaction_targets_args(extra: Value, granularity: &str, ids: &[String]) -> DslValue {
+        let targets = serde_json::to_string(&ids.iter().map(|id| InteractionTarget { granularity: granularity.into(), id: id.clone() }).collect::<Vec<_>>()).expect("targets serialize");
+        let mut object = DslValue::from(&extra);
+        if let DslValue::Object(entries) = &mut object {
+            entries.retain(|(key, _)| key != "targets");
+            entries.push(("targets".to_string(), DslValue::String(targets)));
         }
         object
     }
@@ -5419,6 +5455,74 @@ mod plugin_builder_contract_tests {
         close_reserved_app(&mut app);
     }
 
+    /// 🐁️ Wave B34 — the plugin-host half of the app-declared interaction scope: an `interactionHover`
+    /// dirties ONLY the hover lane of its own window. The framework used to answer `UiDirtyScope::Full`
+    /// for all six `INTERACTION_ACTION_IDS`, hover included, so every pointer move repainted every
+    /// window body, every panel body, the utilities/tools/engagements rails, the labels and the measures
+    /// — measured at 24 interaction ingresses and 3 whole-shell completions per 80 s browser lane
+    /// (ticket 26/09/02 `📓️2026-09-12-wave-B32-world-lane-after-completion.md` §3.2).
+    #[semio_framework_async_macros::async_test]
+    async fn interaction_hover_dirties_only_the_hovering_windows_own_lane() {
+        let mut app = interaction_app_under_test().await;
+        let settled = reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
+        let UiDirtyScope::Partial { window_bodies, panel_bodies, utilities, tools, engagements, measures, labels } = settled.ui_scope else {
+            panic!("a declared hover scope is never Full or None: {:?}", settled.ui_scope);
+        };
+        assert_eq!(window_bodies, vec![TEST_APP_WINDOW_BODY_KEY.to_string()], "a hover dirties the hovering window's own body and no other");
+        assert!(panel_bodies.is_empty(), "a hover cannot dirty a panel: {panel_bodies:?}");
+        assert!(!utilities && !tools && !engagements && !measures && !labels, "a hover cannot dirty the shell chrome");
+        close_reserved_app(&mut app);
+    }
+
+    /// 🖱️ Wave B34 — the same hop for a PICK: the declaring app's answer is carried through verbatim,
+    /// panel bodies included, so an app can widen a select beyond a hover without widening the hover.
+    #[semio_framework_async_macros::async_test]
+    async fn interaction_select_carries_the_apps_declared_selection_lane() {
+        let mut app = interaction_app_under_test().await;
+        let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        assert_eq!(
+            settled.ui_scope,
+            UiDirtyScope::Partial {
+                window_bodies: vec![TEST_APP_WINDOW_BODY_KEY.to_string()],
+                panel_bodies: vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()],
+                utilities: false,
+                tools: false,
+                engagements: false,
+                measures: false,
+                labels: false,
+            },
+            "a pick publishes the app's declared selection scope verbatim"
+        );
+        close_reserved_app(&mut app);
+    }
+
+    /// 🈳️ Wave B34 — the framework DEFAULT, unchanged: a verb the app declares no scope for still
+    /// answers `UiDirtyScope::Full`, which is what every app that implements no `interaction_scope` hook
+    /// keeps getting. `TestApp` declares nothing for `setInteractionGranularity` precisely so this arm
+    /// has a fixture.
+    #[semio_framework_async_macros::async_test]
+    async fn an_undeclared_interaction_verb_keeps_the_framework_full_scope() {
+        let mut app = interaction_app_under_test().await;
+        let settled = reserved_action(&mut app, SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" })))).await;
+        assert_eq!(settled.ui_scope, UiDirtyScope::Full, "an undeclared interaction verb keeps the widest, always-correct scope");
+        close_reserved_app(&mut app);
+    }
+
+    /// 🎮️ Wave B34 — the verb type the declaration is keyed by is exactly the six ids
+    /// `INTERACTION_ACTION_IDS` intercepts, in both directions, so a seventh verb cannot be dispatched
+    /// without an author deciding what it dirties.
+    #[semio_framework_async_macros::async_test]
+    async fn every_intercepted_interaction_id_round_trips_through_its_verb() {
+        for verb in InteractionVerb::ALL {
+            assert_eq!(InteractionVerb::of_action(verb.action_id()), Some(verb), "{verb:?}");
+        }
+        assert_eq!(InteractionVerb::ALL.len(), crate::app::INTERACTION_ACTION_IDS.len());
+        for action in crate::app::INTERACTION_ACTION_IDS {
+            assert!(InteractionVerb::of_action(action).is_some(), "{action} is intercepted but names no verb");
+        }
+        assert_eq!(InteractionVerb::of_action("undo"), None);
+    }
+
     /// 🧪 Wave B15 — empty-target `interactionSelect` leftover `selectedIds` must name the hovered object.
     #[semio_framework_async_macros::async_test]
     async fn empty_target_interaction_select_leftover_selected_ids_name_the_hovered_object() {
@@ -5432,6 +5536,76 @@ mod plugin_builder_contract_tests {
         assert_eq!(hover.get("id").and_then(DslValue::as_str), Some("item-1"));
         close_reserved_app(&mut app);
     }
+    /// 🧪 Ticket 26/09/09/PROCEDURAL-3D-END-TO-END (`📓️selection-dedupe-2026-09-12.md`): the leftover
+    /// `selectedIds` publication is a SET of topology ids — `Select` is event-sourced, so it is
+    /// idempotent per id whatever the merge, and however many mirror domains (`vortex`) the flatten
+    /// walks. Fixture-driven off `🧫️fixtures/🕹️selection-set.json`, the same file the language-neutral
+    /// Node twin (`interactionSelectionSetOracle`) re-derives, so neither side can drift alone.
+    /// Fails-before: one plain pick published the id twice, once per mirroring domain.
+    #[semio_framework_async_macros::async_test]
+    async fn leftover_interaction_view_selected_ids_are_a_set_for_every_merge() {
+        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🕹️selection-set.json")).expect("language-neutral selection-set fixture");
+        let domain = fixture["domain"].as_str().expect("fixture domain");
+        let granularity = fixture["granularity"].as_str().expect("fixture granularity");
+        let strings = |value: &Value| -> Vec<String> { value.as_array().expect("fixture id list").iter().map(|id| id.as_str().expect("fixture id").to_string()).collect() };
+        let cases = fixture["cases"].as_array().expect("fixture cases");
+        assert!(!cases.is_empty(), "the selection-set fixture must carry at least one case");
+        for case in cases {
+            let case_id = case["id"].as_str().expect("case id");
+            let seed = strings(&case["seed"]);
+            let targets = strings(&case["targets"]);
+            let expected = strings(&case["selectedIds"]);
+            let mut app = interaction_app_under_test().await;
+            if !seed.is_empty() {
+                reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": domain, "merge": "replace", "method": "pick" }), granularity, &seed))).await;
+            }
+            let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": domain, "merge": case["merge"].as_str().expect("case merge"), "method": "pick" }), granularity, &targets))).await;
+            let view = settled.output.get("interactionView").expect("leftover InteractionView");
+            let published: Vec<String> = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds").iter().map(|id| id.as_str().expect("selected id").to_string()).collect();
+            assert_eq!(published, expected, "{case_id}: {}", case["why"].as_str().unwrap_or_default());
+            let mut distinct = published.clone();
+            distinct.sort();
+            distinct.dedup();
+            assert_eq!(distinct.len(), published.len(), "{case_id}: selectedIds must name every id at most once, got {published:?}");
+            let DslValue::Object(locked) = view.get("locked").expect("lock state") else { panic!("{case_id}: locked must be an object") };
+            assert_eq!(locked.len(), published.len(), "{case_id}: locked has exactly one key per published id, got {locked:?}");
+            let gumball = view.get("gumball").expect("gumball leftover");
+            assert_eq!(gumball.get("anchorId").and_then(DslValue::as_str), published.first().map(String::as_str), "{case_id}: the gumball anchor is the first published id");
+            close_reserved_app(&mut app);
+        }
+    }
+    /// 🎯️ Ticket 26/09/09/PROCEDURAL-3D-END-TO-END (`📓️selection-merge-vocabulary-2026-09-12.md`): the
+    /// DOMAIN path — the reserved `interactionSelect` job a domain-bound world scene dispatches into —
+    /// accepts exactly the five words of `🕹️interaction`'s own `MergeMode` schema enum, and NOTHING
+    /// else. Fixture-driven off `🕹️interaction/🧫️fixtures/🎯️merge-modes.json`, the file the Node twin
+    /// (`selectionMergeVocabularyOracle`) and the reducer law (`semio-framework`'s
+    /// `next_selection_obeys_the_merge_vocabulary_fixture_for_every_mode`) read too.
+    ///
+    /// Fails-before: the renderer host translated the resolved mode into `add`/`remove`/`toggle`, so a
+    /// shift-click / ctrl-click on the generation3d preview faulted `interactionSelect: unknown merge
+    /// 'add'` and only the unmodified `replace` pick worked.
+    #[semio_framework_async_macros::async_test]
+    async fn interaction_select_speaks_exactly_the_schema_merge_vocabulary() {
+        let fixture: Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🕹️interaction/🧫️fixtures/🎯️merge-modes.json")).expect("language-neutral merge-modes fixture");
+        let words = |value: &Value| -> Vec<String> { value.as_array().expect("fixture word list").iter().map(|word| word.as_str().expect("fixture word").to_string()).collect() };
+        let vocabulary = words(&fixture["vocabulary"]);
+        let deleted = words(&fixture["deletedWords"]);
+        assert!(!vocabulary.is_empty() && !deleted.is_empty(), "the vocabulary fixture must carry both the accepted and the deleted words");
+        for word in &vocabulary {
+            let mut app = interaction_app_under_test().await;
+            let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": "items", "merge": word, "method": "pick" }), "item", &["item-1".to_string()]))).await;
+            assert!(settled.output.get("interactionView").is_some(), "the declared merge '{word}' must settle a leftover InteractionView, not a fault");
+            close_reserved_app(&mut app);
+        }
+        for word in &deleted {
+            let mut app = interaction_app_under_test().await;
+            let admitted = app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": "items", "merge": word, "method": "pick" }), "item", &["item-1".to_string()])), &meta()).await.expect("the reserved job is admitted before its args are decoded");
+            let fault = crate::app::settle_framework_reserved_admission(&mut app, admitted).await.expect_err("a merge word outside the schema vocabulary must fault the reserved job, never fall back to a replace");
+            assert!(format!("{fault:?}").contains(&format!("unknown merge '{word}'")), "the deleted word '{word}' must be rejected outright — no adapter, no silent replace; got {fault:?}");
+            close_reserved_app(&mut app);
+        }
+    }
+
     //#endregion 🔖️InteractionDispatchTests
 
     //#region 🔖️AsyncTaskTests

@@ -106,6 +106,8 @@ class TestScript extends BundleScript {
 
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
+    const { flowExtensionManifestAdmissionSelfTests } = await import("../../../📔️registry/🧪️tests/🪪️manifest-admission/🟦️.ts");
+    console.log(`[DEBUG] flow extension manifest admission twin: ${flowExtensionManifestAdmissionSelfTests()} assertions`);
     await import("../../../🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts");
     await import("../../../🕸️wasm/🧪️tests/🧬️schema-oracle/🟨️.js");
     const { testFlowOpenOwnership } = await import("../../../🕸️wasm/🧪️tests/🔓️open-ownership/🟦️.ts");
@@ -117,6 +119,7 @@ class SourceTestScript extends BundleScript {
 class BrowserTestScript extends BundleScript {
   async run(): Promise<void> {
     await import("../../../🕸️wasm/🧪️tests/🖥️host/🟨️.js");
+    await import("../../../🕸️wasm/🧪️tests/🎬️draw-list/🟨️.js");
     const outputs = await bundleBrowserModule(false);
     const module = await outputs[0]?.text();
     if (outputs.length !== 1 || !module?.includes('import("./flow_core.js")') || !module.includes('from "./🖥️flow-host.js"') || module.includes("../../../🫀️core/🕸️bindings")) throw new Error("Flow browser package lost its exact sibling module bindings");

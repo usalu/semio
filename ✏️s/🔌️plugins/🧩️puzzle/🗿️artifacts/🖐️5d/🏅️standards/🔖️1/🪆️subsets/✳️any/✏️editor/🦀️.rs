@@ -6839,6 +6839,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         self.stage = Puzzle5dBoardEventsStage::DrainBrush;
                         Ok(Self::progress("puzzle5d-board-brush-transfer", "Publishing brush mutation", "Pinselmutation wird veröffentlicht"))
                     }
+                    crate::retained_command::PuzzleCommandWorkStep::Download(_) => Err(Fault::from("puzzle5d-board-brush-download-unsupported")),
                 }
             }
             Puzzle5dBoardEventsStage::DrainBrush => {

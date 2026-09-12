@@ -7,7 +7,9 @@
     "id": "owned",
     "name": "Owned",
     "version": "1",
-    "activationEvents": ["onStartup"],
+    "activationEvents": [
+      "onStartup"
+    ],
     "contributes": {
       "schemas": [
         {
@@ -17,7 +19,16 @@
           "icon": "emoji:🧪️",
           "summary": "Shared schema",
           "fields": [
-            { "key": "nested", "value": { "kind": "any" }, "default": { "label": "schema default" } }
+            {
+              "key": "nested",
+              "value": {
+                "kind": "any"
+              },
+              "default": {
+                "label": "schema default"
+              },
+              "label": null
+            }
           ]
         }
       ],
@@ -35,11 +46,18 @@
               "abbreviation": "In",
               "name": "input",
               "fullName": "Input",
-              "default": { "label": "operator default" },
-              "cardinality": "?"
+              "default": {
+                "label": "operator default"
+              },
+              "cardinality": "?",
+              "operators": [],
+              "label": null
             }
           ],
-          "outputs": []
+          "outputs": [],
+          "variadicInput": null,
+          "variadicOutput": null,
+          "group": []
         }
       ],
       "widgets": [],

@@ -655,7 +655,7 @@ mod renderer {
 
     impl Default for OpaqueSceneRetirementRegistry {
         fn default() -> Self {
-            Self { slots: Box::new(std::array::from_fn(|_| OpaqueSceneRetirementSlot { generation: 0, occupied: false, credited_bytes: 0, scene: None, command: None, command_backing_bytes: 0, command_credited_bytes: 0 })), faulted: false }
+            Self { slots: semio_framework_async::boxed_fixed_slots(|| OpaqueSceneRetirementSlot { generation: 0, occupied: false, credited_bytes: 0, scene: None, command: None, command_backing_bytes: 0, command_credited_bytes: 0 }), faulted: false }
         }
     }
 
@@ -834,6 +834,322 @@ mod renderer {
         }
     }
 
+    // #region 🔖️DrawList
+    /// 🎬️ Portable replay encoding of a first-party [`Scene`] — the SAME command list
+    /// [`Scene::vello_scene`] rasterizes on a GPU target, written out as numbers a renderer with
+    /// no `vello` (a browser 2D canvas context, a conformance twin in any language) can replay
+    /// verb for verb. It exists because a `Scene` painted inside a wasm guest has, until now, had
+    /// exactly one exit: a real GPU device. Where there is none, the picture was dropped on the
+    /// floor and the host invented its own.
+    ///
+    /// Shapes stay PRIMITIVES (`rect`/`rrect`/`circle`/`line`/`cubic`) instead of being flattened
+    /// to polylines, so a replaying 2D context reaches its own `roundRect`/`arc`/`bezierCurveTo`
+    /// and a later zoom cannot facet a circle — the same reason [`RecordedShape`] keeps them
+    /// exact. Only `Arc` and `BezPath` become verb streams, because no 2D primitive matches them.
+    ///
+    /// Every command carries its own affine, and [`DagHost::paint_scene`] already bakes the camera
+    /// into those affines (`camera_content_affine`), so a replay is camera-correct with no second
+    /// transform pipeline. Device-pixel scaling is deliberately NOT baked in (unlike
+    /// [`render::scale_scene_for_device_pixel_ratio`], which the GPU path needs): the replayer sets
+    /// its own base transform, which keeps a draw list a pure function of scene + camera and so
+    /// directly comparable across implementations.
+    pub mod draw_list {
+        use super::{BlendMode, Cap, FillRule, Paint, RecordedShape, Scene, SceneCommand};
+        use geometry::{Affine, PathEl};
+
+        /// 🔖️ Wire version of the encoding below; a replayer MUST refuse a version it does not know.
+        pub const DRAW_LIST_VERSION: u32 = 1;
+        /// 📐️ Flattening tolerance for the two non-primitive shapes (`Arc`, `BezPath` curves are
+        /// emitted exactly; only `Arc` is flattened), in the scene's own pre-transform units.
+        pub const DEFAULT_DRAW_LIST_TOLERANCE: f64 = 0.1;
+        /// 🔢️ Decimal places every coordinate is rounded to. Three is ~1/1000 of a device pixel at
+        /// unit scale — below any display's resolving power, and it is what makes two
+        /// implementations' draw lists comparable as text.
+        pub const DEFAULT_DRAW_LIST_DECIMALS: usize = 3;
+
+        /// ⚙️ Encoder knobs. `maximum_commands` is a hard ceiling, not a hint: the encoded list
+        /// travels a bounded ABI reply body, so a pathological scene must truncate loudly
+        /// (`truncated: true` in the payload) rather than overrun it.
+        #[derive(Clone, Copy, Debug, PartialEq)]
+        pub struct DrawListOptions {
+            pub tolerance: f64,
+            pub decimals: usize,
+            pub maximum_commands: usize,
+        }
+
+        impl Default for DrawListOptions {
+            fn default() -> Self {
+                Self { tolerance: DEFAULT_DRAW_LIST_TOLERANCE, decimals: DEFAULT_DRAW_LIST_DECIMALS, maximum_commands: 65_536 }
+            }
+        }
+
+        fn fill_rule_code(rule: FillRule) -> u8 {
+            match rule {
+                FillRule::NonZero => 0,
+                FillRule::EvenOdd => 1,
+            }
+        }
+
+        fn cap_code(cap: Cap) -> u8 {
+            match cap {
+                Cap::Butt => 0,
+                Cap::Round => 1,
+                Cap::Square => 2,
+            }
+        }
+
+        fn blend_code(blend: BlendMode) -> u8 {
+            match blend {
+                BlendMode::Normal => 0,
+                BlendMode::Multiply => 1,
+                BlendMode::Screen => 2,
+                BlendMode::Overlay => 3,
+                BlendMode::Darken => 4,
+                BlendMode::Lighten => 5,
+                BlendMode::ColorDodge => 6,
+                BlendMode::ColorBurn => 7,
+                BlendMode::HardLight => 8,
+                BlendMode::SoftLight => 9,
+                BlendMode::Difference => 10,
+                BlendMode::Exclusion => 11,
+                BlendMode::Hue => 12,
+                BlendMode::Saturation => 13,
+                BlendMode::Color => 14,
+                BlendMode::Luminosity => 15,
+            }
+        }
+
+        fn push_number(out: &mut String, value: f64, decimals: usize) {
+            if !value.is_finite() {
+                out.push('0');
+                return;
+            }
+            let text = format!("{value:.decimals$}");
+            let trimmed = if text.contains('.') { text.trim_end_matches('0').trim_end_matches('.') } else { &text };
+            out.push_str(if trimmed.is_empty() || trimmed == "-" { "0" } else { trimmed });
+        }
+
+        fn push_numbers(out: &mut String, values: impl IntoIterator<Item = f64>, decimals: usize) {
+            let mut first = true;
+            for value in values {
+                if !first {
+                    out.push(',');
+                }
+                first = false;
+                push_number(out, value, decimals);
+            }
+        }
+
+        fn push_affine(out: &mut String, transform: Affine, decimals: usize) {
+            out.push('[');
+            push_numbers(out, transform.as_coeffs(), decimals);
+            out.push(']');
+        }
+
+        fn push_paint(out: &mut String, paint: &Paint) {
+            let Paint::Solid(color) = paint;
+            let rgba = color.to_rgba8();
+            out.push_str(&format!("[{},{},{},{}]", rgba.r, rgba.g, rgba.b, rgba.a));
+        }
+
+        fn push_path_elements(out: &mut String, elements: &[PathEl], decimals: usize) {
+            out.push_str(r#"["p",["#);
+            let mut first = true;
+            for element in elements {
+                if !first {
+                    out.push(',');
+                }
+                first = false;
+                match element {
+                    PathEl::MoveTo(p) => {
+                        out.push('0');
+                        out.push(',');
+                        push_numbers(out, [p.x, p.y], decimals);
+                    }
+                    PathEl::LineTo(p) => {
+                        out.push('1');
+                        out.push(',');
+                        push_numbers(out, [p.x, p.y], decimals);
+                    }
+                    PathEl::QuadTo(c, p) => {
+                        out.push('2');
+                        out.push(',');
+                        push_numbers(out, [c.x, c.y, p.x, p.y], decimals);
+                    }
+                    PathEl::CurveTo(c1, c2, p) => {
+                        out.push('3');
+                        out.push(',');
+                        push_numbers(out, [c1.x, c1.y, c2.x, c2.y, p.x, p.y], decimals);
+                    }
+                    PathEl::ClosePath => out.push('4'),
+                }
+            }
+            out.push_str("]]");
+        }
+
+        fn push_shape(out: &mut String, shape: &RecordedShape, options: DrawListOptions) {
+            let decimals = options.decimals;
+            match shape {
+                RecordedShape::Rect(rect) => {
+                    out.push_str(r#"["r","#);
+                    push_numbers(out, [rect.x0(), rect.y0(), rect.x1(), rect.y1()], decimals);
+                    out.push(']');
+                }
+                RecordedShape::RoundedRect(rounded) => {
+                    let rect = rounded.rect();
+                    let [tl, tr, br, bl] = rounded.radii().as_clockwise();
+                    out.push_str(r#"["rr","#);
+                    push_numbers(out, [rect.x0(), rect.y0(), rect.x1(), rect.y1(), tl, tr, br, bl], decimals);
+                    out.push(']');
+                }
+                RecordedShape::Circle(circle) => {
+                    let center = circle.center();
+                    out.push_str(r#"["ci","#);
+                    push_numbers(out, [center.x, center.y, circle.radius()], decimals);
+                    out.push(']');
+                }
+                RecordedShape::Line(line) => {
+                    let (p0, p1) = (line.p0(), line.p1());
+                    out.push_str(r#"["ln","#);
+                    push_numbers(out, [p0.x, p0.y, p1.x, p1.y], decimals);
+                    out.push(']');
+                }
+                RecordedShape::CubicBez(cubic) => {
+                    out.push_str(r#"["cb","#);
+                    push_numbers(out, [cubic.p0.x, cubic.p0.y, cubic.p1.x, cubic.p1.y, cubic.p2.x, cubic.p2.y, cubic.p3.x, cubic.p3.y], decimals);
+                    out.push(']');
+                }
+                RecordedShape::Arc(arc) => push_path_elements(out, &arc.path_elements(options.tolerance), decimals),
+                RecordedShape::BezPath(path) => push_path_elements(out, &path.elements(), decimals),
+            }
+        }
+
+        const BASE64_ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+        /// 🔤️ First-party base64 for the one command that carries opaque bytes. Written here
+        /// rather than taken from a crate because this module must stay dependency-free on every
+        /// target it compiles for.
+        fn push_base64(out: &mut String, bytes: &[u8]) {
+            out.push('"');
+            for chunk in bytes.chunks(3) {
+                let b0 = u32::from(chunk[0]);
+                let b1 = chunk.get(1).copied().map_or(0, u32::from);
+                let b2 = chunk.get(2).copied().map_or(0, u32::from);
+                let triple = (b0 << 16) | (b1 << 8) | b2;
+                out.push(BASE64_ALPHABET[((triple >> 18) & 63) as usize] as char);
+                out.push(BASE64_ALPHABET[((triple >> 12) & 63) as usize] as char);
+                out.push(if chunk.len() > 1 { BASE64_ALPHABET[((triple >> 6) & 63) as usize] as char } else { '=' });
+                out.push(if chunk.len() > 2 { BASE64_ALPHABET[(triple & 63) as usize] as char } else { '=' });
+            }
+            out.push('"');
+        }
+
+        fn push_command(out: &mut String, command: &SceneCommand, options: DrawListOptions) {
+            let decimals = options.decimals;
+            match command {
+                SceneCommand::Fill { rule, transform, paint, shape, .. } => {
+                    out.push_str(r#"["f","#);
+                    out.push_str(&fill_rule_code(*rule).to_string());
+                    out.push(',');
+                    push_paint(out, paint);
+                    out.push(',');
+                    push_affine(out, *transform, decimals);
+                    out.push(',');
+                    push_shape(out, shape, options);
+                    out.push(']');
+                }
+                SceneCommand::Stroke { stroke, transform, paint, shape, .. } => {
+                    out.push_str(r#"["s","#);
+                    push_number(out, stroke.width, decimals);
+                    out.push_str(&format!(",{},{},", cap_code(stroke.start_cap), cap_code(stroke.end_cap)));
+                    out.push('[');
+                    push_numbers(out, stroke.dash_pattern.iter().copied(), decimals);
+                    out.push_str("],");
+                    push_number(out, stroke.dash_offset, decimals);
+                    out.push(',');
+                    push_paint(out, paint);
+                    out.push(',');
+                    push_affine(out, *transform, decimals);
+                    out.push(',');
+                    push_shape(out, shape, options);
+                    out.push(']');
+                }
+                SceneCommand::DrawImage { image, transform } => {
+                    out.push_str(&format!(r#"["i",{},{},"#, image.width(), image.height()));
+                    push_base64(out, &image.data);
+                    out.push(',');
+                    push_affine(out, *transform, decimals);
+                    out.push(']');
+                }
+                SceneCommand::PushLayer { rule, blend, alpha, transform, clip } => {
+                    out.push_str(r#"["pl","#);
+                    out.push_str(&format!("{},{},", fill_rule_code(*rule), blend_code(*blend)));
+                    push_number(out, f64::from(*alpha), decimals);
+                    out.push(',');
+                    push_affine(out, *transform, decimals);
+                    out.push(',');
+                    push_shape(out, clip, options);
+                    out.push(']');
+                }
+                SceneCommand::PushClipLayer { rule, transform, clip } => {
+                    out.push_str(r#"["pc","#);
+                    out.push_str(&format!("{},", fill_rule_code(*rule)));
+                    push_affine(out, *transform, decimals);
+                    out.push(',');
+                    push_shape(out, clip, options);
+                    out.push(']');
+                }
+                SceneCommand::PopLayer => out.push_str(r#"["po"]"#),
+                #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+                SceneCommand::VelloFragment { .. } => out.push_str(r#"["po"]"#),
+            }
+        }
+
+        /// 🎬️ Encodes every replayable command of `scene` as one JSON draw list.
+        ///
+        /// `{"version":1,"truncated":false,"commands":[…]}` — each command a tagged flat array:
+        /// `["f",rule,[r,g,b,a],[a,b,c,d,e,f],shape]` fill, `["s",width,capStart,capEnd,[dash…],
+        /// dashOffset,[r,g,b,a],[affine],shape]` stroke, `["i",w,h,"<base64 rgba8>",[affine]]`
+        /// image, `["pl",rule,blend,alpha,[affine],clip]` layer, `["pc",rule,[affine],clip]` clip,
+        /// `["po"]` pop. Rule `0` non-zero / `1` even-odd; cap `0` butt / `1` round / `2` square;
+        /// blend is [`BlendMode`]'s own declaration order. Shapes: `["r",x0,y0,x1,y1]`,
+        /// `["rr",x0,y0,x1,y1,tl,tr,br,bl]`, `["ci",cx,cy,r]`, `["ln",x0,y0,x1,y1]`,
+        /// `["cb",8 coords]`, `["p",[verbs]]` with verb `0` move / `1` line / `2` quad / `3` cubic
+        /// / `4` close.
+        ///
+        /// A `VelloFragment` (the one host-only escape hatch, produced solely by
+        /// [`SvgDocument::append_to_scene`]) carries an opaque `vello` encoding with no
+        /// first-party commands to read, so it encodes as a bare `["po"]` — a no-op a replayer
+        /// skips — rather than silently shifting every later command's layer depth.
+        pub fn scene_draw_list_json(scene: &Scene, options: DrawListOptions) -> String {
+            let mut out = String::new();
+            write_scene_draw_list(&mut out, scene, options);
+            out
+        }
+
+        /// 🎬️ Appends the same encoding into a caller-owned buffer.
+        ///
+        /// The buffer is the point: a guest paints EVERY frame through here, and dlmalloc never
+        /// returns freed pages to the module, so a fresh multi-kilobyte `String` per frame
+        /// fragments the guest heap until it aborts. One buffer, cleared and refilled, keeps the
+        /// allocation count per frame at zero once it has reached its working size.
+        pub fn write_scene_draw_list(out: &mut String, scene: &Scene, options: DrawListOptions) {
+            let truncated = scene.0.len() > options.maximum_commands;
+            out.reserve(scene.0.len().min(options.maximum_commands) * 96 + 64);
+            out.push_str(r#"{"version":"#);
+            out.push_str(&DRAW_LIST_VERSION.to_string());
+            out.push_str(if truncated { r#","truncated":true,"commands":["# } else { r#","truncated":false,"commands":["# });
+            for (index, command) in scene.0.iter().take(options.maximum_commands).enumerate() {
+                if index != 0 {
+                    out.push(',');
+                }
+                push_command(out, command, options);
+            }
+            out.push_str("]}");
+        }
+    }
+    // #endregion 🔖️DrawList
+
     /// @emoji 🏷️ Parsed SVG document for icon and label rasterization. Host/browser only — see
     /// `vello_backend`'s `usvg` re-export docstring above; its only real callers are
     /// `IconPaintCache::get_or_build`'s native arm and `#[cfg(test)]` code.
@@ -869,6 +1185,7 @@ mod renderer {
 pub use geometry::{append_shape_to_path, geom_sel, Affine, Arc, BezPath, Circle, CubicBez, Line, PathEl, Point, Rect, RoundedRect, RoundedRectRadii, ShapeRef, Vec2};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub(crate) use renderer::vello_backend::usvg;
+pub use renderer::draw_list;
 pub use renderer::{
     advance_opaque_scene_retirement, opaque_scene_retirement_status, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, BlendMode, Cap, Color, FillRule, OpaqueSceneRetirementStep, OpaqueSceneRetirementToken, Paint, RasterImage, Rgba8,
     Scene, Stroke,
@@ -1427,6 +1744,46 @@ pub mod text {
         (w, h)
     }
 
+    /// ✂️ The one glyph a clipped label ends on. Every presentation appends the same character, so a
+    /// truncated title reads identically on the GPU, on the 2D replay and on the wgpu shell.
+    pub const LABEL_ELLIPSIS: &str = "…";
+
+    /// ✂️ Longest prefix of `text` that still fits `max_width` once {@link LABEL_ELLIPSIS} is
+    /// appended, measured by the CALLER's own text measure — a glyph atlas on the wgpu shell, the
+    /// canvas `measureText` in the browser, a synthetic advance in a law.
+    ///
+    /// This is the whole reason a title is never shrunk to an unreadable font instead: a label that
+    /// does not fit is CLIPPED at its measured width, not scaled until it does. Returns `text`
+    /// unchanged when it already fits, and the bare ellipsis when not even one glyph plus the
+    /// ellipsis does.
+    pub fn ellipsize_by_measure(text: &str, max_width: f64, mut measure: impl FnMut(&str) -> f64) -> String {
+        let trimmed = text.trim();
+        if trimmed.is_empty() || max_width <= 0.0 {
+            return String::new();
+        }
+        if measure(trimmed) <= max_width {
+            return trimmed.to_string();
+        }
+        let mut best = String::new();
+        let mut candidate = String::new();
+        for (byte_index, ch) in trimmed.char_indices() {
+            candidate.clear();
+            candidate.push_str(&trimmed[..byte_index + ch.len_utf8()]);
+            candidate.push_str(LABEL_ELLIPSIS);
+            if measure(&candidate) <= max_width {
+                best.clear();
+                best.push_str(&candidate);
+            } else {
+                break;
+            }
+        }
+        if best.is_empty() {
+            LABEL_ELLIPSIS.to_string()
+        } else {
+            best
+        }
+    }
+
     /// @emoji ↔ Horizontal text advance inside a label box (excludes outer padding).
     pub fn label_advance(label: &str, px: f64) -> f64 {
         if label.is_empty() || px < ui_styling::metrics::label::MIN_PX {
@@ -1720,6 +2077,98 @@ pub mod camera {
         camera.y = world_before.y - (sy - viewport.height as f64 / 2.0) / next_zoom;
         camera.zoom = next_zoom;
     }
+
+    // #region 🔖️ContentFraming
+    /// 🖼️ Screen margin a fit leaves around the content it frames, in viewport pixels per side.
+    pub const CONTENT_FIT_PADDING_PX: f64 = ui_styling::metrics::camera::CONTENT_FIT_PADDING_PX;
+
+    /// 🖼️ How much of the content a STORED camera has to already show for that camera to be adopted
+    /// on a first attach instead of being replaced by a fit.
+    pub const CONTENT_FRAMED_MIN_COVERAGE: f64 = ui_styling::metrics::camera::CONTENT_FRAMED_MIN_COVERAGE;
+
+    /// 🖼️ How little of the content has to be left on screen for a graph that CHANGED under a live
+    /// camera (an example switch) to be re-fitted. Deliberately far below
+    /// {@link CONTENT_FRAMED_MIN_COVERAGE}: a camera the viewer panned themselves is never yanked
+    /// back just because a new node landed off screen.
+    pub const CONTENT_REFIT_MAX_COVERAGE: f64 = ui_styling::metrics::camera::CONTENT_REFIT_MAX_COVERAGE;
+
+    /// 🖼️ Axis-aligned world bounds of everything a board wants framed.
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct ContentBounds {
+        pub min_x: f64,
+        pub min_y: f64,
+        pub max_x: f64,
+        pub max_y: f64,
+    }
+
+    impl ContentBounds {
+        pub fn width(&self) -> f64 {
+            (self.max_x - self.min_x).max(0.0)
+        }
+
+        pub fn height(&self) -> f64 {
+            (self.max_y - self.min_y).max(0.0)
+        }
+
+        pub fn center(&self) -> (f64, f64) {
+            ((self.min_x + self.max_x) * 0.5, (self.min_y + self.max_y) * 0.5)
+        }
+    }
+
+    fn view_bounds(camera: &Camera, viewport: &Viewport) -> ContentBounds {
+        let zoom = camera.zoom.max(1e-9);
+        let half_w = viewport.width.max(1) as f64 / (2.0 * zoom);
+        let half_h = viewport.height.max(1) as f64 / (2.0 * zoom);
+        ContentBounds { min_x: camera.x - half_w, min_y: camera.y - half_h, max_x: camera.x + half_w, max_y: camera.y + half_h }
+    }
+
+    /// 🖼️ Fraction (`0.0..=1.0`) of `content`'s own area a `camera` currently shows. Degenerate
+    /// content (a single node, a single row) is measured on whichever axes have extent, so a
+    /// zero-height graph is not reported as invisible.
+    pub fn content_coverage(content: &ContentBounds, camera: &Camera, viewport: &Viewport) -> f64 {
+        let view = view_bounds(camera, viewport);
+        let overlap = |a0: f64, a1: f64, b0: f64, b1: f64| (a1.min(b1) - a0.max(b0)).max(0.0);
+        let (cw, ch) = (content.width(), content.height());
+        let ox = overlap(content.min_x, content.max_x, view.min_x, view.max_x);
+        let oy = overlap(content.min_y, content.max_y, view.min_y, view.max_y);
+        let inside_x = content.min_x >= view.min_x && content.max_x <= view.max_x;
+        let inside_y = content.min_y >= view.min_y && content.max_y <= view.max_y;
+        match (cw > 0.0, ch > 0.0) {
+            (true, true) => (ox * oy) / (cw * ch),
+            (true, false) => f64::from(u8::from(inside_y)) * (ox / cw),
+            (false, true) => f64::from(u8::from(inside_x)) * (oy / ch),
+            (false, false) => f64::from(u8::from(inside_x && inside_y)),
+        }
+    }
+
+    /// 🖼️ The camera that frames the whole of `content` inside `viewport` with `padding_px` of
+    /// screen margin per side. Zoom is clamped to the canvas camera range, so content far larger
+    /// than the zoom-out limit is centred rather than silently over-zoomed.
+    pub fn fit_camera(content: &ContentBounds, viewport: &Viewport, padding_px: f64) -> Camera {
+        let (x, y) = content.center();
+        let vw = (viewport.width.max(1) as f64 - padding_px * 2.0).max(1.0);
+        let vh = (viewport.height.max(1) as f64 - padding_px * 2.0).max(1.0);
+        let (cw, ch) = (content.width(), content.height());
+        let zoom_x = if cw > 0.0 { vw / cw } else { f64::INFINITY };
+        let zoom_y = if ch > 0.0 { vh / ch } else { f64::INFINITY };
+        let zoom = zoom_x.min(zoom_y);
+        Camera { x, y, zoom: clamp_zoom(if zoom.is_finite() { zoom } else { 1.0 }) }
+    }
+
+    /// 🖼️ The camera a surface opens on. A stored camera is honoured only when it already frames the
+    /// content it is stored for (`>= min_coverage` of the content's area on screen); otherwise — and
+    /// whenever there is no stored camera at all — the content is fitted. Returns `true` in the
+    /// second component when the fit won, which is what the caller persists as a viewport gesture.
+    pub fn startup_camera(stored: Option<&Camera>, content: Option<&ContentBounds>, viewport: &Viewport, padding_px: f64, min_coverage: f64) -> (Camera, bool) {
+        let Some(content) = content else {
+            return (stored.cloned().unwrap_or_default(), false);
+        };
+        match stored {
+            Some(camera) if camera.zoom > 0.0 && content_coverage(content, camera, viewport) >= min_coverage => (camera.clone(), false),
+            _ => (fit_camera(content, viewport, padding_px), true),
+        }
+    }
+    // #endregion 🔖️ContentFraming
 }
 // #endregion 🔖️Camera
 
@@ -1863,8 +2312,19 @@ pub mod gpu_session {
         }
 
         /// @emoji 🖥️ WebGPU surface bring-up; returns `String` (not `CanvasError`) because every call site is a wasm-bindgen boundary fn that immediately erases the error into a `JsValue` for JS — see `render_frame` below for the same convention.
+        ///
+        /// The adapter is acquired BEFORE the canvas is touched, and that order is the contract, not
+        /// a preference: `Instance::create_surface` binds a `webgpu` context to the element, a canvas
+        /// admits exactly one context kind for its whole life, and a bring-up that binds the context
+        /// and only then discovers there is no adapter leaves an element on which the deviceless 2D
+        /// fallback can never paint either. Measured on a headless browser, which exposes
+        /// `navigator.gpu` and hands out no adapter: `No available adapters` followed by a node-graph
+        /// canvas whose `getContext("2d")` was null for the rest of the session.
         pub async fn create_canvas_surface(canvas: HtmlCanvasElement, pw: u32, ph: u32) -> Result<(util::RenderContext, vello::Renderer, util::RenderSurface<'static>), String> {
             let mut render_ctx = util::RenderContext::new();
+            if render_ctx.device(None).await.is_none() {
+                return Err("no WebGPU adapter".to_string());
+            }
             let surface = render_ctx.create_surface(wgpu::SurfaceTarget::Canvas(canvas), pw, ph, wgpu::PresentMode::AutoVsync).await.map_err(|err| format!("{err:?}"))?;
             let dev = &render_ctx.devices[surface.dev_id].device;
             let renderer =
@@ -2330,4 +2790,16 @@ impl<E: CanvasExtension> CanvasEngine<E> {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🎬️draw-list/🦀️.rs"]
+mod draw_list_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/📷️camera-fit/🦀️.rs"]
+mod camera_fit_laws;
+
+#[cfg(test)]
+#[path = "🧪️tests/🏷️label-fit/🦀️.rs"]
+mod label_fit_laws;
 // #endregion 🔖️Tests

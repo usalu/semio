@@ -89,7 +89,7 @@ impl ArtifactViewer for Fem3dViewer {
         Ok(ViewEmit::default())
     }
 
-    fn pending_effects(doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
+    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
         crate::live_visual::reconcile(doc)
     }
 

@@ -128,15 +128,15 @@ const STORY_DEFAULT_RUNTIME: StoryWorld3dRuntime = {
   activeUtility: "select",
 };
 
-/** @emoji 🖱️ Story-local mirror of `instanceMergeArg`/`componentMergeArg` (`framework/product/os/module/renderer/js/react/index.tsx`) — applies a `worldPick`/`worldSelect`/`worldVortexSelect` merge mode to the current selection. */
+/** @emoji 🖱️ Story-local mirror of the ONE `MergeMode` set algebra (`🕹️interaction/🧫️fixtures/🎯️merge-modes.json`) — applies a `worldPick`/`worldSelect`/`worldVortexSelect` merge mode to the current selection. */
 function applyStoryWorldMerge(current: readonly string[], id: string, merge: string): string[] {
   const set = new Set(current);
-  if (merge === "replace") return [id];
-  if (merge === "add") {
+  if (merge === "replace" || merge === "range") return [id];
+  if (merge === "additive") {
     set.add(id);
     return [...set];
   }
-  if (merge === "remove") {
+  if (merge === "subtractive") {
     set.delete(id);
     return [...set];
   }

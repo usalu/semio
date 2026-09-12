@@ -533,6 +533,7 @@ fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
         match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
+            PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
         }
     };
     assert!(iterations <= extent, "worldRelocate step() ran {iterations} real steps, exceeding its own declared extent {extent} — the bound is unsound");
@@ -588,6 +589,7 @@ fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
         match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
+            PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
         }
     };
     assert!(iterations <= extent, "createAttraction step() ran {iterations} real steps, exceeding its own declared extent {extent} — the bound is unsound");
@@ -639,6 +641,7 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
         match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
+            PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
         }
     };
     assert!(iterations <= extent, "acceptSuggestion step() ran {iterations} real steps, exceeding its own declared extent {extent} — the bound is unsound");
@@ -699,6 +702,7 @@ fn patch_inspector_vortex_step_loop_stays_within_its_own_extent_for_nakagin() {
         match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
+            PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
         }
     };
     assert!(iterations <= extent, "patchInspector step() ran {iterations} real steps, exceeding its own declared extent {extent} — the bound is unsound");
@@ -734,6 +738,7 @@ fn set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin()
         match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => progress_steps += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
+            PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
         }
     };
     assert!(progress_steps > 1, "setActiveExample must require multiple bounded step() calls for the nakagin example, not a single-shot reducer; observed {progress_steps}");
@@ -746,7 +751,7 @@ fn set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin()
     };
     assert_eq!(emit.config_mutations.len(), 1, "example loading publishes one config row, not many");
     assert_eq!(published.active_example_id, PUZZLE3D_EXAMPLE_NAKAGIN, "the stamped id must be the example that was loaded");
-    assert_eq!(Puzzle3dConfig { active_example_id: String::new(), ..published }, config, "example loading leaves shared app preferences untouched");
+    assert_eq!(Puzzle3dConfig { active_example_id: config.active_example_id.clone(), ..published }, config, "example loading leaves shared app preferences untouched");
 }
 
 /// 🧲️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave T: the gumball bracket is an honest `Migrated`
@@ -1566,18 +1571,27 @@ async fn tool_registry_declares_fill_tool() {
     assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
 }
 
-/// 🛠️ Wave W-AB: mid-fill actions must not bounce-disarm the host with an empty `setActiveTool`.
+/// 🛠️ Wave W-AB, restated by wave B31: an empty `setActiveTool` is a DISARM, so the only verb allowed to
+/// emit one is the one whose whole meaning is "leave what is armed". Background and parameter traffic that
+/// merely happens WHILE fill is armed must never emit it — a bounce there disarms the tool under the user's
+/// hands mid-plan. `engagementAbort` is the exception and states it deliberately
+/// (`🎮️commands/🛑️engagement-abort/🦀️.rs`, and
+/// `escaping_the_armed_fill_tool_cancels_the_plan_and_disarms_the_tool`): before B31 it was listed here as
+/// a bounce too, which is exactly why Escape could never leave Fill in the browser.
 #[semio_framework_async_macros::async_test]
-async fn fill_flow_does_not_emit_empty_set_active_tool() {
+async fn fill_flow_only_disarms_the_tool_when_the_user_aborts() {
     let empty_tool = |result: &semio_framework_plugin::InvocationResult| {
         result.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id.is_empty()))
     };
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
     let mut app = app().await;
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("arm fill");
     let tick = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick");
     assert!(!empty_tool(&tick), "fillBuildTick must not bounce-disarm: {:?}", tick.requested_effects);
+    let count = dispatch(&mut app, "setFillCount", Some(&json!({ "count": 3 })), None).await.expect("setFillCount");
+    assert!(!empty_tool(&count), "adjusting the count mid-plan must not bounce-disarm: {:?}", count.requested_effects);
     let abort = dispatch(&mut app, "engagementAbort", None, None).await.expect("engagementAbort");
-    assert!(!empty_tool(&abort), "engagementAbort must not bounce-disarm fill: {:?}", abort.requested_effects);
+    assert!(empty_tool(&abort), "engagementAbort IS the disarm — it must emit the empty tool effect: {:?}", abort.requested_effects);
 }
 //#endregion 🔖️Manifest
 
@@ -2045,6 +2059,27 @@ async fn each_window_instance_publishes_its_own_armed_utility_into_its_world_lan
     assert!(brush_preview_of(&unarmed).is_null(), "an unarmed pane publishes no brush preview: {}", brush_preview_of(&unarmed));
 }
 
+/// 🪟️ Wave B39: the OTHER host route — `plugin_render_surface`'s `<body>:<windowInstanceId>` form,
+/// the one a mounted surface is rendered through (`🪟️surfaces/🦀️.rs`'s per-surface binding). Two
+/// mounted instances of one window kind must publish two DISTINCT world bodies, each carrying its
+/// own armed utility, so the host's two `📃️UiDocumentStore`s never hold the same record: a body key
+/// that resolved the roster's first pane made both surfaces publish one tree, and the host cannot
+/// tell two identical trees apart.
+#[semio_framework_async_macros::async_test]
+async fn two_mounted_instances_publish_two_distinct_world_bodies_with_their_own_utilities() {
+    let mut app = app().await;
+    let perspective = main::WINDOW_INSTANCE_PERSPECTIVE;
+    let top = main::WINDOW_INSTANCE_TOP;
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID, "windowId": perspective })), Some(perspective)).await.expect("arm brush in the perspective pane");
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "", "windowId": top })), Some(top)).await.expect("the top pane stays unarmed");
+    let armed = render_window(&mut app, perspective).await;
+    let unarmed = render_window(&mut app, top).await;
+    let utility_of = |node: &Value| interaction_of(node).get("activeUtility").and_then(Value::as_str).unwrap_or_default().to_string();
+    assert_eq!(utility_of(&armed), utilities::brush::UTILITY_ID, "the armed pane's own surface body must carry its utility: {}", interaction_of(&armed));
+    assert_eq!(utility_of(&unarmed), "select", "the sibling pane's surface body must stay unarmed: {}", interaction_of(&unarmed));
+    assert_ne!(armed, unarmed, "two mounted instances must publish two distinct world bodies, never one shared tree");
+}
+
 /// 🖱️ Wave W-AB: after a committed vortex hover, Alt+right-click (`openVortexSuggestions` with the
 /// hovered `fullId`) publishes `suggestionMenu.open` — the guest half of the host gesture.
 #[semio_framework_async_macros::async_test]
@@ -2120,6 +2155,102 @@ async fn leftover_refresh_after_suggestions_tick_still_publishes_latched_brush_p
     let preview = brush_preview_of(&render_window_refresh(&mut app, main::BODY_KEY, perspective).await);
     assert_eq!(preview.get("targetVortexFullId").and_then(Value::as_str), Some(vortex.as_str()), "leftover refresh-ui must republish the latched tick preview without guest hover: {preview}");
     assert!(preview.get("objectKindId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "latched leftover preview must name a kind: {preview}");
+}
+
+/// ⏰️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B35: the bounded warm-up budget a brush preview may
+/// cost. One tick spends up to eight `PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US` slices on the ONE target the
+/// render is asking for, and the live browser warmed a cold rim vortex in exactly one tick / three
+/// slices (wave B33, `tick-before free=0 pending=true → tick-after free=4 … slices=3`). Two is that
+/// measurement plus one tick of headroom, deliberately far below
+/// [`PUZZLE3D_BRUSH_PICKER_TICKS`]: a preview that needs more than a couple of the host's 120 ms ticks
+/// is not a slow preview, it is a lane that stopped asking.
+const PUZZLE3D_BRUSH_WARM_TICKS: usize = 2;
+
+/// 🖌️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B35: hovering ONE vortex on a freshly armed pane must
+/// publish `brushPreviewJson` within [`PUZZLE3D_BRUSH_WARM_TICKS`] host ticks. The live browser gate
+/// (`brushPreview.gate reason=no-free-candidate vortex=… free=0 pending=true index=0`) is a cold
+/// candidate cache, and a cold cache is only ever a *number of ticks* — this law is what makes that
+/// number small and stated instead of "eventually".
+#[semio_framework_async_macros::async_test]
+async fn one_hover_warms_the_brush_preview_within_the_declared_tick_budget() {
+    let mut app = app().await;
+    let perspective = "puzzle3d-main-perspective";
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID, "windowId": perspective })), Some(perspective)).await.expect("arm brush on the instance");
+    // 🖱️ The LAST vortex, never the first: the brush lane's background round-robin enumerates the
+    // document in order, so a preview for vortex 0 is warmed by the queue no matter what the tick asks
+    // for, and a law written on it cannot tell a targeted warm-up from the enumeration walking past. The
+    // browser hovers rim vortices deep in that enumeration (`seed-left-001:v3`, `:v8`), which is why it
+    // sees the gate at all.
+    let vortex = vortex_full_ids(&app).last().cloned().expect("the fixture publishes vortices");
+    let admitted = hover_id_unsettled(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).await.expect("hover admit");
+    settle_reserved(&mut app, admitted).await.expect("hover leftover commits");
+    let mut ticks = 0;
+    let mut preview = brush_preview_of(&render_window_refresh(&mut app, main::BODY_KEY, perspective).await);
+    while preview.get("objectKindId").and_then(Value::as_str).is_none_or(str::is_empty) && ticks < PUZZLE3D_BRUSH_WARM_TICKS {
+        dispatch(&mut app, "suggestionsTick", None, Some(main::WINDOW_KIND_ID)).await.expect("kind-addressed suggestionsTick");
+        ticks += 1;
+        preview = brush_preview_of(&render_window_refresh(&mut app, main::BODY_KEY, perspective).await);
+    }
+    eprintln!("[DEBUG] brush warm ticks={ticks} budget={PUZZLE3D_BRUSH_WARM_TICKS} preview={preview}");
+    assert_eq!(preview.get("targetVortexFullId").and_then(Value::as_str), Some(vortex.as_str()), "one hover must warm the hovered vortex within {PUZZLE3D_BRUSH_WARM_TICKS} ticks, got {preview} after {ticks}");
+    assert!(preview.get("objectKindId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "a warmed preview names a kind: {preview} after {ticks} ticks");
+}
+
+/// 🧊️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B35: the forever-gate. The render resolves its preview
+/// target through the LATCH (`brush_live_target`) whenever the leftover `refresh-ui` shape has no guest
+/// hover, and every mesh upload / document edit drops `brush_cache` — so the pair "hover cleared, cache
+/// invalidated" is the live browser's normal state, not an edge. `suggestionsTick` used to resolve its
+/// own target from the menu and the hover ONLY, so in exactly that state it ran with `target=None`
+/// while the render asked for the latched vortex, and the gate printed
+/// `reason=no-free-candidate free=0 pending=true` for as long as the pane stayed armed. The tick must
+/// warm whatever the render asks for, and it must do so inside the same declared tick budget.
+#[semio_framework_async_macros::async_test]
+async fn the_tick_rewarms_the_latched_brush_target_after_an_edit_invalidated_its_candidates() {
+    let mut app = app().await;
+    let perspective = "puzzle3d-main-perspective";
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID, "windowId": perspective })), Some(perspective)).await.expect("arm brush on the instance");
+    // 🖱️ A LATE vortex, for the same reason the sibling law above states: the background
+    // round-robin warms vortex 0 on its own.
+    let vortex = vortex_full_ids(&app).last().cloned().expect("the fixture publishes vortices");
+    let admitted = hover_id_unsettled(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).await.expect("hover admit");
+    settle_reserved(&mut app, admitted).await.expect("hover leftover commits");
+    for _ in 0..PUZZLE3D_BRUSH_PICKER_TICKS {
+        dispatch(&mut app, "suggestionsTick", None, Some(main::WINDOW_KIND_ID)).await.expect("warm the latch");
+    }
+    let cleared = hover_id_unsettled(&mut app, PUZZLE3D_GRANULARITY_VORTEX, None).await.expect("leftover skip-clear hover");
+    settle_reserved(&mut app, cleared).await.expect("clear leftover hover");
+    // 🥽️ The browser's own invalidator, not a stand-in: `install_collision_mesh` clears `brush_cache`
+    // and re-arms the broad phase on EVERY accepted upload, and the shell fires hundreds of them per
+    // example (wave B22 measured 202 `registerBrushMesh` commands for one). Geometry no other law in
+    // this binary derives, so the content-addressed store cannot adopt it by id and the install really
+    // runs.
+    let (positions, indices) = crate::standards::v1::subsets::any::schema::testkit::seeded_cube_mesh_buffers(41.0);
+    let position_bytes: Vec<u8> = positions.iter().flat_map(|value| value.to_le_bytes()).collect();
+    let index_bytes: Vec<u8> = indices.iter().flat_map(|value| value.to_le_bytes()).collect();
+    let upload = json!({
+        "surfaceId": "world-3d",
+        "url": "/test/b35-relatch-invalidator.glb",
+        "digest": crate::editor::puzzle3d::precompute::brush_mesh_digest(&positions, &indices),
+        "page": 0,
+        "pageCount": 1,
+        "positionsB64": semio_framework_io_base64::base64_standard_encode(&position_bytes),
+        "indicesB64": semio_framework_io_base64::base64_standard_encode(&index_bytes),
+    });
+    dispatch(&mut app, "registerBrushMesh", Some(&upload), Some(perspective)).await.expect("one accepted mesh upload invalidates the candidate cache");
+    let mut ticks = 0;
+    let mut preview = brush_preview_of(&render_window_refresh(&mut app, main::BODY_KEY, perspective).await);
+    while preview.get("objectKindId").and_then(Value::as_str).is_none_or(str::is_empty) && ticks < PUZZLE3D_BRUSH_WARM_TICKS {
+        dispatch(&mut app, "suggestionsTick", None, Some(main::WINDOW_KIND_ID)).await.expect("kind-addressed suggestionsTick");
+        ticks += 1;
+        preview = brush_preview_of(&render_window_refresh(&mut app, main::BODY_KEY, perspective).await);
+    }
+    eprintln!("[DEBUG] brush relatch ticks={ticks} budget={PUZZLE3D_BRUSH_WARM_TICKS} preview={preview}");
+    assert_eq!(
+        preview.get("targetVortexFullId").and_then(Value::as_str),
+        Some(vortex.as_str()),
+        "a tick with no hover must still warm the vortex the render latched, got {preview} after {ticks} ticks",
+    );
+    assert!(preview.get("objectKindId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "the re-warmed latched preview names a kind: {preview} after {ticks} ticks");
 }
 
 /// Click place after hover-committed preview dispatches real `addBrushObject` with that vortex id.
@@ -2964,6 +3095,88 @@ async fn a_host_initiated_cancel_of_a_stepping_fill_job_leaves_the_guest_serving
     drop(app);
     crate::editor::puzzle3d::precompute::drain_fill_envelope_registry_for_test();
 }
+
+/// 📏️ Teardown units ONE turn may spend. The reactor grants a turn an 8 ms slice
+/// (`⚛️reactor/🔄️turn/🦀️.rs`'s `run_until_deadline(64, …, 8 ms)`) and the framework's maintenance
+/// ladder grants `ArtifactEditor::mounted_job_maintenance_step` exactly `maximum_items.min(1)` — ONE
+/// item. Eight is that one item plus the close cursor's own fixed stages; anything above it is work
+/// the turn took without yielding, which is what the host watchdog reports as
+/// `the worker was silent for 18603 ms; outstanding: cancelJob`.
+const CANCEL_TEARDOWN_UNITS_PER_TURN: u64 = 8;
+
+/// 📏️ Turns the whole post-cancel teardown may take before the registry is quiet. One per retained
+/// owner a plan may have been admitted against, plus the close cursor's stages, per envelope slot —
+/// derived from the very ceiling `finish_measurement` admits against, never chosen.
+const CANCEL_TEARDOWN_TURNS: usize = crate::editor::puzzle3d::precompute::FILL_ENVELOPE_MAX_ITEMS + 9;
+
+/// 🛑 Escape while the Fill tool is armed on a Nakagin-scale document. The census this law reads is
+/// the plugin's own: [`fill_drop_drain_census`] counts every teardown unit spent INSIDE a synchronous
+/// drop, and the unit is the same `FillEnvelopeTerminalHandle::close_step` the incremental ladder
+/// spends one of per turn. So "the cancel turn stays within the reactor slice" is stated as a unit
+/// count, not a wall clock: no dispatch, no `jobs::cancel-job` and no drop may charge more than
+/// [`CANCEL_TEARDOWN_UNITS_PER_TURN`] units to a single turn, and the teardown the cancel starts must
+/// still finish — the registry quiet — within [`CANCEL_TEARDOWN_TURNS`] ordinary maintenance turns.
+///
+/// 🧊️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42, battery wasm #56: right after `engagement-abort`
+/// PASSed, `shard 0` was terminated by the host watchdog with `outstanding: cancelJob puzzle#1 started
+/// 18603 ms ago`, then `shard 0 lost, restoring actors: puzzle#1` and ten guest-death faults for every
+/// later verdict.
+#[semio_framework_async_macros::async_test]
+async fn engagement_abort_tears_the_fill_plan_down_across_turns_and_never_inside_one() {
+    use crate::editor::puzzle3d::precompute::{fill_drop_drain_census, fill_envelope_occupancy, reset_fill_drop_drain_census};
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the Nakagin example through the real typed command");
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("arm fill");
+    let mut live: Vec<u64> = Vec::new();
+    for _ in 0..FILL_TICK_GROWTH_CYCLES {
+        let result = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick");
+        step_spawned_fill_jobs(&result.requested_effects, &mut live).await;
+        if !live.is_empty() && fill_ready(&mut app).await > 0.0 {
+            break;
+        }
+    }
+    let identity = fill_cancel_identity(&mut app).await.expect("an armed, planning fill run publishes its cancel identity");
+    reset_fill_drop_drain_census();
+    let result = dispatch(&mut app, "engagementAbort", None, None).await.expect("engagementAbort");
+    let (abort_units, abort_worst) = fill_drop_drain_census();
+    let cancelled: Vec<u64> = result
+        .requested_effects
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::CancelJob { job } => Some(*job),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(cancelled, vec![identity.0], "Escape on an armed Fill tool cancels exactly the run the panel named");
+    reset_fill_drop_drain_census();
+    for job in &cancelled {
+        semio_framework_plugin::reactor::jobs::cancel_job(*job).await;
+    }
+    let (cancel_units, cancel_worst) = fill_drop_drain_census();
+    let mut turns = 0_usize;
+    let mut worst_turn = 0_u64;
+    let mut quiet = false;
+    while turns < CANCEL_TEARDOWN_TURNS {
+        turns += 1;
+        reset_fill_drop_drain_census();
+        app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("the live-cleanup ladder keeps ticking while the cancelled plan retires");
+        worst_turn = worst_turn.max(fill_drop_drain_census().1);
+        if fill_envelope_occupancy().0 == 0 {
+            quiet = true;
+            break;
+        }
+    }
+    let census =
+        format!("abort_turn={abort_units} units (worst {abort_worst}), cancel_job={cancel_units} units (worst {cancel_worst}), teardown turns={turns} worst_turn={worst_turn} quiet={quiet}, occupancy={:?}", fill_envelope_occupancy());
+    assert!(abort_worst <= CANCEL_TEARDOWN_UNITS_PER_TURN, "the engagementAbort turn tore the plan down inline instead of marking it cancelled: {census}");
+    assert!(cancel_worst <= CANCEL_TEARDOWN_UNITS_PER_TURN, "`jobs::cancel-job` tore the plan down inline — this is the guest turn that never yields: {census}");
+    assert!(worst_turn <= CANCEL_TEARDOWN_UNITS_PER_TURN, "one maintenance turn spent more than its granted teardown unit: {census}");
+    assert!(quiet, "the teardown the cancel started never finished: {census}");
+    drop(app);
+    crate::editor::puzzle3d::precompute::drain_fill_envelope_registry_for_test();
+}
 //#endregion 🪣️FillJobLifetime
 
 #[semio_framework_async_macros::async_test]
@@ -3425,6 +3638,59 @@ async fn selection_scope_names_the_inspector_and_not_the_catalogue() {
     assert!(!utilities);
     assert!(!engagements);
     assert!(!labels);
+}
+
+/// 🎮️ Wave B34: the six framework interaction verbs are declared out of this app's own scope table
+/// through `ArtifactEditor::interaction_scope`, and each one names EXACTLY the lanes it moves. Before
+/// this wave the framework answered `UiDirtyScope::Full` for all six — including `interactionHover`,
+/// which fires on pointer motion — so every mouse move over the viewport repainted every window body,
+/// every panel body, the utilities/tools/engagements rails, the labels and the measures
+/// (`📓️2026-09-12-wave-B32-world-lane-after-completion.md` §3.2: 24 interaction ingresses and 3
+/// whole-shell completions per 80 s lane, which is what a document mutation's own refresh pass then
+/// queued behind for 10–14 s).
+#[semio_framework_async_macros::async_test]
+async fn interaction_verbs_declare_exactly_the_lanes_they_move() {
+    use crate::editor::puzzle3d::{puzzle3d_interaction_chrome_scope, puzzle3d_selection_scope, puzzle3d_viewport_scope, PUZZLE3D_INTERACTION_DOMAIN};
+    use semio_framework_plugin::InteractionVerb;
+    let domain = [PUZZLE3D_INTERACTION_DOMAIN];
+    assert_eq!(Puzzle3dPlayApp::interaction_scope(InteractionVerb::Hover, &domain), Some(puzzle3d_viewport_scope()), "a hover moves the world body's hover lane and nothing else");
+    for verb in [InteractionVerb::Select, InteractionVerb::ClearSelection, InteractionVerb::SelectAll] {
+        assert_eq!(Puzzle3dPlayApp::interaction_scope(verb, &domain), Some(puzzle3d_selection_scope()), "{verb:?} moves the declared selection lanes");
+    }
+    for verb in [InteractionVerb::SetSelectionMode, InteractionVerb::SetGranularity] {
+        assert_eq!(Puzzle3dPlayApp::interaction_scope(verb, &domain), Some(puzzle3d_interaction_chrome_scope()), "{verb:?} moves the window's Select chrome");
+    }
+    for verb in InteractionVerb::ALL {
+        assert_eq!(Puzzle3dPlayApp::interaction_scope(verb, &["mesh"]), None, "{verb:?} on a domain this app never declared must fall back to the framework scope");
+        assert_eq!(Puzzle3dPlayApp::interaction_scope(verb, &[]), None, "{verb:?} touching no domain must fall back to the framework scope");
+    }
+}
+
+/// 🐁️ The hover half, pinned field by field: a pointer move paints the world body ALONE — no panel, no
+/// rail, no label, not even the window measures. The pick half names exactly the three selection panels
+/// (`selection_scope_names_the_inspector_and_not_the_catalogue` pins their identity) and no fourth one,
+/// so widening either answer has to widen this law with it.
+#[semio_framework_async_macros::async_test]
+async fn a_hover_paints_only_the_world_body_and_a_pick_adds_exactly_the_selection_panels() {
+    use crate::editor::puzzle3d::{puzzle3d_interaction_chrome_scope, puzzle3d_selection_scope, puzzle3d_viewport_scope};
+    let UiDirtyScope::Partial { window_bodies, panel_bodies, utilities, tools, engagements, measures, labels } = puzzle3d_viewport_scope() else {
+        panic!("the hover scope is a narrowed scope");
+    };
+    assert_eq!(window_bodies, vec![main::BODY_KEY.to_string()]);
+    assert!(panel_bodies.is_empty(), "a hover cannot move a panel: {panel_bodies:?}");
+    assert!(!utilities && !tools && !engagements && !measures && !labels, "a hover cannot move the shell chrome");
+    let UiDirtyScope::Partial { panel_bodies, .. } = puzzle3d_selection_scope() else {
+        panic!("the selection scope is a narrowed scope");
+    };
+    assert_eq!(panel_bodies.len(), 3, "a pick moves exactly the inspector, the outliner and the history: {panel_bodies:?}");
+    for body in [inspection::BODY_KEY, document::BODY_KEY, FRAMEWORK_HISTORY_BODY_KEY] {
+        assert!(panel_bodies.iter().any(|named| named == body), "a pick moves {body}: {panel_bodies:?}");
+    }
+    let UiDirtyScope::Partial { panel_bodies, measures, .. } = puzzle3d_interaction_chrome_scope() else {
+        panic!("the interaction chrome scope is a narrowed scope");
+    };
+    assert!(panel_bodies.is_empty(), "no panel renders the active selection mode or granularity: {panel_bodies:?}");
+    assert!(measures, "the measures rail binds both Select controls");
 }
 
 /// 🈳️ The four narrow non-document classes deliberately name NO panel body — a camera move, a fill
@@ -3941,6 +4207,10 @@ async fn selection_scoped_commands_with_no_selection_refuse_with_exactly_one_not
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
+    // 🌱️ The seed gesture SELECTS what it adds (`add_object_kind_selects_the_object_it_adds`), so the
+    // empty precondition this law is about has to be established explicitly — otherwise every arm below
+    // measures a live selection and refuses nothing (wave B36).
+    dispatch(&mut app, semio_framework_plugin::CLEAR_SELECTION_ACTION_ID, None, None).await.expect("clear the seed gesture's own selection");
     let objects_before = projection_of(&app).get("objects").and_then(Value::as_array).map(Vec::len).unwrap_or_default();
     for action in ["duplicateSelection", "deleteSelection", "selectSameKindSelection"] {
         let result = dispatch(&mut app, action, None, None).await.unwrap_or_else(|error| panic!("{action} must complete, not fault: {error:?}"));
@@ -3994,6 +4264,60 @@ async fn duplicate_selection_reselects_the_created_clones() {
     assert_ne!(selection.ids.first().map(String::as_str), Some(object_id.as_str()), "the CLONE is selected, not the original");
     let live_ids: Vec<String> = projection_of(&app).get("objects").and_then(Value::as_array).map(|objects| objects.iter().filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string)).collect()).unwrap_or_default();
     assert!(live_ids.contains(selection.ids.first().expect("clone id")), "the re-selected id must exist in the document");
+}
+
+/// 🌱️ `addObjectKind` SELECTS the object it adds — the same `Emit.interaction_writes` contract
+/// `duplicateSelection` and `addBrushObject` already honour, on both of its implementations: the
+/// cursorized `Puzzle3dAddObjectKindWork` the interactive job runs and the direct reducer arm. Adding an
+/// object the user must then hunt for is half a gesture: the catalogue row, the drag-drop and the Add
+/// Object dialog all end with the new object nowhere in the inspector, the gumball or the outliner
+/// (battery #53 `catalogue-add-selects-new-object added=1`, ticket 26/09/02/PUZZLE-3D-END-TO-END wave
+/// B36). Every id is asserted against the live document, so a write naming a phantom fails here.
+#[semio_framework_async_macros::async_test]
+async fn add_object_kind_selects_the_object_it_adds() {
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("first object");
+    let first = app.interaction_state().await.selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+    assert_eq!(first.granularity, PUZZLE3D_GRANULARITY_OBJECT, "the add selects at OBJECT granularity: {first:?}");
+    assert_eq!(first.ids.len(), 1, "exactly the added object is selected: {first:?}");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [4.0, 0.0, 0.0] })), None).await.expect("second object");
+    let second = app.interaction_state().await.selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+    assert_eq!(second.ids.len(), 1, "the second add REPLACES the selection with its own object, it does not widen it: {second:?}");
+    assert_ne!(second.ids, first.ids, "the second add selects the object IT created: {second:?} vs {first:?}");
+    let live_ids: Vec<String> = projection_of(&app).get("objects").and_then(Value::as_array).map(|objects| objects.iter().filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string)).collect()).unwrap_or_default();
+    assert_eq!(live_ids.len(), 2, "both adds landed in the document: {live_ids:?}");
+    assert!(live_ids.contains(second.ids.first().expect("added id")), "the selected id is the one the document carries: {live_ids:?}");
+}
+
+/// 🗑️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B31: one `deleteSelection` on a live object selection
+/// removes that object from the RENDERED world census within the same settle, records exactly one
+/// command-log row, and leaves the deleted id out of the framework-owned selection — so pressing
+/// `Delete` twice cannot land a second, empty edit on an id the document no longer carries. The
+/// browser red this states was `before=2 after=2 waitedMs=30299` with
+/// `history patch applied labels=["delete-object id=object-1"]` in the same run: the document moved
+/// and the selection did not, so every later delete was a no-op against a phantom.
+#[semio_framework_async_macros::async_test]
+async fn delete_selection_shrinks_the_world_census_and_drops_the_deleted_id() {
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("first object");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("second object");
+    let census_before = instance_count(&render_window(&mut app, main::WINDOW_KIND_ID).await);
+    assert_eq!(census_before, 2, "two added objects must both be in the rendered world census");
+    let object_id = first_object_id(&app);
+    select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select");
+    let (deleted, settled) = dispatch_reporting(&mut app, "deleteSelection", None, None).await;
+    deleted.expect("deleteSelection");
+    assert_eq!(history_rows(&settled), 1, "a delete that removed an object must publish exactly one command-log row");
+    assert_eq!(object_count(&app), 1, "the document must carry one object fewer");
+    assert_eq!(instance_count(&render_window(&mut app, main::WINDOW_KIND_ID).await), census_before - 1, "the rendered world census must shrink by one within the same settle");
+    let selection = app.interaction_state().await.selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+    assert!(!selection.ids.contains(&object_id), "the deleted id must be gone from the selection, else a second Delete is a silent no-op: {:?}", selection.ids);
+    let (again, settled_again) = dispatch_reporting(&mut app, "deleteSelection", None, None).await;
+    again.expect("second deleteSelection");
+    assert_eq!(history_rows(&settled_again), 0, "a delete with nothing left selected must record no row");
+    assert_eq!(object_count(&app), 1, "and must not touch the document");
 }
 //#endregion 🔖️WorldSelection
 
@@ -4868,6 +5192,99 @@ async fn the_engagement_fill_verb_arms_the_fill_tool_and_hands_over_its_count() 
     );
 }
 
+/// 🧰️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B35, checklist §14 `engagement-brush-verb`: `fill`
+/// arms and `brush` does not, because `fill` is a MODE-level tool whose effect carries no window and
+/// `brush` is a window utility whose effect carries one. `active_utility_by_window_id` is keyed by
+/// window INSTANCE (wave B9), and a pane reads only its own key — so an effect addressed at the bare
+/// window KIND (`puzzle3d-main`) arms a key nothing ever reads and the world lane keeps publishing
+/// `activeUtility=select` forever, which is exactly the browser verdict. The sibling law above pins
+/// WHICH effect the verb emits; this one pins WHERE it lands, on the multi-pane roster the shell
+/// actually runs (the engagement line is window chrome, and an app-level panel resolves through
+/// `focused_window_id`, wave B15 — both must resolve to an instance, never to the kind).
+#[semio_framework_async_macros::async_test]
+async fn the_engagement_brush_verb_arms_the_utility_of_a_pane_instance_never_the_window_kind() {
+    let mut app = app().await;
+    let perspective = "puzzle3d-main-perspective";
+    let top = "puzzle3d-main-top";
+    dispatch(&mut app, "setGridVisible", Some(&json!({ "pressed": true })), Some(top)).await.expect("grow the roster to two panes");
+    let armed = dispatch(&mut app, "engagementSubmit", Some(&json!({ "value": "brush" })), Some(perspective)).await.expect("engagementSubmit brush at the pane");
+    let addressed: Vec<&String> = armed
+        .requested_effects
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::SetActiveUtility { window_id, utility_id } if utility_id == utilities::brush::UTILITY_ID => Some(window_id),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(addressed, vec![&perspective.to_string()], "the pane-addressed brush verb must arm that pane's own key: {:?}", armed.requested_effects);
+    let unaddressed = dispatch(&mut app, "engagementSubmit", Some(&json!({ "value": "brush" })), None).await.expect("engagementSubmit brush with no window of its own");
+    let fallback: Vec<&String> = unaddressed
+        .requested_effects
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::SetActiveUtility { window_id, utility_id } if utility_id == utilities::brush::UTILITY_ID => Some(window_id),
+            _ => None,
+        })
+        .collect();
+    eprintln!("[DEBUG] engagement brush addressed={addressed:?} fallback={fallback:?}");
+    assert!(
+        fallback.iter().all(|window_id| !crate::editor::puzzle3d::puzzle3d_window_id_is_kind(window_id)),
+        "a verb that carries no window of its own must still resolve a pane INSTANCE, never the bare kind: {fallback:?}",
+    );
+}
+
+/// 🛑 Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B31, checklist §12/§14 `Abort`: Escape while the Fill
+/// TOOL is armed has to LEAVE it — cancel whatever plan is in flight and disarm the tool — instead of
+/// returning untouched, which is what `engagement_abort` did while `puzzle3d_fill_tool_active` and why
+/// the browser read `engagement-abort ... activeUtility=fill` after every `fill <n>` (wave B29 §2.5).
+/// The disarm is the app's own explicit effect, and the abort leaves NO tool and NO utility armed —
+/// the same place the shell's own Escape leaves them (`ShellHost` dispatches `setActiveTool ""`), not
+/// a remembered previous tool this app keeps no history of. The `brush`-claims-a-utility law above
+/// still holds: a plain verb switch never emits a tool effect, only this abort does.
+#[semio_framework_async_macros::async_test]
+async fn escaping_the_armed_fill_tool_cancels_the_plan_and_disarms_the_tool() {
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    let mut armed = app().await;
+    dispatch(&mut armed, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("arm fill");
+    let aborted = dispatch(&mut armed, "engagementAbort", None, None).await.expect("engagementAbort");
+    assert!(
+        aborted.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id.is_empty())),
+        "Escape with fill armed must disarm the tool: {:?}",
+        aborted.requested_effects,
+    );
+    assert!(
+        !aborted.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id == fill_tool::TOOL_ID)),
+        "and must never re-arm the tool it is leaving: {:?}",
+        aborted.requested_effects,
+    );
+    let active_utility = |node: &Value| selection_of(node).get("activeUtility").and_then(Value::as_str).unwrap_or_default().to_string();
+    let rendered = render_window(&mut armed, main::WINDOW_KIND_ID).await;
+    assert_eq!(active_utility(&rendered), PUZZLE3D_DEFAULT_UTILITY, "the abort leaves no utility armed either: {}", selection_of(&rendered));
+
+    // 🏛️ `active_tool_id` is host-owned (`ViewModel`, `🪟️window/🦀️.rs` `host_activation`), so the guest
+    // keeps reading `fill` until the host answers the disarm. A second Escape in that window therefore
+    // repeats the same idempotent disarm — and still cancels nothing, because there is no live plan.
+    let repeated = dispatch(&mut armed, "engagementAbort", None, None).await.expect("second engagementAbort");
+    assert!(
+        repeated.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id.is_empty())),
+        "while the host still reports fill armed the disarm repeats rather than giving up: {:?}",
+        repeated.requested_effects,
+    );
+    assert!(
+        !repeated.requested_effects.iter().any(|effect| matches!(effect, Effect::CancelJob { .. })),
+        "and cancels no job, because none is in flight: {:?}",
+        repeated.requested_effects,
+    );
+
+    let mut unarmed = app().await;
+    let untouched = dispatch(&mut unarmed, "engagementAbort", None, None).await.expect("engagementAbort with nothing armed");
+    assert!(
+        !untouched.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { .. } | Effect::CancelJob { .. })),
+        "an abort with no tool armed owes no tool or cancel effect: {:?}",
+        untouched.requested_effects,
+    );
+}
+
 /// 🧯️ `📓️2026-09-09-user-feature-checklist.md` §9/§13/summary #13: a placement that produces nothing
 /// used to produce NOTHING — no fault, no notice, no visible change. Every refusal path of the two
 /// placement verbs must now carry exactly one `Effect::Notify`, and a SUCCESSFUL placement must carry
@@ -5186,7 +5603,7 @@ async fn export_fixture_downloads_round_trippable_json() {
     let result = dispatch(&mut app, "exportFixture", None, None).await.expect("export");
     let data = result.requested_effects.iter().find_map(|effect| match effect {
         Effect::DownloadMediaExport { filename, mime_type, data, .. } => {
-            assert_eq!(filename, "puzzle-3d.json");
+            assert_eq!(filename, "concrete-forest.json", "a fresh session exports under the example its document was seeded from");
             assert_eq!(mime_type, "application/json");
             Some(data.clone())
         }
@@ -5371,9 +5788,14 @@ async fn exported_fixture_bytes_reimport_as_a_distinct_document_and_then_as_an_i
     assert_eq!(object_cores(&projection_of(&app)), after_distinct, "re-importing the file the document already IS is an identity on the document");
 }
 
-/// 📥️ Wave B16: leftover `exportFixture` must emit `DownloadMediaExport` `puzzle-3d.json`.
+/// 📥️ Wave B16: leftover `exportFixture` must emit `DownloadMediaExport`.
+/// 🏷️ Wave B30: a fresh session's document IS the Concrete Forest example
+/// (`ArtifactApp::initial_snapshot`), and since the config lane says so from the first render the
+/// boot download is named after it. The app-generic `puzzle-3d.json` belongs to a document that came
+/// from no example at all — see `export_fixture_names_the_download_after_the_active_example`, which
+/// reaches that state by clearing the picker.
 #[semio_framework_async_macros::async_test]
-async fn leftover_export_fixture_downloads_puzzle_3d_json() {
+async fn leftover_export_fixture_downloads_the_boot_example_json() {
     let source = include_str!("../../🦀️.rs");
     assert!(
         source.contains(r#""exportFixture" => Box::new(Puzzle3dWindowCommandWork::new(tool_id))"#),
@@ -5385,7 +5807,7 @@ async fn leftover_export_fixture_downloads_puzzle_3d_json() {
         Effect::DownloadMediaExport { filename, .. } => Some(filename.as_str()),
         _ => None,
     });
-    assert_eq!(filename, Some("puzzle-3d.json"), "leftover export must download puzzle-3d.json: {:?}", result.requested_effects);
+    assert_eq!(filename, Some("concrete-forest.json"), "leftover export must name the boot example: {:?}", result.requested_effects);
 }
 
 /// 🏷️ Wave B26: exporting Concrete Forest and exporting Nakagin must not both land as one constant
@@ -5395,18 +5817,23 @@ async fn leftover_export_fixture_downloads_puzzle_3d_json() {
 /// `nakagin`) resolve to the canonical id, so the filename never depends on how the row was spelled.
 #[semio_framework_async_macros::async_test]
 async fn export_fixture_names_the_download_after_the_active_example() {
+    /// 🏷️ The name is asserted across BOTH publication lanes, because the lane is chosen by payload size
+    /// and the naming contract is not: an over-budget example publishes a segmented handle rather than an
+    /// inline `DownloadMediaExport`, and it must carry the same filename (wave B38).
     async fn exported_filename(app: &mut Puzzle3dApp) -> String {
-        let result = dispatch(app, "exportFixture", None, None).await.expect("export");
-        result
-            .requested_effects
-            .iter()
-            .find_map(|effect| match effect {
-                Effect::DownloadMediaExport { filename, .. } => Some(filename.clone()),
-                _ => None,
-            })
-            .expect("export must emit DownloadMediaExport")
+        let (result, settled) = dispatch_reporting(app, "exportFixture", None, None).await;
+        result.expect("export");
+        let inline = settled.effects.iter().find_map(|effect| match effect {
+            Effect::DownloadMediaExport { filename, .. } => Some(filename.clone()),
+            _ => None,
+        });
+        let segmented = settled.downloads.first().map(|download| download.filename.clone());
+        assert!(inline.is_none() || segmented.is_none(), "one export publishes exactly one lane, never both: inline={inline:?} segmented={segmented:?}");
+        inline.or(segmented).expect("export must publish a download on one of the two lanes")
     }
     let mut app = app().await;
+    assert_eq!(exported_filename(&mut app).await, "concrete-forest.json", "a fresh session already names the example its document was seeded from");
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("clear to a blank document");
     assert_eq!(exported_filename(&mut app).await, "puzzle-3d.json", "a document that came from no example keeps the app-generic name");
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "concrete-forest" })), None).await.expect("load concrete forest");
     assert_eq!(exported_filename(&mut app).await, "concrete-forest.json", "Concrete Forest must export under its own id");
@@ -5415,6 +5842,66 @@ async fn export_fixture_names_the_download_after_the_active_example() {
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("clear to a blank document");
     assert_eq!(exported_filename(&mut app).await, "puzzle-3d.json", "clearing the example clears the name it exported under");
     eprintln!("[DEBUG] export filename law reached the blank/concrete/nakagin/blank sequence");
+}
+
+/// ⬇️ Wave B38: an export larger than one wire page must reach the user as ONE download carrying the WHOLE
+/// fixture, through the framework's segmented lane — never as an inline effect field.
+///
+/// 🧊️ The lane is picked by size against the guest's own contiguous-request ceiling
+/// (`GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`, one wasm page), derived from the wire constant rather than
+/// spelled as a literal: Concrete Forest (7 542 B) rides inline, Nakagin Capsule Tower (145 714 B) does not.
+/// The browser measured exactly that split — the inline Nakagin effect left the guest (`"effects":1`) and
+/// reached no file (`📓️2026-09-12-wave-B36-full-run-bisect-2.md` §5).
+///
+/// 🧾️ The assertion is the REASSEMBLED payload, drained one bounded chunk at a time exactly as
+/// `drainSegmentedMediaExport` drains it, parsed back to JSON and compared object-for-object with the live
+/// document — so a lane that publishes a handle but loses, reorders or truncates chunks fails here.
+#[semio_framework_async_macros::async_test]
+async fn export_over_the_inline_budget_streams_one_segmented_download_carrying_the_whole_fixture() {
+    use crate::editor::puzzle3d::commands::export_fixture::{puzzle3d_export_inline_budget_bytes, puzzle3d_export_json};
+    assert_eq!(
+        puzzle3d_export_inline_budget_bytes(),
+        semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
+        "the inline budget is the guest's own contiguous-request ceiling, never an independent literal"
+    );
+    let mut app = app().await;
+
+    // 🌲️ Below the budget: the inline lane, unchanged, and NO segmented handle at all.
+    let (small, small_settled) = dispatch_reporting(&mut app, "exportFixture", None, None).await;
+    small.expect("concrete forest export");
+    let small_bytes = puzzle3d_export_json(&puzzle3d_fixture_from_snapshot(app.snapshot().expect("live snapshot").typed())).len();
+    assert!(small_bytes <= puzzle3d_export_inline_budget_bytes(), "Concrete Forest must sit under the inline budget, got {small_bytes} B");
+    assert!(small_settled.downloads.is_empty(), "a payload that fits one page must not open a segmented handle: {:?}", small_settled.downloads);
+    let inline = small_settled.effects.iter().find_map(|effect| match effect {
+        Effect::DownloadMediaExport { filename, data, encoding, .. } => Some((filename.clone(), data.len(), encoding.clone())),
+        _ => None,
+    });
+    assert_eq!(inline, Some(("concrete-forest.json".to_string(), small_bytes, Some("utf-8".to_string()))), "the inline lane carries the whole payload and the utf-8 encoding");
+
+    // 🏢️ Above the budget: one segmented handle, no inline payload, and the full JSON on drain.
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "nakagin" })), None).await.expect("load nakagin");
+    let expected = puzzle3d_export_json(&puzzle3d_fixture_from_snapshot(app.snapshot().expect("live snapshot").typed()));
+    assert!(expected.len() > puzzle3d_export_inline_budget_bytes(), "Nakagin must exceed the inline budget, got {} B", expected.len());
+    let (large, large_settled) = dispatch_reporting(&mut app, "exportFixture", None, None).await;
+    large.expect("nakagin export");
+    assert!(
+        !large_settled.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })),
+        "an over-budget export must publish no inline download effect: {:?}",
+        large_settled.effects
+    );
+    assert_eq!(large_settled.downloads.len(), 1, "exactly one segmented download handle: {:?}", large_settled.downloads);
+    let handle = large_settled.downloads[0].clone();
+    assert_eq!(handle.filename, "nakagin-capsule-tower.json", "the segmented lane keeps the per-example filename");
+    assert_eq!(handle.mime_type, "application/json");
+    assert_eq!(handle.encoding.as_deref(), Some("identity"), "UTF-8 JSON streams as identity, never base64");
+    assert_eq!(handle.bytes, expected.len(), "the handle declares the whole payload");
+    let drained = drain_segmented_download(&mut app, &handle).await;
+    assert_eq!(drained.len(), expected.len(), "the drained bytes are the whole payload");
+    assert_eq!(String::from_utf8(drained).expect("drained payload is UTF-8"), expected, "the drained payload IS the export, byte for byte");
+    let reassembled: Value = parse(&expected).expect("the reassembled export parses");
+    let live = projection_of(&app);
+    assert_eq!(object_cores(&reassembled), object_cores(&live), "the streamed export reproduces every object of the live document");
+    assert_eq!(reassembled.get("schema"), live.get("schema"));
 }
 
 /// 📥️ Wave B16: leftover `openImportFixture` must emit the file picker that completes as `importFixture`.
@@ -5672,6 +6159,16 @@ async fn an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes() {
     let requested = interaction_of(&render_composite(&mut app).await);
     assert_eq!(requested.pointer("/meshReuploadUrls").and_then(Value::as_array).cloned().unwrap_or_default(), vec![json!(url)], "the refused identity is published as a request for its bytes");
     let residency = requested.pointer("/meshResidency").and_then(Value::as_u64).expect("the world body publishes the guest's mesh residency");
+    // 🐢️ Wave B32: the SECOND refusal of the same id is where the storm lived. The standing request set
+    // is already published, so this announcement has nothing new for any surface — and republishing the
+    // world body for it re-drives the client's registrar, which re-announces, which refuses again. The
+    // live `:6013` shell measured 23 of 33 typed-operation completions carrying this viewport scope in a
+    // 75 s window with four user actions, 23 of 31 refresh passes answering every world body
+    // `unchanged`, and `translateSelection` needing 8–15 s to reach `data-instances-json` behind them.
+    let repeated = dispatch(&mut app, "registerBrushMesh", Some(&announcement), None).await.expect("the client re-announces the same dead identity");
+    assert!(matches!(repeated.ui_scope, UiDirtyScope::None), "a re-announcement of an ALREADY standing request republishes nothing and must stay Quiet; got {:?}", repeated.ui_scope);
+    let unchanged = interaction_of(&render_composite(&mut app).await);
+    assert_eq!(unchanged.pointer("/meshReuploadUrls"), requested.pointer("/meshReuploadUrls"), "the second refusal leaves the published request set byte-identical, which is why it owes no repaint");
 
     let position_bytes: Vec<u8> = positions.iter().flat_map(|value| value.to_le_bytes()).collect();
     let index_bytes: Vec<u8> = indices.iter().flat_map(|value| value.to_le_bytes()).collect();
@@ -5767,6 +6264,43 @@ async fn an_opening_camera_is_stable_and_never_overrules_a_pose_the_user_set() {
     assert_eq!(camera_position(&user), vec![11.0, -7.0, 5.0], "a real gesture owns the pane's pose from then on: {user}");
     assert_eq!(published_camera(&mut app, main::WINDOW_INSTANCE_PERSPECTIVE).await, user, "and the framing never takes it back: {user}");
 }
+
+/// 📽️ Flipping ONE pane's projection repaints THAT pane's published camera and no sibling's.
+///
+/// A projection is not a label on the pose — it IS the pose: `setProjection` re-derives position and
+/// up from the new orientation around the unchanged target (`🎮️commands/📽️set-projection`), and the
+/// `WindowOption` scope it publishes under repaints the world body, so the world lane's `cameraJson`
+/// — what `World3dHost` parses into `data-camera-json` — must differ in the same settle. The browser
+/// probe read `projection-repaints-camera` as bit-identical (ticket 26/09/02 wave B38 §1.3); this law
+/// is what says whether the guest owes that, and it does not — the probe sampled the camera ~100 ms
+/// after the click, while a measures-rail control's own round trip is documented at 0.7 s and up
+/// (`🛠️ShellHelpers/🎚️measure-controls`'s `useWindowMeasureDraft`), so the value it saw flip was that
+/// control's optimistic DRAFT and the camera it read was the pre-dispatch one.
+#[semio_framework_async_macros::async_test]
+async fn flipping_one_panes_projection_repaints_that_panes_camera_and_leaves_its_sibling_alone() {
+    let mut app = app().await;
+    let before = published_camera(&mut app, main::WINDOW_INSTANCE_PERSPECTIVE).await;
+    let sibling_before = published_camera(&mut app, main::WINDOW_INSTANCE_TOP).await;
+    assert_eq!(before.pointer("/projection/mode/kind").and_then(Value::as_str), Some("threePoint"), "the law starts from the perspective pane's own three-point default: {before}");
+
+    dispatch(&mut app, "setProjection", Some(&json!({ "field": "orthographicView", "value": "plan" })), Some(main::WINDOW_INSTANCE_PERSPECTIVE)).await.expect("setProjection orthographicView=plan");
+
+    let after = published_camera(&mut app, main::WINDOW_INSTANCE_PERSPECTIVE).await;
+    assert_eq!(after.pointer("/projection/mode/kind").and_then(Value::as_str), Some("orthographic"), "the flipped pane publishes the projection it was given: {after}");
+    assert_eq!(after.pointer("/projection/orientation/view").and_then(Value::as_str), Some("plan"), "and the orientation it was given: {after}");
+    assert_ne!(camera_position(&after), camera_position(&before), "an orthographic plan looks straight down — the POSE must move, not only its label: before={before} after={after}");
+    assert_ne!(after.get("up"), before.get("up"), "and the up vector is re-derived with it: before={before} after={after}");
+    let eye = camera_position(&after);
+    let focus = camera_position(&after.get("target").cloned().map(|target| json!({ "position": target })).expect("the camera lane carries its target"));
+    assert!((eye[0] - focus[0]).abs() < 1e-9 && (eye[1] - focus[1]).abs() < 1e-9 && eye[2] > focus[2], "a plan view stands directly above what it looks at: eye={eye:?} target={focus:?}");
+    assert_eq!(published_camera(&mut app, main::WINDOW_INSTANCE_TOP).await, sibling_before, "the sibling pane's camera lane is untouched by another pane's projection: {sibling_before}");
+
+    dispatch(&mut app, "setProjection", Some(&json!({ "field": "perspectiveKind", "value": "threePoint" })), Some(main::WINDOW_INSTANCE_PERSPECTIVE)).await.expect("setProjection perspectiveKind=threePoint");
+    let restored = published_camera(&mut app, main::WINDOW_INSTANCE_PERSPECTIVE).await;
+    assert_eq!(restored.pointer("/projection/mode/kind").and_then(Value::as_str), Some("threePoint"), "flipping back is symmetric: {restored}");
+    assert_ne!(camera_position(&restored), camera_position(&after), "and moves the pose back off the plan axis: after={after} restored={restored}");
+    eprintln!("[DEBUG] projection repaint: before={} plan={} restored={}", camera_position(&before).len(), camera_position(&after).len(), camera_position(&restored).len());
+}
 //#endregion 📷️OpeningCamera
 
 //#region ⚙️SettingsPanelScope
@@ -5829,6 +6363,40 @@ async fn a_settings_bump_retunes_only_the_focused_panes_rail() {
     let measures = app.window_measures(&top_view).await;
     assert_eq!(find_measure_slider(measures.get(main::WINDOW_INSTANCE_TOP).expect("top rail"), &spacing_id), Some(bumped), "the focused pane's own rail carries what the Settings stepper published");
     assert_eq!(find_measure_slider(measures.get(main::WINDOW_INSTANCE_PERSPECTIVE).expect("perspective rail"), &spacing_id), perspective_before, "the pane the user is NOT looking at keeps its own spacing");
+}
+
+/// ⚙️ The Settings panel must RENDER the pane it is ADDRESSED at. Every stepper tags the focused pane
+/// as `windowId` (law above), but the value it shows came from `ConfigView::window`, which is `None` for
+/// a panel projection (`ViewModel::for_panel` drops `window_id`) and therefore fell through to
+/// `Puzzle3dWindowConfig::default()`. The panel then displayed the DEFAULT spacing while writing to the
+/// focused pane: battery #53 read `settings-value-reaches-window-rail settings=10.5 windowRail=12.5`
+/// after the rail had been nudged to 12.5 — the panel bumped a 10.0 it had invented
+/// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B36).
+#[semio_framework_async_macros::async_test]
+async fn the_settings_panel_renders_the_focused_panes_own_value_not_a_default() {
+    fn control(node: &Value, key: &str) -> Option<Value> {
+        if node.get("key").and_then(Value::as_str) == Some(key) {
+            return Some(node.clone());
+        }
+        match node {
+            Value::Object(fields) => fields.iter().find_map(|(_, child)| control(child, key)),
+            Value::Array(items) => items.iter().find_map(|item| control(item, key)),
+            _ => None,
+        }
+    }
+    let spacing_id = format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing");
+    let mut app = app().await;
+    for pane in [main::WINDOW_INSTANCE_TOP, main::WINDOW_INSTANCE_PERSPECTIVE] {
+        drop(render_window(&mut app, pane).await);
+    }
+    dispatch(&mut app, "setGridSpacing", Some(&json!({ "windowId": main::WINDOW_INSTANCE_PERSPECTIVE, "value": 12.5 })), Some(main::WINDOW_INSTANCE_PERSPECTIVE)).await.expect("nudge the perspective pane's spacing");
+    let perspective_view = app.window_view(main::WINDOW_INSTANCE_PERSPECTIVE);
+    let rail = app.window_measures(&perspective_view).await;
+    assert_eq!(find_measure_slider(rail.get(main::WINDOW_INSTANCE_PERSPECTIVE).expect("perspective rail"), &spacing_id), Some(12.5), "the rail carries the nudge, so the panel below has something to disagree with");
+    let panel = render_panel_body(&mut app, settings_panel::BODY_KEY, Some(main::WINDOW_INSTANCE_PERSPECTIVE)).await;
+    let stepper = control(&panel, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-settings.grid-spacing.control")).unwrap_or_else(|| panic!("the grid spacing stepper: {panel}"));
+    let rendered = stepper.get("component").and_then(|props| props.get("value")).and_then(Value::as_f64);
+    assert_eq!(rendered, Some(12.5), "the Settings panel renders the focused pane's own spacing, never a default it invented: {stepper}");
 }
 //#endregion ⚙️SettingsPanelScope
 

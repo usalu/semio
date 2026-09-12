@@ -301,7 +301,7 @@ describe("strict plugin catalog completion", () => {
     expect(() => parseComponentPackageId('[package.metadata.component]\npackage = "semio:Parent"\n', "fixture/Cargo.toml")).toThrow(/lowercase/);
     expect(() => parseComponentPackageId('[package.metadata.component]\npackage-name = "semio:parent"\n', "fixture/Cargo.toml")).toThrow(/missing/);
     const repoRoot = temporaryRoot();
-    const cache = join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🧑‍💻dev", "🔌️plugin-modules");
+    const cache = join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "📦️packages", "🟦️typescript", "dist", "dev", "🔌️plugin-modules");
     mkdirSync(join(repoRoot, "target"), { recursive: true });
     mkdirSync(cache, { recursive: true });
     expect(() => createFreshCatalogBuildVerifier(repoRoot, join(repoRoot, "target"))).toThrow(/ambient shared target/);

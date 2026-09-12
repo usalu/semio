@@ -257,21 +257,43 @@ export function isFlowSessionOpenRejected(error) {
 
 let nextSurfaceId = 1;
 
-/** 🎛️ Optional acceleration device for one flow surface. A flow surface **presents through a 2D canvas
- * context** ({@link renderFlowCanvas}) and never touches this device, so a host without WebGPU — a
- * headless/hidden tab, a browser that ships no `navigator.gpu`, a blocklisted adapter — must still
- * reach `created`. Returns `null` instead of throwing whenever the device cannot be acquired; only a
- * cancellation of the attachment itself is allowed to abort the surface. */
-async function requestFlowSurfaceDevice(gpu) {
+/** 🎛️ Binds one flow surface's canvas to the session's own WebGPU presenter.
+ *
+ * The device belongs to the wasm session, not to this module: `flowAttachSurfaceCanvas` hands the
+ * element to `CanvasGpuSession`, the same vello/wgpu presenter every other browser board surface
+ * uses, so a rendered frame reaches the canvas as pixels instead of as a description JS has to
+ * interpret. Returns `false` — never throws — whenever that cannot happen (no `bindings`, no
+ * `navigator.gpu`, a blocklisted adapter, a device refusal): a flow surface must still reach
+ * `created` there and present through {@link replayFlowDrawList} instead. Only a cancellation of
+ * the attachment itself may abort the surface. */
+async function requestFlowSurfacePresentation(bindings, surface, canvas, width, height, dpr, gpu = globalThis.navigator?.gpu) {
+  // 🛡️ `navigator.gpu` is checked HERE, before the call, and not left to the wgpu surface bring-up
+  // inside the module: a guest-side panic is an unrecoverable trap that takes the whole session
+  // with it, so the overwhelmingly common deviceless case must never reach that code at all.
+  if (!gpu || typeof bindings?.flowAttachSurfaceCanvas !== "function") return false;
+  // 🧭️ …and the PRESENCE of `navigator.gpu` decides nothing: a headless browser (and any machine
+  // with a blocklisted GPU) exposes the object and then hands out no adapter at all. An adapter is
+  // the only evidence that the guest's bring-up can finish, and it must be gathered BEFORE the
+  // element is handed over, because `wgpu`'s `create_surface` binds a `webgpu` context to the
+  // canvas before it discovers there is no adapter — and a canvas admits exactly one context kind
+  // for its whole life. Measured on the live serve: `No available adapters` → `present=2d` on a
+  // canvas whose `getContext("2d")` was null for the rest of the session, i.e. a node graph that
+  // could never be painted by either path.
+  let adapter;
   try {
-    const adapter = await gpu?.requestAdapter?.();
-    return (await adapter?.requestDevice?.()) ?? null;
+    adapter = await gpu.requestAdapter?.();
   } catch {
-    return null;
+    adapter = undefined;
+  }
+  if (!adapter) return false;
+  try {
+    return (await bindings.flowAttachSurfaceCanvas(surface, canvas, width, height, dpr)) === true;
+  } catch {
+    return false;
   }
 }
 
-export function attachFlowSurface(features, canvas, { width, height, dpr = 1, gpu = globalThis.navigator?.gpu } = {}) {
+export function attachFlowSurface(features, canvas, { width, height, dpr = 1, bindings, gpu = globalThis.navigator?.gpu } = {}) {
   if (!canvas) return rejectedTask(new Error("Flow canvas is required"));
   const surface = nextSurfaceId++;
   const surfaceGeneration = 1;
@@ -284,18 +306,13 @@ export function attachFlowSurface(features, canvas, { width, height, dpr = 1, gp
   const result = attached.result.then(async () => {
     if (cancelled) throw new Error("Flow surface attachment cancelled");
     try {
-      const device = await requestFlowSurfaceDevice(gpu);
+      const presentsOnGpu = await requestFlowSurfacePresentation(bindings, surface, canvas, width, height, dpr, gpu);
       if (cancelled) throw new Error("Flow surface attachment cancelled");
       active = features.surface.surfaceStatus({ surface, surfaceGeneration, status: "created" });
       active.subscribe(notify);
       await active.result;
-      console.log("[DEBUG] flow surface created surface=%s %sx%s dpr=%s device=%s", surface, width, height, dpr, device ? "webgpu" : "none");
-      device?.lost?.then(() => {
-        const lost = features.surface.surfaceStatus({ surface, surfaceGeneration, status: "device-lost" });
-        const unsubscribeLost = lost.subscribe(notify);
-        return lost.result.finally(unsubscribeLost);
-      }).catch(() => {});
-      return { surface, surfaceGeneration, canvas, device };
+      console.log("[DEBUG] flow surface created surface=%s %sx%s dpr=%s present=%s", surface, width, height, dpr, presentsOnGpu ? "webgpu" : "2d");
+      return { surface, surfaceGeneration, canvas, presentsOnGpu };
     } catch (error) {
       const status = cancelled ? "cancelled" : "rejected";
       active = features.surface.surfaceStatus({ surface, surfaceGeneration, status });
@@ -320,7 +337,10 @@ export function attachFlowSurface(features, canvas, { width, height, dpr = 1, gp
 
 export function renderFlowSurface(features, canvas, render = renderFlowCanvas) {
   const task = features.surface.renderFrame({});
-  return mapTask(task, (state) => { render(canvas, state); return state; });
+  return mapTask(task, (state) => {
+    const presentation = render(canvas, state);
+    return state && typeof state === "object" ? { ...state, presentation } : state;
+  });
 }
 
 export const FlowFeatureGroups = Object.freeze({
@@ -441,18 +461,211 @@ function mapTask(task, decode) { return { ...task, result: task.result.then(deco
 function rejectedTask(error) { return { requestId: undefined, result: Promise.reject(error), cancel: () => false, subscribe: () => () => {} }; }
 
 const flowPresentedCanvases = new WeakSet();
+const flowUnpresentableCanvases = new WeakSet();
+
+/** 🪧️ How one flow frame reached (or failed to reach) its canvas.
+ *
+ * `gpu` — the guest rasterized it through its own WebGPU surface. `replayed` — the encoded draw
+ * list was replayed into a 2D context. `none` — there was no canvas to present onto. And
+ * `unpresentable` — the frame presents in 2D but the element cannot give a 2D context, which is
+ * terminal FOR THAT ELEMENT: the host must mount a fresh canvas and let the presentation be decided
+ * again for it. */
+export const FlowPresentation = Object.freeze({ gpu: "gpu", replayed: "replayed", unpresentable: "unpresentable", none: "none" });
 
 function positiveFlowSize(value) {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
 }
 
-function renderFlowCanvas(canvas, state) {
-  const context = canvas?.getContext?.("2d");
-  if (!context) return;
-  if (canvas && typeof canvas === "object" && !flowPresentedCanvases.has(canvas)) {
-    flowPresentedCanvases.add(canvas);
-    console.log("[DEBUG] flow surface context created 2d %sx%s dpr=%s widgets=%s", state?.width, state?.height, state?.dpr, (state?.fixture?.widgets ?? []).length);
+/** 🎬️ Wire version this replayer understands; see `canvas::draw_list` (Rust) for the encoding. */
+export const FLOW_DRAW_LIST_VERSION = 1;
+
+const FLOW_DRAW_LIST_FILL_RULES = ["nonzero", "evenodd"];
+const FLOW_DRAW_LIST_CAPS = ["butt", "round", "square"];
+/** 🎨️ `canvas::BlendMode`'s own declaration order, mapped to the 2D context's composite names. */
+const FLOW_DRAW_LIST_BLEND_MODES = ["source-over", "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn", "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"];
+const FLOW_TAU = Math.PI * 2;
+
+function flowDrawListColor(rgba) {
+  const [r = 0, g = 0, b = 0, a = 255] = rgba ?? [];
+  return `rgba(${r},${g},${b},${a / 255})`;
+}
+
+/** ✖️ `outer * inner` over 2x3 affines — the same child-space-then-outer composition
+ * `Scene::append` performs, applied here so one `setTransform` replaces a save/transform/restore
+ * trio and a clip pushed by a layer survives the next command. */
+function flowDrawListCompose(outer, inner) {
+  const [a, b, c, d, e, f] = outer;
+  const [g, h, i, j, k, l] = inner;
+  return [a * g + c * h, b * g + d * h, a * i + c * j, b * i + d * j, a * k + c * l + e, b * k + d * l + f];
+}
+
+/** 🍕️ `roundRect` is not universally present (jsdom ships none); four arcs are exact for the
+ * circular corners `RoundedRect` normalizes to. */
+function flowDrawListRoundRect(context, x0, y0, x1, y1, tl, tr, br, bl) {
+  if (typeof context.roundRect === "function") {
+    context.roundRect(x0, y0, x1 - x0, y1 - y0, [tl, tr, br, bl]);
+    return;
   }
+  context.moveTo(x0, y0 + tl);
+  context.arcTo(x0, y0, x0 + tl, y0, tl);
+  context.lineTo(x1 - tr, y0);
+  context.arcTo(x1, y0, x1, y0 + tr, tr);
+  context.lineTo(x1, y1 - br);
+  context.arcTo(x1, y1, x1 - br, y1, br);
+  context.lineTo(x0 + bl, y1);
+  context.arcTo(x0, y1, x0, y1 - bl, bl);
+  context.closePath();
+}
+
+function flowDrawListPath(context, shape) {
+  context.beginPath();
+  switch (shape?.[0]) {
+    case "r":
+      context.rect(shape[1], shape[2], shape[3] - shape[1], shape[4] - shape[2]);
+      return;
+    case "rr":
+      flowDrawListRoundRect(context, shape[1], shape[2], shape[3], shape[4], shape[5], shape[6], shape[7], shape[8]);
+      return;
+    case "ci":
+      context.arc(shape[1], shape[2], shape[3], 0, FLOW_TAU);
+      return;
+    case "ln":
+      context.moveTo(shape[1], shape[2]);
+      context.lineTo(shape[3], shape[4]);
+      return;
+    case "cb":
+      context.moveTo(shape[1], shape[2]);
+      context.bezierCurveTo(shape[3], shape[4], shape[5], shape[6], shape[7], shape[8]);
+      return;
+    case "p": {
+      const verbs = shape[1] ?? [];
+      for (let index = 0; index < verbs.length; ) {
+        switch (verbs[index]) {
+          case 0: context.moveTo(verbs[index + 1], verbs[index + 2]); index += 3; break;
+          case 1: context.lineTo(verbs[index + 1], verbs[index + 2]); index += 3; break;
+          case 2: context.quadraticCurveTo(verbs[index + 1], verbs[index + 2], verbs[index + 3], verbs[index + 4]); index += 5; break;
+          case 3: context.bezierCurveTo(verbs[index + 1], verbs[index + 2], verbs[index + 3], verbs[index + 4], verbs[index + 5], verbs[index + 6]); index += 7; break;
+          case 4: context.closePath(); index += 1; break;
+          default: return;
+        }
+      }
+      return;
+    }
+    default:
+  }
+}
+
+function flowDrawListImage(context, width, height, encoded) {
+  const create = globalThis.OffscreenCanvas ? (w, h) => new globalThis.OffscreenCanvas(w, h) : (w, h) => Object.assign(globalThis.document?.createElement?.("canvas") ?? {}, { width: w, height: h });
+  const source = create(width, height);
+  const target = source?.getContext?.("2d");
+  if (!target || typeof globalThis.atob !== "function") return undefined;
+  const binary = globalThis.atob(encoded);
+  const image = target.createImageData(width, height);
+  for (let index = 0; index < image.data.length && index < binary.length; index += 1) image.data[index] = binary.charCodeAt(index);
+  target.putImageData(image, 0, 0);
+  return source;
+}
+
+/** 🎬️ Replays one encoded `canvas::Scene` into a 2D context.
+ *
+ * `base` is the replayer's OWN transform (device-pixel scale); every command's affine already
+ * carries the camera the Rust painter baked in, so this never re-derives a camera. Returns the
+ * number of commands drawn, which is what the conformance twin asserts on.
+ *
+ * @param {CanvasRenderingContext2D} context
+ * @param {{version?: number, commands?: unknown[]}} drawList
+ * @param {readonly number[]} base
+ */
+export function replayFlowDrawList(context, drawList, base = [1, 0, 0, 1, 0, 0]) {
+  if (!context || drawList?.version !== FLOW_DRAW_LIST_VERSION) return 0;
+  const commands = drawList.commands ?? [];
+  let depth = 0;
+  let drawn = 0;
+  for (const command of commands) {
+    switch (command?.[0]) {
+      case "f": {
+        context.setTransform(...flowDrawListCompose(base, command[3]));
+        flowDrawListPath(context, command[4]);
+        context.fillStyle = flowDrawListColor(command[2]);
+        context.fill(FLOW_DRAW_LIST_FILL_RULES[command[1]] ?? "nonzero");
+        drawn += 1;
+        break;
+      }
+      case "s": {
+        context.setTransform(...flowDrawListCompose(base, command[7]));
+        flowDrawListPath(context, command[8]);
+        context.lineWidth = command[1];
+        context.lineCap = FLOW_DRAW_LIST_CAPS[command[2]] ?? "round";
+        context.lineJoin = "round";
+        if (typeof context.setLineDash === "function") context.setLineDash(command[4] ?? []);
+        context.lineDashOffset = command[5] ?? 0;
+        context.strokeStyle = flowDrawListColor(command[6]);
+        context.stroke();
+        drawn += 1;
+        break;
+      }
+      case "i": {
+        const bitmap = flowDrawListImage(context, command[1], command[2], command[3]);
+        if (!bitmap) break;
+        context.setTransform(...flowDrawListCompose(base, command[4]));
+        context.drawImage(bitmap, 0, 0);
+        drawn += 1;
+        break;
+      }
+      case "pl": {
+        context.save();
+        depth += 1;
+        context.setTransform(...flowDrawListCompose(base, command[4]));
+        flowDrawListPath(context, command[5]);
+        context.clip(FLOW_DRAW_LIST_FILL_RULES[command[1]] ?? "nonzero");
+        context.globalAlpha *= command[3] ?? 1;
+        context.globalCompositeOperation = FLOW_DRAW_LIST_BLEND_MODES[command[2]] ?? "source-over";
+        break;
+      }
+      case "pc": {
+        context.save();
+        depth += 1;
+        context.setTransform(...flowDrawListCompose(base, command[2]));
+        flowDrawListPath(context, command[3]);
+        context.clip(FLOW_DRAW_LIST_FILL_RULES[command[1]] ?? "nonzero");
+        break;
+      }
+      case "po": {
+        if (depth === 0) break;
+        depth -= 1;
+        context.restore();
+        break;
+      }
+      default:
+    }
+  }
+  while (depth > 0) {
+    depth -= 1;
+    context.restore();
+  }
+  return drawn;
+}
+
+/** 🖼️ Presents one rendered flow frame onto its canvas, and says which way it went.
+ *
+ * `state.present === "gpu"` means the wasm session already rasterized the scene through its own
+ * WebGPU surface (`flowAttachSurfaceCanvas`) and the pixels are on screen — touching the canvas
+ * here would be wrong, and asking it for a 2D context would be impossible anyway, since a canvas
+ * admits exactly one context kind for its whole life. Otherwise the frame carries the scene itself
+ * as an encoded draw list, and this replays it at the frame's own device-pixel scale. There is no
+ * third case and no placeholder: what is painted is what the host's own LOD-aware vector painter
+ * produced, camera and all.
+ *
+ * The return value is the verdict, not a courtesy: `"unpresentable"` means the frame asked for the
+ * 2D replay on an element that can never give a 2D context — a canvas already carrying a WebGPU
+ * context whose device is gone, or one poisoned by a bring-up that failed after binding it. That
+ * element is finished, and the only recovery is for the host to replace it and re-decide the
+ * presentation for the new one; swallowing it (as this did) leaves a permanently blank graph with
+ * nothing in the console. {@link FlowPresentation} names the four outcomes. */
+export function renderFlowCanvas(canvas, state) {
+  if (!canvas) return FlowPresentation.none;
+  if (state?.present === "gpu") return FlowPresentation.gpu;
   // 📏️ The frame's own size wins; without one the canvas keeps the backing store its host already owns.
   // `clientWidth` is 0 for a canvas in a hidden tab or an unlaid-out pane, so the previous fallback
   // collapsed a correctly sized surface to 1x1 and presented nothing.
@@ -464,13 +677,29 @@ function renderFlowCanvas(canvas, state) {
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
   }
-  context.setTransform(dpr, 0, 0, dpr, 0, 0);
-  context.clearRect(0, 0, width, height);
-  for (const widget of state?.fixture?.widgets ?? []) {
-    const x = widget.x ?? widget.position?.x ?? 0;
-    const y = widget.y ?? widget.position?.y ?? 0;
-    context.fillRect(x - 60, y - 24, 120, 48);
+  const context = canvas.getContext?.("2d");
+  if (!context) {
+    if (typeof canvas === "object" && !flowUnpresentableCanvases.has(canvas)) {
+      flowUnpresentableCanvases.add(canvas);
+      console.warn("[DEBUG] flow surface cannot replay: the canvas refuses a 2D context while the frame presents in 2D — it must be replaced");
+    }
+    return FlowPresentation.unpresentable;
   }
+  if (typeof canvas === "object" && !flowPresentedCanvases.has(canvas)) {
+    flowPresentedCanvases.add(canvas);
+    console.log("[DEBUG] flow surface context created 2d %sx%s dpr=%s widgets=%s commands=%s", state?.width, state?.height, state?.dpr, (state?.fixture?.widgets ?? []).length, (state?.draw?.commands ?? []).length);
+  }
+  context.setTransform(dpr, 0, 0, dpr, 0, 0);
+  context.globalAlpha = 1;
+  context.globalCompositeOperation = "source-over";
+  context.clearRect(0, 0, width, height);
+  const clear = state?.clear;
+  if (Array.isArray(clear) && clear[3] > 0) {
+    context.fillStyle = flowDrawListColor(clear);
+    context.fillRect(0, 0, width, height);
+  }
+  replayFlowDrawList(context, state?.draw, [dpr, 0, 0, dpr, 0, 0]);
+  return FlowPresentation.replayed;
 }
 
 //#endregion 🧱️Codec

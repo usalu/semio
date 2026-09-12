@@ -1,0 +1,101 @@
+{
+  "root": {
+    "packageRelativePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist",
+    "modulesDirectoryName": "🔌️plugin-modules",
+    "profiles": ["dev", "release"],
+    "rejectedProfiles": ["", "DEV", "ship", "debug", "dev/release", "../release"],
+    "consumers": [
+      { "id": "react-vite-mount", "renderer": "react", "profile": "dev" },
+      { "id": "react-vite-mount", "renderer": "react", "profile": "release" },
+      { "id": "wgpu-trunk-copy-dir", "renderer": "wgpu", "profile": "dev" },
+      { "id": "wgpu-native-runner", "renderer": "wgpu", "profile": "dev" },
+      { "id": "wgpu-native-runner", "renderer": "wgpu", "profile": "release" },
+      { "id": "prepare-and-activate", "renderer": "react", "profile": "dev" },
+      { "id": "prepare-and-activate", "renderer": "wgpu", "profile": "release" }
+    ],
+    "retiredRoots": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/wgpu-modules"
+    ],
+    "retiredSymbols": ["PLUGIN_MODULES_ROOT", "browserModuleRoot", "wgpuActivatedModulesRoot", "stageWgpuPluginModules"],
+    "sourceFiles": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🌐️.html",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Trunk.toml",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs"
+    ]
+  },
+  "freshness": {
+    "command": "bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-dev",
+    "cases": [
+      {
+        "name": "a staged plugin newer than every source is fresh",
+        "facts": { "pluginId": "procedural", "role": "plugin", "activationTracked": true, "stagedAtMs": 2000, "newestSourceMs": 1000, "newestSourcePath": "s/plugin.rs", "receiptArtifactSha256": "a1" },
+        "verdict": { "pluginId": "procedural", "kind": "fresh" },
+        "line": null
+      },
+      {
+        "name": "a staged plugin older than its newest source is loudly stale",
+        "facts": { "pluginId": "procedural", "role": "plugin", "activationTracked": true, "stagedAtMs": 1757600000000, "newestSourceMs": 1757690000000, "newestSourcePath": "s/plugins/procedural/plugin.rs", "receiptArtifactSha256": "a1" },
+        "verdict": { "pluginId": "procedural", "kind": "source-newer", "detail": "staged 2025-09-11T14:13:20.000Z < s/plugins/procedural/plugin.rs 2025-09-12T15:13:20.000Z" },
+        "line": "[stale] procedural: source-newer — staged 2025-09-11T14:13:20.000Z < s/plugins/procedural/plugin.rs 2025-09-12T15:13:20.000Z — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-dev"
+      },
+      {
+        "name": "an equal mtime is fresh, so a restage never reports itself stale",
+        "facts": { "pluginId": "flow", "role": "plugin", "activationTracked": true, "stagedAtMs": 1757600000000, "newestSourceMs": 1757600000000, "newestSourcePath": "s/flow.rs", "receiptArtifactSha256": "a1" },
+        "verdict": { "pluginId": "flow", "kind": "fresh" },
+        "line": null
+      },
+      {
+        "name": "nothing staged outranks every other verdict",
+        "facts": { "pluginId": "flow", "role": "plugin", "activationTracked": true, "newestSourceMs": 1757690000000, "newestSourcePath": "s/flow.rs" },
+        "verdict": { "pluginId": "flow", "kind": "unstaged", "detail": "no staged module directory" },
+        "line": "[stale] flow: unstaged — no staged module directory — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-dev"
+      },
+      {
+        "name": "a staged module missing from the activation receipt is reported",
+        "facts": { "pluginId": "flow", "role": "plugin", "activationTracked": true, "stagedAtMs": 1757600000000, "newestSourceMs": 1000 },
+        "verdict": { "pluginId": "flow", "kind": "unactivated", "detail": "staged 2025-09-11T14:13:20.000Z but absent from the activation receipt" },
+        "line": "[stale] flow: unactivated — staged 2025-09-11T14:13:20.000Z but absent from the activation receipt — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-dev"
+      },
+      {
+        "name": "a materialized-but-never-published extension is never a silent no-op",
+        "facts": { "pluginId": "flow-extension-math", "role": "extension", "activationTracked": true, "stagedAtMs": 1757690000000, "newestSourceMs": 1000, "receiptArtifactSha256": "b2" },
+        "verdict": { "pluginId": "flow-extension-math", "kind": "unpublished", "detail": "installed (nothing) ≠ activated b2" },
+        "line": "[stale] flow-extension-math: unpublished — installed (nothing) ≠ activated b2 — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-dev"
+      },
+      {
+        "name": "an extension published at the activated hash is fresh",
+        "facts": { "pluginId": "flow-extension-math", "role": "extension", "activationTracked": true, "stagedAtMs": 1757690000000, "newestSourceMs": 1000, "receiptArtifactSha256": "b2", "installedPackageHash": "b2" },
+        "verdict": { "pluginId": "flow-extension-math", "kind": "fresh" },
+        "line": null
+      },
+      {
+        "name": "an extension published at a previous hash is reported",
+        "facts": { "pluginId": "flow-extension-math", "role": "extension", "activationTracked": true, "stagedAtMs": 1757690000000, "newestSourceMs": 1000, "receiptArtifactSha256": "b2", "installedPackageHash": "b1" },
+        "verdict": { "pluginId": "flow-extension-math", "kind": "unpublished", "detail": "installed b1 ≠ activated b2" },
+        "line": "[stale] flow-extension-math: unpublished — installed b1 ≠ activated b2 — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-dev"
+      },
+      {
+        "name": "a receipt-less lane asks only the questions it can answer",
+        "facts": { "pluginId": "procedural", "role": "extension", "activationTracked": false, "stagedAtMs": 1757690000000, "newestSourceMs": 1000 },
+        "verdict": { "pluginId": "procedural", "kind": "fresh" },
+        "line": null
+      },
+      {
+        "name": "a receipt-less lane still reports sources newer than the staged bytes",
+        "facts": { "pluginId": "procedural", "role": "plugin", "activationTracked": false, "stagedAtMs": 1757600000000, "newestSourceMs": 1757690000000, "newestSourcePath": "s/plugins/procedural/plugin.rs" },
+        "verdict": { "pluginId": "procedural", "kind": "source-newer", "detail": "staged 2025-09-11T14:13:20.000Z < s/plugins/procedural/plugin.rs 2025-09-12T15:13:20.000Z" },
+        "line": "[stale] procedural: source-newer — staged 2025-09-11T14:13:20.000Z < s/plugins/procedural/plugin.rs 2025-09-12T15:13:20.000Z — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-dev"
+      }
+    ],
+    "walk": {
+      "outputDirectories": ["dist", "target", "node_modules", "pkg", ".git"]
+    }
+  }
+}

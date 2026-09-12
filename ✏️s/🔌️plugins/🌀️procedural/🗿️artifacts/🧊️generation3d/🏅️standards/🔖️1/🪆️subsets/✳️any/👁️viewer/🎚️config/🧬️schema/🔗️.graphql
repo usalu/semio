@@ -3,6 +3,7 @@ type Generation3dViewConfig {
   showMode: String! @state(class: CONFIG)
   previewCamera: Generation3dViewCamera! @state(class: CONFIG)
   sunJson: String! @state(class: CONFIG)
+  activeExampleId: String! @state(class: CONFIG)
 }
 type Generation3dViewCamera {
   position: [Float!]!

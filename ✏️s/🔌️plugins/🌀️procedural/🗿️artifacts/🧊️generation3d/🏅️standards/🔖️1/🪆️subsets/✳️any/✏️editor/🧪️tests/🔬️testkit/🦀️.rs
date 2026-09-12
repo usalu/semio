@@ -83,6 +83,21 @@ pub async fn dispatch(app: &mut Generation3dApp, command: Generation3dCommand) -
     dispatch_with_view_meta(app, command, meta("local")).await.expect("dispatch")
 }
 
+/// 🎯️ Selects `ids` in the framework-owned `graph` interaction domain AND settles the reserved tool
+/// job the dispatch only ADMITS. `interactionSelect` is a `FrameworkInteractionSelectJob`
+/// (`🔌️plugin/🦀️.rs`), so a bare `handle_action` returns an admission receipt and nothing has
+/// touched `protocol::InteractionState` yet — a caller that reads `interaction_state()` or dispatches
+/// a selection-fed command straight afterwards observes the PRE-selection state and its law passes
+/// vacuously (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, the same admission-vs-publication trap
+/// [`dispatch`] documents for typed commands).
+pub async fn select_graph(app: &mut Generation3dApp, granularity: &str, ids: &[&str]) -> semio_framework_plugin::InvocationResult {
+    let targets: Vec<semio_framework_plugin::InteractionTarget> = ids.iter().map(|id| semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: (*id).into() }).collect();
+    let targets_json = serde_json::to_string(&targets).expect("selection targets");
+    let args: dsl::DslValue = serde_json::json!({ "domainId": crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
+    let admitted = app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("interaction selection admitted");
+    semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interaction selection settles its reserved tool job")
+}
+
 pub fn preview_views(left: &str, right: &str) -> (ViewModel, ViewModel) {
     let roster = vec![
         ViewWindowInstance { id: left.into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() },
@@ -223,21 +238,33 @@ fn armed_ticks(effects: &[Effect]) -> Vec<Option<dsl::DslValue>> {
         .collect()
 }
 
+/// 🧳️ A standalone retained-operation owner handle of THIS app's concrete type, for a law that
+/// drives one piece of retained work directly instead of through a live instance. Its session is a
+/// real one, so anything the work arms lands on a real latch.
+pub fn instance_operation_owner() -> semio_framework_plugin::ArtifactInstanceOperationOwnerHandle {
+    semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::build_instance_operation_owner())
+}
+
+/// 🧹️ Walks a testkit-built owner across the same close boundary `VcsArtifactApp` runs — its
+/// `FlowEvalSession` rejects a live drop, so a law that builds one owns its retirement.
+pub fn retire_instance_operation_owner(handle: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) {
+    use semio_framework_plugin::ArtifactInstanceOperationOwner;
+    for _ in 0..1_000_000 {
+        let complete = handle
+            .with_mut::<crate::editor::generation3d::component::Generation3dInstanceOperationOwner, _>(|owner| Ok(matches!(ArtifactInstanceOperationOwner::close_step(owner, usize::MAX, usize::MAX), Ok(semio_framework_plugin::PluginCloseStep::Complete))))
+            .expect("the testkit owner lends itself to its own close ladder");
+        if complete {
+            return;
+        }
+    }
+    panic!("the testkit instance operation owner did not reach terminal-empty under a positive close grant");
+}
+
 /// 🧹️ `FlowEvalSession` rejects a live drop (`🌊️flow/🖥️host/🦀️.rs`'s `Drop` +
 /// `live_session_drop_is_rejected_without_recursive_payload_destruction`), so a test that owns one
 /// must walk it across the close boundary itself — the same `begin_close` + granted `close_step`
 /// loop `FlowInstanceOperationOwner::maintenance_step` runs in production.
-pub fn retire_flow_eval_session(mut session: FlowEvalSession) {
-    session.begin_close();
-    for _ in 0..1_000_000 {
-        match session.close_step(1, 65_536) {
-            semio_framework_job::InteractiveJobCloseStep::Pending { .. } => continue,
-            semio_framework_job::InteractiveJobCloseStep::Complete => return,
-            semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("a positive close grant must never block the evaluation session"),
-        }
-    }
-    panic!("the evaluation session did not reach terminal-empty under a positive close grant");
-}
+pub use crate::flow_operators::retire_flow_eval_session;
 
 /// 📜️ The empty `HistoryView` a command-handler unit test hands `ArtifactView::new` — built here once
 /// because `HistoryView` (`🧰️framework/…/🔌️plugin/🦀️.rs`) derives no `Default`.
@@ -253,25 +280,10 @@ pub fn empty_history_view() -> semio_framework_plugin::HistoryView {
     }
 }
 
-/// 🧩️ The host's `contributionsJson` for the generation3d closure, built the way
-/// `buildContributionsJson` (`🎠️kernel/🟦️.ts`) builds it: one `{pluginId, topicContribution}` entry
-/// per `flow.extension` topic contribution the staged extension plugins declare, JSON-encoded as an
-/// array. The two manifests come from the extension crates themselves, so this is the SAME payload
-/// the served shell pushes — not a hand-written stand-in.
-pub fn staged_flow_extension_contributions_json(extra: &[(&str, String)]) -> String {
-    let entries: Vec<semio_framework::manifest::ProgramContributionEntry> = [
-        (crate::flow_operators::BREP_EXTENSION_PLUGIN_ID, crate::flow_operators::resolve_ready(semio_s_plugin_flow_extension_brep::extension_manifest_json())),
-        (crate::flow_operators::MATH_EXTENSION_PLUGIN_ID, semio_s_plugin_flow_extension_math::extension_manifest_json()),
-    ]
-    .into_iter()
-    .chain(extra.iter().map(|(plugin_id, manifest_json)| (*plugin_id, manifest_json.clone())))
-    .map(|(plugin_id, manifest_json)| semio_framework::manifest::ProgramContributionEntry {
-        plugin_id: plugin_id.to_string(),
-        topic_contribution: Some(semio_framework::manifest::TopicContribution::new("flow.extension", dsl::DslValue::object([("manifestJson".to_string(), dsl::DslValue::String(manifest_json))]))),
-    })
-    .collect();
-    protocol::json::to_json_string(&entries)
-}
+/// 🧩️ The host's `contributionsJson` for the generation3d closure — surface-neutral, so it lives
+/// in `🧪️tests/🔬️flow-operators` beside the two manifests it is built from and both surfaces' laws
+/// push the identical payload. Re-exported here because every editor law already names it.
+pub use crate::flow_operators::staged_flow_extension_contributions_json;
 
 /// 🪪️ A contributed `flow.extension` manifest that carries no operators at all — the witness a
 /// delivery law adds to the payload so that "the registry now holds what the host pushed" is a claim

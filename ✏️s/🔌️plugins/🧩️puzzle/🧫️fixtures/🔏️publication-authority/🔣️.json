@@ -115,8 +115,10 @@
           ],
           "routes": [
             "cancelFillBuild",
+            "exportFixture",
             "fillBuildTick",
             "openAddObjectDialog",
+            "openImportFixture",
             "registerBrushMesh",
             "transformBegin",
             "transformEnd",
@@ -141,7 +143,8 @@
             "config"
           ],
           "routes": [
-            "addObjectKind"
+            "addObjectKind",
+            "setActiveExample"
           ]
         },
         {
@@ -153,13 +156,12 @@
             "addTargetVolume",
             "createAttraction",
             "deleteAttraction",
-            "deleteSelection",
             "deleteTargetVolume",
+            "importFixture",
             "patchInspector",
             "relocateTargetVolume",
             "rotateSelection",
             "scaleSelection",
-            "setActiveExample",
             "setSelectionFlag",
             "setTargetVolumeFlag",
             "translateSelection",
@@ -182,6 +184,7 @@
             "interaction"
           ],
           "routes": [
+            "deleteSelection",
             "duplicateSelection"
           ]
         },
@@ -230,6 +233,7 @@
             "setLodAutomatic",
             "setLodDepthVariable",
             "setLodManual",
+            "setPanelPage",
             "setProjection",
             "setProjectionParam",
             "setProximityRadius",
@@ -248,7 +252,8 @@
           "status": "migrated",
           "lanes": [
             "window-config",
-            "window-transient"
+            "window-transient",
+            "interaction"
           ],
           "routes": [
             "engagementSubmit"

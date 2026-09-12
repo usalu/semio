@@ -1,0 +1,85 @@
+{
+  "law": "delayMs <= 0 is an unthrottled continuation that runs before any pending deadline and advances the clock by nothing; delayMs > 0 is a deadline honoured to the millisecond; every request is cancellable; requests sharing a key coalesce to one run at the earliest deadline with the newest callback; ties run in enqueue order.",
+  "provenance": "ticket 2026/09/09/PROCEDURAL-3D-END-TO-END — 📓️audit-extension-hop-latency-2026-09-12.md measured two silent ~11-13 s gaps per extension hop in a headless page, caused by the guest's Effect::DispatchAction{delay_ms:0} re-arm riding a nested setTimeout chain that Chrome clamps to ~1 tick/s when the renderer is hidden or unfocused. Natively the same chain is 0.58 s.",
+  "cases": [
+    {
+      "name": "zero-delay-outruns-a-pending-deadline",
+      "law": "A continuation never queues behind a deadline that has not arrived, however early that deadline was armed.",
+      "requests": [
+        { "label": "deadline", "atMs": 0, "delayMs": 200 },
+        { "label": "continuation", "atMs": 0, "delayMs": 0 }
+      ],
+      "expectedOrder": ["continuation", "deadline"],
+      "expectedCompletionMs": 200
+    },
+    {
+      "name": "a-deadline-is-honoured-to-the-millisecond",
+      "law": "delayMs > 0 still means what it says: deadlines run in deadline order, not enqueue order.",
+      "requests": [
+        { "label": "late", "atMs": 0, "delayMs": 50 },
+        { "label": "early", "atMs": 0, "delayMs": 10 }
+      ],
+      "expectedOrder": ["early", "late"],
+      "expectedCompletionMs": 50
+    },
+    {
+      "name": "continuations-preserve-enqueue-order",
+      "law": "Zero-delay work is a FIFO, not a set: the host's effect order survives the hop across the event loop.",
+      "requests": [
+        { "label": "first", "atMs": 0, "delayMs": 0 },
+        { "label": "second", "atMs": 0, "delayMs": 0 },
+        { "label": "third", "atMs": 0, "delayMs": 0 }
+      ],
+      "expectedOrder": ["first", "second", "third"],
+      "expectedCompletionMs": 0
+    },
+    {
+      "name": "a-cancelled-deadline-never-runs",
+      "law": "Cancellation before the deadline drops the callback and leaves every other request untouched.",
+      "requests": [
+        { "label": "kept", "atMs": 0, "delayMs": 20 },
+        { "label": "dropped", "atMs": 0, "delayMs": 10, "cancelAtMs": 5 }
+      ],
+      "expectedOrder": ["kept"],
+      "expectedCompletionMs": 20
+    },
+    {
+      "name": "a-cancelled-continuation-never-runs",
+      "law": "Cancellation works on the unthrottled lane too, right up to the macrotask that drains it.",
+      "requests": [
+        { "label": "a", "atMs": 0, "delayMs": 0 },
+        { "label": "b", "atMs": 0, "delayMs": 0, "cancelAtMs": 0 },
+        { "label": "c", "atMs": 0, "delayMs": 0 }
+      ],
+      "expectedOrder": ["a", "c"],
+      "expectedCompletionMs": 0
+    },
+    {
+      "name": "a-ten-hop-rearm-chain-costs-no-wall-clock",
+      "law": "THE regression law: the guest's Effect::DispatchAction{delay_ms:0} re-arm, chained ten deep, finishes at millisecond zero. On a nested setTimeout chain in a hidden renderer the same ten hops cost ten seconds.",
+      "requests": [{ "label": "hop", "atMs": 0, "delayMs": 0, "repeat": 10 }],
+      "expectedOrder": ["hop#1", "hop#2", "hop#3", "hop#4", "hop#5", "hop#6", "hop#7", "hop#8", "hop#9", "hop#10"],
+      "expectedCompletionMs": 0
+    },
+    {
+      "name": "a-key-coalesces-to-the-earliest-deadline",
+      "law": "Two wakes for one owner are one wake: the later request replaces the callback and the earlier deadline wins, so coalescing can only ever make work sooner.",
+      "requests": [
+        { "label": "wake-late", "atMs": 0, "delayMs": 100, "key": "wake" },
+        { "label": "wake-soon", "atMs": 0, "delayMs": 10, "key": "wake" }
+      ],
+      "expectedOrder": ["wake-soon"],
+      "expectedCompletionMs": 10
+    },
+    {
+      "name": "a-key-keeps-the-newest-callback",
+      "law": "The mirror of the case above: asking again for LATER does not push the run out, and the newest callback is the one that runs.",
+      "requests": [
+        { "label": "wake-soon", "atMs": 0, "delayMs": 10, "key": "wake" },
+        { "label": "wake-late", "atMs": 0, "delayMs": 100, "key": "wake" }
+      ],
+      "expectedOrder": ["wake-late"],
+      "expectedCompletionMs": 10
+    }
+  ]
+}

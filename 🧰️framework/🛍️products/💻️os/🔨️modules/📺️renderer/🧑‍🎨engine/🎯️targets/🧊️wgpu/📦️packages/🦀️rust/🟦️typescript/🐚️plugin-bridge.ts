@@ -64,6 +64,7 @@ import {
   type BuiltNode,
   type Component,
   type Effect,
+  GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
   GUEST_HOST_ANSWER_CEILING_BYTES,
   guestAnswerPages,
   type InvocationResponse,
@@ -88,6 +89,8 @@ import {
   coerceTurnResult,
   coerceWireBytes,
   decodeWirePatchOps,
+  driveInboundRequest,
+  INBOUND_REQUEST_TURN_BUDGET,
   shellFrameBytes,
   wireEffectToFriendly,
   type RetainedSurface,
@@ -572,11 +575,14 @@ export function wgpuBuildScopedContributionsPack(receiverPluginId: string, reach
 
 export const WGPU_CONTRIBUTIONS_SLIM_VIEW = Object.freeze({ locale: "en", terminology: "native" });
 
-/** @emoji 🧹 Drops the unscoped contributionsJson from live view so the pack is the only bulk crossing. */
+/** @emoji 🧹 Drops the host-owned panel payload from the live view so the scoped pack is the only bulk
+ * thing this crossing carries, and resolves the preferences the guest's `ViewModel` declares
+ * non-optional. Contributions are no longer a view-state field at all — they are installed by this
+ * very `setContributions` run — so there is nothing left here to strip on their account
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 export function wgpuSlimContributionsView(viewState: unknown): Record<string, unknown> {
   const raw = viewState && typeof viewState === "object" && !Array.isArray(viewState) ? { ...(viewState as Record<string, unknown>) } : {};
-  delete raw.contributionsJson;
-  delete raw.contributions_json;
+  delete raw.panelJson;
   if (typeof raw.locale !== "string" || raw.locale.length === 0) raw.locale = WGPU_CONTRIBUTIONS_SLIM_VIEW.locale;
   if (raw.terminology == null || raw.terminology === "") raw.terminology = WGPU_CONTRIBUTIONS_SLIM_VIEW.terminology;
   return raw;
@@ -684,6 +690,14 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
 //#endregion 🔖️Invocation
 
 //#region 🔖️WgpuPluginHandle
+/** 🎛️ Optional steering for one {@link WgpuPluginHandle.invoke} call — the wgpu twin of
+ * `PluginExtensionInvokeContext` (`🔌️PluginRuntime/🟦️.tsx`). */
+export interface WgpuPluginInvokeContext {
+  readonly originInstanceId?: number;
+  readonly signal?: AbortSignal;
+  readonly onProgress?: (progress: { readonly capability: string; readonly turns: number; readonly budget: number }) => void;
+}
+
 /** 🐚️ The typed handle this file hands to a `bootFrameworkOsWgpu`/`🟦️.ts` caller — narrower than
  * `PluginRuntime`'s wide `PluginWasmHandle` (no transactions/merge/conflicts/backbone/presence): only
  * the surface `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s `wasm32` branch actually calls. */
@@ -700,6 +714,10 @@ export interface WgpuPluginHandle {
   readonly readWindowConfigPacks: (instanceId: number) => Promise<readonly WindowConfigPackEntry[]>;
   readonly loadWindowConfigPack: (instanceId: number, entry: WindowConfigPackEntry) => Promise<void>;
   readonly captureExtensionCompletion: (instanceId: number, req: bigint) => WgpuPluginExtensionCompletion;
+  /** 📥️ Calls INTO this program — the wgpu counterpart of `PluginRuntime`'s own `invoke`, driving the
+   * SAME `Event::Request`/`respond` protocol through the SAME `driveInboundRequest` so the two
+   * renderer targets cannot diverge into two inbound-call ABIs. */
+  readonly invoke: (capability: string, request: Uint8Array | string, context?: WgpuPluginInvokeContext) => Promise<Uint8Array>;
   readonly dispatchInvokeExtension: (instanceId: number, extensionId: string, capability: string, requestJson: string, req: bigint) => Promise<InvocationResponse>;
   readonly pushScopedContributions: (instanceId: number, appId: string, reachabilityJson: string, viewStateJson: string) => Promise<InvocationResponse>;
   readonly dispose: () => Promise<void>;
@@ -897,22 +915,76 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     return Object.freeze({ instanceId, req, assertActive, complete });
   };
 
+  /** 📥️ See {@link WgpuPluginHandle.invoke}. One request actor per handle, activated lazily and
+   * retired with it — an extension program declares no app, so it never gets a `createApp` instance
+   * and `Event::Request` needs none. */
+  let requestActor: Promise<string> | null = null;
+  let inboundRequestSeq = 0n;
+  const ensureRequestActor = (): Promise<string> => {
+    if (disposing) return Promise.reject(new Error("wgpu-plugin-handle.closed"));
+    requestActor ??= (async () => {
+      const actorId = `${pluginId}#request`;
+      await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
+      return actorId;
+    })().catch((error: unknown) => {
+      requestActor = null;
+      throw error;
+    });
+    return requestActor;
+  };
+  const retireRequestActor = async (): Promise<void> => {
+    const pending = requestActor;
+    requestActor = null;
+    if (!pending) return;
+    const actorId = await pending.catch(() => null);
+    if (!actorId) return;
+    registry.cancel(actorId);
+    actorTurnChains.delete(actorId);
+  };
+
+  const invoke = async (capability: string, request: Uint8Array | string, context?: WgpuPluginInvokeContext): Promise<Uint8Array> => {
+    if (typeof capability !== "string" || capability.length === 0) throw new Error("extension.capability-required");
+    const payload = typeof request === "string" ? new TextEncoder().encode(request) : request;
+    const refuse = (code: string, message: string): SemioFaultError =>
+      new SemioFaultError({ origin: "os", code, severity: "error", message, scope: { pluginId }, retryable: false });
+    if (payload.byteLength > GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES) throw refuse("extension.request-too-large", `${capability} request of ${payload.byteLength} B for ${pluginId} exceeds the ${GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES}-byte contiguous guest-request ceiling`);
+    const actorId = await ensureRequestActor();
+    inboundRequestSeq += 1n;
+    const req = inboundRequestSeq;
+    const answer = await driveInboundRequest({
+      req,
+      capability,
+      payload,
+      originInstanceId: context?.originInstanceId ?? 0,
+      signal: context?.signal,
+      onProgress: context?.onProgress,
+      submit: (events) => submitTurn(actorId, events as readonly ShardEventEnvelope[]),
+    });
+    if (answer.status === "cancelled") throw refuse("extension.request-cancelled", `extension request ${req} to ${pluginId} was cancelled after ${answer.turns} turn(s)`);
+    if (answer.status === "unanswered") throw refuse("extension.request-unanswered", `extension ${pluginId} did not answer ${capability} within ${answer.turns} of ${INBOUND_REQUEST_TURN_BUDGET} turns`);
+    if ("fault" in answer.result) {
+      const fault = decodeFaultFromWire(Array.from(answer.result.fault), decodePackValue);
+      throw fault ? new SemioFaultError(fault) : refuse("extension.answer-not-a-fault", `extension ${pluginId} refused ${capability} with ${answer.result.fault.byteLength} undecodable bytes`);
+    }
+    if (answer.result.ok.byteLength > GUEST_HOST_ANSWER_CEILING_BYTES) throw refuse("extension.answer-too-large", `extension answer of ${answer.result.ok.byteLength} B exceeds the ${GUEST_HOST_ANSWER_CEILING_BYTES}-byte host-answer ceiling`);
+    console.log("[DEBUG] wgpu-bridge extension request answered", { pluginId, capability, req: String(req), turns: answer.turns, bytes: answer.result.ok.byteLength });
+    return answer.result.ok;
+  };
+
   const dispatchInvokeExtension = async (instanceId: number, extensionId: string, capability: string, requestJson: string, req: bigint): Promise<InvocationResponse> => {
     const completion = captureExtensionCompletion(instanceId, req);
     console.log("[DEBUG] wgpu-bridge invokeExtension dispatch", { pluginId, instanceId, extensionId, capability, req: String(req) });
     let outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array };
     try {
-      const extension = loadedWgpuHandles.get(extensionId);
-      const invoke = (extension as { invoke?: (capability: string, request: Uint8Array | string) => Promise<string | Uint8Array> } | undefined)?.invoke;
-      if (typeof invoke !== "function") throw new SemioFaultError({
+      const extension = loadedWgpuHandles.get(extensionId) as WgpuPluginHandle | undefined;
+      if (typeof extension?.invoke !== "function") throw new SemioFaultError({
         origin: "os", code: "extension.invoke-unavailable", severity: "error",
         message: "extension.invoke-unavailable",
         scope: { pluginId: extensionId, instanceId: String(instanceId) }, retryable: false,
       });
-      const raw = await invoke.call(extension, capability, requestJson);
+      const raw = await extension.invoke(capability, requestJson, { originInstanceId: instanceId });
       completion.assertActive();
-      const outputJson = typeof raw === "string" ? raw : new TextDecoder("utf-8", { fatal: true }).decode(raw);
-      outcome = { ok: encodePackValue(JSON.parse(outputJson)) };
+      outcome = { ok: encodePackValue(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw))) };
     } catch (error) {
       completion.assertActive();
       const fault = error instanceof SemioFaultError ? error.fault : {
@@ -952,6 +1024,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     if (ingress.ingressPages > SHARD_COMMAND_MAXIMUM_PAGES) {
       throw new Error(`[DEBUG] contributions pack ingress ${ingress.ingressPages} pages exceeds ${SHARD_COMMAND_MAXIMUM_PAGES}`);
     }
+    console.log("[DEBUG] contributions slim view", JSON.stringify({ keys: Object.keys(slimView), windowInstances: slimView.windowInstances ?? slimView.window_instances ?? null, focusedWindowId: slimView.focusedWindowId ?? slimView.focused_window_id ?? null, activeWindowKindId: slimView.activeWindowKindId ?? slimView.active_window_kind_id ?? null }));
     const result = await performInvocation(requireChannel(instanceId), instanceId, command, slimView);
     console.log("[DEBUG] contributions installed", { plugin: pluginId, app: appId, effects: result.requestedEffects.length, tags: effectTags(result.requestedEffects).join(",") || "-", crossings: 1 });
     const ticks: InvocationResponse[] = [];
@@ -1052,6 +1125,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     render: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result) => result.node),
     renderDocument: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result) => JSON.stringify({ document: result.document, effects: jsonEffects(result.effects) })),
     captureExtensionCompletion,
+    invoke,
     dispatchInvokeExtension,
     pushScopedContributions,
     contextMenu: (instanceId, request) => requireChannel(instanceId).contextMenu(request),
@@ -1061,7 +1135,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       if (disposal) return disposal;
       disposing = true;
       const retirements = [...actorIdByInstance.keys()].map((instanceId) => handle.destroyApp(instanceId));
-      disposal = Promise.allSettled(retirements).then((results) => {
+      disposal = Promise.allSettled([...retirements, retireRequestActor()]).then((results) => {
         const failures = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
         if (failures.length) throw new AggregateError(failures.map((result) => result.reason), "wgpu-plugin-handle.retirement-failed");
         turnOutcomes.complete();

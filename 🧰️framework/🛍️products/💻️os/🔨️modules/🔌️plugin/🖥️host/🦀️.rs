@@ -502,6 +502,19 @@ impl GuestInstance {
             GuestInstanceState::Mock(_) | GuestInstanceState::Owned(_) => None,
         }
     }
+
+    /// 🩺️ Everything this guest has written to `wasi:cli/stderr` so far — `None` unless the host's
+    /// own diagnostics were armed when the instance was built, because that is the only condition
+    /// under which the guest is given an environment that makes it print at all (see
+    /// [`guest_wasi_ctx`]). This is the wasm-hosted counterpart of reading the browser console: the
+    /// SAME `[DEBUG]`/`[BUDGET]` lines the native in-process suites print, now observable from a
+    /// real `wasm32-wasip2` component.
+    pub fn guest_diagnostics_text(&self) -> Option<String> {
+        match &self.state {
+            GuestInstanceState::Wasmtime(state) => state.store.data().diagnostics.as_ref().map(|pipe| String::from_utf8_lossy(&pipe.contents()).into_owned()),
+            GuestInstanceState::Mock(_) | GuestInstanceState::Owned(_) => None,
+        }
+    }
 }
 
 /// 🧬️ Shallow, actor-id-only — `WasmtimeInstanceState.store: Store<ActorHostState>` and
@@ -1642,6 +1655,9 @@ struct ActorHostState {
     asset_map: HashMap<String, Vec<u8>>,
     limiter: BudgetLimiter,
     wasi_ctx: WasiCtx,
+    /// 🩺️ The guest's own stderr, retained in memory, when diagnostics are armed — see
+    /// [`guest_wasi_ctx`] and [`GuestInstance::guest_diagnostics_text`].
+    diagnostics: Option<wasmtime_wasi::p2::pipe::MemoryOutputPipe>,
     resource_table: ResourceTable,
 }
 
@@ -1658,6 +1674,33 @@ impl WasiView for ActorHostState {
         WasiCtxView { ctx: &mut self.wasi_ctx, table: &mut self.resource_table }
     }
 }
+
+/// 🩺️ The one exception to that sandboxed-empty environment: `wasi:cli/environment` is the
+/// schema-declared door a component's own `std::env::var` reads, and therefore the door a host arms
+/// the GUEST's perf traces through. `semio_framework_trace::RUNTIME_DIAGNOSTICS_ENV` resolves lazily
+/// and exactly once inside the guest, so handing it across at instantiate is enough. A host whose
+/// own diagnostics are off hands across NOTHING, which is what keeps a release run clean with no
+/// second switch and no build-profile cfg — the guest's `[DEBUG]` sites stay compiled in and stay
+/// silent. Mirrors the browser host's `localStorage`-seeded `getEnvironment` shim (ticket
+/// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-guest-tick-cost-2026-09-12.md` §4 rank 1).
+fn guest_wasi_ctx() -> (WasiCtx, Option<wasmtime_wasi::p2::pipe::MemoryOutputPipe>) {
+    let mut builder = WasiCtxBuilder::new();
+    if !semio_framework_job::runtime_diagnostics_enabled() {
+        return (builder.build(), None);
+    }
+    // 🩺️ A guest whose traces are armed must also have somewhere to write them: the sandboxed
+    // default ctx drops `wasi:cli/stderr` on the floor, which is why a wasmtime-hosted guest's
+    // `eprintln!` has never been readable the way the browser console reads it.
+    let diagnostics = wasmtime_wasi::p2::pipe::MemoryOutputPipe::new(GUEST_DIAGNOSTICS_CAPACITY_BYTES);
+    builder.env(semio_framework_job::RUNTIME_DIAGNOSTICS_ENV, "1").stderr(diagnostics.clone());
+    (builder.build(), Some(diagnostics))
+}
+
+/// 🩺️ How much guest stderr one instance retains while diagnostics are armed. Bounded because the
+/// pipe TRAPS the guest once it overflows, and a perf run's trace volume is byte-proportional to the
+/// document — 4 MiB is far more than any measured boot produces and far less than the guest's own
+/// 512 MiB linear-memory budget.
+const GUEST_DIAGNOSTICS_CAPACITY_BYTES: usize = 4 * 1024 * 1024;
 
 /// 🧬️ `pure` (`📜️wit/📜️pure.wit`) is `world actor`'s ONLY import — `log`/`now-ms`/`trace-span`,
 /// none fallible, none async.
@@ -1908,6 +1951,7 @@ impl GuestRuntime for WasmtimeRuntime {
     async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError> {
         let component = compiled.component.as_ref().ok_or_else(|| PluginHostError::Plugin("CompiledHandle has no wasmtime Component — built by MockGuestRuntime::compile, not WasmtimeRuntime::compile".to_string()))?;
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let (wasi, diagnostics) = guest_wasi_ctx();
         let host_state = ActorHostState {
             plugin_id: format!("actor-{}", actor.0),
             actor,
@@ -1916,7 +1960,8 @@ impl GuestRuntime for WasmtimeRuntime {
             emit_patch_sink: Vec::new(),
             asset_map: HashMap::new(),
             limiter: BudgetLimiter::default(),
-            wasi_ctx: WasiCtxBuilder::new().build(),
+            wasi_ctx: wasi,
+            diagnostics,
             resource_table: ResourceTable::new(),
         };
         let mut store = Store::new(&self.engine, host_state);

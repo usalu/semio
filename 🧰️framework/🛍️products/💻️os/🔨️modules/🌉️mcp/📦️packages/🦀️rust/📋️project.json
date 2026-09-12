@@ -74,11 +74,12 @@
     },
     "inference-discovery-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts inference-discovery-oracle"
-      }
+      },
+      "outputs": []
     },
     "inference-discovery-check": {
       "executor": "nx:run-commands",
@@ -91,11 +92,12 @@
     },
     "hub-live-catalog-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts hub-live-catalog-oracle"
-      }
+      },
+      "outputs": []
     },
     "hub-live-catalog-check": {
       "executor": "nx:run-commands",
@@ -103,7 +105,8 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts hub-live-catalog-check"
-      }
+      },
+      "outputs": []
     },
     "hub-live-catalog-native-check": {
       "executor": "nx:run-commands",
@@ -111,15 +114,17 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts hub-live-catalog-native-check"
-      }
+      },
+      "outputs": []
     },
     "canonical-checkpoint-resource-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-checkpoint-resource-oracle"
-      }
+      },
+      "outputs": []
     },
     "canonical-checkpoint-resource-check": {
       "executor": "nx:run-commands",

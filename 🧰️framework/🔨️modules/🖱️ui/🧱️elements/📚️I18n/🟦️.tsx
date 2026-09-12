@@ -416,6 +416,7 @@ export type UiTranslationSchema = {
       readonly languageDocument: UiLabelValue;
       readonly iconShot: UiLabelValue;
       readonly projection: UiLabelValue;
+      readonly frameVisible: UiLabelValue;
       readonly perspective: UiLabelValue;
       readonly orthographic: UiLabelValue;
     };
@@ -469,6 +470,9 @@ export type UiTranslationSchema = {
       readonly typeToAdd: UiLabelValue;
       readonly collapseSuggestions: UiLabelValue;
       readonly showAllSuggestions: UiLabelValue;
+    };
+    readonly nodeGraph: {
+      readonly fitGraph: UiLabelValue;
     };
     readonly sync: {
       readonly attach: UiLabelValue;

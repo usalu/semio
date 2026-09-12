@@ -216,14 +216,11 @@ const REPO_CLI_ENTRY_GO = join(REPO_CLIENT_GO, "cmd", "repo");
 const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌️mcp");
 const REPO_MCP_PROFILE_ENV = "SEMIO_REPO_MCP_CLIENT";
 
-/** 🦑️Builds the repo MCP client from the current source before execution. */
-function buildRepoMcpClient(root: string): string {
+/** 🚪️Gates the repo MCP client on the Nx-cached `@semio-tech/repo-mcp-go:build` output instead of
+ * rebuilding it inline — a continuous `dev` session must stay thin and consume cached deliverables. */
+function requireRepoMcpBinary(root: string): string {
   const bin = resolveMcpBin(root);
-  runCmd("go", ["build", "-o", bin, `./${REPO_MCP_GO}`], {
-    cwd: root,
-    env: { ...process.env, GOWORK: join(root, "go.work") },
-    budgetMs: buildBudgetMs(),
-  });
+  if (!existsSync(bin) || !statSync(bin).isFile()) throw new Error(`repo MCP client binary is missing at ${bin}; run: bun nx run @semio-tech/repo-mcp-go:build`);
   return bin;
 }
 
@@ -627,7 +624,7 @@ export class DevScript extends Script {
       process.exit(1);
     }
     const profile = (slugs[0] ?? "client").trim().toLowerCase();
-    const bin = buildRepoMcpClient(this.root);
+    const bin = requireRepoMcpBinary(this.root);
     runCmd(bin, [], {
       cwd: this.root,
       env: { ...process.env, GOWORK: join(this.root, "go.work"), [REPO_MCP_PROFILE_ENV]: profile },
@@ -7020,6 +7017,26 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
 }
 //#endregion 🎯️ToolJobCoverage
 
+/**
+ * ⚖️The 12 single-rule stdio-artifact policy gates, previously only reachable via an inline `bun -e`
+ * eval (see `.vscode/launch.json`'s `⚖️gate…` entries) that bypassed Nx entirely. `verify policy-breach
+ * <rule>` gives each one a real CLI surface routable through a cached `nx:run-commands` target.
+ */
+const POLICY_BREACH_GATES: Record<string, (repoRoot: string) => BreachRecord[]> = {
+  "artifact-builder": policyArtifactBuilderBreaches,
+  "artifact-decomposer": policyArtifactDecomposerBreaches,
+  "schema-representation": policySchemaRepresentationBreaches,
+  "io-serializer-matrix": policyIoSerializerMatrixBreaches,
+  "io-terminality": policyIoTerminalityBreaches,
+  "codec-fidelity": policyCodecFidelityBreaches,
+  "standards-coverage": policyStandardsCoverageBreaches,
+  "artifact-analyzer": policyArtifactAnalyzerBreaches,
+  "artifact-composer": policyArtifactComposerBreaches,
+  "artifact-builder-migrated": policyArtifactBuilderMigratedBreaches,
+  "plugin-dependency-parity": policyPluginDependencyParityBreaches,
+  "contribution-target": policyContributionTargetBreaches,
+};
+
 /** 🧪️Aggregates lint + generated-catalog freshness + region/host-contract script lints (`gate`, the cheap pre-`ticket_close` step every refactor session runs), plus the full test suite for the top-level `verify` verb. */
 export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
@@ -7149,6 +7166,14 @@ export class VerifyScript extends Script {
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "retained_window_input", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "publication-retirement-authority") {
+      const { testPublicationRetirementAuthorityOracle } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/♻️publication-retirement-authority/🟦️.ts");
+      testPublicationRetirementAuthorityOracle();
+      if (segments[1] === "oracle") return;
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "publication_retirement", "--", "--nocapture"], this.root);
       return;
     }
     if (segments[0] === "playbook-document-contract") {
@@ -7477,6 +7502,10 @@ export class VerifyScript extends Script {
       if (breaches.length && segments[1] !== "report") throw new Error("OS-owned preferences or host controls are declared by plugin surfaces.");
       return;
     }
+    if (segments[0] === "policy-breach") {
+      this.runPolicyBreach(segments[1]);
+      return;
+    }
     await this.runGate();
     if (segments[0] === "gate") return;
     runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -7534,6 +7563,20 @@ export class VerifyScript extends Script {
     for (const b of breaches) console.error(`[verify package-purity] ${b.kind}: ${b.summary}`);
     if (breaches.length > 0) throw new Error(`[verify package-purity] ${breaches.length} package language purity breach(es)`);
     console.log("[verify package-purity] passed.");
+  }
+
+  /**
+   * ⚖️Standalone entry point for one of the 12 [[POLICY_BREACH_GATES]] rules, byte-identical in
+   * output to the inline `bun -e` eval it replaces: first line is the raw breach count, then one
+   * `kind | scope | summary` line per breach, non-zero exit whenever any breach exists.
+   */
+  private runPolicyBreach(rule: string | undefined): void {
+    const fn = rule ? POLICY_BREACH_GATES[rule] : undefined;
+    if (!fn) throw new Error(`[verify policy-breach] unknown rule ${JSON.stringify(rule)}. known: ${Object.keys(POLICY_BREACH_GATES).join(", ")}`);
+    const breaches = fn(this.root);
+    console.log(breaches.length);
+    for (const b of breaches) console.log(b.kind, "|", b.scope, "|", b.summary);
+    if (breaches.length > 0) throw new Error(`[verify policy-breach ${rule}] ${breaches.length} breach(es)`);
   }
 
   /**

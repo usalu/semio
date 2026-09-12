@@ -66,6 +66,26 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       expect(leftoverShellInvocationFrames(leftover)).toHaveLength(1);
     });
 
+    // 📋️ Ticket 26/09/09/PROCEDURAL-3D-END-TO-END (`📓️selection-dedupe-2026-09-12.md`): a reserved job
+    // publishes its result frame on `send-message` whatever it did, so warning "clipboard-write missing"
+    // whenever a leftover carried one fired on EVERY reserved-job completion — measured on every
+    // `interactionSelect`/`interactionHover` of the generation3d preview. Nothing in the leftover list
+    // declares that a clipboard write was expected, so there is no predicate to warn on.
+    it("never warns about a missing clipboard-write on a job completion that only carries send-message effects", () => {
+      const { promoteShellSendMessages } = dependencies;
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      try {
+        const leftover = [
+          { tag: "send-message", val: { target: { tag: "shell", val: "1" }, payload: [1, 2, 3] } },
+          { tag: "send-message", val: { target: { tag: "shell", val: "1" }, payload: [4, 5, 6] } },
+        ];
+        expect(promoteShellSendMessages(1, leftover, [])).toEqual(leftover);
+        expect(warn.mock.calls.flat().filter((entry) => String(entry).includes("clipboard"))).toEqual([]);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
     it("fails-before every step polls UI; passes-after a 128-step stride", () => {
       const { isolatedJobUiPollEverySteps } = dependencies;
       expect(isolatedJobUiPollEverySteps(1, 1), "fails-before: stride 1 polls every step").toBe(true);
@@ -1708,7 +1728,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           const openEvents = sent.filter(entry => entry.kind === "turn").flatMap(entry => entry.events);
           expect(openEvents).toEqual(fixture.runtimeUiComposition.openEvents);
           expect(equal(openEvents, fixture.runtimeUiComposition.openEvents)).toBe(true);
-          const response = await handle.refreshUi(instance, { viewState: { windowInstances: [{ id: fixture.runtimeUiComposition.surface, windowKindId: "fixture" }] }, windows: [{ key: fixture.runtimeUiComposition.surface, bodyKey: "root" }] });
+          const response = await handle.refreshUi(instance, { viewState: { locale: "en", terminology: "native", windowInstances: [{ id: fixture.runtimeUiComposition.surface, windowKindId: "fixture" }] }, windows: [{ key: fixture.runtimeUiComposition.surface, bodyKey: "root" }] });
           expect(response.windows).toMatchObject([{ key: fixture.runtimeUiComposition.surface, value: { key: "root", component: { type: "text", value: "owned" }, children: [] } }]);
           expect(retainedWindowByActor.has(actorId)).toBe(false);
           const beforeClose = sent.flatMap(entry => entry.kind === "dispose" ? [entry.kind] : entry.events).length;
@@ -1801,7 +1821,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
             handle = await loadPluginModule("ingress-census", "https://fixture.invalid/plugin.js");
             const instance = await handle.createApp("fixture");
             counting = true;
-            await handle.handleAction(instance, JSON.stringify({ ...invocation, address: { ...invocation.address, instanceId: String(instance) } }), { windowInstances: [] } as never);
+            await handle.handleAction(instance, JSON.stringify({ ...invocation, address: { ...invocation.address, instanceId: String(instance) } }), { locale: "en", terminology: "native", windowInstances: [] } as never);
             counting = false;
             expect(bytes).toBeGreaterThan(COMMAND_BYTES - 1_024);
             expect(bytes).toBeLessThanOrEqual(COMMAND_BYTES);
@@ -2115,7 +2135,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           { Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: bytes({ kind: "full" }), history_patch: [], messages: [], mutations: [], inverse_group: [] } },
         ];
         const client = { command: async () => frames } as unknown as AppChannelClient;
-        const result = await performInvocation(client, 7, { address: { pluginId: "procedural", appId: "s.procedural.procedural3d@1/*#editor", windowKindId: "procedural-main", actionId: "commitFixture" }, arguments: {} }, "action", {});
+        const result = await performInvocation(client, 7, { address: { pluginId: "procedural", appId: "s.procedural.procedural3d@1/*#editor", windowKindId: "procedural-main", actionId: "commitFixture" }, arguments: {} }, "action", { locale: "en", terminology: "native" });
         expect(result.output).toEqual({ operationId: fixture.wire.operation });
         expect(result.uiScope).toEqual({ kind: "full" });
       });
@@ -2762,6 +2782,54 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     it("surfaces the last settle's next-wake so an idle actor can be re-armed", async () => {
       const outcome = await drainTypedOperationTurns(4, () => true, async () => ({ status: idle, nextWake: 42 }), async () => {});
       expect(outcome).toEqual({ polls: 1, stopped: "idle", nextWake: 42 });
+    });
+
+    /** ⏱️ Counts every wall-clock primitive a drain could reach for, so "no backoff" is asserted rather
+     * than read off the source. `requestAnimationFrame`/`requestIdleCallback` are in the list because
+     * neither fires in a hidden tab: evaluation must keep converging when nobody is looking. */
+    const countTimerPrimitives = <T,>(run: () => Promise<T>): Promise<{ result: T; timers: number; elapsedMs: number }> => {
+      const host = globalThis as unknown as Record<string, unknown>;
+      const names = ["setTimeout", "setInterval", "requestAnimationFrame", "requestIdleCallback"] as const;
+      const originals = names.map((name) => [name, host[name]] as const);
+      let timers = 0;
+      for (const [name, original] of originals) {
+        if (typeof original !== "function") continue;
+        host[name] = (...args: unknown[]) => { timers += 1; return (original as (...rest: unknown[]) => unknown)(...args); };
+      }
+      const started = Date.now();
+      return run().then(
+        (result) => { for (const [name, original] of originals) host[name] = original; return { result, timers, elapsedMs: Date.now() - started }; },
+        (error) => { for (const [name, original] of originals) host[name] = original; throw error; },
+      );
+    };
+
+    it("re-polls every more-work answer on a continuation, never on a wall clock", async () => {
+      const answers = 64;
+      let polls = 0;
+      const { result, timers, elapsedMs } = await countTimerPrimitives(async () =>
+        drainTypedOperationTurns(answers + 8, () => true, async () => { polls += 1; return { status: polls < answers ? moreWork : idle, nextWake: null }; }, yieldPluginUiContinuation));
+      expect(result).toEqual({ polls: answers, stopped: "idle", nextWake: null });
+      expect(polls).toBe(answers);
+      expect(timers).toBe(0);
+      expect(elapsedMs).toBeLessThan(1_000);
+      console.info(`[DEBUG] more-work pump: ${answers} answers → ${polls} polls in ${elapsedMs} ms with ${timers} timer calls`);
+    });
+
+    it("yields the thread to a contended peer between polls instead of sleeping on it", async () => {
+      let polls = 0;
+      let peerTurns = 0;
+      let peerLive = true;
+      const peer = (async () => { while (peerLive) { peerTurns += 1; await yieldPluginUiContinuation(); } })();
+      const { result, timers, elapsedMs } = await countTimerPrimitives(async () =>
+        drainTypedOperationTurns(48, () => true, async () => { polls += 1; return { status: polls < 32 ? moreWork : idle, nextWake: null }; }, yieldPluginUiContinuation));
+      peerLive = false;
+      await peer;
+      expect(result.stopped).toBe("idle");
+      expect(result.polls).toBe(32);
+      expect(peerTurns).toBeGreaterThanOrEqual(result.polls);
+      expect(timers).toBe(0);
+      expect(elapsedMs).toBeLessThan(1_000);
+      console.info(`[DEBUG] contended more-work pump: ${result.polls} polls interleaved with ${peerTurns} peer turns in ${elapsedMs} ms, ${timers} timer calls`);
     });
   });
 

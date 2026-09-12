@@ -5444,12 +5444,14 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "getrandom 0.3.4",
+ "js-sys",
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-3d",
  "semio-framework-artifact-flow-flow",
  "semio-framework-artifact-infinite-dag",
  "semio-framework-artifact-playbook-playbook",
+ "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-graph",
  "semio-framework-job",
@@ -5476,6 +5478,7 @@ dependencies = [
  "serde",
  "serde_json",
  "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
@@ -5634,6 +5637,7 @@ dependencies = [
  "semio-framework-ui-contract",
  "semio-framework-ui-host",
  "semio-framework-ui-render",
+ "semio-framework-ui-styling",
  "semio-s-plugin-puzzle",
  "serde",
  "serde_json",
@@ -8963,6 +8967,7 @@ dependencies = [
 name = "semio-s-plugin-procedural"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-job",

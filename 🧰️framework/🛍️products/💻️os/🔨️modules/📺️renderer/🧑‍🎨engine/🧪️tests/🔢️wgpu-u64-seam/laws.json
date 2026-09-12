@@ -1,0 +1,15 @@
+{
+  "rustSource": "🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs",
+  "workerSource": "🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts",
+  "handleType": "BrowserRendererWorkerHandle",
+  "widenedIntegerType": "u64",
+  "javascriptCarrier": "bigint",
+  "lowering": "BigInt",
+  "exports": [
+    { "jsName": "enqueueBatch", "rustFn": "enqueue_batch", "widenedParameters": ["generation"] },
+    { "jsName": "tick", "rustFn": "tick", "widenedParameters": ["_sequence", "generation"] }
+  ],
+  "firstBatch": { "sequence": 1, "generation": 2 },
+  "faultCode": "frame-runtime-fault",
+  "numberLoweringFault": "Cannot convert 2 to a BigInt"
+}

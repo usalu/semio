@@ -66,6 +66,7 @@
     "version",
     "uncached",
     "uncachedExact",
+    "cachedExact",
     "continuous",
     "generatedDirectories",
     "toolchains",
@@ -89,6 +90,14 @@
     },
     "uncachedExact": {
       "description": "Target names that never replay while their `<name>-…` variants stay cacheable (e.g. `format` vs `format-check`, `os` vs `os-*`).",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "cachedExact": {
+      "description": "Target names verified deterministic whose name merely collides with the mutating/live name heuristics (e.g. a domain term like `live-catalog`); they replay with their declared outputs.",
       "type": "array",
       "items": {
         "type": "string"
@@ -189,7 +198,8 @@
           "additionalProperties": false,
           "required": [
             "budgetBytes",
-            "unusedAgeMs"
+            "unusedAgeMs",
+            "incremental"
           ],
           "properties": {
             "budgetBytes": {
@@ -199,6 +209,29 @@
             "unusedAgeMs": {
               "type": "integer",
               "exclusiveMinimum": 0
+            },
+            "incremental": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "budgetBytes",
+                "unusedAgeMs",
+                "guardAgeMs"
+              ],
+              "properties": {
+                "budgetBytes": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                "unusedAgeMs": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                "guardAgeMs": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                }
+              }
             }
           }
         },

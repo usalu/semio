@@ -390,7 +390,8 @@
     },
     "preview-generated": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts preview-generated",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"

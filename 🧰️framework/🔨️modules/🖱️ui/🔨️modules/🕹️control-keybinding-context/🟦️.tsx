@@ -146,7 +146,20 @@ export function buildKeysByActionId(keybindings: readonly ControlKeybindingDefin
   return map;
 }
 
-/** @emoji ⌨️ Shell chrome control ids mapped to default chords. */
+/** @emoji ⌨️ Shell chrome control ids mapped to default chords.
+ *
+ * Every row here is a FRAMEWORK verb, reachable through {@link useControlKeybinding}/`useActionHotkey`,
+ * listed by the Settings → Keybindings tree and overridable per user — an app's own
+ * `AppDefinition.keybindings` cannot express these, because that dispatch path resolves
+ * `binding.action.action` against the FOCUSED window kind's `actions` and therefore only ever reaches
+ * the guest (`🏛️ShellHost/🟦️.tsx` `handleAppKeydown`).
+ *
+ * `ui.shell.mode.next`/`.previous` cycle the navbar mode group. They are positional rather than one row
+ * per mode because mode ids are plugin-authored and this table is static; the group's own
+ * `aria-keyshortcuts` republishes both chords so the keyboard path stays discoverable.
+ * `playground.navbar.roles.*` can be per-button precisely because `AppRole` is a closed two-value
+ * union — the ids double as the buttons' DOM ids, so each one also renders its chord badge and tooltip
+ * (`ControlHotkeyBadge`). */
 export const SHELL_KEYBINDINGS: Readonly<Record<string, string>> = {
   "ui.introduction.skip": "escape",
   "ui.introduction.next": "enter,arrowright",
@@ -170,6 +183,10 @@ export const SHELL_KEYBINDINGS: Readonly<Record<string, string>> = {
   "ui.window.close": "mod+shift+w",
   "ui.window.focus": "mod+shift+enter",
   "ui.window.newWindow": "mod+shift+n",
+  "ui.shell.mode.next": "mod+alt+arrowright",
+  "ui.shell.mode.previous": "mod+alt+arrowleft",
+  "playground.navbar.roles.editor": "mod+alt+e",
+  "playground.navbar.roles.viewer": "mod+alt+v",
 };
 
 /** @emoji ⌨️ Merges shell defaults, app action bindings, and user overrides. */

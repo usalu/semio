@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🧬️mutations/🎨️set-active-example",
+  "semanticKind": "set-active-example",
+  "displayName": "Set Active Example",
+  "emoji": "🎨️",
+  "aggregateVariant": "SetActiveExample",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "active-example",
+  "binaryTag": 5,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

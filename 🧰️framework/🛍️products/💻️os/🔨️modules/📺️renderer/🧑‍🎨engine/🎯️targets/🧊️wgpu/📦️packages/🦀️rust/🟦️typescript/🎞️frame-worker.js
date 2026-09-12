@@ -1115,6 +1115,20 @@ class Store {
     this.listeners.clear();
   }
 }
+/* 🧰️framework/🔨️modules/🔺️mesh/🟦️.ts */
+var WORLD3D_EMPTY_COMPUTE_STATUS = Object.freeze({
+  computing: false,
+  phase: "idle",
+  phaseLabel: null,
+  unitsDone: 0,
+  unitsTotal: 0,
+  facesDone: 0,
+  facesTotal: 0,
+  inFlight: 0,
+  ratio: 1,
+  cancellable: false,
+  cancelAction: ""
+});
 /* 🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts */
 var GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES = 65536;
 var GUEST_HOST_ANSWER_CEILING_BYTES = 8388608;
@@ -18744,23 +18758,23 @@ function createTurnOutcomeBroadcast() {
 }
 if (undefined) {}
 var CONTRIBUTION_KIND_KEYS = new Set(["kind", "neuron-kind", "neuronKind", "operator", "operatorKind", "operator-kind", "id"]);
-var CONTRIBUTION_KIND_RE = /^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)+$/;
+var CONTRIBUTION_KIND_RE = /^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+$/;
 function collectOperatorKinds(value, into, keyed = false) {
   if (value == null)
     return;
   if (typeof value === "string") {
     if (keyed && CONTRIBUTION_KIND_RE.test(value) && value !== "flow.extension")
       into.add(value);
-    for (const match of value.matchAll(/neuronKind"\s*:\s*"([a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)+)/g))
+    for (const match of value.matchAll(/neuronKind"\s*:\s*"([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g))
       into.add(match[1]);
-    for (const match of value.matchAll(/neuron-kind=([a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)+)/g))
+    for (const match of value.matchAll(/neuron-kind=([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g))
       into.add(match[1]);
-    for (const match of value.matchAll(/neuron_kind=([a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)+)/g))
+    for (const match of value.matchAll(/neuron_kind=([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g))
       into.add(match[1]);
-    for (const match of value.matchAll(/neuronKind=([a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)+)/g))
+    for (const match of value.matchAll(/neuronKind=([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g))
       into.add(match[1]);
     if (/create-widget|neuron-kind|neuron_kind|neuronKind|widgets\s*\{/.test(value)) {
-      for (const match of value.matchAll(/\b([a-z][a-z0-9]+(?:\.[a-z][a-z0-9]+)+)\b/g)) {
+      for (const match of value.matchAll(/\b([A-Za-z][A-Za-z0-9]+(?:\.[A-Za-z][A-Za-z0-9]+)+)\b/g)) {
         if (match[1] !== "flow.extension")
           into.add(match[1]);
       }
@@ -20691,6 +20705,7 @@ var PLAYGROUND_BUILD_TARGETS = [
   { variant: "aggregator", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.puzzle.puzzle3d@1/*#editor", brand: "entwerfen-mit-bestand-aggregator", aliases: ["mit-bestand", "entwerfen-mit-bestand"], ports: { react: 6023, wgpu: 6123 }, examples: ["🎬️demo"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json" }, { kind: "static-dir", route: "/infinite-assets", root: "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets" }] },
   { variant: "animate", pluginId: "animate", cratePath: "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", aliases: [], ports: { react: 6051, wgpu: 6151 }, examples: ["🎬️demo"], engines: [], assets: [] },
   { variant: "architect", pluginId: "architect", cratePath: "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust", aliases: [], ports: { react: 6090, wgpu: 6190 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "assembly", pluginId: "procedural", cratePath: "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", app: "s.assembly@1/*#editor", aliases: ["procedural assembly"], ports: { react: 6019, wgpu: 6119 }, examples: ["🍄️hexagonal-mushroom-column", "🍩️sphere-cut-with-torus", "🎬️demo", "🎬️demo-session", "🐚️box-shell-preview", "📐️box-fillet-preview", "📦️rectangle-extrude-volume", "🚪️two-room-corridor", "🧱️wall-roof-facade-strip", "🧲️sphere-box-fuse", "🧹️face-sweep-extrude", "🪢️rectangle-wire-preview"], engines: [], assets: [] },
   { variant: "aussuchen", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.sourcing.curation@1/*#editor", brand: "entwerfen-mit-bestand-aussuchen", aliases: ["entwerfen-mit-bestand-aussuchen"], ports: { react: 6030, wgpu: 6130 }, examples: ["🎬️demo"], engines: [], assets: [] },
   { variant: "bearbeiten", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.process.process3d@1/*#editor", brand: "entwerfen-mit-bestand-bearbeiten", aliases: ["entwerfen-mit-bestand-bearbeiten"], ports: { react: 6031, wgpu: 6131 }, examples: ["🎬️demo"], engines: [], assets: [] },
   { variant: "block2d", pluginId: "block", cratePath: "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", app: "s.block.block2d@1/*#editor", aliases: ["block 2d"], ports: { react: 6024, wgpu: 6124 }, examples: ["➡️hexagonal-cut-concrete-forest-right", "🌲️hexagonal-cut-concrete-forest-left", "🏢️nakagin-capsule"], engines: [], assets: [] },
@@ -24645,6 +24660,19 @@ if (undefined) {}
 if (undefined) {}
 /* 🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts */
 var SHARD_WORKER_URL = "/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js";
+var SHARD_RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
+var SHARD_WORKER_DIAGNOSTICS_PARAM = "diagnostics";
+function shardRuntimeDiagnosticsArmed() {
+  try {
+    const stored = globalThis.localStorage?.getItem(SHARD_RUNTIME_DIAGNOSTICS_KEY)?.trim().toLowerCase();
+    return stored === "1" || stored === "true" || stored === "on" || stored === "yes";
+  } catch {
+    return false;
+  }
+}
+function shardWorkerUrl() {
+  return shardRuntimeDiagnosticsArmed() ? `${SHARD_WORKER_URL}?${SHARD_WORKER_DIAGNOSTICS_PARAM}=1` : SHARD_WORKER_URL;
+}
 var DEFAULT_SHARD_BUDGET = { fuel: 50000000, wallMs: 100, memoryBytes: 256 * 1024 * 1024, uiNodes: 20000, mailboxLen: 64, maxEffects: 64, maxPatchBytes: 1 << 20 };
 function poolConcurrency() {
   const hardwareConcurrency = typeof navigator !== "undefined" && typeof navigator.hardwareConcurrency === "number" ? navigator.hardwareConcurrency : 5;
@@ -24653,7 +24681,7 @@ function poolConcurrency() {
 function buildShardClientOptions(overrides) {
   return {
     shardCount: poolConcurrency(),
-    createWorker: () => new Worker(SHARD_WORKER_URL, { type: "module" }),
+    createWorker: () => new Worker(shardWorkerUrl(), { type: "module" }),
     ...overrides
   };
 }
@@ -25442,6 +25470,17 @@ function shellFrameBytes(effect, instanceId) {
     return null;
   return coerceWireBytes(val.payload);
 }
+function wireSendMessageTargetTag(effect) {
+  if (effect.tag !== "send-message")
+    return null;
+  const val = effect.val ?? {};
+  return val.target?.tag ?? "";
+}
+var WIRE_SEND_MESSAGE_ROUTED_TARGETS = ["shell", "backbone"];
+function isRoutedWireSendMessage(effect) {
+  const target = wireSendMessageTargetTag(effect);
+  return target !== null && WIRE_SEND_MESSAGE_ROUTED_TARGETS.includes(target);
+}
 function wireExtensionInvocation(effect) {
   const value = effect.val;
   const req = value?.req;
@@ -25453,6 +25492,50 @@ function wireExtensionInvocation(effect) {
   const requestJson = new TextDecoder("utf-8", { fatal: true }).decode(coerceWireBytes(params.payload));
   return { invokeExtension: { req, extensionId: params.extensionId, capability: params.capability, requestJson } };
 }
+function wireRespondAnswer(effect) {
+  const value = effect.val;
+  const req = value?.req;
+  if (typeof req !== "bigint" || req <= 0n || req > 0xffffffffffffffffn)
+    throw new Error("respond.request-id-invalid");
+  const outcome = value?.outcome;
+  if (outcome?.tag !== "ok" && outcome?.tag !== "fault")
+    throw new Error("respond.outcome-invalid");
+  const bytes = coerceWireBytes(outcome.val);
+  return { respond: { req, result: outcome.tag === "ok" ? { ok: bytes } : { fault: bytes } } };
+}
+function wireTurnStatusTag(status) {
+  const raw = typeof status === "string" ? status : status && typeof status === "object" && ("tag" in status) ? String(status.tag ?? "") : "";
+  return raw.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+}
+var INBOUND_REQUEST_TURN_BUDGET = 64;
+async function driveInboundRequest(drive) {
+  const budget = drive.turnBudget ?? INBOUND_REQUEST_TURN_BUDGET;
+  const answerFor = (turn2) => {
+    for (const effect of turn2.effects) {
+      if (effect.tag !== "respond")
+        continue;
+      const { respond } = wireRespondAnswer(effect);
+      if (respond.req === drive.req)
+        return respond.result;
+    }
+    return null;
+  };
+  let turn = await drive.submit([
+    { kind: "request", payload: { req: drive.req, params: { origin: { tag: "shell", val: drive.originInstanceId }, capability: drive.capability, payload: Array.from(drive.payload) } } }
+  ]);
+  for (let turns = 1;turns <= budget; turns += 1) {
+    const result3 = answerFor(turn);
+    if (result3)
+      return { status: "answered", turns, result: result3 };
+    if (drive.signal?.aborted === true)
+      return { status: "cancelled", turns };
+    drive.onProgress?.({ capability: drive.capability, turns, budget });
+    if (wireTurnStatusTag(turn.status) !== "more-work")
+      return { status: "unanswered", turns };
+    turn = await drive.submit([]);
+  }
+  return { status: "unanswered", turns: budget };
+}
 function wireEffectToFriendly(effect, decodePackValue2) {
   const val = effect.val ?? {};
   const str = (key) => String(val[key] ?? "");
@@ -25461,6 +25544,8 @@ function wireEffectToFriendly(effect, decodePackValue2) {
   switch (effect.tag) {
     case "invoke-extension":
       return wireExtensionInvocation(effect);
+    case "respond":
+      return wireRespondAnswer(effect);
     case "request-sync":
       return "requestSync";
     case "notify":
@@ -25485,11 +25570,18 @@ function wireEffectToFriendly(effect, decodePackValue2) {
       return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId } };
     case "dispatch-action":
       return { dispatchAction: { req: num("req"), action: str("action"), args: packField("args"), delayMs: num("delayMs") } };
+    case "send-message": {
+      if (isRoutedWireSendMessage(effect))
+        return null;
+      console.warn(`[DEBUG] wireEffectToFriendly: send-message to "${wireSendMessageTargetTag(effect) || "no endpoint"}" has no host route — only ${WIRE_SEND_MESSAGE_ROUTED_TARGETS.join("/")} are consumed`);
+      return null;
+    }
     default:
       console.warn(`[DEBUG] wireEffectToFriendly: unmapped effect "${effect.tag}" dropped — unverified wasm-boundary conversion`);
       return null;
   }
 }
+if (undefined) {}
 
 /* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts */
 class MainThreadShardWorker {
@@ -25913,8 +26005,7 @@ function wgpuBuildScopedContributionsPack(receiverPluginId, reachabilityValues, 
 var WGPU_CONTRIBUTIONS_SLIM_VIEW = Object.freeze({ locale: "en", terminology: "native" });
 function wgpuSlimContributionsView(viewState) {
   const raw = viewState && typeof viewState === "object" && !Array.isArray(viewState) ? { ...viewState } : {};
-  delete raw.contributionsJson;
-  delete raw.contributions_json;
+  delete raw.panelJson;
   if (typeof raw.locale !== "string" || raw.locale.length === 0)
     raw.locale = WGPU_CONTRIBUTIONS_SLIM_VIEW.locale;
   if (raw.terminology == null || raw.terminology === "")
@@ -26169,14 +26260,71 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
     };
     return Object.freeze({ instanceId, req, assertActive, complete });
   };
+  let requestActor = null;
+  let inboundRequestSeq = 0n;
+  const ensureRequestActor = () => {
+    if (disposing)
+      return Promise.reject(new Error("wgpu-plugin-handle.closed"));
+    requestActor ??= (async () => {
+      const actorId = `${pluginId}#request`;
+      await registry.activate(pluginId, actorId, "manual");
+      return actorId;
+    })().catch((error) => {
+      requestActor = null;
+      throw error;
+    });
+    return requestActor;
+  };
+  const retireRequestActor = async () => {
+    const pending2 = requestActor;
+    requestActor = null;
+    if (!pending2)
+      return;
+    const actorId = await pending2.catch(() => null);
+    if (!actorId)
+      return;
+    registry.cancel(actorId);
+    actorTurnChains.delete(actorId);
+  };
+  const invoke = async (capability, request, context) => {
+    if (typeof capability !== "string" || capability.length === 0)
+      throw new Error("extension.capability-required");
+    const payload = typeof request === "string" ? new TextEncoder().encode(request) : request;
+    const refuse = (code, message) => new SemioFaultError({ origin: "os", code, severity: "error", message, scope: { pluginId }, retryable: false });
+    if (payload.byteLength > GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES)
+      throw refuse("extension.request-too-large", `${capability} request of ${payload.byteLength} B for ${pluginId} exceeds the ${GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES}-byte contiguous guest-request ceiling`);
+    const actorId = await ensureRequestActor();
+    inboundRequestSeq += 1n;
+    const req = inboundRequestSeq;
+    const answer = await driveInboundRequest({
+      req,
+      capability,
+      payload,
+      originInstanceId: context?.originInstanceId ?? 0,
+      signal: context?.signal,
+      onProgress: context?.onProgress,
+      submit: (events) => submitTurn(actorId, events)
+    });
+    if (answer.status === "cancelled")
+      throw refuse("extension.request-cancelled", `extension request ${req} to ${pluginId} was cancelled after ${answer.turns} turn(s)`);
+    if (answer.status === "unanswered")
+      throw refuse("extension.request-unanswered", `extension ${pluginId} did not answer ${capability} within ${answer.turns} of ${INBOUND_REQUEST_TURN_BUDGET} turns`);
+    if ("fault" in answer.result) {
+      const fault = decodeFaultFromWire(Array.from(answer.result.fault), decodePackValue);
+      throw fault ? new SemioFaultError(fault) : refuse("extension.answer-not-a-fault", `extension ${pluginId} refused ${capability} with ${answer.result.fault.byteLength} undecodable bytes`);
+    }
+    if (answer.result.ok.byteLength > GUEST_HOST_ANSWER_CEILING_BYTES)
+      throw refuse("extension.answer-too-large", `extension answer of ${answer.result.ok.byteLength} B exceeds the ${GUEST_HOST_ANSWER_CEILING_BYTES}-byte host-answer ceiling`);
+    console.log("[DEBUG] wgpu-bridge extension request answered", { pluginId, capability, req: String(req), turns: answer.turns, bytes: answer.result.ok.byteLength });
+    return answer.result.ok;
+  };
   const dispatchInvokeExtension = async (instanceId, extensionId, capability, requestJson, req) => {
     const completion = captureExtensionCompletion(instanceId, req);
     console.log("[DEBUG] wgpu-bridge invokeExtension dispatch", { pluginId, instanceId, extensionId, capability, req: String(req) });
     let outcome;
     try {
       const extension = loadedWgpuHandles.get(extensionId);
-      const invoke = extension?.invoke;
-      if (typeof invoke !== "function")
+      if (typeof extension?.invoke !== "function")
         throw new SemioFaultError({
           origin: "os",
           code: "extension.invoke-unavailable",
@@ -26185,10 +26333,9 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
           scope: { pluginId: extensionId, instanceId: String(instanceId) },
           retryable: false
         });
-      const raw = await invoke.call(extension, capability, requestJson);
+      const raw = await extension.invoke(capability, requestJson, { originInstanceId: instanceId });
       completion.assertActive();
-      const outputJson = typeof raw === "string" ? raw : new TextDecoder("utf-8", { fatal: true }).decode(raw);
-      outcome = { ok: encodePackValue(JSON.parse(outputJson)) };
+      outcome = { ok: encodePackValue(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw))) };
     } catch (error) {
       completion.assertActive();
       const fault = error instanceof SemioFaultError ? error.fault : {
@@ -26230,6 +26377,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
     if (ingress.ingressPages > SHARD_COMMAND_MAXIMUM_PAGES) {
       throw new Error(`[DEBUG] contributions pack ingress ${ingress.ingressPages} pages exceeds ${SHARD_COMMAND_MAXIMUM_PAGES}`);
     }
+    console.log("[DEBUG] contributions slim view", JSON.stringify({ keys: Object.keys(slimView), windowInstances: slimView.windowInstances ?? slimView.window_instances ?? null, focusedWindowId: slimView.focusedWindowId ?? slimView.focused_window_id ?? null, activeWindowKindId: slimView.activeWindowKindId ?? slimView.active_window_kind_id ?? null }));
     const result3 = await performInvocation(requireChannel(instanceId), instanceId, command, slimView);
     console.log("[DEBUG] contributions installed", { plugin: pluginId, app: appId, effects: result3.requestedEffects.length, tags: effectTags(result3.requestedEffects).join(",") || "-", crossings: 1 });
     const ticks = [];
@@ -26341,6 +26489,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
     render: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result3) => result3.node),
     renderDocument: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result3) => JSON.stringify({ document: result3.document, effects: jsonEffects(result3.effects) })),
     captureExtensionCompletion,
+    invoke,
     dispatchInvokeExtension,
     pushScopedContributions,
     contextMenu: (instanceId, request) => requireChannel(instanceId).contextMenu(request),
@@ -26351,7 +26500,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
         return disposal;
       disposing = true;
       const retirements = [...actorIdByInstance.keys()].map((instanceId) => handle.destroyApp(instanceId));
-      disposal = Promise.allSettled(retirements).then((results) => {
+      disposal = Promise.allSettled([...retirements, retireRequestActor()]).then((results) => {
         const failures = results.filter((result3) => result3.status === "rejected");
         if (failures.length)
           throw new AggregateError(failures.map((result3) => result3.reason), "wgpu-plugin-handle.retirement-failed");
@@ -26753,8 +26902,8 @@ async function receive(message) {
   let outcome;
   try {
     const result3 = ownedStep("frame-step", () => {
-      runtime.enqueueBatch(JSON.stringify({ replaceable: message.replaceable, lossless: message.lossless }), message.generation);
-      return JSON.parse(runtime.tick(message.timestampMs, message.sequence, message.generation));
+      runtime.enqueueBatch(JSON.stringify({ replaceable: message.replaceable, lossless: message.lossless }), BigInt(message.generation));
+      return JSON.parse(runtime.tick(message.timestampMs, BigInt(message.sequence), BigInt(message.generation)));
     });
     outcome = lastStepOutcome;
     lastFrame = { cursor: result3.cursor, fullscreen: result3.fullscreen };

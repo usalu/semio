@@ -117,8 +117,27 @@ fn fixture_kind_infos_json_covers_every_first_party_extension() {
     }
 }
 
+/// 🧹️ Encodes one law-local operator catalogue and RETIRES it.
+///
+/// `ChannelSpec::default` carries a `Value`, and `Value`/`Dictionary` fail closed on a bare drop
+/// (`🧠️neural/⚙️engine/🦀️.rs`'s `Drop` — "final Dictionary ownership must be explicitly retired
+/// or owned by a cold boundary"), so a temporary `Vec<OperatorInfo>` may not simply fall off the
+/// end of a law (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn kind_infos_json(kind_infos: Vec<NeuronKindInfo>) -> String {
+    let kind_infos = neural::ColdOwner::new(kind_infos);
+    crate::os_pack::json::to_json_string(&*kind_infos)
+}
+
+/// 🧪️ The two-operator catalogue every host law in this file indexes.
+///
+/// 🧹️ The catalogue is RETIRED, not dropped: `InputSpec::number_default` puts a `Value` in
+/// `ChannelSpec::default`, and `Value`/`Dictionary` fail closed on a bare drop
+/// (`🧠️neural/⚙️engine/🦀️.rs`'s `Drop` — "final Dictionary ownership must be explicitly retired
+/// or owned by a cold boundary"). Letting the temporary `Vec<OperatorInfo>` fall off the end of
+/// this helper aborted every law that builds a host through it
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 fn test_kind_infos_json() -> String {
-    crate::os_pack::json::to_json_string(&vec![
+    kind_infos_json(vec![
         NeuronKindInfo {
             id: "math.add".into(),
             extension: "math".into(),
@@ -187,12 +206,14 @@ fn default_fixture_maps_widgets_to_native_dag_kinds() {
     assert_eq!(slider.width, computation_node_width(&slider.name, &[], &[]));
     let preview = host.dag.fixture.nodes.iter().find(|n| n.id == "preview").expect("preview");
     assert!(matches!(preview.kind, DagNodeKind::Preview { .. }));
+    host.retire_cold();
 }
 
 #[test]
 fn default_fixture_evaluates_add_preview() {
     let host = host_with_test_bridge();
     assert_eq!(host.preview_text(), "3");
+    host.retire_cold();
 }
 
 #[test]
@@ -204,6 +225,7 @@ fn slider_updates_preview() {
     host.set_slider_value("slider", 5.0);
     host.evaluate_internal();
     assert_eq!(host.preview_text(), "5");
+    host.retire_cold();
 }
 
 #[test]
@@ -223,6 +245,7 @@ fn evaluate_skips_unchanged_tree_after_move_widget() {
     host.move_widget("slider", -120.0, 20.0).unwrap();
     host.evaluate_internal();
     assert_eq!(calls.load(Ordering::Relaxed), baseline);
+    host.retire_cold();
 }
 
 #[test]
@@ -234,6 +257,7 @@ fn pending_eval_widget_ids_reports_without_computing() {
     assert!(pending.contains(&"add".to_string()), "the widget downstream of the changed slider is pending");
     assert!(!pending.contains(&"slider".to_string()), "the seed slider itself is not a pending neuron");
     assert_eq!(host.preview_text(), before, "a probe must never actually compute anything");
+    host.retire_cold();
 }
 
 #[test]
@@ -245,6 +269,7 @@ fn set_slider_value_marks_downstream_computing_chrome() {
     host.refresh_computing_chrome_from_pending();
     let remaining = host.pending_eval_widget_ids();
     assert_eq!(remaining.first().map(String::as_str), pending.first().map(String::as_str));
+    host.retire_cold();
 }
 
 #[test]
@@ -259,6 +284,8 @@ fn apply_eval_outputs_json_establishes_baseline_for_dirty_probe() {
     let pending = fresh.pending_eval_widget_ids();
     assert!(pending.contains(&"add".to_string()));
     assert!(!pending.contains(&"slider".to_string()));
+    fresh.retire_cold();
+    host.retire_cold();
 }
 
 #[test]
@@ -275,6 +302,7 @@ fn apply_eval_outputs_json_skips_baseline_when_outputs_stale_for_seeds() {
     let fresh_eval_json = host.last_eval_json.clone();
     host.apply_eval_outputs_json(&fresh_eval_json);
     assert!(host.pending_eval_widget_ids().is_empty(), "fresh eval for the current seeds must establish a converged baseline");
+    host.retire_cold();
 }
 
 #[test]
@@ -291,6 +319,8 @@ fn flow_eval_session_retains_baseline_across_ephemeral_hosts() {
     let pending = replay.pending_eval_widget_ids();
     assert!(pending.contains(&"add".to_string()));
     assert!(!pending.contains(&"slider".to_string()));
+    replay.retire_cold();
+    host.retire_cold();
 }
 
 #[test]
@@ -328,13 +358,14 @@ fn evaluate_step_budget_one_converges_over_multiple_calls() {
     // ⏱️ Tick 1: budget for one cache-missed node — computes "add" for free-riding boundary nodes
     // plus that one dispatch, then stops right before the next miss ("pass"). `remaining[0]` is
     // the blocking node; anything after it (here, "preview") is just downstream-and-untouched.
-    let remaining_after_tick1 = host.evaluate_step(1);
+    let remaining_after_tick1 = host.evaluate_step(EvalStepBudget::dispatches(1));
     assert_eq!(remaining_after_tick1.first(), Some(&"pass".to_string()), "pass is the next node blocking completion");
     assert_eq!(host.preview_text(), "3", "the chain hasn't reached \"pass\" (and thus \"preview\") yet");
     // ⏱️ Tick 2: "add" is now cached, so this reaches and computes "pass".
-    let remaining_after_tick2 = host.evaluate_step(1);
+    let remaining_after_tick2 = host.evaluate_step(EvalStepBudget::dispatches(1));
     assert!(remaining_after_tick2.is_empty(), "the walk reached the end of the topo order");
     assert_eq!(host.preview_text(), "6", "converged to the dragged value after both ticks");
+    host.retire_cold();
 }
 
 #[test]
@@ -361,6 +392,7 @@ fn flow_eval_session_sync_and_tick_state_machine() {
     assert!(session.pending(), "the in-flight chain is still the one that will pick up 30");
     while session.tick(&mut host) {}
     assert_eq!(host.preview_text(), "30", "converges on the latest value, not the superseded intermediate one");
+    host.retire_cold();
 }
 
 /// ⚖️ LAW: the flow extension registry GENERATION is a session's invalidation key.
@@ -414,6 +446,119 @@ fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generatio
     host.retire_cold();
 }
 
+//#region 🔢️RegistryGenerationBaseline
+/// 🧵️ Rebuilds the ephemeral host a durable driver would hand a session's baseline to — the same
+/// three lines `flow_host_with_session` runs in production, over the test bridge.
+fn replay_host_of(host: &FlowHost) -> FlowHost {
+    let mut replay = FlowHost::default();
+    replay.set_eval_bridge_fn(Box::new(test_math_bridge));
+    replay.set_neuron_kind_infos_json(&test_kind_infos_json());
+    replay.replace_fixture(host.fixture.clone());
+    replay
+}
+
+/// ⚖️ LAW: a registry-generation invalidation clears the session's incremental BASELINE, so the
+/// next ephemeral host re-dispatches the very same tree instead of skipping it.
+///
+/// `invalidate_for_flow_extension_registry` releases `eval_json`/`status_json` and sweeps the
+/// neural cache — but the incremental baseline is the third place a pre-contribution miss is
+/// retained, and it is the one that decides whether `evaluate_step` runs at all. A baseline that
+/// outlived the invalidation would let `compute_dirty_set` answer "nothing changed" for a tree
+/// that never did change, and the surface would keep its `unknown kind` fault forever with no user
+/// action able to clear it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️audit-unknown-kind-2026-09-12.md` §3).
+#[test]
+fn an_invalidated_session_hands_an_ephemeral_host_a_re_dispatching_baseline() {
+    let host = host_with_test_bridge();
+    let mut session = FlowEvalSession::new();
+    session.capture_baseline_from(&host);
+    let mut settled = replay_host_of(&host);
+    session.install_baseline_into(&mut settled);
+    assert!(settled.pending_eval_widget_ids().is_empty(), "control: an unchanged tree under an unchanged registry owes no dispatch");
+    let generation = session.flow_extension_generation();
+    assert!(session.invalidate_for_flow_extension_registry(generation + 1), "a moved generation invalidates");
+    let mut rearmed = replay_host_of(&host);
+    session.install_baseline_into(&mut rearmed);
+    assert_eq!(rearmed.eval_baseline_registry_generation(), generation + 1, "the baseline carries the generation it was computed against");
+    assert!(!rearmed.pending_eval_widget_ids().is_empty(), "after a registry-generation invalidation the SAME tree must be re-dispatched");
+    session.begin_close();
+    for _ in 0..1_000_000 {
+        if session.terminal_is_empty() { break; }
+        let _ = session.close_step(usize::MAX, usize::MAX);
+    }
+    assert!(session.terminal_is_empty());
+    settled.retire_cold();
+    rearmed.retire_cold();
+    host.retire_cold();
+}
+
+/// 🧵️ One ephemeral host of the shared fixture, with its OWN neural cache and a bridge that
+/// counts every dispatch — the shape `flow_host_with_session` rebuilds per tick.
+fn counting_replay_host_of(host: &FlowHost, dispatches: &std::sync::Arc<std::sync::atomic::AtomicUsize>) -> FlowHost {
+    let counter = dispatches.clone();
+    let mut replay = FlowHost::default();
+    replay.set_eval_bridge_fn(Box::new(move |kind: &str, input: &Dictionary| {
+        counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        test_math_bridge(kind, input)
+    }));
+    replay.set_neuron_kind_infos_json(&test_kind_infos_json());
+    replay.replace_fixture(host.fixture.clone());
+    replay
+}
+
+/// ⚖️ LAW: a baseline stamped with a SUPERSEDED flow extension registry replacement re-dispatches
+/// the whole tree; only a baseline stamped with the installed one may be skipped.
+///
+/// An unchanged tree is not an unchanged evaluation. `compute_dirty_set` diffs the TREE, and a
+/// contributed operator arriving in a registry replacement changes no tree at all — the operator
+/// table it is dispatched through is process-wide state swapped out underneath a host that has
+/// already settled. Refusing only the skip is not enough either: a refused skip that still diffs
+/// against the superseded snapshot computes an EMPTY dirty set and dispatches nothing, which is
+/// the same stale answer by a longer road. The baseline must be dropped whole
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// 🧪️ Both halves run on an ephemeral host with its OWN neural cache, exactly as
+/// `flow_host_with_session` rebuilds one per tick: the retained cache is the session's to sweep
+/// (`invalidate_for_flow_extension_registry`), and a cache that still answers would mask the very
+/// dispatch this law counts.
+#[test]
+fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
+    let _serialized = crate::registry::lock_flow_extension_registry_for_test();
+    crate::registry::drain_flow_extension_registry_retirements();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📔️registry/🧫️fixtures/🔣️manifest-admission.json")).unwrap();
+    let bump = &fixture["generationBump"];
+    let source = host_with_test_bridge();
+    let generation = source.eval_baseline_registry_generation();
+    assert_eq!(generation, crate::flow_extension_registry_generation(), "a settled host is stamped with the registry it dispatched through");
+    let dispatches = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+
+    let mut settled = counting_replay_host_of(&source, &dispatches);
+    let (snapshot, channels) = source.eval_baseline();
+    settled.install_eval_baseline(snapshot, channels, generation);
+    settled.evaluate_internal();
+    assert_eq!(dispatches.load(std::sync::atomic::Ordering::Relaxed), 0, "control: a current baseline over an unchanged tree dispatches nothing");
+    assert!(settled.pending_eval_widget_ids().is_empty(), "control: and owes no further work");
+
+    crate::install_flow_extension_manifest(bump["pluginId"].as_str().unwrap(), bump["manifestJson"].as_str().unwrap()).expect("the fixture manifest installs");
+    assert_ne!(crate::flow_extension_registry_generation(), generation, "installing a manifest replaces the registry");
+    let mut rearmed = counting_replay_host_of(&source, &dispatches);
+    let (snapshot, channels) = source.eval_baseline();
+    rearmed.install_eval_baseline(snapshot, channels, generation);
+    assert!(!rearmed.pending_eval_widget_ids().is_empty(), "a superseded baseline owes the whole tree again");
+    rearmed.evaluate_internal();
+    assert!(dispatches.load(std::sync::atomic::Ordering::Relaxed) > 0, "a superseded registry generation must re-dispatch the unchanged tree");
+    assert_eq!(rearmed.preview_text(), source.preview_text(), "re-dispatching an unchanged tree reaches the same answer");
+
+    crate::uninstall_flow_extension(bump["extensionId"].as_str().unwrap()).expect("the law leaves the process-wide registry as it found it");
+    for _ in 0..100_000 {
+        if crate::retire_flow_extension_registries_step(1, 64) == Ok(neural::ValueRetirementStep::Complete) { break; }
+    }
+    settled.retire_cold();
+    rearmed.retire_cold();
+    source.retire_cold();
+}
+//#endregion 🔢️RegistryGenerationBaseline
+
 #[test]
 fn connect_ports_allows_fan_out_from_same_output() {
     let mut host = host_with_test_bridge();
@@ -423,6 +568,7 @@ fn connect_ports_allows_fan_out_from_same_output() {
     assert_eq!(fan_out.len(), 2);
     assert!(fan_out.iter().any(|s| s.to == "preview"));
     assert!(fan_out.iter().any(|s| s.to == pass_id));
+    host.retire_cold();
 }
 
 #[test]
@@ -435,6 +581,7 @@ fn connect_ports_replaces_existing_incoming_on_same_input() {
     assert_eq!(incoming_a.len(), 1);
     assert_eq!(incoming_a[0].from, note_id);
     assert!(!host.fixture.synapses.iter().any(|s| s.from == "slider" && s.to == "add" && s.to_port == "a"));
+    host.retire_cold();
 }
 
 #[test]
@@ -459,6 +606,7 @@ fn evaluate_runs_after_tree_change() {
     host.connect_ports("slider", "number", "add", "b").unwrap();
     host.evaluate_internal();
     assert!(calls.load(Ordering::Relaxed) > after_slider);
+    host.retire_cold();
 }
 
 #[test]
@@ -487,6 +635,7 @@ fn dirty_propagation_only_dispatches_affected_branch() {
     let dispatched = calls.lock().unwrap().clone();
     assert!(dispatched.iter().any(|kind| kind == "math.add"), "branch A (add) should re-dispatch after its slider changed");
     assert!(!dispatched.iter().any(|kind| kind == "math.passThrough"), "branch B (pass) must stay clean when only branch A changed");
+    host.retire_cold();
 }
 
 #[test]
@@ -509,6 +658,7 @@ fn neural_cache_persists_across_evaluations() {
     host.set_slider_value("slider", 4.0);
     host.evaluate_internal();
     assert_eq!(calls.load(Ordering::Relaxed), baseline + 1, "only the node downstream of the changed slider should re-dispatch");
+    host.retire_cold();
 }
 
 #[test]
@@ -530,6 +680,7 @@ fn apply_eval_outputs_json_preserves_state_on_global_error() {
     host.apply_eval_outputs_json(r#"{"error":"missing input: geometry"}"#);
     assert_eq!(host.last_eval_json, good);
     assert!(!host.outputs.is_empty());
+    host.retire_cold();
 }
 
 fn collect_live_geometry_handles(outputs: &BTreeMap<String, Dictionary>) -> Vec<String> {
@@ -570,6 +721,7 @@ fn evaluate_emits_channel_structured_json() {
     assert!(add.get("in").and_then(|value| value.as_object()).is_some());
     let out = add.get("out").and_then(|value| value.as_object()).expect("add out");
     assert!(out.get("sum").is_some());
+    host.retire_cold();
 }
 
 #[test]
@@ -599,6 +751,7 @@ fn image_input_seed_and_preview_content() {
     assert!(matches!(node.kind, DagNodeKind::Image { .. }));
     let seeds = host.build_seeds();
     assert_eq!(seeds.get("image").and_then(|d| d.get("image")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("dataUrl")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some(png));
+    host.retire_cold();
 }
 
 #[test]
@@ -618,6 +771,7 @@ fn slider_drag_does_not_evaluate_until_explicit_evaluate() {
     host.evaluate_internal();
     assert_ne!(host.preview_text(), "3", "an explicit evaluate still picks up the dragged value");
     host.pointer_up_screen(sx + 80.0, sy, false, false, false);
+    host.retire_cold();
 }
 
 #[test]
@@ -642,6 +796,7 @@ fn dag_slider_drag_syncs_fixture_value() {
         })
         .unwrap();
     assert!(value > 3.0);
+    host.retire_cold();
 }
 
 #[test]
@@ -653,6 +808,7 @@ fn default_fixture_does_not_auto_layout() {
     assert_eq!(slider.x, 0.0);
     assert_eq!(add.x, 200.0);
     assert_eq!(preview.x, 400.0);
+    host.retire_cold();
 }
 
 #[test]
@@ -673,6 +829,7 @@ fn canvas_slider_hit_adjusts_value_playground_viewport() {
         })
         .unwrap();
     assert!(slider > 3.0);
+    host.retire_cold();
 }
 
 #[test]
@@ -693,6 +850,7 @@ fn canvas_slider_hit_adjusts_value() {
         })
         .unwrap();
     assert!(slider > 3.0);
+    host.retire_cold();
 }
 
 #[test]
@@ -708,6 +866,7 @@ fn reorganize_overwrites_saved_layout_left_to_right() {
     let preview = host.fixture.layout.get("preview").expect("preview layout");
     assert!(add.x > slider.x);
     assert!(preview.x > add.x);
+    host.retire_cold();
 }
 
 #[test]
@@ -716,6 +875,7 @@ fn fixture_json_round_trip() {
     let json = host.fixture_json().unwrap();
     let parsed = FlowHost::parse_fixture_json(&json).unwrap();
     assert_eq!(parsed.schema, "flow.fixture");
+    host.retire_cold();
 }
 
 #[test]
@@ -731,6 +891,7 @@ fn flow_document_tree_is_shakable() {
     seeds.insert("slider".into(), channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(3.0)))));
     let channels = evaluator.evaluate_channels_with(&document.tree, &seeds, &host.kind_infos, &dispatch).unwrap();
     assert_eq!(channels.outputs.get("add").and_then(|d| d.get("sum")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+    host.retire_cold();
 }
 
 #[test]
@@ -740,6 +901,7 @@ fn rebuild_dag_preserves_canvas_theme() {
     host.dag.canvas_theme.node_fill = Color::from_rgba8(12, 34, 56, 255);
     host.rebuild_dag();
     assert_eq!(host.dag.canvas_theme.node_fill.to_rgba8(), Color::from_rgba8(12, 34, 56, 255).to_rgba8());
+    host.retire_cold();
 }
 
 #[test]
@@ -751,6 +913,7 @@ fn set_canvas_theme_dark_applies_board_dark_strokes() {
     host.set_canvas_theme_dark(false);
     let light_stroke = host.dag.canvas_theme.node_stroke.to_rgba8();
     assert!(light_stroke.r < 80);
+    host.retire_cold();
 }
 
 #[test]
@@ -761,6 +924,7 @@ fn paint_scene_dark_theme_paints_edges_and_nodes() {
     let mut scene = canvas::Scene::new();
     host.paint_scene(&mut scene, 1280, 800, 1.0);
     assert!(scene.path_count() > 8, "populated fixture should paint edges, handles, and node bodies under dark board theme");
+    host.retire_cold();
 }
 
 #[test]
@@ -770,6 +934,7 @@ fn flow_host_enables_minimap_widget_on_dag() {
     host.dag.set_camera(200.0, 120.0, 0.65);
     let raw: serde_json::Value = serde_json::from_str(&host.dag.label_overlay_paint_state_json().unwrap()).unwrap();
     assert!(raw.get("minimapWidget").is_some());
+    host.retire_cold();
 }
 
 #[test]
@@ -785,6 +950,7 @@ fn replace_fixture_preserves_kind_infos_and_named_input_ports() {
     let node = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add node");
     let input_ids: Vec<&str> = node.inputs().iter().map(|port| port.id.as_str()).collect();
     assert_eq!(input_ids, vec!["a", "b"]);
+    host.retire_cold();
 }
 
 #[test]
@@ -817,6 +983,7 @@ fn catalogue_has_module_sections() {
     assert!(json.contains("math.add"));
     assert!(json.contains("Inputs"));
     assert!(json.contains("Outputs"));
+    host.retire_cold();
 }
 
 #[test]
@@ -827,6 +994,7 @@ fn flow_backed_node_graph_extras_include_fixture_and_flow_engine() {
     assert!(extras.fixture_json.as_ref().is_some_and(|json| json.contains("flow.fixture")));
     assert!(extras.capabilities_json.as_ref().is_some_and(|json| json.contains(r#""engine":"flow""#)));
     assert!(extras.lod_json.as_ref().is_some_and(|json| json.contains(r#""automatic":true"#)));
+    host.retire_cold();
 }
 
 /// 🛍️ The operator catalogue is APP-STATIC — it leaves the per-scene extras entirely and rides
@@ -854,6 +1022,7 @@ fn app_catalogue_carries_every_operator_and_palette_section() {
 /// asserts the surface is unmoved by them.
 #[test]
 fn a_node_graph_surface_stays_under_the_fixed_admission_with_five_hundred_operators() {
+    let _serialized = crate::registry::lock_flow_extension_registry_for_test();
     const OPERATORS: usize = 500;
     let operators = (0..OPERATORS)
         .map(|index| format!(r#"{{"id":"bulk.op{index}","extension":"bulk","name":"Bulk Operator {index}","abbreviation":"B{index}","icon":"box","summary":"Bulk catalogue operator {index} with a deliberately verbose summary line","inputs":[],"outputs":[]}}"#))
@@ -889,6 +1058,7 @@ fn a_node_graph_surface_stays_under_the_fixed_admission_with_five_hundred_operat
 
 #[test]
 fn contributed_extension_manifest_installs_catalogue_operator() {
+    let _serialized = crate::registry::lock_flow_extension_registry_for_test();
     let manifest = r#"{"schema":"flow.extension","id":"stubext","name":"Stub","version":"0.0.1","activationEvents":[],"contributes":{"schemas":[],"operators":[{"id":"stubext.echo","extension":"stubext","name":"Echo","abbreviation":"Echo","icon":"emoji:📣️","summary":"Echo","inputs":[],"outputs":[]}],"widgets":[],"commands":[],"settings":[]}}"#;
     install_flow_extension_manifest("stub-plugin", manifest).expect("stub extension admission");
     assert!(flow_extension_registry().operator_info("stubext.echo").is_some());
@@ -911,6 +1081,7 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
     host.set_canvas_theme_dark(true);
     host.paint_scene(&mut scene, 1280, 800, 1.0);
     assert!(scene.path_count() > 8, "rich flow graph should paint edges and handles");
+    host.retire_cold();
 }
 
 #[test]
@@ -922,6 +1093,7 @@ fn add_widget_and_connect() {
     host.set_slider_value("slider", 4.0);
     host.evaluate_internal();
     assert_eq!(host.preview_text(), "4");
+    host.retire_cold();
 }
 
 #[test]
@@ -940,6 +1112,7 @@ fn output_export_widget_catalogue_descriptor_and_payload() {
     assert!(payload_json.contains("4") || payload_json.contains("value") || payload_json.contains("sum"));
     let node = host.dag.fixture.nodes.iter().find(|node| node.id == id).expect("export node");
     assert!(matches!(node.kind, DagNodeKind::Export { .. }));
+    host.retire_cold();
 }
 
 /// ↩️ Exercises the standard `crate::os_store::ArtifactStore<FlowFixture, FlowMutation>` undo/redo
@@ -985,6 +1158,7 @@ fn camera_change_does_not_create_undo_step() {
     assert_eq!(host.fixture.camera.y, camera_before.y - 30.0);
     assert!((host.fixture.camera.zoom - camera_before.zoom * 1.5).abs() < 1e-9);
     assert!(!host.fixture.widgets.iter().any(|w| widget_id_for(w) == id));
+    host.retire_cold();
 }
 
 #[test]
@@ -1002,6 +1176,7 @@ fn replace_fixture_preserves_live_camera() {
     assert_eq!(host.fixture.camera.y, -45.0);
     assert!((host.fixture.camera.zoom - 1.75).abs() < 1e-9);
     assert!(host.fixture.widgets.iter().any(|w| widget_id_for(w) == "note"));
+    host.retire_cold();
 }
 
 fn test_dictionary_merge_bridge(kind: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -1045,7 +1220,7 @@ fn variadic_merge_evaluates_port_routed_inputs() {
         layout: crate::OrderedMap::new(),
     });
     host.set_eval_bridge_fn(Box::new(test_dictionary_merge_bridge));
-    host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+    host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "dictionary.merge".into(),
         extension: "dictionary".into(),
         name: "Merge".into(),
@@ -1070,6 +1245,7 @@ fn variadic_merge_evaluates_port_routed_inputs() {
         })
         .expect("preview");
     assert_eq!(preview.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(2.0));
+    host.retire_cold();
 }
 
 #[test]
@@ -1080,6 +1256,7 @@ fn widget_to_dag_node_carries_display_meta() {
     assert_eq!(node.name, "Add");
     assert_eq!(node.abbreviation, "Add");
     assert_eq!(node.icon, "emoji:➕️");
+    host.retire_cold();
 }
 
 #[test]
@@ -1102,6 +1279,7 @@ fn add_slider_widget_with_explicit_range() {
     assert!((dag_max - 15.0).abs() < 1e-6);
     assert!((dag_step - 0.1).abs() < 1e-6);
     assert!((dag_value - 10.2).abs() < 1e-6);
+    host.retire_cold();
 }
 
 #[test]
@@ -1120,6 +1298,7 @@ fn add_note_widget_with_text() {
     assert_eq!(dag_text, "some text");
     assert!(node.width >= 40.0);
     assert_eq!(node.height, semio_framework_artifact_infinite_dag::DAG_CHANNEL_ROW_HEIGHT);
+    host.retire_cold();
 }
 
 #[test]
@@ -1141,6 +1320,7 @@ fn begin_note_edit_groups_undo_into_single_gesture() {
         panic!("expected note widget");
     };
     assert_eq!(restored, "hi");
+    host.retire_cold();
 }
 
 #[test]
@@ -1149,6 +1329,7 @@ fn wheel_screen_zoom_gesture_changes_zoom() {
     let z0 = host.fixture.camera.zoom;
     host.wheel_screen(400.0, 300.0, 0.0, -10.0, true);
     assert_ne!(host.fixture.camera.zoom, z0);
+    host.retire_cold();
 }
 
 #[test]
@@ -1167,6 +1348,8 @@ fn wheel_plan_matches_direct_and_rejects_stale_revision() {
     let replacement = planned.fixture.camera.clone();
     assert!(!planned.commit_wheel(stale));
     assert_eq!(planned.fixture.camera, replacement);
+    planned.retire_cold();
+    direct.retire_cold();
 }
 
 #[test]
@@ -1181,6 +1364,7 @@ fn set_note_text_keeps_uniform_component_width() {
     };
     assert_eq!(text, "a much longer note string");
     assert_eq!(node.width, short_w);
+    host.retire_cold();
 }
 
 #[test]
@@ -1195,6 +1379,7 @@ fn add_slider_widget_with_single_value_uses_sensible_range() {
     assert!((min - 0.0).abs() < 1e-6);
     assert!((max - 10.0).abs() < 1e-6);
     assert!((step - 1.0).abs() < 1e-6);
+    host.retire_cold();
 }
 
 #[test]
@@ -1217,6 +1402,7 @@ fn add_slider_widget_with_decimal_value_uses_matching_step() {
     assert!((dag_max - 10.0).abs() < 1e-6);
     assert!((dag_step - 0.1).abs() < 1e-6);
     assert!((dag_value - 1.3).abs() < 1e-6);
+    host.retire_cold();
 }
 
 #[test]
@@ -1228,6 +1414,7 @@ fn add_slider_widget_with_two_decimal_places_uses_finer_step() {
         panic!("expected slider widget");
     };
     assert!((step - 0.01).abs() < 1e-6);
+    host.retire_cold();
 }
 
 #[test]
@@ -1242,12 +1429,13 @@ fn set_slider_value_expands_bounds_when_out_of_range() {
     assert!((value - 12.0).abs() < 1e-6);
     assert!((min - 0.0).abs() < 1e-6);
     assert!((max - 20.0).abs() < 1e-6);
+    host.retire_cold();
 }
 
 #[test]
 fn ghost_widget_matches_placed_neuron_size() {
     let mut host = host_with_test_bridge();
-    host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+    host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "brep.sketch2d.circle".into(),
         extension: "brep".into(),
         name: "Sketch Circle".into(),
@@ -1264,6 +1452,7 @@ fn ghost_widget_matches_placed_neuron_size() {
     let placed_id = host.add_widget(descriptor, 80.0, 80.0).unwrap();
     let placed_width = host.dag.fixture.nodes.iter().find(|node| node.id == placed_id).expect("placed").width;
     assert!((ghost_width - placed_width).abs() < 1e-6, "ghost width {ghost_width} != placed {placed_width}");
+    host.retire_cold();
 }
 
 #[test]
@@ -1278,13 +1467,14 @@ fn ghost_widget_preview_and_clear() {
     assert_eq!(ghost.icon, "emoji:➕️");
     host.clear_ghost_widget();
     assert!(host.ghost_node.is_none());
+    host.retire_cold();
 }
 
 #[test]
 fn ghost_widget_label_overlay_matches_placed_at_micro() {
     let mut host = host_with_test_bridge();
     host.set_viewport(1280, 800, 1.0);
-    host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+    host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "brep.sketch2d.circle".into(),
         extension: "brep".into(),
         name: "Sketch Circle".into(),
@@ -1330,13 +1520,14 @@ fn ghost_widget_label_overlay_matches_placed_at_micro() {
     }
     let mut scene = canvas::Scene::new();
     host.paint_scene(&mut scene, 1280, 800, 1.0);
+    host.retire_cold();
 }
 
 #[test]
 fn rebuild_dag_preserves_ghost_overlay_at_micro() {
     let mut host = host_with_test_bridge();
     host.set_viewport(1280, 800, 1.0);
-    host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+    host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "brep.sketch2d.circle".into(),
         extension: "brep".into(),
         name: "Sketch Circle".into(),
@@ -1356,6 +1547,7 @@ fn rebuild_dag_preserves_ghost_overlay_at_micro() {
     let overlay: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
     let ghost_rows: Vec<_> = overlay["labels"].as_array().unwrap().iter().filter(|row| row["ghost"] == true).collect();
     assert_eq!(ghost_rows.len(), 3);
+    host.retire_cold();
 }
 
 #[test]
@@ -1365,6 +1557,7 @@ fn ghost_widget_paint_scene_smoke() {
     host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 10.0, 20.0).unwrap();
     let mut scene = canvas::Scene::new();
     host.paint_scene(&mut scene, 800, 600, 1.0);
+    host.retire_cold();
 }
 
 #[test]
@@ -1379,6 +1572,7 @@ fn selection_and_preview_state_round_trip() {
     assert_eq!(host.preview_off_widget_ids(), vec!["add"]);
     host.toggle_preview("add").unwrap();
     assert!(host.preview_off_widget_ids().is_empty());
+    host.retire_cold();
 }
 
 #[test]
@@ -1396,12 +1590,13 @@ fn channel_hover_and_selection_round_trip_at_detail_lod() {
     assert_eq!(selected.len(), 1);
     assert_eq!(selected[0].widget_id, "add");
     assert_eq!(selected[0].port, "a");
+    host.retire_cold();
 }
 
 #[test]
 fn drag_merge_node_preserves_single_fixture_widget() {
     let mut host = host_with_test_bridge();
-    host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+    host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "dictionary.merge".into(),
         extension: "dictionary".into(),
         name: "Merge".into(),
@@ -1427,6 +1622,7 @@ fn drag_merge_node_preserves_single_fixture_widget() {
     assert_eq!(host.dag.fixture.nodes.iter().filter(|n| n.id == merge_id).count(), 1);
     let moved = host.fixture.layout.get(&merge_id).expect("merge layout");
     assert!((moved.x - merge.x).abs() > 1.0);
+    host.retire_cold();
 }
 
 #[test]
@@ -1441,6 +1637,7 @@ fn ghost_widget_cleared_on_pointer_down_and_add_widget() {
     assert!(host.ghost_node.is_none());
     assert_eq!(host.fixture.widgets.iter().filter(|w| widget_id_for(w).starts_with("slider")).count(), 2);
     assert_eq!(host.dag.fixture.nodes.iter().filter(|n| n.id == "slider").count(), 1);
+    host.retire_cold();
 }
 
 #[test]
@@ -1450,6 +1647,7 @@ fn delete_selection_removes_widget_from_fixture() {
     host.delete_selection().unwrap();
     assert!(host.fixture.widgets.iter().all(|w| widget_id_for(w) != "slider"));
     assert!(host.dag.fixture.nodes.iter().all(|n| n.id != "slider"));
+    host.retire_cold();
 }
 
 #[test]
@@ -1522,6 +1720,7 @@ fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
     host.pointer_up_screen(screen.x - 180.0, screen.y, false, false, false);
     assert_eq!(host.dag.engine.edges.len(), 2);
     assert_eq!(host.fixture.synapses.len(), 2);
+    host.retire_cold();
 }
 
 #[test]
@@ -1581,6 +1780,7 @@ fn dag_bridge_keeps_same_named_brep_input_and_output_distinct() {
     let outgoing_source = host.dag.engine.handles.get(&outgoing.source).expect("outgoing source");
     assert_eq!(incoming_target.role, HandleRole::Target);
     assert_eq!(outgoing_source.role, HandleRole::Source);
+    host.retire_cold();
 }
 
 #[test]
@@ -1594,6 +1794,7 @@ fn delete_selection_removes_selected_edge_from_fixture() {
     host.delete_selection().unwrap();
     assert!(host.fixture.synapses.len() < synapse_count_before);
     assert!(!host.has_selection());
+    host.retire_cold();
 }
 
 #[test]
@@ -1605,6 +1806,7 @@ fn delete_selection_removes_edge_selected_by_synapse_id_domain() {
     host.delete_selection().unwrap();
     assert!(host.fixture.synapses.len() < before);
     assert!(!host.fixture.synapses.iter().any(|synapse| synapse.id == "s1"));
+    host.retire_cold();
 }
 
 #[test]
@@ -1621,12 +1823,13 @@ fn align_selection_left_aligns_selected_widget_layout() {
     assert!((slider_left - add_left).abs() < 1e-6, "left edges should match after alignLeft");
     assert!(host.fixture.layout.contains_key("slider"));
     assert!(host.fixture.layout.contains_key("add"));
+    host.retire_cold();
 }
 
 #[test]
 fn add_input_port_inserts_variadic_slot() {
     let mut host = host_with_test_bridge();
-    host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+    host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "dictionary.merge".into(),
         extension: "dictionary".into(),
         name: "Merge".into(),
@@ -1643,12 +1846,13 @@ fn add_input_port_inserts_variadic_slot() {
     let widget = host.fixture.widgets.iter().find(|widget| widget_id_for(widget) == merge_id).expect("merge");
     let Widget::Neuron { input_ports, .. } = widget else { panic!("neuron") };
     assert_eq!(input_ports.len(), 3);
+    host.retire_cold();
 }
 
 #[test]
 fn add_output_port_inserts_variadic_get_slot() {
     let mut host = host_with_test_bridge();
-    host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+    host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "list.get".into(),
         extension: "list".into(),
         name: "Get".into(),
@@ -1671,6 +1875,7 @@ fn add_output_port_inserts_variadic_get_slot() {
     let node = host.dag.fixture.nodes.iter().find(|node| node.id == get_id).expect("get");
     let labels: Vec<&str> = node.outputs().iter().map(|port| port.label.as_str()).collect();
     assert_eq!(labels, vec!["i", "i+1"]);
+    host.retire_cold();
 }
 
 #[test]
@@ -1678,6 +1883,7 @@ fn add_widget_with_explicit_id() {
     let mut host = host_with_test_bridge();
     let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","id":"custom_slider","value":2.0}"#, 0.0, 0.0).unwrap();
     assert_eq!(id, "custom_slider");
+    host.retire_cold();
 }
 
 #[test]
@@ -1689,6 +1895,7 @@ fn insert_between_rewires_downstream_and_connects_anchor() {
     assert!(host.fixture.synapses.iter().any(|synapse| synapse.from == "mid" && synapse.to == "add"));
     assert!(host.fixture.synapses.iter().any(|synapse| synapse.from == "add" && synapse.to == "preview"));
     assert!(!host.fixture.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == "add"));
+    host.retire_cold();
 }
 
 #[test]
@@ -1699,6 +1906,7 @@ fn insert_between_preserves_existing_mid_inputs() {
     host.insert_between("slider", "number", &variable_id, "width", "width").unwrap();
     assert!(host.fixture.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == variable_id && synapse.to_port == "width"));
     assert!(!host.fixture.synapses.iter().any(|synapse| synapse.from == variable_id && synapse.to == variable_id));
+    host.retire_cold();
 }
 
 #[test]
@@ -1712,6 +1920,7 @@ fn make_space_shifts_widgets_right_of_anchor() {
     assert!((host.fixture.layout.get("slider").expect("slider").x - 0.0).abs() < 1e-6);
     assert!((host.fixture.layout.get("add").expect("add").x - 300.0).abs() < 1e-6);
     assert!((host.fixture.layout.get("preview").expect("preview").x - 500.0).abs() < 1e-6);
+    host.retire_cold();
 }
 
 #[test]
@@ -1724,6 +1933,7 @@ fn set_neuron_params_merges_into_eval_input() {
     host.set_neuron_params(&id, r#"{"number":{"$schema":"number","value":7.5}}"#).unwrap();
     host.evaluate_internal();
     assert_eq!(host.preview_text(), "7.5");
+    host.retire_cold();
 }
 
 #[test]
@@ -1753,6 +1963,7 @@ fn variable_relay_evaluates_through_flow_host() {
     let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");
     let width = parsed.get(&variable_id).and_then(|entry| entry.get("out")).and_then(|out| out.get("width")).expect("variable width output");
     assert_eq!(width.get("$schema").and_then(|value| value.as_str()), Some("number"));
+    host.retire_cold();
 }
 
 #[test]
@@ -1779,6 +1990,7 @@ fn collapse_uses_variable_name_as_cluster_input_port() {
     assert!(inputs.iter().any(|port| port.name == "width"));
     host.explode_cluster(&cluster_id).unwrap();
     assert!(host.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Variable { name, .. } if name == "width")));
+    host.retire_cold();
 }
 
 #[test]
@@ -1792,6 +2004,7 @@ fn collapse_then_explode_round_trips() {
     host.explode_cluster(&cluster_id).unwrap();
     assert!(host.fixture.widgets.iter().any(|widget| widget_id_for(widget).starts_with(&format!("{cluster_id}/"))));
     assert!(!host.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Cluster { .. })));
+    host.retire_cold();
 }
 
 #[test]
@@ -2014,6 +2227,7 @@ fn compiled_wire_literal_includes_operator_kinds() {
     let text = host.compiled_wire_literal();
     assert!(text.contains("core.number"));
     assert!(text.contains("math.add"));
+    host.retire_cold();
 }
 
 #[test]

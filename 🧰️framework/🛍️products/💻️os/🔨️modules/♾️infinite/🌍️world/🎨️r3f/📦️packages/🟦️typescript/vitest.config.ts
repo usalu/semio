@@ -1,8 +1,8 @@
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createWorkspaceViteResolveConfig } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
-import { defineOwnedTestConfig, uiReactBuildPlugin } from "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏗️build-tooling.ts";
+import { createWorkspaceViteResolveConfig } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
+import { defineOwnedTestConfig, uiReactBuildPlugin } from "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏗️build-tooling.ts";
 // #endregion 🔌️Adapters
 
 const configDir = dirname(fileURLToPath(import.meta.url));

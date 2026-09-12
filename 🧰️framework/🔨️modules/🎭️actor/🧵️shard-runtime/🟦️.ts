@@ -21,6 +21,38 @@ import { ShardClient, type ShardBudget, type ShardClientOptions, type ShardWorke
  * build's `dist/🔌️plugin-modules/🧵️shard/` output. */
 export const SHARD_WORKER_URL = "/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js";
 
+/** 🩺️ Mirrors the guest-side `RUNTIME_DIAGNOSTICS_ENV` (`🧰️framework/🔨️modules/⏱️trace/🦀️.rs`) and
+ * the renderer's own `RUNTIME_DIAGNOSTICS_KEY`/`TURN_DIAGNOSTICS_KEY` — one name, now three
+ * languages. Declared here rather than imported because this module is a framework leaf and both
+ * other copies live in product code; the engine-contract suite holds all of them equal. */
+export const SHARD_RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
+
+/** 🩺️ The query parameter {@link shardWorkerUrl} stamps on the worker URL when diagnostics are
+ * armed. A Worker realm owns no `localStorage`, so the switch the PAGE resolved has to cross the
+ * worker boundary somehow, and the worker's own URL is the only channel that exists before its first
+ * message. The worker reads it back and hands it to every component it hosts through
+ * `wasi:cli/environment` — see `shardWorkerSource`'s `armGuestRuntimeDiagnostics`. */
+export const SHARD_WORKER_DIAGNOSTICS_PARAM = "diagnostics";
+
+/** 🩺️ Whether this realm has armed runtime diagnostics: the stored
+ * {@link SHARD_RUNTIME_DIAGNOSTICS_KEY} preference, read defensively because a Worker (and a
+ * storage-blocked browser) throws on the accessor itself rather than returning null. */
+function shardRuntimeDiagnosticsArmed(): boolean {
+  try {
+    const stored = globalThis.localStorage?.getItem(SHARD_RUNTIME_DIAGNOSTICS_KEY)?.trim().toLowerCase();
+    return stored === "1" || stored === "true" || stored === "on" || stored === "yes";
+  } catch {
+    return false;
+  }
+}
+
+/** 🩺️ {@link SHARD_WORKER_URL}, plus the diagnostics stamp when this page armed them. Every
+ * `new Worker(...)` in the repo goes through this so the guest's own `[DEBUG]` trace sites are
+ * reachable from a browser session without a second build. */
+export function shardWorkerUrl(): string {
+  return shardRuntimeDiagnosticsArmed() ? `${SHARD_WORKER_URL}?${SHARD_WORKER_DIAGNOSTICS_PARAM}=1` : SHARD_WORKER_URL;
+}
+
 /** ⛽️ Provisional constant turn budget — same honestly-flagged gap `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s
  * native `TURN_BUDGET` documents ("until the DRR scheduler threads a real per-lane one through");
  * this is that budget's shared web default. A caller with a genuinely different budget need (a batch
@@ -49,7 +81,7 @@ export function buildShardClientOptions(
 ): ShardClientOptions {
   return {
     shardCount: poolConcurrency(),
-    createWorker: () => new Worker(SHARD_WORKER_URL, { type: "module" }) as unknown as ShardWorkerLike,
+    createWorker: () => new Worker(shardWorkerUrl(), { type: "module" }) as unknown as ShardWorkerLike,
     ...overrides,
   };
 }

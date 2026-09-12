@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🌍️ `@semio-tech/gis-plugin` router: `bun ./📜️script.ts test`. */
-import { isAbsolute, join, relative, resolve } from "node:path";
-import { mkdirSync, mkdtempSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import {
@@ -343,23 +343,16 @@ class ComponentColdMapPatchCheckScript extends BundleScript {
 class ComponentColdMapPatchNativeCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveGisComponentColdMapPatch(this.repoRoot);
-    const configuredArtifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-    const ticketRoot = resolve(this.repoRoot, ".🧬semio", "🦑️repo", "🎫️tickets");
-    const artifactRoot = configuredArtifactRoot ? resolve(configuredArtifactRoot) : "";
-    const ticketRelative = artifactRoot ? relative(ticketRoot, artifactRoot) : "";
-    if (!artifactRoot || !isAbsolute(artifactRoot) || !ticketRelative || ticketRelative.startsWith("..") || isAbsolute(ticketRelative) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) {
-      throw new Error("GIS component native acceptance requires ticket-owned SEMIO_TEST_ARTIFACT_DIR");
-    }
+    const artifactRoot = join(this.root, "dist/component-cold-map-patch-native-check");
+    rmSync(artifactRoot, { recursive: true, force: true });
     mkdirSync(artifactRoot, { recursive: true, mode: 0o700 });
     const runRoot = mkdtempSync(join(artifactRoot, "gis-component-cold-map-patch-"));
     const target = join(runRoot, "producer-target");
     const stage = join(runRoot, "stage");
-    const diagnostics = join(runRoot, "producer-diagnostics");
     mkdirSync(target, { mode: 0o700 });
     mkdirSync(stage, { mode: 0o700 });
-    mkdirSync(diagnostics, { mode: 0o700 });
     const build = freshGisComponentBuildControl();
-    const control = Object.freeze({ ...build.control, diagnosticsRoot: diagnostics });
+    const control = build.control;
     try {
       const produced = await produceFreshComponentV1(
         this.repoRoot,
@@ -427,6 +420,7 @@ class ComponentColdMapPatchNativeCheckScript extends BundleScript {
       );
     } finally {
       build.close();
+      rmSync(runRoot, { recursive: true, force: true });
     }
   }
 }

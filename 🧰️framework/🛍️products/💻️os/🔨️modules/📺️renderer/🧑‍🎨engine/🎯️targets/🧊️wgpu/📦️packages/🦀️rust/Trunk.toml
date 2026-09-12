@@ -6,7 +6,7 @@ public_url = "/"
 filehash = false
 
 [watch]
-watch = ["../../🧊️renderer", "../../🌐️browser-worker", "../../🧵️frame-job", "../../🎠️runtime", "../../🏠️os-host", "../../📐️surface-lane", "../../📮️runtime-mailbox-core", "../../📸️render-snapshot", "../../🪢️kernel-seam", "../../🎬️renderer-boot", "../../🚀️browser-boot", "../../🚚️browser-frame-transport", "../../🔌️browser-interactive-job-port", "../../⏱️turn-budget", "../../🫀️boot-liveness", "../../🗄️wasm-module-cache", "../../🎞️frame-worker", "../../📇️interactive-job-registry", "../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🕸️Diagram", "../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports", "🟦️typescript", "🌐️.html", "../../../../../../🧑‍💻dev/🔌️plugin-modules"]
+watch = ["../../🧊️renderer", "../../🌐️browser-worker", "../../🧵️frame-job", "../../🎠️runtime", "../../🏠️os-host", "../../📐️surface-lane", "../../📮️runtime-mailbox-core", "../../📸️render-snapshot", "../../🪢️kernel-seam", "../../🎬️renderer-boot", "../../🚀️browser-boot", "../../🚚️browser-frame-transport", "../../🔌️browser-interactive-job-port", "../../⏱️turn-budget", "../../🫀️boot-liveness", "../../🗄️wasm-module-cache", "../../🎞️frame-worker", "../../📇️interactive-job-registry", "../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🕸️Diagram", "../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports", "🟦️typescript", "🌐️.html", "../../../../../../🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules"]
 
 [serve]
 addresses = ["127.0.0.1"]

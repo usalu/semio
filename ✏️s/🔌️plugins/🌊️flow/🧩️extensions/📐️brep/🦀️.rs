@@ -3,7 +3,8 @@
 use flow_extension_sdk::brep_geometry::*;
 use flow_extension_sdk::build_manifest_json;
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{operation_quality, BrepKernel};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::diff::boolean::BooleanOp;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{operation_quality, BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepKernel};
 
 /// 🎯️ Appends a node's live [`OpQuality`] (looked up by the `BrepKernel` method it wraps) to a
 /// human-readable summary, so both `register()`'s catalogue and the packaged `🔣️.json` descriptor
@@ -390,9 +391,118 @@ geo_operation!(HelicalSweep, "solid", |k, i| k.helical_sweep(
 // #endregion 🔖️Sweeps
 
 // #region 🔖️Booleans
-geo_operation!(Fuse, "solid", |k, i| k.fuse(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
-geo_operation!(Cut, "solid", |k, i| k.cut(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
-geo_operation!(Intersect, "solid", |k, i| k.intersect(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
+/// ⏱️ The three set operations are the ONLY operators in this extension that answer
+/// [`Operator::step_plan`]: measured on `🍩️sphere-cut-with-torus` one `brep.bool.cut` costs 4.5 s
+/// natively and over 16 s in the served wasm — long enough for the host's shard watchdog to read
+/// the worker's silence as death and take every actor on that shard down with it. Everything else
+/// here is microseconds and is evaluated in one call
+/// (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`, `📓️extension-evaluate-budget-2026-09-12.md`).
+macro_rules! boolean_operation {
+    ($name:ident, $op:expr) => {
+        struct $name;
+        impl Operator for $name {
+            fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+                with_kernel(|kernel| {
+                    let handle = kernel.boolean_sync(&read_geometry(input, "a")?, &read_geometry(input, "b")?, $op).map_err(|error| map_kernel_error(&error))?;
+                    Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
+                })
+            }
+
+            fn step_plan(&self, input: &Dictionary) -> Result<Option<Box<dyn neural_engine::OperatorJob>>, EvalError> {
+                BrepBooleanOperatorJob::admit(&read_geometry(input, "a")?, &read_geometry(input, "b")?, $op)
+            }
+        }
+    };
+}
+
+boolean_operation!(Fuse, BooleanOp::Unite);
+boolean_operation!(Cut, BooleanOp::Cut);
+boolean_operation!(Intersect, BooleanOp::Intersect);
+
+/// ⏱️ One set operation as a budgeted, resumable [`neural_engine::OperatorJob`]. Admission runs the
+/// kernel's microsecond-cheap fast paths eagerly (they mutate the body and produce the result in
+/// place, so they can never be re-run later) and retains their answer; anything else becomes a
+/// retained [`BrepBooleanJob`] the steps advance.
+///
+/// 🔒️ Every step re-acquires the process-global kernel lock through [`with_kernel`] and hands the
+/// job the body again, which is what makes the job retainable across host turns: it borrows
+/// nothing.
+struct BrepBooleanOperatorJob {
+    job: Option<BrepBooleanJob>,
+    answered: Option<GeometryHandle>,
+    cancelled: bool,
+    progress: neural_engine::OperatorProgress,
+}
+
+impl BrepBooleanOperatorJob {
+    /// 🔀️ Admits one set operation. Always answers `Some`: even a fast-path result comes back as a
+    /// job, because admission has already mutated the body and a `None` here would make the caller
+    /// evaluate the whole boolean a second time.
+    fn admit(a: &GeometryHandle, b: &GeometryHandle, op: BooleanOp) -> Result<Option<Box<dyn neural_engine::OperatorJob>>, EvalError> {
+        with_kernel(|kernel| {
+            let admission = kernel.boolean_job_sync(a, b, op).map_err(|error| map_kernel_error(&error))?;
+            let job = match admission {
+                BrepBooleanAdmission::Answered(handle) => BrepBooleanOperatorJob { job: None, answered: Some(handle), cancelled: false, progress: neural_engine::OperatorProgress { units_done: 1, units_total: 1, phase: "complete" } },
+                BrepBooleanAdmission::Job(job) => {
+                    let progress = job.progress();
+                    BrepBooleanOperatorJob { job: Some(job), answered: None, cancelled: false, progress: neural_engine::OperatorProgress { units_done: progress.units_done, units_total: progress.units_total, phase: progress.phase.tag() } }
+                }
+            };
+            Ok(Some(Box::new(job) as Box<dyn neural_engine::OperatorJob>))
+        })
+    }
+
+    /// 📦️ The out dictionary a finished boolean produces — identical to the one-shot operator's.
+    fn output(handle: &GeometryHandle) -> Result<Dictionary, EvalError> {
+        with_kernel(|kernel| Ok(channel_output("solid", geometry_dict(kernel, handle)?)))
+    }
+}
+
+impl neural_engine::OperatorJob for BrepBooleanOperatorJob {
+    fn step(&mut self, budget: usize) -> Result<neural_engine::OperatorJobStep, EvalError> {
+        if self.cancelled {
+            return Ok(neural_engine::OperatorJobStep::Cancelled(self.progress));
+        }
+        if let Some(handle) = self.answered.clone() {
+            return Ok(neural_engine::OperatorJobStep::Done(Self::output(&handle)?));
+        }
+        let Some(job) = self.job.as_mut() else {
+            return Err(EvalError::InvalidInput("boolean job carries neither an answer nor a plan".to_string()));
+        };
+        let step = with_kernel(|kernel| kernel.step_boolean_job_sync(job, budget.max(1)).map_err(|error| map_kernel_error(&error)))?;
+        match step {
+            BrepBooleanStep::Working(progress) => {
+                self.progress = neural_engine::OperatorProgress { units_done: progress.units_done, units_total: progress.units_total, phase: progress.phase.tag() };
+                Ok(neural_engine::OperatorJobStep::Working(self.progress))
+            }
+            BrepBooleanStep::Cancelled(progress) => {
+                self.cancelled = true;
+                self.progress = neural_engine::OperatorProgress { units_done: progress.units_done, units_total: progress.units_total, phase: progress.phase.tag() };
+                Ok(neural_engine::OperatorJobStep::Cancelled(self.progress))
+            }
+            BrepBooleanStep::Ready(handle) => {
+                self.job = None;
+                self.answered = Some(handle.clone());
+                self.progress = neural_engine::OperatorProgress { units_done: self.progress.units_total.max(self.progress.units_done), units_total: self.progress.units_total.max(self.progress.units_done), phase: "complete" };
+                Ok(neural_engine::OperatorJobStep::Done(Self::output(&handle)?))
+            }
+        }
+    }
+
+    fn progress(&self) -> neural_engine::OperatorProgress {
+        self.progress
+    }
+
+    fn cancel(&mut self) {
+        if self.answered.is_some() {
+            return;
+        }
+        self.cancelled = true;
+        if let Some(job) = self.job.as_mut() {
+            job.cancel();
+        }
+    }
+}
 
 struct CompoundCut;
 impl Operator for CompoundCut {
@@ -1938,9 +2048,11 @@ mod extension_guest {
     const PROCEDURAL3D_APP_ID: &str = "procedural3d-play";
     const EXTENSION_ID: &str = "brep";
     const EXTENSION_LABEL: &str = "Brep";
-    /// ⏱️ Face/edge units one `tessellate` round trip spends before yielding. Sized so a single
-    /// step stays well inside the interactive `maintenance_step` ceiling (a step > 8 ms faults the
-    /// instance) while still converging the bundled toy examples in one or two round trips.
+    /// ⏱️ Face/edge units one `tessellate` STEP spends before the round trip re-checks its wall
+    /// deadline — the granularity at which a cancel can land, never the round trip's own bound.
+    /// The bound is `wallMicros` (default `brep_geometry::TESSELLATE_STEP_WALL_MICROS`): units are
+    /// not time, so a unit budget alone spends a whole interactive round trip on 29 µs of work
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     const TESSELLATE_STEP_BUDGET: usize = 24;
 
     fn bundle() -> ExtensionBundle {
@@ -1959,8 +2071,17 @@ mod extension_guest {
             let handle = request.get("handle").and_then(pack::json::Value::as_str).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), "missing field `handle`".to_string()))?;
             let tolerance = request.get("tolerance").and_then(pack::json::Value::as_f64).unwrap_or(0.05);
             let budget = request.get("budget").and_then(pack::json::Value::as_f64).map_or(TESSELLATE_STEP_BUDGET, |value| (value as usize).max(1));
+            let wall_micros = request.get("wallMicros").and_then(pack::json::Value::as_f64).map_or(flow_extension_sdk::brep_geometry::TESSELLATE_STEP_WALL_MICROS, |value| value.max(0.0) as u64);
             let chunk = request.get("chunk").and_then(pack::json::Value::as_f64).map_or(0, |value| value.max(0.0) as usize);
-            Ok(flow_extension_sdk::brep_geometry::tessellate_step_envelope_json(handle, tolerance, budget, chunk).into_bytes())
+            Ok(flow_extension_sdk::brep_geometry::tessellate_step_envelope_json(handle, tolerance, budget, wall_micros, chunk).into_bytes())
+        });
+        let bundle = bundle.handler("evaluateCancel", |req| {
+            let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate-cancel.bad-request"), err.to_string()))?;
+            let retired = match (request.get("operatorId").and_then(pack::json::Value::as_str), request.get("nodeHash").and_then(pack::json::Value::as_f64)) {
+                (Some(operator_id), Some(node_hash)) => usize::from(flow_extension_sdk::cancel_evaluation(operator_id, node_hash.max(0.0) as u64)),
+                _ => flow_extension_sdk::cancel_all_evaluations(),
+            };
+            Ok(pack::json::to_string(&pack::json::object([("ok".to_string(), pack::json::Value::Bool(true)), ("retired".to_string(), pack::json::Value::from(retired as u64))])).into_bytes())
         });
         bundle.handler("tessellateCancel", |req| {
             let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate-cancel.bad-request"), err.to_string()))?;

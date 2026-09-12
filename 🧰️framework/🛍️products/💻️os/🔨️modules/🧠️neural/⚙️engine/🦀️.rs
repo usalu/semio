@@ -997,9 +997,59 @@ impl std::fmt::Display for EvalError {
 
 impl std::error::Error for EvalError {}
 
+/// 📈️ Monotone progress of one [`OperatorJob`]. `units_done` never decreases; `units_total` is the
+/// plan known so far and may be revised upward by a job whose later stages are only plannable once
+/// an earlier one has run (a boolean cannot count its result's validation units before it has a
+/// result). `phase` is the job's own domain vocabulary — the framework never interprets it, it only
+/// carries it to the surface that labels it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct OperatorProgress {
+    pub units_done: usize,
+    pub units_total: usize,
+    pub phase: &'static str,
+}
+
+/// ⏱️ Outcome of one budgeted [`OperatorJob::step`].
+#[derive(Clone, Debug, PartialEq)]
+pub enum OperatorJobStep {
+    /// 🔁 Budget spent, work remains — call `step` again.
+    Working(OperatorProgress),
+    /// ✅ Terminal: the operator's out dictionary.
+    Done(Dictionary),
+    /// 🛑 Terminal: [`OperatorJob::cancel`] retired the job; nothing is produced.
+    Cancelled(OperatorProgress),
+}
+
+/// ⏱️ A single operator evaluation split into budgetable units so a host can drive it across many
+/// turns inside an interactive step ceiling, paint progress, and cancel it — the operator twin of
+/// the kernel's resumable tessellation job.
+///
+/// Domain-NEUTRAL by construction: the framework knows only units, a phase tag and the three
+/// outcomes. Which units an operator has (a face pair, a validation entity, a solver iteration) is
+/// entirely the domain extension's business, and an operator that has no sub-structure simply does
+/// not offer a job (see [`Operator::step_plan`]'s default) and is evaluated in one call as before
+/// (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
+pub trait OperatorJob: Send {
+    /// ⏱️ Advances by at most `budget` units. A `budget` of zero is a legal progress probe.
+    fn step(&mut self, budget: usize) -> Result<OperatorJobStep, EvalError>;
+    /// 📈️ Progress right now — safe to read between steps and after termination.
+    fn progress(&self) -> OperatorProgress;
+    /// 🛑️ Retires the job at the next observable boundary. A job that already produced its output
+    /// is never retired: supersession may only stop work still in flight.
+    fn cancel(&mut self);
+}
+
 /// 🧮️ Computational unit: one dictionary to another.
 pub trait Operator: Send + Sync {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError>;
+    /// ⏱️ The budgeted, resumable form of this operator's evaluation, when it has one. `None` (the
+    /// default, and the answer for every operator whose cost is microseconds) means "evaluate me in
+    /// one call". An operator that answers `Some` MUST produce, through its job, exactly what
+    /// [`Operator::evaluate`] would have produced for the same input — the stepped path IS the
+    /// algorithm, never a second implementation to drift from.
+    fn step_plan(&self, _input: &Dictionary) -> Result<Option<Box<dyn OperatorJob>>, EvalError> {
+        Ok(None)
+    }
     /// 🪶️ Only compiler-proven trivial operators are terminal without domain-specific field retirement.
     fn retirement_is_empty(&self) -> bool { !std::mem::needs_drop::<Self>() }
     /// 🧹️ Transfers or retires one granted domain frontier while the caller retains the operator itself.
@@ -1546,6 +1596,36 @@ impl Registry {
         validate_operator_outputs(&operator.info, &output)?;
         Ok(output.into_inner())
     }
+
+    /// ⏱️ The budgeted form of [`Registry::dispatch`]: resolves the same operator and
+    /// implementation, validates the same inputs, and asks the implementation for a resumable job.
+    /// `Ok(None)` means this operator has no sub-structure and the caller should `dispatch` it in
+    /// one call. The job's `Done` dictionary still has to pass [`validate_operator_outputs`], which
+    /// is why [`Registry::finish_job`] — not the caller — closes it.
+    // 🚫️async: E1 pure registry lookup mirroring `dispatch` (no I/O) — see R9
+    pub fn dispatch_job(&self, operator_id: &str, input: &Dictionary) -> Result<Option<Box<dyn OperatorJob>>, EvalError> {
+        let operator = self.operator(operator_id).ok_or_else(|| EvalError::UnknownKind(operator_id.into()))?;
+        validate_neuron_inputs(input, Some(&operator.info))?;
+        let signature = operator_signature(&operator.info, input);
+        let implementation = operator
+            .implementations
+            .iter()
+            .find(|implementation| implementation.schemas == signature)
+            .or_else(|| operator.implementations.iter().find(|implementation| implementation.schemas.is_empty()))
+            .ok_or_else(|| EvalError::InvalidInput(format!("no implementation for {operator_id}({})", signature.join(", "))))?;
+        implementation.operator.step_plan(input)
+    }
+
+    /// ✅️ Holds a finished job's output to the SAME output contract [`Registry::dispatch`] holds a
+    /// one-shot evaluation to, so a stepped answer and a one-shot answer are indistinguishable
+    /// downstream.
+    // 🚫️async: E1 pure registry lookup (no I/O) — see R9
+    pub fn finish_job(&self, operator_id: &str, output: Dictionary) -> Result<Dictionary, EvalError> {
+        let operator = self.operator(operator_id).ok_or_else(|| EvalError::UnknownKind(operator_id.into()))?;
+        let output = ColdOwner::new(output);
+        validate_operator_outputs(&operator.info, &output)?;
+        Ok(output.into_inner())
+    }
 }
 // #endregion 🔖️OperatorRecord
 
@@ -1911,6 +1991,66 @@ pub struct BudgetedEval {
     pub pending_extension: Option<PendingExtensionEval>,
 }
 
+/// ⏱️ A wall-clock guard a budgeted walk consults BETWEEN neurons. Carried as a plain `fn` pointer
+/// rather than a clock trait or an `Instant`: this crate is a leaf evaluator with no dependency on
+/// the tracing module that owns the process clock, and `std::time::Instant` is not usable on every
+/// wasm target the guest builds for.
+#[derive(Clone, Copy, Debug)]
+pub struct EvalStepDeadline {
+    pub now_us: fn() -> Option<u64>,
+    pub deadline_us: u64,
+}
+
+impl PartialEq for EvalStepDeadline {
+    fn eq(&self, other: &Self) -> bool {
+        std::ptr::fn_addr_eq(self.now_us, other.now_us) && self.deadline_us == other.deadline_us
+    }
+}
+
+impl EvalStepDeadline {
+    /// ⌛️ Whether the walk has run past its wall-clock allowance. A clock that answers nothing (bare
+    /// wasm with no host clock installed) never expires the walk — the node count stays the only cap.
+    fn expired(&self) -> bool {
+        (self.now_us)().is_some_and(|now_us| now_us >= self.deadline_us)
+    }
+}
+
+/// ⏳️ What ONE budgeted walk may spend. `dispatches` is the historical cache-missed-neuron count;
+/// `deadline` is the preemption point a NODE count alone cannot provide — one expensive operator
+/// (a `brep.bool.fuse` on a complex solid) runs to completion inside a single non-preemptible
+/// reactor step regardless of how few nodes it is, which is what parked the browser's main thread
+/// for 3.5-18.4 s per hop (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️audit-guest-tick-cost-2026-09-12.md` §1.3). The deadline is consulted only AFTER at least one
+/// dispatch, so a walk that starts already over budget still makes progress instead of re-arming
+/// forever.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct EvalStepBudget {
+    pub dispatches: usize,
+    pub deadline: Option<EvalStepDeadline>,
+}
+
+impl EvalStepBudget {
+    /// 🔍️ A pure probe: dispatches nothing, reports every neuron that would still need work.
+    pub const PROBE: EvalStepBudget = EvalStepBudget { dispatches: 0, deadline: None };
+    /// ♾️ Walks the whole dirty set in one call, however long it takes.
+    pub const UNBOUNDED: EvalStepBudget = EvalStepBudget { dispatches: usize::MAX, deadline: None };
+
+    /// 🔢️ A node-count-only budget — no wall-clock preemption.
+    pub const fn dispatches(dispatches: usize) -> EvalStepBudget {
+        EvalStepBudget { dispatches, deadline: None }
+    }
+
+    /// ⏱️ The same node count, preempted at `deadline_us` on `now_us`'s clock.
+    pub const fn until(dispatches: usize, now_us: fn() -> Option<u64>, deadline_us: u64) -> EvalStepBudget {
+        EvalStepBudget { dispatches, deadline: Some(EvalStepDeadline { now_us, deadline_us }) }
+    }
+
+    /// 🛑️ Whether the walk must yield before dispatching another cache-missed neuron.
+    fn exhausted(&self, spent: usize) -> bool {
+        spent >= self.dispatches || (spent != 0 && self.deadline.is_some_and(|deadline| deadline.expired()))
+    }
+}
+
 /// ⏳️ One contributed operator that must be evaluated in its owning plugin before the graph can resume.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PendingExtensionEval {
@@ -1975,14 +2115,15 @@ impl<'a> Evaluator<'a> {
         dirty: &HashSet<String>,
         previous: Option<&EvalChannels>,
     ) -> Result<EvalChannels, EvalError> {
-        self.evaluate_channels_budgeted(tree, seeds, operator_infos, dispatch, cache, dirty, previous, usize::MAX).map(|budgeted| budgeted.channels)
+        self.evaluate_channels_budgeted(tree, seeds, operator_infos, dispatch, cache, dirty, previous, EvalStepBudget::UNBOUNDED).map(|budgeted| budgeted.channels)
     }
 
-    /// ⏳️ Sequential topo walk that stops after computing `budget` cache-missed (i.e. actually
-    /// dispatched) neurons, returning the not-yet-computed neuron ids as `remaining` so a caller can
-    /// resume with another budgeted call — used to spread a heavy evaluation across many cheap ticks
-    /// instead of blocking a thread for the whole graph. `budget = 0` is a pure probe: nothing is
-    /// dispatched, `remaining` reports every neuron that would still need work.
+    /// ⏳️ Sequential topo walk that stops after computing `budget.dispatches` cache-missed (i.e.
+    /// actually dispatched) neurons OR once `budget.deadline` has passed, returning the
+    /// not-yet-computed neuron ids as `remaining` so a caller can resume with another budgeted call
+    /// — used to spread a heavy evaluation across many cheap ticks instead of blocking a thread for
+    /// the whole graph. [`EvalStepBudget::PROBE`] is a pure probe: nothing is dispatched,
+    /// `remaining` reports every neuron that would still need work.
     #[allow(clippy::too_many_arguments, reason = "mirrors evaluate_channels_sequential_cached's params plus a budget; see that method's reason")]
     pub fn evaluate_channels_budgeted(
         &self,
@@ -1993,7 +2134,7 @@ impl<'a> Evaluator<'a> {
         cache: &NeuralCache,
         dirty: &HashSet<String>,
         previous: Option<&EvalChannels>,
-        budget: usize,
+        budget: EvalStepBudget,
     ) -> Result<BudgetedEval, EvalError> {
         let order = topo_order(tree)?;
         let mut outputs = ColdOwner::new(seeds.iter().map(|(key, value)| (key.clone(), value.clone())).collect::<BTreeMap<String, Dictionary>>());
@@ -2022,11 +2163,12 @@ impl<'a> Evaluator<'a> {
                 continue;
             }
             // 🚧️ A budget-exhausted cache miss (cluster or operator) stops the walk here; this
-            // neuron and everything from `order[index..]` becomes `remaining`. Clusters have no
-            // single cache key of their own (their inner neurons are cached individually), so a
+            // neuron and everything from `order[index..]` becomes `remaining`. Exhaustion is either
+            // the dispatch count or the wall-clock deadline — see [`EvalStepBudget`]. Clusters have
+            // no single cache key of their own (their inner neurons are cached individually), so a
             // cluster is conservatively always charged as a miss.
             if let Some(sub_tree) = neuron.tree.as_deref() {
-                if spent >= budget {
+                if budget.exhausted(spent) {
                     return Ok(BudgetedEval { channels: EvalChannels { outputs: outputs.into_inner(), inputs: inputs.into_inner() }, remaining: budgeted_remaining_from(&order, index, dirty), pending_extension: None });
                 }
                 let out = self.evaluate_cluster_sequential(sub_tree, &input, operator_infos, dispatch, cache)?;
@@ -2037,7 +2179,7 @@ impl<'a> Evaluator<'a> {
             let merged = ColdOwner::new(input.merge(&neuron.params));
             let key = node_hash(&neuron.kind, &merged);
             let is_miss = !cache.contains(key);
-            if is_miss && spent >= budget {
+            if is_miss && budget.exhausted(spent) {
                 return Ok(BudgetedEval { channels: EvalChannels { outputs: outputs.into_inner(), inputs: inputs.into_inner() }, remaining: budgeted_remaining_from(&order, index, dirty), pending_extension: None });
             }
             let out = if let Some(cached) = cache.get(key) {

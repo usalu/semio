@@ -485,6 +485,33 @@ pub(crate) fn drain_fill_envelope_registry_for_test() {
     }
 }
 
+/// 🧾️ Teardown units spent INSIDE a synchronous drop, totalled and worst-single-drop, since the last
+/// reset. This is the turn census a slice law reads instead of a wall clock: a cancel that tears its
+/// whole plan down in one `Drop` shows up as thousands of units charged to a single turn, while an
+/// incremental teardown shows up as zero here and as one unit per
+/// [`fill_envelope_maintenance_step`] turn instead.
+static FILL_DROP_DRAIN_UNITS: AtomicU64 = AtomicU64::new(0);
+static FILL_DROP_DRAIN_WORST: AtomicU64 = AtomicU64::new(0);
+
+/// 🧾️ Reads `(total, worst)` of [`FILL_DROP_DRAIN_UNITS`]/[`FILL_DROP_DRAIN_WORST`].
+pub fn fill_drop_drain_census() -> (u64, u64) {
+    (FILL_DROP_DRAIN_UNITS.load(Ordering::Acquire), FILL_DROP_DRAIN_WORST.load(Ordering::Acquire))
+}
+
+/// 🧾️ Zeroes the drop-drain census so one law measures only its own turns.
+pub fn reset_fill_drop_drain_census() {
+    FILL_DROP_DRAIN_UNITS.store(0, Ordering::Release);
+    FILL_DROP_DRAIN_WORST.store(0, Ordering::Release);
+}
+
+fn record_fill_drop_drain(units: u64) {
+    if units == 0 {
+        return;
+    }
+    FILL_DROP_DRAIN_UNITS.fetch_add(units, Ordering::AcqRel);
+    FILL_DROP_DRAIN_WORST.fetch_max(units, Ordering::AcqRel);
+}
+
 /// 🧮️ How many of [`FILL_ENVELOPE_MAX_OPERATIONS`] envelope slots are occupied right now, and how
 /// many admissions the registry has ever handed out. Occupancy is the direct, allocator-independent
 /// statement of "the tick loop retains a bounded number of fill envelopes"; the admission count is
@@ -1821,15 +1848,23 @@ impl Puzzle3dCollision {
     /// 🚚️ Records that one mesh id was announced by identity alone and could not be served, so the
     /// world body's next projection asks the client for the bytes. Bounded and idempotent: a client
     /// that re-announces the same dead id on every window activation never grows the set.
-    pub(crate) fn request_mesh_reupload(&mut self, url: &str) {
+    ///
+    /// 🐢️ The return value is that idempotence made VISIBLE to the caller: `true` only when this call
+    /// added a request the world body has not published yet. A re-announcement of an already-pending id
+    /// changes nothing any surface renders, and republishing the world body for it is a refresh storm —
+    /// measured on the live `:6013` shell (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B32) as 23 of 33
+    /// typed-operation completions carrying the viewport scope in a 75 s window with four user actions,
+    /// every one of them re-rendering all three world bodies and 23 answering `unchanged`.
+    pub(crate) fn request_mesh_reupload(&mut self, url: &str) -> bool {
         if url.len() > FILL_WORKER_MAX_URL_BYTES || self.mesh_reupload_requests.iter().any(|pending| pending == url) {
-            return;
+            return false;
         }
         if self.mesh_reupload_requests.len() >= FILL_WORKER_MAX_MESHES {
-            return;
+            return false;
         }
         self.mesh_reupload_requests.push(url.to_string());
         self.mesh_reupload_requests.sort_unstable();
+        true
     }
 
     /// 🚚️ The open re-upload requests, in a stable order so an unchanged set hashes to an unchanged
@@ -2624,9 +2659,10 @@ impl Puzzle3dPrecomputeSession {
 
     /// 🚚️ Turns a refused id-only announcement into a standing request for the bytes — see
     /// [`Puzzle3dCollision::request_mesh_reupload`]. Never `supersede_admitted_fill`: recording that a
-    /// mesh is missing changes no geometry, so an admitted fill plan must survive it.
-    pub fn request_mesh_reupload(&mut self, url: &str) {
-        self.engine.request_mesh_reupload(url);
+    /// mesh is missing changes no geometry, so an admitted fill plan must survive it. Answers whether
+    /// the standing set actually GREW, which is the only case whose world body has anything new to say.
+    pub fn request_mesh_reupload(&mut self, url: &str) -> bool {
+        self.engine.request_mesh_reupload(url)
     }
 
     /// 🚚️ The mesh ids this session is waiting on bytes for, stable-ordered — see
@@ -3184,11 +3220,14 @@ impl Drop for Puzzle3dPrecomputeSession {
         if let Some(request) = &self.fill_job {
             terminalize_fill_envelope(request, FillEnvelopeTerminalReason::Closed);
         }
+        let mut units = 0_u64;
         for _ in 0..FILL_ENVELOPE_SESSION_CLOSE_TURNS {
             if !self.pump_fill_terminal_step() {
                 break;
             }
+            units += 1;
         }
+        record_fill_drop_drain(units);
     }
 }
 

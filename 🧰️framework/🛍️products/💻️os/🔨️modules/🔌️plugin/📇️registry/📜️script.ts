@@ -2791,7 +2791,7 @@ export function createFreshCatalogBuildVerifier(repoRoot: string, buildRoot: str
   const resolvedBuild = resolve(buildRoot);
   const sharedTarget = cargoTargetDirectory(resolvedRepo);
   const sharedBuild = cargoBuildDirectory(resolvedRepo);
-  const developmentCache = resolve(resolvedRepo, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🧑‍💻dev", "🔌️plugin-modules");
+  const developmentCache = resolve(resolvedRepo, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "📦️packages", "🟦️typescript", "dist");
   if (pathIsWithin(sharedTarget, resolvedBuild)) throw new Error("fresh catalog verification cannot use the ambient shared target");
   if (pathIsWithin(sharedBuild, resolvedBuild)) throw new Error("fresh catalog verification cannot use the ambient shared build directory");
   if (pathIsWithin(developmentCache, resolvedBuild)) throw new Error("fresh catalog verification cannot use the development cache");
@@ -3051,10 +3051,9 @@ class RustTaxonomyMountsCheckScript extends BundleScript {
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: Record<string, string>; expectedCodes: string[]; expectedUnmounted: string[]; rustcSuccess: boolean }[] };
     const validate = await registrySchemaValidator("RustTaxonomyMountsV1");
     if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
-    const outputRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-    if (!outputRoot || !isAbsolute(outputRoot)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must be the ticket generated directory");
-    mkdirSync(outputRoot, { recursive: true });
-    const capture = mkdtempSync(join(outputRoot, "rust-taxonomy-mounts-"));
+    const capture = join(this.root, "dist/rust-taxonomy-mounts-check");
+    rmSync(capture, { recursive: true, force: true });
+    mkdirSync(capture, { recursive: true });
     console.log("[DEBUG] registry-rust-mounts capture=" + capture);
     const failures: string[] = [];
     for (const row of fixture.cases) {
@@ -3116,10 +3115,9 @@ class PluginRootOwnershipCheckScript extends BundleScript {
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: string[]; expected: string[] }[] };
     const validate = await registrySchemaValidator("PluginRootOwnershipV1");
     if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
-    const outputRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-    if (!outputRoot || !isAbsolute(outputRoot)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must be the ticket generated directory");
-    mkdirSync(outputRoot, { recursive: true });
-    const capture = mkdtempSync(join(outputRoot, "plugin-root-ownership-"));
+    const capture = join(this.root, "dist/plugin-root-ownership-check");
+    rmSync(capture, { recursive: true, force: true });
+    mkdirSync(capture, { recursive: true });
     const { Database } = await import("bun:sqlite");
     const oracle = new Database(":memory:");
     const failures: string[] = [];

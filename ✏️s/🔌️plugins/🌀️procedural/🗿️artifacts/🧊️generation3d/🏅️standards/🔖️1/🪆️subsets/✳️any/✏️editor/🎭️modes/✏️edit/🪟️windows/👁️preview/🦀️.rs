@@ -2,7 +2,7 @@
 
 use crate::editor::generation3d::config::Generation3dConfig;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_scene_status_json, preview_selection_json, preview_status_json, PreviewInteractionMarks, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
+use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_selection_json, preview_status_json, preview_window_status_json, PreviewInteractionMarks, PreviewStatusDebug, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{world3d_scene, world3d_sun_measures, ActionDescriptor, BuiltNode, LocalizedLabel, MeasureSelectItem, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
@@ -69,27 +69,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
     let (meshes_json, instances_json) = (payload.meshes_json, payload.instances_json);
     let preview_status = preview_status_json(&eval_json, &document.fixture);
     let sun = config.sun();
-    let status_json = {
-        let base = preview_scene_status_json(session, preview_status);
-        let mut debug_object = dsl::json::Object::new();
-        debug_object.insert("evalLen", dsl::json::Value::from(eval_json.len()));
-        debug_object.insert("meshesLen", dsl::json::Value::from(meshes_json.len()));
-        debug_object.insert("instancesLen", dsl::json::Value::from(instances_json.len()));
-        debug_object.insert("evalHead", dsl::json::Value::String(eval_json.chars().take(240).collect::<String>()));
-        let debug_value = dsl::json::Value::Object(debug_object);
-        Some(match base {
-            Some(existing) => match dsl::json::parse(&existing) {
-                Ok(mut value) => {
-                    if let Some(obj) = value.as_object_mut() {
-                        obj.insert("debug", debug_value);
-                    }
-                    dsl::json::to_string(&value)
-                }
-                _ => dsl::json::to_string(&debug_value),
-            },
-            None => dsl::json::to_string(&debug_value),
-        })
-    };
+    let status_json = preview_window_status_json(Some(session), preview_status, &PreviewStatusDebug { eval_json: &eval_json, meshes_json: &meshes_json, instances_json: &instances_json }, None);
     let _ = GENERATION_3D_PLAY_APP_ID;
     crate::scene_surface(
         GENERATION_3D_PLAY_SURFACE_PREVIEW,

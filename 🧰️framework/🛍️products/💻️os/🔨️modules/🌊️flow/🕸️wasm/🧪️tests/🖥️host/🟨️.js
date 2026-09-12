@@ -155,36 +155,69 @@ fixtureTask.subscribe((event) => events.push(event.event));
 equal(typeof await fixtureTask.result, "object", "real-domain-output");
 for (const code of [2_650, 2_651, 2_652, 2_653, 2_656]) if (!events.includes(code)) throw new Error(`reactive event ${code} missing`);
 
-const gpu = { requestAdapter: async () => ({ requestDevice: async () => ({ lost: new Promise(() => {}) }) }) };
-const attached = attachFlowSurface(features, {}, { width: 800, height: 600, dpr: 2, gpu });
+const presentingBindings = { flowAttachSurfaceCanvas: async () => true };
+const presentingGpu = { requestAdapter: async () => ({}) };
+const attached = attachFlowSurface(features, {}, { width: 800, height: 600, dpr: 2, bindings: presentingBindings, gpu: presentingGpu });
 const attachedSurface = await attached.result;
 equal(attachedSurface.surfaceGeneration, 1, "surface-generation");
+equal(attachedSurface.presentsOnGpu, true, "surface-presents-on-gpu");
 equal(bridge.operations.includes(FlowOperation.surfaceStatus), true, "async-surface-status");
 await features.surface.surfaceStatus({ surface: attachedSurface.surface, surfaceGeneration: attachedSurface.surfaceGeneration, status: "cancelled" }).result;
 
-// 🙈️ A flow surface presents through a 2D canvas context and never touches the WebGPU device, so every
-// host without one — no `navigator.gpu`, a blocklisted adapter, an adapter that refuses a device —
-// must still reach `created` and hand back a usable surface. Before this, each of these threw
-// "Flow GPU adapter unavailable", the attach rejected, and the node-graph window stayed blank forever.
+// 🙈️ A flow surface that cannot bind a WebGPU presenter still presents — it replays the encoded
+// draw list the frame carries into a 2D context. So every host without a device — no wasm-bindgen
+// bindings at all, no `navigator.gpu` behind them, a blocklisted adapter, a device refusal — must
+// reach `created` and hand back a usable surface with `presentsOnGpu === false`. Before the optional
+// device landed, each of these threw "Flow GPU adapter unavailable", the attach rejected, and the
+// node-graph window stayed blank forever.
 for (const [law, deviceless] of [
-  ["absent-gpu-namespace", undefined],
-  ["absent-adapter", { requestAdapter: async () => null }],
-  ["absent-device", { requestAdapter: async () => ({ requestDevice: async () => null }) }],
-  ["throwing-adapter", { requestAdapter: async () => { throw new Error("blocklisted"); } }],
+  ["absent-bindings", undefined],
+  ["absent-export", {}],
+  ["refused-device", { flowAttachSurfaceCanvas: async () => false }],
+  ["throwing-export", { flowAttachSurfaceCanvas: async () => { throw new Error("blocklisted"); } }],
 ]) {
-  const devicelessAttach = attachFlowSurface(features, {}, { width: 966, height: 836, dpr: 1, gpu: deviceless });
+  const devicelessAttach = attachFlowSurface(features, {}, { width: 966, height: 836, dpr: 1, bindings: deviceless, gpu: presentingGpu });
   const devicelessSurface = await devicelessAttach.result;
   equal(devicelessSurface.surfaceGeneration, 1, `deviceless-surface-generation:${law}`);
-  equal(devicelessSurface.device, null, `deviceless-surface-device:${law}`);
+  equal(devicelessSurface.presentsOnGpu, false, `deviceless-surface-presentation:${law}`);
   await features.surface.surfaceStatus({ surface: devicelessSurface.surface, surfaceGeneration: devicelessSurface.surfaceGeneration, status: "cancelled" }).result;
 }
-console.log("[DEBUG] Flow surface attachment reached created on four deviceless hosts without a WebGPU adapter");
+console.log("[DEBUG] Flow surface attachment reached created on four hosts that could not bind a WebGPU presenter");
 
-let releaseAdapter;
-const interruptedAttach = attachFlowSurface(features, {}, { width: 1, height: 1, gpu: { requestAdapter: () => new Promise((resolve) => { releaseAdapter = resolve; }) } });
-while (!releaseAdapter) await new Promise((resolve) => setTimeout(resolve, 0));
+// 🛡️ A host with no `navigator.gpu` must never reach the guest's wgpu bring-up: a panic there is an
+// unrecoverable trap that takes the whole session with it.
+let attemptedWithoutNavigatorGpu = false;
+const guarded = attachFlowSurface(features, {}, { width: 966, height: 836, dpr: 1, gpu: undefined, bindings: { flowAttachSurfaceCanvas: async () => { attemptedWithoutNavigatorGpu = true; return true; } } });
+const guardedSurface = await guarded.result;
+equal(attemptedWithoutNavigatorGpu, false, "absent-navigator-gpu-never-reaches-the-guest-bring-up");
+equal(guardedSurface.presentsOnGpu, false, "absent-navigator-gpu-presents-in-2d");
+await features.surface.surfaceStatus({ surface: guardedSurface.surface, surfaceGeneration: guardedSurface.surfaceGeneration, status: "cancelled" }).result;
+
+// 🧭️ …and the PRESENCE of `navigator.gpu` proves nothing. A headless browser exposes the object and
+// hands out no adapter; `wgpu`'s canvas bring-up binds a `webgpu` context to the element BEFORE it
+// discovers that, and a canvas admits exactly one context kind for its whole life — so an adapterless
+// host that still reaches the guest ends up with a canvas neither path can paint on. Measured live on
+// 6018: `No available adapters` → `present=2d` → `getContext("2d")` null → 0 ink pixels, forever.
+for (const [law, gpu] of [
+  ["no-adapter", { requestAdapter: async () => null }],
+  ["undefined-adapter", { requestAdapter: async () => undefined }],
+  ["throwing-adapter", { requestAdapter: async () => { throw new Error("gpu process crashed"); } }],
+  ["no-request-adapter", {}],
+]) {
+  let reachedGuestBringUp = false;
+  const adapterless = attachFlowSurface(features, {}, { width: 966, height: 836, dpr: 1, gpu, bindings: { flowAttachSurfaceCanvas: async () => { reachedGuestBringUp = true; return true; } } });
+  const adapterlessSurface = await adapterless.result;
+  equal(reachedGuestBringUp, false, `adapterless-never-hands-the-canvas-to-the-guest:${law}`);
+  equal(adapterlessSurface.presentsOnGpu, false, `adapterless-presents-in-2d:${law}`);
+  await features.surface.surfaceStatus({ surface: adapterlessSurface.surface, surfaceGeneration: adapterlessSurface.surfaceGeneration, status: "cancelled" }).result;
+}
+console.log("[DEBUG] Flow surface attachment kept the canvas 2D-capable on four hosts that expose navigator.gpu and hand out no adapter");
+
+let releaseAttach;
+const interruptedAttach = attachFlowSurface(features, {}, { width: 1, height: 1, gpu: presentingGpu, bindings: { flowAttachSurfaceCanvas: () => new Promise((resolve) => { releaseAttach = resolve; }) } });
+while (!releaseAttach) await new Promise((resolve) => setTimeout(resolve, 0));
 equal(interruptedAttach.cancel(), true, "cancel-gpu-create");
-releaseAdapter({ requestDevice: async () => ({ lost: new Promise(() => {}) }) });
+releaseAttach(true);
 let attachCancelled = false;
 try { await interruptedAttach.result; } catch { attachCancelled = true; }
 equal(attachCancelled, true, "cancelled-gpu-terminal");

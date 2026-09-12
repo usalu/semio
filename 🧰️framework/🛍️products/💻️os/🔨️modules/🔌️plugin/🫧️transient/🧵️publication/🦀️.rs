@@ -255,7 +255,11 @@ where
             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         let retirement = self.retirement.as_mut().expect("checked transient retirement remains present");
-        match retirement.close_step(maximum_items.min(1), maximum_bytes).map_err(Fault::from)? {
+        // 🧹️ The retained transient's own retirement gets the caller's WHOLE grant: the close ladder
+        // prices a step in PAGES, and clamping it to one item here is what made a mesh-scale transient
+        // answer `Pending { 0, 0 }` — eight of those in a row and the structural accountant kills the
+        // close with `plugin.internal.zero-progress` (ticket 26/09/09).
+        match retirement.close_step(maximum_items, maximum_bytes).map_err(Fault::from)? {
             store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
             store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "transient read remains live" }),
             store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {

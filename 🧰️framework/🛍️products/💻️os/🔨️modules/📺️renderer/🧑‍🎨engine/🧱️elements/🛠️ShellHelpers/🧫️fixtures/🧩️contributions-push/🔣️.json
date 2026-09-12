@@ -1,0 +1,45 @@
+{
+  "format": "semio.shell.contributions-push",
+  "version": 1,
+  "note": "The contributions push is an owned per-instance unit, not a projection of one refreshUi. Every scenario below drives refreshes that supersede one another while the guest document read is still pending; the push must still land exactly once per (instanceId, content).",
+  "session": { "pluginId": "procedural", "instanceId": 7 },
+  "scopeKinds": ["brep.curve.polygon", "brep.solid.extrude", "math.vector"],
+  "pack": "[{\"pluginId\":\"flow-extension-brep\"},{\"pluginId\":\"flow-extension-math\"}]",
+  "scenarios": [
+    {
+      "id": "superseded-mid-document-read",
+      "note": "The live defect: a guest re-arming a faulting flowEvalTick settles into a new refresh every few seconds, so every refresh that started a push was superseded while the document read was still in flight.",
+      "refreshes": 4,
+      "supersedeEveryRefresh": true,
+      "documentReadResolves": "after-all-refreshes",
+      "expected": { "documentReads": 1, "pushes": 1, "installedKeys": ["7::PACK"], "outcomes": ["installed", "installed", "installed", "installed"] }
+    },
+    {
+      "id": "repeat-refresh-installs-once",
+      "note": "Once installed, later refreshes must not re-push the same content into the same instance.",
+      "refreshes": 3,
+      "supersedeEveryRefresh": false,
+      "documentReadResolves": "immediately",
+      "expected": { "documentReads": 1, "pushes": 1, "installedKeys": ["7::PACK"], "outcomes": ["installed", "unchanged", "unchanged"] }
+    },
+    {
+      "id": "session-switch-retires-the-resolving-unit",
+      "note": "A push whose session went away must be abandoned, never installed into an instance nobody is looking at. The next session resolves its own scope and installs under its own key.",
+      "refreshes": 1,
+      "supersedeEveryRefresh": false,
+      "documentReadResolves": "after-retire",
+      "retireInstanceId": 7,
+      "nextInstanceId": 8,
+      "expected": { "documentReads": 2, "pushes": 1, "installedKeys": ["8::PACK"], "outcomes": ["retired", "installed"] }
+    },
+    {
+      "id": "unresolved-scope-pushes-nothing",
+      "note": "A genesis document with no example fallback resolves no operator kinds; the unit reports the reason instead of pushing an unscoped closure.",
+      "refreshes": 2,
+      "supersedeEveryRefresh": true,
+      "documentReadResolves": "unresolved",
+      "unresolvedReason": "no-document-pack",
+      "expected": { "documentReads": 1, "pushes": 0, "installedKeys": [], "outcomes": ["unresolved", "unresolved"] }
+    }
+  ]
+}

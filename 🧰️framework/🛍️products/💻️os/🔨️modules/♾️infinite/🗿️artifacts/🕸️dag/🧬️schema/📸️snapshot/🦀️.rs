@@ -447,11 +447,17 @@ impl DagNodeSpec {
     }
 }
 
-/// 🏷️ Node label content shown at a draw LOD tier.
+/// 🏷️ Whether a draw LOD tier shows a node caption at all.
+///
+/// A tier decides WHETHER a node is captioned, never WHAT the caption says: the caption is always
+/// the node's name, clipped to the node's own measured width by
+/// `canvas::text::ellipsize_by_measure`. The tier used to pick the content too — `Detail` (a tier
+/// you reach by zooming IN past `Normal`) served `DagNodeSpec::abbreviation`, so a graph whose
+/// operator records abbreviate to a single letter replaced every title with one glyph the moment
+/// the camera crossed the band floor, and got the full names back on zooming further in to `Micro`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DagNodeLabel {
     None,
-    Abbreviation,
     Name,
 }
 
@@ -508,8 +514,7 @@ impl DagDrawLod {
     pub fn node_label(self) -> DagNodeLabel {
         match self {
             Self::Minimap | Self::Overview => DagNodeLabel::None,
-            Self::Compact | Self::Detail => DagNodeLabel::Abbreviation,
-            Self::Normal | Self::Micro => DagNodeLabel::Name,
+            Self::Compact | Self::Normal | Self::Detail | Self::Micro => DagNodeLabel::Name,
         }
     }
 

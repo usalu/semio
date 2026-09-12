@@ -19,6 +19,22 @@
     ],
     "nativeTestSources": [
       "nativeAssets"
+    ],
+    "frameWorkerSources": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏱️turn-budget/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫀️boot-liveness/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗄️wasm-module-cache/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📇️interactive-job-registry/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🥽️mesh/**/*",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*",
+      "{projectRoot}/🟦️typescript/🐚️plugin-bridge.ts",
+      "{workspaceRoot}/bunfig.toml",
+      "{workspaceRoot}/tsconfig.json",
+      { "runtime": "bun --version" },
+      { "runtime": "node -p \"process.platform.concat(process.arch)\"" }
     ]
   },
   "targets": {
@@ -142,6 +158,13 @@
     },
     "generate-frame-worker": {
       "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "frameWorkerSources"
+      ],
+      "outputs": [
+        "{projectRoot}/🟦️typescript/🎞️frame-worker.js"
+      ],
       "options": {
         "command": "bun ./📜️script.ts generate-frame-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"

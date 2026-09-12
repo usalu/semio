@@ -1,6 +1,7 @@
-import { existsSync, lstatSync, mkdirSync, readFileSync, renameSync, rmSync, watch, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export const ACTIVATION_RECEIPT_FILE = "🔣️receipt.json";
 export type ActivationArtifact = { readonly pluginId: string; readonly artifactSha256: string };
@@ -47,6 +48,27 @@ export function developmentRuntimeRoot(packageRoot: string, variant: string, pro
   return join(packageRoot, "dist", "runtime", profile, variant);
 }
 
+/** 🔌️ THE staging root for a profile — the ONE directory every producer writes and every consumer
+ * reads: `@semio-tech/framework-plugin-web:support-<profile>`, every crate's `materialize-<profile>`
+ * and `@semio-tech/framework-os-dev:plugin` write it; the react Vite `/🔌️plugin-modules` mount, the
+ * wgpu trunk bundle's `copy-dir`, the wgpu native runner's `SEMIO_PLUGIN_MODULES`, `prepare`/`activate`
+ * and the production distribution copy read it. Derived from this module's own location — never from a
+ * workspace walk — so Vite's config bundler resolves it without pulling repository discovery in, and so
+ * no caller can pick a second root. Two roots is what this function replaces: a `🧑‍💻dev/🔌️plugin-modules`
+ * written only by the catalog builder while `materialize-*` wrote here drifted silently for two days
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-playground-boot-2026-09-12.md` §2.1). */
+export function pluginModulesRoot(profile: "dev" | "release"): string {
+  return pluginModulesRootIn(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../.."), profile);
+}
+
+/** 🗂️ The same staging root inside an EXPLICIT workspace — the one form a sandboxed consumer (the
+ * production distribution copy, driven against a throwaway workspace in its own tests) may use. The
+ * repository-relative path lives here once so no caller ever spells a second one. */
+export function pluginModulesRootIn(workspace: string, profile: "dev" | "release"): string {
+  if (profile !== "dev" && profile !== "release") throw new Error("Select a plugin staging profile: dev or release");
+  return join(workspace, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "📦️packages", "🟦️typescript", "dist", profile, "🔌️plugin-modules");
+}
+
 /** 📬️ Atomically announces completed preparation without rewriting a warm receipt. */
 export function publishActivationReceipt(directory: string, receipt: ActivationReceipt): boolean {
   const text = JSON.stringify(parseActivationReceipt(receipt)) + "\n", destination = join(directory, ACTIVATION_RECEIPT_FILE);
@@ -82,3 +104,106 @@ export function observeActivationReceipts(directory: string, listener: (receipt:
   try { refresh(); } catch (error) { close(); throw error; }
   return { snapshot: () => current, close };
 }
+
+//#region 🔖️StagedModuleFreshness
+/** 🗑️ Directory names inside a component's owner tree that hold BUILD OUTPUT, never the sources whose
+ * mtime decides whether the staged module is behind. Walking them would make every crate permanently
+ * "stale" the moment its own `dist/component-dev/*.wasm` lands. */
+export const UNWATCHED_COMPONENT_SOURCE_DIRECTORIES: readonly string[] = ["dist", "target", "node_modules", "pkg", ".git"];
+
+/** 🔒️ Bound on one component's source walk so a serve-start freshness pass over ~20 crates stays a
+ * few milliseconds and can never be turned into an unbounded repository scan by a stray symlink. */
+export const COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES = 20_000;
+
+export type StagedModuleFacts = Readonly<{
+  pluginId: string;
+  role: "plugin" | "extension";
+  /** 🧾️ `true` for a lane governed by an activation receipt (the react dev server), `false` for one that
+   * reads the staging root directly (the wgpu trunk bundle and native runner) — the receipt-derived
+   * verdicts are simply not askable there, and inventing an empty receipt would report every extension
+   * as unpublished. */
+  activationTracked: boolean;
+  stagedAtMs?: number;
+  newestSourceMs?: number;
+  newestSourcePath?: string;
+  receiptArtifactSha256?: string;
+  installedPackageHash?: string;
+}>;
+
+export type StagedModuleVerdict = Readonly<{
+  pluginId: string;
+  kind: "fresh" | "unstaged" | "unactivated" | "unpublished" | "source-newer";
+  detail?: string;
+}>;
+
+/** 🕰️ Formats an epoch millisecond for a `[stale]` line — UTC ISO so two machines print the same text. */
+function stagedInstant(value: number): string {
+  return new Date(Math.round(value)).toISOString();
+}
+
+/** 🔎️ Decides one staged component's freshness from already-collected facts — pure, so the serve-start
+ * pass and the activation-receipt watcher share ONE rule and a fixture can drive every outcome.
+ * Precedence is most-fundamental-first: nothing staged beats no receipt row, which beats an extension
+ * that was materialized but never published, which beats sources newer than the staged bytes. */
+export function stagedModuleVerdict(facts: StagedModuleFacts): StagedModuleVerdict {
+  if (facts.stagedAtMs === undefined) return { pluginId: facts.pluginId, kind: "unstaged", detail: "no staged module directory" };
+  if (facts.activationTracked) {
+    if (facts.receiptArtifactSha256 === undefined) return { pluginId: facts.pluginId, kind: "unactivated", detail: `staged ${stagedInstant(facts.stagedAtMs)} but absent from the activation receipt` };
+    if (facts.role === "extension" && facts.installedPackageHash !== facts.receiptArtifactSha256) {
+      return { pluginId: facts.pluginId, kind: "unpublished", detail: `installed ${facts.installedPackageHash ?? "(nothing)"} ≠ activated ${facts.receiptArtifactSha256}` };
+    }
+  }
+  if (facts.newestSourceMs !== undefined && facts.newestSourceMs > facts.stagedAtMs) {
+    return { pluginId: facts.pluginId, kind: "source-newer", detail: `staged ${stagedInstant(facts.stagedAtMs)} < ${facts.newestSourcePath ?? "source"} ${stagedInstant(facts.newestSourceMs)}` };
+  }
+  return { pluginId: facts.pluginId, kind: "fresh" };
+}
+
+/** 📣️ Renders one `[stale]` line per non-fresh component, each ending in the exact command that fixes
+ * it — a served module that is behind its own crate must never be a silent no-op. */
+export function stagedModuleReportLines(verdicts: readonly StagedModuleVerdict[], command: string): readonly string[] {
+  return verdicts.filter((row) => row.kind !== "fresh").map((row) => `[stale] ${row.pluginId}: ${row.kind}${row.detail ? ` — ${row.detail}` : ""} — run: ${command}`);
+}
+
+/** 📂️ One directory's entries, or none when it cannot be read — structurally typed so this module keeps
+ * its node-builtin-only import surface (`⚙️vite.config.ts` bundles it on every dev-server boot). */
+function readableDirectoryEntries(directory: string): readonly { readonly name: string; isSymbolicLink(): boolean; isDirectory(): boolean; isFile(): boolean }[] {
+  try { return readdirSync(directory, { withFileTypes: true }); } catch { return []; }
+}
+
+/** 🕰️ Newest regular-file mtime under one component's source tree, output directories excluded and the
+ * walk bounded. `undefined` when the tree is absent or holds no readable source file. */
+export function newestComponentSourceMtime(sourceRoot: string, maximumEntries: number = COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES): { readonly mtimeMs: number; readonly path: string } | undefined {
+  if (!existsSync(sourceRoot)) return undefined;
+  let newest: { mtimeMs: number; path: string } | undefined, visited = 0;
+  const pending = [sourceRoot];
+  while (pending.length > 0) {
+    const directory = pending.pop()!;
+    for (const entry of readableDirectoryEntries(directory)) {
+      if (++visited > maximumEntries) return newest;
+      if (entry.isSymbolicLink()) continue;
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        if (!UNWATCHED_COMPONENT_SOURCE_DIRECTORIES.includes(entry.name)) pending.push(path);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      let mtimeMs: number;
+      try { mtimeMs = statSync(path).mtimeMs; } catch { continue; }
+      if (!newest || mtimeMs > newest.mtimeMs) newest = { mtimeMs, path };
+    }
+  }
+  return newest;
+}
+
+/** 🕰️ Newest regular-file mtime among one staged module directory's own files. */
+export function stagedModuleMtime(moduleDirectory: string): number | undefined {
+  if (!existsSync(moduleDirectory)) return undefined;
+  let newest: number | undefined;
+  for (const entry of readableDirectoryEntries(moduleDirectory)) {
+    if (!entry.isFile() || entry.name === ".nx-artifact.json") continue;
+    try { const { mtimeMs } = statSync(join(moduleDirectory, entry.name)); if (newest === undefined || mtimeMs > newest) newest = mtimeMs; } catch { continue; }
+  }
+  return newest;
+}
+//#endregion 🔖️StagedModuleFreshness

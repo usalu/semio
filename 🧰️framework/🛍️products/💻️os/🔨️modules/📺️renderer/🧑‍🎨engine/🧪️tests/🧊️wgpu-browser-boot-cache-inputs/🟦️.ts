@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, existsSync, statSync, utimesSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join, resolve } from "node:path";
+import { join, resolve, sep } from "node:path";
 import { spawnSync } from "node:child_process";
 
 /** 🧊️ Verifies runtime selection and native compiler independence from another playground's mutable session. */
@@ -9,15 +9,21 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
   const require = createRequire(import.meta.url), ts = require("typescript"), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️wgpu-browser-boot-cache-inputs/🔣️.json"), "utf8"));
   const entry = resolve(import.meta.dir, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), text = readFileSync(entry, "utf8"), source = ts.createSourceFile(entry, text, ts.ScriptTarget.Latest, true);
   const packageRoot = resolve(entry, "../../📦️packages/🦀️rust"), project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
-  assert.equal(project.targets["check-browser-worker"].cache, false, "Generated-file freshness checks must execute against the current output");
+  assert.equal(project.targets["check-browser-worker"].cache, true, "Generated-file freshness checks must stay cached — a repeat check without a source change is otherwise a wasted 🧵️Trunk-less bundle rebuild every single run");
+  const { cacheInternals } = await import(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"));
+  const bootOutput = resolve(packageRoot, "🟦️typescript/🚀️boot.js"), frameWorkerOutput = resolve(packageRoot, "🟦️typescript/🎞️frame-worker.js");
+  const projectRoot = packageRoot.slice(workspace.length + 1).split(sep).join("/");
+  const couplingInputs = (name: string) => cacheInternals.generatorOutputCouplingInputs(name, project.targets[name], project.targets, projectRoot, workspace);
+  const hashesOutput = (inputs: unknown[], path: string) => inputs.some((input: any) => typeof input === "object" && typeof input?.runtime === "string" && input.runtime.includes(JSON.stringify(path)));
+  assert.ok(hashesOutput(couplingInputs("check-browser-worker"), bootOutput), "check-browser-worker must hash generate-browser-boot's declared output directly — `default` excludes every declared output project-wide, so caching this target soundly requires an explicit digest of the current bytes, not a rebuild-and-compare that a stale cache hit would skip");
+  assert.ok(hashesOutput(couplingInputs("check-browser-worker"), frameWorkerOutput), "check-browser-worker must also hash generate-frame-worker's declared output directly, for the same reason");
+  assert.ok(hashesOutput(couplingInputs("check-frame-worker"), frameWorkerOutput), "check-frame-worker must hash generate-frame-worker's declared output directly");
   const generator = project.targets[fixture.generator.target]; assert.ok(generator, "Browser boot needs one Nx producer");
   assert.deepEqual(generator.inputs.filter((input: unknown) => typeof input === "string" && !input.startsWith("{")), fixture.generator.inputs);
   assert.deepEqual(generator.inputs.filter((input: any) => input.dependentTasksOutputFiles), [{ dependentTasksOutputFiles: fixture.generator.dependencyOutput }]);
   assert.equal(generator.cache, true); assert.deepEqual(generator.outputs, [fixture.generator.output]);
   assert.deepEqual(generator.dependsOn.toSorted(), fixture.generator.prerequisites.toSorted());
   for (const target of fixture.generator.consumers) assert.ok(project.targets[target].dependsOn.includes(fixture.generator.target), target);
-  const library = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-  const { cacheInternals } = await import(join(library, "🟨️.mjs"));
   const sourceInputs = cacheInternals.declaredSourceInputs(project, workspace).browserBootSources;
   const sourceFiles = sourceInputs.filter((input: unknown) => typeof input === "string").map((input: string) => input.replace("{workspaceRoot}/", ""));
   assert.ok(sourceFiles.includes(entry.slice(workspace.length + 1)));

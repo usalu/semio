@@ -52,8 +52,8 @@ import {
   SURFACE_FAULT_CODES,
   type CommandAddress,
   type CommandInvocation,
-  buildContributionsJson,
   exampleArtifactSources,
+  examplesForApp,
   resolveDocumentOperatorKinds,
   scopeContributionsJson,
   type ContextMenuItemSpec,
@@ -187,6 +187,7 @@ import {
  * own `encode`/`decodeMutationEnvelopesPack` helpers above. */
 import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework-replication";
 import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
+import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, quiesceSessionWorkV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1 } from "./🔀️surface-switch/🟦️.ts";
 
 
 function scopeRuntimeKey(message: { readonly documentId: string; readonly scope?: DocumentScope }): string | null {
@@ -253,6 +254,7 @@ import {
   ChromeAwareWindowScrollSurface,
   clearUiThemeFromRoot,
   cn,
+  ariaKeyshortcutsText,
   composeControlKeybindings,
   composeTutorialUi,
   ContextMenuController,
@@ -403,7 +405,9 @@ import {
   registerPendingWorldProjection,
   leftoverOverlayCarryingSelectionV1,
   leftoverOverlayCarryingUtilityV1,
+  leftoverWorldArmedWindowOverlayV1,
   leftoverWorldSelectionOverlayV1,
+  leftoverWorldWindowOverlayV1,
   publishLeftoverWorldSelectionV1,
   subscribeLeftoverWorldSelectionV1,
   WindowInstanceIdContext,
@@ -447,6 +451,9 @@ import {
   browserActorWindowConfigDispatchUiScopeV1,
   typedOperationCompletionRefreshV1,
   buildUiRefreshRequest,
+  createUiRefreshCoalescerV1,
+  type UiRefreshCoalescerV1,
+  hostEffectRefreshScopeV1,
   captureCurrentFrameworkLayout,
   captureTutorialUiSnapshot,
   categoryTabIcon,
@@ -463,6 +470,7 @@ import {
   downloadDataUrl,
   downloadMediaExport,
   mediaExportEncodingText,
+  shellSegmentedDownloadSinkFactory,
   filterDefinitionsForRole,
   flattenPanelTabLeaves,
   groupOpenWithEntries,
@@ -474,6 +482,7 @@ import {
   loadPluginModuleResilient,
   makeEffectDispatchOne,
   mergeRecordPreservingIdentity,
+  mergeUiDirtyScopeV1,
   openArtifactWithText,
   OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID,
   OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID,
@@ -483,6 +492,7 @@ import {
   panelTabDefinitionToNode,
   parsePanelState,
   parseShellRoute,
+  pluginAvailabilityRouteV1,
   pluginShouldReceiveContributions,
   pluginShouldEstablishSession,
   AutoCheckinScheduler,
@@ -495,6 +505,7 @@ import {
   createLatestAsyncDispatcher,
   presenceClientIdentity,
   preserveJsonIdentity,
+  programArmedToolRevealV1,
   reconcileToolTabSelection,
   renderStagedArgControl,
   requestFileOpen,
@@ -530,6 +541,8 @@ import {
   spawnedWindowChromeForKind,
   studioPanelFocusingSpawned,
   surfaceRoleChipText,
+  surfaceRoleGroupText,
+  appModeGroupText,
   syncDocumentId,
   syncPillText,
   syncShellLabelLocale,
@@ -547,6 +560,9 @@ import {
   windowEngagementToSpec,
   windowMeasureTreeContainsId,
   windowMeasuresChrome,
+  beginCancellableExtensionRequest,
+  abortExtensionRequestsForActor,
+  isDeclaredSurfaceCancelAction,
   type ActionPaneSlice,
   type PluginInstallOutcome,
   type ResolvedCommand,
@@ -554,6 +570,7 @@ import {
   type TutorialUiBridgeContext,
   type UiRefreshCache,
 } from "../🛠️ShellHelpers/🟦️.tsx";
+import { createContributionsPublisher, type ContributionsOperatorScope, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
@@ -1215,6 +1232,11 @@ function findDialectApp(plugin: LoadedProgramState | undefined, dialect: Artifac
   return plugin?.manifest.apps.find((app) => app.dialect && dialectCoordinate(app.dialect) === dialectCoordinate(dialect) && app.role === role);
 }
 
+/** 👁️✏️ Fixed per-role icons for the navbar role group. Deliberately NOT the target app's own
+ * `iconId`: both surfaces of one artifact normally carry the SAME artifact icon, which would make the
+ * two buttons indistinguishable at a glance. */
+export const SURFACE_ROLE_ICON_IDS: Readonly<Record<AppRole, IconName>> = { editor: "pencil", viewer: "eye" };
+
 export type { DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1 };
 
 /** 🧾️ One retained, request-id-keyed command completion. A receipt lands here BEFORE any accepted
@@ -1663,6 +1685,7 @@ async function runCapturedExtensionEffect(
   extensionId: string,
   capability: string,
   requestJson: string,
+  requesterActorKey: string,
 ): Promise<InvocationResponse> {
   completion.assertActive();
   const { instanceId, req } = completion;
@@ -1673,12 +1696,30 @@ async function runCapturedExtensionEffect(
   let outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array };
   try {
     if (!extensionEntry) throw unavailable("extension.missing");
-    const invoke = (extensionEntry?.handle as { invoke?: (capability: string, request: Uint8Array | string) => Promise<string | Uint8Array> } | undefined)?.invoke;
+    // 📥️ `PluginWasmHandle.invoke` IS the ABI's inbound-request door (`🔌️PluginRuntime`'s own
+    // `invoke` doc): it submits `Event::Request` on the extension's request actor and returns the
+    // `respond` answer. The typed refusal below now only ever names a handle that genuinely has no
+    // door — a test double, or a target that never adapted one — never a loaded extension.
+    const { invoke } = extensionEntry.handle;
     if (typeof invoke !== "function") throw unavailable("extension.invoke-unavailable");
-    const raw = await invoke.call(extensionEntry.handle, capability, requestJson);
+    // 🛑️ The door honours an `AbortSignal` at turn boundaries and `invoke` forwards one, but nothing
+    // ever handed it one, so `cancelPreviewEval` reached the requesting guest's own bookkeeping and
+    // never the request already parked on the extension actor. Registering the controller under the
+    // REQUESTER's actor key is what lets a surface's declared cancel affordance retire it from
+    // outside the per-actor queue those requests are serialized in — a guest-emitted cancel would
+    // queue behind the very call it means to stop (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    const cancellation = beginCancellableExtensionRequest(requesterActorKey);
+    let raw: Uint8Array;
+    try {
+      raw = await invoke.call(extensionEntry.handle, capability, requestJson, { originInstanceId: instanceId, signal: cancellation.signal });
+    } finally {
+      cancellation.finish();
+    }
     completion.assertActive();
-    const outputJson = typeof raw === "string" ? raw : new TextDecoder("utf-8", { fatal: true }).decode(raw);
-    outcome = { ok: encodePackValue(JSON.parse(outputJson)) };
+    // 📦️ The guest answers a capability in the capability's OWN encoding (`evaluate_invoke_json`
+    // produces JSON text); the completion that carries it back is a `pack`, so the one re-encoding
+    // happens here and nowhere else (`📓️extension-result-realloc-2026-09-10.md` §4.5).
+    outcome = { ok: encodePackValue(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw))) };
   } catch (error) {
     completion.assertActive();
     const fault: Fault = error instanceof SemioFaultError ? error.fault : {
@@ -1686,6 +1727,11 @@ async function runCapturedExtensionEffect(
       scope: { pluginId: extensionId, instanceId: String(instanceId) }, retryable: false,
     };
     outcome = { fault: encodePackValue(fault) };
+    // 🩺 The DECODED fault, not just "something faulted": the completion this builds reaches the
+    // requesting guest as opaque bytes, so this line is the only place a boot log can say WHICH
+    // door refused (ticket 26/09/09/PROCEDURAL-3D-END-TO-END — 154 fault bytes that turned out to
+    // be `extension.invoke-unavailable` on every evaluate, for eight boots running).
+    console.warn("[DEBUG] extension invocation refused", JSON.stringify({ extensionId, capability, origin: fault.origin, code: fault.code, message: fault.message }));
   }
   completion.assertActive();
   const response = await completion.complete(outcome);
@@ -1696,7 +1742,7 @@ async function runCapturedExtensionEffect(
 
 /** 🔁️ Captures one requester before evaluation and delivers only to that same activation. */
 export async function runInvokeExtensionEffect(requestingPlugin: LoadedProgramState, extensionEntry: LoadedProgramState | undefined, instanceId: number, extensionId: string, capability: string, requestJson: string, req: bigint): Promise<InvocationResponse> {
-  return runCapturedExtensionEffect(captureExtensionCompletion(requestingPlugin, instanceId, req), extensionEntry, extensionId, capability, requestJson);
+  return runCapturedExtensionEffect(captureExtensionCompletion(requestingPlugin, instanceId, req), extensionEntry, extensionId, capability, requestJson, `${requestingPlugin.handle.pluginId}:${instanceId}`);
 }
 
 /** 📨️ Resolves an extension address and serializes requests belonging to one originating instance.
@@ -1722,7 +1768,8 @@ export async function dispatchInvokeExtensionEffect(
   const extensionEntry = plugins.find((entry) => entry.handle.pluginId === extensionId);
   if (!extensionEntry) console.warn("[DEBUG] invokeExtension unresolved", { extensionId, capability, req, loaded: plugins.map((entry) => entry.handle.pluginId) });
   const completion = captureExtensionCompletion(requestingPlugin, requester.instanceId, req);
-  const response = await serializePerActor(`${requester.pluginId}:${requester.instanceId}`, () => runCapturedExtensionEffect(completion, extensionEntry, extensionId, capability, requestJson));
+  const requesterActorKey = `${requester.pluginId}:${requester.instanceId}`;
+  const response = await serializePerActor(requesterActorKey, () => runCapturedExtensionEffect(completion, extensionEntry, extensionId, capability, requestJson, requesterActorKey));
   completion.assertActive();
   await publish(requestingPlugin, response);
 }
@@ -1901,7 +1948,7 @@ function FrameworkOsShellInner({
   const leftoverInspectionSelectedKeyRef = useRef("");
   const leftoverInspectionIdsRef = useRef<readonly string[]>([]);
   const leftoverReplaceRefreshBodiesV1 = (): boolean => {
-    const leftover = leftoverWorldSelectionOverlayV1();
+    const leftover = leftoverWorldArmedWindowOverlayV1();
     const hoverVortex = leftover?.hoveredId && (leftover.hoveredDomain === "vortex" || leftover.hoveredId.includes(":")) ? leftover.hoveredId : null;
     if (leftoverBrushPreviewWindowHash(leftover?.activeUtility, hoverVortex, "cached") === undefined) return leftoverBrushTickSettledRef.current;
     const leftoverIds = leftoverInspectionIdsRef.current.length > 0 ? leftoverInspectionIdsRef.current : leftover?.ids ?? [];
@@ -1925,7 +1972,11 @@ function FrameworkOsShellInner({
   const leftoverBrushRefreshPendingRef = useRef(false);
   const leftoverBrushPreviewEpochRef = useRef(0);
   const [leftoverBrushPreviewEpoch, setLeftoverBrushPreviewEpoch] = useState(0);
-  const applyLeftoverInteractionView = useCallback((output: unknown, actionId?: string) => {
+  // 🪟️ `windowId` is the pane the action that produced `output` addressed. A leftover carries per-window
+  // state (hover, the armed utility, its brush preview), so it is published under THAT pane and never
+  // over every pane's record (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B39); a windowless action
+  // publishes the document's shared fields only and leaves every pane's own fields untouched.
+  const applyLeftoverInteractionView = useCallback((output: unknown, actionId?: string, windowId?: string) => {
     const published = interactionViewFromLeftoverOutput(output);
     const armLeftoverBrushPreview = (utility: string | null | undefined, hoverVortex: string | null, previewJson?: string | null) => {
       if (leftoverBrushPreviewRefreshReady(actionId, utility, hoverVortex, previewJson)) leftoverBrushTickSettledRef.current = true;
@@ -1939,12 +1990,12 @@ function FrameworkOsShellInner({
       }
     };
     if (!published) {
-      const leftover = leftoverWorldSelectionOverlayV1();
+      const leftover = windowId ? leftoverWorldWindowOverlayV1(windowId) : leftoverWorldArmedWindowOverlayV1();
       const hoverVortex = leftover?.hoveredId && (leftover.hoveredDomain === "vortex" || leftover.hoveredId.includes(":")) ? leftover.hoveredId : null;
       armLeftoverBrushPreview(leftover?.activeUtility, hoverVortex, leftover?.brushPreviewJson);
       return;
     }
-    const priorLeftover = leftoverWorldSelectionOverlayV1();
+    const priorLeftover = windowId ? leftoverWorldWindowOverlayV1(windowId) : leftoverWorldSelectionOverlayV1();
     const overlay = leftoverOverlayCarryingSelectionV1(
       leftoverOverlayCarryingUtilityV1(
         { ids: published.selectedIds, hoveredId: published.hoverTarget?.id ?? null, hoveredDomain: published.hoverTarget?.domain ?? null, gumballActive: published.gumballActive, gumballAnchorId: published.gumballAnchorId, ...(published.activeUtility !== undefined ? { activeUtility: published.activeUtility } : {}), ...(published.brushPreviewJson ? { brushPreviewJson: published.brushPreviewJson } : {}) },
@@ -1952,7 +2003,7 @@ function FrameworkOsShellInner({
       ),
       priorLeftover,
     );
-    publishLeftoverWorldSelectionV1(overlay);
+    publishLeftoverWorldSelectionV1(overlay, windowId ? { kind: "window", windowId } : { kind: "document" });
     dispatch({ type: "INTERACTION_STATE_OBSERVED", state: leftoverInteractionStateV1({ ...published, selectedIds: overlay.ids }) });
     leftoverInspectionHasSelectionRef.current = overlay.ids.length > 0;
     const selectedKey = overlay.ids.join("\0");
@@ -2075,8 +2126,6 @@ function FrameworkOsShellInner({
   const importSpaceInputRef = useRef<HTMLInputElement>(null);
   const refreshGenerationRef = useRef(0);
   const replaceBodiesGenerationRef = useRef(0);
-  const contributionsJsonRef = useRef<string | null>(null);
-  const documentOperatorKindsRef = useRef<readonly string[] | null>(null);
   const clipboardFragmentRef = useRef<unknown>(undefined);
   const appRegistrationsJsonRef = useRef<string | null>(null);
   const spawnedRefreshGenerationRef = useRef(0);
@@ -2143,6 +2192,26 @@ function FrameworkOsShellInner({
     });
   }, []);
   //#endregion 🏁️OperationSettle
+  //#region 🔀️SurfaceSwitch
+  /** ⏳️ Guest-bound work outstanding per `(pluginId, instanceId)` — every `handleAction` round trip and
+   * every brokered `invokeExtension` registers here for its whole lifetime, and `switchToPluginApp`'s
+   * `quiesce` port reads it. This is the ONE fact a transactional switch needs and the shell did not
+   * have: `operationSettlersRef` only knows about operations somebody is awaiting, and nothing at all
+   * tracked an extension round trip. */
+  const sessionWorkRef = useRef(createSessionWorkLedgerV1());
+  /** 🪦️ Instances a switch has sealed. Read by every path that would otherwise address a retired
+   * instance, so a late action/effect resolves to ONE {@link sealedInstanceDropTextV1} line instead of
+   * `no actor for instance N` plus a stack. */
+  const sealedInstancesRef = useRef(createSealedInstanceLedgerV1());
+  const sessionSwitchGateRef = useRef(createSessionAppSwitchGateV1<AppDefinition, ViewModel>());
+  const [surfaceSwitchBusy, setSurfaceSwitchBusy] = useState(false);
+  /** 🔇️ `true` when this session is sealed — the drop is logged once per call site, never thrown. */
+  const dropForSealedInstance = useCallback((target: { readonly pluginId: string; readonly instanceId: number }, what: string, detail?: string): boolean => {
+    if (!sealedInstancesRef.current.sealed(target.pluginId, target.instanceId)) return false;
+    console.warn(sealedInstanceDropTextV1(sealedInstanceDropV1(target.pluginId, target.instanceId, what, detail)));
+    return true;
+  }, []);
+  //#endregion 🔀️SurfaceSwitch
   const setWindowTitle = useCallback((windowId: string, title: string) => {
     dispatch({ type: "SET_WINDOW_TITLE", windowId, title });
   }, []);
@@ -2560,6 +2629,17 @@ function FrameworkOsShellInner({
    * `handle.dispose()` (`ShardClient.dispose` per activated actor), so this map is unread bookkeeping
    * kept for a future consumer rather than removed mid-packet. */
   const pluginModuleUrlByIdRef = useRef<Map<string, string>>(new Map());
+  /** 🔁️ The `rebuiltAt` each currently-loaded plugin's artifact was acquired at, so the `PluginSource`
+   * pump can tell a genuine rebuild from a replayed availability snapshot
+   * ({@link pluginAvailabilityRouteV1}). Absent means "acquired unbusted", i.e. the first load, which
+   * names no build. */
+  const pluginArtifactRebuiltAtRef = useRef<Map<string, number>>(new Map());
+  /** 🔁️ Records what an acquisition was built from, forgetting it again when the acquisition named no
+   * build — so the map never claims a build the loaded artifact does not have. */
+  const recordPluginArtifactRebuiltAt = useCallback((pluginId: string, rebuiltAt: number | undefined) => {
+    if (rebuiltAt === undefined) pluginArtifactRebuiltAtRef.current.delete(pluginId);
+    else pluginArtifactRebuiltAtRef.current.set(pluginId, rebuiltAt);
+  }, []);
   /** 🔌️ Per-pluginId mutual exclusion across `installPlugin`/`reloadPlugin`/`uninstallPlugin` — the
    * boot effect and the `PluginSource` subscription effect can both request the same pluginId around
    * mount (e.g. the host plugin already appears in the connect-time `snapshot`), and without this guard
@@ -3315,7 +3395,19 @@ function FrameworkOsShellInner({
 
   /** 🔌️ Recreates the primary session instance for `handle` — the exact `hostConfig`/non-studio
    * app-resolution logic the boot effect used to run once inline, now shared with `reloadPlugin` so a
-   * hot-swap of the session-owning plugin re-establishes the session the same way boot does. */
+   * hot-swap of the session-owning plugin re-establishes the session the same way boot does.
+   *
+   * 🗣️ Locale and terminology are read through their refs, and are deliberately NOT dependencies. They
+   * only label the layout SEED, i.e. they matter at the instant a session is established — which is
+   * exactly what a ref answers — while an already-established session's baked-in titles are kept in the
+   * current language by the retitle effect below (`syncShellLabelLocale`'s neighbour). Depending on them
+   * reactively made this callback's identity change on every language switch, which propagated through
+   * `installPlugin`/`reloadPlugin` into the `PluginSource` subscription effect's dep array; that effect's
+   * re-run opens a FRESH `EventSource`, whose connect-time `snapshot` replays every already-built plugin
+   * as a hot-swap, and a hot-swap of the session-owning plugin destroys the live instance —
+   * `actor-activation.revoked` followed by `no channel for instance N` for everything still addressed to
+   * it (ticket 26/09/02 wave B38 §1.7, fixed in wave B40). A UI-language change is a view-context
+   * update; it must never reach the plugin install graph. */
   const establishPrimarySession = useCallback(
     async (handle: PluginWasmHandle) => {
       const manifest = handle.manifest;
@@ -3330,7 +3422,7 @@ function FrameworkOsShellInner({
         const viewState: ViewModel = { activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id, panelJson: panelJsonFromState(panelState) };
         // 🪟️ Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
         // boot `setActiveExample` races the session-switch refresh and wipes pane bodies.
-        const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, withLocalizedWindowKindLabels(sApp.windowKinds), EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
+        const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, withLocalizedWindowKindLabels(sApp.windowKinds), EMPTY_APP_LABELS_OVERLAY, uiTerminologyRef.current, uiLocaleRef.current);
         extraWindowInstancesRef.current = seeded.extraInstances;
         extraWindowCounterRef.current = seeded.extraInstances.length;
         dispatch({ type: "SET_SESSION", value: { pluginId: handle.pluginId, instanceId, app: sApp, viewState } });
@@ -3340,25 +3432,19 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_ERROR", value: null });
         return;
       }
-      const primaryApp = appId
-        ? (() => {
-            const found = manifest.apps.find((app) => app.id === appId);
-            if (!found) {
-              // 🔐️ A pinned app belongs to the selected primary aggregate, never a racing dependency.
-              throw new Error(`primary plugin ${handle.pluginId} does not declare pinned app ${appId}`);
-            }
-            return found;
-          })()
-        : (() => {
-            const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(PLUGIN_CATALOG, pluginFilter) : undefined;
-            // 👁️✏️ An unpinned `appId` still prefers the boot-time role (contract freeze §5) — the
-            // role of an OPEN session always comes from `session.app.role`, never `appRole` itself;
-            // this only breaks a tie among apps the manifest already offers for the default dialect.
-            return (defaultAppId ? manifest.apps.find((app) => app.id === defaultAppId) : undefined) ?? manifest.apps.find((app) => app.role === appRole) ?? manifest.apps[0];
-          })();
+      // 👁️✏️ Boot-time role (contract freeze §5) resolved against the app-id axis by
+      // `resolveBootPrimaryAppV1` — the role of an OPEN session always comes from `session.app.role`,
+      // never `appRole` itself. `appId`/`defaultAppId` name the artifact surface; `appRole` picks
+      // which of that dialect's surfaces opens.
+      const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(PLUGIN_CATALOG, pluginFilter) : undefined;
+      const primaryApp = resolveBootPrimaryAppV1(manifest.apps, appId, defaultAppId, appRole);
+      if (appId !== undefined && primaryApp === undefined) {
+        // 🔐️ A pinned app belongs to the selected primary aggregate, never a racing dependency.
+        throw new Error(`primary plugin ${handle.pluginId} does not declare pinned app ${appId}`);
+      }
       if (!primaryApp) return;
       const instanceId = await handle.createApp(primaryApp.id);
-      const seeded = applyFrameworkLayoutSeed(primaryApp.defaultLayout, withLocalizedWindowKindLabels(primaryApp.windowKinds), EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
+      const seeded = applyFrameworkLayoutSeed(primaryApp.defaultLayout, withLocalizedWindowKindLabels(primaryApp.windowKinds), EMPTY_APP_LABELS_OVERLAY, uiTerminologyRef.current, uiLocaleRef.current);
       extraWindowInstancesRef.current = seeded.extraInstances;
       extraWindowCounterRef.current = seeded.extraInstances.length;
       dispatch({
@@ -3370,7 +3456,7 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
       dispatch({ type: "SET_ERROR", value: null });
     },
-    [hostConfig, appId, appRole, pluginFilter, uiTerminology, uiLocale],
+    [hostConfig, appId, appRole, pluginFilter],
   );
 
   /** 🚑️ ONE watchdog kill must not be a fatal boot. Losing the shard that was running the primary
@@ -3419,6 +3505,7 @@ function FrameworkOsShellInner({
           return "failed";
         }
         pluginModuleUrlByIdRef.current.set(pluginId, moduleUrl);
+        recordPluginArtifactRebuiltAt(pluginId, rebuiltAt);
         dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle, manifest: handle.manifest } });
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
         dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "loaded" });
@@ -3445,7 +3532,7 @@ function FrameworkOsShellInner({
         pluginOpInFlightRef.current.delete(pluginId);
       }
     },
-    [registry, pluginSource, primaryPluginId, establishPrimaryWithShardRetry, appId],
+    [registry, pluginSource, primaryPluginId, establishPrimaryWithShardRetry, appId, recordPluginArtifactRebuiltAt],
   );
 
   /** 🔌️ Hot-swaps an already-loaded plugin to a newly built module — mirrors the os-core kernel's
@@ -3529,6 +3616,7 @@ function FrameworkOsShellInner({
         }
 
         pluginModuleUrlByIdRef.current.set(pluginId, moduleUrl);
+        recordPluginArtifactRebuiltAt(pluginId, rebuiltAt);
         dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle: newHandle, manifest: newHandle.manifest } });
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
         dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: ownsSession ? "running" : "loaded" });
@@ -3561,7 +3649,7 @@ function FrameworkOsShellInner({
         pluginOpInFlightRef.current.delete(pluginId);
       }
     },
-    [installPlugin, establishPrimarySession, hostMode, pluginSource, retireDirectoryHomeOwner],
+    [installPlugin, establishPrimarySession, hostMode, pluginSource, retireDirectoryHomeOwner, recordPluginArtifactRebuiltAt],
   );
 
   /** 🔌️ Removes an already-loaded plugin: refuses the host/primary plugin and whichever plugin owns the
@@ -3610,6 +3698,7 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "available" });
         await current.handle.dispose();
         pluginModuleUrlByIdRef.current.delete(pluginId);
+        pluginArtifactRebuiltAtRef.current.delete(pluginId);
       } finally {
         pluginOpInFlightRef.current.delete(pluginId);
       }
@@ -3823,6 +3912,7 @@ function FrameworkOsShellInner({
           dispatch({ type: "SET_PLUGIN_STATUS", pluginId: extensionId, value: "available" });
           await current.handle.dispose();
           pluginModuleUrlByIdRef.current.delete(extensionId);
+          pluginArtifactRebuiltAtRef.current.delete(extensionId);
         }
         setExtensionLedger((prev) => prev.filter((entry) => entry.extensionId !== extensionId));
         void dispatchSpaceExtensionOp("uninstallExtension", { extensionId });
@@ -3933,9 +4023,27 @@ function FrameworkOsShellInner({
   activeToolIdRef.current = activeToolId;
   /** 🧰️ Dispatch + sync the ref immediately — `refreshUi` reads the ref before the next render, so a
    * bare `dispatch(SET_ACTIVE_UTILITY)` alone leaves the map stale and the gumball never appears. */
+  // 🧰️ The ONE place one window's arm changes — the utility-bar action AND a program's own
+  // `setActiveUtility` effect (an engagement verb's `brush`) both come through here. The pane's
+  // leftover overlay is published from here too, so an arm the guest raised itself is not masked by
+  // the pane's stale `select` overlay until some later refresh
+  // (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B39).
   const setActiveUtilityForWindow = useCallback((windowId: string, utilityId: string | null) => {
     activeUtilityByWindowIdRef.current = { ...activeUtilityByWindowIdRef.current, [windowId]: utilityId };
     dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId });
+    const prior = leftoverWorldWindowOverlayV1(windowId);
+    publishLeftoverWorldSelectionV1(
+      {
+        ids: prior?.ids ?? [],
+        hoveredId: prior?.hoveredId ?? null,
+        hoveredDomain: prior?.hoveredDomain,
+        gumballActive: prior?.gumballActive ?? false,
+        gumballAnchorId: prior?.gumballAnchorId ?? null,
+        activeUtility: utilityId ?? "select",
+        activeToolId: utilityId ? null : prior?.activeToolId ?? null,
+      },
+      { kind: "window", windowId },
+    );
   }, []);
   /** 🧰️ Clear every window's utility in the ref + store at once (tool/utility mutual exclusion). */
   const clearAllWindowUtilities = useCallback(() => {
@@ -4240,6 +4348,12 @@ function FrameworkOsShellInner({
   // correctly. `aborted` stops handing out new work on unmount — an install already in flight (already
   // called) settles on its own, same "stop starting, let in-flight finish" contract
   // `loadPluginModulesInDependencyOrder`'s own `signal` documents.
+  // 🔁️ An availability event for an artifact this shell ALREADY runs is dropped unless its `rebuiltAt`
+  // is strictly newer (`pluginAvailabilityRouteV1`). A `PluginSource` streams availability, not
+  // commands: `subscribe` opens a fresh `EventSource` and the dev endpoint answers every connect with a
+  // full `snapshot`, so the same builds arrive again on every reconnect — and answering a replay with a
+  // hot-swap destroys the session-owning plugin's live instance and its document
+  // (`actor-activation.revoked`, then `no channel for instance N`; ticket 26/09/02 wave B40 §1).
   useEffect(() => {
     const registryIds = new Set(registry.map((entry) => entry.pluginId));
     let aborted = false;
@@ -4250,9 +4364,11 @@ function FrameworkOsShellInner({
     const pump = (): void => {
       while (!aborted && activeWorkers < limit && pending.length > 0) {
         const next = pending.shift()!;
-        activeWorkers += 1;
         const alreadyLoaded = loadedPluginsRef.current.some((entry) => entry.handle.pluginId === next.pluginId);
-        void (alreadyLoaded ? reloadPlugin(next.pluginId, next.rebuiltAt) : installPlugin(next.pluginId, next.rebuiltAt))
+        const route = pluginAvailabilityRouteV1(alreadyLoaded, pluginArtifactRebuiltAtRef.current.get(next.pluginId), next.rebuiltAt);
+        if (route === "drop") continue;
+        activeWorkers += 1;
+        void (route === "hot-swap" ? reloadPlugin(next.pluginId, next.rebuiltAt) : installPlugin(next.pluginId, next.rebuiltAt))
           .catch((error) => console.error("[os-shell] plugin install/reload failed", next.pluginId, error))
           .finally(() => {
             activeWorkers -= 1;
@@ -4300,7 +4416,165 @@ function FrameworkOsShellInner({
     [injectActiveTool, loadedPlugins, session],
   );
 
-  const refreshUi = useCallback(
+  //#region 🧩️ContributionsPush
+  /** 🧩️ What one contributions push is computed against — captured per publish, never read off a
+   * render closure, so the unit a superseded refresh started still finishes against the closure it
+   * was started with. */
+  type ContributionsEnvironment = {
+    readonly loadedPlugins: readonly LoadedProgramState[];
+    readonly disabledExtensionIds: ReadonlySet<string>;
+    readonly hostMode: boolean;
+    readonly session: ActiveSession;
+    readonly targetViewState: ViewModel;
+    readonly dispatchDeferredEffects: (pluginId: string, instanceId: number, effects: readonly Effect[]) => void;
+  };
+  /**
+   * 🧩️ The host→guest contributions push, owned OUTSIDE `refreshUi`'s generation race.
+   *
+   * `refreshUi` bumps `refreshGenerationRef` on every call and abandons itself whenever the
+   * generation moves under one of its awaits. The push used to sit inside that guard and `await` a
+   * guest document read, so a guest re-arming a faulting `flowEvalTick` (which settles into another
+   * refresh) superseded every push mid-read and the closure never crossed — 45 s of live console
+   * with zero `[DEBUG] contributions …` lines (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The unit
+   * now lives in {@link createContributionsPublisher}: per `(pluginId, instanceId)`, joined on an
+   * unmoved registry generation, cancelled only by `retire` (a session switch), and installed keyed
+   * by `(instanceId, content)`.
+   */
+  const contributionsPublisherRef = useRef<ReturnType<typeof createContributionsPublisher<ContributionsEnvironment>> | null>(null);
+  if (contributionsPublisherRef.current === null) {
+    contributionsPublisherRef.current = createContributionsPublisher<ContributionsEnvironment>({
+      // 🔢 The identity of the closure the pack is cut from: a plugin load/unload or an extension
+      // toggle is a new generation and re-runs the unit; a plain refresh is not.
+      registryGeneration: (environment) => `${environment.hostMode ? "host" : "focused"}|${environment.loadedPlugins.map((entry) => entry.handle.pluginId).join(",")}|${[...environment.disabledExtensionIds].sort().join(",")}`,
+      resolveScope: async (session, environment): Promise<ContributionsOperatorScope> => {
+        const receiverPlugin = environment.loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
+        const fromDocument = await readDocumentOperatorScope(receiverPlugin, session.instanceId);
+        if (fromDocument.status === "resolved" && fromDocument.kinds.length > 0) return fromDocument;
+        // 📚️ A genesis `ReadDocument` is the NORMAL boot state — the app's published examples carry
+        // the same operator kinds the first opened document will, so they scope the push instead of
+        // stalling it.
+        const exampleSources = exampleArtifactSources(receiverPlugin?.manifest.examples ?? [], environment.session.app.dialect);
+        const fromExamples = resolveDocumentOperatorKinds(exampleSources);
+        if (fromExamples.status === "resolved" && fromExamples.kinds.length > 0) {
+          console.error("[DEBUG] contributions scoped from published examples", JSON.stringify({ plugin: session.pluginId, app: environment.session.app.id, kinds: fromExamples.kinds, examples: exampleSources.length }));
+          return fromExamples;
+        }
+        if (fromDocument.status === "resolved") return fromDocument;
+        console.error("[DEBUG] contributions push skipped unresolved document operators", JSON.stringify({ plugin: session.pluginId, app: environment.session.app.id, reason: fromDocument.reason }));
+        return fromDocument;
+      },
+      buildPack: (session, kinds, environment) => {
+        const loadedForScope = environment.loadedPlugins.filter((entry) => !environment.disabledExtensionIds.has(entry.handle.pluginId)).map((entry) => ({ pluginId: entry.handle.pluginId, manifest: { ...entry.manifest, workflows: [] } }));
+        const scopedContributionsJson = scopeContributionsJson(loadedForScope, session.pluginId, kinds);
+        if (scopedContributionsJson === "[]") console.error("[DEBUG] contributions push refused empty pack", JSON.stringify({ plugin: session.pluginId, app: environment.session.app.id, chars: 2, kinds }));
+        else console.error("[DEBUG] contributions scoped pack", JSON.stringify({ chars: scopedContributionsJson.length, hasManifestJson: scopedContributionsJson.includes("manifestJson"), hasPolygon: scopedContributionsJson.includes("brep.curve.polygon"), kinds }));
+        return scopedContributionsJson;
+      },
+      install: async (session, json, kinds, environment) => {
+        for (const pluginEntry of environment.loadedPlugins) {
+          if (!pluginEntry.manifest.apps?.length) continue;
+          if (!pluginShouldReceiveContributions(pluginEntry.handle.pluginId, session.pluginId, environment.hostMode)) continue;
+          const isActive = pluginEntry.handle.pluginId === session.pluginId;
+          const targetApp = isActive ? environment.session.app : pluginEntry.manifest.apps.find((app) => appOwnsCommand(app, "setContributions"));
+          const instanceId = targetApp ? (isActive ? session.instanceId : contributorInstancesRef.current.get(pluginEntry.handle.pluginId)) : undefined;
+          const skipped = !targetApp || !appOwnsCommand(targetApp, "setContributions") ? "app-owns-no-setContributions" : !pluginEntry.handle.handleCommand ? "handle-cannot-command" : instanceId == null ? "no-bound-instance" : undefined;
+          const takesPageRun = targetApp !== undefined && appCommandTakesPageRun(targetApp, "setContributions");
+          if (runtimeDiagnosticsEnabled()) {
+            console.log("[DEBUG] contributions push", JSON.stringify({ plugin: pluginEntry.handle.pluginId, app: targetApp?.id ?? null, active: isActive, takesPageRun, pageCount: skipped !== undefined ? 0 : 1, crossings: skipped !== undefined ? 0 : 1, chars: json.length, kinds, encoding: "pack", skipped: skipped ?? null }));
+          }
+          if (!targetApp || !pluginEntry.handle.handleCommand || instanceId == null || skipped !== undefined) continue;
+          // 📦️ One pack crossing: handleCommand already encodePackValue's the invocation
+          // (`PluginRuntime` performInvocation). The 4 KiB public-invocation string cap is the
+          // JSON entry point, not this path. Paging that envelope was 99 guest turns / ~202 s
+          // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). An app that declares pageCount still
+          // receives page 0 of 1 so the addressed schema matches.
+          const args = takesPageRun ? { json, page: 0, pageCount: 1 } : { json };
+          try {
+            const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args);
+            const contributionResponse = await pluginEntry.handle.handleCommand(instanceId, wire, environment.targetViewState);
+            if (contributionResponse.requestedEffects?.length) {
+              console.error("[DEBUG] setContributions deferred effects", JSON.stringify({ plugin: pluginEntry.handle.pluginId, instanceId, effects: contributionResponse.requestedEffects }));
+              environment.dispatchDeferredEffects(pluginEntry.handle.pluginId, instanceId, contributionResponse.requestedEffects);
+            }
+          } catch (error) {
+            console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
+          }
+        }
+      },
+    });
+  }
+
+  /** 📄️ The receiver's OWN open document, as an operator scope — a genesis envelope, a plugin that
+   * cannot be read and a read that throws are all typed `unresolved` reasons, never a silent skip. */
+  const readDocumentOperatorScope = useCallback(async (receiverPlugin: LoadedProgramState | undefined, instanceId: number): Promise<ContributionsOperatorScope> => {
+    if (!receiverPlugin) return { status: "unresolved", reason: "no-receiver" };
+    if (!receiverPlugin.handle.readAppDocumentPack) return { status: "unresolved", reason: "no-document-read" };
+    const liveDocument = await receiverPlugin.handle.readAppDocumentPack(instanceId);
+    if (!liveDocument) return { status: "unresolved", reason: "no-document-pack" };
+    const sources = documentSourcesFromPack(liveDocument.pack, liveDocument.spr, liveDocument.ops);
+    const scope: ContributionsOperatorScope = liveDocument.ops == null ? { status: "unresolved", reason: "document-ops-missing" } : resolveDocumentOperatorKinds(sources);
+    console.error(
+      "[DEBUG] contributions document sources",
+      JSON.stringify({
+        packBytes: liveDocument.pack.byteLength,
+        sprBytes: liveDocument.spr.byteLength,
+        opsChars: liveDocument.ops?.length ?? null,
+        opsHead: (liveDocument.ops ?? "").slice(0, 280),
+        status: scope.status,
+        reason: scope.status === "unresolved" ? scope.reason : undefined,
+        kinds: scope.status === "resolved" ? scope.kinds : [],
+      }),
+    );
+    return scope;
+  }, []);
+
+  /** 🧩️ Starts (or joins) the contributions unit for one session and reports what it decided. The
+   * environment is captured HERE, where the live host bindings are in scope, so the unit never reads
+   * a stale render closure and `refreshUi` owes it nothing but an `await`. */
+  const publishContributions = useCallback(
+    async (nextSession: ActiveSession, loaded: readonly LoadedProgramState[]): Promise<ContributionsPublishOutcome> => {
+      const key: ContributionsSessionKey = { pluginId: nextSession.pluginId, instanceId: nextSession.instanceId };
+      const disabledExtensionIds = new Set(extensionLedgerRef.current.filter((entry) => !entry.enabled).map((entry) => entry.extensionId));
+      const outcome = await contributionsPublisherRef.current!.publish(key, {
+        loadedPlugins: loaded,
+        disabledExtensionIds,
+        hostMode,
+        session: nextSession,
+        targetViewState: resolvedTargetViewState(nextSession),
+        // 🔁️ The install's own re-arm (`flowEvalTick` per attached preview) is dispatched on a fresh
+        // microtask against the LIVE session, never inside the guest crossing that produced it.
+        dispatchDeferredEffects: (deferredPluginId, deferredInstanceId, deferredEffects) =>
+          queueMicrotask(() => {
+            const live = sessionRef.current;
+            if (!live) {
+              console.error(`[os-shell] ${deferredEffects.length} deferred effect(s) for "${deferredPluginId}" dropped: no live session`);
+              return;
+            }
+            const target = { ...live, pluginId: deferredPluginId, instanceId: deferredInstanceId };
+            const owner = captureEffectOwner(target, captureDialogOrigin(target));
+            void applyHostEffects(deferredEffects, target, { kind: "full" }, owner).catch((error) => console.error("[DEBUG] setContributions deferred effects failed", error));
+          }),
+      });
+      if (outcome.status === "installed" || outcome.status === "failed") console.error("[DEBUG] contributions publish", JSON.stringify({ plugin: key.pluginId, instanceId: key.instanceId, outcome }));
+      return outcome;
+    },
+    // 🐢️ `applyHostEffects` is declared later in this component and is referenced in the body only,
+    // never in this array — the same temporal-dead-zone avoidance `refreshUi` below documents.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [captureDialogOrigin, captureEffectOwner, hostMode, readDocumentOperatorScope, resolvedTargetViewState],
+  );
+  /** 🔚 A session switch abandons whatever contributions unit is still resolving for the instance
+   * that is going away: its closure must never be installed into an instance nobody is looking at,
+   * and the next session re-resolves its own operator scope from scratch. */
+  const contributionsInstanceRef = useRef<number | null>(null);
+  useEffect(() => {
+    const previous = contributionsInstanceRef.current;
+    contributionsInstanceRef.current = session?.instanceId ?? null;
+    if (previous != null && previous !== (session?.instanceId ?? null)) contributionsPublisherRef.current?.retire(previous);
+  }, [session?.instanceId]);
+  //#endregion 🧩️ContributionsPush
+
+  const runUiRefreshPass = useCallback(
     // 🪟️ `extraInstancesOverride` lets a caller that just synchronously computed a NEW extra-window list
     // (split/drop, layout/mode switch) hand it straight to this fetch instead of reading `extraWindowInstances`
     // from React state, which wouldn't reflect the just-dispatched change until the next render.
@@ -4327,6 +4601,11 @@ function FrameworkOsShellInner({
       const loadedPlugins = loadedPluginsRef.current;
       const program = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId)?.handle;
       if (!program) return;
+      // 🧩️ Started BEFORE this refresh's first await and never guarded by `generation`: the push is
+      // its own owned unit (see the `🧩️ContributionsPush` region above). A refresh superseded mid
+      // document-read therefore no longer abandons it, and a later refresh joins the same run rather
+      // than starting a second one (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+      const contributionsInstalled = publishContributions(nextSession, loadedPlugins);
       const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
       const isSessionSwitch = layoutSeedKeyRef.current !== layoutSeedKey;
       // 🐢️ A session switch invalidates every cached hash from the previous instance — force a full
@@ -4353,27 +4632,21 @@ function FrameworkOsShellInner({
             windowInstances.map((instance) => [instance.id, current[instance.id] ?? pendingWindowUiNode()] as const),
           ),
       });
-      const disabledExtensionIds = new Set(extensionLedgerRef.current.filter((entry) => !entry.enabled).map((entry) => entry.extensionId));
-      // 🩹️ `buildContributionsJson`'s own `PluginManifest` (kernel/component.ts) is a stale, narrower
-      // mirror of this file's real one (`Shell/🟦️.tsx`'s, deliberately richer — see that
-      // type's own doc comment): it's missing a required `workflows` field this file's manifests never
-      // carry, so `workflows: []` (a real, faithful "no workflow data" value, not a fabricated one) is
-      // added at the boundary — the `contributions` field it actually reads is real, untouched data.
-      const contributionsJson = buildContributionsJson(
-        loadedPlugins
-          .filter((entry) => !disabledExtensionIds.has(entry.handle.pluginId))
-          .map((entry) => ({ pluginId: entry.handle.pluginId, manifest: { ...entry.manifest, workflows: [] } })),
-      );
-      // 🪐️ Every loaded plugin's declared apps, flattened for the space app's catalogue — mirrors
-      // `contributionsJson` above exactly (same opt-in hint-push shape below), because the space app is
-      // its own wasm component: `semio_framework_os::APP_REGISTRATIONS` (populated at native/test
+      // 🪐️ Every loaded plugin's declared apps, flattened for the space app's catalogue — an opt-in
+      // hint-push (below), never a view-state field, because the space app is its own wasm component:
+      // `semio_framework_os::APP_REGISTRATIONS` (populated at native/test
       // `PluginHost::load_plugin`/`hot_swap_plugin` time) lives in a separate linear memory from the
       // space app's own statically-linked copy of the same os-core crate, so nothing crosses the wasm
       // boundary unless this shell pushes it explicitly.
       const appRegistrationsJson = JSON.stringify(loadedPlugins.flatMap((entry) => (entry.manifest.apps ?? []).map((app) => ({ pluginId: entry.handle.pluginId, app }))));
+      // 🧩️ Contributions are deliberately absent here: `publishContributions` (the unit started above)
+      // installs them into the guest through the paged `setContributions` run, which the guest folds
+      // into its own registry. Riding the aggregated closure inside this view state put 248 635
+      // characters against the view-context schema's 65 536-character `panelJson`/long-field bound —
+      // rejected at `parseResolvedPluginViewState` as `view context: invalid panel data`, which
+      // replaced every window body with a fault card (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
       const viewState: ViewModel = injectActiveTool({
         ...nextSession.viewState,
-        contributionsJson,
         locale: uiLocale,
         terminology: uiTerminology,
         windowInstances: windowInstances.map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
@@ -4386,7 +4659,7 @@ function FrameworkOsShellInner({
       });
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
       if (replaceBodies) {
-        const leftover = leftoverWorldSelectionOverlayV1();
+        const leftover = leftoverWorldArmedWindowOverlayV1();
         const hoverVortex = leftover?.hoveredId && (leftover.hoveredDomain === "vortex" || leftover.hoveredId.includes(":")) ? leftover.hoveredId : null;
         if (leftoverBrushPreviewWindowHash(leftover?.activeUtility, hoverVortex, "cached") === undefined) {
           for (const key of [...cache.keys()]) {
@@ -4436,6 +4709,10 @@ function FrameworkOsShellInner({
         const [resolvedWindows, resolvedPanels] = await Promise.all([Promise.all((response.windows ?? []).map(resolveIfChanged)), Promise.all((response.panels ?? []).map(resolveIfChanged))]);
         if (generation !== refreshGenerationRef.current && !(replaceBodies && generation === replaceBodiesGenerationRef.current)) return;
         applyUiRefreshResponseToCache(cache, { ...response, windows: resolvedWindows, panels: resolvedPanels });
+        // 🩺️ Which sections this pass ASKED for and which the guest actually re-serialized — the one
+        // line that separates "the guest re-rendered the previous document" from "this pass never
+        // applied" (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] refreshUi sections", JSON.stringify({ scope, utilities: viewState.activeUtilityByWindowId ?? null, asked: (request.windows ?? []).map((entry) => entry.key), changed: (response.windows ?? []).filter((entry) => entry.value !== undefined).map((entry) => entry.key), hashes: Object.fromEntries((response.windows ?? []).map((entry) => [entry.key, entry.hash])) }));
         // ⏱️ pending_effects (e.g. flowEvalTick) wait until contributions are installed — an earlier
         // tick faults `flow.extension-not-contributed` and retires the window-transient authority.
         pendingRefreshEffects = response.requestedEffects ?? [];
@@ -4496,117 +4773,15 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_SHELL_LAYOUT", value: layoutSeed.modeLayout });
         dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
       }
-      // 🎯 Both push guards below are keyed on `${nextSession.instanceId}::${json}`, NOT on the json
-      // content alone — the content is derived purely from `loadedPlugins`, which stabilizes right after
-      // boot, so a content-only key would only ever unlock ONE push for the process lifetime (the very
-      // first `refreshUi` call, which always targets whatever session exists at boot — usually `home`,
-      // which doesn't own either catalogue command). Folding `instanceId` into the key makes a
-      // session switch (new studio/space instance opened, same unchanged json) retrigger the push instead
-      // of being silently swallowed by a guard that already considered this content "delivered".
-      const receiverPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
-      let operatorScope: ReturnType<typeof resolveDocumentOperatorKinds> | { status: "unresolved"; reason: string };
-      const cachedKinds = documentOperatorKindsRef.current;
-      if (cachedKinds && cachedKinds.length > 0) {
-        operatorScope = { status: "resolved", kinds: cachedKinds };
-      } else if (!receiverPlugin?.handle.readAppDocumentPack) {
-        operatorScope = { status: "unresolved", reason: receiverPlugin ? "no-document-read" : "no-receiver" };
-      } else {
-        const liveDocument = await receiverPlugin.handle.readAppDocumentPack(nextSession.instanceId);
-        if (generation !== refreshGenerationRef.current) return;
-        if (!liveDocument) {
-          operatorScope = { status: "unresolved", reason: "no-document-pack" };
-        } else {
-          const sources = documentSourcesFromPack(liveDocument.pack, liveDocument.spr, liveDocument.ops);
-          operatorScope = liveDocument.ops == null
-            ? { status: "unresolved", reason: "document-ops-missing" }
-            : resolveDocumentOperatorKinds(sources);
-          console.error(
-            "[DEBUG] contributions document sources",
-            JSON.stringify({
-              packBytes: liveDocument.pack.byteLength,
-              sprBytes: liveDocument.spr.byteLength,
-              opsChars: liveDocument.ops?.length ?? null,
-              opsHead: (liveDocument.ops ?? "").slice(0, 280),
-              status: operatorScope.status,
-              reason: operatorScope.status === "unresolved" ? operatorScope.reason : undefined,
-              kinds: operatorScope.status === "resolved" ? operatorScope.kinds : [],
-            }),
-          );
-        }
-        if (operatorScope.status === "resolved" && operatorScope.kinds.length > 0) documentOperatorKindsRef.current = operatorScope.kinds;
-      }
-      if (operatorScope.status === "unresolved") {
-        const exampleSources = exampleArtifactSources(receiverPlugin?.manifest.examples ?? [], nextSession.app.id);
-        const fromExamples = resolveDocumentOperatorKinds(exampleSources);
-        if (fromExamples.status === "resolved" && fromExamples.kinds.length > 0) {
-          operatorScope = fromExamples;
-          documentOperatorKindsRef.current = fromExamples.kinds;
-          console.error("[DEBUG] contributions scoped from published examples", JSON.stringify({ plugin: nextSession.pluginId, app: nextSession.app.id, kinds: fromExamples.kinds, examples: exampleSources.length }));
-        } else {
-          console.error(
-            "[DEBUG] contributions push skipped unresolved document operators",
-            JSON.stringify({ plugin: nextSession.pluginId, app: nextSession.app.id, reason: operatorScope.reason }),
-          );
-        }
-      }
-      if (operatorScope.status === "resolved") {
-        const loadedForScope = loadedPlugins
-          .filter((entry) => !disabledExtensionIds.has(entry.handle.pluginId))
-          .map((entry) => ({ pluginId: entry.handle.pluginId, manifest: { ...entry.manifest, workflows: [] } }));
-        const scopedContributionsJson = scopeContributionsJson(loadedForScope, nextSession.pluginId, operatorScope.kinds);
-        if (scopedContributionsJson === "[]") {
-          console.error("[DEBUG] contributions push refused empty pack", JSON.stringify({ plugin: nextSession.pluginId, app: nextSession.app.id, chars: 2, kinds: operatorScope.kinds }));
-        } else if (scopedContributionsJson) {
-          console.error("[DEBUG] contributions scoped pack", JSON.stringify({ chars: scopedContributionsJson.length, hasManifestJson: scopedContributionsJson.includes("manifestJson"), hasPolygon: scopedContributionsJson.includes("brep.curve.polygon"), kinds: operatorScope.kinds }));
-
-          const contributionsPushKey = `${nextSession.instanceId}::${scopedContributionsJson}`;
-          if (contributionsPushKey !== contributionsJsonRef.current) {
-            contributionsJsonRef.current = contributionsPushKey;
-            for (const pluginEntry of loadedPlugins) {
-              if (!pluginEntry.manifest.apps?.length) continue;
-              if (!pluginShouldReceiveContributions(pluginEntry.handle.pluginId, nextSession.pluginId, hostMode)) continue;
-              const isActive = pluginEntry.handle.pluginId === nextSession.pluginId;
-              const targetApp = isActive ? nextSession.app : pluginEntry.manifest.apps.find((app) => appOwnsCommand(app, "setContributions"));
-              const instanceId = targetApp ? (isActive ? nextSession.instanceId : contributorInstancesRef.current.get(pluginEntry.handle.pluginId)) : undefined;
-              const skipped = !targetApp || !appOwnsCommand(targetApp, "setContributions") ? "app-owns-no-setContributions" : !pluginEntry.handle.handleCommand ? "handle-cannot-command" : instanceId == null ? "no-bound-instance" : undefined;
-              const takesPageRun = targetApp !== undefined && appCommandTakesPageRun(targetApp, "setContributions");
-              if (runtimeDiagnosticsEnabled()) {
-                console.log(
-                  "[DEBUG] contributions push",
-                  JSON.stringify({ plugin: pluginEntry.handle.pluginId, app: targetApp?.id ?? null, active: isActive, takesPageRun, pageCount: skipped !== undefined ? 0 : 1, crossings: skipped !== undefined ? 0 : 1, chars: scopedContributionsJson.length, kinds: operatorScope.kinds, encoding: "pack", skipped: skipped ?? null }),
-                );
-              }
-              if (!targetApp || !appOwnsCommand(targetApp, "setContributions") || !pluginEntry.handle.handleCommand || instanceId == null) continue;
-              // 📦️ One pack crossing: handleCommand already encodePackValue's the invocation
-              // (`PluginRuntime` performInvocation). The 4 KiB public-invocation string cap is the
-              // JSON entry point, not this path. Paging that envelope was 99 guest turns / ~202 s
-              // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). An app that declares pageCount still
-              // receives page 0 of 1 so the addressed schema matches.
-              const args = takesPageRun ? { json: scopedContributionsJson, page: 0, pageCount: 1 } : { json: scopedContributionsJson };
-              try {
-                const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args);
-                const contributionResponse = await pluginEntry.handle.handleCommand(instanceId, wire, resolvedTargetViewState(nextSession));
-                if (contributionResponse.requestedEffects?.length) {
-                  const deferredEffects = contributionResponse.requestedEffects;
-                  const deferredPluginId = pluginEntry.handle.pluginId;
-                  const deferredInstanceId = instanceId;
-                  console.error("[DEBUG] setContributions deferred effects", JSON.stringify({ plugin: deferredPluginId, instanceId: deferredInstanceId, effects: deferredEffects }));
-                  queueMicrotask(() => {
-                    const live = sessionRef.current;
-                    if (!live) return;
-                    const target = { ...live, pluginId: deferredPluginId, instanceId: deferredInstanceId };
-                    const owner = captureEffectOwner(target, captureDialogOrigin(target));
-                    void applyHostEffects(deferredEffects, target, { kind: "full" }, owner).catch((error) => console.error("[DEBUG] setContributions deferred effects failed", error));
-                  });
-                }
-              } catch (error) {
-                console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
-              }
-            }
-          }
-        }
-      }
-      if (pendingRefreshEffects.length) await applyHostEffects(pendingRefreshEffects, nextSession, { kind: "full" }, refreshOwner);
+      // 🧩️ The contributions unit started at the top of this refresh. `await`ing it HERE, and not
+      // running it here, is what keeps `pendingRefreshEffects` (an early `flowEvalTick`) waiting until
+      // the closure is installed, while leaving the push itself outside this refresh's generation
+      // race (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+      await contributionsInstalled;
+      // 🤝️ Handed BACK to the lane, never awaited here: applying an effect re-enters `refreshUi`, and a
+      // pass that awaits its own re-entrant request waits on itself (`createUiRefreshCoalescerV1`
+      // property 3). The lane voids this application and the effect's refresh lands as the next pass.
+      if (pendingRefreshEffects.length) owedPassEffectsRef.current = { effects: pendingRefreshEffects, session: nextSession, owner: refreshOwner };
       if (appRegistrationsJson) {
         const appRegistrationsPushKey = `${nextSession.instanceId}::${appRegistrationsJson}`;
         if (appRegistrationsPushKey !== appRegistrationsJsonRef.current) {
@@ -4624,16 +4799,71 @@ function FrameworkOsShellInner({
         }
       }
     },
-    // 🐢️ `applyHostEffects` is declared later in this component (its own deps need `updateSpacePanel`/
-    // `syncSpawnedPluginDocument`, declared later still) — referencing it here in the body only (never
-    // added to this array) avoids a temporal-dead-zone reference-before-init; safe because this callback
-    // is only ever invoked after render completes, by which point `applyHostEffects` is initialized.
+    // 🐢️ `owedPassEffectsRef` is declared just below (it belongs to the lane that applies what this pass
+    // asked for) — referenced here in the body only, never added to this array, which both avoids a
+    // temporal-dead-zone reference-before-init and keeps this callback's identity off the effect lane.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [appLabelsOverlay, hostMode, injectActiveTool, uiLocale, uiTerminology],
+    [appLabelsOverlay, hostMode, injectActiveTool, publishContributions, uiLocale, uiTerminology],
   );
+
+  //#region 🤝️UiRefreshCoalescing
+  type UiRefreshLaneRequest = { readonly session: ActiveSession; readonly scope: UiDirtyScope; readonly extraInstances?: readonly ExtraWindowInstance[]; readonly replaceBodies: boolean };
+  // 🧰️ The lane is built ONCE (it owns the owed slot and the drain loop, which no render may reset), so
+  // it reaches the current pass and the current effect applier through refs rather than through a
+  // closure — the same reason `runUiRefreshPass` itself reads `loadedPluginsRef`.
+  const runUiRefreshPassRef = useRef(runUiRefreshPass);
+  runUiRefreshPassRef.current = runUiRefreshPass;
+  const applyHostEffectsRef = useRef<(effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<typeof captureEffectOwner>) => Promise<void>>(async () => {});
+  /** 🤝️ The shell's one ui-refresh lane — see {@link createUiRefreshCoalescerV1} for the three
+   * properties it holds (every request owed until a pass covers it, a failed pass never ends the lane,
+   * and a pass may ask for another pass but never wait for one).
+   *
+   * Why the lane exists at all: a pass abandons itself when `refreshGenerationRef` moves under one of
+   * its awaits, which is right only while a pass finishes faster than passes are requested. On the
+   * served procedural editor it does not — every `flowEvalTick` completion of a converging preview
+   * demands a full pass, and one guest crossing during a brep solve was measured at 15-16 s while
+   * completions arrived every few seconds, so each pass was superseded before it applied and NOTHING
+   * the guest re-rendered reached the shell (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+   *
+   * 🔁️ A pass's own `requestedEffects` are applied OUTSIDE the pass (`owedPassEffectsRef`, voided
+   * below): applying an effect re-enters `refreshUi`, and a pass that awaits its own re-entrant
+   * request waits on itself. */
+  const owedPassEffectsRef = useRef<{ effects: readonly Effect[]; session: ActiveSession; owner: ReturnType<typeof captureEffectOwner> } | null>(null);
+  const uiRefreshLaneRef = useRef<UiRefreshCoalescerV1<UiRefreshLaneRequest> | null>(null);
+  if (!uiRefreshLaneRef.current) {
+    uiRefreshLaneRef.current = createUiRefreshCoalescerV1<UiRefreshLaneRequest>(
+      async (request) => {
+        await runUiRefreshPassRef.current(request.session, request.scope, request.extraInstances, request.replaceBodies);
+        const owedEffects = owedPassEffectsRef.current;
+        owedPassEffectsRef.current = null;
+        if (owedEffects) void applyHostEffectsRef.current(owedEffects.effects, owedEffects.session, { kind: "full" }, owedEffects.owner).catch((error) => console.error("[DEBUG] refresh-owed host effects failed", error));
+      },
+      (owed, next) => ({ session: next.session, scope: mergeUiDirtyScopeV1(owed.scope, next.scope), extraInstances: next.extraInstances ?? owed.extraInstances, replaceBodies: owed.replaceBodies || next.replaceBodies }),
+      (decision, scope, passes) => {
+        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] refreshUi lane", JSON.stringify({ decision, scope, passes }));
+      },
+    );
+  }
+  const refreshUi = useCallback(
+    async (nextSession: ActiveSession, scopeArg: UiDirtyScope = { kind: "full" }, extraInstancesOverride?: readonly ExtraWindowInstance[], replaceBodies = false) =>
+      uiRefreshLaneRef.current!.request({ session: nextSession, scope: scopeArg, extraInstances: extraInstancesOverride, replaceBodies }),
+    [],
+  );
+  //#endregion 🤝️UiRefreshCoalescing
   refreshDirectoryHomeRef.current = async (nextSession) => refreshUi(nextSession);
 
-  /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
+  /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale.
+   *
+   * 🌐️ And asks the GUEST to re-render, because the titles are only the shell's own half. Every label
+   * inside a guest-authored body — the outliner's section headings, its per-row Hide/Lock actions, the
+   * inspector's field names — is resolved by the program against `ViewModel::locale` at the moment it
+   * rendered (`🗣️terminology/🦀️.rs`'s `puzzle3d_labels`), so a language switch that requests no refresh
+   * leaves every one of those bodies in the previous language for as long as nothing else happens to
+   * dirty them. Measured on `:6013`: with the actor-revocation of §1 fixed, `locale-switch` brought the
+   * whole shell roster back German while the outliner still read "OBJECTS / Hide / Lock / REFERENCES"
+   * (ticket 26/09/02 wave B40 §3). `replaceBodies` because a language change re-authors EVERY string:
+   * the hash-conditional path must not be allowed to keep a body it cached under the old locale, and
+   * the live UI stores hold rendered text of their own. */
   useEffect(() => {
     const windowKinds = session?.app.windowKinds;
     if (!windowKinds) return;
@@ -4653,7 +4883,9 @@ function FrameworkOsShellInner({
         return next;
       },
     });
-  }, [uiTerminology, uiLocale]);
+    const live = sessionRef.current;
+    if (live) void refreshUi(live, { kind: "full" }, undefined, true).catch((error) => console.error("[os-shell] locale refresh failed", error));
+  }, [uiTerminology, uiLocale, refreshUi]);
 
   const refreshSpawnedUi = useCallback(
     async (spawned: SpawnedAppEntry, viewState: ViewModel, scopeArg: UiDirtyScope = { kind: "full" }) => {
@@ -4686,20 +4918,11 @@ function FrameworkOsShellInner({
         spawnedUiRefreshCacheRef.current = new Map();
       }
       const cache = spawnedUiRefreshCacheRef.current;
-      const disabledExtensionIds = new Set(extensionLedgerRef.current.filter((entry) => !entry.enabled).map((entry) => entry.extensionId));
-      // 🩹️ `buildContributionsJson`'s own `PluginManifest` (kernel/component.ts) is a stale, narrower
-      // mirror of this file's real one (`Shell/🟦️.tsx`'s, deliberately richer — see that
-      // type's own doc comment): it's missing a required `workflows` field this file's manifests never
-      // carry, so `workflows: []` (a real, faithful "no workflow data" value, not a fabricated one) is
-      // added at the boundary — the `contributions` field it actually reads is real, untouched data.
-      const contributionsJson = buildContributionsJson(
-        loadedPlugins
-          .filter((entry) => !disabledExtensionIds.has(entry.handle.pluginId))
-          .map((entry) => ({ pluginId: entry.handle.pluginId, manifest: { ...entry.manifest, workflows: [] } })),
-      );
       const bodyKey = resolveCanvasBodyKey(app);
+      // 🧩️ A spawned instance reads contributions from the registry the paged `setContributions` run
+      // installed, exactly like a primary session — the view context carries none.
       const fullViewState: ViewModel = injectActiveUtility(
-        { ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology, windowId: bodyKey, windowInstances: [{ id: bodyKey, windowKindId: bodyKey }] },
+        { ...viewState, locale: uiLocale, terminology: uiTerminology, windowId: bodyKey, windowInstances: [{ id: bodyKey, windowKindId: bodyKey }] },
         spawned.id,
       );
       // 🐢️ A spawned instance's view is a single body + utilities + engagements + measures (no panels, no
@@ -4782,42 +5005,100 @@ function FrameworkOsShellInner({
     });
   }, []);
 
-  // 🏠️🧳️ Generic replacement for the old `switchToSApp` — switches to either the host plugin's landing
-  // or host app by id (both resolved via `hostConfig`, never a specific app's identity).
-  const switchToManagedApp = useCallback(
-    async (appId: string, viewState?: ViewModel): Promise<ActiveSession | null> => {
-      const sPlugin = hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined;
-      const app = sPlugin?.manifest.apps.find((candidate) => candidate.id === appId);
-      if (!sPlugin || !app) return null;
-      if (session?.pluginId === sPlugin.handle.pluginId && session.app.id === appId) {
-        if (!viewState) return session;
-        const nextSession: ActiveSession = { ...session, viewState };
-        dispatch({ type: "SET_SESSION", value: nextSession });
-        await refreshUi(nextSession);
-        return nextSession;
+  /** 🪦️ The session-instance close ladder, lifted out of the shell-unmount teardown effect so an
+   * in-place app switch retires its predecessor the same way unmounting does: every document session
+   * still bound to that instance is closed (which retires its attachment), then the attachment lane is
+   * drained, then the instance is destroyed. Without it every `switchToPluginApp` leaked one live
+   * `createApp` — tolerable while only two host apps ever swapped, not for a user-facing toggle
+   * (`📓️viewer-eval-chain-2026-09-12.md` §6 item 2). Never throws: a predecessor that refuses to
+   * retire is a leak to report, never a reason to block the successor. */
+  const retireSessionInstance = useCallback(async (retired: ActiveSession): Promise<void> => {
+    const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === retired.pluginId)?.handle;
+    if (!plugin) return;
+    for (const [runtimeKey, entry] of [...openDocumentSessionsRef.current]) {
+      if (entry.plugin !== plugin || entry.session.instanceId !== retired.instanceId) continue;
+      closeDocumentRef.current(runtimeKey, entry.clientInstanceId);
+    }
+    await documentAttachmentLanesRef.current.get(plugin)?.get(retired.instanceId)?.drain();
+    await plugin.destroyApp(retired.instanceId);
+  }, []);
+
+  // 🏠️🧳️👁️✏️ Generalised from the host-only `switchToManagedApp`: switches the mounted session to ANY
+  // loaded plugin's app by `(pluginId, appId)`, so the navbar role group can swap a playground between
+  // `…#editor` and `…#viewer` the same way studio mode swaps its landing/host apps. The host-only
+  // bookkeeping (`openSpaceIdRef`/`openInstanceIdRef` reset on the landing app) stays behind an
+  // explicit `hostMode` guard rather than being reachable from a non-host switch.
+  //
+  // 🪦️ TRANSACTIONAL since 26/09/09/PROCEDURAL-3D-END-TO-END: the whole switch runs through
+  // `sessionSwitchGateRef` (one at a time) and starts with a `quiesce` pass over `sessionWorkRef`, so
+  // the predecessor is never torn down under its own in-flight typed operations and extension
+  // invocations — the mid-chain tear-down measured on 6018, where `⌘️⌥️V` pressed during an
+  // `interactionSelect`/`flow-extension-brep evaluate` round trip revoked instance 1's activation and
+  // left every later action failing with `no actor for instance 1`
+  // (`🗑️generated/journey-3/console.txt`). `seal` runs before the close ladder because the ladder's own
+  // first step already revokes the actor.
+  const switchToPluginApp = useCallback(
+    async (pluginId: string, appId: string, viewState?: ViewModel): Promise<ActiveSession | null> => {
+      setSurfaceSwitchBusy(true);
+      try {
+        const outcome = await sessionSwitchGateRef.current.run(
+          {
+            session,
+            resolveApp: (targetPluginId, targetAppId) => loadedPlugins.find((entry) => entry.handle.pluginId === targetPluginId)?.manifest.apps.find((candidate) => candidate.id === targetAppId) ?? null,
+            appId: (app) => app.id,
+            quiesce: async (retiring) => {
+              const quiet = await quiesceSessionWorkV1(() => sessionWorkRef.current.pending(retiring.pluginId, retiring.instanceId));
+              // ⏳️ A refusal has to name what it waited on, or the next person reading the console sees
+              // only a number and cannot tell a stuck guest turn from a stuck extension round trip.
+              if (!quiet.settled) console.warn(`[DEBUG] surface-switch draining ${retiring.pluginId}#${retiring.instanceId} ${sessionWorkRef.current.outstanding(retiring.pluginId, retiring.instanceId)}`);
+              return quiet;
+            },
+            seal: (retiring) => sealedInstancesRef.current.seal(retiring.pluginId, retiring.instanceId),
+            unseal: (kept) => sealedInstancesRef.current.unseal(kept.pluginId, kept.instanceId),
+            createInstance: async (targetPluginId, app) => {
+              const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === targetPluginId)?.handle;
+              if (!handle) throw new Error(`switchToPluginApp: ${targetPluginId} is no longer loaded`);
+              return handle.createApp(app.id);
+            },
+            retire: retireSessionInstance,
+            // 🪦️ See `establishPrimarySession`'s comment above — `programs` is permanently empty now, and
+            // the empty studio panel belongs to `hostMode` only: a non-host playground's boot session
+            // carries no `panelJson` at all, so a role switch must not invent one either.
+            defaultViewState: (app) => ({ activeModeId: app.defaultModeId ?? app.modes[0]?.id, ...(hostMode ? { panelJson: panelJsonFromState(buildSpacePanelState([], [])) } : {}) }),
+            publish: (next) => dispatch({ type: "SET_SESSION", value: next }),
+            seedLayout: (app) => {
+              const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
+              extraWindowInstancesRef.current = seeded.extraInstances;
+              extraWindowCounterRef.current = seeded.extraInstances.length;
+              dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+              dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+              dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+              if (hostMode && app.id === landingAppId) {
+                openSpaceIdRef.current = null;
+                openInstanceIdRef.current = null;
+              }
+            },
+            refresh: refreshUi,
+            trace: (step, detail) => console.warn(`[DEBUG] surface-switch ${step} ${detail}`),
+          },
+          { pluginId, appId, viewState },
+          (retired, retireError) => console.warn(`[DEBUG] switchToPluginApp: predecessor ${retired.pluginId}/${retired.app.id} retirement failed`, retireError),
+        );
+        console.warn(`[DEBUG] surface-switch outcome ${outcome.status} ${appId} pending=${outcome.pending}`);
+        // 🚦️ `draining` and `busy` both mean "the switch did NOT happen": the predecessor kept its
+        // instance and the shell kept its surface. Telling the user so is the whole difference between
+        // a refusal and a silent no-op — the alternative the fixture rules out is tearing the
+        // predecessor down under its own in-flight work.
+        if (outcome.status === "draining" || outcome.status === "busy") {
+          showTransientNoticeRef.current(surfaceSwitchBusyTextV1(uiLocale), "info");
+          return null;
+        }
+        return outcome.session;
+      } finally {
+        setSurfaceSwitchBusy(false);
       }
-      const instanceId = await sPlugin.handle.createApp(app.id);
-      // 🪦️ See `establishPrimarySession`'s comment above — `programs` is permanently empty now.
-      const nextViewState: ViewModel = viewState ?? {
-        activeModeId: app.defaultModeId ?? app.modes[0]?.id,
-        panelJson: panelJsonFromState(buildSpacePanelState([], [])),
-      };
-      const nextSession: ActiveSession = { pluginId: sPlugin.handle.pluginId, instanceId, app, viewState: nextViewState };
-      dispatch({ type: "SET_SESSION", value: nextSession });
-      const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
-      extraWindowInstancesRef.current = seeded.extraInstances;
-      extraWindowCounterRef.current = seeded.extraInstances.length;
-      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
-      dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
-      if (appId === landingAppId) {
-        openSpaceIdRef.current = null;
-        openInstanceIdRef.current = null;
-      }
-      await refreshUi(nextSession);
-      return nextSession;
     },
-    [loadedPlugins, refreshUi, session, appLabelsOverlay, hostConfig, landingAppId, uiTerminology, uiLocale],
+    [loadedPlugins, refreshUi, retireSessionInstance, session, appLabelsOverlay, hostMode, landingAppId, uiTerminology, uiLocale],
   );
 
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewModel) => {
@@ -4955,6 +5236,10 @@ function FrameworkOsShellInner({
   const applyHostEffects = useCallback(
     async (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<typeof captureEffectOwner>) => {
       const effectOrigin = effectOwner.presentation;
+      // 🪦️ An effect pass addressed to an instance a switch has SEALED is stale by construction — the
+      // close ladder has already revoked its actor, so running the pass reaches `requireActorId` and
+      // surfaces as `no actor for instance N`. One typed drop, no throw, no stack.
+      if (dropForSealedInstance(baseSession, "host effects", `${effects.length} effect(s)`)) return;
       let nextViewState = baseSession.viewState;
       for (const effect of effects) {
         if (!isCurrentEffectOwner(effectOwner)) return;
@@ -5039,8 +5324,13 @@ function FrameworkOsShellInner({
           if (encodingText?.startsWith(SEGMENTED_DOWNLOAD_MARKER_PREFIX)) {
             const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
             if (!pluginEntry) throw new Error(`segmented-download-plugin-missing:${baseSession.pluginId}`);
+            // 🌊 The ASSEMBLED sink, not the File System Access stream: a segmented download must reach the
+            // user as the same kind of file the inline lane produces, and `createSegmentedDownloadSink`
+            // fails closed wherever `showSaveFilePicker` is absent — which turned every over-budget export
+            // into silence. Bounded by the drain's own `MAX_SEGMENTED_DOWNLOAD_BYTES` total cap.
             await drainSegmentedMediaExport(filename, mimeType, data, encodingText, (operationId) => pluginEntry.handle.takeSegmentedDownloadChunk(baseSession.instanceId, operationId), {
               signal: segmentedDownloadAbortRef.current.signal,
+              sinkFactory: shellSegmentedDownloadSinkFactory,
             });
           } else {
             downloadMediaExport(filename, mimeType, data, encodingText);
@@ -5070,22 +5360,35 @@ function FrameworkOsShellInner({
               // 📤️ Single-file (multiple absent/false): identical to the pre-multi-select shape, one
               // `handleAction` call with `{payload, name}`. Multi-file: one sequential call per selected
               // file, each extending args with `{index, total}` so the plugin can stage/merge imports.
-              await dispatchOpenedFiles(opened, resolvedImport, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner)));
+              await dispatchOpenedFiles(opened, resolvedImport, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState));
             }
           }
           continue;
         }
         if ("dispatchAction" in effect) {
           // 🔁️ Self re-dispatch (D2): re-invokes the same plugin instance with `action` after `delayMs`,
-          // without blocking the current `applyHostEffects` pass — `setTimeout` (0 is "next tick") fires
-          // the follow-up call and feeds its own `requestedEffects` back through `applyHostEffects`
+          // without blocking the current `applyHostEffects` pass — the host's one continuation scheduler
+          // fires the follow-up call and feeds its own `requestedEffects` back through `applyHostEffects`
           // recursively, so a plugin can chain several ticks of staged/progressive work (e.g. a
           // multi-pass reconstruction) purely by re-emitting `dispatchAction` from its own handler.
+          // 🪃️ `delayMs: 0` — what every `rearm()` in flow/generation2d/generation3d asks for — is an
+          // unthrottled macrotask, NOT a nested `setTimeout`: this branch re-enters from inside the
+          // previous dispatch's own callback, and a hidden/unfocused/headless renderer clamps exactly
+          // that shape to ~1 tick/s (this ticket's measured ~24 s per extension hop).
           const { action: dispatchActionId, args: dispatchArgs, delayMs } = effect.dispatchAction;
-          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
-          if (pluginEntry) {
-            scheduleDispatchAction(dispatchActionId, dispatchArgs as Record<string, unknown> | undefined, delayMs, makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner)));
+          // 🪦️ `loadedPluginsRef`, never the render closure's `loadedPlugins`: a DEFERRED effect pass
+          // (`publishContributions`'s `dispatchDeferredEffects`) runs against the `applyHostEffects`
+          // captured when the publish STARTED — one render before the program it just installed reached
+          // `loadedPlugins` state. Read from the closure, both of the install's own `flowEvalTick`
+          // re-arms found an EMPTY list and were dropped without a word, so the whole evaluation chain
+          // never started (measured on 6018, ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A miss is now
+          // loud: a re-arm the host silently swallows is indistinguishable from a guest that stopped.
+          const pluginEntry = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+          if (!pluginEntry) {
+            console.error(`[os-shell] dispatchAction "${dispatchActionId}" dropped: no loaded program for "${baseSession.pluginId}" (loaded: ${loadedPluginsRef.current.map((entry) => entry.handle.pluginId).join(", ") || "none"})`);
+            continue;
           }
+          scheduleDispatchAction(dispatchActionId, dispatchArgs as Record<string, unknown> | undefined, delayMs, makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState));
           continue;
         }
         if ("requestInferenceProposal" in effect) {
@@ -5209,7 +5512,7 @@ function FrameworkOsShellInner({
               },
               accept,
               payload,
-              makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner)),
+              makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState),
             );
           }
           continue;
@@ -5221,7 +5524,13 @@ function FrameworkOsShellInner({
           if (!pluginsNow.some((entry) => entry.handle.pluginId === requester.pluginId)) {
             console.error("[DEBUG] invokeExtension requester missing", JSON.stringify({ requested: baseSession.pluginId, instanceId: baseSession.instanceId, session: sessionRef.current?.pluginId ?? null, loaded: pluginsNow.map((entry) => entry.handle.pluginId), extensionId: effect.invokeExtension.extensionId }));
           }
+          // ⏳️ An extension round trip holds the REQUESTER's captured activation from dispatch until its
+          // `Completed` frame lands, so a switch that retires the requester in between is exactly the
+          // `invokeExtension dispatch failed … no actor for instance N` measured on 6018. Registering
+          // it here is what lets `switchToPluginApp`'s quiesce pass wait for it.
+          const releaseExtensionWork = sessionWorkRef.current.begin(requester.pluginId, requester.instanceId, "extension-invocation");
           void dispatchInvokeExtensionEffect(pluginsNow, requester, effect.invokeExtension, async (requestingPlugin, response) => {
+            if (dropForSealedInstance(requester, "extension answer", effect.invokeExtension.extensionId)) throw new Error("extension.requester-retired");
             if (!isCurrentEffectOwner(effectOwner)) throw new Error("extension.requester-retired");
             const current = sessionRef.current;
             const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === requester.pluginId)?.handle;
@@ -5234,8 +5543,9 @@ function FrameworkOsShellInner({
             await applyHostEffects(response.requestedEffects ?? [], primary ? current : { ...baseSession, viewState: current.viewState }, resolveUiDirtyScope(response.uiScope), effectOwner);
           }).catch((error) => {
             const { extensionId, capability, req } = effect.invokeExtension;
+            if (sealedInstancesRef.current.sealed(requester.pluginId, requester.instanceId)) return;
             console.error("[DEBUG] invokeExtension dispatch failed", { extensionId, capability, req, error });
-          });
+          }).finally(releaseExtensionWork);
           continue;
         }
         if ("spawnPluginInstance" in effect) {
@@ -5317,18 +5627,25 @@ function FrameworkOsShellInner({
           return viewStateRewrittenByEffects ? { ...current, viewState: nextViewState } : current;
         },
       });
+      // 🧰️ What the GUEST dirtied (`uiScope`) unioned with what applying these effects dirtied
+      // ({@link hostEffectRefreshScopeV1}) — an armed utility is a host-owned render input, and a
+      // completion that re-took nothing declares `none`, so without this union the arm is applied and
+      // never published (wave B37).
+      const refreshScope = hostEffectRefreshScopeV1(effects, uiScope ?? { kind: "full" }, nextSession.app.windowKinds.map((kind) => kind.bodyKey));
       if (isSpawnedPluginSession) {
         const spawned = parsePanelState(nextViewState)?.spawnedApps.find((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
-        if (spawned) await refreshSpawnedUi(spawned, nextViewState, uiScope);
+        if (spawned) await refreshSpawnedUi(spawned, nextViewState, refreshScope);
       } else if (shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, nextSession)) {
-        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] applyHostEffects refresh", JSON.stringify({ scope: uiScope, viewStateSame: nextViewState === baseSession.viewState }));
-        await refreshUi(nextSession, uiScope, undefined, leftoverReplaceRefreshBodiesV1());
+        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] applyHostEffects refresh", JSON.stringify({ declared: uiScope, scope: refreshScope, viewStateSame: nextViewState === baseSession.viewState }));
+        await refreshUi(nextSession, refreshScope, undefined, leftoverReplaceRefreshBodiesV1());
       } else {
-        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] applyHostEffects skipped refresh: session not current", JSON.stringify({ spawned: isSpawnedPluginSession, scope: uiScope }));
+        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] applyHostEffects skipped refresh: session not current", JSON.stringify({ spawned: isSpawnedPluginSession, scope: refreshScope }));
       }
     },
-    [captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, requestInferenceProposal, session, setActiveUtilityForWindow, hostMode],
+    [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, requestInferenceProposal, resolvedTargetViewState, session, setActiveUtilityForWindow, hostMode],
   );
+  // 🔁️ What the ui-refresh lane applies for a pass that asked for effects of its own, outside that pass.
+  applyHostEffectsRef.current = applyHostEffects;
 
   /** 🏁️ Applies one retained typed operation's terminal publication. The command that started the
    * operation resolved on its FIRST reactor turn — its `InvocationResult` carries no outcome at all —
@@ -5393,7 +5710,7 @@ function FrameworkOsShellInner({
           openSpaceIdRef.current = null;
           openInstanceIdRef.current = null;
           if (!landingAppId) throw new Error("required landing app identity is unavailable");
-          if (currentSession.app.id !== landingAppId) await switchToManagedApp(landingAppId, preservedViewState);
+          if (currentSession.app.id !== landingAppId) await switchToPluginApp(hostConfig.pluginId, landingAppId, preservedViewState);
           return;
         }
         if (route.kind === "notFound") {
@@ -5415,7 +5732,7 @@ function FrameworkOsShellInner({
           }
           // 🔁️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-I — idempotency
           // guard mirroring `studioChanged` below: without it, ANY re-render that mints a new
-          // `applyShellUri` identity (e.g. `switchToManagedApp` depending on `session`, which
+          // `applyShellUri` identity (e.g. `switchToPluginApp` depending on `session`, which
           // `openDocumentRef.current` below itself updates) re-fires this whole branch for the SAME
           // already-open space, tearing the document's sync session down and reopening it in a tight
           // loop — observed live as dozens of WS open/close cycles plus a `Maximum call stack size
@@ -5425,17 +5742,17 @@ function FrameworkOsShellInner({
           openSpaceIdRef.current = spaceId;
           openInstanceIdRef.current = null;
           if (spaceIndexAlreadyOpen) return;
-          const spaceSession = currentSession.app.id === spaceApp.id ? currentSession : await switchToManagedApp(spaceApp.id, preservedViewState);
+          const spaceSession = currentSession.app.id === spaceApp.id ? currentSession : await switchToPluginApp(hostConfig.pluginId, spaceApp.id, preservedViewState);
           if (!spaceSession) return;
           await openDocumentRef.current({ documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA, spaceId }, undefined, { session: spaceSession, plugin: hostPlugin.handle });
           return;
         }
         // 🧭️ Pin the route studio id before the async app switch so the boot example effect cannot
-        // race-navigate to `/spaces/demo` while `switchToManagedApp` is still awaiting.
+        // race-navigate to `/spaces/demo` while `switchToPluginApp` is still awaiting.
         const studioChanged = openSpaceIdRef.current !== spaceId;
         openSpaceIdRef.current = spaceId;
         if (!hostAppId) throw new Error("required host app identity is unavailable");
-        const studioSession = currentSession.app.id === hostAppId ? currentSession : await switchToManagedApp(hostAppId, preservedViewState);
+        const studioSession = currentSession.app.id === hostAppId ? currentSession : await switchToPluginApp(hostConfig.pluginId, hostAppId, preservedViewState);
         if (!studioSession) return;
         const studioControllerId = studioSession.app.controllerId;
         const routeOwner = captureEffectOwner(studioSession, captureDialogOrigin(studioSession));
@@ -5460,7 +5777,7 @@ function FrameworkOsShellInner({
         applyShellUriDepthRef.current -= 1;
       }
     },
-    [applyHostEffects, loadedPlugins, refreshUi, hostConfig, landingAppId, hostAppId, switchToManagedApp, updateSpacePanel],
+    [applyHostEffects, loadedPlugins, refreshUi, hostConfig, landingAppId, hostAppId, switchToPluginApp, updateSpacePanel],
   );
 
   useEffect(() => {
@@ -5757,6 +6074,18 @@ function FrameworkOsShellInner({
       }
 
       if (!session) return;
+      // 🛑️ A cancel gesture retires the requesting instance's IN-FLIGHT extension work before the
+      // gesture itself is forwarded, and never instead of it: the guest still owns its own
+      // bookkeeping (its pending table, its progress ledger, its arming latch) and the extension
+      // actor still has to be told through its own capability. This hop is only the third one —
+      // the host-side door, which nothing inside the per-actor request queue can reach. The action
+      // id is not known to this shell: a mounted surface DECLARES it off its own status contract
+      // (`declareSurfaceCancelAction`), so the shell stays domain-neutral
+      // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+      if (isDeclaredSurfaceCancelAction(action.action)) {
+        const aborted = abortExtensionRequestsForActor(`${session.pluginId}:${session.instanceId}`, `cancelled by ${action.action}`);
+        console.warn("[DEBUG] extension requests aborted by surface cancel", JSON.stringify({ action: action.action, pluginId: session.pluginId, instanceId: session.instanceId, aborted }));
+      }
       const actionOrigin = submittedOrigin ?? captureDialogOrigin(session);
       if (!isCurrentDialogOrigin(actionOrigin)) return;
       const primaryActionOwner = captureEffectOwner(session, actionOrigin);
@@ -5835,16 +6164,6 @@ function FrameworkOsShellInner({
         }
         if (next) lastUtilityArmAtRef.current = performance.now();
         setActiveUtilityForWindow(windowId, next);
-        const priorLeftover = leftoverWorldSelectionOverlayV1();
-        publishLeftoverWorldSelectionV1({
-          ids: priorLeftover?.ids ?? [],
-          hoveredId: priorLeftover?.hoveredId ?? null,
-          hoveredDomain: priorLeftover?.hoveredDomain,
-          gumballActive: priorLeftover?.gumballActive ?? false,
-          gumballAnchorId: priorLeftover?.gumballAnchorId ?? null,
-          activeUtility: next ?? "select",
-          activeToolId: next ? null : priorLeftover?.activeToolId ?? null,
-        });
         // 🛠️ A tool and a window utility are mutually exclusive interaction owners — activating a real
         // utility clears any active mode-level tool.
         if (next && activeToolIdRef.current) {
@@ -5873,7 +6192,7 @@ function FrameworkOsShellInner({
             .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, windowId), viewState)
             .then((response) => {
               applyHistoryPatch(response.historyPatch);
-            applyLeftoverInteractionView(response.output, forwarded.action);
+            applyLeftoverInteractionView(response.output, forwarded.action, windowId);
               if (!isCurrentEffectOwner(primaryActionOwner)) return;
               return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner);
             })
@@ -5893,15 +6212,20 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_ACTIVE_TOOL", toolId: next });
         if (next) clearAllWindowUtilities();
         const priorToolLeftover = leftoverWorldSelectionOverlayV1();
-        publishLeftoverWorldSelectionV1({
-          ids: priorToolLeftover?.ids ?? [],
-          hoveredId: priorToolLeftover?.hoveredId ?? null,
-          hoveredDomain: priorToolLeftover?.hoveredDomain,
-          gumballActive: priorToolLeftover?.gumballActive ?? false,
-          gumballAnchorId: priorToolLeftover?.gumballAnchorId ?? null,
-          activeUtility: next === "fill" ? "fill" : "select",
-          activeToolId: next,
-        });
+        // 🛠️ A mode-level tool is the one leftover authority that legitimately speaks for EVERY pane —
+        // it just cleared every window's utility above, so the per-pane overlays go with it.
+        publishLeftoverWorldSelectionV1(
+          {
+            ids: priorToolLeftover?.ids ?? [],
+            hoveredId: priorToolLeftover?.hoveredId ?? null,
+            hoveredDomain: priorToolLeftover?.hoveredDomain,
+            gumballActive: priorToolLeftover?.gumballActive ?? false,
+            gumballAnchorId: priorToolLeftover?.gumballAnchorId ?? null,
+            activeUtility: next === "fill" ? "fill" : "select",
+            activeToolId: next,
+          },
+          { kind: "allWindows" },
+        );
         console.warn(`[DEBUG] setActiveTool hop leftover tool=${next ?? ""} utility=${next === "fill" ? "fill" : "select"}`);
         if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "tool" && interaction.on.id === next);
         const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
@@ -6043,6 +6367,11 @@ function FrameworkOsShellInner({
       }
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
       if (!plugin) return;
+      // 🪦️ A control that outlived its session (a long-lived canvas host's own callback, a queued
+      // pointer gesture) still addresses the instance a switch sealed. Dropping here is what turns the
+      // twenty `no actor for instance N` stacks the 6018 journey logged after one role chord into one
+      // typed line per late dispatch.
+      if (dropForSealedInstance(targetSession, "action", action.action)) return;
       const actionOwner = captureEffectOwner(targetSession, actionOrigin);
       if (!isCurrentEffectOwner(actionOwner)) {
         if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked effect-owner", JSON.stringify({ action: action.action }));
@@ -6140,12 +6469,16 @@ function FrameworkOsShellInner({
       }
       if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route fallback handleAction", JSON.stringify({ action: action.action }));
       if (interactiveAction) beginInteractivePluginAction();
+      // ⏳️ The whole round trip — admitting turn, host-effect pass and the `OperationCompleted` frame
+      // `awaitOperationSettle` waits for — is what a switch has to outlive, so the ledger entry spans
+      // the entire chain, not just `handleAction`'s own promise.
+      const releaseActionWork = sessionWorkRef.current.begin(targetSession.pluginId, targetSession.instanceId, "typed-operation");
       return plugin
         .handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId), dispatchViewState)
         .then(async (response) => {
           if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] undo handleAction resolved", JSON.stringify({ uiScope: response.uiScope, effects: (response.requestedEffects ?? []).length, historyUpserts: response.historyPatch?.upserts?.length ?? 0, historyCanUndo: response.historyPatch?.canUndo ?? null }));
           applyHistoryPatch(response.historyPatch);
-            applyLeftoverInteractionView(response.output, action.action);
+            applyLeftoverInteractionView(response.output, action.action, dispatchWindowId);
           const navbarExample = navbarExampleIdFromHistoryUpserts(response.historyPatch?.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
           if (navbarExample !== undefined) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
           const needsHistoryRefresh = historyRefreshNeededV1(action.action, response.historyPatch);
@@ -6172,14 +6505,17 @@ function FrameworkOsShellInner({
             showMutationRejectedNotice((actionError as SemioFaultError).fault);
             return;
           }
+          if (dropForSealedInstance(targetSession, "action failure", action.action)) return;
           console.error("[DEBUG] action failed", action.action, action.args, actionError);
         })
         .finally(() => {
+          releaseActionWork();
           if (interactiveAction) endInteractivePluginAction();
         });
     },
     [
       applyHostEffects,
+      dropForSealedInstance,
       refreshHistorySnapshot,
       awaitOperationSettle,
       captureDialogOrigin,
@@ -6701,7 +7037,7 @@ function FrameworkOsShellInner({
    * the `foldDirectoryEvents` plugin view action; the fold itself is `…ConfigMutation::FoldDirectoryEvent`
    * on the plugin side (contract §C6), this only relays the raw batch through the existing action
    * funnel. Brief's prose says "home session AND the open space session" — this shell keeps exactly
-   * ONE plugin session mounted at a time (`session`/`switchToManagedApp`), so only whichever of
+   * ONE plugin session mounted at a time (`session`/`switchToPluginApp`), so only whichever of
    * home/studio/space is actually live right now can receive it.
    *
    * w4-h root-cause fix #1: every `command_from_action` implementation on the Rust side
@@ -6943,6 +7279,65 @@ function FrameworkOsShellInner({
       });
     },
     [appLabelsOverlay, refreshUi, uiTerminology, uiLocale],
+  );
+
+  /** 🎛️⌨️ Keyboard half of the navbar mode group: cycles `session.app.modes` by one step, wrapping.
+   * Positional rather than one binding per mode id because mode ids are plugin-authored while
+   * `SHELL_KEYBINDINGS` is a static framework table — see its own doc comment. Reads `sessionRef` so
+   * the bound callback survives every session change without re-arming the listener. */
+  const applyModeStep = useCallback(
+    (step: 1 | -1) => {
+      const current = sessionRef.current;
+      if (!current) return;
+      const next = stepModeIdV1(current.app.modes.map((mode) => mode.id), current.viewState.activeModeId ?? current.app.defaultModeId, step);
+      if (next) applyModeChange(next);
+    },
+    [applyModeChange],
+  );
+
+  /** 👁️✏️⌨️ Switches the mounted session to this plugin's OTHER surface for the open document's dialect.
+   * Every `session.app.role` gate (VCS check-in, mutation-command filtering, the viewer mutation
+   * refusal, `canonicalSurfaceId` scope validation) reads the live session, so swapping `session.app`
+   * flips all of them in one step — nothing here reproduces a role rule. */
+  const switchToSessionRole = useCallback(
+    async (role: AppRole): Promise<void> => {
+      const current = sessionRef.current;
+      if (!current) return;
+      const apps = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === current.pluginId)?.manifest.apps ?? [];
+      const target = roleSwitchTargetV1(apps, current.app.dialect, current.app.role, role);
+      if (!target) return;
+      await switchToPluginApp(current.pluginId, target.id);
+    },
+    [switchToPluginApp],
+  );
+
+  useActionHotkey(
+    "ui.shell.mode.next",
+    useCallback(() => applyModeStep(1), [applyModeStep]),
+    { preventDefault: true },
+    [applyModeStep],
+    { overrides: uiKeybindingOverrides },
+  );
+  useActionHotkey(
+    "ui.shell.mode.previous",
+    useCallback(() => applyModeStep(-1), [applyModeStep]),
+    { preventDefault: true },
+    [applyModeStep],
+    { overrides: uiKeybindingOverrides },
+  );
+  useActionHotkey(
+    SURFACE_ROLE_CONTROL_IDS.editor,
+    useCallback(() => void switchToSessionRole("editor").catch((switchError) => console.error("[DEBUG] role switch to editor failed", switchError)), [switchToSessionRole]),
+    { preventDefault: true },
+    [switchToSessionRole],
+    { overrides: uiKeybindingOverrides },
+  );
+  useActionHotkey(
+    SURFACE_ROLE_CONTROL_IDS.viewer,
+    useCallback(() => void switchToSessionRole("viewer").catch((switchError) => console.error("[DEBUG] role switch to viewer failed", switchError)), [switchToSessionRole]),
+    { preventDefault: true },
+    [switchToSessionRole],
+    { overrides: uiKeybindingOverrides },
   );
 
   const handleTemplateDrop = useCallback(
@@ -8367,25 +8762,21 @@ function FrameworkOsShellInner({
 
   // 📱️ Moved ahead of `mobilePanelTabs` (below) so its synthetic mobile "App" tab can share the exact
   // example-select/mode-switcher elements the desktop navbar center cluster renders — single source of truth.
+  // 📚️ Resolved by DIALECT, never by app id: an example is a document of the artifact's subset, so
+  // the viewer of a dialect offers exactly the same picker its editor does (ticket
+  // 26/09/09/PROCEDURAL-3D-END-TO-END). `examplesForApp` is the shared predicate — Rust
+  // `manifest::examples_for_app` is its twin, both pinned by `📚️example-picker.json`.
   const exampleOptions = useMemo(() => {
-    const appId = session?.app.id ?? "";
-    if (!appId) return [];
-    const seen = new Set<string>();
-    return (activePluginManifest?.examples ?? [])
-      .filter((example) => example.appId === appId)
-      .filter((example) => {
-        if (seen.has(example.id)) return false;
-        seen.add(example.id);
-        return true;
-      })
-      .map((example) => ({
-        id: example.id,
-        label: resolveAppLabel(appLabelsOverlay, "example", example.id, resolveManifestLabel(example.label, uiTerminology, uiLocale)),
-        // 🩹️ `PluginManifest.examples` entries carry no icon (`{id, label, documentJson, appId}` only,
-        // same shape kernel's own `PluginManifest` declares) — a generic fallback, not a fabricated field.
-        icon: "file" as IconName,
-      }));
-  }, [activePluginManifest, session?.app.id, appLabelsOverlay, uiTerminology, uiLocale]);
+    const app = session?.app;
+    if (!app) return [];
+    return examplesForApp(activePluginManifest?.examples ?? [], app).map((example) => ({
+      id: example.id,
+      label: resolveAppLabel(appLabelsOverlay, "example", example.id, resolveManifestLabel(example.label, uiTerminology, uiLocale)),
+      // 🩹️ `PluginManifest.examples` entries carry no icon (`{id, label, artifactJson, dialect}` only,
+      // same shape kernel's own `PluginManifest` declares) — a generic fallback, not a fabricated field.
+      icon: "file" as IconName,
+    }));
+  }, [activePluginManifest, session?.app, appLabelsOverlay, uiTerminology, uiLocale]);
   exampleOptionsRef.current = exampleOptions;
 
   const dispatchActiveExample = useCallback(
@@ -8416,11 +8807,14 @@ function FrameworkOsShellInner({
     );
   }, [session, exampleOptions, locks.exampleId, hostMode, landingAppId, activeExampleId, dispatchActiveExample]);
 
-  /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
+  /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`).
+   * `aria-keyshortcuts` republishes the two framework mode-cycling chords on the GROUP, which is where
+   * they belong: the chords step through the group rather than addressing any one button. */
   const modeSwitcherElement = useMemo(() => {
     if (!session || session.app.modes.length <= 1) return null;
+    const stepShortcuts = ariaKeyshortcutsText([controlKeybindings.get(MODE_STEP_CONTROL_IDS.next), controlKeybindings.get(MODE_STEP_CONTROL_IDS.previous)].filter(Boolean).join(","));
     return (
-      <ButtonGroup key="modes" id="playground.navbar.modes">
+      <ButtonGroup key="modes" id="playground.navbar.modes" role="group" aria-label={appModeGroupText(uiLocale)} aria-keyshortcuts={stepShortcuts}>
         {session.app.modes.map((mode) => {
           const isActive = activeModeId === mode.id;
           return (
@@ -8429,6 +8823,7 @@ function FrameworkOsShellInner({
               id={`playground.navbar.modes.${mode.id}`}
               className={cn(isActive && interactiveActiveFillClass)}
               data-state={isActive ? "on" : undefined}
+              aria-pressed={isActive}
               onClick={() => applyModeChange(mode.id)}
               icon={mode.iconId}
               text={resolveAppLabel(appLabelsOverlay, "mode", mode.id, resolveManifestLabel(mode.label as LocalizedLabel | string, uiTerminology, uiLocale))}
@@ -8437,7 +8832,49 @@ function FrameworkOsShellInner({
         })}
       </ButtonGroup>
     );
-  }, [session, activeModeId, applyModeChange, appLabelsOverlay, uiTerminology, uiLocale]);
+  }, [session, activeModeId, applyModeChange, appLabelsOverlay, controlKeybindings, uiTerminology, uiLocale]);
+
+  /** 👁️✏️ The plugin's editor/viewer pair for the OPEN document's dialect, or `null` when it declares
+   * fewer than two surfaces for it — which is exactly when the role group must not render. */
+  const sessionRoleApps = useMemo((): Readonly<Record<AppRole, AppDefinition>> | null => {
+    if (!session) return null;
+    const apps = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.manifest.apps ?? [];
+    return surfaceRoleAppsV1(apps, session.app.dialect);
+  }, [loadedPlugins, session]);
+
+  /** @emoji 👁️✏️ Navbar role group — the in-shell control that makes `…#viewer` reachable without a
+   * reload (`📓️audit-window-inventory-2026-09-12.md` §4 P0 item 2). Labels come from each target
+   * `AppDefinition`'s OWN localized label, so en/de follow the plugin rather than a shell dictionary.
+   * Shares the mode switcher's placement in both the desktop navbar cluster and the mobile "App" tab. */
+  const roleSwitcherElement = useMemo(() => {
+    if (!session || sessionRoleApps === null) return null;
+    return (
+      // 🚦️ `aria-busy` on the GROUP, disabled on the items: a switch is a transaction over the whole
+      // group (it quiesces, retires and mounts), never over one button, and a second press while one is
+      // running is refused by `sessionSwitchGateRef` rather than queued — so the group must say so.
+      <ButtonGroup key="roles" id="playground.navbar.roles" role="group" aria-label={surfaceRoleGroupText(uiLocale)} aria-busy={surfaceSwitchBusy || undefined}>
+        {SURFACE_ROLE_ORDER.map((role) => {
+          const app = sessionRoleApps[role];
+          const isActive = session.app.role === role;
+          return (
+            <ButtonGroupItem
+              key={role}
+              id={SURFACE_ROLE_CONTROL_IDS[role]}
+              className={cn(isActive && interactiveActiveFillClass)}
+              data-state={isActive ? "on" : undefined}
+              data-role={role}
+              aria-pressed={isActive}
+              disabled={surfaceSwitchBusy && !isActive}
+              aria-keyshortcuts={ariaKeyshortcutsText(controlKeybindings.get(SURFACE_ROLE_CONTROL_IDS[role]))}
+              onClick={() => void switchToSessionRole(role).catch((switchError) => console.error(`[DEBUG] role switch to ${role} failed`, switchError))}
+              icon={SURFACE_ROLE_ICON_IDS[role]}
+              text={resolveManifestLabel(app.label as LocalizedLabel | string, uiTerminology, uiLocale)}
+            />
+          );
+        })}
+      </ButtonGroup>
+    );
+  }, [session, sessionRoleApps, surfaceSwitchBusy, switchToSessionRole, controlKeybindings, uiTerminology, uiLocale]);
 
   const resolvedCommands = useMemo(() => {
     const resolved = resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds);
@@ -8666,7 +9103,7 @@ function FrameworkOsShellInner({
     // 📱️ The example selector and mode switcher have no navbar room on mobile (see `navbarItems`) — they
     // surface as one more tab in the merged mobile panel instead, sharing the exact same elements the
     // desktop navbar center cluster renders.
-    if (!exampleSelectElement && !modeSwitcherElement) return anchorTabs;
+    if (!exampleSelectElement && !modeSwitcherElement && !roleSwitcherElement) return anchorTabs;
     const appTab = singleTreeLeaf({
       id: "framework.mobile.app",
       icon: shellTabIcon("smartphone"),
@@ -8680,13 +9117,14 @@ function FrameworkOsShellInner({
             items: [
               ...(exampleSelectElement ? [{ id: "framework.mobile.app.example", label: "", control: exampleSelectElement }] : []),
               ...(modeSwitcherElement ? [{ id: "framework.mobile.app.modes", label: "", control: modeSwitcherElement }] : []),
+              ...(roleSwitcherElement ? [{ id: "framework.mobile.app.roles", label: "", control: roleSwitcherElement }] : []),
             ],
           },
         ],
       },
     });
     return [...anchorTabs, appTab];
-  }, [defaultDock, exampleSelectElement, modeSwitcherElement]);
+  }, [defaultDock, exampleSelectElement, modeSwitcherElement, roleSwitcherElement]);
 
   /** 🗄️ Skips the very first (pre-hydration) commit so a persisted skeleton isn't clobbered with `null` before the seeding effect above has a chance to read and apply it. */
   const dockPersistedOnceRef = useRef(false);
@@ -9038,7 +9476,7 @@ function FrameworkOsShellInner({
 
   useEffect(() => {
     return subscribeLeftoverWorldSelectionV1(() => {
-      const leftover = leftoverWorldSelectionOverlayV1();
+      const leftover = leftoverWorldArmedWindowOverlayV1();
       const hoverVortex = leftover?.hoveredId && (leftover.hoveredDomain === "vortex" || leftover.hoveredId.includes(":")) ? leftover.hoveredId : null;
       const utility = leftover?.activeUtility;
       if (leftoverBrushTickSettledRef.current && leftoverBrushPreviewWindowHash(utility, hoverVortex, "cached") === undefined) {
@@ -9053,7 +9491,7 @@ function FrameworkOsShellInner({
   }, []);
 
   useEffect(() => {
-    const leftover = leftoverWorldSelectionOverlayV1();
+    const leftover = leftoverWorldArmedWindowOverlayV1();
     const hoverVortex = leftover?.hoveredId && (leftover.hoveredDomain === "vortex" || leftover.hoveredId.includes(":")) ? leftover.hoveredId : null;
     const scope = leftoverBrushPreviewRefreshScope(leftover?.activeUtility, hoverVortex);
     if (leftoverBrushPreviewEpoch === 0 || !scope || !leftoverBrushTickSettledRef.current) return;
@@ -9067,7 +9505,7 @@ function FrameworkOsShellInner({
       try {
         while (leftoverBrushRefreshPendingRef.current) {
           leftoverBrushRefreshPendingRef.current = false;
-          const live = leftoverWorldSelectionOverlayV1();
+          const live = leftoverWorldArmedWindowOverlayV1();
           const liveHover = live?.hoveredId && (live.hoveredDomain === "vortex" || live.hoveredId.includes(":")) ? live.hoveredId : null;
           const liveSignal = leftoverBrushPreviewRefreshScope(live?.activeUtility, liveHover);
           const liveSession = sessionRef.current;
@@ -9136,6 +9574,7 @@ function FrameworkOsShellInner({
    */
   const toolTabSelectionRef = useRef<ToolTabSelection | null>(null);
   const pendingToolActivateRef = useRef<string | null | undefined>(undefined);
+  const revealedToolIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!session) return;
     const toolAnchor = findPanelTabInDock(dock, FRAMEWORK_CATEGORY_TOOL_ID)?.anchor ?? "bottom-middle";
@@ -9143,7 +9582,16 @@ function FrameworkOsShellInner({
     const branchPath = findPanelTabPath(toolCategoryTabs, FRAMEWORK_CATEGORY_TOOL_ID);
     if (!branchPath) return;
     const path = mobile ? mobilePanelPath : panelActivePaths[toolAnchor];
-    if (branchPath.some((segment, index) => path[index] !== segment)) return;
+    const toolCategoryActive = !branchPath.some((segment, index) => path[index] !== segment);
+    if (programArmedToolRevealV1(revealedToolIdRef.current, activeToolId, toolCategoryActive)) {
+      revealedToolIdRef.current = activeToolId;
+      const value = findPanelTabPath(toolCategoryTabs, `tool.${activeToolId}`) ?? branchPath;
+      dispatch(mobile ? { type: "SET_MOBILE_PANEL_PATH", value } : { type: "SET_PANEL_PATH", anchor: toolAnchor, value });
+      dispatch(mobile ? { type: "SET_MOBILE_PANEL_VISIBLE", value: true } : { type: "SET_PANEL_VISIBLE", anchor: toolAnchor, value: true });
+      return;
+    }
+    if (!toolCategoryActive) return;
+    revealedToolIdRef.current = activeToolId;
     const selectedToolId = toolIdFromPanelTabId(path[path.length - 1]);
     if (pendingToolActivateRef.current !== undefined) {
       const pending = pendingToolActivateRef.current;
@@ -9298,6 +9746,7 @@ function FrameworkOsShellInner({
     const centerContent: ReactNode[] = [logoAndTitle];
     if (showExampleSelect && exampleSelectElement) centerContent.push(exampleSelectElement);
     if (modeSwitcherElement) centerContent.push(modeSwitcherElement);
+    if (roleSwitcherElement) centerContent.push(roleSwitcherElement);
     return [
       { key: "topLeftPanelTabs", content: <PanelChromeTabBar anchor="top-left" {...buildPanelSelectionProps("top-left")} /> },
       navbarFillItem("navbarTrailingFill"),
@@ -9313,7 +9762,7 @@ function FrameworkOsShellInner({
         ),
       },
     ];
-  }, [brand, buildPanelSelectionProps, exampleOptions, exampleSelectElement, locks.exampleId, mobile, mobilePanelVisible, modeSwitcherElement, session, uiTerminology, hostMode, landingAppId]);
+  }, [brand, buildPanelSelectionProps, exampleOptions, exampleSelectElement, locks.exampleId, mobile, mobilePanelVisible, modeSwitcherElement, roleSwitcherElement, session, uiLocale, uiTerminology, hostMode, landingAppId]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];

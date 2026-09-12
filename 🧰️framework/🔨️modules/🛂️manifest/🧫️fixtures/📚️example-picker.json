@@ -1,0 +1,36 @@
+{
+  "examples": [
+    { "id": "hexagonal-mushroom-column", "dialect": { "artifactKind": "s.procedural.generation3d", "standard": "1", "subset": "*" } },
+    { "id": "box-shell-preview", "dialect": { "artifactKind": "s.procedural.generation3d", "standard": "1", "subset": "*" } },
+    { "id": "two-room-corridor", "dialect": { "artifactKind": "s.assembly", "standard": "1", "subset": "*" } },
+    { "id": "hexagonal-mushroom-column", "dialect": { "artifactKind": "s.procedural.generation3d", "standard": "1", "subset": "*" } },
+    { "id": "strict-only", "dialect": { "artifactKind": "s.procedural.generation3d", "standard": "1", "subset": "strict" } }
+  ],
+  "cases": [
+    {
+      "name": "editor-of-the-dialect-offers-every-example-of-it",
+      "app": { "id": "s.procedural.generation3d@1/*#editor", "role": "editor", "dialect": { "artifactKind": "s.procedural.generation3d", "standard": "1", "subset": "*" } },
+      "expected": ["hexagonal-mushroom-column", "box-shell-preview"]
+    },
+    {
+      "name": "viewer-of-the-same-dialect-offers-exactly-the-same-picker",
+      "app": { "id": "s.procedural.generation3d@1/*#viewer", "role": "viewer", "dialect": { "artifactKind": "s.procedural.generation3d", "standard": "1", "subset": "*" } },
+      "expected": ["hexagonal-mushroom-column", "box-shell-preview"]
+    },
+    {
+      "name": "another-artifacts-surface-never-sees-them",
+      "app": { "id": "s.assembly@1/*#viewer", "role": "viewer", "dialect": { "artifactKind": "s.assembly", "standard": "1", "subset": "*" } },
+      "expected": ["two-room-corridor"]
+    },
+    {
+      "name": "a-sibling-subset-of-the-same-artifact-is-a-different-dialect",
+      "app": { "id": "s.procedural.generation3d@1/strict#editor", "role": "editor", "dialect": { "artifactKind": "s.procedural.generation3d", "standard": "1", "subset": "strict" } },
+      "expected": ["strict-only"]
+    },
+    {
+      "name": "a-dialect-with-no-authored-example-shows-no-picker",
+      "app": { "id": "s.draw.draw@1/*#editor", "role": "editor", "dialect": { "artifactKind": "s.draw.draw", "standard": "1", "subset": "*" } },
+      "expected": []
+    }
+  ]
+}

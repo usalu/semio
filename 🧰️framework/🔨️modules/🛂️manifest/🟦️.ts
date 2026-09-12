@@ -1,4 +1,4 @@
-import type { ArtifactDialect } from "../🚪️io/🧬️schema/🟦️.ts";
+import { dialectCoordinate, type ArtifactDialect } from "../🚪️io/🧬️schema/🟦️.ts";
 import type { AppRole, AppRef } from "./🧬️schema/🟦️.ts";
 export { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "./🧬️schema/🟦️.ts";
 // #region 🛂️Manifest
@@ -797,8 +797,11 @@ export type PluginViewState = {
   /** 🛠️ Host-owned active tool of the active mode (never a document field, never a VCS operation) — mutually
    * exclusive with `activeUtilityId`: activating one clears the other. */
   readonly activeToolId?: string;
+  /** 📌️ Host-owned panel state, opaque to the guest. The ONE long string a view context carries —
+   * contributions are NOT a view-state field: they are installed into the guest by the paged
+   * `setContributions` command run (`🛠️ShellHelpers/🧩️contributions/🟦️.ts`), which the guest folds
+   * into its own registry, so a refresh crosses a reference-free, bounded context. */
   readonly panelJson?: string;
-  readonly contributionsJson?: string;
   readonly locale?: string;
   readonly terminology?: string;
   /** 🪟️ The window instance a render/action call targets — programs key per-window option state off this, never off `activeWindowKindId`. */
@@ -871,6 +874,19 @@ export function publicInvocationStringPages(text: string): readonly string[] {
 }
 //#endregion 📏️PublicInvocationCapacity
 
+//#region 📏️ViewContextCapacity
+/** 📏️ `panelJson` capacity in Unicode characters — the TypeScript mirror of the ONE neutral
+ * declaration `🪟️view-context/🧬️schema/🔣️.json` (`maxLength`), twinned in Rust by
+ * `VIEW_CONTEXT_LONG_STRING_CHARS` (`🛂️manifest/🦀️.rs`) and pinned against the schema by
+ * `🧪️tests/🔬️view-context-capacity/🦀️.rs`. */
+export const VIEW_CONTEXT_LONG_STRING_CHARS = 65_536;
+/** 📏️ Long-string fields a view context may carry: `panelJson`, and nothing else. Contributions are
+ * installed by the paged `setContributions` run (`🛠️ShellHelpers/🧩️contributions/🟦️.ts`), never
+ * carried here — the aggregated closure is 248 635 characters
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export const VIEW_CONTEXT_LONG_STRING_FIELDS = ["panelJson"] as const;
+//#endregion 📏️ViewContextCapacity
+
 /** 🪟️ Admits an explicit host projection before it crosses a process boundary. */
 export function parseResolvedPluginViewState(value: unknown): ResolvedPluginViewState {
   const object = (input: unknown): Record<string, unknown> => {
@@ -883,11 +899,11 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
   };
   const row = object(value);
   const short = ["activeModeId", "activeWindowKindId", "activeUtilityId", "activeToolId", "windowId", "focusedWindowId"];
-  const long = ["panelJson", "contributionsJson"];
+  const long = VIEW_CONTEXT_LONG_STRING_FIELDS;
   const allowed = new Set([...short, ...long, "locale", "terminology", "activeUtilityByWindowId", "windowInstances"]);
   if (Object.keys(row).some((key) => !allowed.has(key)) || !["en", "de"].includes(row.locale as string) || !["native", "reuse"].includes(row.terminology as string)) throw new Error("view context: explicit supported preferences required");
   for (const key of short) if (row[key] !== undefined) identifier(row[key]);
-  for (const key of long) if (row[key] !== undefined && (typeof row[key] !== "string" || Array.from(row[key]).length > 65_536)) throw new Error("view context: invalid panel data");
+  for (const key of long) if (row[key] !== undefined && (typeof row[key] !== "string" || Array.from(row[key]).length > VIEW_CONTEXT_LONG_STRING_CHARS)) throw new Error(`view context: invalid panel data at ${key}`);
   if (row.activeUtilityByWindowId !== undefined) {
     const entries = Object.entries(object(row.activeUtilityByWindowId));
     if (entries.length > 64) throw new Error("view context: utility capacity exceeded");
@@ -990,6 +1006,39 @@ export type TopicContribution = {
   readonly payload: unknown;
 };
 
+/** 📚️ One authored example document on the manifest — TS twin of Rust `ExampleDefinition`. It carries
+ * the DIALECT it was authored for, never one app id: every surface bound to that dialect (the editor
+ * and the viewer alike) opens the same fixtures (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export type ManifestExample = {
+  readonly id: string;
+  readonly label: string;
+  readonly documentJson?: string;
+  readonly artifactJson?: string;
+  readonly dialect: ArtifactDialect;
+};
+
+/** 📚️ THE example-picker predicate — every example authored for `dialect`, in manifest order,
+ * deduplicated by id. Twinned by Rust `manifest::examples_for_dialect`, both pinned against
+ * `🧫️fixtures/📚️example-picker.json` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export function examplesForDialect<E extends { readonly id: string; readonly dialect?: ArtifactDialect }>(examples: readonly E[], dialect: ArtifactDialect): E[] {
+  const wanted = dialectCoordinate(dialect);
+  const seen = new Set<string>();
+  const resolved: E[] = [];
+  for (const example of examples) {
+    if (!example.dialect || dialectCoordinate(example.dialect) !== wanted || seen.has(example.id)) continue;
+    seen.add(example.id);
+    resolved.push(example);
+  }
+  return resolved;
+}
+
+/** 📚️ The examples one surface may offer — {@link examplesForDialect} against that surface's own
+ * dialect. Role plays no part: an editor and its viewer are two surfaces of ONE dialect and offer
+ * exactly the same picker. */
+export function examplesForApp<E extends { readonly id: string; readonly dialect?: ArtifactDialect }>(examples: readonly E[], app: { readonly dialect?: ArtifactDialect }): E[] {
+  return app.dialect ? examplesForDialect(examples, app.dialect) : [];
+}
+
 export type PluginManifest = {
   readonly pluginId: string;
   readonly label: string;
@@ -1002,7 +1051,7 @@ export type PluginManifest = {
     readonly breadcrumb?: readonly string[];
     readonly yields: string;
   }[];
-  readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
+  readonly examples: readonly ManifestExample[];
   /** 🗂️ Open plugin contributions — see `TopicContribution`. */
   readonly topicContributions?: readonly TopicContribution[];
   /** 🎛️ Plugin-scope commands this plugin exposes — apply whenever any of its apps is focused. */

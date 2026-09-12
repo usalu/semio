@@ -584,10 +584,18 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Get rid of all testkits and just keep tests, fixtures, etc
+
+violstiond e.g.
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testkit/🌊️actor-import/📜️script.ts
+
+---
+
 abstract properly
 
 violations e.g.
 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx should not have code regarding brush (which is app specific tool such as in puzzle 3d)
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx should not have specific ui elements such as dag etc (should be a ui element)
 
 ---
 

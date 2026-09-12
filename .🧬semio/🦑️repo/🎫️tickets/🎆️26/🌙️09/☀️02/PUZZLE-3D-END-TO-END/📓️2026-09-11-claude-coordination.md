@@ -441,3 +441,189 @@ A3 also re-verified `worldRelocate` on Nakagin as NOT a live defect (extent ≈1
   paying `applyHostEffects` → `typedOperationCompletionRefreshV1` (no pass for completions that dirtied nothing).
   `outliner-show-restores` is a probe timing artifact (fixed 3 s wait vs 9 s Hide). Build #50 started (pid 3280).
 - 02:50 (09-12) #50 deployed (4m 02s; B26 export name + B27 catalogue fold). Full battery waits for B28 (owns the probe file and the port).
+- 04:45 (09-12) B28 landed (`📓️2026-09-12-wave-B28-host-routes-regressions.md`): REAL layout defect — the perspective
+  window's pane-chrome toggle (`…engagement.toggle` at 490,35) is covered by the mode-dock tab button
+  (`mode-dock-tab-1-puzzle3d-main-perspective`), six pointer clicks never unfold it, and `Pane` unmounts folded
+  children, so a real user can never reach Export / Import / the typed engagement field; context-menu rows were never
+  broken (the guest answers 6–7 rows in ~18 s behind serialised ingresses; 30-poll budget → all three PASS);
+  `World3dHost` dispatched an undeclared `contextMenuAt` on every right-click (deleted, law); the typed field lives
+  in the SEARCH pane (`engagement-input-present` PASS) but its controlled `input.value` stays `""` so every submit is
+  empty; gumball hit stamp now includes the axis origin. A probe with `page.evaluate` between mouse down/up
+  deadlocked 44 min and :6013 wedged a third time (pid 81904) → recycled by pid at 02:44, B28's two orphan probes
+  killed, full battery #50 started (`🗑️generated/battery-2026-09-12-50-6013.txt`).
+| B29 | 04:50 (09-12) | dock tabs cover window pane-chrome toggles; engagement Search controlled value never updates; `#tool.fill` needs the footer Tool category; probe mutation polling budgets | `📓️2026-09-12-wave-B29-dock-chrome-engagement.md` |
+- 05:20 (09-12) battery #50 (`🗑️generated/probe-2026-09-12T00-44-50.md`, 1 247 s): FAULTS=0, PASS=51 FAIL=37. NEW PASS:
+  export-only (B28's pane-toggle fallback), add-object dialog + dynamic kinds. NEW FAIL: example-switch / undo-unwind /
+  undo-redo all read `example=` (EMPTY) and `export-names-the-example expected=.json` — the active example id is
+  empty at boot and after a switch (B26's `active_example_id` is stamped only by the set_active_example arms; B26's
+  host `rememberedExampleIdFromDispatchV1` reads it) → REGRESSION, wave B30. import-distinct now reaches the guest
+  (taps present) but the census stays 1 → the fold, not the route. context-menu rows answer in 15–20 s (30 polls
+  insufficient in the full run) — B29's 30 s budgets.
+| B30 | 05:25 (09-12) | example id at boot / navbar label regression / export name; importFixture completion must republish the world lane | `📓️2026-09-12-wave-B30-example-id-import-lane.md` |
+- 06:35 (09-12) B29 landed (`📓️2026-09-12-wave-B29-dock-chrome-engagement.md`): the window sat in the dock tab bar's band
+  because `ui.css` `.window-silhouette-content-plane` zeroed only the padding of its clearance for any descendant
+  `edgeless`/`dead-line-scroll` (matched through the mode-dock body) → guard scoped with `:not(:has([data-slot=
+  "window"]))`; a second obstruction was World3dHost's hardcoded-English `Frame` overlay in the chrome row → moved to
+  a localized top-right rail below the clearance (EN/DE); B28's synthetic click fallback deleted. Live: toggle
+  uncovered, `export-only` PASS by a real click, `engagement-input-present` PASS. Engagement: Search was purely
+  controlled by a value the guest never republished → `searchControlledLineV1` draft; ShellHost skipped tool
+  reconciliation unless the Tool category was the root → `programArmedToolRevealV1`; `engagement-brush-verb`,
+  `engagement-fill-verb`, `engagement-placeholder-has-no-dead-verbs` PASS. Probe: `settleFor(…, 30 s)` + `waitedMs`
+  on every mutation verdict (delete-selection is a proven 30 s red). :6013 wedged a FOURTH time (bun 91282, 96 %) —
+  sampling it before the recycle (`🗑️generated/vite-wedge-sample-2026-09-12.txt`). Newly visible reds: `engagement-abort`
+  cannot leave the fill tool; probe `selectionState()` counts dock tabs; `every_advertised_engagement_verb_is_implemented`
+  red at HEAD (peer).
+- 06:40 (09-12) B30 landed (`📓️2026-09-12-wave-B30-example-id-import-lane.md`): NO element carried
+  `playground.navbar.fixture` (the select spent its id on `.label/.select/.trigger`), so every reader fell through to
+  the first combobox (empty) — the four #50 reds measured nothing; id now names the trigger (law); guest default
+  `active_example_id = concrete-forest` at seeding (rides #51). Import lane: contract correct, completion carries the
+  composite + document bodies, `import-distinct` PASS at ~17 s on a free serve; `openHistory()` toggles the panel
+  SHUT on a second click (probe). Vite wedge ROOT CAUSE found by PROCEDURAL-3D-END-TO-END
+  (`📓️vite-serve-wedge-2026-09-12.md`): chokidar consolidates one FSEvents stream over the whole repo and runs ~1 316
+  prefix filters per write anywhere (probe outputs, cargo cache…) — fixed in `⚙️vite.config.ts` (`server.watch: null`
+  + `semioSourceWatchVitePlugin`, unwatched `🗑️generated`/`.🧬semio`/`dist`…). :6013 recycled onto the fixed config
+  at 04:37 CEST; #51 (B29 host + B30 guest) deploy + battery chained (`🗑️generated/deploy-2026-09-12-51.txt`).
+| B31 | 06:45 (09-12) | `engagement-abort` cannot leave Fill; `delete-selection` 30 s red; gumball zero pose delta; probe `selectionState`/`openHistory` repairs | `📓️2026-09-12-wave-B31-delete-abort-gumball.md` |
+- 07:20 (09-12) B29 follow-up: gumball-handle-enter PASS (grab at 0.6 of origin→tip), catalogue-add-object-kind PASS by a
+  real press (1→2), `selectionState()` no longer counts dock tabs (`addObjectKind` does not select what it adds —
+  honest red). The mutation commits LAND (history `move-object … new-origin=13.0994`, hide reaches both surfaces)
+  but `data-instances-json` never changes and the panel body is never re-taken → the last convergent defect is the
+  world-lane republication after a typed-operation completion (B27's `typedOperationCompletionRefreshV1` returning
+  null for `{kind:"none"}` completions is the first hypothesis) → wave B32.
+| B32 | 07:25 (09-12) | world lane / panel bodies not republished after typed-operation completions (gumball, relocate, hide, delete); `Agent disconnected` during mutations | `📓️2026-09-12-wave-B32-world-lane-after-completion.md` |
+- 07:50 (09-12) battery #51 (`🗑️generated/probe-2026-09-12T02-44-30.md`, 1 265 s): FAULTS=0, PASS=50 FAIL=33. NEW PASS:
+  camera-orbit, example-switch, undo-unwind, undo-redo, import-distinct-records-history (B30 navbar id). NEW FAIL vs
+  #50: add-object dialog/kinds, engagement-input-present (unfold), export-only — all pass in fresh lanes → the FULL
+  run's accumulated state (Nakagin 180 instances, armed Fill, presence banner, dock state) is what breaks them; the
+  mutation verdicts burn the full 30 s in the full run while B29's fresh lanes land them in 6–21 s → wave B33 on the
+  full-run vs fresh-lane gap (state pollution / tool arming / dock unfold under load).
+| B33 | 07:55 (09-12) | why mutations and pane unfolds that pass in fresh lanes fail inside the full battery (state pollution, armed Fill, Nakagin load, presence) | `📓️2026-09-12-wave-B33-full-run-vs-fresh-lane.md` |
+- 08:20 (09-12) B32 stalled (agent watchdog, no progress 600 s) while reading the publication contract table — relaunched as B32b with the same brief.
+- 09:25 (09-12) B31 landed (`📓️2026-09-12-wave-B31-delete-abort-gumball.md`): delete's real defect was in the plugin host —
+  `interaction_selection_snapshot`'s leftover overlay refilled an EMPTY store selection (only the reserved pick route
+  ever wrote it), so every app-authored subtractive clear was undone on the next read → `leftover_after_app_selection
+  _write_v1` (also fixes HEAD's `every_advertised_engagement_verb_is_implemented` red); `deleteSelection` gains the
+  `Interaction` lane + `clear_selection`; the contract fixture was stale in five further ways and the publication audit
+  script lacked two keys (now green for all three owners). Escape now disarms Fill (cancels the plan, `SetActiveTool ""`).
+  Gumball: the probe dragged perpendicular to the axis, and World3dHost FABRICATED a 0.5 `translateSelection` whenever
+  the pose didn't move (deleted, law). Lanes on #51: delete PASS (19.9 s / 10.8 s), duplicate PASS on a verified
+  selection, import-distinct-records-history PASS (`openHistory()` was pressing Undo); `gumball-scene-delta` is one
+  clean hop (a real delta does not move the census → B32b). A peer's `🔀️surface-switch` work briefly broke the boot
+  (`createSessionWorkLedgerV1`).
+- 09:30 (09-12) build #52 (compile only, pid 87736; B31 guest + plugin-host leftover fix) started; materialize/activate deferred until B32b/B33 finish their lanes (`🗑️generated/build-2026-09-12-52.txt`).
+- 10:05 (09-12) B32b landed (`📓️2026-09-12-wave-B32-world-lane-after-completion.md`): NO dropping hop — translate /
+  relocate / addTargetVolume all reach `data-instances-json`, but 10–14 s late, because of a refresh STORM: (1)
+  `register_brush_mesh`'s `request_reupload` widened its `Quiet` scope to the viewport unconditionally on every
+  idempotent repeat (23/33 completions viewport-scope, 23/31 refresh passes all-`unchanged`) → fixed, 3 laws
+  (rides #53); (2) `dispatch_interaction_action` returns `UiDirtyScope::Full` for ALL six interaction verbs incl.
+  `interactionHover` → pointer motion repaints the whole shell → wave B34 (app-declared interaction scope).
+  Re-attribution: outliner hide/show PASS (13.4 s), gumball-scene-delta intermittent at the 30 s budget, relocate's
+  drag never dispatches (`beginRelocateDrag` hit-test — B28 family), `Agent disconnected` = MCP bridge steady state.
+| B34 | 10:10 (09-12) | interaction verbs dirty `Full` (hover repaints the whole shell) → app-declared interaction scope; relocate drag hit-test | `📓️2026-09-12-wave-B34-interaction-scope.md` |
+- 10:15 (09-12) build #53 (compile only, pid 94221; B31 + B32b guest) started; deploy after B33 reports.
+- 11:05 (09-12) B33 landed (`📓️2026-09-12-wave-B33-full-run-vs-fresh-lane.md`): ONE polluter — `brush-stroke`. Root cause:
+  `World3dHost.dispatch` discarded `onAction`'s promise (the only thing that settles on `OperationCompleted`), so every
+  "one round trip outstanding" gate was inert: a 70-move hover storm enqueued 72 `interactionHover` + 85
+  `suggestionsTick` turns (11/10 settled) and `addTargetVolume` starved behind ~136 turns at ~3.5/s — the mechanism
+  behind every "reply never arrived" red. Fix (host-live): `dispatchSettled`, single-flight tick lane, coalesced
+  reference hover, gate release on settle. Proof with the polluter still first: volume-brush add, catalogue add,
+  duplicate, delete, focus, engagement input, context-menu rows (8), outliner hide/show, add-object dialog,
+  settings→rail ALL PASS; 3 engine-contract laws. Probe recipes: `consoleBuf` 4 000-line ring makes `slice(mark)`
+  empty in long runs (`tail=[]`, `guestTaps=[]`); `context-menu-rows` must precede `brush-stroke`. Guest halves:
+  brush preview gate `no-free-candidate free=0 pending=true`, typed `brush` verb does not arm. Stale vite transform
+  seen twice (200 OK + missing-export SyntaxError → `touch` the file).
+- 11:12 (09-12) #53 materialize + full battery chained (`🗑️generated/deploy-2026-09-12-53.txt`, `battery-2026-09-12-53-6013.txt`).
+| B35 | 11:15 (09-12) | probe console ring (indexed), step ordering; brush preview gate `no-free-candidate`; typed `brush` verb | `📓️2026-09-12-wave-B35-probe-ring-brush-gate.md` |
+- 11:45 (09-12) battery #53 (`🗑️generated/probe-2026-09-12T04-33-49.md`, 1 180 s): FAULTS=0, **PASS=63 FAIL=25** (was 50/33).
+  NEW PASS: add-object dialog/kinds/count, catalogue add + drag-drop, context-menu-opens, duplicate + reselects clone,
+  engagement abort/clear/fill-verb/input/placeholder, focus-selection (B33's dispatch gate + B31). Remaining 25:
+  first-pick Inspection + lock chrome + clipboard + volume-brush arm + export + settings→rail + camera-history +
+  projection-repaint + locale + outliner-hide-control in the FULL run only (pass in fresh lanes) → wave B36 (bisect
+  round 2); gumball/relocate delta (B34), brush preview + `brush` verb + context-menu vocabulary ordering + import
+  taps (B35), `addObjectKind` does not select what it adds, delete-selection census confounded by a late duplicate.
+| B36 | 11:50 (09-12) | full-run bisect round 2: first-pick Inspection, lock chrome, clipboard, volume-brush arm, export, settings→rail, camera history, projection repaint, locale, outliner hide control | `📓️2026-09-12-wave-B36-full-run-bisect-2.md` |
+- 12:55 (09-12) B34 landed (`📓️2026-09-12-wave-B34-interaction-scope.md`): app-declared interaction scope via a new
+  `ArtifactApp::interaction_scope(verb, domains)` hook (default None → Full, zero churn for 40 apps); puzzle3d
+  declares hover → world body only, select/clear/selectAll → world + inspector + outliner + history + measures,
+  mode/granularity → world + measures. 6 laws. Measured before on #53: 22 of 26 refresh passes were `full`, 68 % of
+  requested bodies answered `unchanged`; after needs #54 (guest). Relocate: the press point was 265 px from the
+  object — the selection was a GATE on the press point although the args are a travel delta → an empty-ground press
+  with a live selection now grabs the anchor as base point; `relocate-pose-delta` FAIL 30 s → PASS 2.7 s (twice),
+  gumball-scene-delta PASS in the same run.
+- 13:00 (09-12) build #54 (compile only, pid 20179; B34 guest interaction scope) started; deploy after B35/B36 finish their lanes.
+- 13:30 (09-12) B35 landed (`📓️2026-09-12-wave-B35-probe-ring-brush-gate.md`): probe ring → monotonic `consoleSeq`
+  cursors; `context-menu-rows` leads its group and disarms utilities → vocabulary + zoom-row PASS. Brush preview:
+  the suggestions tick resolved its target from menu + hover only while the render used the latched
+  `brush_live_target`; with hover cleared and `brush_cache` dropped by every accepted `registerBrushMesh`, the render
+  asked for a vortex no tick would warm (`free=0 pending=true`) → third leg on the latch,
+  `PUZZLE3D_BRUSH_WARM_TICKS = 2`, laws warm in 1 tick; `brush-preview-place` PASS (rides #54). Typed `brush`: the
+  probe read the wrong pane (fixed, PASS in isolation); behind `brush-stroke` the effect arms the map but no render
+  follows for 30 s — `applyHostEffects`' trailing `refreshUi` vs in-flight coalescing (ShellHost :5537/:4747) → host
+  wave; `engagement-abort` was passing vacuously (open, B31's arm).
+| B37 | 13:35 (09-12) | a refresh requested during an in-flight pass is dropped (effects like SetActiveUtility render only on the next keystroke) → exactly-one merged follow-up | `📓️2026-09-12-wave-B37-effect-refresh-coalescing.md` |
+- 14:40 (09-12) B36 landed (`📓️2026-09-12-wave-B36-full-run-bisect-2.md`): 13 verdicts, four causes, two product. (1) the
+  shell auto-reveals Inspection on a pick and the probe's "open the tab" click COLLAPSES it (rows 12 → 0 → 12) — same
+  for History (`setCamera` emits no history: the product was right) and the Artifact panel; (2) delete's precondition
+  select reads empty after `catalogue-panel` (probe); (3) export: Concrete 7.5 KB downloads, Nakagin 145 KB does not —
+  `export_fixture` never uses the framework's segmented-download lane (32 MiB cap, host drain) → product; (4) locale,
+  clipboard, duplicate-reselects fail in fresh lanes too (`selectionState()` reads a `selection` field
+  `data-interaction-json` never carries). Product fixes: `WindowConfigOwnerRegistry::capture` falls back to
+  `focused_window_id` (Settings rendered the default while writing the focused pane); `addObjectKind` selects what it
+  adds (Interaction lane declared). Both ride #55. Peer-owned: three laws die on `dispatch(CLEAR_SELECTION)` no longer
+  clearing.
+| B38 | 14:45 (09-12) | probe: ensurePanel, settings by id, projection controls, selectionState from `data-selection-json`; product: segmented export download for large fixtures; clipboard fresh-lane red | `📓️2026-09-12-wave-B38-probe-recipes-export-segments.md` |
+- 14:50 (09-12) build #55 (compile only, pid 55428; B34 + B35 + B36 guest) started; deploy + battery after B37/B38 report.
+- 16:00 (09-12) B37 landed (`📓️2026-09-12-wave-B37-effect-refresh-coalescing.md`): the lost refresh was never asked for —
+  `typedOperationCompletionRefreshV1` correctly answered `none` (arming a utility is host-owned) and ShellHost forwarded
+  `none` verbatim; fix `hostEffectRefreshScopeV1` (declared scope ∪ what applying the effects earned) +
+  `createUiRefreshCoalescerV1` replacing the hand-rolled loop (a rejected pass dropped the owed follow-up, joiners awaited
+  the wrong pass, re-entrant requests started a second concurrent pass); 7 laws. `engagement-brush-verb` PASS isolated;
+  behind `brush-stroke` the pane renders armed but the probe reads identical values for BOTH panes because the world
+  record is assembled under one shared `recordKey: puzzle.3d.play.viewport` → wave B39 (per-instance world record).
+| B39 | 16:05 (09-12) | world record keyed by the authored key `puzzle.3d.play.viewport` is shared by both panes on the host → per-window-instance record | `📓️2026-09-12-wave-B39-per-instance-world-record.md` |
+- 16:10 (09-12) #55 materialize + full battery chained (`🗑️generated/deploy-2026-09-12-55.txt`, `battery-2026-09-12-55-6013.txt`); host live incl. B33/B37; B38/B39 in flight.
+- 16:45 (09-12) battery #55 did not boot: pageerror `📤️SegmentedDownload/🟦️.ts does not provide an export named …` — B38's in-flight segmented-export host edit (or a stale vite transform); re-run after B38 lands (touch the module first).
+- 17:20 (09-12) B38 landed (`📓️2026-09-12-wave-B38-probe-recipes-export-segments.md`): six probe recipes (`ensurePanel`
+  never clicks an open tab, settings by id, real projection controls, `selectionState()` from `data-selection-json`,
+  16-id census cap removed) → locale-control-present, catalogue-add-selects, duplicate-reselects, locked-flag-row,
+  clipboard PASS on the unchanged guest; export over 64 KiB now streams the framework's segmented-download lane
+  (guest `PuzzleCommandWorkStep::Download`, host buffered sink; 145 714 B reassembled byte-for-byte; rides #56); the
+  whole segmented-download drain test corpus was in no runner (added). NEW product defect: the locale switch REVOKES
+  the plugin actor (`actor-activation.revoked`, `no channel for instance 1`) → wave B40. Honest reds: `projection-
+  repaints-camera` (a select flips, camera identical), `delete-selection` (census unchanged 30 s with a real selection).
+| B40 | 17:25 (09-12) | locale switch revokes the plugin actor; projection option must repaint the camera; delete census | `📓️2026-09-12-wave-B40-locale-actor-revocation.md` |
+- 17:30 (09-12) build #56 (compile only, pid 81673; B38 guest segmented export) started; battery #55b running (`🗑️generated/battery-2026-09-12-55b-6013.txt`).
+- 18:05 (09-12) battery #55b (`🗑️generated/probe-2026-09-12T07-31-16.md`, 1 176 s, 95 steps): PASS=61 FAIL=34 but
+  FAULTS=11 (5 hard, first at 86 s = the locale switch in the read group → actor revoked, B40) so the rest of the
+  read group and the DE label verdicts measured a dead guest; NEW PASS: export-only + export-names-the-example,
+  inspection-object-fields, inspection/locked flag rows, locale-control-present + no-english-leak, outliner hide
+  control, context-menu vocabulary/zoom, clipboard + selection preconditions. The mutate group ran on a Nakagin
+  document with 175 instances after brush strokes (`puzzle3d.brush.*` objects), which changes every census reading.
+- 18:15 (09-12) #56 materialized (B38 guest segmented export); the full battery waits for B40 (locale switch kills the actor at the 86 s mark of every full run).
+- 18:50 (09-12) B39 landed (`📓️2026-09-12-wave-B39-per-instance-world-record.md`): the record WAS per instance at every
+  hop; the real defect was `World3dHost`'s leftover InteractionView overlay — ONE module-level `let` for every pane of
+  every document, laid over each pane's record last (last-writer-wins: `-top`'s `setCamera`/`registerBrushMesh`
+  leftover wiped `-perspective`'s arm) — plus two arm routes (action vs guest `setActiveUtility` effect) of which only
+  the action published the overlay. Fix: per-instance overlay registry with declared scope (`window` / `document` /
+  `allWindows`), `setActiveUtilityForWindow` as the single arm authority. Live on #56: the two panes diverged for the
+  first time (`select` vs `volumeBrush`); `--only=brush-stroke,engagement-bar,volume-brush` → PASS=15 FAIL=0 FAULTS=0
+  (engagement-brush-verb and engagement-abort green). Host-only.
+- 18:55 (09-12) full battery on #56 with every step except `locale-switch` (B40 pending) started (`🗑️generated/battery-2026-09-12-56-nolocale-6013.txt`).
+- 19:30 (09-12) B40 landed (`📓️2026-09-12-wave-B40-locale-actor-revocation.md`): changing the UI language HOT-SWAPPED every
+  plugin — `establishPrimarySession` had `uiLocale`/`uiTerminology` in its deps → `PluginSource` subscription re-ran →
+  a fresh SSE connect replays a full snapshot → every loaded plugin routed to `reloadPlugin` → `destroyApp`. Fix: refs
+  instead of deps + `pluginAvailabilityRouteV1` (a replayed snapshot can never destroy a live instance; law
+  installs=3 hot-swaps=0 drops=6) + a full `refreshUi` on locale change so guest bodies relabel. Live: locale switch
+  keeps both windows, faults 12 → 0, DE document labels PASS. `projection-repaints-camera` = probe timing (score
+  `value`, use `cameraSettled`); `locale-de-document-section-label` demands the `reuse` terminology word while the
+  shell is on `native` ("Objekte" is correct); delete-selection PASS in isolation and behind the locale step.
+  Handover: `framework.worldOrbit.projection` is a hardcoded id rendered once per world surface (duplicate ids).
+| B41 | 19:35 (09-12) | duplicate `framework.worldOrbit.projection` id per world surface; probe scoring for projection repaint + DE section label | `📓️2026-09-12-wave-B41-projection-id-probe-scoring.md` |
+- 19:37 (09-12) full battery WITH the locale step on #56 (host incl. B39/B40) queued behind the no-locale run (`🗑️generated/battery-2026-09-12-56-full-6013.txt`).
+- 20:20 (09-12) battery #56 (no locale; `🗑️generated/probe-2026-09-12T08-08-54.md`): PASS=61 FAIL=29 but a NEW guest death at
+  740 s: `shard 0 terminated by the host watchdog: the worker was silent for 18 603 ms; outstanding: cancelJob
+  puzzle#1` — right after `engagement-abort` PASS (B31's Escape now cancels the in-flight fill plan via
+  `Effect::CancelJob`) the guest's cancel turn never yields → watchdog kills the shard → actor revoked → every later
+  verdict (outliner hide, catalogue, duplicate/delete, export, import, guest-alive) measured a dead guest. The mutate
+  group also runs on 176 instances after the brush stroke (`puzzle3d.brush.*` objects painted on hovered vortices).
+| B42 | 20:25 (09-12) | `cancelJob` for the fill plan is a non-yielding guest turn (18.6 s) → watchdog kill; cancellation and drops must be bounded per turn | `📓️2026-09-12-wave-B42-cancel-job-watchdog.md` |

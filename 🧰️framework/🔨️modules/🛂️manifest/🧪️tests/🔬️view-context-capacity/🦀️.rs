@@ -17,7 +17,6 @@ async fn capacities_match_the_neutral_schema() {
     let properties = &schema["properties"];
     assert_eq!(schema["$defs"]["Identifier"]["maxLength"].as_u64().unwrap() as usize, VIEW_CONTEXT_IDENTIFIER_CHARS);
     assert_eq!(properties["panelJson"]["maxLength"].as_u64().unwrap() as usize, VIEW_CONTEXT_LONG_STRING_CHARS);
-    assert_eq!(properties["contributionsJson"]["maxLength"].as_u64().unwrap() as usize, VIEW_CONTEXT_LONG_STRING_CHARS);
     assert_eq!(properties["activeUtilityByWindowId"]["maxProperties"].as_u64().unwrap() as usize, VIEW_CONTEXT_UTILITY_ENTRIES);
     assert_eq!(properties["windowInstances"]["maxItems"].as_u64().unwrap() as usize, VIEW_CONTEXT_WINDOW_INSTANCES);
 
@@ -54,7 +53,6 @@ async fn a_capacity_filled_context_fits_the_bound() {
         active_utility_by_window_id: (0..VIEW_CONTEXT_UTILITY_ENTRIES).map(|index| (format!("{index}{}", identifier()), identifier())).collect(),
         active_tool_id: Some(identifier()),
         panel_json: Some(long()),
-        contributions_json: Some(long()),
         locale: Locale::En,
         terminology: Terminology::Native,
         window_id: Some(identifier()),
@@ -64,4 +62,22 @@ async fn a_capacity_filled_context_fits_the_bound() {
     let encoded = serde_json::to_vec(&view).unwrap();
     println!("[STATS] capacity-filled view context encoded={} bound={}", encoded.len(), MAX_SURFACE_VIEW_CONTEXT_BYTES);
     assert!(encoded.len() <= MAX_SURFACE_VIEW_CONTEXT_BYTES, "encoded {} exceeds bound {MAX_SURFACE_VIEW_CONTEXT_BYTES}", encoded.len());
+}
+
+/// ⚖️ LAW: contributions are not a view-state field. They are installed into the guest by the paged
+/// `setContributions` run the host publisher owns (`🛠️ShellHelpers/🧩️contributions/🟦️.ts`) and the
+/// guest folds into its own registry (`🌊️flow/📔️registry/🦀️.rs`); the view context carries no copy
+/// and no reference. The aggregated closure is 248 635 characters against this schema's 65 536
+/// bound, so any producer that re-adds the field re-breaks every refresh of the affected app
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[semio_framework_async_macros::async_test]
+async fn contributions_are_not_a_view_context_field() {
+    let schema = schema();
+    assert!(schema["properties"].get("contributionsJson").is_none(), "contributionsJson must not be a view-context property");
+    assert!(schema["additionalProperties"].as_bool() == Some(false), "the schema must refuse any re-added long field");
+    assert_eq!(VIEW_CONTEXT_LONG_STRING_FIELDS, 1, "panelJson is the only long string a view context carries");
+    let view = crate::ViewModel { panel_json: Some("p".into()), locale: crate::Locale::En, terminology: crate::Terminology::Native, ..Default::default() };
+    let encoded = serde_json::to_string(&view).unwrap();
+    assert!(!encoded.contains("contributionsJson"), "the guest projection must not emit contributionsJson: {encoded}");
+    assert!(encoded.contains("panelJson"), "the guest projection still carries the one long field: {encoded}");
 }

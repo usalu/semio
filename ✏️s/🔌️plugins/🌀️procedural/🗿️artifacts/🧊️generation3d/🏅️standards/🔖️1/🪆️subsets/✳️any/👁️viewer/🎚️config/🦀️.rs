@@ -80,11 +80,18 @@ pub struct Generation3dViewConfig {
     /// 🌞️ JSON-encoded `semio_framework_plugin::WorldSunConfig`.
     #[value(default = "default_view_sun_json")]
     pub sun_json: String,
+    /// 🎨️ The bundled example this surface is looking at (`""` = the opened document itself).
+    ///
+    /// 📚️ A read-only surface cannot rewrite its document, so picking an example is a CONFIG edit
+    /// here, not a document mutation: `viewed_document` resolves this id to the example's projection
+    /// and every read path (preview render, `flowEvalTick`, `pending_effects`, the interaction
+    /// topology) goes through it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub active_example_id: String,
 }
 
 impl Default for Generation3dViewConfig {
     fn default() -> Self {
-        Self { lod_mode: String::new(), show_mode: default_view_show_mode(), preview_camera: Generation3dViewCamera::default(), sun_json: default_view_sun_json() }
+        Self { lod_mode: String::new(), show_mode: default_view_show_mode(), preview_camera: Generation3dViewCamera::default(), sun_json: default_view_sun_json(), active_example_id: String::new() }
     }
 }
 

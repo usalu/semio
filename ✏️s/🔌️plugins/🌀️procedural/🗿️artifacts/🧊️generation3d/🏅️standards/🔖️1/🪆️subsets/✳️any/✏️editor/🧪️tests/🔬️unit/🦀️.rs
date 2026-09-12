@@ -258,16 +258,21 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
 
 //#region 🔖️CommandSurface
 /// ⚖️ LAW: the brep kernel's mesh transfer unit fits the wire bound `flowTessellateResolve` actually
-/// declares. `Generation3dBoundedCommandJobFactory` registers ONE `ToolExecutionContract` for all 28
-/// of its keys, so this route cannot be widened alone — the producer must chunk to the bound. When
-/// the two drifted, one whole-mesh chunk arrived as 38 770 raw bytes, `ActionBus::dispatch_wire`
-/// rejected it before decoding, and every preview handle stayed pending forever
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+/// declares, and that bound belongs to the CHAIN's own route, never to the gesture quota. A factory
+/// registers ONE `ToolExecutionContract` for all its keys, so while the chain shared
+/// `Generation3dBoundedCommandJobFactory` the transfer unit was pinned to 8 KiB minus the envelope
+/// header — 4 KiB of mesh body per `flowEvalTick` round trip, i.e. ten round trips for
+/// `sphere-cut-with-torus` and no painted preview inside any patience window
+/// (`📓️preview-mesh-delivery-2026-09-12.md`). Widening it on the gesture route would have widened
+/// 24 unrelated interactive routes with it, so the chain owns
+/// [`Generation3dFlowEvalJobFactory`] and this law pins ITS bound to the transfer unit.
 #[test]
 fn tessellate_transfer_unit_fits_the_declared_response_wire_bound() {
     let maximum = semio_framework_os_flow::brep_geometry::tessellate_envelope_maximum_bytes();
-    assert!(maximum <= GENERATION3D_RETAINED_RAW_BYTES, "one tessellate step envelope is at most {maximum} bytes but the declared wire bound is {GENERATION3D_RETAINED_RAW_BYTES}");
-    assert_eq!(generation3d_bounded_contract().max_raw_wire_bytes, GENERATION3D_RETAINED_RAW_BYTES, "the registered contract and the factory-side wire cap are one bound");
+    assert!(maximum <= GENERATION3D_FLOW_EVAL_RAW_BYTES, "one tessellate step envelope is at most {maximum} bytes but the declared wire bound is {GENERATION3D_FLOW_EVAL_RAW_BYTES}");
+    assert!(maximum > GENERATION3D_RETAINED_RAW_BYTES, "a transfer unit that still fits the gesture quota needs no route of its own");
+    assert_eq!(generation3d_flow_eval_contract().max_raw_wire_bytes, GENERATION3D_FLOW_EVAL_RAW_BYTES, "the registered contract and the factory-side wire cap are one bound");
+    assert_eq!(generation3d_bounded_contract().max_raw_wire_bytes, GENERATION3D_RETAINED_RAW_BYTES, "the gesture quota stays exactly where it was");
 }
 
 #[test]
@@ -279,12 +284,13 @@ fn command_ids_are_unique_and_cover_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), GENERATION3D_RETAINED_TOOL_IDS.len() + GENERATION3D_CONTRIBUTIONS_TOOL_IDS.len(), "every Generation3dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), GENERATION3D_RETAINED_TOOL_IDS.len() + GENERATION3D_FLOW_EVAL_TOOL_IDS.len() + GENERATION3D_CONTRIBUTIONS_TOOL_IDS.len(), "every Generation3dCommand row must be covered by every_command()");
 }
 
-/// ⚖️ LAW: every one of the 28 declared `Generation3dCommand` rows is retained-owned by
-/// `Generation3dBoundedCommandJobFactory`, with an exact, nonempty publication-lane contract —
-/// the shape `ArtifactToolFactoryRegistry::register` itself enforces
+/// ⚖️ LAW: every one of the 30 declared `Generation3dCommand` rows is retained-owned by EXACTLY one
+/// of the three factories — the gesture route, the preview chain's own route and the contributions
+/// route — with an exact, nonempty publication-lane contract, the shape
+/// `ArtifactToolFactoryRegistry::register` itself enforces
 /// (`🧰️framework/…/🔌️plugin/🦀️.rs:12736-12748`), asserted here so a future command addition that
 /// forgets its retained-tool-id/publication-contract row fails this test instead of silently
 /// reintroducing `interactive-job.missing-owned-reducer` at dispatch. Mirrors generation2d's own
@@ -294,26 +300,33 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     let _serial = test_support::lock();
-    assert_eq!(GENERATION3D_RETAINED_TOOL_IDS.len(), 28);
+    assert_eq!(GENERATION3D_RETAINED_TOOL_IDS.len(), 24);
+    assert_eq!(GENERATION3D_FLOW_EVAL_TOOL_IDS.len(), 5);
     assert_eq!(GENERATION3D_CONTRIBUTIONS_TOOL_IDS.len(), 1);
-    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 29, "both factories' proofs, aggregated");
-    assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 28);
+    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 30, "all three factories' proofs, aggregated");
+    assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 24);
+    assert_eq!(Generation3dFlowEvalJobFactory::PUBLICATION_CONTRACTS.len(), 5);
     assert_eq!(Generation3dContributionsJobFactory::PUBLICATION_CONTRACTS.len(), 1);
     assert_eq!(generation3d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(generation3d_bounded_contract().cancellation, ToolCancellationPolicy::PerOperation);
+    assert_eq!(generation3d_flow_eval_contract().shape, ToolExecutionShape::BoundedFirstStep);
+    assert_eq!(generation3d_flow_eval_contract().cancellation, ToolCancellationPolicy::PerOperation);
     assert!(GENERATION3D_RETAINED_TOOL_IDS.iter().all(|tool_id| Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id)));
+    assert!(GENERATION3D_FLOW_EVAL_TOOL_IDS.iter().all(|tool_id| Generation3dFlowEvalJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id)));
     let mut sorted_ids = GENERATION3D_RETAINED_TOOL_IDS.to_vec();
+    sorted_ids.extend_from_slice(GENERATION3D_FLOW_EVAL_TOOL_IDS);
+    sorted_ids.extend_from_slice(GENERATION3D_CONTRIBUTIONS_TOOL_IDS);
+    let declared = sorted_ids.len();
     sorted_ids.sort_unstable();
     sorted_ids.dedup();
-    assert_eq!(sorted_ids.len(), GENERATION3D_RETAINED_TOOL_IDS.len(), "duplicate retained tool ids in {GENERATION3D_RETAINED_TOOL_IDS:?}");
+    assert_eq!(sorted_ids.len(), declared, "a tool id may be owned by exactly one factory");
     for command in every_command() {
         assert!(
-            GENERATION3D_RETAINED_TOOL_IDS.contains(&command.command_id()) || GENERATION3D_CONTRIBUTIONS_TOOL_IDS.contains(&command.command_id()),
-            "command {} is owned by neither Generation3dBoundedCommandJobFactory nor Generation3dContributionsJobFactory",
+            sorted_ids.contains(&command.command_id()),
+            "command {} is owned by none of Generation3dBoundedCommandJobFactory, Generation3dFlowEvalJobFactory or Generation3dContributionsJobFactory",
             command.command_id()
         );
     }
-    assert!(GENERATION3D_CONTRIBUTIONS_TOOL_IDS.iter().all(|tool_id| !GENERATION3D_RETAINED_TOOL_IDS.contains(tool_id)), "a tool id may be owned by exactly one factory");
 }
 
 /// ⚖️ LAW: the contributions route's declared wire ceiling is REACHABLE — the largest page the
@@ -449,6 +462,7 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "flow-eval-resolve",
         "flow-tessellate-resolve",
         "cancel-preview-eval",
+        "flow-tessellate-cancel-resolve",
         "set-contributions",
     ];
     let commands = every_command();
@@ -487,9 +501,10 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::SetCamera(set_camera::SetCamera { camera: crate::editor::generation3d::config::Generation3dPreviewCamera::default() }),
         Generation3dCommand::SelectGeneration(select_generation::SelectGeneration { id: "generation-1".into() }),
         Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() }),
-        Generation3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash: 7, output_json: "{}".into() }),
+        Generation3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash: 7, output_json: "{}".into(), extension_id: String::new(), ok: true, fault_code: String::new(), fault_message: String::new() }),
         Generation3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash: 9, output_json: "{}".into() }),
-        Generation3dCommand::CancelPreviewEval(cancel_preview_eval::CancelPreviewEval {}),
+        Generation3dCommand::CancelPreviewEval(cancel_preview_eval::CancelPreviewEval { window_id: "w1".into(), window_kind_id: "procedural-preview".into() }),
+        Generation3dCommand::FlowTessellateCancelResolve(flow_tessellate_cancel_resolve::FlowTessellateCancelResolve { window_id: "w1".into(), window_kind_id: "procedural-preview".into(), output_json: "{\"ok\":true,\"retired\":1}".into(), ok: true }),
         Generation3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
     ]
 }
@@ -620,9 +635,7 @@ async fn generation3d_interaction_selection_owns_its_persisted_history() {
     let _serial = test_support::lock();
     let mut app = app_with_registry().await;
     let node_id = testkit::snapshot(&app).fixture.widgets.first().map(crate::widget_id).expect("default fixture node").to_string();
-    let targets = serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: "node".into(), id: node_id.clone() }]).expect("selection targets");
-    let args: dsl::DslValue = serde_json::json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" }).into();
-    app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &semio_framework_plugin::testkit::meta("local")).await.expect("interaction selection persists");
+    testkit::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
     semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
 }
@@ -661,9 +674,7 @@ async fn context_menu_reads_the_framework_owned_graph_selection() {
     let unselected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await);
     assert!(!unselected.iter().any(|id| id == "translateSelection"), "an empty selection must not offer a transform: {unselected:?}");
     assert!(!unselected.iter().any(|id| id == "removeWidget"), "an empty selection must not offer a removal target: {unselected:?}");
-    let targets = serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: "node".into(), id: node_id.clone() }]).expect("selection targets");
-    let args: dsl::DslValue = serde_json::json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" }).into();
-    app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &semio_framework_plugin::testkit::meta("local")).await.expect("interaction selection persists");
+    testkit::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     let selected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await);
     for id in ["translateSelection", "rotateSelection", "scaleSelection", "removeWidget", "removeGeneration"] {
         assert!(selected.iter().any(|candidate| candidate == id), "a live graph selection must offer {id}: {selected:?}");
@@ -693,7 +704,7 @@ fn no_pointer_down_route_survives_the_framework_owned_selection_domain() {
     let definition = create_generation3d_app();
     let json = serde_json::to_string(&definition).expect("app definition json");
     assert!(!json.contains("PointerDown"), "pointer-down routes are framework-owned now");
-    assert!(GENERATION3D_RETAINED_TOOL_IDS.iter().all(|id| !id.ends_with("PointerDown")), "a retained tool id outlived its action");
+    assert!(GENERATION3D_RETAINED_TOOL_IDS.iter().chain(GENERATION3D_FLOW_EVAL_TOOL_IDS).all(|id| !id.ends_with("PointerDown")), "a retained tool id outlived its action");
     assert!(definition.interactions.iter().any(|interaction| interaction.id == "graph"), "the graph domain is what replaced them");
 }
 
@@ -1222,7 +1233,10 @@ async fn the_first_turn_sequence_retires_every_flow_host_it_builds() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let (_, preview_view) = testkit::preview_views("procedural-preview-test", "procedural-preview-test-other");
-    let effects = <Generation3dPlayApp as ArtifactEditor>::pending_effects(&doc, &cfg, Some(&preview_view));
+    let _ = (&doc, &cfg);
+    // 🔒️ Through the app instance, because the poll now reads the RETAINED evaluation session's
+    // per-window arming latch and only the instance owns the handle to it.
+    let effects = app.pending_effects(Some(&preview_view)).await;
     println!("[STATS] pending_effects effects={}", effects.len());
     snapshot.retire_cold();
 
@@ -1478,7 +1492,7 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
     let miss = semio_framework_os_flow::flow_extension_invocation_address("not-contributed-by-anything").expect_err("an uncontributed flow extension id has no invocation address");
     let mut owner = Generation3dInstanceOperationOwner::new();
     let faulted: serde_json::Value = owner
-        .with_session(|session| serde_json::from_str(&crate::editor::generation3d::preview_progress_status_json_for(session, Err(miss))).expect("preview status json"))
+        .with_session(|session| serde_json::from_str(&crate::editor::generation3d::preview_progress_status_json_for(Some(session), Err(miss))).expect("preview status json"))
         .expect("the retained evaluation-session owner lends its session");
     for _ in 0..1_000_000 {
         if matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, usize::MAX, usize::MAX), Ok(semio_framework_plugin::PluginCloseStep::Complete)) {
@@ -1531,7 +1545,7 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
 #[semio_framework_async_macros::async_test]
 async fn a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_faulted() {
     let _serial = test_support::lock();
-    let _unlinked = UnlinkedFlowExtensions::take();
+    let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::take();
     semio_framework_os_flow::sync_host_flow_extension_contributions("[]".to_string()).expect("an empty closure is a legal registry state — it is the state every served boot starts in");
     assert!(
         semio_framework_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_err(),
@@ -1634,44 +1648,6 @@ async fn re_pushing_an_unchanged_closure_re_arms_nothing() {
     semio_framework_os_flow::uninstall_flow_extension(testkit::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
 }
 
-/// 🔗 Retires both linked extension installers for the length of a law and puts them back
-/// afterwards — panic or not. A `--lib` binary links the packs the served guest only ever receives
-/// as host contributions, and a linked pack shadows the contributed stub, so a law about the served
-/// shape has to reach it explicitly. The registry is process-wide and this guard is a guest in it
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-struct UnlinkedFlowExtensions {
-    taken: Vec<(&'static str, fn(&mut semio_framework_os_flow::neural::Registry))>,
-}
-
-impl UnlinkedFlowExtensions {
-    fn take() -> Self {
-        let taken = [crate::flow_operators::BREP_EXTENSION_FLOW_ID, crate::flow_operators::MATH_EXTENSION_FLOW_ID]
-            .into_iter()
-            .filter_map(|extension_id| semio_framework_os_flow::unregister_linked_flow_extension_installer(extension_id).map(|install| (extension_id, install)))
-            .collect::<Vec<_>>();
-        assert_eq!(taken.len(), 2, "both linked packs must be registered before a law retires them");
-        Self { taken }
-    }
-}
-
-impl Drop for UnlinkedFlowExtensions {
-    fn drop(&mut self) {
-        for (extension_id, install) in self.taken.drain(..) {
-            semio_framework_os_flow::register_linked_flow_extension_installer(extension_id, install);
-        }
-        // 🔁️ Two replacements, not one: the installer table is only read while a registry is BUILT,
-        // and the installer answers de-duplicate on the contribution map alone — re-pushing the
-        // closure the law already pushed would rebuild nothing and silently leave the packs unlinked
-        // for every later test in this binary.
-        semio_framework_os_flow::sync_host_flow_extension_contributions("[]".to_string()).expect("the law leaves the process-wide registry as it found it");
-        let contributions = testkit::staged_flow_extension_contributions_json(&[]);
-        semio_framework_os_flow::sync_host_flow_extension_contributions(contributions).expect("the law leaves the process-wide registry as it found it");
-        assert!(
-            std::thread::panicking() || semio_framework_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_ok(),
-            "the restored registry must address the geometry kernel again"
-        );
-    }
-}
 
 /// 📈 The preview window's published tessellation phase.
 fn preview_phase(preview_body_json: &str) -> String {
@@ -1820,6 +1796,25 @@ async fn hex_column_boot_stays_inside_the_interactive_turn_budget() {
         budget.ledger.published_bytes,
         budget.ledger.considered_bytes
     );
+    // ⏱️ The ceiling asserted above is only ENFORCEABLE while the dag walk carries a wall-clock
+    // deadline. `FLOW_EVAL_TICK_STEP_BUDGET` counts NODES, and this seven-node fixture is three
+    // orders of magnitude under it — a single expensive operator would blow the 8 ms contract
+    // without ever reaching the node cap, which is exactly how one browser reactor turn ran for
+    // 3.5-18.4 s (`📓️audit-guest-tick-cost-2026-09-12.md` §1.3). The reactor itself cannot help:
+    // `run_until_deadline` checks its deadline BETWEEN task steps, never inside one, and this tick
+    // is a plain synchronous `fn`. So the preemption point has to live inside the walk, and this
+    // law asserts it is armed rather than merely declared.
+    assert!(
+        semio_framework_os_flow::FLOW_EVAL_TICK_ELAPSED_CEILING_US < semio_framework_job::INTERACTIVE_STEP_CEILING_US,
+        "the dag walk must yield strictly before the interactive contract expires, leaving the rest of the turn its own room: {}us against {}us",
+        semio_framework_os_flow::FLOW_EVAL_TICK_ELAPSED_CEILING_US,
+        semio_framework_job::INTERACTIVE_STEP_CEILING_US
+    );
+    assert!(
+        semio_framework_os_flow::flow_eval_tick_budget().deadline.is_some(),
+        "a target with an installed monotonic clock must run the dag walk under a wall-clock deadline — a node count alone cannot preempt one slow operator"
+    );
+    assert_eq!(semio_framework_os_flow::flow_eval_tick_budget().dispatches, semio_framework_os_flow::FLOW_EVAL_TICK_STEP_BUDGET, "the wall-clock deadline is added to the node budget, never instead of it");
 }
 //#endregion 📈️HotPathBudget
 
@@ -1897,3 +1892,89 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
     }
 }
 //#endregion 📇️WindowActionLawTests
+
+//#region 💥️ExtensionEvaluateFaultLaw
+/// 💥 The preview's published fault has to be the one the surface is CURRENTLY living with. Before
+/// this law the status object could only ever name the addressing miss (`flow.extension-not-contributed`),
+/// so a contributed-but-refusing geometry extension left the preview card asserting the extension
+/// was absent while the console showed every `evaluate` faulting
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Driven by the language-agnostic
+/// `🧫️fixtures/💥️extension-evaluate-fault.json` the TypeScript twin reads in
+/// `🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`.
+#[semio_framework_async_macros::async_test]
+async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_install_clears_it() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/💥️extension-evaluate-fault.json")).expect("the evaluate-fault fixture parses");
+    let extension_id = fixture["extensionId"].as_str().expect("extensionId").to_string();
+    let address = || Ok::<String, semio_framework_os_flow::FlowExtensionAddressMiss>(extension_id.clone());
+    let mut owner = Generation3dInstanceOperationOwner::new();
+    let observed = owner
+        .with_session(|session| {
+            let mut rows = Vec::new();
+            for answer in fixture["answers"].as_array().expect("answers") {
+                let resolve = crate::preview_eval::FlowEvalResolve {
+                    window_id: "window:procedural-preview".to_string(),
+                    window_kind_id: "procedural-preview".to_string(),
+                    node_hash: 1,
+                    output_json: String::new(),
+                    extension_id: extension_id.clone(),
+                    ok: answer["ok"].as_bool().expect("ok"),
+                    fault_code: answer["faultCode"].as_str().expect("faultCode").to_string(),
+                    fault_message: answer["faultMessage"].as_str().expect("faultMessage").to_string(),
+                };
+                crate::preview_eval::resolve_eval(&resolve, session);
+                let status: serde_json::Value = serde_json::from_str(&crate::editor::generation3d::preview_progress_status_json_for(Some(session), address())).expect("preview status json");
+                rows.push((answer["name"].as_str().expect("name").to_string(), answer["phase"].as_str().expect("phase").to_string(), answer["publishesFault"].as_bool().expect("publishesFault"), status));
+            }
+            // 🧩️ The install clears the retained fault before any later tick settles.
+            let resolve = crate::preview_eval::FlowEvalResolve {
+                window_id: "window:procedural-preview".to_string(),
+                window_kind_id: "procedural-preview".to_string(),
+                node_hash: 1,
+                output_json: String::new(),
+                extension_id: extension_id.clone(),
+                ok: false,
+                fault_code: fixture["faultCode"].as_str().expect("faultCode").to_string(),
+                fault_message: fixture["faultMessage"].as_str().expect("faultMessage").to_string(),
+            };
+            crate::preview_eval::resolve_eval(&resolve, session);
+            assert!(session.extension_evaluate_fault().is_some(), "the refused answer must be retained before the install clears it");
+            assert!(session.invalidate_for_flow_extension_registry(session.flow_extension_generation() + 1), "a moved registry generation invalidates");
+            let cleared: serde_json::Value = serde_json::from_str(&crate::editor::generation3d::preview_progress_status_json_for(Some(session), address())).expect("preview status json");
+            (rows, cleared)
+        })
+        .expect("the retained evaluation-session owner lends its session");
+    for _ in 0..1_000_000 {
+        if matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, usize::MAX, usize::MAX), Ok(semio_framework_plugin::PluginCloseStep::Complete)) {
+            break;
+        }
+    }
+    assert!(semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner), "the projection's own session owner must close terminal-empty");
+
+    let (rows, cleared) = observed;
+    for (name, phase, publishes_fault, status) in rows {
+        assert_eq!(status["phase"].as_str(), Some(phase.as_str()), "{name}: {status}");
+        assert_eq!(status.get("fault").is_some(), publishes_fault, "{name}: {status}");
+        if !publishes_fault {
+            continue;
+        }
+        assert_eq!(status["cancellable"].as_bool(), Some(false), "{name}: a refused evaluation offers no cancel");
+        for language in ["en", "de"] {
+            let label = status["phaseLabel"][language].as_str().unwrap_or_default();
+            assert!(!label.is_empty(), "{name} {language}: the faulted phase carries its own label, never the superseded one");
+        }
+        assert_ne!(status["phaseLabel"]["en"].as_str(), Some("Idle"), "{name}: the published phase and its label must agree");
+        let fault = &status["fault"];
+        assert_eq!(fault["code"].as_str(), fixture["code"].as_str(), "{name}");
+        assert_eq!(fault["extensionId"].as_str(), Some(extension_id.as_str()), "{name}");
+        assert_eq!(fault["capability"].as_str(), fixture["capability"].as_str(), "{name}");
+        assert_eq!(fault["faultCode"].as_str(), fixture["faultCode"].as_str(), "{name}");
+        assert_eq!(fault["faultMessage"].as_str(), fixture["faultMessage"].as_str(), "{name}");
+        for language in ["en", "de"] {
+            assert_eq!(fault["message"][language].as_str(), fixture["labels"][language].as_str(), "{name} {language}");
+        }
+    }
+    assert!(fixture["clearedByContributionInstall"].as_bool().expect("clearedByContributionInstall"));
+    assert!(cleared.get("fault").is_none(), "a contribution install clears the retained evaluate fault: {cleared}");
+    assert_ne!(cleared["phase"].as_str(), Some("faulted"), "{cleared}");
+}
+//#endregion 💥️ExtensionEvaluateFaultLaw

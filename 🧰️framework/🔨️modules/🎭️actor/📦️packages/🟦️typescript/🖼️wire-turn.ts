@@ -104,6 +104,27 @@ export function shellFrameBytes(effect: WireVariant, instanceId: number): Uint8A
   if (val.payload === undefined) return null;
   return coerceWireBytes(val.payload);
 }
+
+/** 📨️ The `MessageEndpoint` tag a `send-message` effect addresses (`""` when the effect carries no
+ * target at all), `null` for any other effect kind. */
+export function wireSendMessageTargetTag(effect: WireVariant): string | null {
+  if (effect.tag !== "send-message") return null;
+  const val = (effect.val ?? {}) as { readonly target?: WireVariant };
+  return val.target?.tag ?? "";
+}
+
+/** 📨️ Every `MessageEndpoint` a host route already owns. `Shell{instance}` is the reply-frame
+ * transport ({@link shellFrameBytes}, and `leftoverShellInvocationFrames` for a frame that lands on a
+ * later turn than the call it answers); `Backbone{uri}` is the document port. Both are consumed
+ * BEFORE {@link wireEffectToFriendly} ever sees them — they are transport, not a friendly `Effect`,
+ * and the friendly union deliberately declares no `sendMessage` member for them. */
+export const WIRE_SEND_MESSAGE_ROUTED_TARGETS: readonly string[] = ["shell", "backbone"];
+
+/** 📨️ Whether a `send-message` effect is already owned by one of {@link WIRE_SEND_MESSAGE_ROUTED_TARGETS}. */
+export function isRoutedWireSendMessage(effect: WireVariant): boolean {
+  const target = wireSendMessageTargetTag(effect);
+  return target !== null && WIRE_SEND_MESSAGE_ROUTED_TARGETS.includes(target);
+}
 //#endregion 🔖️TurnResult
 
 //#region 🔖️RetainedUiPatch
@@ -181,6 +202,108 @@ export function wireExtensionInvocation(effect: WireVariant): Extract<Effect, { 
   return { invokeExtension: { req, extensionId: params.extensionId, capability: params.capability, requestJson } };
 }
 
+/** ↩️ Decodes `respond-effect` (`🔌️plugin/🧬️schema/📜️.wit` — `{ req, outcome: respond-result }`)
+ * without narrowing its u64 identity. `respond` is the ANSWER half of the one inbound-call seam the
+ * ABI has (`request-event`); it is addressed by `req` alone, so a host that submitted the request
+ * correlates on that id and never on an actor-local reply channel. The outcome keeps the WIT arm
+ * names (`ok`/`fault`) rather than Rust's `RequestOutcome::{Ok,Err}` because this is the wire the
+ * host reads, and because it is byte-for-byte the shape `captureExtensionCompletion.complete`
+ * already takes — one vocabulary for both directions of the same door. */
+export function wireRespondAnswer(effect: WireVariant): Extract<Effect, { readonly respond: unknown }> {
+  const value = effect.val as { readonly req?: unknown; readonly outcome?: WireVariant } | undefined;
+  const req = value?.req;
+  if (typeof req !== "bigint" || req <= 0n || req > 0xffffffffffffffffn) throw new Error("respond.request-id-invalid");
+  const outcome = value?.outcome;
+  if (outcome?.tag !== "ok" && outcome?.tag !== "fault") throw new Error("respond.outcome-invalid");
+  const bytes = coerceWireBytes(outcome.val);
+  return { respond: { req, result: outcome.tag === "ok" ? { ok: bytes } : { fault: bytes } } };
+}
+
+/** 🚥️ Normalizes `TurnResult.status` to its kebab-case tag — jco hands a variant `{tag}`, a plain
+ * string, or a camelCase spelling depending on the boundary it crossed. `"more-work"` is the ONE tag
+ * a drain loop branches on: the guest is telling the host it has work left this activation. */
+export function wireTurnStatusTag(status: unknown): string {
+  const raw =
+    typeof status === "string"
+      ? status
+      : status && typeof status === "object" && "tag" in status
+        ? String((status as { readonly tag?: unknown }).tag ?? "")
+        : "";
+  return raw.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+}
+
+//#region 📥️InboundRequest
+/** ⏱️ How many guest turns ONE inbound `request` may take to produce its `respond` — the ABI's own
+ * "answered … within a bounded number of turns, or by spawning a job" (`🔌️plugin/🧬️schema/📜️.wit`'s
+ * `request-event`). A capability handler is a pure synchronous function, so the answer lands on turn
+ * 1; the budget exists so a guest that parks a request instead of answering it fails loudly at the
+ * caller rather than leaving an outstanding completion forever. */
+export const INBOUND_REQUEST_TURN_BUDGET = 64;
+
+/** 📥️ One inbound call, as this side of the ABI states it. `originInstanceId` becomes the request's
+ * `message-endpoint::shell` origin — the instance the answer is being fetched FOR; `0` means the
+ * shell itself asked, owning no instance of the callee. */
+export type InboundRequestDrive = {
+  readonly req: bigint;
+  readonly capability: string;
+  readonly payload: Uint8Array;
+  readonly originInstanceId: number;
+  /** 🔁️ Submits one turn on the CALLEE's actor and hands back its result — each target keeps its own
+   * scheduling, activation and serialization discipline; this module owns only the protocol. Typed on
+   * the two fields the protocol reads, not on {@link WireTurnResult}, so a target carrying a richer
+   * turn record of its own satisfies it structurally without converting. */
+  readonly submit: (events: readonly { readonly kind: string; readonly payload: unknown }[]) => Promise<InboundRequestTurn>;
+  readonly turnBudget?: number;
+  readonly signal?: AbortSignal;
+  readonly onProgress?: (progress: { readonly capability: string; readonly turns: number; readonly budget: number }) => void;
+};
+
+/** 🔁️ The slice of one turn result {@link driveInboundRequest} reads: the effects it scans for a
+ * matching `respond`, and the status that says whether the guest has work left to drain. */
+export type InboundRequestTurn = { readonly effects: readonly WireVariant[]; readonly status?: unknown };
+
+export type InboundRequestAnswer =
+  | { readonly status: "answered"; readonly turns: number; readonly result: { readonly ok: Uint8Array } | { readonly fault: Uint8Array } }
+  | { readonly status: "cancelled"; readonly turns: number }
+  | { readonly status: "unanswered"; readonly turns: number };
+
+/**
+ * @emoji 📥️ Drives ONE `Event::Request` to its `respond` on the callee's actor — the host half of the
+ * ABI's single inbound-call seam, shared verbatim by the React `PluginRuntime` door and the wgpu
+ * `plugin-bridge` one so the two targets can never drift into two protocols (this module's own
+ * header: the "third divergent copy" hazard).
+ *
+ * The request is submitted once; afterwards the actor is drained with EMPTY turns while it still
+ * reports `more-work`, because a guest that parked the request answers on a later turn nobody else
+ * would drive. Cancellation and progress are read at turn boundaries only — a turn already handed to
+ * the worker is never half-abandoned. Fault vocabulary is deliberately NOT chosen here: each target
+ * maps `cancelled`/`unanswered` onto its own typed refusal.
+ */
+export async function driveInboundRequest(drive: InboundRequestDrive): Promise<InboundRequestAnswer> {
+  const budget = drive.turnBudget ?? INBOUND_REQUEST_TURN_BUDGET;
+  const answerFor = (turn: InboundRequestTurn): { readonly ok: Uint8Array } | { readonly fault: Uint8Array } | null => {
+    for (const effect of turn.effects) {
+      if (effect.tag !== "respond") continue;
+      const { respond } = wireRespondAnswer(effect);
+      if (respond.req === drive.req) return respond.result;
+    }
+    return null;
+  };
+  let turn = await drive.submit([
+    { kind: "request", payload: { req: drive.req, params: { origin: { tag: "shell", val: drive.originInstanceId }, capability: drive.capability, payload: Array.from(drive.payload) } } },
+  ]);
+  for (let turns = 1; turns <= budget; turns += 1) {
+    const result = answerFor(turn);
+    if (result) return { status: "answered", turns, result };
+    if (drive.signal?.aborted === true) return { status: "cancelled", turns };
+    drive.onProgress?.({ capability: drive.capability, turns, budget });
+    if (wireTurnStatusTag(turn.status) !== "more-work") return { status: "unanswered", turns };
+    turn = await drive.submit([]);
+  }
+  return { status: "unanswered", turns: budget };
+}
+//#endregion 📥️InboundRequest
+
 /** 🚧️ Best-effort conversion of a raw WIT `effect` variant into the friendly `Effect` union
  * `🎠️kernel/🟦️.ts` already declares — Rust `kernel::Effect`'s externally-tagged serde shape,
  * which every downstream consumer already expects. Covers the effect kinds a renderer commonly
@@ -194,6 +317,8 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
   switch (effect.tag) {
     case "invoke-extension":
       return wireExtensionInvocation(effect);
+    case "respond":
+      return wireRespondAnswer(effect);
     case "request-sync":
       return "requestSync";
     case "notify":
@@ -218,9 +343,27 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
       return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined } };
     case "dispatch-action":
       return { dispatchAction: { req: num("req"), action: str("action"), args: packField("args"), delayMs: num("delayMs") } };
+    // 📨️ Transport, never a friendly `Effect`: a `Shell{instance}` send-message IS the `AppFrame`
+    // reply (`shellFrameBytes`/`leftoverShellInvocationFrames` already consumed it — an
+    // `interactionSelect` completion leaves two of them, its `Invocation` reply and the reserved
+    // tool job's, both applied before this mapping runs) and a `Backbone{uri}` one already went out
+    // the document port. Returning `null` here is the declared shape, not the unverified-conversion
+    // fallback below. Any OTHER endpoint has no host route at all, which is a real hole and stays loud.
+    case "send-message": {
+      if (isRoutedWireSendMessage(effect)) return null;
+      console.warn(`[DEBUG] wireEffectToFriendly: send-message to "${wireSendMessageTargetTag(effect) || "no endpoint"}" has no host route — only ${WIRE_SEND_MESSAGE_ROUTED_TARGETS.join("/")} are consumed`);
+      return null;
+    }
     default:
       console.warn(`[DEBUG] wireEffectToFriendly: unmapped effect "${effect.tag}" dropped — unverified wasm-boundary conversion`);
       return null;
   }
 }
 //#endregion 🔖️EffectWire
+
+//#region 🧪️Tests
+if (import.meta.vitest) {
+  const { registerTests1 } = await import("../../🧪️tests/📨️effect-wire-routes/🟦️.ts");
+  await registerTests1(import.meta.vitest, { shellFrameBytes, wireEffectToFriendly, isRoutedWireSendMessage, wireSendMessageTargetTag, WIRE_SEND_MESSAGE_ROUTED_TARGETS }, { url: import.meta.url });
+}
+//#endregion 🧪️Tests

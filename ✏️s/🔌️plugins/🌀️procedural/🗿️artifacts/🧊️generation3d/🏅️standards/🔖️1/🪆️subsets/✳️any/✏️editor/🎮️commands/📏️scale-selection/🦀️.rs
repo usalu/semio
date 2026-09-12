@@ -103,3 +103,9 @@ pub(crate) fn apply_selected(payload: &ScaleSelection, doc: &ArtifactView<'_, Ge
     let ids = mesh_selection_ids_typed(&payload.node_ids, selected);
     scale_ids(&doc.snapshot.fixture, &ids, (payload.sx + payload.sy + payload.sz) / 3.0)
 }
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

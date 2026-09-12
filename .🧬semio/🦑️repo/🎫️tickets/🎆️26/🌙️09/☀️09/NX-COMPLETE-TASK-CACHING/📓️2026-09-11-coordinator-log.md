@@ -124,3 +124,47 @@ Also: stale `sccache` rationale in root `Cargo.toml` profile comment rewritten f
 - Shared caches in use: `⚡️cache/cargo/{build,target}` (≈35 GiB warm), `⚡️cache/nx`, `⚡️cache/vite/*`,
   `⚡️cache/tools/ms-playwright`; bounded by `repo:cache-prune` (also auto-triggered ≤1/h after native cargo runs) and
   Nx `maxCacheSize`.
+
+## Phase 2 (2026-09-12) — see `📓️2026-09-12-phase2-every-step-cached-plan.md`
+
+- Old session builds deleted (~244 GB, 8 `target*` dirs in two dead scratchpads; free 46 → 250 GB).
+- P6: incremental state got its own budget (24 GiB / 24 h / 1 h guard, `-working` sessions protected); live prune
+  130 → 78 GB build-dir.
+- P2: `activate-*` + wgpu `prepare-*` cached into per-variant Nx-owned roots; wgpu runner reads the Nx output.
+- P4: 21 tail targets cached, 92 kept uncached with reasons; `mutatingName`/`liveName` narrowed.
+
+### Review fix 8: domain carve-out moved from code to schema-first policy data
+
+P4 hard-coded `!/^hub-live-catalog/` into the domain-neutral plugin's `liveName`. Replaced by `policy.json`
+`cachedExact` (schema: names verified deterministic that merely collide with the mutating/live heuristics) checked in
+`targetPolicy` after the uncached lists and before the heuristics; `liveName` is domain-neutral again. The nx-contract
+vectors asserted authored-independence for every row, which contradicts owner-classified names outside every family
+(`catalog-smoke`, `artifact-field-parity-report`, `reset-document-ownership` — the pre-existing `catalog-smoke` failure
+S11 reported): schema-first optional `authored` flag on policy rows; test and the 2026-09-09 ticket probe
+(`verify-cache-contract-policy.ts`, also fixed for the `matchesUncached(name, policy)` signature) now assert it.
+Evidence: 34/34 vectors match; probe PASS; graph exit 0; `repo:audit` violations=0.
+
+### Review fix 9: lock-freshness guard soundness (trunk-lockfile suite failure)
+
+The full cache-contract suite, unblocked by fix 8, failed in `🔒️trunk-lockfile`: a lane had cached the wgpu
+`lockfile-check` (`native cargo metadata --locked`). Caching is right, but `--locked` validates `Cargo.lock` against
+EVERY workspace manifest while the target only hashed its own/dependency sources + root manifest → a stale lock caused
+by an unrelated member would replay a pass. New domain-neutral plugin rule `nativeLockInputs(command)`: every
+`native cargo metadata` target also hashes `{workspaceRoot}/**/Cargo.toml` + `Cargo.lock`. Test asserts the resolved
+policy (`cache: true`) and the rule (positive + negative case). `nx show project` → `lockfile-check cache true,
+workspace manifests hashed true`. Suite then advanced to 16 PASS and stopped on the next stale-contract assertion
+(`check-browser-worker`), which exposed a real bug class handed to lane Q1: cached freshness checks lose sight of the
+generated files they verify because declared outputs are excluded from `default`.
+
+- P1: exhaustive tests cached (real input gap fixed: walk-up SUT crates + shared oracle crates now hashed).
+- P3: 135 continuous targets audited; 4 inline-build gaps fixed; os-hub dev cargo build deferred → lane Q2.
+
+### Review fix 10: evidence-location invariants are policy-driven, not a folder name (after lane R1)
+
+R1 satisfied two hard-coded "path must contain `🗑️generated`" invariants (library `runExactCargoLaws`, describe
+`freshRun`) by nesting gis evidence as `dist/<target>/🗑️generated/exact`. The invariants' intent is "evidence lives in
+a disposable generated location"; the policy already declares that set once (`generatedDirectories`: `dist`,
+`🗑️generated`, `target`, …). New `isGeneratedPath()` in `⚡️caching/🟦️.ts` (lazy policy read — a module-load read broke
+the bootstrap sandbox, which copies only the import closure) is used by both invariants; gis evidence is
+`dist/component-cold-map-patch-native-check/exact` again. Evidence: Node strip-types + Bun load OK; exact-cargo-laws
+26/26 pass; cache-contract suite exit 0, 78 PASS; `repo:audit` violations=0; graph exit 0.

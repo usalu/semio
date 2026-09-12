@@ -21,5 +21,6 @@ if (import.meta.main) {
   const bundle = await import(pathToFileURL(join(import.meta.dir, "..", "..", "📜️script.ts")).href) as { closedBrowserActorBundle: ActorImportFactoryPort };
   const command = process.argv[2] ?? "runtime-check";
   assert(["runtime-check", "pending-host-close-check"].includes(command), `actor import fixture: unknown command ${command}`);
-  await testCanonicalActorAsyncImport(root, undefined, bundle.closedBrowserActorBundle, true);
+  const evidenceRoot = join(import.meta.dir, "dist", command);
+  await testCanonicalActorAsyncImport(root, evidenceRoot, undefined, bundle.closedBrowserActorBundle, true);
 }

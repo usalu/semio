@@ -22,7 +22,11 @@
         "command": "bun ./📜️script.ts component-cold-map-patch-native-check",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": true,
+      "parallelism": false,
+      "outputs": [
+        "{projectRoot}/dist/component-cold-map-patch-native-check"
+      ]
     },
     "durable-three-store-assembly-check": {
       "executor": "nx:run-commands",

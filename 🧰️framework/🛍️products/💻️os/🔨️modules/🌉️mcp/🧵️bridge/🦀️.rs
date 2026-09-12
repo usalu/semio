@@ -1606,16 +1606,6 @@ impl BridgeBroadcastCursor {
     }
 }
 
-/// 🏗️ Heap-allocates `len` `None` slots without ever materializing them as one contiguous stack
-/// value first — unlike `Box::new(std::array::from_fn(...))`, an unoptimized build gives no such
-/// guarantee for a large fixed-size array literal, and `BridgeAsyncState`'s three ring buffers below
-/// are hundreds of KiB combined (proven: `size_of::<BridgeAsyncState>()` measured 337,688 bytes, the
-/// stack overflow this replaced only ever tripped on `BridgeHandle::new`, and vanished once these
-/// fields moved off the stack).
-fn boxed_slot_ring<T>(len: usize) -> Box<[Option<T>]> {
-    (0..len).map(|_| None).collect()
-}
-
 struct BridgeAsyncState {
     broadcasts: Box<[Option<BridgeBroadcastCursor>]>,
     broadcast_head: usize,
@@ -1636,16 +1626,16 @@ struct BridgeAsyncState {
 impl BridgeAsyncState {
     fn new() -> Self {
         Self {
-            broadcasts: boxed_slot_ring(BRIDGE_BROADCAST_MAX_PENDING),
+            broadcasts: semio_framework_async::boxed_slots(BRIDGE_BROADCAST_MAX_PENDING, || None),
             broadcast_head: 0,
             broadcast_len: 0,
             broadcast_reserved: 0,
             broadcast_driving: false,
-            completions: boxed_slot_ring(BRIDGE_BROADCAST_MAX_PENDING),
+            completions: semio_framework_async::boxed_slots(BRIDGE_BROADCAST_MAX_PENDING, || None),
             completion_head: 0,
             completion_len: 0,
             completion_reserved: 0,
-            retirements: boxed_slot_ring(BRIDGE_RETIREMENT_MAX_PENDING),
+            retirements: semio_framework_async::boxed_slots(BRIDGE_RETIREMENT_MAX_PENDING, || None),
             retirement_head: 0,
             retirement_len: 0,
             retirement_reserved: 0,

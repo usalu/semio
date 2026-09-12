@@ -129,15 +129,15 @@ function historyColumnsFromParts(parts: readonly StoryPuzzle5dPart[]): readonly 
 //#endregion HistorySynthesis
 
 //#region PluginEmulator
-/** @emoji 🖱️ Story-local mirror of `instanceMergeArg` (`framework/product/os/module/renderer/js/react/index.tsx`) — see `../3d/World.stories.tsx`'s copy. */
+/** @emoji 🖱️ Story-local mirror of the ONE `MergeMode` set algebra (`🕹️interaction/🧫️fixtures/🎯️merge-modes.json`) — see `../3d/World.stories.tsx`'s copy. */
 function applyStoryMerge(current: readonly string[], id: string, merge: string): string[] {
   const set = new Set(current);
-  if (merge === "replace") return [id];
-  if (merge === "add") {
+  if (merge === "replace" || merge === "range") return [id];
+  if (merge === "additive") {
     set.add(id);
     return [...set];
   }
-  if (merge === "remove") {
+  if (merge === "subtractive") {
     set.delete(id);
     return [...set];
   }

@@ -110,10 +110,10 @@ async function validateWindowOwnershipSchemas(puzzleRoot: string): Promise<numbe
       cases: [
         {
           definition: "Puzzle3dWindowConfig",
-          value: { lodAutomatic: true, lodDepthVariable: false, gridVisible: true, lodManual: 100, gridSnapEnabled: false, gridSpacing: 10, selectableKinds: { objects: true, vortices: true, attractions: true }, proximityRadius: 0.75, chunkSize: 256, voxelDims: [1, 1, 1], transformMove: true, transformRotate: true, vortexShow: "selected", vortexDirection: "outwards", sun, camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1, up: null, projection } },
-          keys: ["lodAutomatic", "lodDepthVariable", "gridVisible", "lodManual", "gridSnapEnabled", "gridSpacing", "selectableKinds", "proximityRadius", "chunkSize", "voxelDims", "transformMove", "transformRotate", "vortexShow", "vortexDirection", "sun", "camera"],
+          value: { lodAutomatic: true, lodDepthVariable: false, gridVisible: true, lodManual: 100, gridSnapEnabled: false, gridSpacing: 10, selectableKinds: { objects: true, vortices: true, attractions: true }, proximityRadius: 0.75, chunkSize: 256, voxelDims: [1, 1, 1], transformMove: true, transformRotate: true, vortexShow: "selected", vortexDirection: "outwards", selectionMethod: "pick", sun, camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1, up: null, projection } },
+          keys: ["lodAutomatic", "lodDepthVariable", "gridVisible", "lodManual", "gridSnapEnabled", "gridSpacing", "selectableKinds", "proximityRadius", "chunkSize", "voxelDims", "transformMove", "transformRotate", "vortexShow", "vortexDirection", "selectionMethod", "sun", "camera"],
         },
-        { definition: "Puzzle3dWindowTransient", value: { suggestionMenu: null, engagementInput: "", brushCandidateIndex: 0 }, keys: ["suggestionMenu", "engagementInput", "brushCandidateIndex"] },
+        { definition: "Puzzle3dWindowTransient", value: { suggestionMenu: null, engagementInput: "", brushCandidateIndex: 0, activation: "" }, keys: ["suggestionMenu", "engagementInput", "brushCandidateIndex", "activation"] },
       ],
     },
     {

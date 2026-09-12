@@ -287,8 +287,9 @@ export type World3dScene = {
   /** ☁️ Point-cloud rendering layers (10^5-10^6 points) — an array of `{ id, positionsB64 (base64 le
    * f32 xyz), colorsB64? (base64 u8 rgb), size, sizeAttenuation }`, consumed by `WorldPointCloudLayer`. */
   readonly pointsJson?: string;
-  /** ⏳️ Off-main-thread compute status (`{"computing": true, "label": "…"}`) shown as an overlay while
-   * a `flowEvalTick` chain resolves the meshes this scene renders. */
+  /** ⏳️ Off-main-thread compute status shown as an overlay while a `flowEvalTick` chain resolves the
+   * meshes this scene renders — see {@link World3dComputeStatusV1} for the full declared shape and
+   * {@link world3dComputeStatusV1} for the one parser every surface reads it through. */
   readonly statusJson?: string;
   /** 🪟️ The framework interaction domain id this world window is bound to (see the Rust
    * `World3dScene::domain_id` doc comment). `undefined` leaves the window on plain plugin-private
@@ -303,6 +304,103 @@ export type World3dScene = {
    * and the Rust `World3dScene::lanes` doc. Absent on an assembled scene built by hand. */
   readonly lanes?: readonly World3dSceneLaneRef[];
 };
+
+//#region ⏳️World3dComputeStatus
+/** 🌍️ An English/German pair carried by a producer that has no default language. */
+export type World3dComputeLabelV1 = { readonly en: string; readonly de: string };
+
+/**
+ * @emoji ⏳️ The declared shape of {@link World3dScene.statusJson} — what a surface may render and
+ * what a producer must therefore fill.
+ *
+ * 🛑️ `cancellable` + `cancelAction` are the CANCEL CONTRACT, and they are deliberately part of the
+ * scene's own vocabulary rather than any plugin's: the shell offers the affordance while
+ * `cancellable` is true and dispatches whatever id `cancelAction` names, so it never learns a
+ * domain verb from code. A producer that can be stopped fills both; one that cannot fills neither
+ * and gets no button (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+ */
+export type World3dComputeStatusV1 = {
+  /** ⏳️ Whether work is still resolving — the spinner's own predicate. */
+  readonly computing: boolean;
+  /** 🏷️ A stable wire tag for the current phase (`idle`, `meshingFaces`, `cancelled`, `faulted`, …). */
+  readonly phase: string;
+  /** 🌍️ The phase's own English/German label, when the producer supplies one. */
+  readonly phaseLabel: World3dComputeLabelV1 | null;
+  readonly unitsDone: number;
+  readonly unitsTotal: number;
+  readonly facesDone: number;
+  readonly facesTotal: number;
+  readonly inFlight: number;
+  /** 📈️ Fraction in `[0, 1]`, as the producer reports it. */
+  readonly ratio: number;
+  /** 🛑️ Whether a cancel would stop anything RIGHT NOW. */
+  readonly cancellable: boolean;
+  /** 🛑️ The action id a cancel affordance dispatches; empty when the producer declares none. */
+  readonly cancelAction: string;
+};
+
+const WORLD3D_EMPTY_COMPUTE_STATUS: World3dComputeStatusV1 = Object.freeze({
+  computing: false,
+  phase: "idle",
+  phaseLabel: null,
+  unitsDone: 0,
+  unitsTotal: 0,
+  facesDone: 0,
+  facesTotal: 0,
+  inFlight: 0,
+  ratio: 1,
+  cancellable: false,
+  cancelAction: "",
+});
+
+function world3dComputeLabel(value: unknown): World3dComputeLabelV1 | null {
+  if (typeof value !== "object" || value === null) return null;
+  const { en, de } = value as { en?: unknown; de?: unknown };
+  if (typeof en !== "string" || typeof de !== "string" || en.length === 0 || de.length === 0) return null;
+  return { en, de };
+}
+
+function world3dComputeNumber(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
+/**
+ * @emoji ⏳️ The ONE reader of {@link World3dScene.statusJson}. Total: malformed JSON, a missing
+ * field or a hostile type degrades to the neutral status rather than throwing inside a render — a
+ * status overlay must never be able to blank the viewport it annotates.
+ *
+ * 🛑️ `cancellable` is honoured only alongside a non-empty `cancelAction`: an affordance with no
+ * action to dispatch is a dead button, which is worse than no button.
+ */
+export function world3dComputeStatusV1(statusJson: string | undefined | null): World3dComputeStatusV1 {
+  if (typeof statusJson !== "string" || statusJson.length === 0) return WORLD3D_EMPTY_COMPUTE_STATUS;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(statusJson);
+  } catch {
+    return WORLD3D_EMPTY_COMPUTE_STATUS;
+  }
+  if (typeof parsed !== "object" || parsed === null) return WORLD3D_EMPTY_COMPUTE_STATUS;
+  const row = parsed as Record<string, unknown>;
+  const progress = (typeof row.progress === "object" && row.progress !== null ? row.progress : {}) as Record<string, unknown>;
+  const cancelAction = typeof row.cancelAction === "string" ? row.cancelAction : "";
+  const unitsTotal = world3dComputeNumber(progress.unitsTotal);
+  const unitsDone = Math.min(world3dComputeNumber(progress.unitsDone), unitsTotal === 0 ? Number.POSITIVE_INFINITY : unitsTotal);
+  return {
+    computing: row.computing === true,
+    phase: typeof row.phase === "string" && row.phase.length > 0 ? row.phase : "idle",
+    phaseLabel: world3dComputeLabel(row.phaseLabel),
+    unitsDone,
+    unitsTotal,
+    facesDone: world3dComputeNumber(progress.facesDone),
+    facesTotal: world3dComputeNumber(progress.facesTotal),
+    inFlight: world3dComputeNumber(progress.inFlight),
+    ratio: typeof progress.ratio === "number" && Number.isFinite(progress.ratio) ? Math.min(Math.max(progress.ratio, 0), 1) : unitsTotal > 0 ? unitsDone / unitsTotal : 1,
+    cancellable: row.cancellable === true && cancelAction.length > 0,
+    cancelAction,
+  };
+}
+//#endregion ⏳️World3dComputeStatus
 
 //#region 🚚️World3dSceneLanes
 /** 🚚️ One entry of {@link World3dScene.lanes}. `bytes` is what tells a fully arrived lane from one

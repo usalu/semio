@@ -6,12 +6,14 @@
     "SEMIO_DEFAULT_EXAMPLE": "demo",
     "PLAYGROUND_LOCKED_EXAMPLE_ID": "example",
     "VITE_SEMIO_LOCKED_LOCALE": "en",
-    "UNRELATED": "ignored"
+    "UNRELATED": "ignored",
+    "SEMIO_APP_ROLE": " viewer "
   },
   "expected": {
     "VITE_SEMIO_LOCKED_LOCALE": "de",
     "VITE_SEMIO_LOCKED_THEME": "dark",
     "VITE_SEMIO_DEFAULT_EXAMPLE": "demo",
-    "VITE_SEMIO_LOCKED_EXAMPLE": "example"
+    "VITE_SEMIO_LOCKED_EXAMPLE": "example",
+    "VITE_SEMIO_APP_ROLE": "viewer"
   }
 }

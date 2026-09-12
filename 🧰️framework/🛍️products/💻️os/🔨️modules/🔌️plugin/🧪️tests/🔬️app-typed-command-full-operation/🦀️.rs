@@ -1262,7 +1262,10 @@ mod typed_command_full_operation_tests {
         let publisher_start = source.rfind("fn publish_mounted_typed_operation_unit").expect("production one-page publisher");
         let publisher_end = source[publisher_start..].find("fn require_tool_operation_authority").map(|offset| publisher_start + offset).expect("publisher end");
         let publisher = &source[publisher_start..publisher_end];
-        for retained_seam in ["pending_artifact_publication", "begin_apply_batch", "advance_apply_batch", "ArtifactStoreOneItemAdvance::Published", "publication.close_step(grant)"] {
+        // ♻️ The seven per-lane `Closing` arms collapsed into ONE shared
+        // `PendingArtifactStorePublication::retirement_turn` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END),
+        // so the retained one-item retirement seam is that call, not a per-lane `close_step`.
+        for retained_seam in ["pending_artifact_publication", "begin_apply_batch", "advance_apply_batch", "ArtifactStoreOneItemAdvance::Published", "pending.retirement_turn(grant.maximum_items, grant.maximum_bytes)"] {
             assert!(publisher.contains(retained_seam), "production publisher lost its retained one-item seam: {retained_seam}");
         }
         for forbidden in [".apply_one(", "artifact_mutations.last().cloned()", "config_mutations.last().cloned()", "draft_mutations.last().cloned()", "presence.last().cloned()", "transient.last().cloned()"] {

@@ -1,17 +1,23 @@
 mod tests {
     use super::*;
 
+    /// 🎯️ The non-domain world path speaks the SAME five schema words as the domain path — ticket
+    /// 26/09/09/PROCEDURAL-3D-END-TO-END deleted its private `add`/`remove`/`toggle` spelling, which is
+    /// unrepresentable now that the mode is a decoded [`protocol::MergeMode`] and not a string.
     #[semio_framework_async_macros::async_test]
-    async fn merge_world_selection_ids_supports_add_toggle_invertive_and_remove() {
+    async fn merge_world_selection_ids_speaks_the_one_schema_merge_vocabulary() {
         let a = || SelectionSet::from_ids(vec!["a".into()]);
         let ab = || SelectionSet::from_ids(vec!["a".into(), "b".into()]);
         let abc = || SelectionSet::from_ids(vec!["a".into(), "b".into(), "c".into()]);
-        assert_eq!(merge_world_selection_ids(&a(), &["b".into()], "add").await.as_slice(), &["a".to_string(), "b".to_string()]);
-        assert_eq!(merge_world_selection_ids(&ab(), &["b".into(), "c".into()], "toggle").await.as_slice(), &["a".to_string(), "c".to_string()]);
-        assert_eq!(merge_world_selection_ids(&ab(), &["b".into()], "invertive").await.as_slice(), &["a".to_string()]);
-        assert_eq!(merge_world_selection_ids(&a(), &["b".into()], "replace").await.as_slice(), &["b".to_string()]);
-        assert_eq!(merge_world_selection_ids(&abc(), &["b".into()], "remove").await.as_slice(), &["a".to_string(), "c".to_string()]);
-        assert_eq!(merge_world_selection_ids(&abc(), &["b".into()], "subtractive").await.as_slice(), &["a".to_string(), "c".to_string()]);
+        assert_eq!(merge_world_selection_ids(&a(), &["b".into()], protocol::MergeMode::Additive).await.as_slice(), &["a".to_string(), "b".to_string()]);
+        assert_eq!(merge_world_selection_ids(&ab(), &["b".into(), "c".into()], protocol::MergeMode::Invertive).await.as_slice(), &["a".to_string(), "c".to_string()]);
+        assert_eq!(merge_world_selection_ids(&ab(), &["b".into()], protocol::MergeMode::Invertive).await.as_slice(), &["a".to_string()]);
+        assert_eq!(merge_world_selection_ids(&a(), &["b".into()], protocol::MergeMode::Replace).await.as_slice(), &["b".to_string()]);
+        assert_eq!(merge_world_selection_ids(&abc(), &["b".into()], protocol::MergeMode::Subtractive).await.as_slice(), &["a".to_string(), "c".to_string()]);
+        assert_eq!(merge_world_selection_ids(&abc(), &["d".into()], protocol::MergeMode::Range).await.as_slice(), &["d".to_string()], "Range has no ordered topology on this path — it degrades to a replace, never a fault");
+        for word in ["add", "remove", "toggle"] {
+            assert!(protocol::MergeMode::from_wire_label(word).is_none(), "the deleted word '{word}' must decode to nothing — no adapter, no compatibility layer");
+        }
     }
 
     #[semio_framework_async_macros::async_test]

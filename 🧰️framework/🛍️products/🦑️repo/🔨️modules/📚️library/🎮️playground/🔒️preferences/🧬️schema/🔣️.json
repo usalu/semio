@@ -45,6 +45,10 @@
         "VITE_SEMIO_DEFAULT_EXAMPLE": {
           "type": "string",
           "minLength": 1
+        },
+        "VITE_SEMIO_APP_ROLE": {
+          "type": "string",
+          "minLength": 1
         }
       }
     }

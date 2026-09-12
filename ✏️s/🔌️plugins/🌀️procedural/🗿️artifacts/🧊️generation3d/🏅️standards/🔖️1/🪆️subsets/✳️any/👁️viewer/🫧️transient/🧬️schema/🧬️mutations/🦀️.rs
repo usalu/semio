@@ -42,3 +42,13 @@ impl protocol::OpBinary for Generation3dViewTransientMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+
+/// 🧹️ The mutation's own retirement ladder — the window-transient owner's
+/// `OwnedValueRetirementFactory` drains a published evaluation's bytes under a grant instead of
+/// dropping them (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+impl store::retirement::RetireOwned for Generation3dViewTransientMutation {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        let Self::SetPreviewEval(SetPreviewEval { eval_text }) = self;
+        store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(eval_text)])
+    }
+}

@@ -25,6 +25,7 @@ use crate::wgpu::scene_slots::{scene_slot_for_node, SceneHost, ScenePaintCursor,
 use crate::wgpu::shell::{Shell, ShellEvent};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::Theme;
+use crate::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
 use crate::wgpu::tree::{NodeFlags, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree};
 use crate::wgpu::IconName;
 use semio_framework_job::StepContext;
@@ -55,8 +56,12 @@ struct UiWindow {
     layout_generation: u64,
     document_ingress: Option<UiDocumentIngress>,
     retiring_document: Option<UiDocumentTree>,
+    /// 🌳️ The published document's own reconcile into the paintable arena — the one thing that ever
+    /// sets `tree.root` in production (see `🔁️reconcile.rs`'s `🌳️DocumentTreeReconcile`).
+    document_reconcile: UiDocumentReconcileCursor,
     paint_frame: Option<RetainedPaintFrame>,
     retiring_draw: Option<DrawList>,
+    paint_census: UiFramePaintCensus,
 }
 
 impl UiWindow {
@@ -80,8 +85,10 @@ impl UiWindow {
             layout_generation: 1,
             document_ingress: None,
             retiring_document: None,
+            document_reconcile: UiDocumentReconcileCursor::default(),
             paint_frame: None,
             retiring_draw: None,
+            paint_census: UiFramePaintCensus::default(),
         }
     }
 
@@ -157,6 +164,43 @@ enum RetainedPaintPhase {
     Fault,
 }
 
+/// 📊️ What one window's own retained paint contributed to a frame: non-empty draw layers, quad
+/// instances, and the glyph subset of those quads.
+///
+/// The production path is `frame_into_step`, which paints into the CALLER's draw list and never
+/// publishes into `UiWindow::draw` — so `Ui::draw_list` (and every probe reading it) reports an empty
+/// list no matter how much the window painted. This census is measured as the DELTA the window's own
+/// paint frame appended to whatever target it was handed, so it answers the same question for both
+/// paint entries (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-document-reconcile-2026-09-12.md`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct UiFramePaintCensus {
+    pub layers: usize,
+    pub quads: usize,
+    pub glyphs: usize,
+}
+
+impl UiFramePaintCensus {
+    fn of(draw: &DrawList) -> Self {
+        let mut census = Self::default();
+        for layer in &draw.layers {
+            if !layer.ui_instances.is_empty() || !layer.raster_instances.is_empty() || !layer.vector_vertices.is_empty() || !layer.overlay_ui_instances.is_empty() || !layer.overlay_vector_vertices.is_empty() {
+                census.layers += 1;
+            }
+            for instance in layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter()) {
+                census.quads += 1;
+                if instance.params[2] == crate::wgpu::draw_types::KIND_GLYPH {
+                    census.glyphs += 1;
+                }
+            }
+        }
+        census
+    }
+
+    fn since(self, baseline: Self) -> Self {
+        Self { layers: self.layers.saturating_sub(baseline.layers), quads: self.quads.saturating_sub(baseline.quads), glyphs: self.glyphs.saturating_sub(baseline.glyphs) }
+    }
+}
+
 struct RetainedPaintFrame {
     phase: RetainedPaintPhase,
     walk: RetainedPaintWalk,
@@ -170,6 +214,10 @@ struct RetainedPaintFrame {
     revision: u64,
     theme_revision: u64,
     viewport_revision: u64,
+    baseline: UiFramePaintCensus,
+    /// 🩺️ Which sub-step drove this frame terminal — a `UiFrameStep::Fault` is otherwise
+    /// undiagnosable from outside the engine.
+    fault_site: Option<&'static str>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -205,14 +253,20 @@ struct UiSurfaceSlot {
     window: UiWindow,
 }
 
+/// 🧱️ The retained window table. `slots` is boxed because `UiSurfaceSlot` carries a whole
+/// [`UiWindow`] (~186 KiB): held inline, the 64-slot array is ~11.9 MiB of `Ui`, materialised in the
+/// constructing frame by `array::from_fn` and copied again by every by-value move of `Ui`
+/// (`Ui::new` → `Mutex::new` → `OnceLock::get_or_init` stacked ~88 MiB). Boxed, the array is built
+/// straight on the heap by [`semio_framework_async::boxed_fixed_slots`] and `Ui` stays pointer-sized
+/// here. `generations` is `[u64; 64]` = 512 B and stays inline.
 struct UiSurfaceRegistry {
-    slots: [Option<UiSurfaceSlot>; UI_LAYOUT_SURFACE_SLOTS],
+    slots: Box<[Option<UiSurfaceSlot>; UI_LAYOUT_SURFACE_SLOTS]>,
     generations: [u64; UI_LAYOUT_SURFACE_SLOTS],
 }
 
 impl Default for UiSurfaceRegistry {
     fn default() -> Self {
-        Self { slots: std::array::from_fn(|_| None), generations: [0; UI_LAYOUT_SURFACE_SLOTS] }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), generations: [0; UI_LAYOUT_SURFACE_SLOTS] }
     }
 }
 
@@ -666,8 +720,61 @@ impl Ui {
         Ok(())
     }
 
+    /// 📄️ Publishes an already-assembled document into `window_id` WITHOUT replaying the paged
+    /// ingress — the page ladder is pinned by its own laws (`📃️document-lease-owner-move`), and a
+    /// `UiDocumentNodePage` has no public constructor, so a reconcile law would otherwise have to
+    /// drive the process-wide `UI_DOCUMENT_ARENA` to say anything about the arena. Bookkeeping is
+    /// byte-identical to `finish_document`'s own tail.
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn publish_document(&mut self, window_id: &str, document: UiDocumentTree) -> bool {
+        let Some(window) = self.window_mut(window_id) else { return false };
+        let Some(next_revision) = window.revision.checked_add(1) else { return false };
+        let Some(next_layout_generation) = window.layout_generation.checked_add(1) else { return false };
+        window.retiring_document = window.tree.publish_document(document);
+        window.revision = next_revision;
+        window.layout_generation = next_layout_generation;
+        if let Some(root) = window.tree.root {
+            window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+        }
+        self.enqueue_layout(window_id);
+        true
+    }
+
+    /// 🌳️ Advances `window_id`'s published document into its paintable arena, spending this
+    /// opportunity's whole budget rather than one unit, and enqueues the layout the freshly mounted
+    /// root now needs.
+    ///
+    /// `UiTree::publish_document` stores the document and nothing read it back — `tree.root` stayed
+    /// `None` forever and `frame_into_step` answered `Missing` on its first line
+    /// (`📓️wgpu-blank-paint-2026-09-12.md` §5). This is that missing edge: the ONLY production writer
+    /// of the arena, `Ui::apply_tree` being `cfg(test/testkit)`.
+    pub fn step_document_reconcile(&mut self, window_id: &str, controller: &str, cx: &mut StepContext<'_>) -> UiDocumentReconcileStep {
+        let Some(window) = self.window_mut(window_id) else { return UiDocumentReconcileStep::Pending };
+        let Some(generation) = window.tree.document().map(UiDocumentTree::generation) else { return UiDocumentReconcileStep::Pending };
+        window.document_reconcile.rearm(generation);
+        if window.document_reconcile.terminal_is_complete() {
+            return UiDocumentReconcileStep::Complete;
+        }
+        let UiWindow { tree, document_reconcile, .. } = window;
+        let step = loop {
+            let step = tree.step_document_reconcile(document_reconcile, window_id, controller);
+            cx.consume_fuel(1);
+            if !matches!(step, UiDocumentReconcileStep::Pending) || cx.is_cancelled() || cx.should_yield() {
+                break step;
+            }
+        };
+        if matches!(step, UiDocumentReconcileStep::Complete) {
+            self.enqueue_layout(window_id);
+        }
+        step
+    }
+
     pub fn close_document_step(&mut self, window_id: &str) -> bool {
         let Some(window) = self.windows.get_mut(window_id) else { return true };
+        if !window.tree.close_document_binding_step() {
+            return false;
+        }
+        window.document_reconcile = UiDocumentReconcileCursor::default();
         if let Some(ingress) = window.document_ingress.as_mut() {
             if !ingress.document.close_step() {
                 return false;
@@ -1063,6 +1170,8 @@ impl Ui {
                 revision: window.revision,
                 theme_revision: window.theme_revision,
                 viewport_revision: window.viewport_revision,
+                baseline: UiFramePaintCensus::default(),
+                fault_site: None,
             });
             return UiFrameStep::Pending;
         }
@@ -1193,6 +1302,7 @@ impl Ui {
                 std::mem::swap(&mut window.draw, &mut frame.candidate);
                 window.retiring_draw = Some(std::mem::take(&mut frame.candidate));
                 frame.phase = RetainedPaintPhase::Complete;
+                window.paint_census = UiFramePaintCensus::of(&window.draw);
                 UiFrameStep::Pending
             }
             RetainedPaintPhase::Complete => {
@@ -1236,6 +1346,8 @@ impl Ui {
                 revision: window.revision,
                 theme_revision: window.theme_revision,
                 viewport_revision: window.viewport_revision,
+                baseline: UiFramePaintCensus::of(target),
+                fault_site: None,
             });
             return UiFrameStep::Pending;
         }
@@ -1266,6 +1378,7 @@ impl Ui {
                     }
                     RetainedInteractiveSyncStep::Fault => {
                         frame.phase = RetainedPaintPhase::Fault;
+                        frame.fault_site = Some("synchronize-node");
                         return UiFrameStep::Pending;
                     }
                 }
@@ -1284,6 +1397,7 @@ impl Ui {
                     }
                     RetainedNodePaintStep::Fault => {
                         frame.phase = RetainedPaintPhase::Fault;
+                        frame.fault_site = Some("paint-node");
                         return UiFrameStep::Fault;
                     }
                 }
@@ -1293,10 +1407,12 @@ impl Ui {
             if let Some((node, origin_x, origin_y)) = frame.scene_node {
                 let Some(host) = scene_host.as_deref_mut() else {
                     frame.phase = RetainedPaintPhase::Fault;
+                    frame.fault_site = Some("scenes-no-host");
                     return UiFrameStep::Fault;
                 };
                 let Some(slot) = scene_slot_for_node(&window.tree, node, origin_x, origin_y) else {
                     frame.phase = RetainedPaintPhase::Fault;
+                    frame.fault_site = Some("scenes-slot-missing");
                     return UiFrameStep::Fault;
                 };
                 match host.paint_slot_step(&slot, &mut frame.scene_paint, target, atlas, icons) {
@@ -1307,6 +1423,7 @@ impl Ui {
                     }
                     ScenePaintStep::Fault => {
                         frame.phase = RetainedPaintPhase::Fault;
+                        frame.fault_site = Some("scenes-host");
                         return UiFrameStep::Fault;
                     }
                 }
@@ -1326,6 +1443,7 @@ impl Ui {
                 }
                 RetainedPaintWalkStep::DepthFault => {
                     frame.phase = RetainedPaintPhase::Fault;
+                    frame.fault_site = Some("walk-depth-synchronize");
                     UiFrameStep::Fault
                 }
             },
@@ -1342,6 +1460,7 @@ impl Ui {
                 }
                 RetainedPaintWalkStep::DepthFault => {
                     frame.phase = RetainedPaintPhase::Fault;
+                    frame.fault_site = Some("walk-depth-paint");
                     UiFrameStep::Fault
                 }
             },
@@ -1361,11 +1480,13 @@ impl Ui {
                 }
                 RetainedPaintWalkStep::DepthFault => {
                     frame.phase = RetainedPaintPhase::Fault;
+                    frame.fault_site = Some("walk-depth-scenes");
                     UiFrameStep::Fault
                 }
             },
             RetainedPaintPhase::Publish => {
                 frame.phase = RetainedPaintPhase::Complete;
+                window.paint_census = UiFramePaintCensus::of(target).since(frame.baseline);
                 UiFrameStep::Pending
             }
             RetainedPaintPhase::Complete => {
@@ -1401,6 +1522,30 @@ impl Ui {
     }
 
     /// 📤️ Direct access to `window_id`'s last-painted `DrawList` without re-running the pipeline.
+    /// 🩺️ Which phase `window_id`'s in-flight retained paint frame is standing on — the only way a
+    /// `UiFrameStep::Fault` can name where it came from without widening the step enum. `None` when no
+    /// paint frame is in flight.
+    pub fn paint_frame_phase(&self, window_id: &str) -> Option<&'static str> {
+        self.windows.get(window_id).and_then(|window| window.paint_frame.as_ref()).map(|frame| match (frame.fault_site, frame.phase) {
+            (Some(site), _) => site,
+            _ => match frame.phase {
+            RetainedPaintPhase::Synchronize => "synchronize",
+            RetainedPaintPhase::Paint => "paint",
+            RetainedPaintPhase::Scenes => "scenes",
+            RetainedPaintPhase::Publish => "publish",
+            RetainedPaintPhase::Complete => "complete",
+            RetainedPaintPhase::Fault => "fault",
+            },
+        })
+    }
+
+    /// 📊️ What `window_id`'s own retained paint contributed to the LAST frame it completed — the
+    /// only honest answer for the production `frame_into_step` path, whose output lands in the
+    /// caller's draw list and never in `draw_list` below. See [`UiFramePaintCensus`].
+    pub fn paint_census(&self, window_id: &str) -> Option<UiFramePaintCensus> {
+        self.windows.get(window_id).map(|window| window.paint_census)
+    }
+
     pub fn draw_list(&self, window_id: &str) -> Option<&DrawList> {
         self.windows.get(window_id).map(|window| &window.draw)
     }

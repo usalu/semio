@@ -441,7 +441,8 @@
     },
     "preview-generated": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts preview-generated"

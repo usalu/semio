@@ -1,0 +1,264 @@
+{
+  "format": "semio.generation3d.tick-addressing",
+  "version": 1,
+  "note": "The window address of the self-dispatched flowEvalTick chain, declared as data — for BOTH surfaces of this subset, which run the one shared chain (`🧵️preview-eval`). `arming` is what a surface's pending_effects may put on the wire for a given attached-window roster; `dispatch` is which of those addresses that surface's retained route admits. Each row names the `surface` it governs (`editor` | `viewer`). Language-agnostic: an implementation in any language must answer these exact rows.",
+  "windowKinds": {
+    "flow": "procedural-main",
+    "preview": "procedural-preview",
+    "generations": "generation3d-generations",
+    "form": "generation3d-generate-form",
+    "generatePreview": "generation3d-generate-preview",
+    "viewPreview": "procedural-view-preview"
+  },
+  "arming": [
+    {
+      "id": "no-surface-mounted",
+      "attached": [],
+      "armedWindowIds": [],
+      "why": "Before the first SurfaceVisible there is no roster and no window transient to publish into — the chain waits instead of spinning an address that cannot land.",
+      "surface": "editor"
+    },
+    {
+      "id": "flow-window-only",
+      "attached": [
+        {
+          "id": "main",
+          "kind": "flow"
+        }
+      ],
+      "armedWindowIds": [],
+      "why": "The flow window holds no evaluation publication; arming a tick it can only refuse is the served-app stall.",
+      "surface": "editor"
+    },
+    {
+      "id": "flow-and-preview",
+      "attached": [
+        {
+          "id": "main",
+          "kind": "flow"
+        },
+        {
+          "id": "preview",
+          "kind": "preview"
+        }
+      ],
+      "armedWindowIds": [
+        "preview"
+      ],
+      "why": "The preview window owns the retained evaluation, so the tick names it — never the current window.",
+      "surface": "editor"
+    },
+    {
+      "id": "two-previews",
+      "attached": [
+        {
+          "id": "main",
+          "kind": "flow"
+        },
+        {
+          "id": "left",
+          "kind": "preview"
+        },
+        {
+          "id": "right",
+          "kind": "preview"
+        }
+      ],
+      "armedWindowIds": [
+        "left",
+        "right"
+      ],
+      "why": "Every preview window holds its OWN publication, so every one gets its own addressed chain.",
+      "surface": "editor"
+    },
+    {
+      "id": "generate-preview-attached",
+      "attached": [
+        {
+          "id": "generations",
+          "kind": "generations"
+        },
+        {
+          "id": "form",
+          "kind": "form"
+        },
+        {
+          "id": "generation3d-generate-preview",
+          "kind": "generatePreview"
+        }
+      ],
+      "armedWindowIds": [
+        "generation3d-generate-preview"
+      ],
+      "why": "Generate preview owns the same retained evaluation chain as edit preview, addressed at its own window id.",
+      "surface": "editor"
+    },
+    {
+      "id": "viewer-no-surface-mounted",
+      "surface": "viewer",
+      "attached": [],
+      "armedWindowIds": [],
+      "why": "The read-only surface obeys the same law: before the first SurfaceVisible there is no window transient to publish into, so nothing is armed."
+    },
+    {
+      "id": "viewer-preview-attached",
+      "surface": "viewer",
+      "attached": [
+        {
+          "id": "view-preview",
+          "kind": "viewPreview"
+        }
+      ],
+      "armedWindowIds": [
+        "view-preview"
+      ],
+      "why": "The viewer's single preview window owns the retained evaluation, so the tick names it — the chain is not editor-only."
+    }
+  ],
+  "dispatch": [
+    {
+      "id": "unaddressed",
+      "attached": [
+        {
+          "id": "main",
+          "kind": "flow"
+        },
+        {
+          "id": "preview",
+          "kind": "preview"
+        }
+      ],
+      "currentWindowId": "main",
+      "payloadWindowId": "",
+      "admitted": false,
+      "why": "The defect: an Effect::DispatchAction carries no window, so the shell redispatches under the current window and the route refuses.",
+      "payloadWindowKind": "preview",
+      "surface": "editor"
+    },
+    {
+      "id": "flow-window-addressed",
+      "attached": [
+        {
+          "id": "main",
+          "kind": "flow"
+        },
+        {
+          "id": "preview",
+          "kind": "preview"
+        }
+      ],
+      "currentWindowId": "main",
+      "payloadWindowId": "main",
+      "admitted": false,
+      "why": "An attached window of the wrong KIND is refused, not silently accepted.",
+      "payloadWindowKind": "flow",
+      "surface": "editor"
+    },
+    {
+      "id": "preview-addressed-from-the-flow-window",
+      "attached": [
+        {
+          "id": "main",
+          "kind": "flow"
+        },
+        {
+          "id": "preview",
+          "kind": "preview"
+        }
+      ],
+      "currentWindowId": "main",
+      "payloadWindowId": "preview",
+      "admitted": true,
+      "why": "The fix: the payload names the preview window, so the runtime captures THAT window's transient authority while the shell stays focused on the flow window.",
+      "payloadWindowKind": "preview",
+      "surface": "editor"
+    },
+    {
+      "id": "detached-window-addressed",
+      "attached": [
+        {
+          "id": "main",
+          "kind": "flow"
+        },
+        {
+          "id": "preview",
+          "kind": "preview"
+        }
+      ],
+      "currentWindowId": "main",
+      "payloadWindowId": "closed-preview",
+      "admitted": false,
+      "why": "A window that left the roster fails closed — the chain ends and the next refresh re-arms it, rather than spinning.",
+      "payloadWindowKind": "preview",
+      "surface": "editor"
+    },
+    {
+      "id": "generate-preview-addressed-from-generations",
+      "attached": [
+        {
+          "id": "generations",
+          "kind": "generations"
+        },
+        {
+          "id": "form",
+          "kind": "form"
+        },
+        {
+          "id": "generation3d-generate-preview",
+          "kind": "generatePreview"
+        }
+      ],
+      "currentWindowId": "generations",
+      "payloadWindowId": "generation3d-generate-preview",
+      "payloadWindowKind": "generatePreview",
+      "admitted": true,
+      "why": "The generate preview tick is window-scoped: the payload names generation3d-generate-preview while the shell stays on the generations list.",
+      "surface": "editor"
+    },
+    {
+      "id": "viewer-unaddressed",
+      "surface": "viewer",
+      "attached": [
+        {
+          "id": "view-preview",
+          "kind": "viewPreview"
+        }
+      ],
+      "currentWindowId": "view-preview",
+      "payloadWindowId": "",
+      "payloadWindowKind": "viewPreview",
+      "admitted": false,
+      "why": "An unaddressed tick is refused on the read-only surface too, even though its preview window happens to be the current one — the address is the payload's, never the shell's focus."
+    },
+    {
+      "id": "viewer-preview-addressed",
+      "surface": "viewer",
+      "attached": [
+        {
+          "id": "view-preview",
+          "kind": "viewPreview"
+        }
+      ],
+      "currentWindowId": "view-preview",
+      "payloadWindowId": "view-preview",
+      "payloadWindowKind": "viewPreview",
+      "admitted": true,
+      "why": "The fix: the payload names the viewer preview window, so the runtime captures THAT window's transient authority and the brep round trip can publish into it."
+    },
+    {
+      "id": "viewer-detached-window-addressed",
+      "surface": "viewer",
+      "attached": [
+        {
+          "id": "view-preview",
+          "kind": "viewPreview"
+        }
+      ],
+      "currentWindowId": "view-preview",
+      "payloadWindowId": "closed-view-preview",
+      "payloadWindowKind": "viewPreview",
+      "admitted": false,
+      "why": "A window that left the roster fails closed — the chain ends and the next refresh re-arms it, rather than spinning."
+    }
+  ]
+}

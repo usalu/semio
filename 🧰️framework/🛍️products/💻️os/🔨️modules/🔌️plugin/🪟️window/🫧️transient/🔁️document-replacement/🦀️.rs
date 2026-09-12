@@ -23,9 +23,21 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         self.cache = None;
     }
 
+    /// ♻️ A CLOSING app hands the displaced registries the caller's whole page grant; a LIVE one hands
+    /// them one owner per step.
+    ///
+    /// The asymmetry is the measurement, not a preference. Live: a displaced generation still backs the
+    /// preview an example switch is reading through, and retiring a whole registry in one maintenance
+    /// step empties it — `switching_active_example_changes_preview_meshes` goes red with `[]` meshes
+    /// (measured 2026-09-12, ticket 26/09/09). Closing: nothing reads it any more, and one item per
+    /// step is both a browser worker round trip per retained window transient AND a ladder that answers
+    /// `Pending { 0, 0 }` whenever the next owner needs more than one item — eight of those in a row and
+    /// the structural accountant kills the close with `plugin.internal.zero-progress`, which is exactly
+    /// what the close-cost fixture's eight-document session reproduces.
     fn retire_document_windows_step(&mut self, maximum_items: usize, maximum_bytes: usize, closing: bool) -> Result<PluginCloseStep, Fault> {
         let cursor = if closing { &mut self.close_window_retirement_cursor } else { &mut self.maintenance_window_retirement_cursor };
-        retire_document_window_registry_step(&mut self.retired_window_transient_stores, cursor, maximum_items, maximum_bytes)
+        let grant = if closing { maximum_items } else { maximum_items.min(1) };
+        retire_document_window_registry_step(&mut self.retired_window_transient_stores, cursor, grant, maximum_bytes)
     }
 }
 
@@ -37,7 +49,7 @@ fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<W
     let Some((index, generation)) = registries.next_id_from(*cursor) else { return Ok(PluginCloseStep::Complete) };
     *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
     let retired = registries.get_mut(generation).expect("selected window transient retirement remains owned");
-    let step = retired.close_step(maximum_items.min(1), maximum_bytes)?;
+    let step = retired.close_step(maximum_items, maximum_bytes)?;
     if step != PluginCloseStep::Complete {
         return Ok(step);
     }

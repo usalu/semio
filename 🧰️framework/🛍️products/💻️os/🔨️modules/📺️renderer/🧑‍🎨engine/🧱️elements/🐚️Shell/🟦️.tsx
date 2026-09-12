@@ -43,6 +43,7 @@ import {
   type Fault,
   type MergePolicy,
   type AppCatalogue,
+  type ManifestExample,
   type PluginAppLabelsOverlay,
   type PluginDependency,
   type PluginViewState,
@@ -85,7 +86,7 @@ export type PluginManifest = {
   readonly label: string;
   readonly version: string;
   readonly apps: readonly AppDefinition[];
-  readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
+  readonly examples: readonly ManifestExample[];
   readonly contributions?: readonly {
     readonly kind: "playbookBlockKind";
     readonly appId: string;

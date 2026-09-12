@@ -786,7 +786,7 @@ pub mod types {
 
     impl Default for IconPaintRegistry {
         fn default() -> Self {
-            Self { slots: Box::new(std::array::from_fn(|_| IconPaintSlot { key: None, epoch: 0, generation: 0, value: None })), epoch: 1, faulted: false }
+            Self { slots: semio_framework_async::boxed_fixed_slots(|| IconPaintSlot { key: None, epoch: 0, generation: 0, value: None }), epoch: 1, faulted: false }
         }
     }
 

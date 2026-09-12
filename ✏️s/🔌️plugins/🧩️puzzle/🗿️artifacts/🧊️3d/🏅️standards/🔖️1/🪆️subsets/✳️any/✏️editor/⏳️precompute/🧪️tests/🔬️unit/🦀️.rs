@@ -1544,8 +1544,8 @@ fn an_identity_this_guest_cannot_serve_becomes_a_request_for_the_bytes() {
     let mut session = Puzzle3dPrecomputeSession::new();
     assert!(!session.adopt_shared_mesh(url, Some(&digest)), "an identity this instantiation never derived cannot be adopted by id alone");
     assert!(session.mesh_reupload_requests().is_empty(), "a refusal is only a request once the arm records it");
-    session.request_mesh_reupload(url);
-    session.request_mesh_reupload(url);
+    assert!(session.request_mesh_reupload(url), "the FIRST refusal records a request the world body has not published yet");
+    assert!(!session.request_mesh_reupload(url), "a re-announcement of a pending id changes nothing, so it may not claim a world-body republication (wave B32: widening the scope for it is a refresh storm)");
     assert_eq!(session.mesh_reupload_requests(), [url.to_string()], "a re-announced dead identity is one standing request, never a growing list");
     let mut moved = Puzzle3dPrecomputeSession::new();
     moved.install_collision_session(session.take_collision_session());
@@ -1579,14 +1579,15 @@ fn the_residency_counter_only_climbs_and_the_request_set_is_bounded() {
     assert_eq!(shared_brush_mesh_installs(), residency, "a refusal derives nothing, so the counter stands still");
     let mut bounded = Puzzle3dPrecomputeSession::new();
     for identity in 0..(FILL_WORKER_MAX_MESHES + 8) {
-        bounded.request_mesh_reupload(&format!("/test/bounded-{identity:04}.glb"));
+        let recorded = bounded.request_mesh_reupload(&format!("/test/bounded-{identity:04}.glb"));
+        assert_eq!(recorded, identity < FILL_WORKER_MAX_MESHES, "identity {identity} may only claim a republication while the bounded set still has room for it");
     }
     assert_eq!(bounded.mesh_reupload_requests().len(), FILL_WORKER_MAX_MESHES, "the request set stops at the mesh ceiling instead of growing with the client's noise");
     let published: Vec<String> = bounded.mesh_reupload_requests().to_vec();
     let mut sorted = published.clone();
     sorted.sort();
     assert_eq!(published, sorted, "requests publish in a stable order, so an unchanged set hashes to an unchanged world-body lane");
-    bounded.request_mesh_reupload(&"x".repeat(FILL_WORKER_MAX_URL_BYTES + 1));
+    assert!(!bounded.request_mesh_reupload(&"x".repeat(FILL_WORKER_MAX_URL_BYTES + 1)), "an over-long id records nothing and therefore claims no republication");
     assert_eq!(bounded.mesh_reupload_requests().len(), FILL_WORKER_MAX_MESHES, "an id longer than the engine admits is never recorded");
 }
 

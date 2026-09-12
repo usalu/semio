@@ -704,11 +704,18 @@ pub struct SpawnedAppEntry {
     pub breadcrumb: Vec<String>,
 }
 
+/// 📌️ Host-owned panel state, serialized into `ViewModel::panel_json`.
+///
+/// 🪶️ It deliberately carries NO app roster. The roster is one [`SpaceProgramEntry`] per app of
+/// every loaded plugin — it grew with the plugin closure, was written on every panel commit and was
+/// never read back ([`Self::build_space_workflows`] recomputes it from `self.plugins` wherever it is
+/// actually needed), so it was pure inflation of the one long string a view context may carry
+/// (65 536 characters, `🪟️view-context/🧬️schema/🔣️.json`). What remains is bounded by the open
+/// spawned instances (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SpacePanelState {
     pub active_panel_tab: String,
-    pub workflows: Vec<SpaceProgramEntry>,
     pub spawned_apps: Vec<SpawnedAppEntry>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub active_spawned_id: Option<String>,
@@ -1692,14 +1699,14 @@ struct ShellDocumentRetirementSlot {
 }
 
 struct ShellDocumentRetirementRegistry {
-    slots: [Option<ShellDocumentRetirementSlot>; SHELL_DOCUMENT_RETIREMENT_CAPACITY],
+    slots: Box<[Option<ShellDocumentRetirementSlot>; SHELL_DOCUMENT_RETIREMENT_CAPACITY]>,
     epochs: [u64; SHELL_DOCUMENT_RETIREMENT_CAPACITY],
     cursor: usize,
 }
 
 impl Default for ShellDocumentRetirementRegistry {
     fn default() -> Self {
-        Self { slots: std::array::from_fn(|_| None), epochs: [0; SHELL_DOCUMENT_RETIREMENT_CAPACITY], cursor: 0 }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; SHELL_DOCUMENT_RETIREMENT_CAPACITY], cursor: 0 }
     }
 }
 
@@ -3002,6 +3009,13 @@ impl ShellState {
         self.host_app().map(|app| app.controller_id.clone())
     }
 
+    /// 🎬️ The controller every retained document's own action bindings dispatch to: the live
+    /// session's app, falling back to the host program's own app when no session is mounted (a
+    /// framework panel painted before the guest opened).
+    fn document_controller_id(&self) -> String {
+        self.session.as_ref().map(|session| session.app.controller_id.clone()).or_else(|| self.host_controller_id()).unwrap_or_default()
+    }
+
     fn host_catalogue_tab_id(&self) -> Option<String> {
         self.host_app().and_then(|app| app.panel_tabs.first().map(|tab| tab.id().to_string()))
     }
@@ -3081,7 +3095,9 @@ impl ShellState {
     /// 🧯 Records one surface's render fault and refreshes the shell's status line, WITHOUT failing the
     /// refresh. A surface repeats across refreshes, so the same surface never accumulates two entries.
     fn record_surface_fault(&mut self, surface_id: &str, body_key: &str, detail: String) {
-        eprintln!("[DEBUG] wgpu shell refresh: surface {surface_id} body {body_key} faulted: {detail}");
+        // 📣️ `eprintln!` is a no-op in a `wasm32-unknown-unknown` Worker — a surface fault recorded
+        // there left no trace at all, which is why a blank body read as "nothing happened".
+        Self::debug_log(&format!("[DEBUG] wgpu-shell surface fault surface={surface_id} body={body_key} detail={detail}"));
         if let Some(existing) = self.surface_faults.iter_mut().find(|fault| fault.surface_id == surface_id) {
             existing.body_key = body_key.to_string();
             existing.detail = detail;
@@ -3089,6 +3105,39 @@ impl ShellState {
             self.surface_faults.push(ShellSurfaceFault { surface_id: surface_id.to_string(), body_key: body_key.to_string(), detail });
         }
         self.error = self.fault_status();
+    }
+
+    /// 🧯️ A retained document whose per-frame cursor reached its TERMINAL fault phase must release the
+    /// chrome step, not hold it. `render_ui_document_step` answers `false` for "not complete", and the
+    /// chrome walk used to read that as "come back next opportunity" — which for a terminal fault is
+    /// never, so one unreadable body wedged the whole frame transaction and the shell presented
+    /// nothing at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-blank-paint-2026-09-12.md`).
+    /// The surface's own fault card is the right consequence; a black canvas is not.
+    fn record_document_paint_fault(&mut self, surface_id: &str) {
+        if self.surface_faults.iter().any(|fault| fault.surface_id == surface_id) {
+            return;
+        }
+        let body_key = self.document_body_key(surface_id).unwrap_or_else(|| surface_id.to_string());
+        self.record_surface_fault(surface_id, &body_key, "retained document ingress reached its terminal fault".to_string());
+    }
+
+    fn clear_document_paint_fault(&mut self, surface_id: &str) {
+        if self.surface_faults.iter().any(|fault| fault.surface_id == surface_id) {
+            self.surface_faults.retain(|fault| fault.surface_id != surface_id);
+            self.error = self.fault_status();
+        }
+    }
+
+    fn document_body_key(&self, surface_id: &str) -> Option<String> {
+        let session = self.session.as_ref()?;
+        let window_kind_id = self.live_window_kind_id(session, surface_id);
+        session
+            .app
+            .window_kinds
+            .iter()
+            .find(|kind| Some(kind.id.as_str()) == window_kind_id)
+            .map(|kind| kind.body_key.clone())
+            .or_else(|| Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().find(|tab| tab.id() == surface_id).and_then(|tab| tab.body_key.clone()))
     }
 
     /// 🗣️ The per-plugin boot status, in English or German with no default language — `None` while
@@ -3143,8 +3192,7 @@ impl ShellState {
             let host_plugin_id = cfg.plugin_id.to_string();
             let semio_s_plugin_space = self.plugins.iter().find(|p| p.plugin_id == host_plugin_id).ok_or("host program missing")?;
             let s_app = semio_s_plugin_space.manifest.apps.iter().find(|app| app.id == cfg.landing_app_id).or_else(|| semio_s_plugin_space.manifest.apps.first()).ok_or("host program missing landing app")?.clone();
-            let workflows = self.build_space_workflows();
-            let panel_state = SpacePanelState { active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(), workflows, spawned_apps: vec![], active_spawned_id: None };
+            let panel_state = SpacePanelState { active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(), spawned_apps: vec![], active_spawned_id: None };
             let Some(instance_id) = self.open_boot_instance(&host_plugin_id, &s_app.id).await else {
                 return self.settle_boot().await;
             };
@@ -3153,7 +3201,6 @@ impl ShellState {
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
                 active_utility_id: None,
                 panel_json: Some(Self::panel_json(&panel_state)),
-                contributions_json: None,
                 locale: self.active_locale(),
                 terminology: self.active_terminology(),
                 window_id: None,
@@ -3194,7 +3241,6 @@ impl ShellState {
                     active_window_kind_id: self.active_window_id.clone(),
                     active_utility_id: None,
                     panel_json: None,
-                    contributions_json: None,
                     locale: self.active_locale(),
                     terminology: self.active_terminology(),
                     window_id: None,
@@ -3358,7 +3404,6 @@ impl ShellState {
         let mut view_state = session.view_state.clone();
         view_state.locale = self.active_locale();
         view_state.terminology = self.active_terminology();
-        view_state.contributions_json = Some(Self::contributions_json_from_plugins(&self.plugins));
         view_state.window_instances = self
             .dock
             .window_instances()
@@ -3398,18 +3443,6 @@ impl ShellState {
     }
 
 
-
-    fn contributions_json_from_plugins(plugins: &[ProgramBridgeEntry]) -> String {
-        #[derive(serde::Serialize)]
-        #[serde(rename_all = "camelCase")]
-        struct ProgramContributionEntry<'a> {
-            plugin_id: &'a str,
-            topic_contribution: &'a semio_framework::TopicContribution,
-        }
-        let entries: Vec<ProgramContributionEntry<'_>> =
-            plugins.iter().flat_map(|program| program.manifest.topic_contributions.iter().map(|topic_contribution| ProgramContributionEntry { plugin_id: program.plugin_id.as_str(), topic_contribution })).collect();
-        serde_json::to_string(&entries).unwrap_or_else(|_| "[]".into())
-    }
 
     pub async fn refresh_ui(&mut self) -> Result<(), String> {
         let Some(session) = self.session.clone() else {
@@ -3485,7 +3518,6 @@ impl ShellState {
                                 active_window_kind_id: Some(app.window_kinds.first().id.clone()),
                                 active_utility_id: None,
                                 panel_json: None,
-                                contributions_json: None,
                                 locale: self.active_locale(),
                                 terminology: self.active_terminology(),
                                 window_id: Some(spawned.id.clone()),
@@ -3649,6 +3681,32 @@ impl ShellState {
 
     fn retain_document_for_close(&mut self, document: UiDocumentLease) -> Result<(), UiDocumentLease> {
         self.closing_documents.try_admit(document)
+    }
+
+    /// 🔑️ Lends the chrome walk the EXACT window-body owner for one step and takes it back with
+    /// [`Self::restore_window_document`]. A retained document read used to be reached through
+    /// `UiDocumentLease::try_alias`, which mints a new arena alias: the arena admits
+    /// [`UI_DOCUMENT_LEASE_ALIASES`] of them per slot and only `close_read_step_with_grant` gives one
+    /// back, so a per-frame-step read that simply dropped its alias exhausted the slot after seven
+    /// steps and every later read answered `AliasCapacity`. The chrome step reads that as "this
+    /// window has no document", advances past the body, and the surface's page ingress freezes
+    /// forever — a booted shell with an empty `UI_ENGINE` tree and a black canvas
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-blank-paint-2026-09-12.md`). Moving the one
+    /// owner instead of aliasing it needs no credit at all, which is why it cannot run out.
+    fn take_window_document(&mut self, window_id: &str) -> Option<UiDocumentLease> {
+        if window_id == "spawned" {
+            self.spawned_ui.take()
+        } else {
+            self.window_ui.remove(window_id)
+        }
+    }
+
+    fn restore_window_document(&mut self, window_id: &str, document: UiDocumentLease) {
+        if window_id == "spawned" {
+            self.spawned_ui = Some(document);
+        } else {
+            self.window_ui.insert(window_id.to_string(), document);
+        }
     }
 
     fn close_document_one(&mut self) -> bool {
@@ -5593,14 +5651,12 @@ impl ShellState {
             }
         }
         let instance_id = semio_s_plugin_space.create_app(&app.id).await?;
-        let workflows = self.build_space_workflows();
-        let panel_state = SpacePanelState { active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(), workflows, spawned_apps: vec![], active_spawned_id: None };
+        let panel_state = SpacePanelState { active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(), spawned_apps: vec![], active_spawned_id: None };
         let next_view_state = view_state.unwrap_or_else(|| ViewModel {
             active_mode_id: Some(app.default_mode_id.clone()),
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
             active_utility_id: None,
             panel_json: Some(Self::panel_json(&panel_state)),
-            contributions_json: None,
             locale: self.active_locale(),
             terminology: self.active_terminology(),
             window_id: None,
@@ -5640,7 +5696,6 @@ impl ShellState {
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
             active_utility_id: None,
             panel_json: None,
-            contributions_json: None,
             locale: self.active_locale(),
             terminology: self.active_terminology(),
             window_id: None,
@@ -5728,7 +5783,7 @@ impl ShellState {
         let bridge = self.plugins.iter().find(|entry| entry.plugin_id == workflow.plugin_id).ok_or("spawn program missing")?;
         let instance_id = bridge.create_app(&workflow.app_id).await?;
         let default_catalogue_tab_id = self.host_catalogue_tab_id().unwrap_or_default();
-        let mut panel = Self::panel_state_from_view(&view_state).unwrap_or(SpacePanelState { active_panel_tab: default_catalogue_tab_id, workflows: workflows.clone(), spawned_apps: vec![], active_spawned_id: None });
+        let mut panel = Self::panel_state_from_view(&view_state).unwrap_or(SpacePanelState { active_panel_tab: default_catalogue_tab_id, spawned_apps: vec![], active_spawned_id: None });
         let spawned_id = format!("{}-{}", bridge.plugin_id, instance_id);
         panel.spawned_apps.push(SpawnedAppEntry { id: spawned_id.clone(), plugin_id: bridge.plugin_id.clone(), instance_id, app_id: workflow.app_id.clone(), label: workflow.label.clone(), breadcrumb: workflow.breadcrumb.clone() });
         panel.active_spawned_id = Some(spawned_id);
@@ -10653,12 +10708,7 @@ impl ShellState {
                 cursor.phase = 4;
             }
             4 => {
-                let Some(window) = cursor.window.as_ref() else {
-                    cursor.phase = 5;
-                    return false;
-                };
-                let document = if window.as_str() == "spawned" { self.spawned_ui.as_ref() } else { self.window_ui.get(window.as_str()) }.and_then(|lease| lease.try_alias().ok());
-                let Some(document) = document else {
+                let Some(window) = cursor.window.clone() else {
                     cursor.phase = 5;
                     return false;
                 };
@@ -10666,15 +10716,33 @@ impl ShellState {
                     cursor.phase = u16::MAX;
                     return false;
                 };
-                let scroll_offsets = &mut self.scroll_offsets;
-                let collapsed_sections = &mut self.collapsed_sections;
-                let open_selects = &mut self.open_selects;
-                let widget_maps = &mut self.widget_maps;
-                let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources };
-                let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
-                ctx.pick_clip = Some(rect);
-                if !render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, window.as_str(), &mut hosts) {
+                // 🎬️ Who answers this document's action bindings: the owning app's controller, the
+                // same identity `queue_host_effects` stamps on every effect-borne descriptor. The
+                // semantic contract moved it off the node onto the session, so the reconcile has to
+                // be handed it here rather than reading it off a record.
+                let controller = self.document_controller_id();
+                let Some(document) = self.take_window_document(window.as_str()) else {
+                    cursor.phase = 5;
                     return false;
+                };
+                let complete = {
+                    let scroll_offsets = &mut self.scroll_offsets;
+                    let collapsed_sections = &mut self.collapsed_sections;
+                    let open_selects = &mut self.open_selects;
+                    let widget_maps = &mut self.widget_maps;
+                    let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources };
+                    let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
+                    ctx.pick_clip = Some(rect);
+                    render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, window.as_str(), controller.as_str(), &mut hosts)
+                };
+                self.restore_window_document(window.as_str(), document);
+                if !complete {
+                    if !cursor.document.terminal_is_fault() {
+                        return false;
+                    }
+                    self.record_document_paint_fault(window.as_str());
+                } else {
+                    self.clear_document_paint_fault(window.as_str());
                 }
                 cursor.phase = 5;
             }
@@ -10734,11 +10802,7 @@ impl ShellState {
                 cursor.phase = 8;
             }
             8 => {
-                let Some(window) = cursor.window.as_ref() else {
-                    cursor.phase = 9;
-                    return false;
-                };
-                let Some(document) = self.panel_documents.get(window.as_str()).and_then(|lease| lease.try_alias().ok()) else {
+                let Some(window) = cursor.window.clone() else {
                     cursor.phase = 9;
                     return false;
                 };
@@ -10746,16 +10810,30 @@ impl ShellState {
                     cursor.phase = u16::MAX;
                     return false;
                 };
-                let content = panel.inset(theme.gap_standard);
-                let scroll_offsets = &mut self.scroll_offsets;
-                let collapsed_sections = &mut self.collapsed_sections;
-                let open_selects = &mut self.open_selects;
-                let widget_maps = &mut self.widget_maps;
-                let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources };
-                let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
-                ctx.pick_clip = Some(content);
-                if !render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window.as_str(), &mut hosts) {
+                let controller = self.document_controller_id();
+                let Some(document) = self.panel_documents.remove(window.as_str()) else {
+                    cursor.phase = 9;
                     return false;
+                };
+                let content = panel.inset(theme.gap_standard);
+                let complete = {
+                    let scroll_offsets = &mut self.scroll_offsets;
+                    let collapsed_sections = &mut self.collapsed_sections;
+                    let open_selects = &mut self.open_selects;
+                    let widget_maps = &mut self.widget_maps;
+                    let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources };
+                    let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
+                    ctx.pick_clip = Some(content);
+                    render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window.as_str(), controller.as_str(), &mut hosts)
+                };
+                self.panel_documents.insert(window.as_str().to_string(), document);
+                if !complete {
+                    if !cursor.document.terminal_is_fault() {
+                        return false;
+                    }
+                    self.record_document_paint_fault(window.as_str());
+                } else {
+                    self.clear_document_paint_fault(window.as_str());
                 }
                 cursor.phase = 9;
             }

@@ -104,3 +104,9 @@ pub(crate) fn apply_selected(payload: &RotateSelection, doc: &ArtifactView<'_, G
     let ids = mesh_selection_ids_typed(&payload.node_ids, selected);
     rotate_ids(&doc.snapshot.fixture, &ids, payload.ax, payload.ay, payload.az, payload.angle)
 }
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

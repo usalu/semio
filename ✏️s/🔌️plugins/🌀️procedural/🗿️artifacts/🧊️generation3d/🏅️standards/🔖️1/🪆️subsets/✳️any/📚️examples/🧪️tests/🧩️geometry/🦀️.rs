@@ -33,7 +33,24 @@ struct ExampleGeometryFixture {
     preview: PreviewTarget,
     tessellation_tolerance: f64,
     expect: Expectation,
+    delivery: DeliveryExpectation,
     kernel_status: String,
+}
+
+/// 🚚️ What this example's preview must DELIVER across the extension boundary, at the LOD the live
+/// surface asks for — the second half of "the geometry is right": a correct mesh nobody receives is
+/// a blank viewport. `max_round_trips` is the load-bearing number, because one round trip is one
+/// whole `flowEvalTick` (evaluate → invoke → answer → refresh), seconds apiece in a served build
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️preview-mesh-delivery-2026-09-12.md`).
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DeliveryExpectation {
+    lod_mode: String,
+    min_meshes: usize,
+    min_triangles: usize,
+    min_edge_segments: usize,
+    max_round_trips: usize,
+    max_chunks: u32,
 }
 
 /// 🎯️ Which evaluated node channel carries the geometry the preview renders.
@@ -462,3 +479,180 @@ fn hexagonal_mushroom_column_preview_payload_matches_the_scene_bridge_fixture() 
     assert_eq!(camera, expected.camera_json, "preview camera measure drifted from the committed scene-bridge fixture");
 }
 //#endregion 🌉️SceneBridgeProvenance
+
+//#region 🔖️MeshDelivery
+/// 🚚️ One example's preview mesh delivery, driven through the REAL browser wire rather than the
+/// in-process `tessellate_geometry` shortcut the lane above uses: the same budgeted
+/// `tessellate_step_envelope_json` the `brep` extension answers with, folded by the same
+/// `FlowEvalSession::resolve_preview_tessellate` the `flowTessellateResolve` command folds with, at
+/// the same LOD tolerance [`preview_tolerance`] gives the live preview.
+///
+/// ⚖️ Round trips are the measured quantity because each one costs the app a WHOLE `flowEvalTick`
+/// (evaluate → invoke → answer → refresh), which is seconds in a served wasm build — a delivery
+/// that needs dozens of them never reaches the user's eyes, however correct the mesh is
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️preview-mesh-delivery-2026-09-12.md`).
+#[derive(Debug)]
+struct DeliveryRun {
+    round_trips: usize,
+    chunks: u32,
+    pack_base64_bytes: usize,
+    triangles: usize,
+    edge_segments: usize,
+    phase: String,
+    diagnostics: Option<String>,
+    payload_meshes: usize,
+    payload_instances: usize,
+    payload_edge_segments: usize,
+    payload_triangles: usize,
+    step_micros: Vec<u64>,
+}
+
+/// 🧹️ Retires a `FlowEvalSession`, which rejects a live drop — the same `begin_close` + granted
+/// `close_step` loop production's `FlowInstanceOperationOwner::maintenance_step` runs.
+fn retire_eval_session(mut session: semio_framework_os_flow::FlowEvalSession) {
+    session.begin_close();
+    for _ in 0..1_000_000 {
+        match session.close_step(1, 65_536) {
+            semio_framework_job::InteractiveJobCloseStep::Pending { .. } => continue,
+            semio_framework_job::InteractiveJobCloseStep::Complete => return,
+            semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("a positive close grant must never block the evaluation session"),
+        }
+    }
+    panic!("the evaluation session did not reach terminal-empty under a positive close grant");
+}
+
+/// 🚚️ Evaluates one example and delivers its preview handle's mesh across the extension boundary
+/// exactly as the app does, counting every round trip the transfer costs.
+fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> DeliveryRun {
+    use semio_s_artifact_procedural_generation3d::preview_eval::{preview_tolerance, PREVIEW_TESSELLATE_STEP_BUDGET, PREVIEW_TESSELLATE_STEP_WALL_MICROS};
+    operators_installed();
+    let Generation3dSnapshot { fixture: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
+    generation.retire_cold();
+    let mut host = FlowHost::from_fixture(graph);
+    host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
+    let eval_json = host.evaluate().expect("example evaluates");
+    let eval: serde_json::Value = serde_json::from_str(&eval_json).expect("evaluation json");
+    let handle = output_channel(&eval, &fixture.preview.node, &fixture.preview.channel).get("handle").and_then(serde_json::Value::as_str).expect("geometry handle").to_string();
+    let tolerance = preview_tolerance(lod_mode);
+    // 🧼️ The lane above already tessellated this handle at a FINER tolerance, and
+    // `cached_mesh_at_or_finer` would serve that cache instead of stepping — so the delivery starts
+    // from a cold kernel, the way a freshly evaluated handle does in the app.
+    semio_framework_os_flow::brep_geometry::evict_mesh_cache_for_handle(&handle);
+    semio_framework_os_flow::brep_geometry::cancel_all_tessellations();
+    let node_hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance.to_bits());
+    let mut session = semio_framework_os_flow::FlowEvalSession::new();
+    let mut round_trips = 0usize;
+    let mut chunks = 0u32;
+    let mut phase = String::new();
+    let mut step_micros: Vec<u64> = Vec::new();
+    for _ in 0..4096 {
+        if !session.note_pending_tessellate(node_hash, handle.clone()) {
+            break;
+        }
+        let chunk = session.next_tessellate_chunk(node_hash) as usize;
+        let started = std::time::Instant::now();
+        let envelope = semio_framework_os_flow::brep_geometry::tessellate_step_envelope_json(&handle, tolerance, PREVIEW_TESSELLATE_STEP_BUDGET as usize, PREVIEW_TESSELLATE_STEP_WALL_MICROS, chunk);
+        step_micros.push(started.elapsed().as_micros() as u64);
+        round_trips += 1;
+        let parsed: serde_json::Value = serde_json::from_str(&envelope).expect("envelope json");
+        phase = parsed.get("phase").and_then(serde_json::Value::as_str).unwrap_or_default().to_string();
+        chunks = chunks.max(parsed.get("chunks").and_then(serde_json::Value::as_u64).unwrap_or_default() as u32);
+        assert!(envelope.len() <= semio_framework_os_flow::brep_geometry::tessellate_envelope_maximum_bytes(), "{}: a {} B envelope exceeds the declared transfer unit", fixture.example, envelope.len());
+        match session.resolve_preview_tessellate(node_hash, &envelope) {
+            semio_framework_os_flow::PreviewTessellateOutcome::Working => continue,
+            _ => break,
+        }
+    }
+    let pack = session.preview_mesh_pack(&handle).unwrap_or_default().to_string();
+    let mesh = semio_s_artifact_procedural_generation3d::preview_eval::decode_preview_mesh_pack(&pack);
+    let diagnostics = session.preview_diagnostics(&handle).map(str::to_string);
+    // 👁️ The publication the preview window actually paints, built from the SAME delivered session
+    // — transfer and publication are two different failures and this row separates them.
+    let config = semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig { lod_mode: lod_mode.to_string(), ..Default::default() };
+    let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(&eval_json, &host.fixture, &config, Some(&session), &semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks::default());
+    let payload_meshes: serde_json::Value = serde_json::from_str(&payload.meshes_json).expect("payload meshes json");
+    let payload_instances: serde_json::Value = serde_json::from_str(&payload.instances_json).expect("payload instances json");
+    let published = payload_meshes.as_array().cloned().unwrap_or_default();
+    let payload_triangles = published.iter().map(|entry| entry.pointer("/data/indices").and_then(serde_json::Value::as_array).map(Vec::len).unwrap_or_default() / 3).sum::<usize>();
+    let payload_edge_segments = published.iter().map(|entry| entry.pointer("/data/edgePositions").and_then(serde_json::Value::as_array).map(Vec::len).unwrap_or_default() / 6).sum::<usize>();
+    let run = DeliveryRun {
+        payload_meshes: published.len(),
+        payload_instances: payload_instances.as_array().map(Vec::len).unwrap_or_default(),
+        payload_edge_segments,
+        payload_triangles,
+        step_micros,
+        round_trips,
+        chunks,
+        pack_base64_bytes: pack.len(),
+        triangles: mesh.as_ref().map(|m| m.indices.len() / 3).unwrap_or_default(),
+        edge_segments: mesh.as_ref().map(|m| m.edge_positions.len() / 6).unwrap_or_default(),
+        phase,
+        diagnostics,
+    };
+    retire_eval_session(session);
+    retire_host(host);
+    run
+}
+
+/// ✅️ Holds one example's delivery to its committed `delivery` row.
+fn assert_delivery(dsl: &str, fixture_json: &str) {
+    let _guard = exclusive();
+    let fixture: ExampleGeometryFixture = serde_json::from_str(fixture_json).expect("expected-stats fixture parses");
+    let run = run_delivery(dsl, &fixture, &fixture.delivery.lod_mode.clone());
+    println!("[DELIVERY] {} roundTrips={} chunks={} packBase64Bytes={} triangles={} edgeSegments={} phase={} diagnostics={:?} payloadMeshes={} payloadInstances={} payloadTriangles={} payloadEdgeSegments={} stepMicros={:?} totalMicros={}", fixture.example, run.round_trips, run.chunks, run.pack_base64_bytes, run.triangles, run.edge_segments, run.phase, run.diagnostics, run.payload_meshes, run.payload_instances, run.payload_triangles, run.payload_edge_segments, run.step_micros, run.step_micros.iter().sum::<u64>());
+    let delivery = &fixture.delivery;
+    assert_eq!(run.diagnostics, None, "{}: the validate gate rejected the preview solid", fixture.example);
+    assert_eq!(run.phase, "complete", "{}: the delivery ended in phase {:?}", fixture.example, run.phase);
+    assert!(run.triangles >= delivery.min_triangles, "{}: {} delivered triangles, expected at least {}", fixture.example, run.triangles, delivery.min_triangles);
+    assert!(run.edge_segments >= delivery.min_edge_segments, "{}: {} delivered edge segments, expected at least {}", fixture.example, run.edge_segments, delivery.min_edge_segments);
+    // 👁️ A wire preview has NO triangles and must still paint: its polyline rides the same `pack`
+    // body in `edgePositions`, and `mesh_has_preview_geometry` admits it on that alone.
+    assert!(run.triangles > 0 || run.edge_segments > 0, "{}: the delivered mesh is empty", fixture.example);
+    assert!(run.payload_meshes >= delivery.min_meshes, "{}: the preview published {} meshes, expected at least {}", fixture.example, run.payload_meshes, delivery.min_meshes);
+    assert_eq!(run.payload_instances, run.payload_meshes.max(delivery.min_meshes), "{}: every published mesh owes exactly one preview instance", fixture.example);
+    assert!(run.payload_triangles >= delivery.min_triangles, "{}: the published payload carries {} triangles, expected at least {}", fixture.example, run.payload_triangles, delivery.min_triangles);
+    assert!(run.payload_edge_segments >= delivery.min_edge_segments, "{}: the published payload carries {} edge segments, expected at least {}", fixture.example, run.payload_edge_segments, delivery.min_edge_segments);
+    assert!(run.chunks <= delivery.max_chunks, "{}: the mesh body crossed in {} chunks, budget {}", fixture.example, run.chunks, delivery.max_chunks);
+    assert!(run.round_trips <= delivery.max_round_trips, "{}: the preview cost {} tessellate round trips, budget {} — one round trip is one whole flowEvalTick", fixture.example, run.round_trips, delivery.max_round_trips);
+}
+
+#[test]
+fn delivery_rectangle_wire_preview() {
+    assert_delivery(include_str!("../../🪢️rectangle-wire-preview/🖼️assets/🪢️rectangle-wire-preview/🗣️.dsl.semio"), include_str!("../../🪢️rectangle-wire-preview/🧪️tests/🧩️example/🔣️.json"));
+}
+
+#[test]
+fn delivery_rectangle_extrude_volume() {
+    assert_delivery(include_str!("../../📦️rectangle-extrude-volume/🖼️assets/📦️rectangle-extrude-volume/🗣️.dsl.semio"), include_str!("../../📦️rectangle-extrude-volume/🧪️tests/🧩️example/🔣️.json"));
+}
+
+#[test]
+fn delivery_face_sweep_extrude() {
+    assert_delivery(include_str!("../../🧹️face-sweep-extrude/🖼️assets/🧹️face-sweep-extrude/🗣️.dsl.semio"), include_str!("../../🧹️face-sweep-extrude/🧪️tests/🧩️example/🔣️.json"));
+}
+
+#[test]
+fn delivery_hexagonal_mushroom_column() {
+    assert_delivery(include_str!("../../🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom-column/🗣️.dsl.semio"), include_str!("../../🍄️hexagonal-mushroom-column/🧪️tests/🧩️example/🔣️.json"));
+}
+
+#[test]
+fn delivery_box_shell_preview() {
+    assert_delivery(include_str!("../../🐚️box-shell-preview/🖼️assets/🐚️box-shell-preview/🗣️.dsl.semio"), include_str!("../../🐚️box-shell-preview/🧪️tests/🧩️example/🔣️.json"));
+}
+
+#[test]
+fn delivery_box_fillet_preview() {
+    assert_delivery(include_str!("../../📐️box-fillet-preview/🖼️assets/📐️box-fillet-preview/🗣️.dsl.semio"), include_str!("../../📐️box-fillet-preview/🧪️tests/🧩️example/🔣️.json"));
+}
+
+#[test]
+fn delivery_sphere_box_fuse() {
+    assert_delivery(include_str!("../../🧲️sphere-box-fuse/🖼️assets/🧲️sphere-box-fuse/🗣️.dsl.semio"), include_str!("../../🧲️sphere-box-fuse/🧪️tests/🧩️example/🔣️.json"));
+}
+
+#[test]
+fn delivery_sphere_cut_with_torus() {
+    assert_delivery(include_str!("../../🍩️sphere-cut-with-torus/🖼️assets/🍩️sphere-cut-with-torus/🗣️.dsl.semio"), include_str!("../../🍩️sphere-cut-with-torus/🧪️tests/🧩️example/🔣️.json"));
+}
+//#endregion 🔖️MeshDelivery

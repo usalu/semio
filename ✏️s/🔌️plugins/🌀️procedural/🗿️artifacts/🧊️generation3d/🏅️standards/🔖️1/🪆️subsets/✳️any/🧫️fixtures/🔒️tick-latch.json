@@ -1,0 +1,193 @@
+{
+  "format": "semio.generation3d.tick-latch",
+  "version": 1,
+  "note": "The ARMING law of the self-dispatched flowEvalTick chain, declared as data. `🪟️tick-addressing.json` says WHICH window an armed tick names; this says WHETHER one may be armed at all. The invariant every row proves: at most ONE pending flowEvalTick per (app instance, preview window) exists at any time, no matter how many independent sources ask for one — the host refresh poll, a contributions install, an example switch, a view command, and the chain's own continuations all pass through the retained FlowEvalSession's per-window latch. Language-agnostic: an implementation in any language must replay these event sequences and answer the same `armed` lists.",
+  "windowKinds": {
+    "flow": "procedural-main",
+    "preview": "procedural-preview",
+    "generatePreview": "generation3d-generate-preview",
+    "viewPreview": "procedural-view-preview"
+  },
+  "events": {
+    "refresh": "One host refreshUi pass asks the app for pending effects. Arms a window only while that window OWES a tick nothing else is chasing.",
+    "gesture": "A command that changed what the evaluation would produce (setContributions after the registry moved, setActiveExample, a generation command, a viewer view command). Arms every attached preview — through the latch, so a window that already owes a tick gets no second one.",
+    "tick": "The armed tick RUNS on the named window. `parks` is how many ExtensionInvocations it declared; `more` is whether the evaluation is unfinished. A tick that parked work owes no re-arm: its answers own the continuation.",
+    "resolve": "One extension answer comes back for the named window. `ok` is whether it could be folded into the session (a faulted invokeExtension folds nothing); `more` is whether the fold left work behind.",
+    "invalidate": "The flow extension registry was replaced, so every result the old chain was chasing has been swept and every window's latch is abandoned.",
+    "detach": "A refresh pass ran while the named window was NOT in the shell's roster. Its latch can never be discharged by a tick once it is gone, so that pass drops it and the window owes a first tick again when it comes back."
+  },
+  "rows": [
+    {
+      "id": "install-arms-exactly-one-tick-per-attached-window",
+      "surface": "editor",
+      "attached": [
+        { "id": "preview", "kind": "preview" },
+        { "id": "generate", "kind": "generatePreview" }
+      ],
+      "sequence": [
+        { "event": "invalidate" },
+        { "event": "gesture" }
+      ],
+      "armed": [[], ["preview", "generate"]],
+      "why": "Each preview window owns its own retained evaluation publication, so the install owes each one a chain — and owes each exactly one."
+    },
+    {
+      "id": "a-refresh-after-the-install-arms-nothing-more",
+      "surface": "editor",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "sequence": [
+        { "event": "invalidate" },
+        { "event": "gesture" },
+        { "event": "refresh" },
+        { "event": "refresh" }
+      ],
+      "armed": [[], ["preview"], [], []],
+      "why": "The poll used to run on a throwaway session whose latch was always clear, so every refresh stacked another tick on the running chain."
+    },
+    {
+      "id": "two-refreshes-in-a-row-leave-one-pending-tick",
+      "surface": "editor",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "sequence": [
+        { "event": "refresh" },
+        { "event": "refresh" },
+        { "event": "refresh" }
+      ],
+      "armed": [["preview"], [], []],
+      "why": "A window that has never ticked owes its first one; after that the latch holds until the tick actually runs."
+    },
+    {
+      "id": "a-tick-with-an-in-flight-invocation-arms-nothing",
+      "surface": "editor",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "sequence": [
+        { "event": "refresh" },
+        { "event": "tick", "window": "preview", "parks": 1, "more": true },
+        { "event": "refresh" },
+        { "event": "gesture" }
+      ],
+      "armed": [["preview"], [], [], []],
+      "why": "Ticking a window whose invocation is outstanding recomputes the identical pending request and parks a duplicate — the 298-invocations-against-111-settles spin."
+    },
+    {
+      "id": "a-resolve-with-more-work-re-arms-exactly-once",
+      "surface": "editor",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "sequence": [
+        { "event": "refresh" },
+        { "event": "tick", "window": "preview", "parks": 1, "more": true },
+        { "event": "resolve", "window": "preview", "ok": true, "more": true },
+        { "event": "refresh" }
+      ],
+      "armed": [["preview"], [], ["preview"], []],
+      "why": "The answer owns the continuation the tick that parked it declined to owe."
+    },
+    {
+      "id": "a-fan-out-of-answers-re-arms-once-not-once-each",
+      "surface": "editor",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "sequence": [
+        { "event": "refresh" },
+        { "event": "tick", "window": "preview", "parks": 3, "more": false },
+        { "event": "resolve", "window": "preview", "ok": true, "more": true },
+        { "event": "resolve", "window": "preview", "ok": true, "more": true },
+        { "event": "resolve", "window": "preview", "ok": true, "more": true }
+      ],
+      "armed": [["preview"], [], [], [], ["preview"]],
+      "why": "A budgeted tessellation parks one invocation per handle; the LAST answer arms the next tick, the earlier ones hand their claim on."
+    },
+    {
+      "id": "a-faulted-answer-arms-nothing-and-leaves-no-standing-debt",
+      "surface": "editor",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "sequence": [
+        { "event": "refresh" },
+        { "event": "tick", "window": "preview", "parks": 1, "more": true },
+        { "event": "resolve", "window": "preview", "ok": false, "more": true },
+        { "event": "refresh" },
+        { "event": "refresh" }
+      ],
+      "armed": [["preview"], [], [], [], []],
+      "why": "A faulted invokeExtension folds nothing, so the next tick would park the identical request and fault again at the host's own cadence. Only a gesture may resume it."
+    },
+    {
+      "id": "a-settled-evaluation-arms-nothing-on-any-later-refresh",
+      "surface": "editor",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "sequence": [
+        { "event": "refresh" },
+        { "event": "tick", "window": "preview", "parks": 0, "more": false },
+        { "event": "refresh" },
+        { "event": "refresh" }
+      ],
+      "armed": [["preview"], [], [], []],
+      "why": "Idle turns cost nothing: a finished evaluation owes no continuation and the poll asks the latch, not an evaluation."
+    },
+    {
+      "id": "an-unfinished-tick-re-arms-itself-once",
+      "surface": "editor",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "sequence": [
+        { "event": "refresh" },
+        { "event": "tick", "window": "preview", "parks": 0, "more": true },
+        { "event": "refresh" }
+      ],
+      "armed": [["preview"], ["preview"], []],
+      "why": "A graph that outruns one step budget continues itself, and the poll must not add a second chain on top of it."
+    },
+    {
+      "id": "two-previews-latch-independently",
+      "surface": "editor",
+      "attached": [
+        { "id": "left", "kind": "preview" },
+        { "id": "right", "kind": "preview" }
+      ],
+      "sequence": [
+        { "event": "refresh" },
+        { "event": "tick", "window": "left", "parks": 1, "more": true },
+        { "event": "tick", "window": "right", "parks": 0, "more": true },
+        { "event": "refresh" }
+      ],
+      "armed": [["left", "right"], [], ["right"], []],
+      "why": "Generate-mode previews evaluate a patched fixture of their own, so a window's debt is that window's, never the session's."
+    },
+    {
+      "id": "a-detached-window-owes-a-first-tick-again-when-it-returns",
+      "surface": "editor",
+      "attached": [{ "id": "preview", "kind": "preview" }],
+      "sequence": [
+        { "event": "refresh" },
+        { "event": "detach", "window": "preview" },
+        { "event": "refresh" }
+      ],
+      "armed": [["preview"], [], ["preview"]],
+      "why": "A detached window's armed latch can never be discharged — the retained route refuses a window that has left the roster — so a stale latch would make it unarmable forever."
+    },
+    {
+      "id": "viewer-install-arms-its-one-preview-once",
+      "surface": "viewer",
+      "attached": [{ "id": "view-preview", "kind": "viewPreview" }],
+      "sequence": [
+        { "event": "invalidate" },
+        { "event": "gesture" },
+        { "event": "gesture" },
+        { "event": "refresh" }
+      ],
+      "armed": [[], ["view-preview"], [], []],
+      "why": "The viewer runs the identical shared chain; two gestures in a row still leave one pending tick."
+    },
+    {
+      "id": "viewer-resolve-fan-out-re-arms-once",
+      "surface": "viewer",
+      "attached": [{ "id": "view-preview", "kind": "viewPreview" }],
+      "sequence": [
+        { "event": "refresh" },
+        { "event": "tick", "window": "view-preview", "parks": 2, "more": false },
+        { "event": "resolve", "window": "view-preview", "ok": true, "more": true },
+        { "event": "resolve", "window": "view-preview", "ok": true, "more": false }
+      ],
+      "armed": [["view-preview"], [], [], ["view-preview"]],
+      "why": "One answer asking for a continuation is enough; the last answer of the fan-out carries it."
+    }
+  ]
+}

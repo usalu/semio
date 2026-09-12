@@ -471,11 +471,15 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         self.editor_app::<E>(def, Vec::new())
     }
 
-    /// 📚️ `editor` twin that also stamps the given `ExampleSource`s onto the manifest — each becomes
-    /// an `ExampleDefinition` (`app_id` filled in by `register_app_factory` at `try_build`), the same
-    /// path `App::example_source` uses. Feeds the react shell's example dropdown
-    /// (`activePluginManifest.examples`, `NavbarExampleSelect/🟦️.tsx`), which stays hidden while an
-    /// app's `manifest.examples` is empty.
+    /// 📚️ `editor` twin that also declares this subset's `ExampleSource`s on the manifest — each
+    /// becomes an `ExampleDefinition` stamped with `E::DIALECT` by `register_app_factory` at
+    /// `try_build`, the same path `App::example_source` uses. The examples belong to the DIALECT, not
+    /// to this editor: every surface of the same dialect (its viewer included) resolves them through
+    /// `manifest::examples_for_app`, which is what feeds the react shell's example dropdown
+    /// (`activePluginManifest.examples`, `NavbarExampleSelect/🟦️.tsx`) — hidden only while no example
+    /// of the open app's dialect exists. Declared here rather than on a standalone builder step
+    /// because the editor row is the one registration the subset's fixtures travel with
+    /// (`SubsetDeclaration.examples` does the same, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn editor_with_examples<E: crate::app::ArtifactEditor>(self, def: crate::app::AppDefinition, examples: Vec<crate::app::ExampleSource>) -> Self
     where
         PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>>>,
@@ -502,7 +506,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         if def.io.document_schema.is_empty() {
             def.io.document_schema = E::DOCUMENT_SCHEMA.to_string();
         }
-        let app = App { definition: def.clone(), examples: examples.into_iter().map(Into::into).collect() };
+        let app = App { definition: def.clone(), examples };
         self.app_defs.push((app, (def, factory::<E, PA>)));
         self.app_schema_descriptors.push(app_schema::<E>);
         // 🔒️ Contract §2.3 clause 4 — an editor's document store attaches both Read and Write.

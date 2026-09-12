@@ -1,0 +1,16 @@
+{
+  "fixture": "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/📃️document-lease-owner-move/🔣️.json",
+  "shellSource": "🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
+  "interpreterSource": "🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
+  "rendererSource": "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+  "frameJobSource": "🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
+  "winitSource": "🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs",
+  "documentReaders": ["take_window_document", "restore_window_document", "panel_documents.remove"],
+  "forbiddenDocumentReader": "try_alias",
+  "terminalCursorRelease": "terminal_is_fault",
+  "supersededVariant": "Superseded",
+  "supersededFaultRecorder": "record_frame_fault",
+  "supersededConditions": 6,
+  "effectStormChargeSite": "FrameTransactionStage::FlushEffects;",
+  "driveBudgets": ["BROWSER_FRAME_BUILD_DRIVE_US", "INTERACTIVE_STEP_CEILING_US / 2"]
+}

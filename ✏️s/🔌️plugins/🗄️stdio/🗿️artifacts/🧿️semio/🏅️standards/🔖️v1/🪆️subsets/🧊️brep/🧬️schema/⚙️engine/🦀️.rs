@@ -42,7 +42,7 @@ pub mod contract;
 pub use contract::*;
 
 use crate::standards::v1::subsets::brep::schema::diff::blend::{chamfer_edges, fillet_edges, fillet_variable};
-use crate::standards::v1::subsets::brep::schema::diff::boolean::{boolean_solid, compound_cut, section_solid_by_plane, split_solid_by_plane, BooleanOp};
+use crate::standards::v1::subsets::brep::schema::diff::boolean::{boolean_job, boolean_solid, compound_cut, section_solid_by_plane, split_solid_by_plane, BooleanAdmission, BooleanJob, BooleanOp, BooleanProgress, BooleanStep};
 use crate::standards::v1::subsets::brep::schema::diff::euler::make_vertex;
 use crate::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_curve;
 use crate::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_surface;
@@ -436,6 +436,52 @@ enum Entity {
 pub struct Brep {
     body: Body,
     live: HashMap<String, Entity>,
+}
+
+/// ⏱️ A retained resumable boolean plus the operation recorder its whole run accumulates into —
+/// the recorder must outlive every step, which is why the job owns it rather than borrowing the
+/// caller's (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
+pub struct BrepBooleanJob {
+    job: BooleanJob,
+    rec: OpRecorder,
+}
+
+impl BrepBooleanJob {
+    /// 📈️ Progress right now — safe to read between steps and after termination.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn progress(&self) -> BooleanProgress {
+        self.job.progress()
+    }
+
+    /// 🛑️ Retires this boolean at the next observable boundary.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn cancel(&mut self) {
+        self.job.cancel();
+    }
+
+    /// ✅️ True once the job reached a terminal phase.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_terminal(&self) -> bool {
+        self.job.is_terminal()
+    }
+}
+
+/// 🔀️ What [`Brep::boolean_job_sync`] admitted.
+pub enum BrepBooleanAdmission {
+    /// ⚡️ A fast path answered exactly and in place; there is nothing to resume.
+    Answered(GeometryHandle),
+    /// ⏱️ The general exact engine, as a budgetable job.
+    Job(BrepBooleanJob),
+}
+
+/// ⏱️ Outcome of one [`Brep::step_boolean_job_sync`].
+pub enum BrepBooleanStep {
+    /// 🔁 Budget spent, work remains.
+    Working(BooleanProgress),
+    /// ✅️ Terminal: the result solid, registered as a live handle.
+    Ready(GeometryHandle),
+    /// 🛑️ Terminal: the job was cancelled; nothing is produced.
+    Cancelled(BooleanProgress),
 }
 
 impl Default for Brep {
@@ -919,6 +965,51 @@ impl Brep {
         let mut rec = OpRecorder::new();
         let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Cut, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
+    }
+
+    /// 🔀️ The one-shot set operation, over the SAME road [`Brep::boolean_job_sync`] takes — so a
+    /// caller that cannot afford a job and a caller that drives one cannot diverge.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn boolean_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle, op: BooleanOp) -> Result<GeometryHandle, BrepError> {
+        match self.boolean_job_sync(a, b, op)? {
+            BrepBooleanAdmission::Answered(handle) => Ok(handle),
+            BrepBooleanAdmission::Job(mut job) => loop {
+                match self.step_boolean_job_sync(&mut job, usize::MAX)? {
+                    BrepBooleanStep::Ready(handle) => return Ok(handle),
+                    BrepBooleanStep::Cancelled(_) => return Err(BrepError::Operation("boolean cancelled".to_string())),
+                    BrepBooleanStep::Working(_) => continue,
+                }
+            },
+        }
+    }
+
+    /// ⏱️ A resumable, budgetable boolean of `a` and `b` — the interactive twin of
+    /// [`Brep::cut_sync`]/[`Brep::fuse_sync`]/[`Brep::intersect_sync`], and the exact analogue of
+    /// [`Brep::tessellate_job_sync`]. The microsecond-cheap fast paths are taken here and answer
+    /// immediately; everything else comes back as a job the caller drives with
+    /// [`Brep::step_boolean_job_sync`] so no single call outruns an interactive step ceiling
+    /// (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn boolean_job_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle, op: BooleanOp) -> Result<BrepBooleanAdmission, BrepError> {
+        let sa = self.solid_id(a)?;
+        let sb = self.solid_id(b)?;
+        let mut rec = OpRecorder::new();
+        match boolean_job(&mut self.body, sa, sb, op, 1e-6, &mut rec).map_err(|error| map_err(&error))? {
+            BooleanAdmission::Answered(solid) => Ok(BrepBooleanAdmission::Answered(self.register_solid(solid))),
+            BooleanAdmission::Job(job) => Ok(BrepBooleanAdmission::Job(BrepBooleanJob { job, rec })),
+        }
+    }
+
+    /// ⏱️ Advances `job` by at most `budget` units against THIS kernel's topology. The job borrows
+    /// nothing, so a host may retain it across turns and re-present the kernel on every step — the
+    /// same contract [`Brep::tessellation_body`] states for tessellation.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn step_boolean_job_sync(&mut self, job: &mut BrepBooleanJob, budget: usize) -> Result<BrepBooleanStep, BrepError> {
+        match job.job.step(&mut self.body, &mut job.rec, budget).map_err(|error| map_err(&error))? {
+            BooleanStep::Working(progress) => Ok(BrepBooleanStep::Working(progress)),
+            BooleanStep::Cancelled(progress) => Ok(BrepBooleanStep::Cancelled(progress)),
+            BooleanStep::Done(solid) => Ok(BrepBooleanStep::Ready(self.register_solid(solid))),
+        }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn intersect_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {

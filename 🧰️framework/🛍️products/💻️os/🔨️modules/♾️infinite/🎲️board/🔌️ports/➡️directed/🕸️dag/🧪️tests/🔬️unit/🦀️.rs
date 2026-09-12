@@ -1629,7 +1629,8 @@ fn dag_draw_lod_maps_zoom_to_puzzle2d_bands() {
 #[test]
 fn dag_draw_lod_progressive_disclosure_gates() {
     assert_eq!(DagDrawLod::Normal.node_label(), DagNodeLabel::Name);
-    assert_eq!(DagDrawLod::Detail.node_label(), DagNodeLabel::Abbreviation);
+    // 🏷️ Zooming IN never shortens a caption: `Detail` sits above `Normal` and says the same word.
+    assert_eq!(DagDrawLod::Detail.node_label(), DagNodeLabel::Name);
     assert!(DagDrawLod::Normal.shows_computation_layout());
     assert!(!DagDrawLod::Compact.shows_computation_layout());
     assert!(!DagDrawLod::Normal.shows_handles());
@@ -1735,7 +1736,18 @@ fn dag_paint_scene_keeps_labels_when_lod_forced_at_low_zoom() {
     host.fixture.camera.zoom = 0.25;
     let mut scene = canvas::Scene::new();
     host.paint_scene(&mut scene, 1280, 800, 1.0);
-    assert!(scene.path_count() > 12, "compact LOD at low zoom should still paint abbreviation labels");
+    // 🏷️ A captioned tier DELEGATES its captions to the overlay (`node_caption_delegated_to_js_overlay`),
+    // so "still labelled at a forced low zoom" is a property of the overlay rows, not of the scene's
+    // path count — which is node chrome only, two paths per node. This used to assert `> 12` paths and
+    // measured 10 whichever string the tier served (recorded in
+    // `26/09/09/PROCEDURAL-3D-END-TO-END/📓️node-graph-camera-fit-labels-2026-09-12.md`).
+    assert!(scene.path_count() >= host.fixture.nodes.len() * 2, "a forced compact LOD must still paint every node's chrome");
+    let state: dsl::os_pack::json::Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+    let rows = state["labels"].as_array().expect("label overlay rows");
+    assert_eq!(rows.len(), host.fixture.nodes.len(), "a forced compact LOD must caption every node");
+    for (row, node) in rows.iter().zip(&host.fixture.nodes) {
+        assert_eq!(row["text"], dsl::os_pack::json::Value::from(node.name.as_str()), "a caption is the node's NAME at every captioned tier");
+    }
 }
 
 #[test]
@@ -1987,11 +1999,11 @@ fn dag_draw_lod_node_content_matrix() {
     assert!(DagDrawLod::Overview.node_icon_visible());
     assert_eq!(DagDrawLod::Overview.node_label(), DagNodeLabel::None);
     assert!(!DagDrawLod::Compact.node_icon_visible());
-    assert_eq!(DagDrawLod::Compact.node_label(), DagNodeLabel::Abbreviation);
+    assert_eq!(DagDrawLod::Compact.node_label(), DagNodeLabel::Name);
     assert!(!DagDrawLod::Normal.node_icon_visible());
     assert_eq!(DagDrawLod::Normal.node_label(), DagNodeLabel::Name);
     assert!(!DagDrawLod::Detail.node_icon_visible());
-    assert_eq!(DagDrawLod::Detail.node_label(), DagNodeLabel::Abbreviation);
+    assert_eq!(DagDrawLod::Detail.node_label(), DagNodeLabel::Name);
     assert!(!DagDrawLod::Micro.node_icon_visible());
     assert_eq!(DagDrawLod::Micro.node_label(), DagNodeLabel::Name);
     let computation = DagNodeSpec::computation(

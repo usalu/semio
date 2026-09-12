@@ -37,6 +37,15 @@ export const GUESTSLIM_FONT_RELATIVE = "🪞️vendor/🔤️guestslim-typst-fon
  * would drag the whole kernel/ui/resident graph into config loading) survives. */
 export const SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS = 1000;
 
+/** 🩺️ Mirrors `🎭️actor/🧵️shard-runtime/🟦️.ts`'s `SHARD_RUNTIME_DIAGNOSTICS_KEY`/
+ * `SHARD_WORKER_DIAGNOSTICS_PARAM` and, through them, the guest's own `RUNTIME_DIAGNOSTICS_ENV`
+ * (`🧰️framework/🔨️modules/⏱️trace/🦀️.rs`). Declared rather than imported for the same reason
+ * {@link SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS} is: this module is bundled into `⚙️vite.config.ts`'s
+ * import graph, and reaching `🧵️shard-runtime` from here would drag `ShardClient` and the whole
+ * kernel/ui/resident graph into config loading. Held equal by the engine-contract suite. */
+export const SHARD_RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
+export const SHARD_WORKER_DIAGNOSTICS_PARAM = "diagnostics";
+
 export type PluginWebMaterializeContext = {
   readonly repoRoot: string;
   readonly preview2VendorDir: string;
@@ -340,6 +349,37 @@ function replyError(requestId, error, frames, retryableLifecycle) {
   self.postMessage({ kind: "result", requestId, ok: false, error: reason + detail, stack, type, framesBytes, retryableLifecycle: retryableLifecycle === true });
 }
 
+// 🩺️ Hands every component this worker hosts the guest-side diagnostics switch through
+// \`wasi:cli/environment\` — the ONE schema-declared door a \`wasm32-wasip2\` component's own
+// \`std::env::var\` reads (\`semio_framework_trace::RUNTIME_DIAGNOSTICS_ENV\`). Before this, every
+// \`[DEBUG]\` line the guest's Rust hot path prints was unreachable from a browser session: the page's
+// \`localStorage\` switch only ever armed TypeScript-side traces, and \`runtime_diagnostics_from_environment\`
+// resolved against an environment nobody populated (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+// \`📓️audit-guest-tick-cost-2026-09-12.md\` §0/§4 rank 1).
+//
+// 🚪️ The page resolved the switch and stamped it on this worker's OWN url (\`shardWorkerUrl\`), since a
+// Worker realm owns no \`localStorage\`. The shim module is the SAME instance the transpiled component
+// imports — both resolve \`🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js\` against the shared
+// \`🔌️plugin-modules/\` root — so seeding it here seeds the guest. Disarmed is the default and costs
+// one url read; a shim that cannot be loaded degrades to silent traces, never to a failed boot.
+let guestRuntimeDiagnostics = null;
+async function armGuestRuntimeDiagnostics() {
+  if (guestRuntimeDiagnostics !== null) return guestRuntimeDiagnostics;
+  guestRuntimeDiagnostics = (async () => {
+    if (new URL(self.location.href).searchParams.get("${SHARD_WORKER_DIAGNOSTICS_PARAM}") !== "1") return false;
+    try {
+      const { _setEnv } = await import(/* @vite-ignore */ "../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js");
+      _setEnv({ "${SHARD_RUNTIME_DIAGNOSTICS_KEY}": "1" });
+      console.debug("[DEBUG] guest runtime diagnostics armed through wasi:cli/environment");
+      return true;
+    } catch (error) {
+      console.warn(\`[DEBUG] guest runtime diagnostics could not be armed: \${error}\`);
+      return false;
+    }
+  })();
+  return guestRuntimeDiagnostics;
+}
+
 async function loadActor(actorId, activationGeneration, moduleUrl) {
   if (typeof activationGeneration !== "bigint" || activationGeneration <= lastActivationGeneration || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
   if (actors.has(actorId) || activatingActors.has(actorId)) throw new Error("actor-close.activation-already-owned");
@@ -353,6 +393,7 @@ async function loadActor(actorId, activationGeneration, moduleUrl) {
     faultModuleUrl = moduleUrl;
     faultPhase = "load-bridge";
     heartbeat("module-fetch");
+    await armGuestRuntimeDiagnostics();
     const bridge = await import(/* @vite-ignore */ moduleUrl);
     faultPhase = "instantiate";
     heartbeat("module-ready");

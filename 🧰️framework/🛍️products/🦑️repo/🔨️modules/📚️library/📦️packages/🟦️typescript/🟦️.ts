@@ -15,7 +15,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { preparedBinaryen } from "../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
 import { cargoTargetDirectory } from "../../⚡️caching/🦀️cargo/🟦️.ts";
-import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
+import { isGeneratedPath, repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
 import { canonicalFilenameForKind, fixedContractFilename, loadTaxonomy, taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -2047,7 +2047,7 @@ export async function runExactCargoLawProcess(command: string, args: string[], o
 export async function runExactCargoLaws(options: ExactCargoLawOptions, port: ExactCargoLawPort = { probe: runExactCargoLawProcess, fingerprint: exactExecutableFingerprint }): Promise<readonly ExactCargoLawReceipt[]> {
   const configuredEnv = options.env ?? process.env;
   const artifactRoot = options.artifactDir ?? configuredEnv.SEMIO_TEST_ARTIFACT_DIR;
-  if (!artifactRoot || !isAbsolute(artifactRoot) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Exact Cargo laws require an absolute ticket-generated artifactDir or SEMIO_TEST_ARTIFACT_DIR");
+  if (!artifactRoot || !isAbsolute(artifactRoot) || !isGeneratedPath(artifactRoot)) throw new Error("Exact Cargo laws require an absolute artifactDir or SEMIO_TEST_ARTIFACT_DIR inside a generated directory");
   const cargoTargetDir = cargoTargetDirectory(getWorkspaceRoot(), configuredEnv);
   const targetBoundary = process.platform === "win32" ? cargoTargetDir.toLowerCase() : cargoTargetDir;
   const sourceBoundary = process.platform === "win32" ? resolve(options.cwd).toLowerCase() : resolve(options.cwd);

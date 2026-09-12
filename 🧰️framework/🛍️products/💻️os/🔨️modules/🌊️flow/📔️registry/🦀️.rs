@@ -48,6 +48,9 @@ struct FlowExtensionMetadata {
 
 pub(crate) struct FlowExtensionRegistryState {
     contributed: BTreeMap<String, ContributedFlowExtension>,
+    /// 📜️ [`installed_flow_extensions_shared`]'s memo of `contributed`, dropped by
+    /// [`FlowRegistryReplacement::publish`] — the ONE thing that can change the table.
+    installed: Option<std::sync::Arc<Vec<FlowExtensionInfo>>>,
     pub(crate) registry: neural::SharedRegistry,
     registry_retirement: neural::RegistryRetirement,
     retired: VecDeque<neural::RegistryRetirement>,
@@ -57,10 +60,40 @@ pub(crate) struct FlowExtensionRegistryState {
 const RETIRED_REGISTRY_CAPACITY: usize = 16;
 static FLOW_EXTENSION_STATE: OnceLock<Mutex<FlowExtensionRegistryState>> = OnceLock::new();
 
+/// 🔒️ Serializes every law that mutates the process-wide extension registry — the contribution
+/// table, the replacement generation and the retirement queue are ONE singleton shared by the
+/// whole test binary, and libtest runs laws on parallel threads by default, so a law that installs
+/// a manifest and one that asserts on the generation are otherwise reading each other's state
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Poisoning is ignored: a law that panicked while
+/// holding it has already reported its own failure, and swallowing the poison keeps that one
+/// failure from cascading into every later law.
+#[cfg(test)]
+pub(crate) static FLOW_EXTENSION_REGISTRY_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+/// 🔒️ Takes [`FLOW_EXTENSION_REGISTRY_TEST_LOCK`] for the duration of one law.
+#[cfg(test)]
+pub(crate) fn lock_flow_extension_registry_for_test() -> std::sync::MutexGuard<'static, ()> {
+    FLOW_EXTENSION_REGISTRY_TEST_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+/// 🧹️ Drains whatever retired registry versions an earlier law left behind, so a law that MEASURES
+/// the retirement queue measures its own work. Bounded, and gives up the moment the queue is empty
+/// or a faulted worker owns the cursor — neither is this helper's business to report.
+#[cfg(test)]
+pub(crate) fn drain_flow_extension_registry_retirements() {
+    for _ in 0..1_000_000 {
+        match retire_flow_extension_registries_step(1, 4096) {
+            Ok(neural::ValueRetirementStep::Pending { .. }) => {}
+            _ => break,
+        }
+    }
+}
+
 pub(crate) fn flow_extension_state() -> &'static Mutex<FlowExtensionRegistryState> {
     FLOW_EXTENSION_STATE.get_or_init(|| {
-        let (registry, registry_retirement) = neural::SharedRegistry::new(build_flow_extension_registry(&BTreeMap::new()));
-        Mutex::new(FlowExtensionRegistryState { contributed: BTreeMap::new(), registry, registry_retirement, retired: VecDeque::with_capacity(RETIRED_REGISTRY_CAPACITY), generation: 0 })
+        let composed = build_flow_extension_registry(&BTreeMap::new()).expect("an empty contribution map admits no manifest and cannot be rejected");
+        let (registry, registry_retirement) = neural::SharedRegistry::new(composed);
+        Mutex::new(FlowExtensionRegistryState { contributed: BTreeMap::new(), installed: None, registry, registry_retirement, retired: VecDeque::with_capacity(RETIRED_REGISTRY_CAPACITY), generation: 0 })
     })
 }
 
@@ -121,8 +154,41 @@ impl neural::Operator for ContributedExtensionStub {
     }
 }
 
-fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &str, manifest_json: &str) {
-    let Ok(manifest) = crate::os_pack::json::from_json_str::<FlowExtensionManifest>(manifest_json) else { return };
+/// 🪪️ Why a contributed `flow.extension` manifest could not be admitted, naming the contributing
+/// plugin and the decode that refused it.
+///
+/// A manifest that does not decode contributes ZERO operators and ZERO schemas. Answering `()` for
+/// that — `let Ok(manifest) = … else { return }` — let one contributor's malformed `manifestJson`
+/// empty a whole extension pack out of the registry while `sync_host_flow_extension_contributions`
+/// still returned `Ok` and the installing command still reported success; the surface's only
+/// symptom was `unknown kind: <operator>` on every node that needed it, arriving a tick later and
+/// nowhere near the contributor that caused it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️audit-unknown-kind-2026-09-12.md` §2). A rejection is a fault, never a silent zero.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FlowExtensionManifestRejection {
+    pub plugin_id: String,
+    pub reason: String,
+}
+
+impl FlowExtensionManifestRejection {
+    /// 🏷️ The one wire code every surface projects this rejection under — the same code
+    /// [`fold_host_flow_extension_contributions`] and [`install_flow_extension_manifest`] raise
+    /// when the manifest's own metadata is unreadable, because it is the same fault one decode
+    /// earlier.
+    pub const CODE: &'static str = "flow.extension-manifest-invalid";
+
+    /// 🌍 English and German, with no default language — surfaces carry both.
+    pub fn labels(&self) -> (String, String) {
+        (
+            format!("Plugin {:?} contributed a flow extension manifest that cannot be read: {}", self.plugin_id, self.reason),
+            format!("Plugin {:?} hat ein nicht lesbares Flow-Erweiterungsmanifest beigesteuert: {}", self.plugin_id, self.reason),
+        )
+    }
+}
+
+fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &str, manifest_json: &str) -> Result<(), FlowExtensionManifestRejection> {
+    let manifest = crate::os_pack::json::from_json_str::<FlowExtensionManifest>(manifest_json)
+        .map_err(|reason| FlowExtensionManifestRejection { plugin_id: plugin_id.to_string(), reason: reason.to_string() })?;
     for schema in manifest.contributes.schemas {
         if registry.schema(&schema.id).is_none() { registry.register_schema(schema); } else { schema.retire_cold(); }
     }
@@ -136,9 +202,15 @@ fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &st
         registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { invocation_address, operator_id }) }], &[]);
     }
     registry.finalize();
+    Ok(())
 }
 
-fn build_flow_extension_registry(contributed: &BTreeMap<String, ContributedFlowExtension>) -> neural::Registry {
+/// 🏗️ Composes one whole registry out of the built-ins, every linked installer and every
+/// contributed manifest — or refuses, naming the contributor whose manifest could not be read. The
+/// half-built registry is retired by its [`neural::ColdOwner`] on the way out, so a refusal costs
+/// the caller nothing and changes nothing: no admission is published, no generation is burned, and
+/// the previously installed registry stays exactly as it was.
+fn build_flow_extension_registry(contributed: &BTreeMap<String, ContributedFlowExtension>) -> Result<neural::Registry, FlowExtensionManifestRejection> {
     let mut registry = neural::ColdOwner::new(neural::Registry::new());
     install_builtin_flow_extensions(&mut registry);
     let linked = LINKED_FLOW_EXTENSION_INSTALLERS.lock().expect("linked flow extension installers").clone();
@@ -146,10 +218,10 @@ fn build_flow_extension_registry(contributed: &BTreeMap<String, ContributedFlowE
         install(&mut registry);
     }
     for entry in contributed.values() {
-        register_contributed_manifest(&mut registry, &entry.plugin_id, &entry.manifest_json);
+        register_contributed_manifest(&mut registry, &entry.plugin_id, &entry.manifest_json)?;
     }
     registry.finalize();
-    registry.into_inner()
+    Ok(registry.into_inner())
 }
 
 pub(crate) struct FlowRegistryReplacement<'a> { state: &'a mut FlowExtensionRegistryState, generation: u64 }
@@ -167,6 +239,7 @@ impl FlowRegistryReplacement<'_> {
         self.state.retired.push_back(std::mem::replace(&mut self.state.registry_retirement, retirement));
         self.state.registry = registry;
         self.state.generation = self.generation;
+        self.state.installed = None;
     }
 }
 
@@ -208,7 +281,7 @@ pub fn install_flow_extension(spec: FlowExtensionSpec) -> Result<(), &'static st
     let mut composed = neural::ColdOwner::new(neural::Registry::new());
     install_builtin_flow_extensions(&mut composed);
     for entry in admission.state.contributed.values() {
-        register_contributed_manifest(&mut composed, &entry.plugin_id, &entry.manifest_json);
+        register_contributed_manifest(&mut composed, &entry.plugin_id, &entry.manifest_json).map_err(|_| FlowExtensionManifestRejection::CODE)?;
     }
     (spec.install)(&mut composed);
     composed.finalize();
@@ -261,7 +334,7 @@ pub fn sync_host_flow_extension_contributions(contributions_json: String) -> Res
         return Ok(());
     }
     let admission = begin_flow_registry_replacement(&mut state)?;
-    let registry = build_flow_extension_registry(&contributed);
+    let registry = build_flow_extension_registry(&contributed).map_err(|_| FlowExtensionManifestRejection::CODE)?;
     admission.state.contributed = contributed;
     admission.publish(registry);
     Ok(())
@@ -278,7 +351,7 @@ fn fold_host_flow_extension_contributions(contributions_json: String) -> Result<
     for entry in entries {
         let Some(topic) = entry.topic_contribution.filter(|topic| topic.topic == FLOW_EXTENSION_TOPIC) else { continue; };
         let payload = topic.decode::<FlowExtensionTopicPayload>().map_err(|_| "flow.extension-contribution-invalid")?;
-        let manifest = crate::os_pack::json::from_json_str::<FlowExtensionMetadata>(&payload.manifest_json).map_err(|_| "flow.extension-manifest-invalid")?;
+        let manifest = crate::os_pack::json::from_json_str::<FlowExtensionMetadata>(&payload.manifest_json).map_err(|_| FlowExtensionManifestRejection::CODE)?;
         let mut manifest_json = payload.manifest_json;
         manifest_json.shrink_to_fit();
         contributed.insert(manifest.id, ContributedFlowExtension { plugin_id: entry.plugin_id, manifest_json });
@@ -370,13 +443,13 @@ pub fn host_flow_extension_contributions_pending_bytes() -> usize {
 }
 
 pub fn install_flow_extension_manifest(plugin_id: &str, manifest_json: &str) -> Result<(), &'static str> {
-    let manifest = crate::os_pack::json::from_json_str::<FlowExtensionMetadata>(manifest_json).map_err(|_| "flow.extension-manifest-invalid")?;
+    let manifest = crate::os_pack::json::from_json_str::<FlowExtensionMetadata>(manifest_json).map_err(|_| FlowExtensionManifestRejection::CODE)?;
     let id = manifest.id;
     let mut state = flow_extension_state().lock().expect("flow extension registry");
     let admission = begin_flow_registry_replacement(&mut state)?;
     let mut contributed = admission.state.contributed.clone();
     contributed.insert(id, ContributedFlowExtension { plugin_id: plugin_id.to_string(), manifest_json: manifest_json.to_string() });
-    let registry = build_flow_extension_registry(&contributed);
+    let registry = build_flow_extension_registry(&contributed).map_err(|_| FlowExtensionManifestRejection::CODE)?;
     admission.state.contributed = contributed;
     admission.publish(registry);
     Ok(())
@@ -389,7 +462,7 @@ pub fn uninstall_flow_extension(id: &str) -> Result<(), &'static str> {
     let admission = begin_flow_registry_replacement(&mut state)?;
     let mut contributed = admission.state.contributed.clone();
     contributed.remove(id);
-    let registry = build_flow_extension_registry(&contributed);
+    let registry = build_flow_extension_registry(&contributed).map_err(|_| FlowExtensionManifestRejection::CODE)?;
     admission.state.contributed = contributed;
     admission.publish(registry);
     Ok(())
@@ -397,15 +470,36 @@ pub fn uninstall_flow_extension(id: &str) -> Result<(), &'static str> {
 
 /// 📜️ Lists installed contributed extensions (built-ins are implicit).
 pub fn installed_flow_extensions() -> Vec<FlowExtensionInfo> {
-    let state = flow_extension_state().lock().expect("flow extension registry");
-    state
-        .contributed
-        .values()
-        .filter_map(|entry| {
-            let manifest = crate::os_pack::json::from_json_str::<FlowExtensionMetadata>(&entry.manifest_json).ok()?;
-            Some(FlowExtensionInfo { id: manifest.id, name: manifest.name, version: manifest.version, plugin_id: Some(entry.plugin_id.clone()) })
-        })
-        .collect()
+    installed_flow_extensions_shared().as_ref().clone()
+}
+
+/// 📜️ The same installed-extension projection, SHARED — derived from the contribution table exactly
+/// once per registry replacement and handed to every later reader as an `Arc`.
+///
+/// ⏱️ The projection JSON-parses every contributed manifest, and the contribution table is the whole
+/// host closure: 106 kB in the native late-install law, ~249 kB in the served playground. Rebuilding
+/// it per call cost **5.2 ms of native debug time per call** — and
+/// [`flow_extension_invocation_address`] is on the preview evaluation hot path, called once per
+/// evaluation tick (the tessellate producer) and once per preview status render, so a wasm guest
+/// paid that parse tens of times per second for a table that only changes when the registry
+/// generation moves (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn installed_flow_extensions_shared() -> std::sync::Arc<Vec<FlowExtensionInfo>> {
+    let mut state = flow_extension_state().lock().expect("flow extension registry");
+    if let Some(installed) = state.installed.as_ref() {
+        return std::sync::Arc::clone(installed);
+    }
+    let installed = std::sync::Arc::new(
+        state
+            .contributed
+            .values()
+            .filter_map(|entry| {
+                let manifest = crate::os_pack::json::from_json_str::<FlowExtensionMetadata>(&entry.manifest_json).ok()?;
+                Some(FlowExtensionInfo { id: manifest.id, name: manifest.name, version: manifest.version, plugin_id: Some(entry.plugin_id.clone()) })
+            })
+            .collect(),
+    );
+    state.installed = Some(std::sync::Arc::clone(&installed));
+    installed
 }
 
 /// 🧠️ Shared composed operator registry for evaluation and catalogue derivation.
@@ -458,13 +552,13 @@ impl FlowExtensionAddressMiss {
 /// here and nowhere else. Unresolvable is a typed [`FlowExtensionAddressMiss`], not an `Option`:
 /// the caller owes its surface a fault naming both ids.
 pub fn flow_extension_invocation_address(extension_id: &str) -> Result<String, FlowExtensionAddressMiss> {
-    let installed = installed_flow_extensions();
+    let installed = installed_flow_extensions_shared();
     if let Some(address) = installed.iter().find(|info| info.id == extension_id).and_then(|info| info.plugin_id.clone()) {
         return Ok(address);
     }
     Err(FlowExtensionAddressMiss {
         extension_id: extension_id.to_string(),
-        contributed: installed.into_iter().filter_map(|info| info.plugin_id.map(|plugin_id| (info.id, plugin_id))).collect(),
+        contributed: installed.iter().filter_map(|info| info.plugin_id.as_ref().map(|plugin_id| (info.id.clone(), plugin_id.clone()))).collect(),
     })
 }
 

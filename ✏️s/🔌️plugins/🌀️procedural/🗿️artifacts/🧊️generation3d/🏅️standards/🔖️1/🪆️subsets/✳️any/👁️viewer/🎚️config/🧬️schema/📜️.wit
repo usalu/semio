@@ -1,7 +1,7 @@
 package semio:procedural-generation3d-viewer-config@1.0.0;
 
 /// 🎚️ The language-neutral surface of `Generation3dViewConfig` — the persisted, read-only view
-/// state the 3D viewer keeps per instance. It is the same four facets the sibling formats state
+/// state the 3D viewer keeps per instance. It is the same five facets the sibling formats state
 /// (`🔣️.json` `$id` `…/procedural/3d/viewer/config/schema.json`, `🦀️.rs` `Generation3dViewConfig`,
 /// `🟦️.ts`, `🔗️.graphql`, `🛰️.proto`); the editor's own `Generation3dConfig` carries three more
 /// (`camera`, `selected-generation-id`, `preview-eval-text`) the viewer has no window for.
@@ -20,6 +20,8 @@ interface config {
         show-mode: string,
         preview-camera: view-camera,
         sun-json: string,
+        /// 🎨️ The bundled example this surface is looking at; the empty string is the opened document.
+        active-example-id: string,
     }
 }
 

@@ -59,6 +59,9 @@ ui_render = { path = "../../../../../../../../../🔨️modules/🖱️ui/🖌�
 # 🧬️ Same defect again — `kernel_seam.rs` already named `ui_contract::UiIntent`. Workspace-internal,
 # 238→238.
 ui_contract = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+# 🎨️ Same undeclared-dependency shape once more — `🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`
+# reads `ui_styling::metrics::label::LEGIBLE_MIN_PX` for its engine-surface label gate. Workspace-internal.
+ui_styling = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 semio-framework-plugin = { path = "../../../../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

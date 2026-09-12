@@ -1,94 +1,69 @@
-//! 🧮️ 🧮️ Generation3d play app commands command — `flow-eval-tick`.
+//! 🧮️ Generation3d play app commands command — `flow-eval-tick`: the editor's binding of the
+//! surface-neutral chain in `🧵️preview-eval`. The addressing law, the payload shape, the tick core
+//! and the tessellate producer all live there, shared verbatim with `👁️viewer`; what is editor-only
+//! is what this file keeps — the generate-mode fixture patch and the editor `Emit` type.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use crate::preview_eval;
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::Generation3dSnapshot;
-use semio_framework_os_flow::{flow_host_with_session, FlowEvalPublication, FlowEvalSession};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, ExtensionInvocation, Fault};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
-/// 🪟️ The evaluation tick names the preview window that OWNS the evaluation it advances.
-///
-/// The tick publishes into one window's retained transient (`Generation3dPreviewWindowTransientOwner`),
-/// so the retained route is window-scoped and its work refuses any command that does not name that
-/// window. The chain is entirely self-dispatched — `Generation3dPlayApp::pending_effects` arms the
-/// first tick and every tick/resolve re-arms the next through `Effect::DispatchAction` — and an
-/// effect carries no window of its own: the shell redispatches it under whichever window is current
-/// (the flow window `procedural-main` in the served app). Carrying the id ON THE PAYLOAD is how
-/// `retained_window_transient_target` can capture the preview window's transient authority, the same
-/// way `TrinityJackCommand::RunQuery` carries its `results_window_id`
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
-#[dsl(keyword = "flow-eval-tick")]
-pub struct FlowEvalTick {
-    pub window_id: String,
-    pub window_kind_id: String,
-}
+pub use crate::preview_eval::FlowEvalTick;
 
 /// 🔁️ The self-redispatch every hop of the chain arms, addressed to the SAME preview window.
 pub fn rearm(window_id: &str, window_kind_id: &str, req: u64) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(req), action: "flowEvalTick".into(), args: Some(window_args(window_id, window_kind_id)), delay_ms: 0 }
+    preview_eval::rearm(window_id, window_kind_id, req)
 }
 
-/// 🪟️ The one `windowId` argument object every hop of the chain carries, on the redispatch and on
-/// the extension request alike — `reactor::extension_response_args` echoes an invocation request's
-/// own fields back onto the response action, so the window address survives the round trip without
-/// the SDK ever learning what it means.
+/// 🚧️ Whether a chain may be armed for this graph at all — see [`preview_eval::may_rearm`]. The
+/// editor's `pending_effects` poll asks the SAME question the tick's own re-arm asks, so an
+/// uncontributed graph is not spun from the poll after the tick stopped spinning it itself.
+pub fn may_rearm(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> bool {
+    preview_eval::may_rearm(fixture)
+}
+
+/// 🪟️ The one `windowId`/`windowKindId` argument object every hop of the chain carries.
 pub fn window_args(window_id: &str, window_kind_id: &str) -> dsl::DslValue {
-    dsl::DslValue::object([
-        ("windowId".to_string(), dsl::DslValue::String(window_id.to_string())),
-        ("windowKindId".to_string(), dsl::DslValue::String(window_kind_id.to_string())),
-    ])
+    preview_eval::window_args(window_id, window_kind_id)
 }
 
 /// 🧮️ One evaluation tick, plus what the calling surface owes its retained preview publication.
 ///
-/// ⏱️ The tick's own wall cost is recorded into `semio_framework_os_flow`'s evaluation-step ledger
-/// ONLY while `semio_framework_job::runtime_diagnostics_enabled()` is armed — this is the ONE app
-/// work step the 8 ms interactive ceiling governs, and a normal boot must not pay two clock reads
-/// per tick to measure it.
-///
-/// 📤️ `retained_eval` is the evaluation that surface ALREADY holds — the tick republishes only when it
-/// differs, so the redispatch ticks that move no node allocate and retire nothing.
-pub fn evaluate(window_id: &str, window_kind_id: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession, retained_eval: Option<&str>) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication), Fault> {
-    let started_us = semio_framework_job::runtime_diagnostics_enabled().then(semio_framework_job::default_now_us).flatten();
+/// 🧬️ The editor-only half: a tick addressed at the GENERATE preview evaluates the patched
+/// generation fixture (`generation_fixture_for`) rather than the document's own, and evaluates
+/// nothing at all until a generation is selected.
+pub fn evaluate(
+    window_id: &str,
+    window_kind_id: &str,
+    doc: &ArtifactView<'_, Generation3dSnapshot>,
+    cfg: &ConfigView<'_, Generation3dConfig>,
+    session: &mut FlowEvalSession,
+    retained_eval: Option<&str>,
+) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication), Fault> {
     let generate = window_kind_id == crate::editor::generation3d::modes::generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW;
     let mut patched = None;
     if generate {
         let mut state = doc.snapshot.generation.as_state().clone();
         state.selected_generation_id.clone_from(&cfg.snapshot.selected_generation_id);
         if semio_framework_artifact_playbook_playbook::selected_generation(&state).is_none() {
+            // 🔒️ This tick RAN — it just had nothing to evaluate. Discharging the window's arming
+            // latch here is what lets the next gesture arm a fresh chain; leaving it armed would
+            // make a generate preview that opened before any generation exists unarmable forever
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+            session.begin_window_tick(window_id);
+            session.note_window_tick_outcome(window_id, false);
             return Ok((Emit::default(), session.eval_publication_for(retained_eval)));
         }
         patched = Some(crate::standards::v1::subsets::any::schema::generation_fixture_for(&doc.snapshot.fixture, &state));
     }
     let fixture = patched.as_ref().unwrap_or(&doc.snapshot.fixture);
-    let mut host = flow_host_with_session(fixture, session);
-    let more = session.tick(&mut host);
-    let effects = if more { vec![rearm(window_id, window_kind_id, 103)] } else { Vec::new() };
-    let pending_extension_eval = host.take_pending_extension_eval();
-    host.retire_cold();
-    let mut extension_invocations = Vec::new();
-    if let Some(pending) = pending_extension_eval {
-        let request_json = dsl::json::to_json_string(&dsl::DslValue::object([
-            ("operatorId".to_string(), dsl::DslValue::String(pending.operator_id.clone())),
-            ("inputJson".to_string(), dsl::DslValue::String(pending.input_json.clone())),
-            ("nodeHash".to_string(), dsl::DslValue::uint(pending.node_hash)),
-            ("windowId".to_string(), dsl::DslValue::String(window_id.to_string())),
-            ("windowKindId".to_string(), dsl::DslValue::String(window_kind_id.to_string())),
-        ]));
-        extension_invocations.push(ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve"));
-    } else if !more {
-        extension_invocations.extend(crate::editor::generation3d::preview_tessellate_invocations(window_id, window_kind_id, session, fixture, cfg.snapshot));
-    }
-    let publication = session.eval_publication_for(retained_eval);
-    if let (Some(started_us), Some(finished_us)) = (started_us, started_us.and_then(|_| semio_framework_job::default_now_us())) {
-        semio_framework_os_flow::record_flow_eval_step(finished_us.saturating_sub(started_us));
-    }
+    let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, fixture, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval);
     if let Some(fixture) = patched {
         fixture.retire_cold();
     }
-    Ok((Emit { effects, extension_invocations, ..Default::default() }, publication))
+    Ok((Emit { effects: outcome.effects, extension_invocations: outcome.extension_invocations, ..Default::default() }, outcome.publication))
 }
 
 pub fn handle(payload: &FlowEvalTick, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {

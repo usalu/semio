@@ -38,6 +38,10 @@ semio-framework-artifact-infinite-dag = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-job = { workspace = true }
+# 🧱️ `boxed_fixed_slots` (the heap-first fixed slot table every retirement/admission registry in
+# this crate builds through) plus the browser session bridges' async vocabulary. Unconditional: the
+# helper is target-neutral and `semio-framework-job` already pulls this crate in on every target.
+semio-framework-async = { workspace = true }
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 geometry = { path = "../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
@@ -160,7 +164,6 @@ semio-framework-intrinsic-size = { path = "../../../../../../🔨️modules/📏
 # the wasip2 guest never attaches an `HtmlCanvasElement`. `dag_debug_log`/`pointer_event_now_ms`
 # (same `🕸️dag` file) needed genuine wasip2 arms instead — see their docstrings.
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-semio-framework-async = { workspace = true }
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window", "Request", "RequestInit", "RequestMode", "Response", "console"] }

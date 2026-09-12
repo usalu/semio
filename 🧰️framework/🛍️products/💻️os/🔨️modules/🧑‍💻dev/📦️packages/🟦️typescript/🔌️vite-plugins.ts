@@ -6,20 +6,18 @@
  * runtime exists. */
 import { createHash, randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, watch, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os";
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, moduleIdForDirectoryName, moduleRoutePath } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { observeActivationReceipts, type ActivationReceipt } from "../../♻️activation/🟦️.ts";
+import { newestComponentSourceMtime, observeActivationReceipts, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type ActivationReceipt, type StagedModuleFacts } from "../../♻️activation/🟦️.ts";
+import { EXTENSION_INSTALL_META } from "../../../🔌️plugin/🏪️store/📥️store.ts";
 import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
 
 /** @emoji 🗂️ Repository root derived from this module's own location — the config bundler must not
  * reach `getWorkspaceRoot` (and the discovery walk behind it) just to place two dev databases. */
 export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../..");
-
-/** @emoji 🔌️ Shared dev-session output root every built plugin module lands in. */
-export const PLUGIN_MODULES_ROOT = join(REPO_ROOT, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules");
 
 export type DescriptorRouteGuardSpec = {
   readonly route: string;
@@ -572,14 +570,14 @@ export function semioBackboneVitePlugin() {
 //#region 🔌️PluginHotSwapVitePlugin
 type PluginHotSwapMarker = { readonly pluginId: string; readonly rebuiltAt: number };
 
-/** @emoji 🔌️ Every plugin dir under `root` (default `plugin-modules/`) that has a completed build right
- * now (a `.core*.wasm` present — same convention `collectPluginWasmSizeRows` walks), newest core-wasm
- * mtime as `rebuiltAt`. Backs the SSE endpoint's connect-time `snapshot` event: a browser that connects
- * (or reconnects) after some builds already finished must still learn about them — `♻️hot-swap.json` alone
- * only ever holds the single most recent build, not the full history. `root` is overridable so this can
- * be exercised against a throwaway temp dir in-source below rather than the real (build-dependent, so
- * flaky) `plugin-modules/` tree. */
-export function scanBuiltPluginModules(root: string = PLUGIN_MODULES_ROOT): readonly PluginHotSwapMarker[] {
+/** @emoji 🔌️ Every plugin dir under `root` that has a completed build right now (a `.core*.wasm`
+ * present — same convention `collectPluginWasmSizeRows` walks), newest core-wasm mtime as `rebuiltAt`.
+ * Backs the SSE endpoint's connect-time `snapshot` event: a browser that connects (or reconnects) after
+ * some builds already finished must still learn about them — `♻️hot-swap.json` alone only ever holds the
+ * single most recent build, not the full history. `root` is REQUIRED (never defaulted): the one staging
+ * root is `pluginModulesRoot(profile)` in `♻️activation/🟦️.ts`, and a default here was how a second,
+ * silently drifting module tree stayed alive. */
+export function scanBuiltPluginModules(root: string): readonly PluginHotSwapMarker[] {
   if (!existsSync(root)) return [];
   const rows: PluginHotSwapMarker[] = [];
   for (const entry of readdirSync(root, { withFileTypes: true })) {
@@ -607,15 +605,15 @@ export const PLUGIN_SOURCE_WATCH_PATH = `${MODULE_PLUGIN_ROUTE}/watch`;
  * as `subscribeFolderWatch` above (a burst of writes during one build collapses to a single event). One
  * `fs.watch` on `plugin-modules/` for the whole dev server's lifetime — unlike the backbone plugin's
  * per-uri watchers, there is exactly one watch target here, so it is never torn down. */
-export function semioPluginHotSwapVitePlugin() {
+export function semioPluginHotSwapVitePlugin(options: { readonly moduleRoot: string }) {
   return {
     name: "semio-plugin-hot-swap",
     configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void } }) {
       const subscribers = new Set<BackboneServerResponse>();
-      mkdirSync(PLUGIN_MODULES_ROOT, { recursive: true });
-      const hotSwapMarker = join(PLUGIN_MODULES_ROOT, MODULE_HOT_SWAP_FILE);
+      mkdirSync(options.moduleRoot, { recursive: true });
+      const hotSwapMarker = join(options.moduleRoot, MODULE_HOT_SWAP_FILE);
       let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-      watch(PLUGIN_MODULES_ROOT, (_eventType, filename) => {
+      watch(options.moduleRoot, (_eventType, filename) => {
         if (filename !== MODULE_HOT_SWAP_FILE) return;
         if (debounceTimer) clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
@@ -638,7 +636,7 @@ export function semioPluginHotSwapVitePlugin() {
         res.setHeader("cache-control", "no-cache");
         res.setHeader("connection", "keep-alive");
         res.write(": connected\n\n");
-        const snapshot: PluginSourceEvent = { kind: "snapshot", plugins: scanBuiltPluginModules() };
+        const snapshot: PluginSourceEvent = { kind: "snapshot", plugins: scanBuiltPluginModules(options.moduleRoot) };
         res.write(`data: ${JSON.stringify(snapshot)}\n\n`);
         subscribers.add(res);
         const stopKeepalive = startSseKeepalive(res);
@@ -650,8 +648,37 @@ export function semioPluginHotSwapVitePlugin() {
     },
   };
 }
+export type ActivationComponentSpec = Readonly<{ pluginId: string; directoryName: string; role: "plugin" | "extension"; sourceRoot: string }>;
+
+/** @emoji 🔎️ Re-runs the staged-module freshness rule against the receipt the dev server just observed and
+ * prints one `[stale]` line per component whose served bytes are behind — the live half of the serve-start
+ * pass in `📜️script.ts`. A restage that lands while the server runs therefore retires its own warning
+ * without a restart, and one that never lands keeps saying so. */
+export function reportActivationFreshness(receipt: ActivationReceipt, options: { readonly moduleRoot: string; readonly installRoot: string; readonly components: readonly ActivationComponentSpec[] }): readonly string[] {
+  const activated = new Map(receipt.plugins.map((row) => [row.pluginId, row.artifactSha256]));
+  const facts = options.components.map((component): StagedModuleFacts => {
+    const newest = newestComponentSourceMtime(component.sourceRoot);
+    const installedMeta = join(options.installRoot, component.directoryName, EXTENSION_INSTALL_META);
+    let installedPackageHash: string | undefined;
+    if (existsSync(installedMeta)) {
+      try { installedPackageHash = JSON.parse(readFileSync(installedMeta, "utf8")).packageHash as string; } catch { installedPackageHash = undefined; }
+    }
+    return {
+      pluginId: component.pluginId,
+      role: component.role,
+      activationTracked: true,
+      stagedAtMs: stagedModuleMtime(join(options.moduleRoot, component.directoryName)),
+      newestSourceMs: newest?.mtimeMs,
+      newestSourcePath: newest ? relative(REPO_ROOT, newest.path).split(/[\\/]/).join("/") : undefined,
+      receiptArtifactSha256: activated.get(component.pluginId),
+      installedPackageHash,
+    };
+  });
+  return stagedModuleReportLines(facts.map(stagedModuleVerdict), `bun nx run @semio-tech/framework-os-dev:activate-${receipt.variant}-react-${receipt.profile}`);
+}
+
 /** 📡️ Announces explicit Nx activation completion and releases every server-owned subscription. */
-export function semioActivationVitePlugin(options: { readonly receiptDirectory: string }) {
+export function semioActivationVitePlugin(options: { readonly receiptDirectory: string; readonly moduleRoot: string; readonly installRoot: string; readonly components: readonly ActivationComponentSpec[] }) {
   let dispose = (): void => {};
   return {
     name: "semio-activation",
@@ -670,6 +697,7 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
         }
       };
       const observer = observeActivationReceipts(options.receiptDirectory, (receipt) => {
+        for (const line of reportActivationFreshness(receipt, options)) console.warn(line);
         if (previous) {
           if (previous.plugins.map((row) => row.pluginId).join() !== receipt.plugins.map((row) => row.pluginId).join()) server.ws?.send({ type: "full-reload" });
           const prior = new Map(previous.plugins.map((row) => [row.pluginId, row.artifactSha256]));
@@ -787,3 +815,75 @@ export function semioBlobVitePlugin() {
   };
 }
 //#endregion BlobVitePlugin
+
+//#region 🔖️SourceWatchVitePlugin
+/** @emoji 🚫️ Repository directory names no dev server may ever watch: version control metadata, the Nx
+ * workspace store, the package store, the shared build/cache root, compiled output and generated
+ * sources. Tools rewrite millions of files inside them while a dev session is open, and every such write
+ * would otherwise be delivered into the dev server's event loop.
+ *
+ * `🤖️generated` and `.vscode` stay listed for the reason Vite's own `server.watch.ignored` once carried:
+ * those files are config dependencies, so reacting to a registry or launch-config rewrite restarts the
+ * server in a loop.
+ * @see https://github.com/paulmillr/chokidar/blob/3.6.0/lib/fsevents-handler.js */
+export const UNWATCHED_REPOSITORY_SEGMENTS: readonly string[] = [".git", ".nx", ".vscode", ".🧬semio", "node_modules", "dist", "target", "🤖️generated", "🗑️generated"];
+
+/** @emoji 👁️ The repository's top-level source directories — every place a dev server's module graph can
+ * legitimately import from, with the unwatchable stores above removed. Read from disk rather than
+ * hardcoded so a new top-level product directory is watched without touching this module. */
+export function repositorySourceWatchRoots(repoRoot: string): readonly string[] {
+  const excluded = new Set(UNWATCHED_REPOSITORY_SEGMENTS);
+  return readdirSync(repoRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory() && !excluded.has(entry.name)).map((entry) => join(repoRoot, entry.name)).sort();
+}
+
+/** @emoji 🧹️ Matches any relative path that crosses an unwatched store, on both `/` and `\` separators.
+ * One precompiled test per filesystem event is the whole per-event budget this watcher may spend. */
+export function unwatchedRepositoryPathMatcher(): RegExp {
+  const alternatives = UNWATCHED_REPOSITORY_SEGMENTS.map((segment) => segment.replaceAll(".", "\\.")).join("|");
+  return new RegExp(`(?:^|[\\\\/])(?:${alternatives})(?:[\\\\/]|$)`, "u");
+}
+
+/** @emoji 🛰️ Drives Vite's file-change pipeline from `node:fs` recursive watches over the repository's
+ * source roots, so `⚙️vite.config.ts` can hand Vite `server.watch: null` and run no chokidar watcher of
+ * its own.
+ *
+ * Vite watches its `root` plus — through `ensureWatchedFile` — every module-graph file outside it, which
+ * in this repository is roughly a thousand individual paths spread across several top-level directories.
+ * On macOS chokidar answers that by consolidating sibling FSEvents streams upward until ONE stream covers
+ * the whole repository, then runs every watched path's prefix filter against every event that stream
+ * delivers. A concurrent `cargo` build writing into the shared cache therefore costs the dev server
+ * `events × watched paths` string comparisons — measured at 6 291 events per 2 s against 1 316 watched
+ * paths, which blocks the event loop for ~2 s at a time, allocates ~600 MB per burst and, once resident
+ * memory reaches the runtime's ceiling, wedges the server permanently. `server.watch.ignored` cannot undo
+ * this: chokidar consults it only after those prefix filters have already run.
+ *
+ * Watching the source roots directly keeps the kernel from ever reporting cache, package-store or
+ * generated-output writes, and reduces the per-event cost to one regular-expression test. Events are
+ * replayed on Vite's own (no-op) watcher emitter, so module invalidation, HMR boundary computation and
+ * config-dependency restarts behave exactly as they did with chokidar. */
+export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string }) {
+  return {
+    name: "semio-source-watch",
+    apply: "serve" as const,
+    configureServer(server: { watcher: { emit(event: string, path: string): boolean }; httpServer: { once(event: "close", listener: () => void): void } | null }) {
+      const unwatched = unwatchedRepositoryPathMatcher();
+      const handles = repositorySourceWatchRoots(options.repoRoot).map((root) => watch(root, { recursive: true, persistent: false }, (eventType, name) => {
+        if (name === null || unwatched.test(name)) return;
+        const path = join(root, name);
+        if (eventType !== "rename") {
+          server.watcher.emit("change", path);
+          return;
+        }
+        if (!existsSync(path)) {
+          server.watcher.emit("unlink", path);
+          return;
+        }
+        server.watcher.emit(statSync(path).isDirectory() ? "addDir" : "add", path);
+      }));
+      server.httpServer?.once("close", () => {
+        for (const handle of handles) handle.close();
+      });
+    },
+  };
+}
+//#endregion SourceWatchVitePlugin

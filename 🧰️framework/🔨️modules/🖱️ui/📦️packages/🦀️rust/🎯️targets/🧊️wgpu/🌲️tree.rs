@@ -330,11 +330,20 @@ impl Node {
 }
 
 /// 🌲️ One window's retained scene-graph: a generational arena of `Node`s plus its root.
+///
+/// `document_nodes` is the identity ledger the retained-document reconcile
+/// (`🔁️reconcile.rs`'s `🌳️DocumentTreeReconcile`) keys on: one `UiNodeId → NodeId` binding per
+/// mounted record, kept sorted so a lookup is a binary search and never an allocation. A
+/// `UiNodeId` is minted per `(parent, key)` by the producer's own reconciler
+/// (`🧠️runtime`'s `SurfaceReconcileStage::AllocateIdentities`) and reused for as long as that
+/// identity survives, so a binding held across document generations is exactly the "same element"
+/// guarantee React's `Interpreter` gets from its `uiChildReactKeys`.
 #[derive(Default)]
 pub struct UiTree {
     arena: Arena<Node>,
     pub root: Option<NodeId>,
     document: Option<UiDocumentTree>,
+    document_nodes: Vec<(UiNodeId, NodeId)>,
     mounted_layout_active: usize,
     mounted_layout_generation: u64,
 }
@@ -379,6 +388,15 @@ impl UiTree {
         self.mounted_layout_generation
     }
 
+    /// 📐️ The layout the PAINT path actually reads for `id`, as `(x, y, width, height)` in its
+    /// parent's space. `Node::layout` is the immediate-mode bucket and stays zero on the retained
+    /// path — `mounted_layout`'s double-buffered `AcceptedLayout` is what `paint_node_step` and
+    /// `RetainedPaintWalk` consume, so a probe reading `Node::layout` reports an unlaid-out tree even
+    /// when layout published (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn mounted_layout(&self, id: NodeId) -> Option<(f32, f32, f32, f32)> {
+        self.accepted_layout(id).map(|layout| (layout.x, layout.y, layout.width, layout.height))
+    }
+
     pub fn contains(&self, id: NodeId) -> bool {
         self.arena.contains(id)
     }
@@ -394,6 +412,95 @@ impl UiTree {
     pub fn take_document(&mut self) -> Option<UiDocumentTree> {
         self.document.take()
     }
+
+    //#region 🪪️DocumentIdentity
+    /// 🪪️ The arena node currently standing for `id`, if one is mounted.
+    pub(crate) fn document_node(&self, id: UiNodeId) -> Option<NodeId> {
+        self.document_nodes.binary_search_by_key(&id, |(document, _)| *document).ok().and_then(|index| self.document_nodes.get(index)).map(|(_, node)| *node)
+    }
+
+    /// 🪪️ Binds `id` to `node`, replacing any previous binding for the same record.
+    pub(crate) fn bind_document_node(&mut self, id: UiNodeId, node: NodeId) {
+        match self.document_nodes.binary_search_by_key(&id, |(document, _)| *document) {
+            Ok(index) => {
+                if let Some(entry) = self.document_nodes.get_mut(index) {
+                    entry.1 = node;
+                }
+            }
+            Err(index) => self.document_nodes.insert(index, (id, node)),
+        }
+    }
+
+    /// 🪪️ The ledger in `UiNodeId` order — the retirement sweep's own iteration order.
+    pub(crate) fn document_bindings(&self) -> &[(UiNodeId, NodeId)] {
+        &self.document_nodes
+    }
+
+    /// 🧹️ Drops the binding at `index` and returns the arena node it named.
+    pub(crate) fn unbind_document_node_at(&mut self, index: usize) -> Option<NodeId> {
+        if index >= self.document_nodes.len() {
+            return None;
+        }
+        Some(self.document_nodes.remove(index).1)
+    }
+
+    /// 🔗️ Severs every tree link on `id` without touching the node itself — the first half of a
+    /// relink pass, so a later `attach_child` can rebuild sibling order from the published document
+    /// without any node losing its arena identity (and with it its `WidgetState`, its focused edit
+    /// buffer and its interaction flags).
+    pub(crate) fn clear_links(&mut self, id: NodeId) {
+        if let Some(node) = self.arena.get_mut(id) {
+            node.parent = None;
+            node.first_child = None;
+            node.last_child = None;
+            node.prev_sibling = None;
+            node.next_sibling = None;
+        }
+    }
+
+    /// 🔗️ Appends the already-inserted `child` as `parent`'s last child.
+    pub(crate) fn attach_child(&mut self, parent: NodeId, child: NodeId) {
+        let prev_last = self.arena.get(parent).and_then(|node| node.last_child);
+        if let Some(node) = self.arena.get_mut(child) {
+            node.parent = Some(parent);
+            node.prev_sibling = prev_last;
+            node.next_sibling = None;
+        }
+        if let Some(previous) = prev_last.and_then(|id| self.arena.get_mut(id)) {
+            previous.next_sibling = Some(child);
+        }
+        if let Some(node) = self.arena.get_mut(parent) {
+            if node.first_child.is_none() {
+                node.first_child = Some(child);
+            }
+            node.last_child = Some(child);
+        }
+    }
+
+    /// 🍃️ Inserts `node` unparented and unlinked — the reconcile links it in a later step.
+    pub(crate) fn insert_detached(&mut self, node: Node) -> NodeId {
+        self.arena.insert(node)
+    }
+
+    /// 🧹️ Frees one already-unlinked slot. Unlike [`UiTree::remove`] this never recurses, because a
+    /// relink pass has already cleared the node's children.
+    pub(crate) fn remove_detached(&mut self, id: NodeId) {
+        if self.root == Some(id) {
+            self.root = None;
+        }
+        drop(self.arena.remove(id));
+    }
+
+    /// 🧹️ Retires one document identity binding per call, freeing the arena slot it named — the
+    /// retirement half of the ledger, driven by `Ui::close_document_step` so a surface that drops its
+    /// document does not keep its records' arena nodes alive. `true` once the ledger is empty.
+    pub(crate) fn close_document_binding_step(&mut self) -> bool {
+        let Some((_, node)) = self.document_nodes.pop() else { return true };
+        self.clear_links(node);
+        self.remove_detached(node);
+        false
+    }
+    //#endregion 🪪️DocumentIdentity
 
     /// 🔗️ Inserts `node` as the last child of `parent` (or as a root if `parent` is `None` and no
     /// root exists yet), threading the sibling links.

@@ -435,16 +435,6 @@ const HTTP_READINESS_POLL_MS: u64 = 4;
 const HTTP_RETRY_MS: u64 = 1;
 const WEBSOCKET_FRAME_BYTES: usize = 1_048_576;
 
-/// 🏗️ Heap-allocates `len` `None` slots without ever materializing them as one contiguous stack
-/// value first — unlike `Box::new(std::array::from_fn(...))`/a `[Option<T>; N]` field literal, an
-/// unoptimized build gives no such guarantee for a large fixed-size array, and both call sites below
-/// hold owners (`HttpConnection` at up to ~50KiB apiece via its `bridge` field's inbound decode
-/// cursor) times `HTTP_CONNECTION_CAPACITY` easily into the low megabytes — proven: this is what
-/// `bridge::long`/`transport::quick`'s stack overflow traced back to, not any recursive call.
-fn boxed_slot_ring<T>(len: usize) -> Box<[Option<T>]> {
-    (0..len).map(|_| None).collect()
-}
-
 struct FixedOwnerRing<T, const N: usize> {
     slots: Box<[Option<T>]>,
     head: usize,
@@ -480,7 +470,7 @@ impl FixedByteCredits {
 
 impl<T, const N: usize> FixedOwnerRing<T, N> {
     fn new() -> Self {
-        Self { slots: boxed_slot_ring(N), head: 0, len: 0 }
+        Self { slots: semio_framework_async::boxed_slots(N, || None), head: 0, len: 0 }
     }
 
     fn len(&self) -> usize {
@@ -676,7 +666,7 @@ impl HttpTransportState {
     fn new(listener: TcpListener, server: McpServer, options: &HttpTransportOptions, events: Arc<Mutex<EventLog>>, bridge: crate::bridge::BridgeHandle) -> Self {
         Self {
             listener: Some(listener),
-            connections: boxed_slot_ring(HTTP_CONNECTION_CAPACITY),
+            connections: semio_framework_async::boxed_slots(HTTP_CONNECTION_CAPACITY, || None),
             terminal: FixedOwnerRing::new(),
             terminal_policy: HttpTerminalPolicy::Handback,
             mode: HttpTransportMode::Running,

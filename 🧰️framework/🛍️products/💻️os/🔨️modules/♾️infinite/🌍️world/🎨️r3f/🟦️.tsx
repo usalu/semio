@@ -4,6 +4,7 @@
 
 // #region 🔌️Adapters
 import {
+  childElementId,
   cn,
   floatingRibbonSurfaceClass,
   LevelProvider,
@@ -1961,19 +1962,24 @@ export function worldProjectionTemplateApplySpec(templateSpec: WorldProjectionSp
   };
 }
 
-/** @emoji 🌲️ Maps {@link createWorldProjectionTemplates} into selectable {@link TreeDataItem}s for the live projection pane. */
-export function worldProjectionSwitchTreeItems(templates: readonly WorldProjectionTemplateDescriptor[], onSelect: (spec: WorldProjectionSpec) => void, currentSpec?: WorldProjectionSpec): TreeDataItem[] {
+/** @emoji 🌲️ Maps {@link createWorldProjectionTemplates} into selectable {@link TreeDataItem}s for the live projection pane.
+ * `id` is the OWNING pane's element id: `TreeSection`/`TreeItem` render their item id as the row's DOM `id`, and one
+ * world surface is mounted per open window instance, so a bare `template.id` puts `orthographic` (and every sibling)
+ * in the document once per pane. Every row id is therefore a {@link childElementId} of the pane. */
+export function worldProjectionSwitchTreeItems(id: string, templates: readonly WorldProjectionTemplateDescriptor[], onSelect: (spec: WorldProjectionSpec) => void, currentSpec?: WorldProjectionSpec): TreeDataItem[] {
   return templates.map((template) => ({
-    id: template.id,
+    id: childElementId(id, template.id),
     label: template.label,
     icon: <Icon icon={template.iconId} size={12} className="size-tiny shrink-0" />,
     defaultOpen: true,
     onClick: () => onSelect(worldProjectionTemplateApplySpec(template.args.spec, currentSpec)),
-    ...(template.children?.length ? { items: worldProjectionSwitchTreeItems(template.children, onSelect, currentSpec) } : {}),
+    ...(template.children?.length ? { items: worldProjectionSwitchTreeItems(id, template.children, onSelect, currentSpec) } : {}),
   }));
 }
 
 export interface WorldProjectionKindSwitchProps {
+  /** @emoji 🪪️ Element id of the pane this switch is mounted in — qualifies every row id per window instance. */
+  readonly id: string;
   readonly spec: WorldProjectionSpec;
   readonly onSpecChange: (spec: WorldProjectionSpec) => void;
   readonly className?: string;
@@ -1983,18 +1989,20 @@ export interface WorldProjectionKindSwitchProps {
 export function WorldProjectionKindSwitch(props: WorldProjectionKindSwitchProps): ReactElement {
   const shellClass = props.className ?? cn("pointer-events-auto min-w-40 text-2xs font-medium", floatingRibbonSurfaceClass);
   const templates = reactHostPort.useMemo(() => createWorldProjectionTemplates({ controllerId: "projection-switch" }), []);
-  const items = reactHostPort.useMemo(() => worldProjectionSwitchTreeItems(templates, props.onSpecChange, props.spec), [templates, props.onSpecChange, props.spec]);
-  const selectedId = worldProjectionTemplateSelectionId(props.spec);
+  const items = reactHostPort.useMemo(() => worldProjectionSwitchTreeItems(props.id, templates, props.onSpecChange, props.spec), [props.id, templates, props.onSpecChange, props.spec]);
+  const selectedId = childElementId(props.id, worldProjectionTemplateSelectionId(props.spec));
   return (
     <div className={shellClass} data-world-projection-kind-switch data-level="window">
       <LevelProvider level="window">
-        <Tree showLines={false} sortableSections={false} selectionMode="single" selectedIds={[selectedId]} sections={[{ id: "projection-modes", items }]} />
+        <Tree showLines={false} sortableSections={false} selectionMode="single" selectedIds={[selectedId]} sections={[{ id: childElementId(props.id, "projection-modes"), items }]} />
       </LevelProvider>
     </div>
   );
 }
 
 export interface WorldOrbitProjectionSwitchProps {
+  /** @emoji 🪪️ Element id of the pane this switch is mounted in — see {@link WorldProjectionKindSwitchProps.id}. */
+  readonly id: string;
   readonly projection: OrbitCameraProjection;
   readonly onProjectionChange: (projection: OrbitCameraProjection) => void;
   readonly className?: string;
@@ -2005,7 +2013,7 @@ export interface WorldOrbitProjectionSwitchProps {
 /** @emoji 🔀️ Orthographic / perspective toggle, or full {@link WorldProjectionKindSwitch} when `spec` is provided. */
 export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProps): ReactElement {
   if (props.spec && props.onSpecChange) {
-    return <WorldProjectionKindSwitch spec={props.spec} onSpecChange={props.onSpecChange} className={props.className} />;
+    return <WorldProjectionKindSwitch id={props.id} spec={props.spec} onSpecChange={props.onSpecChange} className={props.className} />;
   }
   const shellClass = props.className ?? cn("pointer-events-auto flex text-2xs font-medium", floatingRibbonSurfaceClass);
   const buttonClass = (active: boolean) => cn("px-2 py-1 transition-colors text-muted-foreground hover:text-emphasized", active && "text-emphasized");

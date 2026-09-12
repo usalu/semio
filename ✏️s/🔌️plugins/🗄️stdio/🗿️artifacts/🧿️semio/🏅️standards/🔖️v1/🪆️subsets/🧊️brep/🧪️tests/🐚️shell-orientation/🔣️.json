@@ -1,0 +1,54 @@
+{
+  "schema": "s.stdio.semio.brep.shell-orientation/v1",
+  "chordTolerance": 0.001,
+  "deflection": 0.005,
+  "volumeTolerance": 0.000001,
+  "oracleTolerance": 0.002,
+  "cases": [
+    {
+      "id": "box-shell-preview",
+      "note": "the 🐚️box-shell-preview example's own numbers — size 2.0, wall 0.2",
+      "box": [2.0, 2.0, 2.0],
+      "thickness": 0.2,
+      "expect": {
+        "bodySolids": 2,
+        "bodyShells": 3,
+        "validationIssues": [],
+        "outerShellSignedVolume": 8.0,
+        "voidShellSignedVolumes": [-4.096],
+        "solidSignedVolume": 3.904,
+        "minTriangles": 24
+      }
+    },
+    {
+      "id": "unit-cube-thin-wall",
+      "note": "1³ outer, 0.8³ cavity",
+      "box": [1.0, 1.0, 1.0],
+      "thickness": 0.1,
+      "expect": {
+        "bodySolids": 2,
+        "bodyShells": 3,
+        "validationIssues": [],
+        "outerShellSignedVolume": 1.0,
+        "voidShellSignedVolumes": [-0.512],
+        "solidSignedVolume": 0.488,
+        "minTriangles": 24
+      }
+    },
+    {
+      "id": "anisotropic-slab",
+      "note": "3×2×1 outer, 2.5×1.5×0.5 cavity — three different wall spans off one thickness",
+      "box": [3.0, 2.0, 1.0],
+      "thickness": 0.25,
+      "expect": {
+        "bodySolids": 2,
+        "bodyShells": 3,
+        "validationIssues": [],
+        "outerShellSignedVolume": 6.0,
+        "voidShellSignedVolumes": [-1.875],
+        "solidSignedVolume": 4.125,
+        "minTriangles": 24
+      }
+    }
+  ]
+}

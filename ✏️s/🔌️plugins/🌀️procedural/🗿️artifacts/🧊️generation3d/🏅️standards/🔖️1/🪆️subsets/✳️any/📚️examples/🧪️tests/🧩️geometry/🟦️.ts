@@ -46,8 +46,32 @@ export type ExampleGeometryFixture = {
     kernelVolumeChannel: string | null;
     kernelVolumeTolerance: number | null;
   };
+  delivery: ExampleDeliveryExpectation;
   kernelStatus: string;
 };
+
+/**
+ * 🚚️ What one example's preview must DELIVER across the extension boundary at the LOD the live
+ * surface asks for. A correct mesh nobody receives is a blank viewport, so this row is asserted
+ * beside the geometry itself.
+ */
+export type ExampleDeliveryExpectation = {
+  lodMode: string;
+  minMeshes: number;
+  minTriangles: number;
+  minEdgeSegments: number;
+  maxRoundTrips: number;
+  maxChunks: number;
+};
+
+/**
+ * ⏱️ Tessellate round trips one preview may cost before it has painted. One round trip is one whole
+ * `flowEvalTick` — evaluate, invoke the kernel, fold the answer, refresh every window — which is
+ * SECONDS in a served wasm build, so this is a user-facing promise, not an efficiency preference.
+ * Five of the eight bundled examples used to need five to ten of them and never painted
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️preview-mesh-delivery-2026-09-12.md`).
+ */
+export const EXAMPLE_DELIVERY_ROUND_TRIP_CEILING = 2;
 
 /** 📥️ Reads the example's DSL asset and its committed expected-stats fixture. */
 export function loadExample(here: string, assetDirName: string, assetName: string): { dsl: string; fixture: ExampleGeometryFixture } {
@@ -71,6 +95,30 @@ export function assertFixtureContract(fixture: ExampleGeometryFixture, exampleId
   expect(fixture.expect.kernelVolumeTolerance === null).toBe(fixture.expect.kernelVolumeNode === null);
   expect(fixture.expect.kernelVolumeTolerance === null || (fixture.expect.kernelVolumeTolerance as number) > 0).toBe(true);
   expect(EXAMPLE_GEOMETRY_KERNEL_STATUSES).toContain(fixture.kernelStatus);
+  assertDeliveryContract(fixture);
+}
+
+/**
+ * ✅️ Every invariant the delivery row states, derived here independently of the Rust run:
+ * a preview that publishes no mesh is a blank viewport, a preview whose mesh carries neither
+ * triangles NOR edge segments cannot paint at all, and a preview that needs more than
+ * {@link EXAMPLE_DELIVERY_ROUND_TRIP_CEILING} round trips is not delivered in any useful sense.
+ * The `wire` previews are the ones that must paint on edges alone.
+ */
+export function assertDeliveryContract(fixture: ExampleGeometryFixture): void {
+  const delivery = fixture.delivery;
+  expect(typeof delivery.lodMode).toBe("string");
+  expect(delivery.minMeshes).toBeGreaterThanOrEqual(1);
+  expect(delivery.minTriangles + delivery.minEdgeSegments).toBeGreaterThan(0);
+  expect(delivery.maxRoundTrips).toBeGreaterThanOrEqual(1);
+  expect(delivery.maxRoundTrips).toBeLessThanOrEqual(EXAMPLE_DELIVERY_ROUND_TRIP_CEILING);
+  expect(delivery.maxChunks).toBe(1);
+  if (fixture.preview.kind === "wire") {
+    expect(delivery.minTriangles).toBe(0);
+    expect(delivery.minEdgeSegments).toBeGreaterThanOrEqual(1);
+  } else {
+    expect(delivery.minTriangles).toBeGreaterThanOrEqual(fixture.expect.minTriangles);
+  }
 }
 
 /** 🔗️ The op chain the fixture claims is exactly what the example's DSL wires, node by node. */

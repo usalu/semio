@@ -5,8 +5,10 @@
       "name": "cad-react",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "./📜️script.ts",
-        "dev",
+        "nx",
+        "run",
+        "workspace:dev",
+        "--",
         "cad"
       ],
       "port": 6020
@@ -15,8 +17,10 @@
       "name": "s-react",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "./📜️script.ts",
-        "dev",
+        "nx",
+        "run",
+        "workspace:dev",
+        "--",
         "s"
       ],
       "port": 6070
@@ -25,8 +29,10 @@
       "name": "s-react-served",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "./📜️script.ts",
-        "dev",
+        "nx",
+        "run",
+        "workspace:dev",
+        "--",
         "s",
         "served"
       ],
@@ -96,8 +102,10 @@
       "name": "dag-react",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "./📜️script.ts",
-        "dev",
+        "nx",
+        "run",
+        "workspace:dev",
+        "--",
         "dag"
       ],
       "port": 6017
@@ -132,8 +140,10 @@
       "name": "storybook-framework-hosts",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "./📜️script.ts",
-        "dev",
+        "nx",
+        "run",
+        "workspace:dev",
+        "--",
         "storybook",
         "framework",
         "hosts"
@@ -144,8 +154,10 @@
       "name": "gis2d-wgpu",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "./📜️script.ts",
-        "dev",
+        "nx",
+        "run",
+        "workspace:dev",
+        "--",
         "gis",
         "2d"
       ],
@@ -155,8 +167,10 @@
       "name": "puzzle2d-react",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "./📜️script.ts",
-        "dev",
+        "nx",
+        "run",
+        "workspace:dev",
+        "--",
         "2d"
       ],
       "port": 6012
@@ -181,8 +195,10 @@
       "name": "storybook-static",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "./📜️script.ts",
-        "dev",
+        "nx",
+        "run",
+        "workspace:dev",
+        "--",
         "storybook-static"
       ],
       "port": 6010
@@ -191,8 +207,10 @@
       "name": "storybook-framework-os",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "./📜️script.ts",
-        "dev",
+        "nx",
+        "run",
+        "workspace:dev",
+        "--",
         "storybook",
         "framework",
         "os"

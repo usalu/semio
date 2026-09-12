@@ -262,7 +262,23 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         self.retirement_cursor = Some(window_id.clone());
         let partition = self.partitions.get_mut(&window_id).expect("selected window transient partition remains owned");
         let disposer = partition.disposer.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.disposer"), "window transient partition lost its exact disposer"))?;
-        let step = disposer.close_step(&mut partition.store, maximum_items.min(1), maximum_bytes)?;
+        // 🧹️ The partition's disposer gets the caller's WHOLE grant — the caller already decided how
+        // much a step may cost (one item while the app is live, a page while it is closing), and
+        // re-clamping it here meant a closing app paged a document's retained preview meshes one item
+        // at a time and then answered `Pending { 0, 0 }` once the retirement needed more than one
+        // (ticket 26/09/09: `plugin.internal.zero-progress` on an eight-document session).
+        let step = disposer.close_step(&mut partition.store, maximum_items, maximum_bytes)?;
+        // 🕰️ A retirement that released nothing is WAITING on something outside this ladder — the
+        // preview's own returned read lease, which comes back on a later reactor turn — not
+        // livelocked. Reported as `Pending { 0, 0 }` it is indistinguishable from a stuck ladder, and
+        // eight of them in a row kill the close with `plugin.internal.zero-progress`: measured
+        // intermittently on the close-cost fixture's eight-document session, always on the last
+        // remaining `procedural-preview` partition (ticket 26/09/09). `AwaitingInput` is the shape the
+        // runtime already treats as an external wait — it yields, names the authority through
+        // `runtime_close_pending_authority`, and spends no structural livelock credit.
+        if matches!(step, PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }) {
+            return Ok(PluginCloseStep::AwaitingInput { reason: "window transient retirement awaits its returned read" });
+        }
         if step != PluginCloseStep::Complete {
             return Ok(step);
         }

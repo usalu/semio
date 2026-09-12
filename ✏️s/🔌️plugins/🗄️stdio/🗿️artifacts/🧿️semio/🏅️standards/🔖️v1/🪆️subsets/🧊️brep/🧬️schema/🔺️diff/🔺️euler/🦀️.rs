@@ -96,6 +96,31 @@ pub fn add_solid(body: &mut Body, outer: ShellId, inners: Vec<ShellId>, rec: &mu
     body.solids.insert(Solid { outer, inners, label })
 }
 
+/// ✂️ Retires a solid and its shells while every face they carried lives on — the exact inverse of
+/// [`add_solid`]/[`add_shell`] for an operator that built a solid only as a SCAFFOLD to carry
+/// faces it then hands to a different solid. Faces, loops, edges and vertices are untouched: the
+/// caller owns them now.
+///
+/// A scaffold left behind is not inert. It is a second, independent solid that
+/// [`crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body`]
+/// walks like any other — so when `↔️offset::shell_solid` flips every one of its faces to build
+/// the cavity, the scaffold's own outer shell integrates to −V and the body carries a permanent
+/// `shell-orientation-inward` issue. `Brep::validate_gate_sync` validates the WHOLE body, so that
+/// one orphan refuses every preview taken from that kernel afterwards, not just the shelled one
+/// (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`, `🐚️box-shell-preview`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn retire_solid_scaffold(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) {
+    let Some(data) = body.solids.get(solid).cloned() else { return };
+    for shell in std::iter::once(data.outer).chain(data.inners.iter().copied()) {
+        if let Some(label) = body.shells.get(shell).map(|s| s.label) {
+            rec.record_deleted(label);
+        }
+        body.shells.remove(shell);
+    }
+    rec.record_deleted(data.label);
+    body.solids.remove(solid);
+}
+
 // #endregion 🔖️Make
 
 // #region 🔖️SplitJoin

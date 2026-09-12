@@ -33,5 +33,13 @@
     "kernelVolumeChannel": null,
     "kernelVolumeTolerance": null
   },
+  "delivery": {
+    "lodMode": "",
+    "minMeshes": 1,
+    "minTriangles": 0,
+    "minEdgeSegments": 4,
+    "maxRoundTrips": 1,
+    "maxChunks": 1
+  },
   "kernelStatus": "green"
 }

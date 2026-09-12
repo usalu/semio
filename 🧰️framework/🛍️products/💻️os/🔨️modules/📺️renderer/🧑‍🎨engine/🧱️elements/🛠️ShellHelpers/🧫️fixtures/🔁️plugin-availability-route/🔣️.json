@@ -1,0 +1,25 @@
+{
+  "format": "semio.shell.plugin-availability-route",
+  "version": 1,
+  "note": "A PluginSource streams AVAILABILITY, never commands. `subscribe` opens a fresh stream and the dev source's SSE endpoint answers every connect with a full snapshot of what is already built, so the same rebuiltAt arrives again on every reconnect and on every re-run of the subscription effect. Routing such a replay to a hot-swap destroys the session-owning plugin's live instance and its document (actor-activation.revoked, then `no channel for instance N`) — ticket 26/09/02, measured in wave B38 §1.7 and diagnosed in wave B40 §1, where switching the UI language was re-running that effect. `loadedRebuiltAt: null` means the artifact was acquired unbusted, i.e. a first load that names no build.",
+  "rows": [
+    { "id": "first-build-installs", "alreadyLoaded": false, "loadedRebuiltAt": null, "eventRebuiltAt": 1000, "route": "install" },
+    { "id": "first-snapshot-without-a-build-installs", "alreadyLoaded": false, "loadedRebuiltAt": null, "eventRebuiltAt": null, "route": "install" },
+    { "id": "newer-build-hot-swaps", "alreadyLoaded": true, "loadedRebuiltAt": 1000, "eventRebuiltAt": 1001, "route": "hot-swap" },
+    { "id": "busted-build-over-an-unbusted-first-load-hot-swaps", "alreadyLoaded": true, "loadedRebuiltAt": null, "eventRebuiltAt": 1000, "route": "hot-swap" },
+    { "id": "replayed-snapshot-of-the-same-build-drops", "alreadyLoaded": true, "loadedRebuiltAt": 1000, "eventRebuiltAt": 1000, "route": "drop" },
+    { "id": "older-build-drops", "alreadyLoaded": true, "loadedRebuiltAt": 1001, "eventRebuiltAt": 1000, "route": "drop" },
+    { "id": "event-naming-no-build-over-a-loaded-artifact-drops", "alreadyLoaded": true, "loadedRebuiltAt": 1000, "eventRebuiltAt": null, "route": "drop" },
+    { "id": "event-naming-no-build-over-an-unbusted-load-drops", "alreadyLoaded": true, "loadedRebuiltAt": null, "eventRebuiltAt": null, "route": "drop" }
+  ],
+  "replay": {
+    "note": "The measured shape: a cold boot's snapshot carries ~20 already-built plugins, and the language switch re-subscribed. The first connect installs every one of them; every later connect replaying the SAME snapshot must destroy nothing.",
+    "snapshot": [
+      { "pluginId": "puzzle", "rebuiltAt": 1755000000000 },
+      { "pluginId": "procedural", "rebuiltAt": 1755000000001 },
+      { "pluginId": "cad", "rebuiltAt": 1755000000002 }
+    ],
+    "connects": 3,
+    "expected": { "installs": 3, "hotSwaps": 0, "drops": 6 }
+  }
+}

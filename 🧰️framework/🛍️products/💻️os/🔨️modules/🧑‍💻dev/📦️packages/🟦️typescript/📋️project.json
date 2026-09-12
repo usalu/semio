@@ -118,9 +118,7 @@
     },
     "plugin": {
       "executor": "nx:run-commands",
-      "outputs": [
-        "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udd0c\ufe0fplugin-modules"
-      ],
+      "outputs": [],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts plugin",

@@ -1,0 +1,293 @@
+{
+  "provenance": {
+    "what": "Rows of the node-graph opening-camera law: graph bounds + viewport + stored camera -> the camera a surface opens on.",
+    "law": "A stored camera is adopted only when it already shows at least `minCoverage` of the graph's own area; otherwise the graph is fitted with `paddingPx` of screen margin per side and the zoom clamped to the canvas camera range. `refits` is the separate, far stricter gate an ALREADY LIVE camera passes when the graph changed under it (an example switch).",
+    "calibration": "`minCoverage` 0.85 is the one judgement call here. The live generation3d boot camera (x=94.75 y=-97.5 zoom=1.78 in a 483x814 pane) covers 0.570 of its own graph and shows one node of seven, so 0.6 would have decided it by 0.03; 0.85 decides it by 0.28 and still adopts a camera with a sliver of the graph off the edge.",
+    "implementations": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🦀️.rs — canvas::camera::{content_coverage,fit_camera,startup_camera}",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx — dagContentCoverage/dagFitCamera/dagStartupCamera"
+    ],
+    "constants": {
+      "paddingPx": 24.0,
+      "minCoverage": 0.85,
+      "refitMaxCoverage": 0.05,
+      "zoomMin": 0.05,
+      "zoomMax": 32.0
+    }
+  },
+  "rows": [
+    {
+      "name": "a-surface-with-no-stored-camera-fits-its-whole-graph",
+      "why": "The first attach of a graph nobody has framed yet must show all of it, not the world origin.",
+      "content": {
+        "minX": -200.0,
+        "minY": -160.0,
+        "maxX": 240.0,
+        "maxY": -80.0
+      },
+      "viewport": {
+        "width": 483,
+        "height": 814
+      },
+      "stored": null,
+      "expect": {
+        "camera": {
+          "x": 20.0,
+          "y": -120.0,
+          "zoom": 0.9886363636363636
+        },
+        "fitted": true,
+        "coverage": 0.0,
+        "refits": false
+      }
+    },
+    {
+      "name": "a-stored-camera-that-already-frames-the-graph-is-adopted",
+      "why": "A camera the viewer set and that still shows the graph is never overridden.",
+      "content": {
+        "minX": -100.0,
+        "minY": -50.0,
+        "maxX": 100.0,
+        "maxY": 50.0
+      },
+      "viewport": {
+        "width": 400,
+        "height": 300
+      },
+      "stored": {
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "expect": {
+        "camera": {
+          "x": 0.0,
+          "y": 0.0,
+          "zoom": 1.0
+        },
+        "fitted": false,
+        "coverage": 1.0,
+        "refits": false
+      }
+    },
+    {
+      "name": "a-stored-camera-with-a-small-overhang-is-still-adopted",
+      "why": "The framing test is a coverage threshold, not exact containment; a sliver off the edge is tolerated.",
+      "content": {
+        "minX": -100.0,
+        "minY": -50.0,
+        "maxX": 100.0,
+        "maxY": 50.0
+      },
+      "viewport": {
+        "width": 200,
+        "height": 200
+      },
+      "stored": {
+        "x": 20.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "expect": {
+        "camera": {
+          "x": 20.0,
+          "y": 0.0,
+          "zoom": 1.0
+        },
+        "fitted": false,
+        "coverage": 0.9,
+        "refits": false
+      }
+    },
+    {
+      "name": "a-stored-camera-that-only-shows-three-quarters-is-replaced-by-the-fit",
+      "why": "Three quarters is not 'framed'. The live generation3d boot camera measures 0.570 of its graph.",
+      "content": {
+        "minX": -100.0,
+        "minY": -50.0,
+        "maxX": 100.0,
+        "maxY": 50.0
+      },
+      "viewport": {
+        "width": 200,
+        "height": 200
+      },
+      "stored": {
+        "x": 50.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "expect": {
+        "camera": {
+          "x": 0.0,
+          "y": 0.0,
+          "zoom": 0.76
+        },
+        "fitted": true,
+        "coverage": 0.75,
+        "refits": false
+      }
+    },
+    {
+      "name": "a-stored-camera-showing-half-the-graph-is-replaced-by-the-fit",
+      "why": "The boot defect this law closes: the stored camera shows one node of seven and still wins.",
+      "content": {
+        "minX": -100.0,
+        "minY": -50.0,
+        "maxX": 100.0,
+        "maxY": 50.0
+      },
+      "viewport": {
+        "width": 200,
+        "height": 200
+      },
+      "stored": {
+        "x": 100.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "expect": {
+        "camera": {
+          "x": 0.0,
+          "y": 0.0,
+          "zoom": 0.76
+        },
+        "fitted": true,
+        "coverage": 0.5,
+        "refits": false
+      }
+    },
+    {
+      "name": "a-stored-camera-that-left-the-graph-entirely-is-replaced-and-would-refit",
+      "why": "An example switch can move the whole graph out of view; zero coverage refits even a live camera.",
+      "content": {
+        "minX": 5000.0,
+        "minY": 5000.0,
+        "maxX": 5200.0,
+        "maxY": 5100.0
+      },
+      "viewport": {
+        "width": 400,
+        "height": 400
+      },
+      "stored": {
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "expect": {
+        "camera": {
+          "x": 5100.0,
+          "y": 5050.0,
+          "zoom": 1.76
+        },
+        "fitted": true,
+        "coverage": 0.0,
+        "refits": true
+      }
+    },
+    {
+      "name": "a-graph-larger-than-the-zoom-floor-is-centred-not-over-zoomed",
+      "why": "fit_camera clamps to the canvas camera range instead of returning an unusable zoom.",
+      "content": {
+        "minX": -10000.0,
+        "minY": -10000.0,
+        "maxX": 10000.0,
+        "maxY": 10000.0
+      },
+      "viewport": {
+        "width": 400,
+        "height": 400
+      },
+      "stored": null,
+      "expect": {
+        "camera": {
+          "x": 0.0,
+          "y": 0.0,
+          "zoom": 0.05
+        },
+        "fitted": true,
+        "coverage": 0.0,
+        "refits": false
+      }
+    },
+    {
+      "name": "a-single-node-graph-fits-to-its-own-box",
+      "why": "One node is still content; the fit frames it rather than falling back to zoom 1.",
+      "content": {
+        "minX": 5.0,
+        "minY": 5.0,
+        "maxX": 45.0,
+        "maxY": 25.0
+      },
+      "viewport": {
+        "width": 200,
+        "height": 200
+      },
+      "stored": null,
+      "expect": {
+        "camera": {
+          "x": 25.0,
+          "y": 15.0,
+          "zoom": 3.8
+        },
+        "fitted": true,
+        "coverage": 0.0,
+        "refits": false
+      }
+    },
+    {
+      "name": "a-zero-height-graph-is-measured-on-the-axis-it-has",
+      "why": "A row of nodes at one y must not read as zero coverage and refit forever.",
+      "content": {
+        "minX": 0.0,
+        "minY": 0.0,
+        "maxX": 100.0,
+        "maxY": 0.0
+      },
+      "viewport": {
+        "width": 200,
+        "height": 200
+      },
+      "stored": {
+        "x": 50.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "expect": {
+        "camera": {
+          "x": 50.0,
+          "y": 0.0,
+          "zoom": 1.0
+        },
+        "fitted": false,
+        "coverage": 1.0,
+        "refits": false
+      }
+    },
+    {
+      "name": "an-empty-graph-leaves-the-stored-camera-alone",
+      "why": "Nothing to frame is not a reason to move the viewer's camera.",
+      "content": null,
+      "viewport": {
+        "width": 400,
+        "height": 400
+      },
+      "stored": {
+        "x": 7.0,
+        "y": 8.0,
+        "zoom": 2.0
+      },
+      "expect": {
+        "camera": {
+          "x": 7.0,
+          "y": 8.0,
+          "zoom": 2.0
+        },
+        "fitted": false,
+        "coverage": 1.0,
+        "refits": false
+      }
+    }
+  ]
+}

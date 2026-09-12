@@ -109,8 +109,8 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
 
 // #region 🔖️Body
 #[path = "🧪️body/🦀️.rs"]
-mod body;
-pub use body::validate_body;
+pub mod body;
+pub use body::{validate_body, BodyValidationJob, BodyValidationPhase, BodyValidationProgress};
 // #endregion 🔖️Body
 
 #[cfg(test)]

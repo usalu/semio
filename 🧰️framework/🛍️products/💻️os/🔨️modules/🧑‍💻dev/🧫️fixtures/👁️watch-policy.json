@@ -1,0 +1,27 @@
+{
+  "reason": "A dev server must react to source edits and to nothing else. Vite's own watcher watches `root` plus every module-graph file outside it; on macOS chokidar consolidates those into ONE FSEvents stream over the whole repository and then runs every watched path's prefix filter against every event it delivers, so a concurrent cargo build in the shared cache costs `events × watched paths` per second and wedges the server. `server.watch.ignored` is consulted only after those filters have run, so the scope has to be decided before the kernel ever reports the write: these are the directories no watch may cover, and the paths that decision must classify.",
+  "unwatchedSegments": [".git", ".nx", ".vscode", ".🧬semio", "node_modules", "dist", "target", "🤖️generated", "🗑️generated"],
+  "unwatchedGlobs": ["**/.git/**", "**/.nx/**", "**/.vscode/**", "**/.🧬semio/**", "**/node_modules/**", "**/dist/**", "**/target/**", "**/🤖️generated/**", "**/🗑️generated/**"],
+  "unwatchedPaths": [
+    ".🧬semio/🦑️repo/⚡️cache/cargo/wasm-dev/deps/semio_s_artifact.rmeta",
+    ".🧬semio/🦑️repo/⚡️cache/vite/os-dev/generation3d-react/deps/three.js",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️09/PROCEDURAL-3D-END-TO-END/🗑️generated/serve.txt",
+    ".nx/workspace-data/project-graph.json",
+    ".git/fsmonitor--daemon/cookies/1",
+    ".vscode/launch.json",
+    "node_modules/vite/dist/node/index.js",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts",
+    "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/target/wasm32-wasip2/release/plugin.wasm"
+  ],
+  "watchedPaths": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+    "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx",
+    "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/🟦️.ts",
+    "♻️mit-bestand/🧺️demonstrator/🪧️brand.ts"
+  ],
+  "requiredRoots": ["🧰️framework", "✏️s", "♻️mit-bestand"],
+  "forbiddenRoots": [".git", ".nx", ".vscode", ".🧬semio", "node_modules"]
+}

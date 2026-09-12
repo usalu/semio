@@ -1,6 +1,36 @@
 use super::testkit::*;
 use super::*;
 
+/// 🏷️ Wave B30: the ACTIVE EXAMPLE must be known from the first render, not only after the user
+/// switches. `ArtifactApp::initial_snapshot` seeds a fresh document from `default_fixture()` — the
+/// Concrete Forest example — while `Puzzle3dConfig::active_example_id` defaulted to `""`, i.e. "this
+/// document came from no example at all". Everything downstream reads that one field: `export_fixture`
+/// names its download after it (Concrete Forest downloaded as the generic `puzzle-3d.json`), and the
+/// shell's navbar picker has nothing else to agree with. The law pins the two together — the seeded
+/// DOCUMENT and the seeded CONFIG must name the same example — on all three ways a config comes into
+/// existence (the Rust `Default`, a decode of a record that omits the field, and a live instance),
+/// plus the switch that moves it.
+#[semio_framework_async_macros::async_test]
+async fn a_fresh_session_config_names_the_example_its_document_was_seeded_from() {
+    assert_eq!(Puzzle3dConfig::default().active_example_id, PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "the shared config default must name the example `initial_snapshot` seeds");
+    assert_eq!(Puzzle3dRuntime::default().active_example_id, PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "the runtime projection default must agree with the config default");
+    let omitted = <Puzzle3dConfig as store::ArtifactDsl>::parse_dsl("{}").expect("a config record that omits every field decodes");
+    assert_eq!(omitted.active_example_id, PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "a record that omits the field must decode to the seeded example, never to the blank id");
+
+    let mut app = app().await;
+    let seeded = object_count(&app);
+    assert!(seeded > 0, "a fresh session boots on a real example document");
+    let object_ids = |fixture: &Puzzle3dFixture| fixture.objects.iter().map(|object| object.id.clone()).collect::<Vec<_>>();
+    assert_eq!(
+        object_ids(&puzzle3d_fixture_from_projection(&projection_of(&app))),
+        object_ids(&default_fixture()),
+        "the document a fresh session boots with must BE the example the config names"
+    );
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
+    assert_ne!(object_count(&app), seeded, "the switch must actually replace the document it was measured against");
+    eprintln!("[DEBUG] seeded example id={} objects={}", Puzzle3dConfig::default().active_example_id, seeded);
+}
+
 /// 🎵️ Wave W-X: a whole-fixture switch must stay cursorized (hostile law) but land as ONE
 /// coalesced document-replacement emit — chunked by mutation kind, not one ingress per item.
 #[test]
@@ -19,6 +49,7 @@ fn set_active_example_chunks_by_kind_and_emits_one_coalesced_gesture() {
         match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => progress_steps += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
+            PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
         }
     };
     let document = snapshot.typed();
@@ -141,6 +172,7 @@ fn set_active_example_history_is_one_set_active_example_row() {
         match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => {}
             PuzzleCommandWorkStep::Complete(emit) => break emit,
+            PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
         }
     };
     assert_eq!(emit.description.as_deref(), Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION));

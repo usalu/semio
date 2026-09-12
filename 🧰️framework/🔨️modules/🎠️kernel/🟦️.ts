@@ -328,25 +328,23 @@ export type DocumentOperatorScope =
   | { readonly status: "resolved"; readonly kinds: readonly string[] }
   | { readonly status: "unresolved"; readonly reason: string };
 
-/** 📚️ Published example graphs on the host — the live ReadDocument envelope can still be genesis. */
+/** 📚️ Published example graphs on the host — the live ReadDocument envelope can still be genesis.
+ * Scoped by DIALECT, so the editor and the viewer of one artifact read the exact same graphs; the
+ * app-id stem fallback this used to need is gone because an example now carries the coordinate
+ * itself (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 export function exampleArtifactSources(
-  examples: readonly { readonly id?: string; readonly appId?: string; readonly artifactJson?: string }[],
-  appId?: string,
+  examples: readonly { readonly id?: string; readonly dialect?: ArtifactDialect; readonly artifactJson?: string }[],
+  dialect?: ArtifactDialect,
   exampleId?: string,
 ): string[] {
-  const take = (matchApp: (id: string | undefined) => boolean): string[] => {
-    const sources: string[] = [];
-    for (const example of examples) {
-      if (!matchApp(example.appId)) continue;
-      if (exampleId !== undefined && example.id !== exampleId) continue;
-      if (typeof example.artifactJson === "string" && example.artifactJson.length > 0) sources.push(example.artifactJson);
-    }
-    return sources;
-  };
-  const exact = take((id) => appId === undefined || id === appId);
-  if (exact.length > 0 || appId === undefined) return exact;
-  const stem = appId.split("#")[0] ?? appId;
-  return take((id) => (id ?? "").split("#")[0] === stem);
+  const wanted = dialect === undefined ? undefined : dialectCoordinate(dialect);
+  const sources: string[] = [];
+  for (const example of examples) {
+    if (wanted !== undefined && (example.dialect === undefined || dialectCoordinate(example.dialect) !== wanted)) continue;
+    if (exampleId !== undefined && example.id !== exampleId) continue;
+    if (typeof example.artifactJson === "string" && example.artifactJson.length > 0) sources.push(example.artifactJson);
+  }
+  return sources;
 }
 
 /** 📄️ Kinds from an open document. Empty kinds with a present graph is resolved; a missing graph is not. */
@@ -1358,7 +1356,11 @@ export type Effect =
   | { readonly setTimer: { readonly id: number; readonly afterMs: number; readonly repeat?: boolean } }
   | { readonly spawnJob: { readonly job: number; readonly kind: string; readonly input: readonly number[]; readonly placement: "inline" | "isolated" | "exclusive" } }
   | { readonly cancelJob: { readonly job: number } }
-  | { readonly respond: { readonly req: number; readonly result: unknown } }
+  /** @emoji ↩️ Answers ONE inbound `Event::Request { req, … }` — the only `req`-bearing effect that
+   * completes someone else's request instead of opening its own. `result` keeps the WIT
+   * `respond-result` arm names (`ok`/`fault`, not Rust's `RequestOutcome::{Ok,Err}`) because this is
+   * the shape the wire carries and the shape the extension-completion door already takes. */
+  | { readonly respond: { readonly req: bigint; readonly result: { readonly ok: Uint8Array } | { readonly fault: Uint8Array } } }
   | { readonly storageRead: { readonly req: number; readonly key: string } }
   | { readonly storageWrite: { readonly req: number; readonly key: string; readonly bytes: readonly number[] } }
   | { readonly storageDelete: { readonly req: number; readonly key: string } }
@@ -3123,16 +3125,17 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   
   describe("exampleArtifactSources", () => {
+    const generation3d = { artifactKind: "s.procedural.generation3d", standard: "1", subset: "*" } as const;
     const examples = [
-      { id: "box-shell-preview", appId: "s.procedural.generation3d@1/*#editor", artifactJson: "neuron id=box neuron-kind=brep.prim3d.box neuron-kind=brep.solid.shell" },
-      { id: "face-sweep-extrude", appId: "s.procedural.generation3d@1/*#editor", artifactJson: "neuron-kind=brep.surf.planarFaceWire neuron-kind=brep.sweep.extrude" },
+      { id: "box-shell-preview", dialect: generation3d, artifactJson: "neuron id=box neuron-kind=brep.prim3d.box neuron-kind=brep.solid.shell" },
+      { id: "face-sweep-extrude", dialect: generation3d, artifactJson: "neuron-kind=brep.surf.planarFaceWire neuron-kind=brep.sweep.extrude" },
     ];
     it("reads neuron-kind from published example artifactJson", () => {
-      const sources = exampleArtifactSources(examples, "s.procedural.generation3d@1/*#editor", "box-shell-preview");
+      const sources = exampleArtifactSources(examples, generation3d, "box-shell-preview");
       expect(resolveDocumentOperatorKinds(sources)).toEqual({ status: "resolved", kinds: ["brep.prim3d.box", "brep.solid.shell"] });
     });
-    it("uses the editor graphs when the open app is the viewer of the same artifact", () => {
-      const sources = exampleArtifactSources(examples, "s.procedural.generation3d@1/*#viewer");
+    it("uses the same dialect graphs when the open app is the viewer of that artifact", () => {
+      const sources = exampleArtifactSources(examples, generation3d);
       const scope = resolveDocumentOperatorKinds(sources);
       expect(scope.status).toBe("resolved");
       if (scope.status === "resolved") {

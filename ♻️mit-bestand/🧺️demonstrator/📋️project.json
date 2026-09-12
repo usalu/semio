@@ -4,8 +4,11 @@
   "targets": {
     "prepare-dev": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "outputs": [],
+      "inputs": [
+        { "dependentTasksOutputFiles": "**/*", "transitive": true }
+      ],
       "dependsOn": [
         "@semio-tech/framework-os-dev:prepare-aggregator-react-dev",
         "@semio-tech/framework-os-dev:prepare-aussuchen-react-dev",
@@ -23,8 +26,11 @@
     },
     "prepare-release": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "outputs": [],
+      "inputs": [
+        { "dependentTasksOutputFiles": "**/*", "transitive": true }
+      ],
       "dependsOn": [
         "@semio-tech/framework-os-dev:prepare-aggregator-react-release",
         "@semio-tech/framework-os-dev:prepare-aussuchen-react-release",
@@ -88,8 +94,12 @@
     },
     "activate-dev": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
+      "parallelism": false,
       "outputs": [],
+      "inputs": [
+        { "dependentTasksOutputFiles": "**/*", "transitive": true }
+      ],
       "dependsOn": [
         "prepare-dev",
         "@semio-tech/framework-os-dev:activate-generator-react-dev"
@@ -149,7 +159,7 @@
     },
     "test-e2e": {
       "executor": "nx:run-commands",
-      "cache": true,
+      "cache": false,
       "outputs": [],
       "dependsOn": [
         "serve-e2e"

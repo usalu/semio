@@ -1,0 +1,19 @@
+{
+  "capacityChars": 65536,
+  "windowInstanceCapacity": 64,
+  "programsAreEmpty": true,
+  "spawned": {
+    "idChars": 48,
+    "pluginIdChars": 32,
+    "appIdChars": 48,
+    "labelChars": 64,
+    "breadcrumbSegments": 4,
+    "breadcrumbSegmentChars": 32
+  },
+  "measured": {
+    "at": "2026-09-12",
+    "source": "http://127.0.0.1:6018/?plugin=generation3d",
+    "contributionsJsonChars": 248635,
+    "note": "The aggregated contributions closure rode inside every refresh's view state against the 65536-character bound; it is no longer a view-state field."
+  }
+}

@@ -301,7 +301,7 @@ struct SceneIntentQueue {
 
 impl Default for SceneIntentQueue {
     fn default() -> Self {
-        Self { slots: Box::new(std::array::from_fn(|_| None)), head: 0, len: 0, next_generation: 1, retiring: None }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), head: 0, len: 0, next_generation: 1, retiring: None }
     }
 }
 
@@ -1097,6 +1097,10 @@ static DOCUMENT_PAGE_OPPORTUNITY_CONSUMED: AtomicBool = AtomicBool::new(false);
 enum UiDocumentFramePhase {
     #[default]
     Ingress,
+    /// 🌳️ Projects the published `UiDocumentTree`'s records into the engine's paintable arena. Sits
+    /// between ingress and viewport because layout reads the arena's own parent/child links, which
+    /// do not exist until this phase has run (`📓️wgpu-blank-paint-2026-09-12.md` §5).
+    Reconcile,
     Viewport,
     Layout,
     Paint,
@@ -1123,7 +1127,16 @@ pub fn begin_ui_document_opportunity(consumed: bool) {
     DOCUMENT_PAGE_OPPORTUNITY_CONSUMED.store(consumed, Ordering::Release);
 }
 
-pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, document: &UiDocumentLease, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, window_id: &str, hosts: &mut crate::scenes::SceneEngineHosts<'_>) -> bool {
+/// 🩺️ Console line for a retained-document terminal fault. `eprintln!` is a no-op inside a
+/// `wasm32-unknown-unknown` Worker, so a fault recorded there left no trace at all.
+fn document_debug_log(line: &str) {
+    #[cfg(target_arch = "wasm32")]
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(line));
+    #[cfg(not(target_arch = "wasm32"))]
+    eprintln!("{line}");
+}
+
+pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, document: &UiDocumentLease, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, window_id: &str, controller_id: &str, hosts: &mut crate::scenes::SceneEngineHosts<'_>) -> bool {
     let Ok(header) = document.header() else {
         cursor.phase = UiDocumentFramePhase::Fault;
         return false;
@@ -1144,31 +1157,67 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
     UI_ENGINE.with(|cell| {
         let mut engine = cell.borrow_mut();
         match cursor.phase {
+            // 🚦️ A refused ingress opportunity is a RETRY, never a fault. `begin_document`,
+            // `apply_document_page` and `finish_document` all refuse a step whose `StepContext` is
+            // cancelled or out of budget, and this arm used to read every refusal as the terminal
+            // `Fault` phase — one `Deadline` on the very first opportunity froze the surface's page
+            // ingress for the life of the shell (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+            // `📓️wgpu-blank-paint-2026-09-12.md`). The budget is checked HERE instead, so an
+            // opportunity that cannot pay is simply not spent and the next one resumes the same page.
+            UiDocumentFramePhase::Ingress if step.is_cancelled() || step.should_yield() => {}
             UiDocumentFramePhase::Ingress => match engine.document_status(window_id, generation) {
                 ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant => {
-                    if engine.begin_document(window_id, header, &mut step).is_err() {
-                        cursor.phase = UiDocumentFramePhase::Fault;
+                    if let Err((_fault, _header)) = engine.begin_document(window_id, header, &mut step) {
+                        if !matches!(
+                            _fault,
+                            ui_wgpu::wgpu::engine::UiDocumentIngressFault::Cancelled
+                                | ui_wgpu::wgpu::engine::UiDocumentIngressFault::Deadline
+                                | ui_wgpu::wgpu::engine::UiDocumentIngressFault::InterruptedClose
+                                | ui_wgpu::wgpu::engine::UiDocumentIngressFault::ValidationPending
+                        ) {
+                            cursor.phase = UiDocumentFramePhase::Fault;
+                        }
                     }
                 }
                 ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Pending { next_page, node_count } => {
                     if next_page == node_count {
                         match engine.finish_document(window_id, generation, &mut step) {
-                            Ok(()) => cursor.phase = UiDocumentFramePhase::Viewport,
-                            Err(ui_wgpu::wgpu::engine::UiDocumentIngressFault::ValidationPending | ui_wgpu::wgpu::engine::UiDocumentIngressFault::InterruptedClose) => {}
-                            Err(_) => cursor.phase = UiDocumentFramePhase::Fault,
+                            Ok(()) => cursor.phase = UiDocumentFramePhase::Reconcile,
+                            Err(
+                                ui_wgpu::wgpu::engine::UiDocumentIngressFault::ValidationPending
+                                | ui_wgpu::wgpu::engine::UiDocumentIngressFault::InterruptedClose
+                                | ui_wgpu::wgpu::engine::UiDocumentIngressFault::Cancelled
+                                | ui_wgpu::wgpu::engine::UiDocumentIngressFault::Deadline,
+                            ) => {}
+                            Err(_fault) => {
+                                cursor.phase = UiDocumentFramePhase::Fault;
+                            }
                         }
                     } else {
                         match document.read_node_page(next_page) {
                             Ok(Some(page)) => {
-                                if engine.apply_document_page(window_id, page, &mut step).is_err() {
+                                if let Err(_rejection) = engine.apply_document_page(window_id, page, &mut step) {
                                     cursor.phase = UiDocumentFramePhase::Fault;
                                 }
                             }
-                            _ => cursor.phase = UiDocumentFramePhase::Fault,
+                            _ => {
+                                cursor.phase = UiDocumentFramePhase::Fault;
+                            }
                         }
                     }
                 }
-                ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Published => cursor.phase = UiDocumentFramePhase::Viewport,
+                ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Published => cursor.phase = UiDocumentFramePhase::Reconcile,
+            },
+            // 🌳️ The one production writer of the paintable arena: `Ui::apply_tree` is
+            // `cfg(test/testkit)`, so without this phase `tree.root` is `None` forever and
+            // `frame_into_step` answers `Missing` before it reads anything else.
+            UiDocumentFramePhase::Reconcile => match engine.step_document_reconcile(window_id, controller_id, &mut step) {
+                ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Complete => cursor.phase = UiDocumentFramePhase::Viewport,
+                ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Pending => {}
+                ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Fault(fault) => {
+                    document_debug_log(&format!("[DEBUG] ui-doc reconcile fault window={window_id} fault={fault:?}"));
+                    cursor.phase = UiDocumentFramePhase::Fault;
+                }
             },
             UiDocumentFramePhase::Viewport => {
                 engine.set_theme(*ctx.theme);
@@ -1176,7 +1225,8 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
                 cursor.phase = UiDocumentFramePhase::Layout;
             }
             UiDocumentFramePhase::Layout => {
-                if matches!(drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas), ui_wgpu::wgpu::UiLayoutStep::Ready { .. } | ui_wgpu::wgpu::UiLayoutStep::Idle) {
+                let layout = drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas);
+                if matches!(layout, ui_wgpu::wgpu::UiLayoutStep::Ready { .. } | ui_wgpu::wgpu::UiLayoutStep::Idle) {
                     cursor.phase = UiDocumentFramePhase::Paint;
                 }
             }
@@ -1190,10 +1240,14 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
                     world3d_states: &mut *hosts.world3d_states,
                     world_resources: &mut *hosts.world_resources,
                 };
-                match engine.frame_into_step(window_id, ui_wgpu::wgpu::geometry::Rect { x: bounds.x, y: bounds.y, w: viewport_w, h: viewport_h }, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw) {
+                let paint = engine.frame_into_step(window_id, ui_wgpu::wgpu::geometry::Rect { x: bounds.x, y: bounds.y, w: viewport_w, h: viewport_h }, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw);
+                match paint {
                     ui_wgpu::wgpu::UiFrameStep::Ready | ui_wgpu::wgpu::UiFrameStep::Missing => cursor.phase = UiDocumentFramePhase::Complete,
                     ui_wgpu::wgpu::UiFrameStep::Pending => {}
-                    ui_wgpu::wgpu::UiFrameStep::Fault => cursor.phase = UiDocumentFramePhase::Fault,
+                    ui_wgpu::wgpu::UiFrameStep::Fault => {
+                        document_debug_log(&format!("[DEBUG] ui-doc paint fault window={window_id} phase={:?} nodes={:?}", engine.paint_frame_phase(window_id), engine.tree(window_id).map(|tree| tree.root.is_some())));
+                        cursor.phase = UiDocumentFramePhase::Fault;
+                    }
                 }
             }
             UiDocumentFramePhase::Complete | UiDocumentFramePhase::Fault => {}
@@ -1812,8 +1866,12 @@ fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: 
     let segment = ui_node_path_segment(ui_node, sibling_index);
     let path = if parent_path.is_empty() { segment } else { format!("{parent_path}/{segment}") };
 
-    let abs_x = origin_x + node.layout.x;
-    let abs_y = origin_y + node.layout.y;
+    // 📐️ `Node::layout` is the immediate-mode bucket and stays zero on the retained path; the paint
+    // walk consumes the double-buffered `mounted_layout`, so a probe reading the former reports an
+    // unlaid-out tree even when layout published (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    let (layout_x, layout_y, layout_w, layout_h) = tree.mounted_layout(id).unwrap_or((node.layout.x, node.layout.y, node.layout.width, node.layout.height));
+    let abs_x = origin_x + layout_x;
+    let abs_y = origin_y + layout_y;
     let disabled = presence.state == UiState::Disabled;
     let hovered = effective_hovered(node, presence.hover, disabled);
     if focus_path.is_none() && node.flags.contains(ui_wgpu::wgpu::NodeFlags::FOCUSED) {
@@ -1824,7 +1882,7 @@ fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: 
     nodes.push(DumpNode {
         path: path.clone(),
         kind: ui_node_kind_tag(ui_node),
-        rect: [abs_x, abs_y, node.layout.width, node.layout.height],
+        rect: [abs_x, abs_y, layout_w, layout_h],
         text,
         color,
         bg,
@@ -1896,6 +1954,14 @@ fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui) -> DumpFrameStats {
     let Some(window_id) = primary_window_id(engine) else {
         return DumpFrameStats { window_id: None, draw_calls: 0, quad_count: 0, glyph_count: 0 };
     };
+    // 📊️ The production paint entry is `frame_into_step`, which appends into the CALLER's draw list
+    // and never publishes into the window's own — so `draw_list` answers "empty" no matter how much
+    // the window painted, which is why `drawCalls: 0` survived every earlier lane. The engine's own
+    // per-window paint census measures the delta that paint appended, for either entry; the retained
+    // `draw_list` is still read when it carries one (the `frame_step` path).
+    if let Some(census) = engine.paint_census(&window_id).filter(|census| census.layers > 0) {
+        return DumpFrameStats { window_id: Some(window_id), draw_calls: census.layers, quad_count: census.quads, glyph_count: census.glyphs };
+    }
     let Some(draw) = engine.draw_list(&window_id) else {
         return DumpFrameStats { window_id: Some(window_id), draw_calls: 0, quad_count: 0, glyph_count: 0 };
     };

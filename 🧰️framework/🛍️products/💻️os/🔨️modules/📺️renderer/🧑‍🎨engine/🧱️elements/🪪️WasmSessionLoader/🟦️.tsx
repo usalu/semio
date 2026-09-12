@@ -117,7 +117,9 @@ export async function createFlowSession(): Promise<FlowWasmSession> {
       import("@semio-tech/flow-core/🌐️flow-browser.js"),
     ]).then(async ([core, browser]) => {
       const exports = await core.default();
-      return browser.createFlowBrowserRuntime({ source: exports });
+      // 🖼️ `core` (not `exports`) carries the wasm-bindgen wrappers, the only ones that can take an
+      // `HtmlCanvasElement` — that is how a flow surface reaches its own WebGPU presenter.
+      return browser.createFlowBrowserRuntime({ source: exports, bindings: core });
     });
   }
   const runtime = await flowSessionPromise;

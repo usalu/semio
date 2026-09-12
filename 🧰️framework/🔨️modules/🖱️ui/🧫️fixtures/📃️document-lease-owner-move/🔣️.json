@@ -1,0 +1,46 @@
+{
+  "$comment": "📃️ The neutral oracle for how a per-frame retained-document READ must reach its lease, and for which ingress refusals a frame cursor may retry. Read by 🖱️ui/🧪️tests/📃️document-lease-owner-move/🦀️.rs (the live arena) and by 📺️renderer/🧑‍🎨engine/🧪️tests/🖌️wgpu-document-owner-move/🟦️.ts (the wgpu chrome walk's own sources). Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+  "aliasCapacity": 8,
+  "publishedAliases": 1,
+  "aliasReads": {
+    "$comment": "A published document starts with one alias. try_alias mints another and only close_read_step_with_grant gives one back, so a reader that drops its alias exhausts the slot after `admitted` reads and every later read is refused.",
+    "admitted": 7,
+    "refusedAt": 8,
+    "refusal": "AliasCapacity"
+  },
+  "ownerMove": {
+    "$comment": "Taking the ONE owner out of its map for the step and putting it back mints no alias at all, so the same read repeats without bound. The number is the frame count a 60 Hz surface reaches in one minute — far past any alias budget.",
+    "reads": 3600,
+    "refusals": 0
+  },
+  "ingressRefusals": [
+    { "fault": "Cancelled", "terminal": false },
+    { "fault": "Deadline", "terminal": false },
+    { "fault": "InterruptedClose", "terminal": false },
+    { "fault": "ValidationPending", "terminal": false },
+    { "fault": "StaleGeneration", "terminal": true },
+    { "fault": "Invalid", "terminal": true }
+  ],
+  "frameOpportunity": [
+    { "condition": "operationRebound", "verdict": "superseded" },
+    { "condition": "generationRebound", "verdict": "superseded" },
+    { "condition": "cancelled", "verdict": "superseded" },
+    { "condition": "deadlineExceeded", "verdict": "superseded" },
+    { "condition": "inputGenerationSuperseded", "verdict": "superseded" },
+    { "condition": "baseRevisionSuperseded", "verdict": "superseded" }
+  ],
+  "effectStorm": {
+    "$comment": "The storm budget bounds effect-flush ROUNDS. Charging it per step taken while the stage is FlushEffects charges the whole post-intent tail instead, which no real frame can pay.",
+    "budget": 64,
+    "chargedPer": "round"
+  },
+  "terminalCursor": {
+    "$comment": "A per-frame document cursor that reached its terminal fault phase releases the chrome step; only a non-terminal cursor may hold it for another opportunity.",
+    "complete": "release",
+    "fault": "release",
+    "ingress": "hold",
+    "viewport": "hold",
+    "layout": "hold",
+    "paint": "hold"
+  }
+}

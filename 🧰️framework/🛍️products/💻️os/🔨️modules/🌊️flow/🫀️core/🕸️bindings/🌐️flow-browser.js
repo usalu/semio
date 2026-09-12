@@ -9,10 +9,11 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
 /* ../../../🕸️wasm/📦️packages/🟨️javascript/🌐️flow-browser.js */
 import { FlowFeatureGroups, FlowOperation, FlowOperationFields, attachFlowSurface, createFlowFeatures, createFlowHost, isFlowSessionOpenRejected, renderFlowSurface } from "./🖥️flow-host.js";
 //! 🌐️ Production Flow browser entry over the owned serialized Wasm ABI.
-async function createFlowBrowserRuntime({ source, imports = {}, instantiate, ...hostOptions } = {}) {
+async function createFlowBrowserRuntime({ source, imports = {}, instantiate, bindings, ...hostOptions } = {}) {
   if (source === undefined)
     throw new Error("Flow Wasm source is required");
   let exports = source?.exports ?? source;
+  let surfaceBindings = bindings;
   if (typeof exports?.flow_bridge_allocate !== "function") {
     if (instantiate) {
       let bytes = source?.module_or_path ?? source;
@@ -25,8 +26,9 @@ async function createFlowBrowserRuntime({ source, imports = {}, instantiate, ...
     } else {
       if (Reflect.ownKeys(imports).length !== 0)
         throw new Error("custom Flow imports require their exact embedding initializer");
-      const { default: initialize } = await import("./flow_core.js");
-      exports = await initialize({ module_or_path: source?.module_or_path ?? source });
+      const core = await import("./flow_core.js");
+      surfaceBindings ??= core;
+      exports = await core.default({ module_or_path: source?.module_or_path ?? source });
     }
   }
   const memory = exports?.memory;
@@ -40,7 +42,7 @@ async function createFlowBrowserRuntime({ source, imports = {}, instantiate, ...
     openSession() {
       if (closing)
         throw new Error("Flow runtime is closed");
-      const session = new FlowSession(sessionAuthority, createFlowFeatures(host), () => sessions.delete(session));
+      const session = new FlowSession(sessionAuthority, createFlowFeatures(host), () => sessions.delete(session), surfaceBindings);
       sessions.add(session);
       return session;
     },
@@ -69,10 +71,12 @@ class FlowSession {
   #closePromise;
   #release;
   #released = false;
-  constructor(authority, ready, release) {
+  #bindings;
+  constructor(authority, ready, release, bindings) {
     if (authority !== sessionAuthority)
       throw new Error("Flow sessions require their runtime owner");
     this.#release = release;
+    this.#bindings = bindings;
     this.#ready = Promise.resolve(ready).catch((error) => {
       if (isFlowSessionOpenRejected(error))
         this.#releaseOnce();
@@ -91,7 +95,7 @@ class FlowSession {
     return deferredFlowTask(this.#ready, (features) => {
       if (this.#closed)
         throw new Error("Flow session is closed");
-      return attachFlowSurface(features, canvas, { width, height, dpr });
+      return attachFlowSurface(features, canvas, { width, height, dpr, bindings: this.#bindings });
     });
   }
   renderCanvas(canvas) {

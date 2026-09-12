@@ -250,16 +250,17 @@ fn publish_world3d_intent(state: &mut World3dState, intent: WorldInteractionInte
     crate::collect_fixture_actions(&mut input)
 }
 
-#[test]
-fn world3d_preview_window_attaches_the_world_engine_and_paints_the_tessellated_solid() {
+/// 🧱️ The paint law, keyed by surface id so it can run twice in one binary — once on libtest's own
+/// thread and once on the deliberately 2 MiB lane below, without the two sharing a surface.
+fn world3d_preview_window_law(surface_id: &str) {
     let fixture = fixture();
-    let scene = world3d_preview_scene("world3d-attach-draw", &fixture);
+    let scene = world3d_preview_scene(surface_id, &fixture);
     let bounds = Rect { x: 24.0, y: 36.0, w: 800.0, h: 600.0 };
 
-    let painted = attach_and_settle_world3d(&scene, bounds, "world3d-attach-draw");
+    let painted = attach_and_settle_world3d(&scene, bounds, surface_id);
 
     let expect = &fixture["world3d"]["expect"];
-    let state = painted.world3d_states.get("world3d-attach-draw").expect("attached world state");
+    let state = painted.world3d_states.get(surface_id).expect("attached world state");
     assert_eq!(state.snapshot_fault(), None, "the production attach reaches a published snapshot without faulting");
     let pass = painted.draw.scene_passes.first().expect("the World3d host paints a real 3-D pass into the window draw list");
     assert_eq!(pass.viewport, [bounds.x, bounds.y, bounds.w, bounds.h], "the pass is sized to the window body");
@@ -279,12 +280,17 @@ fn world3d_preview_window_attaches_the_world_engine_and_paints_the_tessellated_s
 }
 
 #[test]
-fn world3d_pointer_down_emits_the_graph_domain_selection_react_dispatches() {
+fn world3d_preview_window_attaches_the_world_engine_and_paints_the_tessellated_solid() {
+    world3d_preview_window_law("world3d-attach-draw");
+}
+
+/// 🖱️ The pick law, keyed by surface id for the same reason as `world3d_preview_window_law`.
+fn world3d_pointer_down_law(surface_id: &str) {
     let fixture = fixture();
-    let scene = world3d_preview_scene_with_selection("world3d-attach-pick", &fixture, json!({ "method": "pick", "mode": "replace", "ids": [] }).to_string());
+    let scene = world3d_preview_scene_with_selection(surface_id, &fixture, json!({ "method": "pick", "mode": "replace", "ids": [] }).to_string());
     let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
-    let mut states = attach_and_settle_world3d(&scene, bounds, "world3d-attach-pick").world3d_states;
-    let state = states.get_mut("world3d-attach-pick").expect("attached world state");
+    let mut states = attach_and_settle_world3d(&scene, bounds, surface_id).world3d_states;
+    let state = states.get_mut(surface_id).expect("attached world state");
 
     // 🎯️ Aim through the fixture camera's own target — the centre of the prism's base face, the one
     // point guaranteed both inside the solid and inside the 45° frustum.
@@ -308,19 +314,24 @@ fn world3d_pointer_down_emits_the_graph_domain_selection_react_dispatches() {
 }
 
 #[test]
-fn world3d_orbit_and_wheel_emit_the_generation3d_set_camera_payload() {
+fn world3d_pointer_down_emits_the_graph_domain_selection_react_dispatches() {
+    world3d_pointer_down_law("world3d-attach-pick");
+}
+
+/// 📷️ The camera law, keyed by surface id for the same reason as `world3d_preview_window_law`.
+fn world3d_orbit_and_wheel_law(surface_id: &str) {
     let fixture = fixture();
-    let scene = world3d_preview_scene("world3d-attach-camera", &fixture);
+    let scene = world3d_preview_scene(surface_id, &fixture);
     let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
-    let mut states = attach_and_settle_world3d(&scene, bounds, "world3d-attach-camera").world3d_states;
-    let state = states.get_mut("world3d-attach-camera").expect("attached world state");
+    let mut states = attach_and_settle_world3d(&scene, bounds, surface_id).world3d_states;
+    let state = states.get_mut(surface_id).expect("attached world state");
     let before = state.orbit.to_camera().position.to_array();
 
     let wheel = publish_world3d_intent(state, WorldInteractionIntent::wheel(400.0, 300.0, -120.0, &PointerModifiers::default()));
     let zoomed = wheel.iter().find(|action| action.action == "setCamera").expect("a wheel over the preview publishes setCamera");
     assert_eq!(zoomed.controller_id, "generation3d");
     let args = zoomed.args.clone().expect("camera args");
-    assert_eq!(args["surfaceId"].as_str(), Some("world3d-attach-camera"));
+    assert_eq!(args["surfaceId"].as_str(), Some(surface_id));
     assert!(args["camera"]["position"].as_array().is_some_and(|axes| axes.len() == 3), "generation3d's 📷️set-camera payload carries a 3-axis position");
     assert!(args["camera"]["target"].as_array().is_some_and(|axes| axes.len() == 3));
     assert!(args["camera"]["fov"].as_f64().is_some());
@@ -333,11 +344,43 @@ fn world3d_orbit_and_wheel_emit_the_generation3d_set_camera_payload() {
     let dragged = publish_world3d_intent(state, WorldInteractionIntent::pointer_move(420.0, 320.0, 20.0, 20.0, true, 2, &PointerModifiers { alt: true, ..PointerModifiers::default() }));
     let orbited = dragged.iter().find(|action| action.action == "setCamera").expect("an orbit drag publishes setCamera");
     let orbit_args = orbited.args.clone().expect("orbit camera args");
-    assert_eq!(orbit_args["surfaceId"].as_str(), Some("world3d-attach-camera"));
+    assert_eq!(orbit_args["surfaceId"].as_str(), Some(surface_id));
     let orbited_position = state.orbit.to_camera().position.to_array();
     let turned = (0..3).any(|axis| (orbited_position[axis] - after[axis]).abs() > 1.0e-4);
     assert!(turned, "the orbit drag actually turned the camera: {after:?} -> {orbited_position:?}");
     drop_world3d_states(states);
+}
+
+#[test]
+fn world3d_orbit_and_wheel_emit_the_generation3d_set_camera_payload() {
+    world3d_orbit_and_wheel_law("world3d-attach-camera");
+}
+
+/// 🧵️ Runs all three World3d laws on a lane with an EXPLICIT 2 MiB stack — the budget
+/// `std::thread` hands a spawned thread, and the budget the native frame-build pool worker that
+/// actually drives `AppFrameTransactionPhase::World3dSnapshot` runs on (`WorkerPool` spawns its
+/// workers with no `stack_size` at `🧰️framework/🔨️modules/⏳️async/🦀️.rs:1780`, and
+/// `🧵️frame-job/🦀️.rs:474` submits the frame build to it).
+///
+/// `Builder::stack_size` overrides `RUST_MIN_STACK`, so the repo runner's blanket 128 MiB floor
+/// (`runCargoTestBudgeted`, `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts`)
+/// cannot hide a re-inflated frame here the way it hid the 5 664 768-byte
+/// `AdmittedSurfaceMap::<World3dState>::default` array literal until 2026-09-12. Behavioural, not a
+/// source-shape assertion: any future frame that grows back past the budget aborts this lane.
+#[test]
+fn world3d_engine_surface_laws_fit_a_bounded_thread_stack() {
+    let lane = std::thread::Builder::new()
+        .name("world3d-bounded-stack".to_string())
+        .stack_size(2 * 1024 * 1024)
+        .spawn(|| {
+            world3d_preview_window_law("world3d-bounded-draw");
+            world3d_pointer_down_law("world3d-bounded-pick");
+            world3d_orbit_and_wheel_law("world3d-bounded-camera");
+        })
+        .expect("the bounded-stack lane spawns");
+    if let Err(panic) = lane.join() {
+        std::panic::resume_unwind(panic);
+    }
 }
 
 #[test]
@@ -384,4 +427,41 @@ fn tiled_map_and_board_windows_attach_their_engines_on_the_same_production_seam(
     for surface_id in ["tiled-map-attach", "board2d-attach"] {
         drop_engine_surface(surface_id);
     }
+}
+
+/// 🧱️ The `boxed_fixed_slots` law for this module's fixed slot tables, against the one committed
+/// budget every implementation of it reads (`semio_framework_async::BOXED_FIXED_SLOTS_FIXTURE`).
+///
+/// Asserts the measured shape of each table (capacity, one slot's bytes, the owner's own bytes)
+/// against that record, that each owner is smaller than the table it owns — the structural proof the
+/// slots are heap-first rather than an inline `[T; N]` field — and then constructs them on a thread
+/// holding only the fixture's `boundedThreadStackBytes`. `Builder::stack_size` overrides
+/// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
+#[test]
+fn engine_canvas_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
+    let fixture: Value = serde_json::from_str(semio_framework_async::BOXED_FIXED_SLOTS_FIXTURE).expect("🧱️ the committed fixed-slot-table budget parses");
+    let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
+        .as_array()
+        .expect("🧱️ the budget lists its tables")
+        .iter()
+        .filter(|table| table["guard"] == "renderer::engine_canvas")
+        .map(|table| semio_framework_async::FixedSlotTableBudget::new(table["owner"].as_str().expect("owner"), table["capacity"].as_u64().expect("capacity") as usize, table["elementSizeBytes"].as_u64().expect("element bytes") as usize, table["ownerSizeBytes"].as_u64().expect("owner bytes") as usize))
+        .collect();
+    let measured = vec![
+        semio_framework_async::FixedSlotTableBudget::new("engine_canvas::EngineSurfaceRegistry", ENGINE_SURFACE_CAPACITY, size_of::<EngineSurfaceSlot>(), size_of::<EngineSurfaceRegistry>()),
+        semio_framework_async::FixedSlotTableBudget::new("engine_canvas::StagedEngineScenes", ENGINE_CANVAS_FRAME_PACKET_CAPACITY, size_of::<Option<StagedEngineScene>>(), size_of::<StagedEngineScenes>()),
+        semio_framework_async::FixedSlotTableBudget::new("engine_canvas::EngineCanvasBuildContext", ENGINE_CANVAS_FRAME_PACKET_CAPACITY, size_of::<Option<EngineCanvasPacket>>(), size_of::<EngineCanvasBuildContext>()),
+    ];
+    semio_framework_async::assert_fixed_slot_tables(
+        "renderer::engine_canvas",
+        fixture["boundedThreadStackBytes"].as_u64().expect("bounded stack budget") as usize,
+        fixture["conversionThresholdBytes"].as_u64().expect("conversion threshold") as usize,
+        &declared,
+        &measured,
+        || {
+        drop(EngineSurfaceRegistry::default());
+        drop(StagedEngineScenes::default());
+        drop(EngineCanvasBuildContext::default());
+        },
+    );
 }

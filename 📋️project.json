@@ -157,7 +157,8 @@
     },
     "reset-document-ownership": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify reset-document-ownership"
       }
@@ -633,7 +634,13 @@
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test metrics",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        { "runtime": "node -e \"const c=require('crypto'),f=require('fs'),p=require('path'),r=process.argv[1],h=c.createHash('sha256');(function walk(x){if(!f.existsSync(x))return;const s=f.lstatSync(x);if(s.isDirectory())for(const e of f.readdirSync(x).sort())walk(p.join(x,e));else if(s.isFile()){h.update(p.relative(r,x).split(p.sep).join('/')+String.fromCharCode(0));h.update(f.readFileSync(x));}})(r);process.stdout.write(h.digest('hex'));\" .\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache/tests/reports/latest/\ud83d\udcc8\ufe0fmetrics.json" }
+      ],
+      "outputs": []
     },
     "test-metrics-enforce": {
       "executor": "nx:run-commands",
@@ -641,7 +648,13 @@
       "cache": true,
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test metrics --enforce"
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        { "runtime": "node -e \"const c=require('crypto'),f=require('fs'),p=require('path'),r=process.argv[1],h=c.createHash('sha256');(function walk(x){if(!f.existsSync(x))return;const s=f.lstatSync(x);if(s.isDirectory())for(const e of f.readdirSync(x).sort())walk(p.join(x,e));else if(s.isFile()){h.update(p.relative(r,x).split(p.sep).join('/')+String.fromCharCode(0));h.update(f.readFileSync(x));}})(r);process.stdout.write(h.digest('hex'));\" .\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache/tests/reports/latest/\ud83d\udcc8\ufe0fmetrics.json" }
+      ],
+      "outputs": []
     },
     "test-report": {
       "executor": "nx:run-commands",
@@ -978,7 +991,10 @@
     "verify-dependencies-freeze-write-baseline": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
+      "outputs": [
+        "{workspaceRoot}/\ud83d\udd12\ufe0fdependencies.json"
+      ],
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify dependencies write-baseline"
       }
@@ -989,6 +1005,102 @@
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify abstraction-ownership",
         "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "verify-policy-breach-artifact-builder": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify policy-breach artifact-builder"
+      },
+      "outputs": []
+    },
+    "verify-policy-breach-artifact-decomposer": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify policy-breach artifact-decomposer"
+      },
+      "outputs": []
+    },
+    "verify-policy-breach-schema-representation": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify policy-breach schema-representation"
+      },
+      "outputs": []
+    },
+    "verify-policy-breach-io-serializer-matrix": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify policy-breach io-serializer-matrix"
+      },
+      "outputs": []
+    },
+    "verify-policy-breach-io-terminality": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify policy-breach io-terminality"
+      },
+      "outputs": []
+    },
+    "verify-policy-breach-codec-fidelity": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify policy-breach codec-fidelity"
+      },
+      "outputs": []
+    },
+    "verify-policy-breach-standards-coverage": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify policy-breach standards-coverage"
+      },
+      "outputs": []
+    },
+    "verify-policy-breach-artifact-analyzer": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify policy-breach artifact-analyzer"
+      },
+      "outputs": []
+    },
+    "verify-policy-breach-artifact-composer": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify policy-breach artifact-composer"
+      },
+      "outputs": []
+    },
+    "verify-policy-breach-artifact-builder-migrated": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify policy-breach artifact-builder-migrated"
+      },
+      "outputs": []
+    },
+    "verify-policy-breach-plugin-dependency-parity": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify policy-breach plugin-dependency-parity"
+      },
+      "outputs": []
+    },
+    "verify-policy-breach-contribution-target": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify policy-breach contribution-target"
       },
       "outputs": []
     },
@@ -1042,7 +1154,10 @@
     "verify-layering-write-baseline": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
+      "outputs": [
+        "{workspaceRoot}/\ud83e\uddc5\ufe0flayering.json"
+      ],
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify layering write-baseline"
       }
@@ -1284,7 +1399,7 @@
     },
     "prepare": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         "@semio-tech/framework-schema:generate",
@@ -1452,6 +1567,22 @@
       },
       "outputs": []
     },
+    "test-publication-retirement-authority": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify publication-retirement-authority"
+      },
+      "outputs": []
+    },
+    "test-publication-retirement-authority-oracle": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify publication-retirement-authority oracle"
+      },
+      "outputs": []
+    },
     "test-wires-window-transient": {
       "executor": "nx:run-commands",
       "cache": true,
@@ -1501,7 +1632,8 @@
     },
     "artifact-field-parity-report": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify artifact-field-parity report"
       }

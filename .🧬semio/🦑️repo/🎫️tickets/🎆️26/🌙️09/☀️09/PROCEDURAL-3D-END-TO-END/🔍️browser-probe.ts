@@ -12,6 +12,9 @@ import { chromium, type ConsoleMessage, type Page, type Request, type Response }
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+/** 🧯 JSON.stringify that survives BigInt values in page snapshots. */
+const jsonSafe = (value: unknown, indent?: number): string => JSON.stringify(value, (_k, v) => (typeof v === "bigint" ? Number(v) : v), indent);
+
 type ConsoleRow = {
   at: string;
   elapsedMs: number;
@@ -90,6 +93,10 @@ const steps = (arg("steps") ?? "example,hover,select,orbit")
   .filter(Boolean);
 const example = arg("example") ?? "box-shell-preview";
 const settleSec = Number(arg("settle") ?? "90");
+/** ⏳️ Extra quiet seconds AFTER the first mesh lands, before the first gesture — the preview keeps
+ * evaluating channels for a while, and a fixed-position pick that fires too early lands on empty
+ * background instead of the solid. */
+const preDelaySec = Number(arg("predelay") ?? "0");
 const label = arg("label") ?? "boot-13-pre";
 const headed = has("headed");
 const navTimeoutMs = Number(arg("timeout") ?? "90") * 1000;
@@ -278,7 +285,7 @@ const dismissIntro = async (page: Page) => {
 
 const writeJson = (name: string, value: unknown) => {
   const path = join(runDir, name);
-  writeFileSync(path, JSON.stringify(value, null, 2));
+  writeFileSync(path, jsonSafe(value, null, 2));
   return path;
 };
 
@@ -292,10 +299,10 @@ const diagnosisOf = (snap: Snapshot | null, navError?: string): { ok: boolean; l
   const chrome = snap.chrome.navbar || tabs.length > 0 || /procedural/i.test(snap.title);
   if (bodyFatal) return { ok: false, fatal: true, line: `boot fault: ${snap.visibleFaults[0] || "No plugins loaded"}` };
   if (consoleFatal && !bodies) return { ok: false, fatal: true, line: `boot fault: ${consoleFatal.slice(0, 220)}` };
-  if (!bodies && chrome) return { ok: false, fatal: true, line: `boot fault: chrome rendered but window bodies empty (tabs=${tabs.join(",") || "none"}; title=${JSON.stringify(snap.title)})` };
-  if (!bodies) return { ok: false, fatal: true, line: `boot fault: shell did not render (title=${JSON.stringify(snap.title)} windows=0 canvases=${snap.canvases.length})` };
+  if (!bodies && chrome) return { ok: false, fatal: true, line: `boot fault: chrome rendered but window bodies empty (tabs=${tabs.join(",") || "none"}; title=${jsonSafe(snap.title)})` };
+  if (!bodies) return { ok: false, fatal: true, line: `boot fault: shell did not render (title=${jsonSafe(snap.title)} windows=0 canvases=${snap.canvases.length})` };
   if (consoleFatal) return { ok: false, fatal: true, line: `boot fault after chrome: ${consoleFatal.slice(0, 220)}` };
-  const previewFault = snap.visibleFaults[0] || (typeof snap.previewHosts[0]?.status === "object" && snap.previewHosts[0]?.status && /fault/i.test(JSON.stringify(snap.previewHosts[0].status)) ? JSON.stringify(snap.previewHosts[0].status).slice(0, 180) : "");
+  const previewFault = snap.visibleFaults[0] || (typeof snap.previewHosts[0]?.status === "object" && snap.previewHosts[0]?.status && /fault/i.test(jsonSafe(snap.previewHosts[0].status)) ? jsonSafe(snap.previewHosts[0].status).slice(0, 180) : "");
   const extra = previewFault ? `; preview: ${previewFault}` : snap.meshCount === 0 ? "; preview meshes=0" : "";
   return { ok: true, fatal: false, line: `shell rendered; windows=${snap.windowIds.join(",") || tabs.join(",")}; meshes=${snap.meshCount}${extra}` };
 };
@@ -320,7 +327,7 @@ const waitSettle = async (page: Page): Promise<Snapshot> => {
     const bodies = last.windows.length > 0 || last.windowIds.length > 0 || last.canvases.length > 0;
     const tabs = [...new Set(last.windowTabs.map((t) => t.windowId))];
     const fatal = /No plugins loaded/i.test(last.bodyText);
-    if (i === 0 || i % 4 === 0) log(`waiting… title=${JSON.stringify(last.title)} tabs=${tabs.join(",") || "0"} bodies=${last.windowIds.length} canvases=${last.canvases.length} meshes=${last.meshCount} faults=${last.visibleFaults.length}`);
+    if (i === 0 || i % 4 === 0) log(`waiting… title=${jsonSafe(last.title)} tabs=${tabs.join(",") || "0"} bodies=${last.windowIds.length} canvases=${last.canvases.length} meshes=${last.meshCount} faults=${last.visibleFaults.length}`);
     if (fatal && Date.now() - t0 > 8000) {
       log("visible 'No plugins loaded' after 8s — treating as settled fault");
       break;
@@ -328,7 +335,7 @@ const waitSettle = async (page: Page): Promise<Snapshot> => {
     if (bodies && Date.now() - t0 > 6000) {
       await page.waitForTimeout(2500);
       last = await takeSnapshot(page);
-      log(`settled: windows=${JSON.stringify(last.windowIds)} canvases=${last.canvases.length} meshes=${last.meshCount}`);
+      log(`settled: windows=${jsonSafe(last.windowIds)} canvases=${last.canvases.length} meshes=${last.meshCount}`);
       break;
     }
     await page.waitForTimeout(2000);
@@ -350,7 +357,7 @@ const runStep = async (page: Page, name: string, fn: () => Promise<void>) => {
     await page.waitForTimeout(2500);
     const snap = await takeSnapshot(page);
     const arts = await captureSettleArtifacts(page, `step-${name}`, snap);
-    log(`step ${name}: ok windows=${snap.windowIds.length} meshes=${snap.meshCount} example=${JSON.stringify(snap.example)} newConsole=${consoleRows.length - before} png=${arts.png}`);
+    log(`step ${name}: ok windows=${snap.windowIds.length} meshes=${snap.meshCount} example=${jsonSafe(snap.example)} newConsole=${consoleRows.length - before} png=${arts.png}`);
     return snap;
   } catch (e) {
     log(`step ${name}: FAILED ${String(e).slice(0, 300)}`);
@@ -360,13 +367,29 @@ const runStep = async (page: Page, name: string, fn: () => Promise<void>) => {
   }
 };
 
+const waitMeshes = async (page: Page): Promise<Snapshot> => {
+  const deadline = Date.now() + settleSec * 1000;
+  let last = await takeSnapshot(page);
+  while (last.meshCount === 0 && Date.now() < deadline) {
+    await page.waitForTimeout(2000);
+    last = await takeSnapshot(page);
+  }
+  log(`meshes ready: meshes=${last.meshCount} after ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+  return last;
+};
+
 const interact = async (page: Page) => {
+  if (steps.some((s) => ["hover", "select", "orbit"].includes(s))) await waitMeshes(page);
+  if (preDelaySec > 0) {
+    log(`predelay ${preDelaySec}s before the first gesture`);
+    await page.waitForTimeout(preDelaySec * 1000);
+  }
   if (steps.includes("example")) {
     await runStep(page, "example", async () => {
       const select = page.locator("select").first();
       if (await select.count()) {
         const opts = await select.locator("option").allTextContents();
-        log(`example <select> options=${JSON.stringify(opts).slice(0, 300)}`);
+        log(`example <select> options=${jsonSafe(opts).slice(0, 300)}`);
         const byValue = await select.locator(`option[value="${example}"]`).count();
         if (byValue) await select.selectOption(example);
         else {
@@ -457,7 +480,7 @@ try {
   let navError: string | undefined;
   try {
     const res = await page.goto(url, { waitUntil: "domcontentloaded", timeout: navTimeoutMs });
-    log(`navigated status=${res?.status() ?? "?"} title=${JSON.stringify(await page.title())}`);
+    log(`navigated status=${res?.status() ?? "?"} title=${jsonSafe(await page.title())}`);
     if (!res || res.status() >= 400) navError = `HTTP ${res?.status() ?? "no-response"}`;
   } catch (e) {
     navError = String(e).slice(0, 240);
@@ -541,15 +564,15 @@ const summary = {
 };
 
 flushConsole.flush();
-writeFileSync(join(runDir, "console.jsonl"), consoleRows.map((r) => JSON.stringify(r)).join("\n") + (consoleRows.length ? "\n" : ""));
-writeFileSync(join(runDir, "network.jsonl"), networkFails.map((r) => JSON.stringify(r)).join("\n") + (networkFails.length ? "\n" : ""));
-writeFileSync(join(runDir, "page-faults.jsonl"), pageFaults.map((r) => JSON.stringify(r)).join("\n") + (pageFaults.length ? "\n" : ""));
+writeFileSync(join(runDir, "console.jsonl"), consoleRows.map((r) => jsonSafe(r)).join("\n") + (consoleRows.length ? "\n" : ""));
+writeFileSync(join(runDir, "network.jsonl"), networkFails.map((r) => jsonSafe(r)).join("\n") + (networkFails.length ? "\n" : ""));
+writeFileSync(join(runDir, "page-faults.jsonl"), pageFaults.map((r) => jsonSafe(r)).join("\n") + (pageFaults.length ? "\n" : ""));
 writeFileSync(join(runDir, "probe.log"), logLines.join("\n") + "\n");
 writeJson("summary.json", summary);
 
 const baselinePrefix = join(GENERATED, label);
-writeFileSync(`${baselinePrefix}-summary.json`, JSON.stringify(summary, null, 2));
-writeFileSync(`${baselinePrefix}-console.jsonl`, consoleRows.map((r) => JSON.stringify(r)).join("\n") + (consoleRows.length ? "\n" : ""));
+writeFileSync(`${baselinePrefix}-summary.json`, jsonSafe(summary, null, 2));
+writeFileSync(`${baselinePrefix}-console.jsonl`, consoleRows.map((r) => jsonSafe(r)).join("\n") + (consoleRows.length ? "\n" : ""));
 writeFileSync(`${baselinePrefix}-diagnosis.txt`, `${observedAt}\n${diagnosis}\n`);
 writeFileSync(`${baselinePrefix}-probe.log`, logLines.join("\n") + "\n");
 try {

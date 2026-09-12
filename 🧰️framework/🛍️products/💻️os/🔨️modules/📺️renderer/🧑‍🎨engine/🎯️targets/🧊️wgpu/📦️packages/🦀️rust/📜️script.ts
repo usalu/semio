@@ -27,15 +27,15 @@ import {
 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { startAssetServer } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
 import { buildCargoArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
+import { pluginModulesRoot } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import type { PlaygroundAssetSpec } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
 
-import { checkBrowserBoot, renderBrowserEntry } from "../../⚙️browser-build/🟦️.ts";
+import { assertBundleModuleRoutes, checkBrowserBoot, renderBrowserEntry } from "../../⚙️browser-build/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
 const crateName = "semio-framework-os-renderer-wgpu";
 const outDir = join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules/🧊️wgpu");
-const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules");
 const NATIVE_RUNNER_BENIGN_ENV_KEY = "SEMIO_DIRECT_CHILD_BENIGN";
 const NATIVE_RUNNER_BENIGN_ENV_VALUE = "preserved";
 
@@ -220,6 +220,7 @@ class TrunkBuildScript extends BundleScript {
     ensureWasmTarget();
     await checkBrowserBoot(this.root);
     await checkFrameWorker(this.root);
+    assertBundleModuleRoutes(this.root);
     mkdirSync(outDir, { recursive: true });
     const release = segments.includes("--release") || segments.includes("--dist");
     const args = ["build", "--config", "Trunk.toml"];
@@ -236,6 +237,7 @@ class TrunkServeScript extends BundleScript {
     ensureWasmTarget();
     await checkBrowserBoot(this.root);
     await checkFrameWorker(this.root);
+    assertBundleModuleRoutes(this.root);
     const program = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
     ensureAssetServer(program);
     const catalog = loadFrameworkOsPlaygroundCatalog();
@@ -243,7 +245,8 @@ class TrunkServeScript extends BundleScript {
     const port = process.env.S_OS_PORT ?? defaultPort;
     const extra = segments.filter((segment, index, all) => segment !== "--port" && all[index - 1] !== "--port");
     const args = ["serve", "--config", "Trunk.toml", "--port", port, ...extra];
-    if (process.env.SEMIO_PARITY_QUIET_CARGO === "1") args.push("--ignore", pluginOutRoot);
+    const profile = process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
+    if (process.env.SEMIO_PARITY_QUIET_CARGO === "1") args.push("--ignore", pluginModulesRoot(profile));
     if ((await runInteractiveCommand("trunk", args, this.root, trunkEnv())) !== 0) throw new Error("trunk serve failed for wgpu renderer");
   }
 }
@@ -294,11 +297,13 @@ class NativeRunScript extends BundleScript {
       return;
     }
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
-    const osDevScript = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
-    if (runCmdStatus("bun", [osDevScript, "plugin", filterPlugin], { cwd: repoRoot, env: { ...process.env, SEMIO_RENDERER: "wgpu", SEMIO_PLUGIN: filterPlugin }, ...orchestratorBudgetOpts() }) !== 0) throw new Error(`Plugin preparation failed: ${filterPlugin}`);
+    // 🧊️ Delegates to the Nx-cached `activate-<variant>-wgpu-<profile>` target (`playgroundPreparationTargets`
+    // in `…🦑️repo/🔨️modules/📚️library/🟨️.mjs`) instead of a raw `plugin` build — a warm cache restores the
+    // per-variant/profile module directory below instantly rather than rebuilding the whole catalog serially.
+    if (runCmdStatus("bun", ["nx", "run", `@semio-tech/framework-os-dev:activate-${filterPlugin}-wgpu-${profile}`], { cwd: repoRoot, ...orchestratorBudgetOpts() }) !== 0) throw new Error(`Plugin activation failed: ${filterPlugin}`);
     ensureAssetServer(filterPlugin);
     const nativeEnv = nativeRunnerEnvironment(process.env);
-    nativeEnv.SEMIO_PLUGIN_MODULES = pluginOutRoot;
+    nativeEnv.SEMIO_PLUGIN_MODULES = pluginModulesRoot(profile as "dev" | "release");
     if (variantAssetSpecs(filterPlugin).length > 0) {
       nativeEnv[SEMIO_ASSET_BASE_URL_ENV] = assetServerBaseUrl();
     }

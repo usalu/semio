@@ -489,6 +489,48 @@ opt-level = 2
 [profile.wasm-dev.package.semio-s-artifact-puzzle-3d]
 opt-level = 2
 
+# 🎚️ Same interactive-step contract as lowpoly/puzzle3d above, measured on the procedural
+# generation3d flow chain (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+# `📓️audit-guest-tick-cost-2026-09-12.md`): `flowEvalTick` is a SYNCHRONOUS, non-preemptible guest
+# step, and in the browser each of its five hops sat in one silent reactor turn for 3.5-18.4 s
+# against the same 8 ms budget, converging the example in ~130 s. The identical code path measures
+# 2.3-7.4 ms NATIVELY at `opt-level = 0`, so the overrun is the wasm baseline tier executing
+# unoptimized code, not the algorithm. The seven packages below are exactly the crates a
+# `flowEvalTick` hop executes, read off `cargo tree -p semio-s-plugin-procedural
+# --target wasm32-wasip2 -e normal`: the plugin's own tick/preview payload, the flow host plus its
+# BREP kernel, the topological dag walk, the per-node value model and its JSON codec, and the two
+# extension components that answer `evaluate`/`tessellate`. `2` (not `1`) matches the two
+# precedents above rather than introducing a third tuning value.
+
+# 🎚️ Hosts `flowEvalTick`, `FlowEvalSession::tick`, the preview payload and the tessellation cache.
+[profile.wasm-dev.package.semio-s-plugin-procedural]
+opt-level = 2
+
+# 🎚️ `FlowHost::evaluate_step` and `brep_geometry::{evaluate_invoke_json, tessellate_step_envelope_json}`
+# — the solid-modeling kernel every flow-domain plugin shares.
+[profile.wasm-dev.package.semio-framework-os-flow]
+opt-level = 2
+
+# 🎚️ `Evaluator::evaluate_channels_budgeted` — the topological dag walk itself, run once per hop.
+[profile.wasm-dev.package.semio-framework-os-kernel-neural-engine]
+opt-level = 2
+
+# 🎚️ `DslValue`/`OrderedMap` — the per-neuron `Dictionary` every walk clones, merges and hashes.
+[profile.wasm-dev.package.semio-framework-replication]
+opt-level = 2
+
+# 🎚️ `pack::json` — the codec that serializes each node's input/output payload on the same hop.
+[profile.wasm-dev.package.semio-framework-pack]
+opt-level = 2
+
+# 🎚️ Answers `capability: evaluate`/`tessellate` for the BREP operators the example drives.
+[profile.wasm-dev.package.semio-s-plugin-flow-extension-brep]
+opt-level = 2
+
+# 🎚️ Answers `capability: evaluate` for the math operators the same graph drives.
+[profile.wasm-dev.package.semio-s-plugin-flow-extension-math]
+opt-level = 2
+
 # 🚀️ Ship profile for native binaries (`cargo build --release`, os-run in CI).
 # Dev loops use `[profile.dev]` only — see root `📜️script.ts` `os run` and wgpu native defaults.
 [profile.release]

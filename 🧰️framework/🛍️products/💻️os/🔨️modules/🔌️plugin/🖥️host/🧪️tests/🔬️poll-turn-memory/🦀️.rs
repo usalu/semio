@@ -17,6 +17,16 @@ use super::*;
 /// 📐️ One wasm page — the tolerance the flatness law admits over the whole run.
 const GUEST_PAGE_BYTES: usize = 65_536;
 
+/// 🔒️ `semio_framework_job::set_runtime_diagnostics` is a PROCESS-WIDE switch, and `cargo test` runs
+/// this file's laws on parallel threads in one binary — so a law that arms it would otherwise change
+/// what a sibling law's guest does mid-run. Every law here that instantiates a component takes this
+/// first, which makes them sequential with respect to each other and to nothing else.
+static WASM_HOST_SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn wasm_host_serial() -> std::sync::MutexGuard<'static, ()> {
+    WASM_HOST_SERIAL.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 /// 🔁️ Drives `turns` idle `poll` turns and returns `(bytes after instantiate, per-turn readings,
 /// turns that answered `MoreWork`)`. Acknowledges every lifecycle receipt the guest publishes, the
 /// way a real host does — an open the host never acknowledges is retained state the guest re-offers
@@ -100,8 +110,78 @@ fn staged_actor_component() -> Option<std::path::PathBuf> {
     staged.exists().then_some(staged)
 }
 
+/// ⚖️ LAW: the guest's own runtime diagnostics are REACHABLE from a wasm host — a real
+/// `wasm32-wasip2` component, booted with the host's diagnostics armed, prints the same `[DEBUG]`
+/// lines the native in-process suites print, through `wasi:cli/environment` and `wasi:cli/stderr`.
+///
+/// 🐛️ Regression guard for `📓️audit-guest-tick-cost-2026-09-12.md` §0: the browser's
+/// `localStorage.SEMIO_RUNTIME_DIAGNOSTICS` switch armed only TYPESCRIPT-side traces, and the
+/// guest's `runtime_diagnostics_from_environment()` resolved against an environment no host ever
+/// populated — so every Rust-side probe this ticket added was invisible in every browser capture,
+/// and the 3.5-18.4 s per-hop cost could not be attributed to a function. Nothing in a native
+/// in-process suite can catch that: `std::env::var` there reads the TEST's own environment. Only a
+/// real component behind a real `wasi:cli/environment` can, which is what this drives.
+///
+/// 🔇️ The mirror half matters just as much: with diagnostics OFF the same component must print
+/// NOTHING, because those sites are byte-proportional work an interactive boot must never pay for.
+#[semio_framework_async_macros::async_test]
+async fn an_armed_host_reaches_the_guests_own_runtime_diagnostics() {
+    let _serial = wasm_host_serial();
+    let Some(component) = staged_actor_component() else {
+        eprintln!("[DEBUG] no staged wasm32-wasip2 actor component — build one with `cargo build -p semio-s-plugin-procedural --target wasm32-wasip2 --profile wasm-dev`");
+        return;
+    };
+    let turns: usize = std::env::var("SEMIO_POLL_TURN_DIAGNOSTICS_TURNS").ok().and_then(|value| value.parse().ok()).unwrap_or(24);
+    let silent = drive_diagnostics_turns(&component, turns, false).await;
+    let armed = drive_diagnostics_turns(&component, turns, true).await;
+    eprintln!("[DEBUG] guest stderr: disarmed={:?} armed={} bytes", silent.as_ref().map(String::len), armed.as_deref().map(str::len).unwrap_or(0));
+    for line in armed.as_deref().unwrap_or_default().lines().take(16) {
+        eprintln!("[DEBUG] guest said: {line}");
+    }
+    assert_eq!(silent.as_deref(), None, "a host with diagnostics OFF must hand the guest no environment and no stderr sink at all, got {silent:?}");
+    let armed = armed.expect("an armed host retains the guest's stderr");
+    assert!(armed.contains("[DEBUG]"), "an armed host must reach the guest's own `[DEBUG]` trace sites; the component printed {} bytes and none of them were a trace line:\n{armed}", armed.len());
+}
+
+/// 🩺️ Boots the staged component with the process-wide diagnostics switch forced to `armed`, drives
+/// `turns` idle turns, and returns whatever the guest wrote to `wasi:cli/stderr`. The switch is a
+/// process-wide atomic, so the two halves of the law above run in ONE test, sequentially, rather
+/// than racing each other across two `#[test]`s in the same binary.
+async fn drive_diagnostics_turns(component: &std::path::Path, turns: usize, armed: bool) -> Option<String> {
+    semio_framework_job::set_runtime_diagnostics(armed);
+    let bytes = std::fs::read(component).unwrap_or_else(|error| panic!("read {}: {error}", component.display()));
+    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
+    let hash = *semio_framework_hash::hash(&bytes).as_bytes();
+    let package = PackageRef { package: PackageId(format!("poll-turn-diagnostics-{armed}")), hash: PackageHash(hash) };
+    let compiled = runtime.compile(&package, &bytes).await.expect("the staged actor component compiles");
+    let budget = Budget { fuel: u64::MAX, deadline_ms: 60_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 64 };
+    let mut instance = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).await.expect("the staged actor component instantiates");
+    let app_id = std::env::var("SEMIO_POLL_TURN_LEAK_APP").unwrap_or_else(|_| "s.procedural.generation3d@1/*#editor".to_string());
+    let mut events: Vec<Event> = vec![Event::InstanceOpen {
+        request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: 1, request_sequence: 1 },
+        app_id: semio_framework::AppInstanceId(app_id),
+        actor: "poll-turn-diagnostics".to_string(),
+        config: Vec::new(),
+        assets: Vec::new(),
+        capabilities: Vec::new(),
+        quotas: Default::default(),
+    }];
+    for turn in 0..turns {
+        match runtime.execute_turn(&mut instance, &events, budget).await {
+            Ok(result) => {
+                events = result.lifecycle_receipt.map(|receipt| vec![Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt })]).unwrap_or_default();
+            }
+            Err(fault) => panic!("diagnostics turn {turn} faulted: {fault:?}"),
+        }
+    }
+    let text = instance.guest_diagnostics_text();
+    semio_framework_job::set_runtime_diagnostics(false);
+    text
+}
+
 #[semio_framework_async_macros::async_test]
 async fn the_poll_export_keeps_guest_linear_memory_flat_across_turns() {
+    let _serial = wasm_host_serial();
     let Some(component) = staged_actor_component() else {
         eprintln!("[DEBUG] no staged wasm32-wasip2 actor component — build one with `cargo build -p semio-s-plugin-procedural --target wasm32-wasip2 --profile wasm-dev`");
         return;

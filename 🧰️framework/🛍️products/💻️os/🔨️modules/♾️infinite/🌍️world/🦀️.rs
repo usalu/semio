@@ -175,15 +175,15 @@ impl WorldCursorWakeAuthority {
 impl World3dBuildContext {
     pub fn new(cursor_wake: WorldCursorWakeAuthority) -> Self {
         Self {
-            uploads: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
+            uploads: semio_framework_async::boxed_fixed_slots(|| None),
             upload_len: 0,
-            raster_producers: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
+            raster_producers: semio_framework_async::boxed_fixed_slots(|| None),
             raster_producer_len: 0,
-            evictions: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
+            evictions: semio_framework_async::boxed_fixed_slots(|| None),
             eviction_len: 0,
-            mesh_requests: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
+            mesh_requests: semio_framework_async::boxed_fixed_slots(|| None),
             mesh_request_len: 0,
-            raster_requests: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
+            raster_requests: semio_framework_async::boxed_fixed_slots(|| None),
             raster_request_len: 0,
             rejected: None,
             cursor_wake,
@@ -757,7 +757,7 @@ struct WorldDynamicInsertPlan {
 
 impl<T, const N: usize> Default for WorldDynamicRegistry<T, N> {
     fn default() -> Self {
-        Self { slots: Box::new([const { None }; N]), epochs: [0; N], len: 0, closing: false }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; N], len: 0, closing: false }
     }
 }
 
@@ -909,7 +909,7 @@ struct WorldDrawRegistry {
 
 impl Default for WorldDrawRegistry {
     fn default() -> Self {
-        Self { slots: Box::new([const { None }; WORLD_DYNAMIC_DRAW_CAPACITY]), epochs: [0; WORLD_DYNAMIC_DRAW_CAPACITY], len: 0, closing: false }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; WORLD_DYNAMIC_DRAW_CAPACITY], len: 0, closing: false }
     }
 }
 
@@ -1102,7 +1102,7 @@ impl WorldDrawRebuildCursor {
         }
         Ok(Self {
             descriptor,
-            drafts: Box::new([const { None }; WORLD_DYNAMIC_DRAW_CAPACITY]),
+            drafts: semio_framework_async::boxed_fixed_slots(|| None),
             admitted_draws: 0,
             admitted_instances: 0,
             admitted_bytes: 0,
@@ -1232,7 +1232,7 @@ struct WorldOpaqueQuarantine<const N: usize> {
 
 impl<const N: usize> Default for WorldOpaqueQuarantine<N> {
     fn default() -> Self {
-        Self { slots: Box::new([const { None }; N]), len: 0, saturated: 0 }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), len: 0, saturated: 0 }
     }
 }
 
@@ -2012,7 +2012,7 @@ fn mesh3d_schema_bytes(schema: Mesh3dSchema) -> Option<usize> {
 
 impl Default for WorldInteractionMeshRegistry {
     fn default() -> Self {
-        Self { slots: Box::new([None; WORLD_INTERACTION_MESH_CAPACITY]), epochs: Box::new([0; WORLD_INTERACTION_MESH_CAPACITY]), faulted: false }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: semio_framework_async::boxed_fixed_slots(|| 0), faulted: false }
     }
 }
 
@@ -2144,9 +2144,9 @@ struct WorldInteractionObjectRegistry {
 impl Default for WorldInteractionObjectRegistry {
     fn default() -> Self {
         Self {
-            slots: Box::new([None; WORLD_INTERACTION_OBJECT_CAPACITY]),
-            epochs: Box::new([0; WORLD_INTERACTION_OBJECT_CAPACITY]),
-            instance_order: Box::new([None; WORLD_INTERACTION_OBJECT_CAPACITY]),
+            slots: semio_framework_async::boxed_fixed_slots(|| None),
+            epochs: semio_framework_async::boxed_fixed_slots(|| 0),
+            instance_order: semio_framework_async::boxed_fixed_slots(|| None),
             instance_len: 0,
             revision: u64::MAX,
             faulted: false,
@@ -3135,11 +3135,11 @@ struct WorldMarqueePublishJob {
 impl WorldMarqueePublishJob {
     fn new(generation: u64, gesture: WorldMarqueeGesture, results: WorldMarqueeResultPages, shift: bool, ctrl: bool) -> Self {
         let merge = if shift {
-            merge_mode_wire_str(MergeMode::Additive)
+            MergeMode::Additive.wire_label()
         } else if ctrl {
-            merge_mode_wire_str(MergeMode::Invertive)
+            MergeMode::Invertive.wire_label()
         } else {
-            merge_mode_wire_str(MergeMode::Replace)
+            MergeMode::Replace.wire_label()
         };
         Self { generation, gesture, results, merge, prepared: None, draft: None, page: 0, stage: 0, published: false }
     }
@@ -3291,11 +3291,11 @@ struct WorldComponentMarqueePublishJob {
 impl WorldComponentMarqueePublishJob {
     fn new(generation: u64, gesture: WorldMarqueeGesture, results: WorldMarqueeResultPages, kind: WorldComponentKind, shift: bool, ctrl: bool) -> Self {
         let merge = if shift {
-            merge_mode_wire_str(MergeMode::Additive)
+            MergeMode::Additive.wire_label()
         } else if ctrl {
-            merge_mode_wire_str(MergeMode::Invertive)
+            MergeMode::Invertive.wire_label()
         } else {
-            merge_mode_wire_str(MergeMode::Replace)
+            MergeMode::Replace.wire_label()
         };
         Self {
             generation,
@@ -3343,7 +3343,7 @@ impl WorldComponentMarqueePublishJob {
     }
 
     fn merge_step(&mut self, state: &World3dState) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-        if self.merge != merge_mode_wire_str(MergeMode::Replace) && usize::from(self.existing_cursor) < state.component_ids.len() {
+        if self.merge != MergeMode::Replace.wire_label() && usize::from(self.existing_cursor) < state.component_ids.len() {
             let value = &state.component_ids[usize::from(self.existing_cursor)];
             self.existing_cursor += 1;
             if value.len() > 10 {
@@ -3359,7 +3359,7 @@ impl WorldComponentMarqueePublishJob {
             };
             state.interaction_objects.resolve(object).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
             self.result_cursor += 1;
-            if self.merge == merge_mode_wire_str(MergeMode::Invertive) {
+            if self.merge == MergeMode::Invertive.wire_label() {
                 if let Some(position) = self.find(id) {
                     self.remove(position);
                 } else if !self.add(id) {
@@ -3777,9 +3777,9 @@ impl WorldRayPickCursor {
                     let domain = plan.push_string(resolved_domain_id(state)).ok_or(WorldInteractionStep::Fault)?;
                     let merge = plan
                         .push_string(match self.merge {
-                            1 => merge_mode_wire_str(MergeMode::Additive),
-                            2 => merge_mode_wire_str(MergeMode::Invertive),
-                            _ => merge_mode_wire_str(MergeMode::Replace),
+                            1 => MergeMode::Additive.wire_label(),
+                            2 => MergeMode::Invertive.wire_label(),
+                            _ => MergeMode::Replace.wire_label(),
                         })
                         .ok_or(WorldInteractionStep::Fault)?;
                     let method = plan.push_string(selection_method_wire_str(SelectionMethod::Pick)).ok_or(WorldInteractionStep::Fault)?;
@@ -3818,9 +3818,9 @@ impl WorldRayPickCursor {
                 let granularity = plan.push_string(resolved_domain_granularity_id(state)).ok_or(WorldInteractionStep::Fault)?;
                 let merge = plan
                     .push_string(match self.merge {
-                        1 => merge_mode_wire_str(MergeMode::Additive),
-                        2 => merge_mode_wire_str(MergeMode::Invertive),
-                        _ => merge_mode_wire_str(MergeMode::Replace),
+                        1 => MergeMode::Additive.wire_label(),
+                        2 => MergeMode::Invertive.wire_label(),
+                        _ => MergeMode::Replace.wire_label(),
                     })
                     .ok_or(WorldInteractionStep::Fault)?;
                 let method = plan.push_string(selection_method_wire_str(SelectionMethod::Pick)).ok_or(WorldInteractionStep::Fault)?;
@@ -3963,9 +3963,9 @@ impl WorldObjectPickCursor {
                 let hit = plan.push_string(entry.id.as_str()).ok_or(WorldInteractionStep::Fault)?;
                 let merge = plan
                     .push_string(match self.merge {
-                        1 => "add",
-                        2 => "toggle",
-                        _ => "replace",
+                        1 => MergeMode::Additive.wire_label(),
+                        2 => MergeMode::Invertive.wire_label(),
+                        _ => MergeMode::Replace.wire_label(),
                     })
                     .ok_or(WorldInteractionStep::Fault)?;
                 WorldFlatAction { kind: WorldFlatActionKind::VortexSelect, strings: [Some(controller), Some(surface), Some(hit), Some(merge), None, None, None, None], numbers: [0.0; 10] }
@@ -4184,9 +4184,9 @@ impl WorldComponentPickCursor {
         let merge = if self.purpose == WorldComponentPickPurpose::Select {
             Some(
                 plan.push_string(match self.merge {
-                    1 => merge_mode_wire_str(MergeMode::Additive),
-                    2 => merge_mode_wire_str(MergeMode::Invertive),
-                    _ => merge_mode_wire_str(MergeMode::Replace),
+                    1 => MergeMode::Additive.wire_label(),
+                    2 => MergeMode::Invertive.wire_label(),
+                    _ => MergeMode::Replace.wire_label(),
                 })
                 .ok_or(WorldInteractionStep::Fault)?,
             )
@@ -10106,11 +10106,11 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
             if state.active_utility == "brush" || (state.active_utility == "select" && state.granularity == "vertex") {
                 if let Some(full_id) = pick_vortex_at(state, x, y, inner) {
                     let merge = if shift {
-                        "add"
+                        MergeMode::Additive.wire_label()
                     } else if ctrl {
-                        "toggle"
+                        MergeMode::Invertive.wire_label()
                     } else {
-                        "replace"
+                        MergeMode::Replace.wire_label()
                     };
                     return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldVortexSelect".into(), args: action_args(json!({ "surfaceId": state.surface_id, "fullId": full_id, "merge": merge })) });
                 }
@@ -10324,11 +10324,15 @@ fn handle_world3d_wheel(state: &mut World3dState, delta: f32) {
     state.orbit.zoom(delta);
 }
 
-fn merge_string_ids(existing: &[String], incoming: &[String], merge: &str) -> Vec<String> {
+/// 🎯️ Optimistic local set algebra over the ONE framework merge vocabulary — the five
+/// `MergeMode` words of `🕹️interaction/🧬️schema/🔣️.json` (fixture `🎯️merge-modes.json`). It takes a
+/// decoded mode, never a word: ticket 26/09/09/PROCEDURAL-3D-END-TO-END deleted this file's private
+/// `add`/`remove`/`toggle` spelling, which made `worldPick` and the domain-bound `interactionSelect`
+/// disagree about what a shift-click means. `Range` needs an ordered topology this local preview does
+/// not carry, so it replaces — the documented degradation, identical to `next_selection`'s.
+fn merge_string_ids(existing: &[String], incoming: &[String], merge: MergeMode) -> Vec<String> {
     match merge {
-        // 🕹️ `"additive"` is the framework `MergeMode` wire label (see `world_interaction_definition`);
-        // `"add"` is `worldPick`'s own pre-existing, untouched-this-wave vocabulary — both accepted here.
-        "add" | "additive" => {
+        MergeMode::Additive => {
             let mut merged = existing.to_vec();
             for id in incoming {
                 if !merged.contains(id) {
@@ -10337,7 +10341,7 @@ fn merge_string_ids(existing: &[String], incoming: &[String], merge: &str) -> Ve
             }
             merged
         }
-        "toggle" | "invertive" => {
+        MergeMode::Invertive => {
             let mut merged = existing.to_vec();
             for id in incoming {
                 if let Some(index) = merged.iter().position(|entry| entry == id) {
@@ -10348,7 +10352,8 @@ fn merge_string_ids(existing: &[String], incoming: &[String], merge: &str) -> Ve
             }
             merged
         }
-        _ => incoming.to_vec(),
+        MergeMode::Subtractive => existing.iter().filter(|id| !incoming.contains(id)).cloned().collect(),
+        MergeMode::Replace | MergeMode::Range => incoming.to_vec(),
     }
 }
 
@@ -10444,16 +10449,6 @@ fn parse_resolved_item_id<'a>(state: &World3dState, target_id: &'a str) -> Optio
     }
 }
 
-fn merge_mode_wire_str(merge: MergeMode) -> &'static str {
-    match merge {
-        MergeMode::Replace => "replace",
-        MergeMode::Additive => "additive",
-        MergeMode::Subtractive => "subtractive",
-        MergeMode::Invertive => "invertive",
-        MergeMode::Range => "range",
-    }
-}
-
 fn selection_method_wire_str(method: SelectionMethod) -> &'static str {
     match method {
         SelectionMethod::Pick => "pick",
@@ -10496,12 +10491,17 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
             }
         }
         "worldPick" => {
-            let merge = args.get("merge").and_then(|value| value.as_str()).unwrap_or("replace");
+            // 🕹️ An undecodable merge leaves this OPTIMISTIC LOCAL PREVIEW untouched — the word is
+            // outside `🕹️interaction`'s schema enum, so the authoritative path faults on it and the
+            // preview must not invent a meaning for it (see `MergeMode::from_wire_label`).
+            let Some(merge) = MergeMode::from_wire_label(args.get("merge").and_then(|value| value.as_str()).unwrap_or(MergeMode::Replace.wire_label())) else {
+                return;
+            };
             if let Some(granularity) = args.get("granularity").and_then(|value| value.as_str()) {
                 state.granularity = granularity.to_string();
             }
             if args.get("id").is_none_or(|value| value.is_null()) {
-                if merge == "replace" {
+                if merge == MergeMode::Replace {
                     state.component_ids.clear();
                 }
             } else if let Some(id) = args.get("id").and_then(dsl_id_to_string) {
@@ -10516,7 +10516,11 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
         // `next_selection`/`next_hover` machine (not this file) is the source of truth once the
         // round-trip settles.
         "interactionSelect" if args.get("domainId").and_then(|value| value.as_str()) == Some(resolved_domain_id(state)) => {
-            let merge = args.get("merge").and_then(|value| value.as_str()).unwrap_or("replace");
+            // 🕹️ Same preview contract as `worldPick` above — an unknown merge is the framework's
+            // fault to raise, never this preview's to guess.
+            let Some(merge) = MergeMode::from_wire_label(args.get("merge").and_then(|value| value.as_str()).unwrap_or(MergeMode::Replace.wire_label())) else {
+                return;
+            };
             let ids: Vec<String> = args
                 .get("targets")
                 .and_then(|value| value.as_array())
@@ -10612,15 +10616,15 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
 
 #[cfg(test)]
 fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: bool, ctrl: bool) -> Option<ActionDescriptor> {
-    // 🕹️ Canonical `MergeMode` wire labels (see `merge_mode_wire_str`) — `merge_string_ids` accepts
-    // these directly for both `worldPick` (unconverted, component-level picking) and the `interactionSelect`
-    // emission below, so this one computation feeds both branches unchanged.
+    // 🕹️ Canonical `MergeMode` wire labels (see `MergeMode::wire_label`) — `worldPick` (unconverted,
+    // component-level picking) and the `interactionSelect` emission below now speak the SAME five
+    // words, so this one computation feeds both branches unchanged.
     let merge = if shift {
-        merge_mode_wire_str(MergeMode::Additive)
+        MergeMode::Additive.wire_label()
     } else if ctrl {
-        merge_mode_wire_str(MergeMode::Invertive)
+        MergeMode::Invertive.wire_label()
     } else {
-        merge_mode_wire_str(MergeMode::Replace)
+        MergeMode::Replace.wire_label()
     };
     if state.interaction_mode == "paint" {
         return None;
@@ -10692,13 +10696,12 @@ fn instance_object_index(state: &World3dState, object_id: &str) -> Option<u32> {
 }
 
 #[cfg(test)]
-fn merge_u32_ids(existing: &[String], incoming: &[String], merge: &str) -> Vec<u32> {
+fn merge_u32_ids(existing: &[String], incoming: &[String], merge: MergeMode) -> Vec<u32> {
     let parse = |ids: &[String]| -> Vec<u32> { ids.iter().filter_map(|id| id.parse().ok()).collect() };
     let existing_ids = parse(existing);
     let incoming_ids = parse(incoming);
     match merge {
-        // 🕹️ `"additive"` is the framework `MergeMode` wire label — see `merge_string_ids`.
-        "add" | "additive" => {
+        MergeMode::Additive => {
             let mut merged = existing_ids;
             for id in incoming_ids {
                 if !merged.contains(&id) {
@@ -10707,7 +10710,7 @@ fn merge_u32_ids(existing: &[String], incoming: &[String], merge: &str) -> Vec<u
             }
             merged
         }
-        "toggle" | "invertive" => {
+        MergeMode::Invertive => {
             let mut merged = existing_ids;
             for id in incoming_ids {
                 if let Some(index) = merged.iter().position(|entry| *entry == id) {
@@ -10718,7 +10721,8 @@ fn merge_u32_ids(existing: &[String], incoming: &[String], merge: &str) -> Vec<u
             }
             merged
         }
-        _ => incoming_ids,
+        MergeMode::Subtractive => existing_ids.into_iter().filter(|id| !incoming_ids.contains(id)).collect(),
+        MergeMode::Replace | MergeMode::Range => incoming_ids,
     }
 }
 
@@ -10739,13 +10743,14 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
     };
     state.marquee_points.clear();
     state.marquee_preview_ids.clear();
-    // 🕹️ Canonical `MergeMode` wire labels — see `pick_select_action`'s identical rationale.
+    // 🕹️ ONE decoded `MergeMode` drives both the local merge and the wire word — see
+    // `pick_select_action`'s identical rationale.
     let merge = if shift {
-        merge_mode_wire_str(MergeMode::Additive)
+        MergeMode::Additive
     } else if ctrl {
-        merge_mode_wire_str(MergeMode::Invertive)
+        MergeMode::Invertive
     } else {
-        merge_mode_wire_str(MergeMode::Replace)
+        MergeMode::Replace
     };
     if component_mode_active(state) {
         let merged = merge_u32_ids(&state.component_ids, &ids, merge);
@@ -10768,7 +10773,7 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
         args: action_args(json!({
             "domainId": resolved_domain_id(state),
             "targets": targets,
-            "merge": merge,
+            "merge": merge.wire_label(),
             "method": selection_method_wire_str(SelectionMethod::Rectangle),
         })),
     })
@@ -11572,7 +11577,7 @@ pub struct WorldAssetIoAuthority {
 
 impl Default for WorldAssetIoAuthority {
     fn default() -> Self {
-        Self { slots: Box::new([const { None }; WORLD_ASSET_REQUEST_CAPACITY]), epochs: [0; WORLD_ASSET_REQUEST_CAPACITY], completed_cursor: 0, reserved_bytes: 0, closing: false }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; WORLD_ASSET_REQUEST_CAPACITY], completed_cursor: 0, reserved_bytes: 0, closing: false }
     }
 }
 
@@ -11614,7 +11619,7 @@ impl WorldAssetIoAuthority {
             url: url.to_owned(),
             reserved_bytes: byte_credits,
             received_bytes: 0,
-            pages: Box::new([const { None }; WORLD_ASSET_RESPONSE_PAGE_CAPACITY]),
+            pages: semio_framework_async::boxed_fixed_slots(|| None),
             page_len: 0,
             page_read: 0,
             close_page: 0,

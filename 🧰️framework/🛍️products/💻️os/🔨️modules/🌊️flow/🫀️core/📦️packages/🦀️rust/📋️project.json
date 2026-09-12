@@ -63,7 +63,8 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "bun ./📜️script.ts test",
-        "cwd": "{projectRoot}"
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
       }
     }
   },

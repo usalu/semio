@@ -1,0 +1,79 @@
+{
+  "provenance": {
+    "what": "Rows of the node-graph caption clipping law: a title and a measured width budget -> the string a presentation draws.",
+    "law": "A caption is the node's NAME clipped by the presentation's OWN text measure: the longest prefix that still fits `maxWidth` once `…` is appended, the whole string when it already fits, the bare `…` when not even one glyph plus the ellipsis fits, and nothing at all for empty text or a non-positive budget. Width is never answered by shrinking the font.",
+    "measure": "Every row is measured with the synthetic advance `charWidth * <characters>` (the ellipsis counts as one character) so both implementations are driven by the SAME measure; in production each presentation passes its own — the wgpu glyph atlas, the browser canvas `measureText`.",
+    "implementations": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🦀️.rs — canvas::text::ellipsize_by_measure",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx — dagEllipsizeByMeasure (the 2D replay overlay)",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs — fit_overlay_label_text (the wgpu shell)"
+    ],
+    "ellipsis": "…"
+  },
+  "rows": [
+    {
+      "name": "a-title-that-fits-is-drawn-whole",
+      "why": "The live generation3d title `extrude` at its own node width fits — one glyph was never a width verdict.",
+      "text": "extrude",
+      "maxWidth": 62.8,
+      "charWidth": 6.5,
+      "expect": "extrude"
+    },
+    {
+      "name": "a-title-wider-than-its-node-is-clipped-with-exactly-one-ellipsis",
+      "why": "The caption is clipped at the measured width, never shrunk to an unreadable font.",
+      "text": "Brep.solid.extrude",
+      "maxWidth": 60.0,
+      "charWidth": 6.0,
+      "expect": "Brep.soli…"
+    },
+    {
+      "name": "a-budget-too-narrow-for-one-glyph-yields-the-bare-ellipsis",
+      "why": "There is always a visible sign that a caption was clipped.",
+      "text": "ExtrudeCurve",
+      "maxWidth": 8.0,
+      "charWidth": 6.0,
+      "expect": "…"
+    },
+    {
+      "name": "a-multi-byte-title-clips-on-character-boundaries",
+      "why": "German captions must not be cut mid-codepoint — the second UI language of this repo.",
+      "text": "Höhenprofil",
+      "maxWidth": 40.0,
+      "charWidth": 6.0,
+      "expect": "Höhen…"
+    },
+    {
+      "name": "surrounding-whitespace-is-trimmed-before-measuring",
+      "why": "A padded operator name must not spend its budget on blanks.",
+      "text": "  vector  ",
+      "maxWidth": 100.0,
+      "charWidth": 6.0,
+      "expect": "vector"
+    },
+    {
+      "name": "an-empty-title-stays-empty",
+      "why": "A node with no name draws nothing rather than a lone ellipsis.",
+      "text": "   ",
+      "maxWidth": 100.0,
+      "charWidth": 6.0,
+      "expect": ""
+    },
+    {
+      "name": "a-non-positive-budget-draws-nothing",
+      "why": "A collapsed node has no room for a caption at all.",
+      "text": "polygon",
+      "maxWidth": 0.0,
+      "charWidth": 6.0,
+      "expect": ""
+    },
+    {
+      "name": "a-title-exactly-at-the-budget-is-not-clipped",
+      "why": "The comparison is inclusive, so a caption that just fits is never ellipsized.",
+      "text": "vector",
+      "maxWidth": 36.0,
+      "charWidth": 6.0,
+      "expect": "vector"
+    }
+  ]
+}

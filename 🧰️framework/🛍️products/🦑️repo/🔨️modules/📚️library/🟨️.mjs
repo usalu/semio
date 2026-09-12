@@ -24,7 +24,7 @@ const nxPath = (path) => path.split("\\").join("/");
 const owned = (path, root) => root === "." || path === root || path.startsWith(`${root}/`);
 const matchesCommand = (name, commands) => commands.some((command) => name === command || name.startsWith(`${command}-`));
 const matchesUncached = (name, policy) => policy.uncachedExact.includes(name) || matchesCommand(name, policy.uncached);
-const mutatingName = (name) => /write-baseline$|(?:^|-)(?:reset|clean|gc|prune|report|setup|fuzz)(?:-|$)/.test(name);
+const mutatingName = (name) => /(?:^|-)(?:clean|gc|prune|setup|fuzz)(?:-|$)/.test(name);
 const liveName = (name) => /(?:^|-)(?:e2e|live)(?:-|$)/.test(name);
 const verifyCommand = (target) => /(?:^|[\s"'])verify(?:[\s"']|$)/.test(target?.options?.command ?? "");
 const cacheableFamily = (name) => /^(test(?:-|$)|check(?:-|$)|lint(?:-|$)|typecheck(?:-|$)|format-check(?:-|$)|generate(?:-|$)|schema(?:-|$)|verify(?:-|$)|stdio(?:-|$)|build(?:-|$)|wasm$|native-build$|package$|extension-package$|cpp-(?:configure|build|test)$|graph-check$|policy-check$|artifact-check$|artifact-package-contract$|toolchain$)/.test(name) || /(?:^|-)contract(?:-|$)/.test(name) || /^generator(?:-|$)/.test(name) && !name.includes("generator-inputs");
@@ -375,6 +375,11 @@ function targetScriptClosure(target, workspaceRoot) {
   return entries.length ? relativeScriptInputs(entries, workspaceRoot) : undefined;
 }
 
+/** 🔐️ `cargo metadata --locked` validates the shared lock against every workspace manifest, so its replay must hash all of them. */
+function nativeLockInputs(command) {
+  return typeof command === "string" && command.includes(" native cargo metadata ") ? ["{workspaceRoot}/**/Cargo.toml", "{workspaceRoot}/Cargo.lock"] : [];
+}
+
 /** 🧭️ Adds the selected native target's local router and executable import closure. */
 function nativeTargetCommandInputs(target, workspaceRoot, fallback = nativeCommandInputs(workspaceRoot)) {
   const closure = targetScriptClosure(target, workspaceRoot);
@@ -421,10 +426,49 @@ function outputRootInputs(output, workspaceRoot) {
   return { runtime: `node -e ${JSON.stringify(OUTPUT_ROOT_DIGEST_SCRIPT)} ${JSON.stringify(absolute)}` };
 }
 
+/** 📍️ Resolves a declared `{projectRoot}`/`{workspaceRoot}` output string to its absolute path, or `undefined` for an unrecognized shape. */
+function resolveOutputPath(output, root, workspaceRoot) {
+  if (!output.startsWith("{projectRoot}/") && !output.startsWith("{workspaceRoot}/")) return undefined;
+  return resolve(workspaceRoot, output.replace("{projectRoot}", root).replace("{workspaceRoot}", "."));
+}
+
+/**
+ * 🪞 A `check-*` target verifying a same-project `generate-*` producer's bytes still needs those CURRENT
+ * bytes to invalidate its own cache, whether or not it also `dependsOn` the producer — `dependsOn` alone only
+ * orders execution here (every authored instance in this repo names its target fully qualified, even for a
+ * same-project producer) and never by itself feeds the producer's bytes into the hash; only a paired
+ * `dependentTasksOutputFiles` input would, and this repo does not author that pairing for hand-written
+ * `check-*`/`generate-*` pairs. `projectInputs` excludes every declared output from every named bucket
+ * project-wide (`default`, `nativeSources`, …) to stop a producer from hashing its own freshly-written
+ * output — but a proven Nx contract (see the `⚡️caching/📜️script.ts` `CacheVerifyScript` fixture family) is
+ * that once a bucket carrying that exclusion is also referenced, a plain positive glob for the same exact
+ * path added elsewhere in the same `inputs` array is suppressed too; only a `runtime` digest (immune to
+ * fileset inclusion/exclusion entirely) reliably restores visibility. Reused here uniformly for tracked and
+ * gitignored outputs alike, exactly like `outputRootInputs`; deduped against whatever digest a generator
+ * contract's own `checkTarget` wiring already added for the same absolute path.
+ */
+function generatorOutputCouplingInputs(name, target, targets, root, workspaceRoot) {
+  if (!/^check(?:-|$)/.test(name)) return [];
+  const existing = new Set((target.inputs ?? []).filter((entry) => typeof entry === "object" && typeof entry?.runtime === "string").map((entry) => entry.runtime));
+  const inputs = [];
+  for (const [sibling, siblingTarget] of Object.entries(targets)) {
+    if (sibling === name || !/^generate(?:-|$)/.test(sibling)) continue;
+    for (const output of siblingTarget.outputs ?? []) {
+      const absolute = resolveOutputPath(output, root, workspaceRoot);
+      if (!absolute) continue;
+      const runtime = `node -e ${JSON.stringify(OUTPUT_ROOT_DIGEST_SCRIPT)} ${JSON.stringify(absolute)}`;
+      if (!existing.has(runtime)) inputs.push({ runtime });
+    }
+  }
+  return inputs;
+}
+
 /** 🛡️ Side effects and live processes cannot be replayed as completed task results. */
 function targetPolicy(name, target, policy = POLICY) {
   if (matchesCommand(name, policy.continuous)) return { ...target, cache: false, continuous: true };
-  if (matchesUncached(name, policy) || mutatingName(name) || liveName(name)) return { ...target, cache: false };
+  if (matchesUncached(name, policy)) return { ...target, cache: false };
+  if (policy.cachedExact.includes(name)) return { inputs: ["default", "^default"], outputs: [], ...target, cache: true };
+  if (mutatingName(name) || liveName(name)) return { ...target, cache: false };
   if (cacheableFamily(name) || verifyCommand(target)) return { inputs: ["default", "^default"], outputs: [], ...target, cache: true };
   return { ...target, cache: target.cache !== false };
 }
@@ -600,8 +644,8 @@ function projectInputs(json, root, workspaceRoot, facts) {
   const declarations = json.namedInputs ?? {};
   const exclusions = [];
   for (const target of Object.values(json.targets ?? {})) for (const output of target.outputs ?? []) {
-    if (!output.startsWith("{projectRoot}/") && !output.startsWith("{workspaceRoot}/")) continue;
-    const absolute = resolve(workspaceRoot, output.replace("{projectRoot}", root).replace("{workspaceRoot}", "."));
+    const absolute = resolveOutputPath(output, root, workspaceRoot);
+    if (!absolute) continue;
     const path = nxPath(relative(workspaceRoot, absolute));
     if (path === "" || path.startsWith("../")) throw new Error(`Invalid output ownership for ${json.name}: ${output}`);
     exclusions.push(`!{workspaceRoot}/${path}`, `!{workspaceRoot}/${path}/**/*`);
@@ -680,7 +724,7 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
     const artifactTarget = artifactTypeScript && /^(?:build|check|test(?:-(?:quick|long|exhaustive))?)$/.test(name);
     if (nativeTarget) {
       policy.parallelism ??= false;
-      policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...nativeTargetCommandInputs(policy, workspaceRoot, commandInputs), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : [])];
+      policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...nativeTargetCommandInputs(policy, workspaceRoot, commandInputs), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : []), ...nativeLockInputs(policy.options?.command)];
     }
     if (artifactTarget) policy.inputs = ["artifactSources", "artifactCommandSources"];
     if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...genericTargetCommandInputs(policy, workspaceRoot, genericFallback)];
@@ -692,6 +736,11 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
     if (!target) continue;
     const discovery = generatorContractInputs(contract);
     normalized[check] = { ...target, cache: true, inputs: [...target.inputs, ...discovery.inputs, ...contract.outputRoots.map((output) => outputRootInputs(output, workspaceRoot))], ...(discovery.dependsOn.length ? { dependsOn: [...new Set([...(target.dependsOn ?? []), ...discovery.dependsOn])] } : {}) };
+  }
+  for (const [name, target] of Object.entries(normalized)) {
+    if (target.cache !== true) continue;
+    const extra = generatorOutputCouplingInputs(name, target, declared, root, workspaceRoot);
+    if (extra.length) normalized[name] = { ...target, inputs: [...target.inputs, ...extra] };
   }
   return { ...json, name: json.name, root, namedInputs: projectInputs({ ...json, targets: declared }, root, workspaceRoot, facts), targets: normalized };
 }
@@ -798,10 +847,17 @@ function playgroundSessionTargets(configFiles, workspaceRoot) {
 /**
  * 🎮️ Declares the runtime component closure and browser producers before any catalog is generated.
  * React's `prepare` only validates already Nx-materialized bytes (no write), so it caches on its
- * `dependsOn` closure with no outputs; WGPU's `prepare` additionally copies into `PLUGIN_MODULES_ROOT`
- * (`🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts`), one fixed, live, shared directory a running
- * `dev`/hot-swap session also writes into and that is not scoped per variant/profile, so it stays
- * uncached for the same reason as this project's own `plugin` target in `📋️project.json`.
+ * `dependsOn` closure with no outputs. WGPU's `prepare` copies NO module either: the trunk bundle's
+ * `copy-dir` and the native runner's `SEMIO_PLUGIN_MODULES` both read the ONE staging root
+ * `pluginModulesRoot(profile)` (`🧑‍💻dev/♻️activation/🟦️.ts`) its `dependsOn` closure just wrote, so it
+ * only publishes that lane's extensions and font asset and caches on the same closure with no outputs —
+ * a per-variant mirror was a third tree to drift. `activate-*-react-*` publishes into
+ * `developmentRuntimeRoot`, itself already
+ * scoped per variant/profile, so it caches the same way with that directory as its output; its
+ * wall-clock-bearing receipt bookkeeping (`nextActivationReceipt`) only ever runs for real on a cache
+ * miss, and a miss means the inputs — hence the cache key — actually changed, so restores of a given key
+ * stay byte-identical. `activate-*-wgpu-*` does no work beyond `prepare` (activation IS preparation for
+ * that renderer), so it stays a thin, cacheable no-output confirmation.
  */
 function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
   const components = new Map(), playgrounds = [];
@@ -834,7 +890,14 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
     }));
     for (const profile of ["dev", "release"]) {
       for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-react-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-react-${profile}`], options: { command: `bun ./📜️script.ts serve ${playground.variant} react ${profile}` } };
-      result[`activate-${playground.variant}-react-${profile}`] = { cache: false, parallelism: false, outputs: [], dependsOn: [`prepare-${playground.variant}-react-${profile}`], options: { command: `bun ./📜️script.ts activate ${playground.variant} react ${profile}` } };
+      result[`activate-${playground.variant}-react-${profile}`] = {
+      cache: true,
+      parallelism: false,
+      outputs: [`{projectRoot}/dist/runtime/${profile}/${playground.variant}`],
+      inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
+      dependsOn: [`prepare-${playground.variant}-react-${profile}`],
+      options: { command: `bun ./📜️script.ts activate ${playground.variant} react ${profile}` },
+      };
       result[`prepare-${playground.variant}-react-${profile}`] = {
       cache: true,
       outputs: [],
@@ -843,10 +906,18 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} react ${profile}` },
       };
       for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `bun ./📜️script.ts dev ${playground.variant} served`, env: { SEMIO_RENDERER: "wgpu" } } };
-      result[`activate-${playground.variant}-wgpu-${profile}`] = { cache: false, parallelism: false, outputs: [], dependsOn: [`prepare-${playground.variant}-wgpu-${profile}`], options: { command: `bun ./📜️script.ts activate ${playground.variant} wgpu ${profile}` } };
-      result[`prepare-${playground.variant}-wgpu-${profile}`] = {
-      cache: false,
+      result[`activate-${playground.variant}-wgpu-${profile}`] = {
+      cache: true,
+      parallelism: false,
       outputs: [],
+      inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
+      dependsOn: [`prepare-${playground.variant}-wgpu-${profile}`],
+      options: { command: `bun ./📜️script.ts activate ${playground.variant} wgpu ${profile}` },
+      };
+      result[`prepare-${playground.variant}-wgpu-${profile}`] = {
+      cache: true,
+      outputs: [],
+      inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
       dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", wgpuEngine, ...[...selected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} wgpu ${profile}` },
       };
@@ -1042,4 +1113,4 @@ export default {
   createDependencies,
 };
 
-export const cacheInternals = { declaredSourceInputs, withWasmTooling, runtimeComponentClosure, playgroundPreparationTargets, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, projectInputs, rootCommandTargets };
+export const cacheInternals = { declaredSourceInputs, nativeLockInputs, withWasmTooling, runtimeComponentClosure, playgroundPreparationTargets, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets };

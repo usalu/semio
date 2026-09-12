@@ -10,6 +10,7 @@ import {
   MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES,
   parseSegmentedDownloadMarker,
   parseSegmentedDownloadOperationId,
+  segmentedDownloadSinkFactory,
   type SegmentedDownloadSink,
 } from "../../../📤️SegmentedDownload/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -119,3 +120,33 @@ describe("segmented download drain", () => {
   });
 });
 //#endregion 🧵Drain
+
+//#region 🧺️AssembledSink
+describe("segmented download assembled sink", () => {
+  /** 🧺️ The shell's own sink factory must turn a chunked producer into ONE delivered file, without the
+   * File System Access API: `createSegmentedDownloadSink` fails closed wherever `showSaveFilePicker` is
+   * absent, which used to make an over-budget export silence (ticket 26/09/02, wave B38). */
+  it("assembles every chunk in order and delivers the payload once", async () => {
+    const payload = "x".repeat(MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES) + "TAIL";
+    const pages = [bytes(payload.slice(0, MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES)), bytes(payload.slice(MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES)), undefined];
+    const delivered: { filename: string; mimeType: string; text: string }[] = [];
+    await drainSegmentedMediaExport("nakagin-capsule-tower.json", "application/json", "7", "semio-segmented-handle-v1:identity", async () => pages.shift(), {
+      sinkFactory: segmentedDownloadSinkFactory((filename, mimeType, assembled) => delivered.push({ filename, mimeType, text: new TextDecoder().decode(assembled) })),
+    });
+    expect(delivered).toEqual([{ filename: "nakagin-capsule-tower.json", mimeType: "application/json", text: payload }]);
+  });
+
+  /** 🧯️ A drain that aborts delivers NOTHING: a truncated payload must never reach the user as a file
+   * that looks complete. */
+  it("delivers nothing when the drain aborts", async () => {
+    const delivered: string[] = [];
+    const factory = segmentedDownloadSinkFactory((filename) => delivered.push(filename));
+    await expect(
+      drainSegmentedMediaExport("x.json", "application/json", "8", "semio-segmented-handle-v1:identity", async () => {
+        throw new Error("interactive-job.unknown-segmented-download");
+      }, { sinkFactory: factory }),
+    ).rejects.toThrow("interactive-job.unknown-segmented-download");
+    expect(delivered).toEqual([]);
+  });
+});
+//#endregion 🧺️AssembledSink

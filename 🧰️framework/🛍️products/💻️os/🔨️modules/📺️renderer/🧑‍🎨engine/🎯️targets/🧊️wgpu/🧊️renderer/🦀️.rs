@@ -1179,14 +1179,14 @@ struct GlbSchemaOutput {
 impl GlbSchemaOutput {
     fn new() -> Self {
         Self {
-            accessors: Box::new([None; GLB_SCHEMA_ITEM_CAPACITY]),
-            views: Box::new([None; GLB_SCHEMA_ITEM_CAPACITY]),
-            primitives: Box::new([None; GLB_SCHEMA_ITEM_CAPACITY]),
-            meshes: Box::new([None; GLB_SCHEMA_ITEM_CAPACITY]),
-            nodes: Box::new([None; GLB_SCHEMA_ITEM_CAPACITY]),
-            scenes: Box::new([None; GLB_SCHEMA_ITEM_CAPACITY]),
-            node_edges: Box::new([None; GLB_SCHEMA_ITEM_CAPACITY]),
-            scene_roots: Box::new([None; GLB_SCHEMA_ITEM_CAPACITY]),
+            accessors: semio_framework_async::boxed_fixed_slots(|| None),
+            views: semio_framework_async::boxed_fixed_slots(|| None),
+            primitives: semio_framework_async::boxed_fixed_slots(|| None),
+            meshes: semio_framework_async::boxed_fixed_slots(|| None),
+            nodes: semio_framework_async::boxed_fixed_slots(|| None),
+            scenes: semio_framework_async::boxed_fixed_slots(|| None),
+            node_edges: semio_framework_async::boxed_fixed_slots(|| None),
+            scene_roots: semio_framework_async::boxed_fixed_slots(|| None),
             accessor_len: 0,
             view_len: 0,
             primitive_len: 0,
@@ -1846,7 +1846,7 @@ impl GlbInstancePlanCursor {
     fn new(schema: &GlbSchemaOutput) -> Self {
         let scene = schema.default_scene.or((schema.scene_len != 0).then_some(0));
         let mode = if schema.node_len == 0 { GlbPlanMode::Fallback { primitive: 0 } } else { GlbPlanMode::Roots { scene, index: 0 } };
-        Self { instances: Box::new([None; GLB_SCHEMA_ITEM_CAPACITY]), instance_len: 0, stack: Box::new([None; GLB_SCHEMA_ITEM_CAPACITY]), stack_len: 0, mode, vertex_count: 0, index_count: 0, has_uvs: false, output_bytes: 0 }
+        Self { instances: semio_framework_async::boxed_fixed_slots(|| None), instance_len: 0, stack: semio_framework_async::boxed_fixed_slots(|| None), stack_len: 0, mode, vertex_count: 0, index_count: 0, has_uvs: false, output_bytes: 0 }
     }
 
     fn step(&mut self, schema: &GlbSchemaOutput) -> Result<bool, &'static str> {
@@ -4141,15 +4141,15 @@ pub(crate) mod kernel_runtime {
     }
 
     struct MountedProductReplayRecoveryRegistry {
-        slots: [MountedProductReplayRecoverySlot; JOB_PROGRESS_ACTIVE_CAPACITY],
-        abandoned: [Option<MountedProductReplayRecoveryOwner>; JOB_PROGRESS_ACTIVE_CAPACITY],
+        slots: Box<[MountedProductReplayRecoverySlot; JOB_PROGRESS_ACTIVE_CAPACITY]>,
+        abandoned: Box<[Option<MountedProductReplayRecoveryOwner>; JOB_PROGRESS_ACTIVE_CAPACITY]>,
         cursor: usize,
         abandoned_cursor: usize,
     }
 
     impl MountedProductReplayRecoveryRegistry {
         fn new() -> Self {
-            Self { slots: std::array::from_fn(|_| MountedProductReplayRecoverySlot { generation: 0, reserved: false, owner: None }), abandoned: std::array::from_fn(|_| None), cursor: 0, abandoned_cursor: 0 }
+            Self { slots: semio_framework_async::boxed_fixed_slots(|| MountedProductReplayRecoverySlot { generation: 0, reserved: false, owner: None }), abandoned: semio_framework_async::boxed_fixed_slots(|| None), cursor: 0, abandoned_cursor: 0 }
         }
 
         fn reserve(&mut self) -> Option<MountedProductReplayRecoveryToken> {
@@ -4416,8 +4416,8 @@ pub(crate) mod kernel_runtime {
     }
 
     struct MountedProductReplayRefusalRegistry {
-        slots: [MountedProductReplayRefusalSlot; JOB_PROGRESS_ACTIVE_CAPACITY],
-        abandoned: [Option<RetainedRefusedProductReplay>; JOB_PROGRESS_ACTIVE_CAPACITY],
+        slots: Box<[MountedProductReplayRefusalSlot; JOB_PROGRESS_ACTIVE_CAPACITY]>,
+        abandoned: Box<[Option<RetainedRefusedProductReplay>; JOB_PROGRESS_ACTIVE_CAPACITY]>,
         cursor: usize,
         abandoned_cursor: usize,
     }
@@ -4429,7 +4429,7 @@ pub(crate) mod kernel_runtime {
 
     impl MountedProductReplayRefusalRegistry {
         fn new() -> Self {
-            Self { slots: std::array::from_fn(|_| MountedProductReplayRefusalSlot { generation: 0, instance: None, reserved: false, owner: None }), abandoned: std::array::from_fn(|_| None), cursor: 0, abandoned_cursor: 0 }
+            Self { slots: semio_framework_async::boxed_fixed_slots(|| MountedProductReplayRefusalSlot { generation: 0, instance: None, reserved: false, owner: None }), abandoned: semio_framework_async::boxed_fixed_slots(|| None), cursor: 0, abandoned_cursor: 0 }
         }
 
         fn reserve(&mut self, instance: u32) -> Option<MountedProductReplayRefusalToken> {
@@ -4915,13 +4915,18 @@ pub(crate) mod kernel_runtime {
         acknowledge: Arc<dyn Fn(TypedOperationResultToken) -> bool + Send + Sync>,
     }
 
+    /// 📄️ Exact finite publication credit for the renderer-side typed-operation exchange — one
+    /// named capacity instead of a bare literal, so the `boxed_fixed_slots` budget fixture can pin
+    /// the same constant the slot table is sized with.
+    const MOUNTED_TYPED_OPERATION_RESULT_PAGES: usize = 64;
+
     struct MountedTypedOperationResultExchange {
-        pages: Mutex<[Option<MountedTypedOperationResultPage>; 64]>,
+        pages: Mutex<Box<[Option<MountedTypedOperationResultPage>; MOUNTED_TYPED_OPERATION_RESULT_PAGES]>>,
     }
 
     impl MountedTypedOperationResultExchange {
         fn new() -> Self {
-            Self { pages: Mutex::new(std::array::from_fn(|_| None)) }
+            Self { pages: Mutex::new(semio_framework_async::boxed_fixed_slots(|| None)) }
         }
 
         fn publish(&self, page: TypedOperationResultPage, acknowledge: Arc<dyn Fn(TypedOperationResultToken) -> bool + Send + Sync>) -> Result<(), TypedOperationResultPage> {
@@ -5617,7 +5622,7 @@ pub(crate) mod kernel_runtime {
     }
 
     struct RetainedSurfaceRegistry {
-        slots: [Option<RetainedSurfaceSlot>; RETAINED_SURFACE_CAPACITY],
+        slots: Box<[Option<RetainedSurfaceSlot>; RETAINED_SURFACE_CAPACITY]>,
         next_generation: u64,
         generation_exhausted: bool,
         close_cursor: usize,
@@ -5625,7 +5630,7 @@ pub(crate) mod kernel_runtime {
 
     impl RetainedSurfaceRegistry {
         fn new() -> Self {
-            Self { slots: std::array::from_fn(|_| None), next_generation: 0, generation_exhausted: false, close_cursor: 0 }
+            Self { slots: semio_framework_async::boxed_fixed_slots(|| None), next_generation: 0, generation_exhausted: false, close_cursor: 0 }
         }
 
         fn index(&self, instance: u32, surface: &SurfaceId) -> Option<usize> {
@@ -5697,13 +5702,13 @@ pub(crate) mod kernel_runtime {
     }
 
     struct PendingSurfaceRejectionRegistry {
-        slots: [Option<PendingSurfaceRejection>; RETAINED_SURFACE_CAPACITY],
+        slots: Box<[Option<PendingSurfaceRejection>; RETAINED_SURFACE_CAPACITY]>,
         close_cursor: usize,
     }
 
     impl PendingSurfaceRejectionRegistry {
         fn new() -> Self {
-            Self { slots: std::array::from_fn(|_| None), close_cursor: 0 }
+            Self { slots: semio_framework_async::boxed_fixed_slots(|| None), close_cursor: 0 }
         }
 
         fn index(&self, instance: u32, surface: &SurfaceId) -> Option<usize> {
@@ -5869,15 +5874,15 @@ pub(crate) mod kernel_runtime {
     }
 
     struct MountedReplayRecoveryRegistry {
-        slots: [MountedReplayRecoverySlot; JOB_PROGRESS_ACTIVE_CAPACITY],
-        abandoned: [Option<MountedReplayRecoveryOwner>; JOB_PROGRESS_ACTIVE_CAPACITY],
+        slots: Box<[MountedReplayRecoverySlot; JOB_PROGRESS_ACTIVE_CAPACITY]>,
+        abandoned: Box<[Option<MountedReplayRecoveryOwner>; JOB_PROGRESS_ACTIVE_CAPACITY]>,
         cursor: usize,
         abandoned_cursor: usize,
     }
 
     impl MountedReplayRecoveryRegistry {
         fn new() -> Self {
-            Self { slots: std::array::from_fn(|_| MountedReplayRecoverySlot { epoch: 0, reserved: false, owner: None }), abandoned: std::array::from_fn(|_| None), cursor: 0, abandoned_cursor: 0 }
+            Self { slots: semio_framework_async::boxed_fixed_slots(|| MountedReplayRecoverySlot { epoch: 0, reserved: false, owner: None }), abandoned: semio_framework_async::boxed_fixed_slots(|| None), cursor: 0, abandoned_cursor: 0 }
         }
 
         fn reserve(&mut self) -> Option<MountedReplayRecoveryToken> {
@@ -6034,14 +6039,14 @@ pub(crate) mod kernel_runtime {
     }
 
     struct CommandDocumentRetirementRegistry {
-        slots: [Option<CommandDocumentRetirementState>; COMMAND_DOCUMENT_RETIREMENT_CAPACITY],
+        slots: Box<[Option<CommandDocumentRetirementState>; COMMAND_DOCUMENT_RETIREMENT_CAPACITY]>,
         epochs: [u64; COMMAND_DOCUMENT_RETIREMENT_CAPACITY],
         cursor: usize,
     }
 
     impl CommandDocumentRetirementRegistry {
         fn new() -> Self {
-            Self { slots: std::array::from_fn(|_| None), epochs: [0; COMMAND_DOCUMENT_RETIREMENT_CAPACITY], cursor: 0 }
+            Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; COMMAND_DOCUMENT_RETIREMENT_CAPACITY], cursor: 0 }
         }
 
         fn try_reserve_page(&mut self, batch: u64, generation: u64) -> Result<CommandDocumentPageReservation, ()> {
@@ -7700,7 +7705,7 @@ pub(crate) mod kernel_runtime {
     }
 
     struct KernelRequestQueueState {
-        slots: [Option<(KernelRequest, Arc<ResponseSlot>)>; KERNEL_REQUEST_QUEUE_CAPACITY],
+        slots: Box<[Option<(KernelRequest, Arc<ResponseSlot>)>; KERNEL_REQUEST_QUEUE_CAPACITY]>,
         read: usize,
         write: usize,
         len: usize,
@@ -7713,7 +7718,7 @@ pub(crate) mod kernel_runtime {
 
     impl Default for KernelRequestQueue {
         fn default() -> Self {
-            Self { state: Mutex::new(KernelRequestQueueState { slots: std::array::from_fn(|_| None), read: 0, write: 0, len: 0, command_pages: 0, command_bytes: 0, closing: false, consumer_waker: None, producer_waker: None }) }
+            Self { state: Mutex::new(KernelRequestQueueState { slots: semio_framework_async::boxed_fixed_slots(|| None), read: 0, write: 0, len: 0, command_pages: 0, command_bytes: 0, closing: false, consumer_waker: None, producer_waker: None }) }
         }
     }
 
@@ -10683,7 +10688,7 @@ struct FrameEnginePackets {
 
 impl Default for FrameEnginePackets {
     fn default() -> Self {
-        Self { slots: Box::new([const { None }; FRAME_ENGINE_PACKET_CAPACITY]), len: 0 }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), len: 0 }
     }
 }
 
@@ -11109,6 +11114,17 @@ pub(crate) struct FrameTransaction {
 pub(crate) enum AppFrameTransactionStep {
     Pending,
     Complete(AppFrameBuild),
+    /// 🌀️ This opportunity's inputs moved under it — a newer input generation, a newer scene
+    /// revision, or a cancelled operation. NOT a defect: the candidate is discarded and the next
+    /// opportunity builds a fresh one from the current witness.
+    ///
+    /// 🩸️ Every one of those conditions used to answer [`Self::Fault`] AND record a runtime frame
+    /// fault, which the browser worker turns into a surface quarantine. The scene revision is bumped
+    /// by every runtime completion (`enqueue_runtime_completion`, `finish`), so a frame build long
+    /// enough to ingest a retained document is superseded as a matter of course — and the whole shell
+    /// died with `frame opportunity base revision was superseded` instead of simply rebuilding
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-blank-paint-2026-09-12.md`).
+    Superseded,
     Fault,
 }
 
@@ -11168,36 +11184,20 @@ impl FrameTransaction {
     pub(crate) fn step(&mut self, runtime: &RuntimeMailbox, handle: &AppHandle, context: &mut semio_framework_job::StepContext<'_>) -> AppFrameTransactionStep {
         context.set_stage(self.stage_label());
         if context.operation() != self.operation || context.generation() != self.generation || context.is_cancelled() || context.deadline_exceeded() {
-            runtime.record_frame_fault("frame opportunity freshness guard refused operation, generation, cancellation, or deadline");
             self.phase = AppFrameTransactionPhase::Terminal;
-            return AppFrameTransactionStep::Fault;
+            return AppFrameTransactionStep::Superseded;
         }
         let Some(current_witness) = runtime.presentation_witness_for(self.generation.0) else {
-            runtime.record_frame_fault("frame opportunity input generation was superseded");
             self.phase = AppFrameTransactionPhase::Terminal;
-            return AppFrameTransactionStep::Fault;
+            return AppFrameTransactionStep::Superseded;
         };
         if let Some(base_witness) = self.base_witness {
             if base_witness != current_witness {
-                runtime.record_frame_fault("frame opportunity base revision was superseded");
                 self.phase = AppFrameTransactionPhase::Terminal;
-                return AppFrameTransactionStep::Fault;
+                return AppFrameTransactionStep::Superseded;
             }
         } else {
             self.base_witness = Some(current_witness);
-        }
-        if self.stage == FrameTransactionStage::FlushEffects {
-            let Some(next) = self.effect_opportunities.checked_add(1) else {
-                runtime.record_frame_fault("frame effect opportunity counter exhausted");
-                self.phase = AppFrameTransactionPhase::Terminal;
-                return AppFrameTransactionStep::Fault;
-            };
-            if next > EFFECT_STORM_BUDGET {
-                runtime.record_frame_fault("frame effect storm budget exhausted");
-                self.phase = AppFrameTransactionPhase::Terminal;
-                return AppFrameTransactionStep::Fault;
-            }
-            self.effect_opportunities = next;
         }
         let Some(directives) = self.directives.as_ref() else { return AppFrameTransactionStep::Pending };
         if context.should_yield() {
@@ -11299,6 +11299,27 @@ impl FrameTransaction {
                 if interpreter::drive_scene_interaction_step(&mut app.input) {
                     return AppFrameTransactionStep::Pending;
                 }
+                // 🌩️ ONE effect-flush ROUND, counted where the transaction actually enters the stage.
+                //
+                // 🩸️ The counter used to be charged on every `step` taken WHILE the stage was
+                // `FlushEffects`, which is not a storm measure at all: the stage covers the whole
+                // post-intent tail (deferred frame work, board authority, world snapshots, the prepared
+                // packet), and that tail legitimately needs far more than {@link EFFECT_STORM_BUDGET}
+                // one-cursor steps. It only stayed invisible while the wgpu browser frame never reached
+                // this stage at all; the moment it did, every frame faulted
+                // `frame effect storm budget exhausted` and quarantined the surface
+                // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-blank-paint-2026-09-12.md`).
+                let Some(next) = self.effect_opportunities.checked_add(1) else {
+                    runtime.record_frame_fault("frame effect opportunity counter exhausted");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
+                if next > EFFECT_STORM_BUDGET {
+                    runtime.record_frame_fault("frame effect storm budget exhausted");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                }
+                self.effect_opportunities = next;
                 self.stage = FrameTransactionStage::FlushEffects;
                 self.phase = AppFrameTransactionPhase::FrameDeferred;
                 AppFrameTransactionStep::Pending

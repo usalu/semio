@@ -1,0 +1,13 @@
+import { chromium } from "playwright";
+const browser = await chromium.launch({ headless: true });
+const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+const page = await context.newPage();
+const t0 = performance.now();
+page.on("console", (m) => console.log(`${(performance.now() - t0).toFixed(0)} ${m.type()} ${m.text().slice(0, 500)}`));
+page.on("pageerror", (e) => console.log(`${(performance.now() - t0).toFixed(0)} PAGEERROR ${String(e).slice(0, 1200)}`));
+page.on("requestfailed", (r) => console.log(`${(performance.now() - t0).toFixed(0)} REQFAIL ${r.url().slice(0, 200)} ${r.failure()?.errorText}`));
+page.on("response", (r) => { if (r.status() >= 400) console.log(`${(performance.now() - t0).toFixed(0)} HTTP${r.status()} ${r.url().slice(0, 200)}`); });
+await page.goto("http://127.0.0.1:6018/?plugin=generation3d", { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(Number(process.env.S ?? 45) * 1000);
+console.log("ROOT_HTML_LEN", (await page.evaluate(() => document.getElementById("root")?.innerHTML.length ?? -1)));
+await browser.close();

@@ -23,11 +23,12 @@ export default {
     // to `includeSource`/`coverage.include` only — a file absent from `includeSource` does not run at
     // all while the suite still reports green.
     include: [],
-    coverage: { include: ["../../📮️shard-client/🟦️.ts", "../../📬️mailbox/🟦️.ts", "../../📥️cold-pair/🟦️.ts", "🟦️.ts"] },
+    coverage: { include: ["../../📮️shard-client/🟦️.ts", "../../📬️mailbox/🟦️.ts", "../../📥️cold-pair/🟦️.ts", "🟦️.ts", "🖼️wire-turn.ts"] },
     includeSource: [
       "../../📮️shard-client/🟦️.ts",
       "../../📬️mailbox/🟦️.ts",
       "🟦️.ts",
+      "🖼️wire-turn.ts",
       "../../🚪️lifetime/🟦️.ts",
       "../../🚪️lifetime/🩹️patch/🟦️.ts",
       "../../📥️cold-pair/🟦️.ts",

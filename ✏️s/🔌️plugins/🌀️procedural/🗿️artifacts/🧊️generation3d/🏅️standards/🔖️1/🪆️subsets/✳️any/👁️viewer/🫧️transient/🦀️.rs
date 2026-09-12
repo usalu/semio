@@ -77,6 +77,12 @@ impl protocol::MutationDiff<Generation3dViewTransient> for Generation3dViewTrans
         *self = other;
     }
 }
+
+// 🧹️ The explicit retirement ladder both this surface's APP-level transient lane and its preview
+// WINDOW-level one publish through (`🪟️windows/👁️preview/🫧️transient`): a published evaluation is
+// the largest ephemeral value this viewer owns, so the store retires its bytes under a grant
+// rather than dropping them (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+store::artifact_retire_struct!(Generation3dViewTransient { preview_eval_text });
 //#endregion 🔖️Transient
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]

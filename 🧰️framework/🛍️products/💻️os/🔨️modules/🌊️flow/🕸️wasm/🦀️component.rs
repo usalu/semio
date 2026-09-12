@@ -41,11 +41,13 @@ struct FlowDomainAdapter {
     width: u32,
     height: u32,
     dpr: f64,
+    /// 🧱️ Retained frame-reply buffer — see `render_frame`.
+    frame_payload: String,
 }
 
 impl Default for FlowDomainAdapter {
     fn default() -> Self {
-        Self { host: FlowDomainHost::Open(FlowHost::default()), vcs: None, surface: None, width: 1, height: 1, dpr: 1.0 }
+        Self { host: FlowDomainHost::Open(FlowHost::default()), vcs: None, surface: None, width: 1, height: 1, dpr: 1.0, frame_payload: String::new() }
     }
 }
 
@@ -5501,8 +5503,14 @@ impl FlowDomainAdapter {
         }
         match text(args, "status")? {
             "created" | "recovered" => current.state = SurfaceState::Ready,
-            "lost" | "device-lost" => current.state = SurfaceState::Lost,
-            "cancelled" | "rejected" => self.surface = None,
+            "lost" | "device-lost" => {
+                current.state = SurfaceState::Lost;
+                surface_canvas::flow_detach_surface_canvas(id.get());
+            }
+            "cancelled" | "rejected" => {
+                self.surface = None;
+                surface_canvas::flow_detach_surface_canvas(id.get());
+            }
             _ => return Err(abi_failure(AbiErrorCode::MalformedTag)),
         }
         Ok(self.surface_status_bytes())
@@ -5516,18 +5524,61 @@ impl FlowDomainAdapter {
         self.host.set_viewport(width, height, dpr);
         if let Some(surface) = self.surface.as_mut() {
             surface.metrics = metrics;
+            surface_canvas::flow_resize_surface_canvas(surface.id.get(), width, height, dpr);
         }
         Ok(())
     }
 
+    /// 🖼️ Paints the surface and PRESENTS it — the real `canvas::Scene` this host's own LOD-aware
+    /// vector painter produces, not a stand-in for it.
+    ///
+    /// Two exits, one picture. When the surface's canvas was bound to a WebGPU device
+    /// (`flowAttachSurfaceCanvas`, below) the scene is rasterized in-process through the SAME
+    /// `CanvasGpuSession` every other browser board session presents with (`DagSession`,
+    /// `BoardSession`, the paint/map/editor sessions) and the reply carries an EMPTY draw list —
+    /// the pixels are already on screen. With no device the reply carries the scene itself, encoded
+    /// by `canvas::draw_list` for the host's 2D-context replayer. `paint_scene` bakes the camera
+    /// into every command's affine, so neither exit needs a second transform pipeline.
     fn render_frame(&mut self) -> Result<Vec<u8>, FlowFailure> {
         let surface = self.surface.filter(|surface| surface.state == SurfaceState::Ready).ok_or_else(|| abi_failure(AbiErrorCode::UnknownHandle))?;
         self.host.sync_dag_ghost();
         let mut scene = canvas::Scene::new();
         self.host.paint_scene(&mut scene, self.width, self.height, self.dpr);
+        let clear = self.host.dag.canvas_theme.raster_clear;
+        let presented = surface_canvas::present_surface_scene(surface.id.get(), &scene, clear, self.dpr);
         let fixture = self.host.fixture_json().map_err(domain_error)?;
         let labels = self.host.label_overlay_paint_state_json().map_err(domain_error)?;
-        Ok(format!("{{\"surface\":{},\"surfaceGeneration\":{},\"width\":{},\"height\":{},\"dpr\":{},\"fixture\":{fixture},\"labels\":{labels}}}", surface.id.get(), surface.generation.get(), self.width, self.height, self.dpr).into_bytes())
+        let rgba = clear.to_rgba8();
+        // 🧱️ One retained buffer, cleared and refilled — a guest that allocates a fresh multi-kilobyte
+        // reply every frame fragments its own heap (dlmalloc hands nothing back) until it aborts.
+        let payload = &mut self.frame_payload;
+        payload.clear();
+        use std::fmt::Write as _;
+        let _ = write!(
+            payload,
+            "{{\"surface\":{},\"surfaceGeneration\":{},\"width\":{},\"height\":{},\"dpr\":{},\"present\":\"{}\",\"clear\":[{},{},{},{}],\"draw\":",
+            surface.id.get(),
+            surface.generation.get(),
+            self.width,
+            self.height,
+            self.dpr,
+            if presented { "gpu" } else { "2d" },
+            rgba.r,
+            rgba.g,
+            rgba.b,
+            rgba.a
+        );
+        if presented {
+            payload.push_str(r#"{"version":1,"truncated":false,"commands":[]}"#);
+        } else {
+            canvas::draw_list::write_scene_draw_list(payload, &scene, canvas::draw_list::DrawListOptions::default());
+        }
+        payload.push_str(",\"fixture\":");
+        payload.push_str(&fixture);
+        payload.push_str(",\"labels\":");
+        payload.push_str(&labels);
+        payload.push('}');
+        Ok(payload.as_bytes().to_vec())
     }
 
     fn surface_status_bytes(&self) -> Vec<u8> {
@@ -5658,6 +5709,117 @@ fn surface_abi_failure(code: SurfaceAbiErrorCode) -> FlowFailure {
 
 //#endregion 🔖️ReactiveFeatures
 
+//#region 🖼️SurfacePresentation
+
+/// 🖥️ Per-surface WebGPU presentation for the browser flow session.
+///
+/// The flow session speaks a linear-memory byte ABI (`flow_bridge_send`/`flow_bridge_poll`), which
+/// cannot carry an `HtmlCanvasElement` — that is the whole reason the node-graph canvas had no GPU
+/// exit and the host drew its own boxes instead. These two exports bind the canvas out of band,
+/// keyed by the SAME `surface` id the ABI's `attachSurface` already issues, so no session state is
+/// duplicated and nothing about the message protocol changes. The session itself is
+/// `CanvasGpuSession` — the one browser vello/wgpu presenter every other board surface in this
+/// repo uses (`DagSession`, `BoardSession`, paint/map/editor), reused, not forked.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+mod surface_canvas {
+    use crate::canvas::{self, gpu_session::CanvasGpuSession, Color, Scene};
+    use semio_framework_async::browser::future_to_promise;
+    use std::cell::RefCell;
+    use std::collections::BTreeMap;
+    use wasm_bindgen::prelude::*;
+    use web_sys::HtmlCanvasElement;
+
+    thread_local! {
+        static SURFACE_CANVASES: RefCell<BTreeMap<u32, CanvasGpuSession>> = const { RefCell::new(BTreeMap::new()) };
+    }
+
+    fn physical(logical: u32, dpr: f64) -> u32 {
+        ((f64::from(logical.max(1)) * dpr.max(1.0)).round() as u32).max(1)
+    }
+
+    /// 🔌️ Binds one flow surface's canvas to a WebGPU device. Resolves `true` when the canvas will
+    /// present on the GPU and `false` when no adapter/device/surface could be had — never rejects,
+    /// because a host without WebGPU must still reach a painted canvas through the 2D replay path.
+    #[wasm_bindgen(js_name = flowAttachSurfaceCanvas)]
+    pub fn flow_attach_surface_canvas(surface: u32, canvas: HtmlCanvasElement, logical_width: u32, logical_height: u32, dpr: f64) -> js_sys::Promise {
+        let width = physical(logical_width, dpr);
+        let height = physical(logical_height, dpr);
+        future_to_promise(async move {
+            match CanvasGpuSession::create_canvas_surface(canvas.clone(), width, height).await {
+                Ok((render_ctx, renderer, gpu_surface)) => {
+                    SURFACE_CANVASES.with(|map| map.borrow_mut().entry(surface).or_default().finish_attach(canvas, render_ctx, renderer, gpu_surface));
+                    Ok(JsValue::TRUE)
+                }
+                Err(_) => Ok(JsValue::FALSE),
+            }
+        })
+    }
+
+    /// 📐️ Resizes an attached surface's swapchain; a no-op for a surface that presents in 2D.
+    #[wasm_bindgen(js_name = flowResizeSurfaceCanvas)]
+    pub fn flow_resize_surface_canvas(surface: u32, logical_width: u32, logical_height: u32, dpr: f64) {
+        let width = physical(logical_width, dpr);
+        let height = physical(logical_height, dpr);
+        SURFACE_CANVASES.with(|map| {
+            if let Some(session) = map.borrow_mut().get_mut(&surface) {
+                session.resize_surface(width, height);
+            }
+        });
+    }
+
+    /// 🔎️ Whether this surface presents on the GPU — the host reads it to decide whether to keep a
+    /// 2D context off the canvas (a canvas admits exactly one context kind, for its whole life).
+    #[wasm_bindgen(js_name = flowSurfaceCanvasPresentsOnGpu)]
+    pub fn flow_surface_canvas_presents_on_gpu(surface: u32) -> bool {
+        SURFACE_CANVASES.with(|map| map.borrow().get(&surface).is_some_and(CanvasGpuSession::gpu_ready))
+    }
+
+    /// 🧹️ Releases a surface's device, swapchain and canvas retention.
+    #[wasm_bindgen(js_name = flowDetachSurfaceCanvas)]
+    pub fn flow_detach_surface_canvas(surface: u32) {
+        SURFACE_CANVASES.with(|map| {
+            if let Some(mut session) = map.borrow_mut().remove(&surface) {
+                session.detach();
+            }
+        });
+    }
+
+    /// 🎬️ Rasterizes one painted scene onto the surface's canvas. `false` means nothing presented,
+    /// which is the host's signal to replay the encoded draw list into a 2D context instead.
+    pub fn present_surface_scene(surface: u32, scene: &Scene, clear: Color, dpr: f64) -> bool {
+        SURFACE_CANVASES.with(|map| {
+            let mut map = map.borrow_mut();
+            let Some(session) = map.get_mut(&surface) else { return false };
+            if !session.gpu_ready() {
+                return false;
+            }
+            if (dpr.max(1.0) - 1.0).abs() < f64::EPSILON {
+                return session.render_frame(scene, clear).is_ok();
+            }
+            let scaled = canvas::render::scale_scene_for_device_pixel_ratio(scene.clone(), dpr);
+            session.render_frame(&scaled, clear).is_ok()
+        })
+    }
+}
+
+/// 🚫️ Non-browser arm: there is no `HtmlCanvasElement` to present onto (native runs this component
+/// only under `#[cfg(test)]`, and the WASI guest target does not compile this file at all), so every
+/// frame takes the encoded-draw-list exit.
+#[cfg(not(all(target_arch = "wasm32", not(target_env = "p2"))))]
+mod surface_canvas {
+    use crate::canvas::{Color, Scene};
+
+    pub fn present_surface_scene(_surface: u32, _scene: &Scene, _clear: Color, _dpr: f64) -> bool {
+        false
+    }
+
+    pub fn flow_resize_surface_canvas(_surface: u32, _logical_width: u32, _logical_height: u32, _dpr: f64) {}
+
+    pub fn flow_detach_surface_canvas(_surface: u32) {}
+}
+
+//#endregion 🖼️SurfacePresentation
+
 //#region 🌉️LinearMemory
 
 fn flow_bridge_clock_ready() -> bool {
@@ -5752,5 +5914,9 @@ pub extern "C" fn flow_bridge_terminal_is_empty() -> i32 {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️component-domain-laws/🦀️.rs"]
 mod domain_laws;
+
+#[cfg(test)]
+#[path = "🧪️tests/🎬️draw-list/🦀️.rs"]
+mod draw_list_laws;
 
 //#endregion 🧪️DomainLaws

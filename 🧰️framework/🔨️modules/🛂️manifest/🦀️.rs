@@ -1092,6 +1092,59 @@ pub const SET_SELECTION_MODE_ACTION_ID: &str = "setSelectionMode";
 /// 🪜️ The framework-owned action id apps dispatch to switch a domain's active granularity.
 pub const SET_INTERACTION_GRANULARITY_ACTION_ID: &str = "setInteractionGranularity";
 
+/// @emoji 🎮️ The six framework-owned interaction verbs as one closed type — the key an app's declared
+/// interaction refresh scope is resolved by (`ArtifactApp::interaction_scope`), so "what does a hover
+/// repaint" is a match on a verb rather than a string compare re-derived at every call site. The
+/// framework owns the verbs; only the SCOPE each one dirties is app knowledge, because only the app
+/// knows which of its window/panel bodies render a selection or a hover.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum InteractionVerb {
+    /// 🖱️ `interactionSelect` — a pick, marquee gather or keyboard range/toggle.
+    Select,
+    /// 🐁️ `interactionHover` — pointer motion, the highest-frequency verb in the shell.
+    Hover,
+    /// 🧹️ `clearSelection` — every declared domain at once.
+    ClearSelection,
+    /// 🗂️ `selectAll` — every target of every declared domain at its active granularity.
+    SelectAll,
+    /// 🔀️ `setSelectionMode` — one domain's active `SelectionMode`.
+    SetSelectionMode,
+    /// 🪜️ `setInteractionGranularity` — one domain's active granularity.
+    SetGranularity,
+}
+
+impl InteractionVerb {
+    /// 🎮️ The verb one dispatched action id stands for; `None` for every action that is not one of the
+    /// six (the same membership test `INTERACTION_ACTION_IDS` makes, as a typed answer).
+    pub fn of_action(action: &str) -> Option<Self> {
+        match action {
+            INTERACTION_SELECT_ACTION_ID => Some(Self::Select),
+            INTERACTION_HOVER_ACTION_ID => Some(Self::Hover),
+            CLEAR_SELECTION_ACTION_ID => Some(Self::ClearSelection),
+            SELECT_ALL_ACTION_ID => Some(Self::SelectAll),
+            SET_SELECTION_MODE_ACTION_ID => Some(Self::SetSelectionMode),
+            SET_INTERACTION_GRANULARITY_ACTION_ID => Some(Self::SetGranularity),
+            _ => None,
+        }
+    }
+
+    /// 🎮️ The declared action id this verb is dispatched under — exact inverse of `of_action`.
+    pub fn action_id(self) -> &'static str {
+        match self {
+            Self::Select => INTERACTION_SELECT_ACTION_ID,
+            Self::Hover => INTERACTION_HOVER_ACTION_ID,
+            Self::ClearSelection => CLEAR_SELECTION_ACTION_ID,
+            Self::SelectAll => SELECT_ALL_ACTION_ID,
+            Self::SetSelectionMode => SET_SELECTION_MODE_ACTION_ID,
+            Self::SetGranularity => SET_INTERACTION_GRANULARITY_ACTION_ID,
+        }
+    }
+
+    /// 🎮️ Every verb, in dispatch-id declaration order — what a law walks so a seventh verb cannot be
+    /// added without an author deciding what it dirties.
+    pub const ALL: [Self; 6] = [Self::Select, Self::Hover, Self::ClearSelection, Self::SelectAll, Self::SetSelectionMode, Self::SetGranularity];
+}
+
 /// 🕹️ The six framework-owned Interaction actions, auto-injected into any `AppDefinition` that
 /// declares at least one `InteractionDefinition` — mirrors `history_action_definitions`/
 /// `clipboard_action_definitions`, except conditional (like `set_active_utility_action_definition`)
@@ -3573,10 +3626,33 @@ pub struct ExampleDefinition {
     pub label: LocalizedLabel,
     pub icon_id: IconName,
     pub artifact_json: String,
-    pub app_id: String,
+    /// 🎯️ The DIALECT this example is authored for, never one app of it. An example is a document of
+    /// an artifact's subset, and every surface bound to that subset — the editor and the viewer
+    /// alike — opens the same eight fixtures; `SubsetDeclaration.examples` already models them that
+    /// way. Stamped at registration from the registering app's own `AppDefinition.dialect`, and
+    /// resolved by [`examples_for_app`] (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub dialect: ArtifactDialect,
 }
 
-/// 🧩️ One host-aggregated plugin contribution entry (`contributionsJson` wire shape).
+/// 📚️ THE example-picker predicate — every example authored for `dialect`, in manifest order,
+/// deduplicated by id. The react shell's navbar select (`ShellHost`'s `exampleOptions`) and the
+/// host's own example-graph scoping (`exampleArtifactSources`) both answer it, and so does the
+/// TypeScript twin `examplesForDialect` (`🛂️manifest/🟦️.ts`); both are pinned against the shared
+/// `🧫️fixtures/📚️example-picker.json` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn examples_for_dialect<'a>(examples: &'a [ExampleDefinition], dialect: &ArtifactDialect) -> Vec<&'a ExampleDefinition> {
+    let mut seen = std::collections::BTreeSet::new();
+    examples.iter().filter(|example| &example.dialect == dialect).filter(|example| seen.insert(example.id.clone())).collect()
+}
+
+/// 📚️ The examples one surface may offer — [`examples_for_dialect`] against that surface's own
+/// dialect. Role plays no part: an editor and its viewer are two surfaces of ONE dialect and offer
+/// exactly the same picker.
+pub fn examples_for_app<'a>(examples: &'a [ExampleDefinition], app: &AppDefinition) -> Vec<&'a ExampleDefinition> {
+    examples_for_dialect(examples, &app.dialect)
+}
+
+/// 🧩️ One host-aggregated plugin contribution entry — the element shape of the paged
+/// `setContributions` command payload, never a view-state field.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ProgramContributionEntry {
@@ -3585,7 +3661,8 @@ pub struct ProgramContributionEntry {
     pub topic_contribution: Option<TopicContribution>,
 }
 
-/// 📕️ Parses host-pushed `contributionsJson` into typed entries.
+/// 📕️ Parses one assembled `setContributions` payload into typed entries — the ONE route
+/// contributions reach a guest by.
 pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
     dsl::os_pack::json::from_json_str(json).unwrap_or_default()
 }
@@ -4297,12 +4374,18 @@ pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub active_tool_id: Option<String>,
+    /// 📌️ Host-owned panel state, opaque to the guest — the ONE long string a view context carries.
+    ///
+    /// Contributions are deliberately NOT a view-state field. They are installed into the guest by
+    /// the paged `setContributions` command run the host publisher owns
+    /// (`🛠️ShellHelpers/🧩️contributions/🟦️.ts`), which the guest folds into its own registry
+    /// ([`crate::parse_contributions`], `🌊️flow/📔️registry/🦀️.rs`). Riding the aggregated closure
+    /// inside every refresh's view state put a 248 635-character payload against a 65 536-character
+    /// schema bound — no guest ever read it back
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub panel_json: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub contributions_json: Option<String>,
     /// 🗣️ Active UI locale; plugins resolve their own label set from this via `resolve_labels`/
     /// `app_labels!`. Non-optional — the shell always resolves one (see `initUiLocaleSync`/
     /// `detectShellLocale`) before the first `render`, so "nobody set the locale" is unrepresentable.
@@ -4380,7 +4463,7 @@ mod window_view_context_tests;
 /// (`🛂️manifest/🟦️.ts`) and its Ajv oracle validate against. Pinned from Rust by
 /// `🧪️tests/🔬️view-context-capacity/🦀️.rs`, so neither side can drift from the schema.
 pub const VIEW_CONTEXT_IDENTIFIER_CHARS: usize = 256;
-/// 📏️ `panelJson`/`contributionsJson` capacity, in Unicode characters (schema `maxLength`).
+/// 📏️ `panelJson` capacity, in Unicode characters (schema `maxLength`).
 pub const VIEW_CONTEXT_LONG_STRING_CHARS: usize = 65_536;
 /// 📏️ `activeUtilityByWindowId` capacity (schema `maxProperties`).
 pub const VIEW_CONTEXT_UTILITY_ENTRIES: usize = 64;
@@ -4389,8 +4472,9 @@ pub const VIEW_CONTEXT_WINDOW_INSTANCES: usize = 64;
 /// 🔢️ `Identifier`-typed scalar fields: `activeModeId`, `activeWindowKindId`, `activeUtilityId`,
 /// `activeToolId`, `windowId`, `focusedWindowId`.
 pub const VIEW_CONTEXT_IDENTIFIER_FIELDS: usize = 6;
-/// 🔢️ Long-string fields: `panelJson`, `contributionsJson`.
-pub const VIEW_CONTEXT_LONG_STRING_FIELDS: usize = 2;
+/// 🔢️ Long-string fields: `panelJson` — the only one. Contributions cross by their own paged
+/// `setContributions` run, never inside a view context.
+pub const VIEW_CONTEXT_LONG_STRING_FIELDS: usize = 1;
 /// 📐️ Worst-case UTF-8 expansion of one schema character — the schema bounds characters, the wire
 /// carries bytes.
 const VIEW_CONTEXT_BYTES_PER_CHAR: usize = 4;
@@ -4407,7 +4491,7 @@ const VIEW_CONTEXT_ENCODED_VALUES: usize =
 ///
 /// Derived from the schema above rather than borrowed: this used to reuse
 /// `MAX_PUBLIC_ACTION_BODY_BYTES` (256 KiB), the DFF *public action* admission cap, which is
-/// unrelated to a view context and smaller than the two 64 Ki-character long strings the schema
+/// unrelated to a view context and smaller than the 64 Ki-character long string the schema
 /// alone permits — so a schema-valid context was rejected as
 /// `plugin.internal: surface context exceeds its wire bound` and every window body of the affected
 /// app was replaced by that fault card (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
@@ -5344,6 +5428,14 @@ mod media_vocabulary_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️app-label/🦀️.rs"]
 mod app_label_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️example-picker/🦀️.rs"]
+mod example_picker_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪟️resolved-host-context/🦀️.rs"]
+mod resolved_host_context_tests;
 //#endregion 🔖️Manifest
 
 // #endregion 🛂️Manifest

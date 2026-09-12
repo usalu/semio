@@ -713,6 +713,8 @@ import {
   type ShellRoute,
   parseShellRoute,
   parseSpaceShellPath,
+  pluginAvailabilityRouteV1,
+  type PluginAvailabilityRouteV1,
   pluginShouldReceiveContributions,
   pluginShouldEstablishSession,
   appBreadcrumb,
@@ -764,6 +766,8 @@ import {
   Puzzle3dBrushMeshRegistry,
   puzzle3dBrushMeshRegistry,
   windowMeasureTreeContainsId,
+  windowMeasureDomId,
+  qualifyWindowMeasureIds,
   renderWindowMeasuresTree,
   renderStagedArgControl,
   actionRequiresStagedForm,
@@ -815,7 +819,8 @@ import {
   computeSyncPillState,
   syncPillText,
 } from "../../../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-export { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, dispatchOpenedFiles, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, runRequestMediaFrames, type SpaceShellPath, type ShellRoute, parseShellRoute, parseSpaceShellPath, appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, appWindowLabel, studioPanelFocusingSpawned, viewStateWithSpacePanel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, panelAnchorForGroup, SHELL_OWNED_PANEL_TAB_IDS, shellRendersPanelTabItself, uiIntentToActionDescriptor, resolveUtilities, resolveUtilityNodes, type SelectionUtilityOptions, spawnedWindowChromeForKind, uiNodeToTreePanelConfig, synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, syncShellLabelLocale, shellTerminologyLabel, driverDisplayLabel, DEFAULT_PANEL_WIDTH_PX, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, type RevealCutoffStore, createRevealCutoffStore, worldRevealCutoffStore, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, isRevealCutoffHidden, createInFlightSkippingInterval, createCoalescingActionDispatcher, PUZZLE3D_MESH_COMMAND_RAW_BYTES, PUZZLE3D_MESH_PAGE_VALUES, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, type Puzzle3dBrushMeshQueueStep, puzzle3dBrushMeshQueueStep, drainPuzzle3dBrushMeshQueue, Puzzle3dBrushMeshRegistry, puzzle3dBrushMeshRegistry, windowMeasureTreeContainsId, renderWindowMeasuresTree, renderStagedArgControl, actionRequiresStagedForm, isEditableEventTarget, keyboardEventMatchesChord, type KeybindingIntent, resolveKeybindingIntent, resolveUtilityActivation, actionCategoryId, actionCategories, buildActionCategoryTree, type WindowActionPaneProps, WindowActionPane, type ResolvedCommand, commandAddressKey, resolveCommands, commandCategories, buildOsCommands, dispatchOsCommand, buildCommandCategoryTree, buildCommandCategoryTabs, buildToolTabs, toolCategoryOpenPath, toolLeafInactiveRepress, toolIdFromPanelTabId, reconcileToolTabSelection, toolPanelTreeContentRevision, type ToolTabSelection, type ToolTabSelectionEffect, preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, checkinActionText, checkinMessagePlaceholderText, checkinSubmitText, checkinCancelText, type SyncPillState, computeSyncPillState, syncPillText };
+export { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, dispatchOpenedFiles, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, runRequestMediaFrames, type SpaceShellPath, type ShellRoute, parseShellRoute, parseSpaceShellPath, appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, appWindowLabel, studioPanelFocusingSpawned, viewStateWithSpacePanel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, panelAnchorForGroup, SHELL_OWNED_PANEL_TAB_IDS, shellRendersPanelTabItself, uiIntentToActionDescriptor, resolveUtilities, resolveUtilityNodes, type SelectionUtilityOptions, spawnedWindowChromeForKind, uiNodeToTreePanelConfig, synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, syncShellLabelLocale, shellTerminologyLabel, driverDisplayLabel, DEFAULT_PANEL_WIDTH_PX, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, type RevealCutoffStore, createRevealCutoffStore, worldRevealCutoffStore, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, isRevealCutoffHidden, createInFlightSkippingInterval, createCoalescingActionDispatcher, PUZZLE3D_MESH_COMMAND_RAW_BYTES, PUZZLE3D_MESH_PAGE_VALUES, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, type Puzzle3dBrushMeshQueueStep, puzzle3dBrushMeshQueueStep, drainPuzzle3dBrushMeshQueue, Puzzle3dBrushMeshRegistry, puzzle3dBrushMeshRegistry, windowMeasureTreeContainsId, windowMeasureDomId, qualifyWindowMeasureIds, renderWindowMeasuresTree, renderStagedArgControl, actionRequiresStagedForm, isEditableEventTarget, keyboardEventMatchesChord, type KeybindingIntent, resolveKeybindingIntent, resolveUtilityActivation, actionCategoryId, actionCategories, buildActionCategoryTree, type WindowActionPaneProps, WindowActionPane, type ResolvedCommand, commandAddressKey, resolveCommands, commandCategories, buildOsCommands, dispatchOsCommand, buildCommandCategoryTree, buildCommandCategoryTabs, buildToolTabs, toolCategoryOpenPath, toolLeafInactiveRepress, toolIdFromPanelTabId, reconcileToolTabSelection, toolPanelTreeContentRevision, type ToolTabSelection, type ToolTabSelectionEffect, preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, checkinActionText, checkinMessagePlaceholderText, checkinSubmitText, checkinCancelText, type SyncPillState, computeSyncPillState, syncPillText };
+export { pluginAvailabilityRouteV1, type PluginAvailabilityRouteV1 };
 export { pluginShouldEstablishSession };
 export { pluginShouldReceiveContributions };
 //#endregion ShellHelpers
@@ -1028,11 +1033,11 @@ export { CANVAS_CAMERA_ZOOM_MIN, CANVAS_CAMERA_ZOOM_MAX, type CanvasCamera, clam
 //#endregion 🔖️Canvas2dHost
 
 //#region 🔖️World3dHost
-import { world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dMarkerInteractionTarget, type World3dMarkerLayer, type World3dMarkerInteractionFields, type WorldInstanceRecord, worldMeshMaterialRevision, resolveMeshStyle, resolveMeshSelectionPreviewStyle, type SemanticColors, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, mergeWorldViewportCamera, world3dViewportCameraSeedKey, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, worldCameraPoseApproxEqual, shouldReattachWorldViewportCamera, world3dCameraDomJson, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, mapContextMenuSpecs, resolveWorldContextMenuTarget, worldInstancePickBlocked, worldFillBuildShouldTick, worldFillBuildHostTickAllowed, resolveVortexPointerDownIntent, brushObjectPlacementArgs, isCurveOnlyWorldMesh, isWorldTransformGumballMode, gumballTransformDeltaBetweenPoses, world3dGumballSelectionArgsV1, world3dRelocateDragTargetV1, world3dRelocateDispatchArgsV1, world3dVolumeBrushOriginV1, world3dVolumeBrushCommits, type WorldGumballLivePreviewDelta, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, gumballConfigForTransformMode, worldGumballConfigForProjection, worldVortexMaterialRevision, brushPreviewGhostMeshUrl, worldSuggestionMenuOwnsWindow, suggestionMenuItems, resolveWorldMergeMode, meshBoundsCorners, raycastGroundPoint,
+import { world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dMarkerInteractionTarget, type World3dMarkerLayer, type World3dMarkerInteractionFields, type WorldInstanceRecord, worldMeshMaterialRevision, resolveMeshStyle, resolveMeshSelectionPreviewStyle, type SemanticColors, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, mergeWorldViewportCamera, world3dViewportCameraSeedKey, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, worldCameraPoseApproxEqual, shouldReattachWorldViewportCamera, world3dCameraDomJson, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, mapContextMenuSpecs, resolveWorldContextMenuTarget, worldInstancePickBlocked, worldFillBuildShouldTick, worldFillBuildHostTickAllowed, resolveVortexPointerDownIntent, brushObjectPlacementArgs, isCurveOnlyWorldMesh, isWorldTransformGumballMode, gumballTransformDeltaBetweenPoses, world3dGumballSelectionArgsV1, world3dRelocateDragTargetV1, world3dRelocateDispatchArgsV1, world3dVolumeBrushOriginV1, world3dVolumeBrushCommits, type WorldGumballLivePreviewDelta, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, gumballConfigForTransformMode, worldGumballConfigForProjection, worldVortexMaterialRevision, brushPreviewGhostMeshUrl, worldSuggestionMenuOwnsWindow, suggestionMenuItems, resolveWorldMergeMode, world3dContextMenuSurfaceV1, meshBoundsCorners, raycastGroundPoint,
   resolveClickInstanceIdFromProjected,
   world3dProjectedAabbContainsClick,
-  world3dSuggestionsGestureArmed, parsePuzzle3dCatalogueDragPayload, snapWorldPointToGrid, subscribeWorldCatalogueDropPreview, getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, setWorldCatalogueDropPreview, clearWorldCatalogueDropPreview, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint, type WorldSelectionPreview, subscribeWorldSelectionPreview, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, setWorldSelectionPreview, clearWorldSelectionPreview, beginInteractivePluginAction, endInteractivePluginAction, WindowInstanceIdContext, registerPendingWorldProjection, clearPendingWorldProjection, World3dHost } from "../../../../🧱️elements/🌐️World3dHost/🟦️.tsx";
-export { world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dMarkerInteractionTarget, type World3dMarkerLayer, type World3dMarkerInteractionFields, type WorldInstanceRecord, worldMeshMaterialRevision, resolveMeshStyle, resolveMeshSelectionPreviewStyle, type SemanticColors, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, mergeWorldViewportCamera, world3dViewportCameraSeedKey, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, worldCameraPoseApproxEqual, shouldReattachWorldViewportCamera, world3dCameraDomJson, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, mapContextMenuSpecs, resolveWorldContextMenuTarget, worldInstancePickBlocked, worldFillBuildShouldTick, worldFillBuildHostTickAllowed, resolveVortexPointerDownIntent, brushObjectPlacementArgs, isCurveOnlyWorldMesh, isWorldTransformGumballMode, gumballTransformDeltaBetweenPoses, world3dGumballSelectionArgsV1, world3dRelocateDragTargetV1, world3dRelocateDispatchArgsV1, world3dVolumeBrushOriginV1, world3dVolumeBrushCommits, type WorldGumballLivePreviewDelta, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, gumballConfigForTransformMode, worldGumballConfigForProjection, worldVortexMaterialRevision, brushPreviewGhostMeshUrl, worldSuggestionMenuOwnsWindow, suggestionMenuItems, resolveWorldMergeMode, meshBoundsCorners, raycastGroundPoint, parsePuzzle3dCatalogueDragPayload, snapWorldPointToGrid, subscribeWorldCatalogueDropPreview, getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, setWorldCatalogueDropPreview, clearWorldCatalogueDropPreview, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint, type WorldSelectionPreview, subscribeWorldSelectionPreview, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, setWorldSelectionPreview, clearWorldSelectionPreview, beginInteractivePluginAction, endInteractivePluginAction, WindowInstanceIdContext, registerPendingWorldProjection, clearPendingWorldProjection, World3dHost };
+  world3dSuggestionsGestureArmed, parsePuzzle3dCatalogueDragPayload, snapWorldPointToGrid, subscribeWorldCatalogueDropPreview, getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, setWorldCatalogueDropPreview, clearWorldCatalogueDropPreview, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint, type WorldSelectionPreview, subscribeWorldSelectionPreview, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, setWorldSelectionPreview, clearWorldSelectionPreview, beginInteractivePluginAction, endInteractivePluginAction, WindowInstanceIdContext, registerPendingWorldProjection, clearPendingWorldProjection, world3dProjectionPaneElementId, WorldOrbitProjectionSwitchPane, World3dHost } from "../../../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+export { world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dMarkerInteractionTarget, type World3dMarkerLayer, type World3dMarkerInteractionFields, type WorldInstanceRecord, worldMeshMaterialRevision, resolveMeshStyle, resolveMeshSelectionPreviewStyle, type SemanticColors, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, mergeWorldViewportCamera, world3dViewportCameraSeedKey, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, worldCameraPoseApproxEqual, shouldReattachWorldViewportCamera, world3dCameraDomJson, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, mapContextMenuSpecs, resolveWorldContextMenuTarget, worldInstancePickBlocked, worldFillBuildShouldTick, worldFillBuildHostTickAllowed, resolveVortexPointerDownIntent, brushObjectPlacementArgs, isCurveOnlyWorldMesh, isWorldTransformGumballMode, gumballTransformDeltaBetweenPoses, world3dGumballSelectionArgsV1, world3dRelocateDragTargetV1, world3dRelocateDispatchArgsV1, world3dVolumeBrushOriginV1, world3dVolumeBrushCommits, type WorldGumballLivePreviewDelta, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, gumballConfigForTransformMode, worldGumballConfigForProjection, worldVortexMaterialRevision, brushPreviewGhostMeshUrl, worldSuggestionMenuOwnsWindow, suggestionMenuItems, resolveWorldMergeMode, world3dContextMenuSurfaceV1, meshBoundsCorners, raycastGroundPoint, parsePuzzle3dCatalogueDragPayload, snapWorldPointToGrid, subscribeWorldCatalogueDropPreview, getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, setWorldCatalogueDropPreview, clearWorldCatalogueDropPreview, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint, type WorldSelectionPreview, subscribeWorldSelectionPreview, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, setWorldSelectionPreview, clearWorldSelectionPreview, beginInteractivePluginAction, endInteractivePluginAction, WindowInstanceIdContext, registerPendingWorldProjection, clearPendingWorldProjection, world3dProjectionPaneElementId, WorldOrbitProjectionSwitchPane, World3dHost };
 //#endregion 🔖️World3dHost
 
 //#region 🔖️NodeGraphHost
@@ -1044,9 +1049,20 @@ import {
   dagElementInteractionChrome,
   dagOverlayLabelFill,
   dagOverlayLabelFillHex,
+  dagContentBounds,
+  dagContentCoverage,
+  dagEllipsizeByMeasure,
+  dagFitCamera,
   dagScreenToWorld,
+  dagStartupCamera,
   dagWorldToScreen,
+  nodeGraphContentSignature,
+  DAG_CONTENT_FIT_PADDING_PX,
+  DAG_CONTENT_FRAMED_MIN_COVERAGE,
+  DAG_CONTENT_REFIT_MAX_COVERAGE,
+  DAG_LABEL_ELLIPSIS,
   type DagCameraState,
+  type DagContentBounds,
   type DagLabelOverlayInteraction,
   type DagLabelOverlayRow,
   type DagMarqueeOverlay,
@@ -1093,9 +1109,20 @@ export {
   dagElementInteractionChrome,
   dagOverlayLabelFill,
   dagOverlayLabelFillHex,
+  dagContentBounds,
+  dagContentCoverage,
+  dagEllipsizeByMeasure,
+  dagFitCamera,
   dagScreenToWorld,
+  dagStartupCamera,
   dagWorldToScreen,
+  nodeGraphContentSignature,
+  DAG_CONTENT_FIT_PADDING_PX,
+  DAG_CONTENT_FRAMED_MIN_COVERAGE,
+  DAG_CONTENT_REFIT_MAX_COVERAGE,
+  DAG_LABEL_ELLIPSIS,
   type DagCameraState,
+  type DagContentBounds,
   type DagLabelOverlayInteraction,
   type DagLabelOverlayRow,
   type DagMarqueeOverlay,

@@ -1,0 +1,57 @@
+{
+  "why": "The set law of the framework-owned interaction selection, written once and read by two implementations: the Rust reducer laws (`🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs`, driving the real reserved `interactionSelect` job) and the language-neutral Node twin (`interactionSelectionSetOracle`, the renderer react target's `📜️script.ts`). A selection is a SET of topology ids: `Select` is event-sourced, so it must be idempotent per id — repeating a target in one batch, or re-adding an already selected id, can never make the same id appear twice in the published `selectedIds`.",
+  "liveDefect": "Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 2026-09-12: one click on the generation3d preview published `InteractionView {\"selectedIds\":[\"extrude@solid\",\"extrude@solid\"],\"publishedIds\":[\"extrude@solid\",\"extrude@solid\"],\"locked\":{\"extrude@solid\":false}}`. The per-domain reducer was innocent (`next_selection` already dedups `Replace`/`Additive`); the leftover PROJECTION flattened every domain of one `InteractionState`, and the framework deliberately mirrors the picked ids into a second `vortex` domain (`overlay_leftover_ids_into_vortex`), so one pick was counted once per mirroring domain. `locked` — an object, keyed by construction — carried the id exactly once, which is what made the two halves disagree.",
+  "domain": "items",
+  "granularity": "item",
+  "mirrorDomain": "vortex",
+  "law": "selectedIds names every selected topology id AT MOST ONCE, in first-seen order, for every merge and however many mirror domains the leftover projection flattens; `locked` has exactly one key per published id, and `gumball.anchorId` is the first of them.",
+  "cases": [
+    {
+      "id": "replace-repeated-batch-target",
+      "why": "Two rendered instances of ONE topology id picked in one batch select that id once — the host is expected to collapse them first, and the reducer must not depend on it having done so.",
+      "seed": [],
+      "merge": "replace",
+      "targets": ["item-1", "item-1"],
+      "selectedIds": ["item-1"]
+    },
+    {
+      "id": "replace-single-target-is-not-mirrored-twice",
+      "why": "The regression itself: a plain one-target pick must publish ONE id even though the leftover state carries the picked id under both the app's domain and the `vortex` mirror.",
+      "seed": [],
+      "merge": "replace",
+      "targets": ["item-1"],
+      "selectedIds": ["item-1"]
+    },
+    {
+      "id": "add-already-selected-is-idempotent",
+      "why": "Event-sourced `Select`: re-adding a selected id is a no-op, never a second entry.",
+      "seed": ["item-1"],
+      "merge": "additive",
+      "targets": ["item-1"],
+      "selectedIds": ["item-1"]
+    },
+    {
+      "id": "add-new-target-extends-the-set",
+      "why": "An additive merge still grows the set — the dedup must not swallow a genuinely new id.",
+      "seed": ["item-1"],
+      "merge": "additive",
+      "targets": ["item-2"],
+      "selectedIds": ["item-1", "item-2"]
+    },
+    {
+      "id": "add-repeated-batch-target",
+      "why": "A repeated target inside an additive batch lands once.",
+      "seed": ["item-1"],
+      "merge": "additive",
+      "targets": ["item-2", "item-2"],
+      "selectedIds": ["item-1", "item-2"]
+    }
+  ],
+  "wiring": {
+    "why": "Source-level anchors the Node twin re-checks, so the two flatten sites can never drift back apart into one deduping and one not — which is exactly how the live defect was introduced.",
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+    "projection": "pub(crate) fn leftover_selected_ids_of(state: &protocol::InteractionState) -> Vec<String> {",
+    "callSites": ["            leftover_selected_ids_of(self.state)", "            let selected_ids = leftover_selected_ids_of(state);"],
+    "lockedFromSelectedIds": "            let locked: Vec<(String, DslValue)> = selected_ids.iter().map(|id| (id.clone(), DslValue::Bool(false))).collect();"
+  }
+}

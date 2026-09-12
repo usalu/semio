@@ -1,6 +1,6 @@
 //! 🎚️ Generation3d viewer config — the closed semantic mutation aggregate.
 //!
-//! Four authored leaf directories, one per settled read-only interaction. Every leaf is an
+//! Five authored leaf directories, one per settled read-only interaction. Every leaf is an
 //! immediate child of this aggregate's own mutation root, so `dsl::Mutations`'s leaf-ownership
 //! contract holds without a single provisional descriptor.
 
@@ -14,7 +14,10 @@ mod set_lod_mode;
 mod set_preview_camera;
 #[path = "🌞️set-sun/🦀️.rs"]
 mod set_sun;
+#[path = "🎨️set-active-example/🦀️.rs"]
+mod set_active_example;
 
+pub use set_active_example::SetActiveExample;
 pub use set_lod_mode::SetLodMode;
 pub use set_preview_camera::SetPreviewCamera;
 pub use set_show_mode::SetShowMode;
@@ -31,6 +34,10 @@ pub enum Generation3dViewConfigMutation {
     SetPreviewCamera(SetPreviewCamera),
     #[dsl(key = "sun")]
     SetSun(SetSun),
+    /// 🎨️ Which bundled example this read-only surface is looking at — a config leaf, because a
+    /// viewer opens a document rather than rewriting one.
+    #[dsl(key = "active-example")]
+    SetActiveExample(SetActiveExample),
 }
 
 impl protocol::OpText for Generation3dViewConfigMutation {

@@ -1,0 +1,35 @@
+{
+  "capability": "evaluate",
+  "requestFields": ["operatorId", "inputJson"],
+  "operatorId": "test.echo",
+  "outputChannel": "x",
+  "rows": [
+    {
+      "name": "ok",
+      "requestJson": "{\"operatorId\":\"test.echo\",\"inputJson\":\"{\\\"number\\\":2}\"}",
+      "outcome": "ok",
+      "outputKeys": ["x"],
+      "outputEmpty": false
+    },
+    {
+      "name": "empty-output",
+      "requestJson": "{\"operatorId\":\"test.echo\",\"inputJson\":\"{}\"}",
+      "outcome": "ok",
+      "outputKeys": ["x"],
+      "outputEmpty": true
+    },
+    {
+      "name": "operator-fault",
+      "requestJson": "{\"operatorId\":\"test.missing\",\"inputJson\":\"{}\"}",
+      "outcome": "ok",
+      "outputKeys": ["error"],
+      "outputEmpty": false
+    },
+    {
+      "name": "bad-request",
+      "requestJson": "{\"inputJson\":\"{}\"}",
+      "outcome": "fault",
+      "fault": "missing field `operatorId`"
+    }
+  ]
+}

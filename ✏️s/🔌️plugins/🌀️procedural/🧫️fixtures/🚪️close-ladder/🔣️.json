@@ -1,0 +1,28 @@
+{
+  "contract": "semio.procedural.close-ladder/v1",
+  "app": "s.procedural.generation3d@1/*#editor",
+  "previewWindow": "procedural-preview",
+  "previewBody": "procedural.play.preview",
+  "instance": 7,
+  "sessions": [
+    {
+      "label": "cold",
+      "documents": 0,
+      "rendersPerDocument": 0
+    },
+    {
+      "label": "warm",
+      "documents": 3,
+      "rendersPerDocument": 2
+    },
+    {
+      "label": "long",
+      "documents": 8,
+      "rendersPerDocument": 4
+    }
+  ],
+  "maximumCloseTurns": 768,
+  "turnBudget": 16384,
+  "maximumCloseTurnGrowth": 8,
+  "note": "🚪️ The cost of closing one generation3d editor instance, as a function of the session it accumulated. Each close turn is one browser worker round trip, so a ladder whose turn count grows with the retained session is a role switch whose wall time grows with it — measured on 6018 as 62–87 s and then plugin-ui.lifecycle-close-budget-exhausted (ticket 26/09/09, 🗑️generated/journey-5/console.txt). Before the fix every session cost exactly 2052 turns: the reactor close walked its fixed slot geometry one slot per reactor turn."
+}

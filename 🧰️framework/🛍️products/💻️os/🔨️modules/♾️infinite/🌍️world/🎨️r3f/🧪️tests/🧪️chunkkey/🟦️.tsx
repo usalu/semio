@@ -269,12 +269,27 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("mirrors createWorldProjectionTemplates labels and ids in the switch tree", () => {
       const templates = createWorldProjectionTemplates({ controllerId: "demo" });
-      const items = worldProjectionSwitchTreeItems(templates, () => undefined);
-      expect(items.map((row) => row.id)).toEqual(["parallel", "perspective"]);
+      const items = worldProjectionSwitchTreeItems("framework.worldOrbit.projection.puzzle3dMainPerspective", templates, () => undefined);
+      expect(items.map((row) => row.id)).toEqual(["framework.worldOrbit.projection.puzzle3dMainPerspective.parallel", "framework.worldOrbit.projection.puzzle3dMainPerspective.perspective"]);
       expect(items[0]!.items!.map((row) => row.label)).toEqual(["Orthographic", "Axonometric", "Oblique"]);
       expect(items[0]!.items![0]!.items).toBeUndefined();
       expect(items[0]!.items![1]!.items!.map((row) => row.label)).toEqual(["Isometric", "Dimetric", "Trimetric"]);
       expect(items[1]!.items!.map((row) => row.label)).toEqual(["1-Point", "2-Point", "3-Point", "Curvilinear"]);
+    });
+
+    it("qualifies every switch row id by the owning pane so two world surfaces share none", () => {
+      const templates = createWorldProjectionTemplates({ controllerId: "demo" });
+      const rowIds = (paneId: string): string[] => {
+        const walk = (rows: readonly { readonly id: string; readonly items?: readonly unknown[] }[]): string[] =>
+          rows.flatMap((row) => [row.id, ...walk((row.items ?? []) as readonly { readonly id: string; readonly items?: readonly unknown[] }[])]);
+        return walk(worldProjectionSwitchTreeItems(paneId, templates, () => undefined));
+      };
+      const top = rowIds("framework.worldOrbit.projection.puzzle3dMainTop");
+      const perspective = rowIds("framework.worldOrbit.projection.puzzle3dMainPerspective");
+      expect(top.length).toBeGreaterThan(8);
+      expect(top.length).toBe(perspective.length);
+      expect(top.filter((id) => perspective.includes(id))).toEqual([]);
+      expect(new Set([...top, ...perspective]).size).toBe(top.length + perspective.length);
     });
   });
 

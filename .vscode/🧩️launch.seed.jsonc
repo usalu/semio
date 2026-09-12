@@ -1640,6 +1640,48 @@
       }
     },
     {
+      "name": "🛠️dev🔧️procedural🏙️3d👁️viewer⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- procedural 3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6018",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP_ROLE": "viewer"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 200.2
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6018)",
+        "uriFormat": "%s/?plugin=generation3d"
+      }
+    },
+    {
+      "name": "🛠️dev🔧️procedural🏙️3d👁️viewer🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- procedural 3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6118",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP_ROLE": "viewer"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 200.3
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6118)",
+        "uriFormat": "%s/?plugin=generation3d&role=viewer"
+      }
+    },
+    {
       "name": "🛠️dev📽️projektetage",
       "type": "node-terminal",
       "request": "launch",
@@ -2327,7 +2369,7 @@
       "name": "🛠️dev🔺️trinity🃏️jack🦀️shell",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo run -p trinity_jack_shell -- trinity/fixture/nakagin-capsule-tower.trinity.json \"MATCH (a:Piece) RETURN a.name\"",
+      "command": "bun nx run @semio-tech/trinity-jack-shell:run -- trinity/fixture/nakagin-capsule-tower.trinity.json \"MATCH (a:Piece) RETURN a.name\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -3237,6 +3279,14 @@
       "presentation": { "group": "4_gate", "order": 407.34 }
     },
     {
+      "name": "⚖️gate⏳️async🧱️boxed-fixed-slots-twin",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-async:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 407.35 }
+    },
+    {
       "name": "⚖️gate🖱️runtime📏️ownership",
       "type": "node-terminal",
       "request": "launch",
@@ -3433,7 +3483,7 @@
       "name": "⚖️gate📐️cad🧠️brep-invoke🦀️check",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo check -p semio-framework-os-flow --lib --message-format short",
+      "command": "bun nx run semio-framework-os-flow-core:check --args=\"-p semio-framework-os-flow --lib --message-format short\"",
       "cwd": "${workspaceFolder}",
       "presentation": { "group": "4_gate", "order": 408.06 }
     },
@@ -5768,9 +5818,8 @@
       "name": "⚖️gate🌊️browser-actor-import🧪️runtime",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/browser-actor-import-fixture:runtime-check",
+      "command": "bun nx run @semio-tech/browser-actor-import-testkit:runtime-check",
       "env": {
-        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/browser-actor-import-exact",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "600000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "600000",
@@ -5783,9 +5832,8 @@
       "name": "⚖️gate🌊️browser-actor-import🧪️pending-host-close",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/browser-actor-import-fixture:pending-host-close-check",
+      "command": "bun nx run @semio-tech/browser-actor-import-testkit:pending-host-close-check",
       "env": {
-        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/browser-actor-import-exact",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "600000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "600000",
@@ -6345,6 +6393,28 @@
       }
     },
     {
+      "name": "⚖️gate📌️view-state-carriage🌐️shell",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-react:view-state-carriage-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.0998452
+      }
+    },
+    {
+      "name": "⚖️gate🔀️surface-switch🌐️shell",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-react:surface-switch-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.0998455
+      }
+    },
+    {
       "name": "⚖️gate🎥️tutorial-interaction🌐️renderer",
       "type": "node-terminal",
       "request": "launch",
@@ -6561,7 +6631,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/plugin-registry:rust-taxonomy-mounts-check",
       "cwd": "${workspaceFolder}",
-      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/registry-taxonomy-mounts" },
       "presentation": { "group": "4_gate", "order": 411.10869 }
     },
     {
@@ -6570,7 +6639,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/plugin-registry:plugin-root-ownership-check",
       "cwd": "${workspaceFolder}",
-      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/registry-plugin-root-ownership" },
       "presentation": { "group": "4_gate", "order": 411.10870 }
     },
     {
@@ -7116,7 +7184,6 @@
       "command": "bun nx run @semio-tech/gis-plugin:component-cold-map-patch-native-check",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/gis-component-cold-map-patch",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
@@ -7677,7 +7744,7 @@
       "name": "⚖️gate🏗️artifact-builder",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyArtifactBuilderBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:verify-policy-breach-artifact-builder",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -7688,7 +7755,7 @@
       "name": "⚖️gate🪓️artifact-decomposer",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyArtifactDecomposerBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:verify-policy-breach-artifact-decomposer",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -7941,7 +8008,7 @@
       "name": "⚖️gate🧬️schema-representation",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policySchemaRepresentationBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:verify-policy-breach-schema-representation",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -8051,7 +8118,7 @@
       "name": "⚖️gate🚪️io-serializer-matrix",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyIoSerializerMatrixBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:verify-policy-breach-io-serializer-matrix",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -8271,7 +8338,7 @@
       "name": "⚖️gate🗄️io-terminality",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyIoTerminalityBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:verify-policy-breach-io-terminality",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -8315,7 +8382,7 @@
       "name": "⚖️gate💾codec-fidelity",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyCodecFidelityBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:verify-policy-breach-codec-fidelity",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -8326,7 +8393,7 @@
       "name": "⚖️gate🏅️standards-coverage",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyStandardsCoverageBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:verify-policy-breach-standards-coverage",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -8337,7 +8404,7 @@
       "name": "⚖️gate🧐️artifact-analyzer",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyArtifactAnalyzerBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:verify-policy-breach-artifact-analyzer",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -8348,7 +8415,7 @@
       "name": "⚖️gate🎹️artifact-composer",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyArtifactComposerBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:verify-policy-breach-artifact-composer",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -8359,7 +8426,7 @@
       "name": "⚖️gate🏗️artifact-builder-migrated",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyArtifactBuilderMigratedBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:verify-policy-breach-artifact-builder-migrated",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -8370,7 +8437,7 @@
       "name": "⚖️gate🔗️plugin-dependency-parity",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyPluginDependencyParityBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:verify-policy-breach-plugin-dependency-parity",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -8381,7 +8448,7 @@
       "name": "⚖️gate🎯️contribution-target",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyContributionTargetBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:verify-policy-breach-contribution-target",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -8408,39 +8475,6 @@
       "presentation": {
         "group": "4_gate",
         "order": 410.99
-      }
-    },
-    {
-      "name": "🎥️render🎬️animate-video",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts render",
-      "cwd": "${workspaceFolder}/animate/video/rs",
-      "presentation": {
-        "group": "3_dev",
-        "order": 391.42
-      }
-    },
-    {
-      "name": "👁️preview🎬️animate-video",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts preview",
-      "cwd": "${workspaceFolder}/animate/video/rs",
-      "presentation": {
-        "group": "3_dev",
-        "order": 391.43
-      }
-    },
-    {
-      "name": "🧹️flush-cache🎬️animate-video",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts flush-cache",
-      "cwd": "${workspaceFolder}/animate/video/rs",
-      "presentation": {
-        "group": "3_dev",
-        "order": 391.44
       }
     },
     "@generated:fem2d:react",
@@ -8742,56 +8776,71 @@
       "name": "🏛️bestest🔋️energy♻️regenerate",
       "type": "node-terminal",
       "request": "launch",
-      "command": "SEMIO_ENERGY_BESTEST_REGENERATE=1 cargo test -p semio-s-plugin-energy --lib bestest::tests::regenerate_bestest_fixtures -- --nocapture",
+      "command": "bun nx run @semio-tech/energy-model-rs:test-bestest-regenerate",
       "cwd": "${workspaceFolder}"
     },
     {
       "name": "🧪️test⏱️brep🧊️tessellation-jobs",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p semio-s-artifact-stdio-semio --features conversion-brep --test brep_tessellation_jobs -- --nocapture --test-threads 1",
+      "command": "bun nx run @semio-tech/stdio-semio-rs:test --args=\"--features conversion-brep --test brep_tessellation_jobs -- --nocapture\"",
       "cwd": "${workspaceFolder}"
     },
     {
       "name": "🧪️test📦️brep🧊️extrude-orientation",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p semio-s-artifact-stdio-semio --test brep_extrude_orientation -- --nocapture --test-threads 1",
+      "command": "bun nx run @semio-tech/stdio-semio-rs:test --args=\"--test brep_extrude_orientation -- --nocapture\"",
       "cwd": "${workspaceFolder}"
     },
     {
       "name": "🧪️test🎨️brep🧊️analytic-blend",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p semio-s-artifact-stdio-semio --test brep_analytic_blend -- --nocapture --test-threads 1",
+      "command": "bun nx run @semio-tech/stdio-semio-rs:test --args=\"--test brep_analytic_blend -- --nocapture\"",
       "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🧪️test🐚️brep🧊️shell-orientation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-semio-rs:test --args=\"--test brep_shell_orientation -- --nocapture\"",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🧪️test🐚️brep🧊️shell-orientation🕸️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-semio-rs:test --args=\"--target wasm32-wasip2 --test brep_shell_orientation -- --nocapture\"",
+      "cwd": "${workspaceFolder}",
+      "env": { "CARGO_TARGET_WASM32_WASIP2_RUNNER": "wasmtime" }
     },
     {
       "name": "🧪️test⏱️procedural🧊️boot-deadline",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p semio-s-plugin-procedural --test boot_deadline -- --nocapture --test-threads 1",
+      "command": "bun nx run @semio-tech/procedural-plugin:test --args=\"--test boot_deadline -- --nocapture\"",
       "cwd": "${workspaceFolder}"
     },
     {
       "name": "🧪️test🚪️procedural🧊️close-ladder",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p semio-s-plugin-procedural --test close_ladder -- --nocapture --test-threads 1",
+      "command": "bun nx run @semio-tech/procedural-plugin:test --args=\"--test close_ladder -- --nocapture\"",
       "cwd": "${workspaceFolder}"
     },
     {
       "name": "🧪️test🎒️flow🧊️mesh-pack-wire",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p semio-framework-os-flow --test flow_mesh_pack_wire -- --nocapture --test-threads 1",
+      "command": "bun nx run semio-framework-os-flow-core:test --args=\"--test flow_mesh_pack_wire -- --nocapture\"",
       "cwd": "${workspaceFolder}"
     },
     {
       "name": "🏛️bestest🔋️energy🧪️laws",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p semio-s-plugin-energy --lib bestest:: -- --nocapture",
+      "command": "bun nx run @semio-tech/energy-model-rs:test --args=\"--lib bestest:: -- --nocapture\"",
       "cwd": "${workspaceFolder}"
     },
     {

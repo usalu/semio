@@ -10,9 +10,9 @@ import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../🔌️plugin/
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioProductionTestBoundaryVitePlugin } from "./🔌️vite-plugins.ts";
+import { semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioProductionTestBoundaryVitePlugin, semioSourceWatchVitePlugin } from "./🔌️vite-plugins.ts";
 import { semioExtensionStoreVitePlugin } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts";
-import { developmentRuntimeRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
+import { developmentRuntimeRoot, pluginModulesRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { resolveTestBrowserHostRootsV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import { productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents } from "../../🚚️distribution/🔌️components/🟦️.ts";
 import { DISTRIBUTION_LAYOUT, distributionChunkName, distributionAssetName } from "../../🚚️distribution/🟦️.ts";
@@ -30,7 +30,7 @@ const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile);
 const testBrowserHost = command === "serve" ? resolveTestBrowserHostRootsV1(process.env) : undefined;
 const receiptDirectory = testBrowserHost?.activationRoot ?? path.join(runtimeRoot, "activation");
 const activated = command === "serve" ? readActivationReceipt(receiptDirectory) : undefined;
-const pluginModulesDir = testBrowserHost?.moduleRoot ?? path.resolve(configDir, "../../../🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
+const pluginModulesDir = testBrowserHost?.moduleRoot ?? pluginModulesRoot(profile);
 const installedExtensionsDir = command === "build" ? pluginModulesDir : testBrowserHost ? path.join(testBrowserHost.browserHostRoot, "extensions") : path.join(runtimeRoot, "extensions");
 const fontsDir = path.resolve(configDir, "../../../♾️infinite/📦️packages/🦀️rust/dist/fonts");
 const sessionPath = path.resolve(configDir, "../../../🔌️plugin/📇️registry/dist/sessions", plugin, "🟦️session.ts");
@@ -64,9 +64,12 @@ function engineNpmPackage(cratePath: string): string {
 
 const registryEngineOptimizeDepsExclude = [...new Set((isHostPlaygroundFilter(plugin) ? PLAYGROUND_BUILD_TARGETS : PLAYGROUND_BUILD_TARGETS.filter((target) => target.variant === plugin)).flatMap((target) => target.engines))].map(engineNpmPackage);
 
-/** @emoji 🗄️ Isolates dependency-optimizer state for concurrent playground variants and renderers under
- * the ONE shared cache root, so disk is bounded by build history rather than by `node_modules`. */
-const playgroundCacheDir = repoCacheDirectory(repoRoot, "vite", "os-dev", `${plugin}-${renderer}`);
+/** @emoji 🗄️ Isolates dependency-optimizer state for concurrent playground variants, renderers and
+ * profiles under the ONE shared cache root, so disk is bounded by build history rather than by
+ * `node_modules`. The profile belongs in the key: a `dev` and a `release` serve of the same variant run
+ * side by side, and sharing one `deps/` directory means whichever re-optimizes last rewrites the modules
+ * the other has already handed to a browser. */
+const playgroundCacheDir = repoCacheDirectory(repoRoot, "vite", "os-dev", `${plugin}-${renderer}-${profile}`);
 
 /** @emoji 🚫️ Keeps Node-only browser automation packages outside Vite's browser dependency optimizer. */
 const nodeOnlyOptimizeDepsExclude = ["playwright", "playwright-core", "chromium-bidi", "fsevents"];
@@ -91,6 +94,16 @@ if (!resolvedPluginId) throw new Error(`Unknown playground module identity: ${pl
 const extensionIds = new Set(EXTENSION_TARGETS.map((target) => target.pluginId));
 const productionComponents = command === "build" ? selectProductionBrowserComponents((await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION, plugin, resolvedPluginId, [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS]) : undefined;
 const pluginModuleDirNames = [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...(activated?.plugins ?? []).filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId))];
+
+/** @emoji 🔎️ The components the activation-receipt watcher checks for staleness — every declared build
+ * target, with the owner tree whose newest source mtime decides whether the staged module is behind
+ * (`<cratePath>/../..`, the same owner root `stagePluginDescriptor` publishes descriptors from). */
+const activationComponents = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map((target) => ({
+  pluginId: target.pluginId,
+  directoryName: moduleDirectoryName(target.pluginId),
+  role: target.role === "extension" ? ("extension" as const) : ("plugin" as const),
+  sourceRoot: path.resolve(repoRoot, target.cratePath, "..", ".."),
+}));
 //#endregion 🔖️RegistryDrivenAssetsAndEngines
 
 return {
@@ -146,10 +159,13 @@ return {
       },
     } : {}),
     fs: { allow: [repoRoot, pluginModulesDir, installedExtensionsDir, rendererModulesDir] },
-    watch: {
-      // Generated registry rewrites must not bounce Vite (write playgrounds.ts → restart → rewrite…).
-      ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**", "**/.vscode/launch.json"],
-    },
+    // 👁️ `semioSourceWatchVitePlugin` owns file watching (see its docstring): Vite's own chokidar
+    // watcher watches `root` plus every module-graph file outside it, which on macOS consolidates into
+    // ONE FSEvents stream over the whole repository and then pays `events × watched paths` per event —
+    // a concurrent cargo build in the shared cache wedges the server. `server.watch.ignored` cannot fix
+    // that (chokidar reads it only after those per-path filters have run), so there is no watcher here
+    // to configure; the replacement watches the source roots and never sees cache writes at all.
+    watch: null,
   },
   plugins: [
     semioProductionTestBoundaryVitePlugin(),
@@ -170,7 +186,7 @@ return {
     ]),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
-    ...(command === "serve" ? [semioActivationVitePlugin({ receiptDirectory }), semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot })] : []),
+    ...(command === "serve" ? [semioSourceWatchVitePlugin({ repoRoot }), semioActivationVitePlugin({ receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: activationComponents }), semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot })] : []),
     ...semioAssetsVitePlugin(repoRoot),
     ...(productionComponents ? [productionBrowserArtifactsVitePlugin(repoRoot, productionComponents)] : [
       ...pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),

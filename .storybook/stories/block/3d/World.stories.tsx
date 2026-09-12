@@ -34,15 +34,15 @@ import { admitBlockStoryRepresentations, block3dStorySnapshotFor, blockStoryActi
 //#region PluginEmulator
 type Block3dStoryRuntime = { readonly selectedIds: readonly string[]; readonly hoveredId: string | null };
 
-/** @emoji 🖱️ Story-local mirror of `instanceMergeArg`/`componentMergeArg` — applies a `worldPick`/`worldSelect`/`worldVortexSelect` merge mode to the current selection (verbatim the helper `../puzzle/3d/World.stories.tsx` uses). */
+/** @emoji 🖱️ Story-local mirror of the ONE `MergeMode` set algebra (`🕹️interaction/🧫️fixtures/🎯️merge-modes.json`) — applies a `worldPick`/`worldSelect`/`worldVortexSelect` merge mode to the current selection (verbatim the helper `../puzzle/3d/World.stories.tsx` uses). */
 function applyStoryWorldMerge(current: readonly string[], id: string, merge: string): string[] {
   const set = new Set(current);
-  if (merge === "replace") return [id];
-  if (merge === "add") {
+  if (merge === "replace" || merge === "range") return [id];
+  if (merge === "additive") {
     set.add(id);
     return [...set];
   }
-  if (merge === "remove") {
+  if (merge === "subtractive") {
     set.delete(id);
     return [...set];
   }

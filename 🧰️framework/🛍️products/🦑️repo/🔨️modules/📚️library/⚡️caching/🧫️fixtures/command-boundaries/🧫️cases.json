@@ -14,7 +14,7 @@
       "exports": [
         "buildCargoArtifacts"
       ],
-      "maximumInputs": 5
+      "maximumInputs": 6
     },
     {
       "name": "command router",

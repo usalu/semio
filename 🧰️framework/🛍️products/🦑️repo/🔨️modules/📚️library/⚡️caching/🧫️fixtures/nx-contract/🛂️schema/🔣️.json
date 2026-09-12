@@ -90,6 +90,10 @@
           "continuous": {
             "type": "boolean"
           },
+          "authored": {
+            "description": "True when no policy family classifies the name, so the owner's authored `cache` flag decides: `cache` is the resolution for an authored `true`, an authored `false` stays uncached.",
+            "type": "boolean"
+          },
           "command": {
             "type": "string",
             "minLength": 1

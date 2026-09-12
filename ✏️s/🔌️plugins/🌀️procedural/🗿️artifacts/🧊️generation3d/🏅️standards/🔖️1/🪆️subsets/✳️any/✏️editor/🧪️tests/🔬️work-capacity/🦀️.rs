@@ -36,13 +36,14 @@ async fn every_bounded_retained_route_answers_an_admissible_extent() {
     let read = testkit::snapshot(&app);
     let interaction = protocol::InteractionState::default();
     let capacity = GENERATION3D_RETAINED_CAPACITY;
-    for tool_id in GENERATION3D_RETAINED_TOOL_IDS.iter().copied() {
+    let instance_owner = testkit::instance_operation_owner();
+    for tool_id in GENERATION3D_RETAINED_TOOL_IDS.iter().chain(GENERATION3D_FLOW_EVAL_TOOL_IDS).copied() {
         if tool_id == "flowEvalTick" {
             continue;
         }
         let command = <Generation3dPlayApp as ArtifactEditor>::command_from_action(tool_id, None).unwrap_or_else(|_| panic!("{tool_id} decodes from its own action id"));
         let extent = if GENERATION3D_PREVIEW_TOOL_IDS.contains(&tool_id) {
-            Generation3dPreviewCommandWork::new(tool_id).extent(&command, &read, &interaction, None)
+            Generation3dPreviewCommandWork::new(tool_id, instance_owner.clone()).extent(&command, &read, &interaction, None)
         } else {
             generation3d_bounded_extent(&command, &read, &interaction)
         };
@@ -50,6 +51,7 @@ async fn every_bounded_retained_route_answers_an_admissible_extent() {
         assert!(capacity.admits(extent), "{tool_id}: extent {extent} exceeds the declared capacity {}", capacity.work_items());
         eprintln!("[DEBUG] retained route {tool_id}: extent={extent} maximum_work_items={}", capacity.work_items());
     }
+    testkit::retire_instance_operation_owner(&instance_owner);
     semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
 }
 
@@ -75,13 +77,12 @@ async fn interaction_select_passes_the_reserved_preflight() {
     let _serial = test_support::lock();
     let mut app = app_with_registry().await;
     let node_id = testkit::snapshot(&app).fixture.widgets.first().map(crate::widget_id).expect("default fixture node").to_string();
-    let targets = serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: "node".into(), id: node_id.clone() }]).expect("selection targets");
-    let args: dsl::DslValue = serde_json::json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" }).into();
-    app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &semio_framework_plugin::testkit::meta("local")).await.expect("interactionSelect dispatches");
-    let receipt = testkit::settle(&mut app).await;
-    assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "interactionSelect faulted");
+    // 🧯️ The reserved spawn-job the admission requests has to be DRIVEN before the selection exists —
+    // see `testkit::select_graph`. Settling a typed operation instead left this law reading a `None`
+    // selection and asserting nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    let settled = testkit::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
-    eprintln!("[DEBUG] interactionSelect reserved work items={} lanes={:?}", ArtifactRetainedWorkCapacity::for_invertible_items(1).work_items(), receipt.lanes);
+    eprintln!("[DEBUG] interactionSelect reserved work items={} effects={}", ArtifactRetainedWorkCapacity::for_invertible_items(1).work_items(), settled.requested_effects.len());
     semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
 }
 

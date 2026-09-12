@@ -638,6 +638,14 @@ pub mod examples {
     mod sphere_cut_with_torus_tests;
 }
 
+/// 🧵️ The surface-neutral `flowEvalTick` chain BOTH surfaces run. Mounted at the artifact level,
+/// beside `editor`/`viewer` rather than inside either, so the viewer can reach it without ever
+/// importing through the sibling `editor` module (`policyViewerPurityBreaches`) — the same reason
+/// [`GENERATION3D_DIALECT`] lives here (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[cfg(feature = "component-app-assembly")]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🦀️.rs"]
+pub mod preview_eval;
+
 #[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
@@ -704,6 +712,8 @@ pub mod editor {
             pub mod flow_tessellate_resolve;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛑️cancel-preview-eval/🦀️.rs"]
             pub mod cancel_preview_eval;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧯️flow-tessellate-cancel-resolve/🦀️.rs"]
+            pub mod flow_tessellate_cancel_resolve;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs"]
@@ -833,6 +843,18 @@ pub mod viewer {
 
         #[path = "."]
         pub mod commands {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/✅️flow-eval-resolve/🦀️.rs"]
+            pub mod flow_eval_resolve;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/⏱️flow-eval-tick/🦀️.rs"]
+            pub mod flow_eval_tick;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔺️flow-tessellate-resolve/🦀️.rs"]
+            pub mod flow_tessellate_resolve;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🛑️cancel-preview-eval/🦀️.rs"]
+            pub mod cancel_preview_eval;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🧯️flow-tessellate-cancel-resolve/🦀️.rs"]
+            pub mod flow_tessellate_cancel_resolve;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set-active-example/🦀️.rs"]
+            pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/📷️set-camera/🦀️.rs"]
             pub mod set_camera;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔬️set-lod-mode/🦀️.rs"]
@@ -861,8 +883,15 @@ pub mod viewer {
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🦀️.rs"]
-                    pub mod preview;
+                    #[path = "."]
+                    pub mod preview {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🫧️transient/🦀️.rs"]
+                        pub mod transient;
+                    }
                 }
             }
         }

@@ -11,7 +11,20 @@
          of bounds" — which is why the introspection beacon is `window.semioWgpuIntrospection`, owned by
          `🚀️browser-boot/🟦️.ts` over the Worker seam, and never `wasmBindings`. -->
     <link data-trunk rel="rust" href="Cargo.toml" data-wasm-opt="z" data-type="worker" data-bindgen-target="web" />
-    <link data-trunk rel="copy-dir" href="../../../../../../🧑‍💻dev/🔌️plugin-modules" data-target-path="🔌️plugin-modules" />
+    <!-- 🔌️ THE one staging root (`pluginModulesRoot("dev")`, `🧑‍💻dev/♻️activation/🟦️.ts`) — the same
+         directory the react Vite server mounts and the wgpu native runner reads. The trunk bundle is a
+         dev-profile artifact (`Trunk.toml`'s `dist` is not profile-split and no Nx target passes
+         `--release` to it), so the `dev` segment is pinned here and `assertBundleModuleRoutes` fails the
+         build if this href ever stops resolving to that root. A second root here is what served a
+         two-day-old `🌀️procedural` guest (26/09/09/PROCEDURAL-3D-END-TO-END). -->
+    <link data-trunk rel="copy-dir" href="../../../../../../🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules" data-target-path="🔌️plugin-modules" />
+    <!-- 🧩️ The SECOND module route the dev session publishes (`MODULE_ROUTES.extension`). The React dev
+         server mounts it from `🧑‍💻dev/🧩️extension-modules` beside the plugin route; trunk carried only
+         the plugin route, so every `/🧩️extension-modules/<dir>/🔣️.json` fetch fell through to the SPA
+         index and `primeContributionManifest` refused each extension with `plugin.descriptor-invalid:
+         … returned HTML`. With no primed extension manifest the scoped `setContributions` pack is
+         empty, so no flow operator ever installs and the graph cannot evaluate. -->
+    <link data-trunk rel="copy-dir" href="../../../../../../🧑‍💻dev/🧩️extension-modules" data-target-path="🧩️extension-modules" />
     <link data-trunk rel="copy-dir" href="../../../../../../../../../🔨️modules/🖼️assets" data-target-path="🖼️assets" />
     <link data-trunk rel="copy-file" href="🟦️typescript/🚀️boot.js" />
     <link data-trunk rel="copy-file" href="🟦️typescript/🎞️frame-worker.js" />

@@ -39,6 +39,21 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "test-bestest-regenerate": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test --lib bestest::tests::regenerate_bestest_fixtures -- --nocapture",
+        "env": {
+          "SEMIO_ENERGY_BESTEST_REGENERATE": "1"
+        }
+      }
     }
   }
 }

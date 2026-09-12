@@ -13,7 +13,8 @@ use semio_framework_artifact_flow_flow::{widget_id_for, FlowMutation, FlowStore,
 use graph::dsl::{WireEdge, WireNode};
 use graph::manifest::{PropertyBag, PropertyValue};
 use neural::{
-    channel_output, compute_dirty_set, Atom, BudgetedEval, ColdRetire, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND,
+    channel_output, compute_dirty_set, Atom, BudgetedEval, ColdRetire, Dictionary, EvalChannels, EvalError, EvalStepBudget, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot,
+    Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND,
 };
 use serde::{Deserialize, Serialize};
 
@@ -165,6 +166,15 @@ pub struct FlowHost {
     neural_cache: Arc<NeuralCache>,
     previous_snapshot: Option<TreeSnapshot>,
     previous_channels: Option<EvalChannels>,
+    /// 🔢 Which replacement of the process-wide flow extension registry
+    /// `previous_snapshot`/`previous_channels` were computed against. An unchanged TREE is not an
+    /// unchanged EVALUATION: the operator table the tree is dispatched through is process-wide
+    /// state that a contribution install replaces underneath a host, so the incremental fast path's
+    /// premise ("nothing that could change the answer has changed") is false the moment the
+    /// generation moves — a node that faulted `unknown kind` against the empty registry would
+    /// otherwise keep its fault forever, because its tree never changed
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    baseline_registry_generation: u64,
     next_widget_serial: u64,
     next_synapse_serial: u64,
     viewport_w: u32,
@@ -233,6 +243,7 @@ impl FlowHost {
             neural_cache,
             previous_snapshot: None,
             previous_channels: None,
+            baseline_registry_generation: flow_extension_registry_generation(),
             next_widget_serial: 1,
             next_synapse_serial: 100,
             viewport_w: 1,
@@ -318,9 +329,20 @@ impl FlowHost {
         self.host_catalogue_json = json.to_string();
     }
 
-    pub fn set_neuron_kind_infos_json(&mut self, json: &str) {
-        self.kind_infos = Arc::new(if json.trim().is_empty() { HashMap::new() } else { crate::os_pack::json::from_json_str::<Vec<OperatorInfo>>(json).map(|items| items.into_iter().map(|info| (info.id.clone(), info)).collect()).unwrap_or_default() });
+    /// 🧹️ Installs a new operator catalogue and retires the one it displaces — but ONLY when this
+    /// host was its last owner. The catalogue is shared by every live host
+    /// ([`FlowHost::kind_infos`]), and its `ChannelSpec::default` values are `Value`s that fail
+    /// closed on a bare drop, so a plain assignment aborted the process the moment a host swapped
+    /// a uniquely-owned catalogue out (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn install_kind_infos(&mut self, kind_infos: Arc<HashMap<String, OperatorInfo>>) {
+        if let Some(displaced) = Arc::into_inner(std::mem::replace(&mut self.kind_infos, kind_infos)) {
+            displaced.retire_cold();
+        }
         self.rebuild_dag();
+    }
+
+    pub fn set_neuron_kind_infos_json(&mut self, json: &str) {
+        self.install_kind_infos(Arc::new(if json.trim().is_empty() { HashMap::new() } else { crate::os_pack::json::from_json_str::<Vec<OperatorInfo>>(json).map(|items| items.into_iter().map(|info| (info.id.clone(), info)).collect()).unwrap_or_default() }));
     }
 
     /// 🧠️ Same as `set_neuron_kind_infos_json` but over the already-built id-keyed map — the ONE
@@ -328,14 +350,12 @@ impl FlowHost {
     /// that serialized and re-parsed it spent 11-26 ms per tick doing nothing else
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn set_neuron_kind_info_map(&mut self, infos: Arc<HashMap<String, OperatorInfo>>) {
-        self.kind_infos = infos;
-        self.rebuild_dag();
+        self.install_kind_infos(infos);
     }
 
     /// 🧠️ Same as `set_neuron_kind_infos_json` but over the typed `NodeGraphScene.operators` records.
     pub fn set_neuron_kind_infos(&mut self, infos: &[ui_wgpu::wgpu::NodeGraphOperatorRecord]) {
-        self.kind_infos = Arc::new(infos.iter().map(|record| (record.id.clone(), node_graph_operator_record_to_operator_info(record))).collect());
-        self.rebuild_dag();
+        self.install_kind_infos(Arc::new(infos.iter().map(|record| (record.id.clone(), node_graph_operator_record_to_operator_info(record))).collect()));
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -361,6 +381,7 @@ impl FlowHost {
         let seeds = self.build_seeds();
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
         let dirty = compute_dirty_set(self.previous_snapshot.as_ref(), &snapshot);
+        let evaluated_generation = flow_extension_registry_generation();
         let converged = self.probe_eval_outputs_converged(&tree, &seeds, &dirty, &channels);
         tree.retire_cold();
         seeds.retire_cold();
@@ -370,6 +391,7 @@ impl FlowHost {
             self.displaced.push_dictionaries(displaced_outputs);
             self.apply_preview_outputs(&channels.outputs);
             self.apply_export_outputs(&channels.outputs);
+            self.baseline_registry_generation = evaluated_generation;
             self.previous_snapshot = Some(snapshot);
             if let Some(displaced_channels) = self.previous_channels.replace(channels) {
                 self.displaced.push_channels(displaced_channels);
@@ -385,7 +407,7 @@ impl FlowHost {
         let registry = flow_registry();
         let evaluator = Evaluator::new(registry.as_ref());
         let mut probe_never_dispatches = |kind: &str, _: &Dictionary| -> Result<Dictionary, EvalError> { Err(EvalError::InvalidInput(format!("apply_eval_outputs_json probed a dispatch for {kind}"))) };
-        match evaluator.evaluate_channels_budgeted(tree, seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, dirty, Some(channels), 0) {
+        match evaluator.evaluate_channels_budgeted(tree, seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, dirty, Some(channels), EvalStepBudget::PROBE) {
             Ok(BudgetedEval { remaining, channels, .. }) => {
                 channels.retire_cold();
                 remaining.is_empty()
@@ -395,7 +417,14 @@ impl FlowHost {
     }
 
     /// 🧵️ Installs a durable eval baseline from an off-thread driver onto this ephemeral host.
-    pub fn install_eval_baseline(&mut self, snapshot: Option<TreeSnapshot>, channels: Option<EvalChannels>) {
+    ///
+    /// `registry_generation` is the flow extension registry replacement the driver's baseline was
+    /// computed against, and it travels WITH the baseline rather than being read from the live
+    /// registry here: an ephemeral host is rebuilt after the install that bumped the generation, so
+    /// reading "now" would tell every such host its inherited baseline is current when it is
+    /// precisely the one that is not (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn install_eval_baseline(&mut self, snapshot: Option<TreeSnapshot>, channels: Option<EvalChannels>, registry_generation: u64) {
+        self.baseline_registry_generation = registry_generation;
         self.previous_snapshot = snapshot;
         if let Some(displaced_channels) = std::mem::replace(&mut self.previous_channels, channels) {
             self.displaced.push_channels(displaced_channels);
@@ -434,6 +463,44 @@ impl FlowHost {
     /// 🧵️ Captures this host's eval baseline for persistence on a durable driver.
     pub fn eval_baseline(&self) -> (Option<TreeSnapshot>, Option<EvalChannels>) {
         (self.previous_snapshot.clone(), self.previous_channels.clone())
+    }
+
+    /// 🔢 The flow extension registry replacement this host's eval baseline was computed against.
+    pub fn eval_baseline_registry_generation(&self) -> u64 {
+        self.baseline_registry_generation
+    }
+
+    /// 🔢 Whether the incremental baseline may still be believed — i.e. whether the operator table
+    /// it was dispatched through is the one installed right now.
+    ///
+    /// `compute_dirty_set` diffs the TREE, and a contributed operator arriving in a registry
+    /// replacement changes no tree at all: the operator table is process-wide state swapped out
+    /// underneath a live host. So a stale generation must make the WHOLE tree dirty and drop the
+    /// previous channels, not merely refuse the skip — a refused skip that still diffs against the
+    /// old snapshot computes an empty dirty set and dispatches nothing, which is the same stale
+    /// answer by a longer road (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn baseline_is_current(&self) -> bool {
+        self.baseline_registry_generation == flow_extension_registry_generation()
+    }
+
+    /// ⏮️ The snapshot to diff this evaluation against — `None` once the registry it was computed
+    /// against has been replaced, which makes every node dirty.
+    fn current_baseline_snapshot(&self) -> Option<&TreeSnapshot> {
+        self.previous_snapshot.as_ref().filter(|_| self.baseline_is_current())
+    }
+
+    /// ⏮️ The channels this evaluation may free-ride on, under the same condition.
+    fn current_baseline_channels(&self) -> Option<&EvalChannels> {
+        self.previous_channels.as_ref().filter(|_| self.baseline_is_current())
+    }
+
+    /// ⚡️ Whether the incremental fast path may skip this evaluation entirely: nothing is dirty, a
+    /// full channel baseline is held, and outputs are published.
+    ///
+    /// One predicate, read by every caller that owns a fast path ([`FlowHost::evaluate_step`] and
+    /// [`FlowHost::pending_eval_widget_ids`]), so the two can never drift apart.
+    fn baseline_answers_everything(&self, dirty: &HashSet<String>) -> bool {
+        dirty.is_empty() && self.current_baseline_channels().is_some() && !self.outputs.is_empty()
     }
 
     /// ⚙️ Probes pending nodes and paints active/stale computing chrome on the DAG canvas.
@@ -1053,15 +1120,17 @@ impl FlowHost {
     }
 
     fn evaluate_internal(&mut self) {
-        self.evaluate_step(usize::MAX);
+        self.evaluate_step(EvalStepBudget::UNBOUNDED);
     }
 
-    /// ⏳️🧵️ Evaluates at most `budget` cache-missed (dirty) nodes and returns the not-yet-computed
-    /// widget ids in topo order — `remaining[0]` is the node currently blocking, `remaining[1..]`
-    /// are downstream widgets waiting behind it. An off-main-thread caller (a plugin worker) resumes
-    /// with another `evaluate_step` call until `remaining` is empty; a single `evaluate_step(usize::MAX)`
-    /// call (via [`FlowHost::evaluate`]/`evaluate_internal`) still evaluates everything synchronously
-    /// in one shot for callers that don't need to spread the work across ticks (tests, explicit
+    /// ⏳️🧵️ Evaluates at most `budget.dispatches` cache-missed (dirty) nodes, yielding early once
+    /// `budget.deadline` passes, and returns the not-yet-computed widget ids in topo order —
+    /// `remaining[0]` is the node currently blocking, `remaining[1..]` are downstream widgets
+    /// waiting behind it. An off-main-thread caller (a plugin worker) resumes with another
+    /// `evaluate_step` call until `remaining` is empty; a single
+    /// `evaluate_step(EvalStepBudget::UNBOUNDED)` call (via
+    /// [`FlowHost::evaluate`]/`evaluate_internal`) still evaluates everything synchronously in one
+    /// shot for callers that don't need to spread the work across ticks (tests, explicit
     /// worker-side `evaluate` actions that already run off the caller's main thread).
     ///
     /// `begin_epoch`/`sweep` bracket the *whole run* (every tick up to and including the completing
@@ -1071,22 +1140,27 @@ impl FlowHost {
     /// [`NeuralCache`] (e.g. a generation-preview eval firing mid-chain) may have its in-progress
     /// entries swept early by that other call's completion; the next tick simply recomputes them —
     /// extra work, never a wrong result.
-    pub fn evaluate_step(&mut self, budget: usize) -> Vec<String> {
+    pub fn evaluate_step(&mut self, budget: EvalStepBudget) -> Vec<String> {
         self.drain_displaced();
         self.pending_extension_eval = None;
         let tree = self.build_tree();
         let seeds = self.build_seeds();
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
-        let dirty = compute_dirty_set(self.previous_snapshot.as_ref(), &snapshot);
-        if dirty.is_empty() && self.previous_channels.is_some() && !self.outputs.is_empty() {
+        let dirty = compute_dirty_set(self.current_baseline_snapshot(), &snapshot);
+        if self.baseline_answers_everything(&dirty) {
             tree.retire_cold();
             seeds.retire_cold();
             return Vec::new();
         }
+        // 🔢 Read BEFORE the registry it describes: a replacement landing between the two reads
+        // then stamps the baseline with the OLDER generation, which over-dirties the next step
+        // (extra work, never a stale answer). Reading it after could stamp a generation the
+        // evaluation never used.
+        let evaluated_generation = flow_extension_registry_generation();
         let registry = flow_registry();
         let evaluator = Evaluator::new(registry.as_ref());
         self.neural_cache.begin_epoch();
-        let previous = self.previous_channels.as_ref();
+        let previous = self.current_baseline_channels();
         let budgeted = if let Some(bridge) = self.eval_bridge.as_ref() {
             let mut dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
             evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget)
@@ -1113,9 +1187,10 @@ impl FlowHost {
                 crate::retain_geometry_handles(&live_handles);
                 let live_drawing_handles = collect_live_drawing_handles_from_channels(&channels);
                 retain_drawing_handles(&live_drawing_handles);
-                // 🔒️ Only advance the snapshot/channels pair together, and only on success — a
-                // failed evaluation keeps diffing against the last known-good state next time,
-                // which is always a safe (never under-dirty) baseline.
+                // 🔒️ Only advance the snapshot/channels/generation triple together, and only on
+                // success — a failed evaluation keeps diffing against the last known-good state
+                // next time, which is always a safe (never under-dirty) baseline.
+                self.baseline_registry_generation = evaluated_generation;
                 self.previous_snapshot = Some(snapshot);
                 if let Some(displaced_channels) = self.previous_channels.replace(channels) {
                     self.displaced.push_channels(displaced_channels);
@@ -1199,17 +1274,17 @@ impl FlowHost {
         let tree = self.build_tree();
         let seeds = self.build_seeds();
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
-        let dirty = compute_dirty_set(self.previous_snapshot.as_ref(), &snapshot);
-        if dirty.is_empty() && self.previous_channels.is_some() && !self.outputs.is_empty() {
+        let dirty = compute_dirty_set(self.current_baseline_snapshot(), &snapshot);
+        if self.baseline_answers_everything(&dirty) {
             tree.retire_cold();
             seeds.retire_cold();
             return Vec::new();
         }
         let registry = flow_registry();
         let evaluator = Evaluator::new(registry.as_ref());
-        let previous = self.previous_channels.as_ref();
+        let previous = self.current_baseline_channels();
         let mut probe_never_dispatches = |kind: &str, _: &Dictionary| -> Result<Dictionary, EvalError> { Err(EvalError::InvalidInput(format!("pending_eval_widget_ids probed a dispatch for {kind}"))) };
-        let pending = match evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, &dirty, previous, 0) {
+        let pending = match evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, &dirty, previous, EvalStepBudget::PROBE) {
             Ok(BudgetedEval { remaining, channels, .. }) => {
                 channels.retire_cold();
                 remaining
@@ -1943,7 +2018,13 @@ impl FlowHost {
     /// 💥️ Explodes a cluster back into its inner widgets.
     pub fn explode_cluster(&mut self, cluster_id: &str) -> Result<(), FlowCoreError> {
         let cluster_index = self.fixture.widgets.iter().position(|widget| matches!(widget, Widget::Cluster { id, .. } if id == cluster_id)).ok_or_else(|| FlowCoreError::UnknownCluster(cluster_id.to_string()))?;
-        let Widget::Cluster { tree, flow, .. } = self.fixture.widgets[cluster_index].clone() else {
+        // 🧹️ The working copy is BORROWED from one retired clone, not destructured out of it: a
+        // cluster's `Tree` params and its `FlowUi` node map both fail closed on a bare drop, so
+        // owning `tree`/`flow` as loose locals aborted the process at the end of this function
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        let exploded = self.fixture.widgets[cluster_index].clone();
+        let Widget::Cluster { tree, flow, .. } = &exploded else {
+            exploded.retire_cold();
             return Err(FlowCoreError::WidgetNotCluster(cluster_id.to_string()));
         };
         let cluster_layout = self.fixture.layout.get(cluster_id).cloned().unwrap_or(WidgetLayout { x: 0.0, y: 0.0 });
@@ -1982,7 +2063,10 @@ impl FlowHost {
             restored_widgets.push((namespaced_id, neuron.id.clone(), widget));
         }
         let id_map: HashMap<String, String> = restored_widgets.iter().map(|(namespaced, original, _)| (original.clone(), namespaced.clone())).collect();
-        self.fixture.widgets.remove(cluster_index);
+        // 🧹️ The cluster widget carries a `FlowUi` whose `OrderedMap<FlowNodeGui>` and a `Tree`
+        // whose `Dictionary` params both fail closed on a bare drop, so the exploded shell is
+        // RETIRED rather than dropped (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        self.fixture.widgets.remove(cluster_index).retire_cold();
         self.fixture.layout.remove(cluster_id);
         for (_, _, widget) in restored_widgets {
             self.fixture.widgets.push(widget);
@@ -2020,6 +2104,7 @@ impl FlowHost {
             next_synapses.push(SynapseSpec { id: format!("s{}", self.next_synapse_serial), from: from.clone(), to: to.clone(), from_port, to_port });
         }
         self.fixture.synapses = next_synapses;
+        exploded.retire_cold();
         self.rebuild_dag();
         Ok(())
     }
@@ -2207,6 +2292,7 @@ impl FlowHostRetirement {
             neural_cache,
             previous_snapshot,
             previous_channels,
+            baseline_registry_generation: _,
             next_widget_serial: _,
             next_synapse_serial: _,
             viewport_w: _,
@@ -2420,6 +2506,33 @@ use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
 /// ⏱️ Max cache-missed neuron dispatches per `flowEvalTick` — keeps one dispatch from blocking the worker while still converging small graphs in a single tick.
 pub const FLOW_EVAL_TICK_STEP_BUDGET: usize = 512;
 
+/// ⏱️ Wall-clock ceiling for ONE `flowEvalTick` dag walk, in microseconds.
+///
+/// 🚨️ [`FLOW_EVAL_TICK_STEP_BUDGET`] alone cannot bound a tick: it counts NODES, and a seven-node
+/// graph is far under 512 however expensive each node is. The reactor's own 8 ms budget cannot
+/// bound it either — `run_until_deadline` checks its deadline BETWEEN two tasks' `step()` calls,
+/// never inside one, and `flowEvalTick` is a plain synchronous `fn`, so once the executor enters it
+/// nothing can interrupt it. That is how one browser turn ran for 3.5-18.4 s against an 8 ms budget
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-guest-tick-cost-2026-09-12.md` §1.3).
+///
+/// 🎚️ Sized at three quarters of [`semio_framework_job::INTERACTIVE_STEP_CEILING_US`] so the rest of
+/// the turn — publication, retirement, the effect the tick returns — still fits the same 8 ms the
+/// dag walk is being held to, and so a tick that yields here has not ALREADY broken the contract it
+/// exists to keep. A walk always dispatches at least one node before the deadline can stop it
+/// ([`neural::EvalStepBudget::exhausted`]), so a graph whose single cheapest node exceeds the
+/// ceiling still converges — one node per tick — instead of re-arming forever with no progress.
+pub const FLOW_EVAL_TICK_ELAPSED_CEILING_US: u64 = semio_framework_job::INTERACTIVE_STEP_CEILING_US / 4 * 3;
+
+/// ⏱️ The budget ONE `flowEvalTick` dag walk runs under: [`FLOW_EVAL_TICK_STEP_BUDGET`] nodes,
+/// preempted after [`FLOW_EVAL_TICK_ELAPSED_CEILING_US`] on the process clock. Falls back to the
+/// node count alone when no clock is installed (bare wasm), which is the pre-existing behaviour.
+pub fn flow_eval_tick_budget() -> EvalStepBudget {
+    match semio_framework_job::default_now_us() {
+        Some(now_us) => EvalStepBudget::until(FLOW_EVAL_TICK_STEP_BUDGET, semio_framework_job::default_now_us, now_us.saturating_add(FLOW_EVAL_TICK_ELAPSED_CEILING_US)),
+        None => EvalStepBudget::dispatches(FLOW_EVAL_TICK_STEP_BUDGET),
+    }
+}
+
 static FLOW_SESSION_GEOMETRY: LazyLock<Mutex<HashMap<u64, BTreeSet<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 static NEXT_FLOW_SESSION_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -2442,6 +2555,37 @@ pub enum NodeEvalStatus {
     Blocked { ports: Vec<String> },
 }
 
+/// 🔒️ What ONE preview window's evaluation chain currently owes, as the retained session sees it.
+///
+/// ⏱️ `armed` is the latch itself: exactly one `flowEvalTick` may be outstanding for a window at a
+/// time, no matter how many independent sources ask for one (a host refresh poll, a
+/// `setContributions` install, an example switch, a view command, the tick's own continuation).
+/// `in_flight` counts the [`ExtensionInvocation`]s that window's last tick parked — a window waiting
+/// on an extension answer must NOT be ticked again, because the tick would recompute the identical
+/// pending request and park a duplicate. `owed` remembers that an answer asked for a continuation
+/// while its siblings were still outstanding, so the LAST answer arms exactly one tick instead of
+/// every answer arming its own. `unfinished` is what the window's own last tick reported, so a
+/// refresh poll can tell "this evaluation is still running and nothing is chasing it" from "this
+/// evaluation is done" and from "this evaluation gave up" — PER WINDOW, because generate-mode
+/// previews evaluate a patched fixture of their own and finish on their own schedule
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct FlowEvalWindowTickLatch {
+    armed: bool,
+    in_flight: u32,
+    owed: bool,
+    unfinished: bool,
+}
+
+/// 🔑️ The latch key for one preview window instance id. Hashed rather than retained: the latch map
+/// must cost nothing to retire, and a window id is the caller's string, never the session's.
+fn flow_eval_window_key(window_id: &str) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    window_id.hash(&mut hasher);
+    hasher.finish()
+}
+
 /// 🧵️ In-process evaluation session: neural cache, incremental baseline, eval output, and status — one per app instance, never serialized.
 #[doc(hidden)]
 pub struct FlowEvalSessionState {
@@ -2452,6 +2596,13 @@ pub struct FlowEvalSessionState {
     eval_json: String,
     status_json: String,
     tick_scheduled: bool,
+    /// 🔒️ One arming latch per preview window this session publishes into, keyed by
+    /// [`flow_eval_window_key`]. See [`FlowEvalWindowTickLatch`] — this is what makes "at most ONE
+    /// pending `flowEvalTick` per (instance, window)" a fact the session owns rather than a
+    /// convention every caller has to re-derive. Plain `Copy` rows keyed by hash, so retirement is
+    /// a single `clear` (the `tessellate_progress_by_hash` precedent) and no window id is ever
+    /// retained here.
+    window_tick_latches: BTreeMap<u64, FlowEvalWindowTickLatch>,
     live_geometry_handles: BTreeSet<String>,
     /// 🧊 Tessellated preview meshes keyed by geometry handle, each one a base64 `pack` record body
     /// (see `brep_geometry::encode_mesh_pack`) — filled via extension `tessellate` because
@@ -2482,10 +2633,54 @@ pub struct FlowEvalSessionState {
     /// say "everything in here predates the registry you can now address"
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     flow_extension_generation: u64,
+    /// 💥 The LAST `evaluate` answer this session was handed that faulted, so the surface publishes
+    /// the fault it is actually living with instead of the addressing miss that preceded it. Cleared
+    /// the moment a contribution install moves `flow_extension_generation`, and the moment any
+    /// answer folds — a stale fault outranking a live evaluation is the same defect as an
+    /// `extension-not-contributed` card surviving its own install
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    extension_evaluate_fault: Option<ExtensionEvaluateFault>,
+    /// 🛑 Whether the user's explicit `cancelPreviewEval` gesture is the LAST thing that happened to
+    /// this session's evaluation. It is not derivable from the tessellation ledger: a cancel raised
+    /// while the chain was still in its `evaluate` round trips has no progress row to stamp, and a
+    /// cancel of a never-admitted tessellation leaves an all-`Idle` ledger — both of which would
+    /// publish `phase: "idle"` and silently swallow the gesture. Cleared by the next tick that
+    /// actually begins ([`FlowEvalSession::begin_window_tick`]), so a later gesture resumes with a
+    /// clean status rather than a frozen `cancelled` banner
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    preview_cancelled: bool,
+    /// ⏱️ Per-node progress of the BUDGETED `evaluate` round trips — the half of the preview's work
+    /// the tessellation ledger cannot see at all, because a long operator (a boolean) admits no
+    /// tessellation until it has finished. Keyed by `nodeHash`, the same identity the extension
+    /// resumes its retained job by (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️extension-evaluate-budget-2026-09-12.md`).
+    eval_progress_by_hash: BTreeMap<u64, PreviewEvalProgress>,
     retiring_cache: Option<neural::NeuralCacheRetirement>,
     retirement: neural::ValueRetirement,
     retiring_collections: std::collections::LinkedList<SessionCollectionOwner>,
     closing: bool,
+}
+
+/// 💥 One faulted `evaluate` round trip, as the surface publishes it: the addressed extension, the
+/// capability that failed, and the fault the SDK decoded from the host's completion. Distinct from
+/// [`FlowExtensionAddressMiss`] on purpose — a miss means NOTHING was invoked, this means the
+/// extension answered and refused (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct ExtensionEvaluateFault {
+    pub extension_id: String,
+    pub capability: String,
+    pub code: String,
+    pub message: String,
+}
+
+impl ExtensionEvaluateFault {
+    /// 🪪️ The stable wire code the surface publishes for this fault family.
+    pub const CODE: &'static str = "flow.extension-evaluate-failed";
+
+    /// 🌍 English and German headline, with no default language — the message itself stays verbatim.
+    pub fn labels(&self) -> (String, String) {
+        (format!("Geometry extension '{}' could not evaluate", self.extension_id), format!("Geometrie-Erweiterung '{}' konnte nicht auswerten", self.extension_id))
+    }
 }
 
 /// 📊️ What the preview-eval publication gate saw and what it let through, since the last reset.
@@ -2624,16 +2819,20 @@ impl FlowEvalSession {
                 eval_json: String::new(),
                 status_json: "{}".into(),
                 tick_scheduled: false,
+                window_tick_latches: BTreeMap::new(),
                 live_geometry_handles: BTreeSet::new(),
                 preview_mesh_pack_by_handle: BTreeMap::new(),
                 pending_tessellate_by_hash: BTreeMap::new(),
                 tessellate_handle_by_hash: BTreeMap::new(),
                 tessellate_progress_by_hash: BTreeMap::new(),
+                eval_progress_by_hash: BTreeMap::new(),
                 tessellate_chunks_by_hash: BTreeMap::new(),
                 preview_diagnostics_by_handle: BTreeMap::new(),
                 retiring_cache: None,
                 retirement: neural::ValueRetirement::default(),
                 flow_extension_generation: flow_extension_registry_generation(),
+                extension_evaluate_fault: None,
+                preview_cancelled: false,
                 retiring_collections: std::collections::LinkedList::new(),
                 closing: false,
             }),
@@ -2645,12 +2844,25 @@ impl FlowEvalSession {
     }
 
     pub fn install_baseline_into(&self, host: &mut FlowHost) {
-        host.install_eval_baseline(self.previous_snapshot.clone(), self.previous_channels.clone());
+        host.install_eval_baseline(self.previous_snapshot.clone(), self.previous_channels.clone(), self.state.flow_extension_generation);
     }
 
+    /// 🧵️ Takes over a host's eval baseline, INCLUDING which registry replacement it was computed
+    /// against.
+    ///
+    /// The generation carry-back is monotonic and gated on the host actually holding a snapshot: a
+    /// host that has evaluated against a newer registry owns results that are current, and leaving
+    /// the session pinned to the older generation would make every ephemeral host it seeds refuse
+    /// the incremental fast path forever. It can never walk BACKWARDS, so it cannot cancel a
+    /// pending [`FlowEvalSession::invalidate_for_flow_extension_registry`]
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn capture_baseline_from(&mut self, host: &FlowHost) {
         let (snapshot, channels) = host.eval_baseline();
+        let evaluated_generation = host.eval_baseline_registry_generation();
         let state = &mut *self.state;
+        if snapshot.is_some() && evaluated_generation > state.flow_extension_generation {
+            state.flow_extension_generation = evaluated_generation;
+        }
         if let Some(previous) = std::mem::replace(&mut state.previous_snapshot, snapshot) {
             state.retirement.push_snapshot(previous);
         }
@@ -2683,7 +2895,7 @@ impl FlowEvalSession {
     }
 
     pub fn tick(&mut self, host: &mut FlowHost) -> bool {
-        let remaining = host.evaluate_step(FLOW_EVAL_TICK_STEP_BUDGET);
+        let remaining = host.evaluate_step(flow_eval_tick_budget());
         self.eval_json = host.last_eval_json.clone();
         self.status_json = build_flow_status_json(host, &remaining);
         if remaining.is_empty() {
@@ -2731,6 +2943,7 @@ impl FlowEvalSession {
         state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_handle_by_hash)));
         state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_chunks_by_hash)));
         state.tessellate_progress_by_hash.clear();
+        state.eval_progress_by_hash.clear();
         if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
             if let Some(previous) = map.remove(&state.session_id) {
                 state.retiring_collections.push_back(SessionCollectionOwner::Handles(previous));
@@ -2742,6 +2955,129 @@ impl FlowEvalSession {
     pub fn pending(&self) -> bool {
         self.tick_scheduled
     }
+
+    //#region 🔒️TickLatch
+    /// 🔒️ Arms `window_id`'s `flowEvalTick` if — and only if — nothing already owes one.
+    ///
+    /// This is the ONE gate every arming source goes through: the host refresh poll
+    /// (`ArtifactApp::pending_effects`), the `setContributions` install, `setActiveExample`, every
+    /// view command, and the chain's own continuations. Answers whether the CALLER owes the effect,
+    /// so a refused arm emits nothing rather than duplicating a tick that is already in flight.
+    ///
+    /// ⏳️ A window waiting on an extension answer is not armed at all — it is marked `owed` instead,
+    /// and [`FlowEvalSession::settle_window_extension`] hands the arm to whichever answer lands
+    /// last. Ticking a window whose invocation is outstanding recomputes the identical pending
+    /// request, which is how one graph turned into 298 invocations against 111 settles in 80 s of
+    /// live console (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn arm_window_tick(&mut self, window_id: &str) -> bool {
+        let latch = self.state.window_tick_latches.entry(flow_eval_window_key(window_id)).or_default();
+        if latch.armed {
+            return false;
+        }
+        if latch.in_flight > 0 {
+            latch.owed = true;
+            return false;
+        }
+        latch.armed = true;
+        latch.owed = false;
+        true
+    }
+
+    /// 🔎️ Whether `window_id` owes a tick that nothing has armed — a window that has never ticked
+    /// owes its first one, and a window whose own last tick reported unfinished work owes another
+    /// only while no tick and no extension answer is already chasing it. The REFRESH poll's whole
+    /// question, and the reason it costs no evaluation at all.
+    pub fn window_tick_owed(&self, window_id: &str) -> bool {
+        match self.window_tick_latches.get(&flow_eval_window_key(window_id)) {
+            None => true,
+            Some(latch) => latch.unfinished && !latch.armed && latch.in_flight == 0,
+        }
+    }
+
+    /// 🔒️ Arms the tick `window_id` actually owes — [`FlowEvalSession::window_tick_owed`] and
+    /// [`FlowEvalSession::arm_window_tick`] as the single question a refresh poll asks.
+    pub fn arm_owed_window_tick(&mut self, window_id: &str) -> bool {
+        self.window_tick_owed(window_id) && self.arm_window_tick(window_id)
+    }
+
+    /// ▶️ Marks `window_id`'s armed tick as RUNNING: the effect has been delivered, so the latch is
+    /// free for whatever this tick's own outcome decides to arm next.
+    /// 🛑 A tick that actually begins is work RESUMING, which is the one thing that retires the
+    /// `cancelled` banner an explicit gesture raised — see [`FlowEvalSession::preview_cancelled`].
+    pub fn begin_window_tick(&mut self, window_id: &str) {
+        self.state.preview_cancelled = false;
+        self.state.window_tick_latches.entry(flow_eval_window_key(window_id)).or_default().armed = false;
+    }
+
+    /// ⏳️ Records that `window_id`'s tick parked `count` extension invocations. Those answers own
+    /// the continuation from here — the tick that parked them owes no re-arm.
+    pub fn note_window_extensions_in_flight(&mut self, window_id: &str, count: usize) {
+        let latch = self.state.window_tick_latches.entry(flow_eval_window_key(window_id)).or_default();
+        latch.in_flight = latch.in_flight.saturating_add(u32::try_from(count).unwrap_or(u32::MAX));
+    }
+
+    /// 📝️ Records what `window_id`'s tick reported: `unfinished` is the tick's own "there is more to
+    /// compute". Only this makes a refresh poll able to answer [`FlowEvalSession::window_tick_owed`]
+    /// without evaluating anything.
+    pub fn note_window_tick_outcome(&mut self, window_id: &str, unfinished: bool) {
+        self.state.window_tick_latches.entry(flow_eval_window_key(window_id)).or_default().unfinished = unfinished;
+    }
+
+    /// 🚧️ Marks `window_id`'s chain as GIVEN UP: an extension answer this process cannot fold (a
+    /// faulted `invokeExtension`, an answer that seeds no cache entry) is not slow work, and the
+    /// next tick would park the identical request and fault again at the host's own cadence. Nothing
+    /// but a gesture — a contributions install, an example switch, an edit — may resume it, and each
+    /// of those arms through [`FlowEvalSession::arm_window_tick`] directly.
+    pub fn abandon_window_tick(&mut self, window_id: &str) {
+        let latch = self.state.window_tick_latches.entry(flow_eval_window_key(window_id)).or_default();
+        latch.unfinished = false;
+        latch.owed = false;
+    }
+
+    /// 🧹️ Drops the latch of every window that is no longer attached. A detached window's latch can
+    /// never be discharged by a tick — the retained route refuses a window that has left the
+    /// roster — so keeping it would make a window that comes back unarmable forever.
+    pub fn retain_window_tick_latches(&mut self, window_ids: &[&str]) {
+        if self.state.window_tick_latches.is_empty() {
+            return;
+        }
+        let live: BTreeSet<u64> = window_ids.iter().map(|window_id| flow_eval_window_key(window_id)).collect();
+        self.state.window_tick_latches.retain(|key, _| live.contains(key));
+    }
+
+    /// ✅️ Folds ONE extension answer back into `window_id`'s latch. Answers whether that settle
+    /// discharged an arm a sibling answer had already asked for, so the LAST answer of a fan-out
+    /// emits exactly one re-arm and the earlier ones emit none.
+    pub fn settle_window_extension(&mut self, window_id: &str) -> bool {
+        let latch = self.state.window_tick_latches.entry(flow_eval_window_key(window_id)).or_default();
+        latch.in_flight = latch.in_flight.saturating_sub(1);
+        if latch.in_flight == 0 && latch.owed && !latch.armed {
+            latch.armed = true;
+            latch.owed = false;
+            return true;
+        }
+        false
+    }
+
+    /// 🔎️ How many extension answers `window_id` is still waiting for — readable so a law can state
+    /// the in-flight rule rather than infer it.
+    pub fn window_extensions_in_flight(&self, window_id: &str) -> u32 {
+        self.window_tick_latches.get(&flow_eval_window_key(window_id)).map(|latch| latch.in_flight).unwrap_or(0)
+    }
+
+    /// 🔎️ Whether a `flowEvalTick` is currently pending for `window_id`.
+    pub fn window_tick_is_armed(&self, window_id: &str) -> bool {
+        self.window_tick_latches.get(&flow_eval_window_key(window_id)).is_some_and(|latch| latch.armed)
+    }
+
+    /// 🧹️ Abandons every window's latch — what a chain RESTART owes itself. The results the old
+    /// chain was chasing have just been swept (a registry replacement, a fresh document), so the
+    /// invocations it parked can no longer resume anything and their windows must be free to be
+    /// armed again from scratch.
+    pub fn clear_window_tick_latches(&mut self) {
+        self.state.window_tick_latches.clear();
+    }
+    //#endregion 🔒️TickLatch
 
     /// 🔢 Which flow extension registry replacement this session's held results were computed
     /// against — the invalidation key, readable so a surface can state it rather than infer it.
@@ -2769,12 +3105,32 @@ impl FlowEvalSession {
             return false;
         }
         self.state.flow_extension_generation = generation;
+        self.state.extension_evaluate_fault = None;
+        self.state.preview_cancelled = false;
+        self.state.window_tick_latches.clear();
         if let Some(cache) = self.state.neural_cache.as_ref() {
             cache.begin_epoch();
             cache.sweep();
         }
         self.set_eval_json(String::new());
         true
+    }
+
+    /// 💥 Records the fault an `evaluate` answer came back with. The extension id and the decoded
+    /// message are the SDK's own (`reactor::extension_response_args` echoes `faultCode`/
+    /// `faultMessage` onto the response action) — nothing here re-words them.
+    pub fn note_extension_evaluate_fault(&mut self, fault: ExtensionEvaluateFault) {
+        self.state.extension_evaluate_fault = Some(fault);
+    }
+
+    /// ✅️ Forgets the last evaluate fault — an answer that folded supersedes it.
+    pub fn clear_extension_evaluate_fault(&mut self) {
+        self.state.extension_evaluate_fault = None;
+    }
+
+    /// 💥 The evaluate fault this session is currently living with, if any.
+    pub fn extension_evaluate_fault(&self) -> Option<&ExtensionEvaluateFault> {
+        self.extension_evaluate_fault.as_ref()
     }
 
     pub fn seed_node_cache(&self, node_hash: u64, output_json: &str) -> Result<(), FlowCoreError> {
@@ -2846,9 +3202,20 @@ impl FlowEvalSession {
             status.units_total = status.units_total.saturating_add(progress.units_total);
             status.faces_done = status.faces_done.saturating_add(progress.faces_done);
             status.faces_total = status.faces_total.saturating_add(progress.faces_total);
-            if progress.phase != PreviewTessellatePhase::Complete {
+            // 🧱 A kernel-COMPLETE job whose mesh body has not finished crossing is not idle — it is
+            // `Transferring`, the one phase the enum declares that no kernel ever reports. Without
+            // this the whole chunked transfer of a large mesh published `phase: "idle"` with a
+            // full-looking ratio, so a surface could neither label it nor offer to stop it
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+            if progress.phase == PreviewTessellatePhase::Complete {
+                if progress.next_chunk < progress.chunks {
+                    status.phase = PreviewTessellatePhase::Transferring;
+                }
+            } else {
                 status.phase = progress.phase;
             }
+            status.chunks_done = status.chunks_done.saturating_add(progress.next_chunk.min(progress.chunks));
+            status.chunks_total = status.chunks_total.saturating_add(progress.chunks);
         }
         if status.units_total == 0 && status.in_flight > 0 {
             status.phase = PreviewTessellatePhase::SamplingEdges;
@@ -2856,10 +3223,30 @@ impl FlowEvalSession {
         status
     }
 
-    /// 🛑 Retires every in-flight preview evaluation and tessellation: the kernel jobs are cancelled
-    /// in place, every pending request is forgotten and every partial mesh body is dropped. Returns
-    /// how many in-flight tessellations were retired. Idempotent — a second cancel is a no-op.
-    pub fn cancel_preview_evaluation(&mut self) -> usize {
+    /// 🛑 Retires every in-flight preview evaluation and tessellation: the kernel jobs this process
+    /// owns are cancelled in place, every pending request is forgotten, every partial mesh body is
+    /// dropped, every window's arming latch falls back to QUIESCENT (`window_id`'s is CREATED if it
+    /// does not exist yet) and the session remembers that the gesture happened. Returns how many in-flight tessellations were retired. Idempotent — a
+    /// second cancel is a no-op.
+    ///
+    /// 🧱 The mesh-body chunk CURSOR is reset alongside the half-received body it addresses. The two
+    /// are one fact in two fields: `tessellate_chunks_by_hash` holds the base64 assembled so far and
+    /// `PreviewTessellateProgress::next_chunk` says which chunk continues it. Dropping the body
+    /// while keeping the cursor made the NEXT evaluation of the same handle ask the kernel for chunk
+    /// `n` and concatenate it onto nothing — a silently truncated `pack` body, i.e. exactly the
+    /// "stale mesh from the cancelled run" a cancel exists to prevent
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    ///
+    /// 🔒️ The latches are reset to [`FlowEvalWindowTickLatch::default`] rather than REMOVED: a
+    /// missing latch reads as "this window never ticked" and [`FlowEvalSession::window_tick_owed`]
+    /// answers `true` for it, so `clear()` here would have the host refresh poll re-arm the very
+    /// chain the user just stopped. A defaulted latch owes nothing and admits the next gesture.
+    ///
+    /// 🚪️ This cancels what THIS process holds. The kernel jobs the geometry extension retains live
+    /// in the extension actor's own instance and are only reachable through its `tessellateCancel`
+    /// capability — see [`FlowEvalSession::preview_cancel_invocation_request_json`], which the
+    /// cancelling command emits alongside this call.
+    pub fn cancel_preview_evaluation(&mut self, window_id: &str) -> usize {
         let retired = self.pending_tessellate_by_hash.len();
         crate::brep_geometry::cancel_all_tessellations();
         let state = &mut *self.state;
@@ -2870,9 +3257,104 @@ impl FlowEvalSession {
             if progress.phase != PreviewTessellatePhase::Complete {
                 progress.phase = PreviewTessellatePhase::Cancelled;
             }
+            progress.next_chunk = 0;
+            progress.chunks = 0;
         }
+        // ⏱️ The budgeted-evaluation ledger is EMPTIED rather than stamped: unlike a tessellation,
+        // whose frozen counters are what the surface keeps showing beside `phase: "cancelled"`, a
+        // parked evaluation that survives here would make the very next `preview_eval_status()`
+        // report work in flight that nothing will ever answer.
+        state.eval_progress_by_hash.clear();
+        for latch in state.window_tick_latches.values_mut() {
+            *latch = FlowEvalWindowTickLatch::default();
+        }
+        // 🔒️ The ADDRESSED window's latch is created if it does not exist yet. A window with no
+        // latch reads as "never ticked", which `window_tick_owed` answers `true` for — so a cancel
+        // that left the addressed window latchless would be undone by the very next host refresh
+        // poll (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        if !window_id.is_empty() {
+            state.window_tick_latches.insert(flow_eval_window_key(window_id), FlowEvalWindowTickLatch::default());
+        }
+        state.preview_cancelled = true;
         state.tick_scheduled = false;
         retired
+    }
+
+    /// 🛑 The `tessellateCancel` request body the cancelling command sends to the geometry extension.
+    /// Deliberately addresses NO handle: the session keys its ledger by `nodeHash`, which is a
+    /// one-way digest of `(handle, tolerance bits)`, so the tolerance half of the extension's job key
+    /// is not recoverable here — and a cancel that can only retire SOME of the jobs it means to
+    /// retire is worse than the whole-registry branch the capability already offers
+    /// (`✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️.rs`'s `tessellateCancel` handler).
+    pub fn preview_cancel_invocation_request_json(window_id: &str, window_kind_id: &str) -> String {
+        format!("{{\"windowId\":{},\"windowKindId\":{}}}", crate::os_pack::json::to_string(&crate::os_pack::json::Value::String(window_id.to_string())), crate::os_pack::json::to_string(&crate::os_pack::json::Value::String(window_kind_id.to_string())))
+    }
+
+    /// ✅️ Folds ONE budgeted `evaluate` envelope (`{done, phase, unitsDone, unitsTotal, outputJson}`)
+    /// into the session's evaluation ledger and says what the chain owes next. A `done` envelope
+    /// retires the progress row; a working one keeps it so the surface can paint the phase and
+    /// ratio of the ONE part of a boolean preview the tessellation ledger is blind to.
+    ///
+    /// 🧾️ A body that is not an envelope at all is read as a finished evaluation whose output IS
+    /// that body — that is precisely what an extension built before this contract answers, and
+    /// treating it as complete is the only reading that cannot lose an answer.
+    pub fn resolve_preview_eval(&mut self, node_hash: u64, envelope_json: &str) -> PreviewEvalOutcome {
+        let Ok(envelope) = crate::os_pack::json::parse(envelope_json) else {
+            self.eval_progress_by_hash.remove(&node_hash);
+            return PreviewEvalOutcome::Complete { output_json: envelope_json.to_string() };
+        };
+        let Some(done) = envelope.get("done").and_then(crate::os_pack::json::Value::as_bool) else {
+            self.eval_progress_by_hash.remove(&node_hash);
+            return PreviewEvalOutcome::Complete { output_json: envelope_json.to_string() };
+        };
+        let phase = PreviewEvalPhase::from_job_tag(envelope.get("phase").and_then(crate::os_pack::json::Value::as_str).unwrap_or("computing"));
+        let units_done = envelope.get("unitsDone").and_then(crate::os_pack::json::Value::as_f64).unwrap_or(0.0).max(0.0) as u32;
+        let units_total = envelope.get("unitsTotal").and_then(crate::os_pack::json::Value::as_f64).unwrap_or(0.0).max(0.0) as u32;
+        if !done {
+            self.eval_progress_by_hash.insert(node_hash, PreviewEvalProgress { units_done, units_total, phase });
+            return PreviewEvalOutcome::Working;
+        }
+        self.eval_progress_by_hash.remove(&node_hash);
+        if matches!(phase, PreviewEvalPhase::Cancelled) {
+            return PreviewEvalOutcome::Cancelled;
+        }
+        PreviewEvalOutcome::Complete { output_json: envelope.get("outputJson").and_then(crate::os_pack::json::Value::as_str).unwrap_or_default().to_string() }
+    }
+
+    /// 📈 Aggregate progress of every budgeted evaluation this session has admitted and not yet
+    /// finished — what the preview window's status object reports for the `evaluate` half of the
+    /// work.
+    pub fn preview_eval_status(&self) -> PreviewEvalStatus {
+        let mut status = PreviewEvalStatus { in_flight: self.eval_progress_by_hash.len() as u32, ..PreviewEvalStatus::default() };
+        for progress in self.eval_progress_by_hash.values() {
+            status.units_done = status.units_done.saturating_add(progress.units_done);
+            status.units_total = status.units_total.saturating_add(progress.units_total);
+            status.phase = progress.phase;
+        }
+        status
+    }
+
+    /// 🛑 The `evaluateCancel` request body the cancelling command sends to the geometry extension.
+    /// Whole-registry, for the same reason [`FlowEvalSession::preview_cancel_invocation_request_json`]
+    /// is: a session cancels its preview, not one named operator hop.
+    pub fn preview_eval_cancel_invocation_request_json(window_id: &str, window_kind_id: &str) -> String {
+        Self::preview_cancel_invocation_request_json(window_id, window_kind_id)
+    }
+
+    /// 🛑 Whether the user's explicit cancel is the last thing that happened to this evaluation —
+    /// what makes a surface able to publish `phase: "cancelled"` even when the gesture landed before
+    /// any tessellation had been admitted.
+    pub fn preview_cancelled(&self) -> bool {
+        self.preview_cancelled
+    }
+
+    /// ⏳️ How many extension answers this session is waiting for across EVERY window it publishes
+    /// into — the session-wide half of "is there work in flight", which the per-window latch can only
+    /// answer one window at a time. A surface's `cancellable` is this OR a tessellation in flight: an
+    /// `evaluate` round trip admits no tessellation at all, so the tessellation ledger alone reports
+    /// `idle` through the whole (slowest) part of a boolean preview.
+    pub fn extensions_in_flight(&self) -> u32 {
+        self.window_tick_latches.values().map(|latch| latch.in_flight).sum()
     }
 
     /// 🧹 Retires one tessellation's transfer state (its handle binding and any half-received mesh
@@ -2948,6 +3430,7 @@ impl FlowEvalSession {
     pub fn begin_close(&mut self) {
         self.closing = true;
         self.tick_scheduled = false;
+        self.window_tick_latches.clear();
         if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
             if let Some(previous) = map.remove(&self.session_id) {
                 self.retiring_collections.push_back(SessionCollectionOwner::Handles(previous));
@@ -3010,6 +3493,10 @@ impl FlowEvalSession {
             state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_handle_by_hash)));
         } else if !state.tessellate_progress_by_hash.is_empty() {
             state.tessellate_progress_by_hash.clear();
+        } else if !state.eval_progress_by_hash.is_empty() {
+            state.eval_progress_by_hash.clear();
+        } else if !state.window_tick_latches.is_empty() {
+            state.window_tick_latches.clear();
         } else if !state.pending_tessellate_by_hash.is_empty() {
             state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.pending_tessellate_by_hash)));
         } else if !state.live_geometry_handles.is_empty() {
@@ -3053,6 +3540,8 @@ impl FlowEvalSession {
             && self.tessellate_chunks_by_hash.is_empty()
             && self.tessellate_handle_by_hash.is_empty()
             && self.tessellate_progress_by_hash.is_empty()
+            && self.eval_progress_by_hash.is_empty()
+            && self.window_tick_latches.is_empty()
             && self.pending_tessellate_by_hash.is_empty()
             && self.retiring_cache.is_none()
             && self.retirement.terminal_is_empty()
@@ -3149,6 +3638,134 @@ impl PreviewTessellatePhase {
     }
 }
 
+/// ⏱️ Where one BUDGETED `evaluate` round trip currently is. The extension's job reports its own
+/// domain phase tag (`imprint`, `classifyA`, `validate`, …); this enum is the wire-stable,
+/// localizable vocabulary the surface paints, and `Computing` is the honest answer for any tag a
+/// future operator invents (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum PreviewEvalPhase {
+    #[default]
+    Idle,
+    /// 🧮️ A stepped operator is working and named a phase this vocabulary does not know.
+    Computing,
+    /// ✂️ Imprinting intersection curves onto the operands' faces.
+    Imprinting,
+    /// 🧩 Splitting imprinted faces into pieces.
+    Splitting,
+    /// 🎯 Classifying each piece against the other operand.
+    Classifying,
+    /// 🧵 Stitching the kept faces into shells and solids.
+    Stitching,
+    /// 🩺 Validating the result.
+    Validating,
+    Complete,
+    Cancelled,
+}
+
+impl PreviewEvalPhase {
+    /// 🏷️ The stable wire tag the status object publishes.
+    pub fn tag(self) -> &'static str {
+        match self {
+            Self::Idle => "idle",
+            Self::Computing => "computing",
+            Self::Imprinting => "imprinting",
+            Self::Splitting => "splitting",
+            Self::Classifying => "classifying",
+            Self::Stitching => "stitching",
+            Self::Validating => "validating",
+            Self::Complete => "complete",
+            Self::Cancelled => "cancelled",
+        }
+    }
+
+    /// 🏷️ Reads the extension job's own phase tag. An unknown tag is `Computing`, never `Idle`: the
+    /// envelope that carried it said the job is still working, and publishing `idle` for live work
+    /// is the exact defect this ledger exists to close.
+    pub fn from_job_tag(tag: &str) -> Self {
+        match tag {
+            "imprint" => Self::Imprinting,
+            "applyA" | "applyB" => Self::Splitting,
+            "classifyA" | "classifyB" => Self::Classifying,
+            "stitch" => Self::Stitching,
+            "validate" => Self::Validating,
+            "complete" => Self::Complete,
+            "cancelled" => Self::Cancelled,
+            "idle" => Self::Idle,
+            _ => Self::Computing,
+        }
+    }
+
+    /// 🛑 True while a cancel can still retire the evaluation.
+    pub fn is_cancellable(self) -> bool {
+        matches!(self, Self::Computing | Self::Imprinting | Self::Splitting | Self::Classifying | Self::Stitching | Self::Validating)
+    }
+
+    /// 🌍 English and German labels — the UI carries both, with no default language.
+    pub fn labels(self) -> (&'static str, &'static str) {
+        match self {
+            Self::Idle => ("Idle", "Bereit"),
+            Self::Computing => ("Computing", "Berechnen"),
+            Self::Imprinting => ("Imprinting intersections", "Schnittkurven werden eingeprägt"),
+            Self::Splitting => ("Splitting faces", "Flächen werden geteilt"),
+            Self::Classifying => ("Classifying faces", "Flächen werden klassifiziert"),
+            Self::Stitching => ("Stitching shells", "Schalen werden vernäht"),
+            Self::Validating => ("Validating solid", "Körper wird geprüft"),
+            Self::Complete => ("Complete", "Fertig"),
+            Self::Cancelled => ("Cancelled", "Abgebrochen"),
+        }
+    }
+}
+
+/// 📈 One budgeted evaluation's monotone progress.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PreviewEvalProgress {
+    pub units_done: u32,
+    pub units_total: u32,
+    pub phase: PreviewEvalPhase,
+}
+
+/// 📈 The whole session's budgeted-evaluation state, as the status object reports it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PreviewEvalStatus {
+    pub units_done: u32,
+    pub units_total: u32,
+    pub in_flight: u32,
+    pub phase: PreviewEvalPhase,
+}
+
+impl PreviewEvalStatus {
+    /// 📈 Fraction of the admitted evaluation work already done, in `[0, 1]`.
+    pub fn ratio(&self) -> f64 {
+        if self.units_total == 0 {
+            return if self.in_flight == 0 { 1.0 } else { 0.0 };
+        }
+        (f64::from(self.units_done) / f64::from(self.units_total)).clamp(0.0, 1.0)
+    }
+
+    /// 🛑 True while an explicit cancel would still retire something.
+    pub fn is_cancellable(&self) -> bool {
+        self.in_flight > 0 || self.phase.is_cancellable()
+    }
+}
+
+/// ✅️ What folding one budgeted `evaluate` envelope achieved.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PreviewEvalOutcome {
+    /// 🔁 The extension's job is still working — arm another round trip for the SAME request.
+    Working,
+    /// ✅ The operator answered; `output_json` is the out dictionary to seed.
+    Complete { output_json: String },
+    /// 🛑 The job was retired; nothing is produced and nothing is owed.
+    Cancelled,
+}
+
+impl PreviewEvalOutcome {
+    /// 🔁 Whether the chain owes another identical `evaluate` round trip.
+    pub fn needs_another_round_trip(&self) -> bool {
+        matches!(self, Self::Working)
+    }
+}
+
 /// 📈 One tessellation's monotone progress plus its mesh-body chunk cursor.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PreviewTessellateProgress {
@@ -3168,6 +3785,11 @@ pub struct PreviewTessellateStatus {
     pub units_total: u32,
     pub faces_done: u32,
     pub faces_total: u32,
+    /// 🧱 Mesh-body chunks already folded, and how many the bodies in flight carry in all — the
+    /// SECOND stage of the work a preview owes, which [`PreviewTessellateStatus::ratio`] counts
+    /// alongside the kernel's units so a body still crossing can never publish `ratio: 1`.
+    pub chunks_done: u32,
+    pub chunks_total: u32,
     pub in_flight: u32,
     pub diagnostics: u32,
     pub phase: PreviewTessellatePhase,
@@ -3175,11 +3797,17 @@ pub struct PreviewTessellateStatus {
 
 impl PreviewTessellateStatus {
     /// 📈 Fraction of the admitted work already done, in `[0, 1]`.
+    /// ⚖️ A preview owes TWO stages of work — tessellating the kernel's units and carrying the mesh
+    /// body across in chunks — so the ratio is the fraction of BOTH. Counting units alone published
+    /// `ratio: 1` for the whole of a ten-chunk transfer, i.e. the surface said "done" while nothing
+    /// had been painted (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn ratio(&self) -> f64 {
-        if self.units_total == 0 {
+        let done = u64::from(self.units_done).saturating_add(u64::from(self.chunks_done));
+        let total = u64::from(self.units_total).saturating_add(u64::from(self.chunks_total));
+        if total == 0 {
             return if self.in_flight == 0 { 1.0 } else { 0.0 };
         }
-        (f64::from(self.units_done) / f64::from(self.units_total)).clamp(0.0, 1.0)
+        ((done as f64) / (total as f64)).clamp(0.0, 1.0)
     }
 
     /// 🛑 True while an explicit cancel would still retire something.
@@ -3254,6 +3882,36 @@ pub fn flow_host_with_session(fixture: &FlowFixture, session: &FlowEvalSession) 
         host.last_eval_json = session.eval_json().to_string();
     }
     host
+}
+
+/// 🚧️ The operator kinds `fixture` needs that the live flow extension registry cannot serve — the
+/// typed, up-front form of the evaluator's per-node `unknown kind: …`.
+///
+/// A miss here is NOT something an evaluation tick can work off: `Evaluator::dispatch` answers
+/// `EvalError::UnknownKind` for an unregistered kind, the node publishes an error dictionary, and
+/// the very next tick recomputes the same miss because an error is never cached. Only a REGISTRY
+/// change — a host `setContributions` push, which bumps
+/// [`flow_extension_registry_generation`] and re-arms every attached surface through
+/// [`FlowEvalSession::invalidate_for_flow_extension_registry`] — can move it. A surface that arms a
+/// chain anyway spins forever at its own refresh cadence, which is exactly what the served
+/// generation3d editor did for the whole 45 s of a live boot with no contributions installed
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// Scope is deliberately the fixture's own `Widget::Neuron` kinds: those are the kinds a contributed
+/// extension pack registers and the ones a host push makes resolvable. A cluster's inner tree is not
+/// walked — its boundary kinds are structural (`core.input`/`core.output`), never contributed — so
+/// this answer never invents a block that a contribution could not lift.
+pub fn unserved_flow_operator_kinds(fixture: &FlowFixture) -> Vec<String> {
+    let registry = flow_registry();
+    let mut unserved = BTreeSet::new();
+    for widget in &fixture.widgets {
+        if let Widget::Neuron { neuron_kind, .. } = widget {
+            if registry.as_ref().operator(neuron_kind).is_none() {
+                unserved.insert(neuron_kind.clone());
+            }
+        }
+    }
+    unserved.into_iter().collect()
 }
 
 fn node_eval_status_json(status: &NodeEvalStatus) -> crate::os_pack::json::Value {

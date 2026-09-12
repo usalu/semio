@@ -1,0 +1,19 @@
+{
+  "bundleRoot": "🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+  "bundleDocument": "🌐️.html",
+  "devSessionRelativeRoot": "../../../../../../🧑‍💻dev",
+  "routes": {
+    "plugin": "/🔌️plugin-modules",
+    "extension": "/🧩️extension-modules"
+  },
+  "descriptorFile": "🔣️.json",
+  "descriptorProbeDirectory": "🧊️flow-extension-brep",
+  "pluginOnlyDocument": "<link data-trunk rel=\"rust\" href=\"Cargo.toml\" data-type=\"worker\" />\n<link data-trunk rel=\"copy-dir\" href=\"./🔌️plugin-modules\" data-target-path=\"🔌️plugin-modules\" />\n<link data-trunk rel=\"copy-file\" href=\"🟦️typescript/🚀️boot.js\" />\n",
+  "danglingDocument": "<link data-trunk rel=\"copy-dir\" href=\"./🫥️absent\" data-target-path=\"🧩️extension-modules\" />\n",
+  "descriptorFallthroughFault": "plugin.descriptor-invalid",
+  "pluginStagingRelativeRoot": "../../../../../../🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules",
+  "routeRelativeRoots": {
+    "/🔌️plugin-modules": "../../../../../../🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules",
+    "/🧩️extension-modules": "../../../../../../🧑‍💻dev/🧩️extension-modules"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/plugin/reactor.json",
+  "title": "🧬️ Reactor seam contracts",
+  "definitions": {
+    "InboundRequestSeam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eventKind", "effectTag", "eventFields", "paramFields", "effectFields", "outcomeArms", "originTag", "turnBudget", "answeredOnTurn", "contiguousRequestCeilingBytes", "hostAnswerCeilingBytes"],
+      "properties": {
+        "eventKind": { "const": "request" },
+        "effectTag": { "const": "respond" },
+        "eventFields": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "paramFields": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "effectFields": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "outcomeArms": { "type": "array", "items": { "enum": ["ok", "fault"] }, "minItems": 2, "maxItems": 2 },
+        "originTag": { "type": "string", "minLength": 1 },
+        "turnBudget": { "type": "integer", "minimum": 1 },
+        "answeredOnTurn": { "type": "integer", "minimum": 1 },
+        "contiguousRequestCeilingBytes": { "type": "integer", "minimum": 1 },
+        "hostAnswerCeilingBytes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "InboundRequestRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "bundle", "capability", "requestText", "outcome"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "bundle": { "type": "boolean" },
+        "capability": { "type": "string", "minLength": 1 },
+        "requestText": { "type": "string" },
+        "outcome": { "enum": ["ok", "fault"] },
+        "answerText": { "type": "string" },
+        "faultCode": { "type": "string", "minLength": 1 }
+      }
+    },
+    "InboundRequestFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seam", "capability", "rows"],
+      "properties": {
+        "seam": { "$ref": "#/definitions/InboundRequestSeam" },
+        "capability": { "type": "string", "minLength": 1 },
+        "rows": { "type": "array", "items": { "$ref": "#/definitions/InboundRequestRow" }, "minItems": 3 }
+      }
+    }
+  }
+}

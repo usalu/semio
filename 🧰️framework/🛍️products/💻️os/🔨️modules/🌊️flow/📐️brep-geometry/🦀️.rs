@@ -708,12 +708,27 @@ pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framewo
     }
 }
 
-/// 🌐️ One budgeted tessellate step as the extension-boundary JSON envelope: progress/phase always,
-/// plus one base64 `pack` mesh-body chunk per continuation once the mesh is ready. `chunk` selects
-/// which chunk to ship; `chunks` tells the caller how many there are in total.
-pub fn tessellate_step_envelope_json(handle: &str, tolerance: f64, budget: usize, chunk: usize) -> String {
+/// 🌐️ One budgeted tessellate ROUND TRIP as the extension-boundary JSON envelope: progress/phase
+/// always, plus one base64 `pack` mesh-body chunk per continuation once the mesh is ready. `chunk`
+/// selects which chunk to ship; `chunks` tells the caller how many there are in total.
+///
+/// ⏱️ `budget` bounds ONE step in face/edge units — the granularity at which a cancel can land —
+/// and `wall_micros` bounds the whole round trip in wall time: the call keeps stepping while the
+/// job is still working AND the deadline has not passed. Both bounds are needed because units are
+/// not time: the cheapest step measured on this kernel is 29 µs and the dearest 5.9 s, so a unit
+/// budget alone either wastes a whole interactive round trip on microseconds of work or overruns
+/// any ceiling on a single face (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn tessellate_step_envelope_json(handle: &str, tolerance: f64, budget: usize, wall_micros: u64, chunk: usize) -> String {
     use crate::os_pack::json::{object, Value};
-    let outcome = tessellate_step(handle, tolerance, budget);
+    let deadline = semio_framework_job::default_now_us().map(|now| now.saturating_add(wall_micros));
+    let mut outcome = tessellate_step(handle, tolerance, budget);
+    while matches!(outcome, TessellationStepOutcome::Working { .. }) {
+        let Some(deadline) = deadline else { break };
+        if semio_framework_job::default_now_us().is_none_or(|now| now >= deadline) {
+            break;
+        }
+        outcome = tessellate_step(handle, tolerance, budget);
+    }
     let envelope = match outcome {
         TessellationStepOutcome::Working { units_done, units_total, faces_done, faces_total, phase } => object([
             ("done".to_string(), Value::Bool(false)),
@@ -924,14 +939,28 @@ pub fn decode_mesh_pack(bytes: &[u8]) -> Result<semio_framework::MeshData, Strin
 /// this much of the mesh body, so a dense mesh streams across turns instead of blowing one turn's
 /// intake budget on a single oversized continuation.
 ///
-/// 48 KiB was NOT a real intake unit: the response action is an ordinary interactive retained route
-/// whose declared wire bound is 8 KiB (generation3d's `GENERATION3D_RETAINED_RAW_BYTES` and every
-/// `bounded_first_step(8_192, …)` proof beside it — one factory registers ONE contract for all its
-/// keys, so this route cannot be widened on its own). A single-chunk mesh therefore arrived as
-/// 38 770 raw bytes and the bus rejected it before decoding, leaving every preview handle pending
-/// forever. Sized against [`tessellate_envelope_maximum_bytes`], which the consumer pins to its own
-/// declared bound (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub const MESH_PACK_CHUNK_BASE64_CHARS: usize = 4 * 1024;
+/// 📏️ Sized as one guest-contiguous page minus the envelope header: the answer is handed to the
+/// consuming guest through pages of `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES` (64 KiB) and the
+/// PRODUCING guest must itself hold the envelope as one contiguous `String`, which dlmalloc never
+/// returns to the OS — so the whole envelope stays inside one page.
+///
+/// ⚖️ It is NOT 4 KiB. That value was derived from the 8 KiB gesture quota the response action used
+/// to share with 28 unrelated interactive routes, and it made the transfer unit twelve times
+/// smaller than the wire can carry: a 38 584-character `sphere-cut-with-torus` body took TEN
+/// `flowEvalTick` round trips — seconds apiece in a served build — so the preview never painted
+/// inside any patience window (`📓️preview-mesh-delivery-2026-09-12.md`). The chain now owns its own
+/// route (`GENERATION3D_FLOW_EVAL_RAW_BYTES` / `GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES`), whose bound
+/// is pinned to [`tessellate_envelope_maximum_bytes`] by both surfaces' own tests, so the transfer
+/// unit and the bound can never drift apart (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub const MESH_PACK_CHUNK_BASE64_CHARS: usize = 48 * 1024;
+
+/// ⏱️ Wall-clock microseconds one `tessellate` round trip spends stepping before it answers with
+/// whatever progress it reached. The unit budget alone is NOT a time bound — a single face of a
+/// boolean-cut sphere costs seconds while a box edge costs 29 µs — so a pure unit budget both
+/// over-runs (one 5.9 s step) and under-runs (five consecutive µs-long steps, each paying a whole
+/// interactive round trip). The unit budget stays the CANCELLATION granularity; this is the
+/// interactivity bound (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub const TESSELLATE_STEP_WALL_MICROS: u64 = 6_000;
 
 /// 📏️ Largest `tessellate` step envelope [`tessellate_step_envelope_json`] can emit: one full
 /// [`MESH_PACK_CHUNK_BASE64_CHARS`] chunk plus the widest progress/accounting header. Every consumer

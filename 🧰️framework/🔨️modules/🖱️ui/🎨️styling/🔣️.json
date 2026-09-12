@@ -190,10 +190,14 @@
       "flowZoomMax": 8.0,
       "wheelZoomInFactor": 1.1,
       "wheelZoomOutFactor": 0.9,
-      "lodZoomFloor": 0.05
+      "lodZoomFloor": 0.05,
+      "contentFitPaddingPx": 24.0,
+      "contentFramedMinCoverage": 0.85,
+      "contentRefitMaxCoverage": 0.05
     },
     "label": {
       "minPx": 4.0,
+      "legibleMinPx": 8.0,
       "padRatio": 0.35,
       "charWidthRatio": 0.62,
       "heightRatio": 1.6,
@@ -284,7 +288,8 @@
       "minimapWidgetRadius": 6.0,
       "minimapWidgetNodeMinSize": 2.0,
       "minimapWidgetMaxContentRatio": 0.82,
-      "minimapWidgetContentPad": 32.0
+      "minimapWidgetContentPad": 32.0,
+      "nodeTitleWidthFactor": 2.0
     },
     "map": {
       "labelPxBands": [26, 26, 20, 14, 12.5, 12, 10.5, 10.5],

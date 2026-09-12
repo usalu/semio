@@ -508,9 +508,17 @@ impl WindowConfigOwnerRegistry {
         self.owners.is_empty()
     }
 
+    /// 🪟️ The window whose config this call speaks for: the addressed instance, and for a PANEL
+    /// projection — which `ViewModel::for_panel` deliberately strips of `window_id` — the shell's
+    /// focused pane. A panel's controls are addressed at `focused_window_id` (that is the only carrier of
+    /// "which window is the user looking at" a panel is given), so handing the panel no window config at
+    /// all made every panel render a per-window option from `Default` while writing to the focused pane:
+    /// the puzzle3d Settings panel displayed spacing 10.0 and bumped it to 10.5 against a pane whose rail
+    /// stood at 12.5 (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B36). A surface reads exactly the state
+    /// it writes.
     pub(crate) async fn capture(&mut self, view_state: Option<&ViewModel>) -> Result<Option<WindowConfigAuthority>, Fault> {
         let Some(view_state) = view_state else { return Ok(None) };
-        let Some(window_id) = view_state.window_id.as_deref() else { return Ok(None) };
+        let Some(window_id) = view_state.window_id.as_deref().or(view_state.focused_window_id.as_deref()) else { return Ok(None) };
         let window = view_state
             .window_instances
             .iter()

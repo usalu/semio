@@ -360,6 +360,13 @@ pub async fn settle(app: &mut Puzzle3dApp) -> Puzzle3dSettled {
         app.advance_typed_operation_publication().await.expect("advance one typed operation publication unit");
         if let Some(page) = app.take_typed_operation_result_page(FIXTURE_INSTANCE_ID) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
+            // ⬇️ The Download lane's page is the ONLY place the segmented handle is named, and the ACK
+            // below is what admits the chunks into the app's `segmented_downloads` authority — so the
+            // handle is captured here, exactly where the host's own `consumeTypedOperationEffects`
+            // captures it, or a law can never drain what it just published.
+            if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Download {
+                settled.downloads.push(Puzzle3dDownload::from_page(page.token.operation, page.bytes()));
+            }
             assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page"), "the app's own presented result page must accept its exact token");
         }
         settled.effects.extend(app.take_typed_operation_effect());
@@ -388,6 +395,53 @@ pub struct Puzzle3dSettled {
     pub events: Vec<semio_framework_plugin::AppEvent>,
     pub scope: Option<UiDirtyScope>,
     pub completions: Vec<Puzzle3dCompletion>,
+    pub downloads: Vec<Puzzle3dDownload>,
+}
+
+/// ⬇️ One segmented download handle a typed operation published — the metadata the host turns into
+/// `download-media-export` with a `semio-segmented-handle-v1:` marker, plus the operation id the chunks
+/// are drained by ([`drain_segmented_download`]).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle3dDownload {
+    pub operation: u64,
+    pub filename: String,
+    pub mime_type: String,
+    pub encoding: Option<String>,
+    pub bytes: usize,
+}
+
+impl Puzzle3dDownload {
+    /// 📦️ The Download lane's wire shape is a flat 4-element JSON array
+    /// (`DownloadResultPayload`'s hand-written `ToValue`), read here exactly as the renderer reads it.
+    fn from_page(operation: u64, page: &[u8]) -> Self {
+        let text = String::from_utf8_lossy(page).into_owned();
+        let value: Value = parse(&text).unwrap_or_else(|_| panic!("download result page must be JSON: {text}"));
+        let row = value.as_array().unwrap_or_else(|| panic!("download result page must be a 4-element array: {text}"));
+        Self {
+            operation,
+            filename: row.first().and_then(Value::as_str).unwrap_or_default().to_string(),
+            mime_type: row.get(1).and_then(Value::as_str).unwrap_or_default().to_string(),
+            encoding: row.get(2).and_then(Value::as_str).map(str::to_string),
+            bytes: row.get(3).and_then(Value::as_u64).unwrap_or_default() as usize,
+        }
+    }
+}
+
+/// ⬇️ Drains one published segmented download the way the host's `drainSegmentedMediaExport` does: one
+/// bounded chunk per await until the producer answers `None`, concatenated in order. The whole point of
+/// the lane is that the payload never crosses as one contiguous block, so a law that asserts the
+/// REASSEMBLED bytes has to drain it exactly like this.
+pub async fn drain_segmented_download(app: &mut Puzzle3dApp, download: &Puzzle3dDownload) -> Vec<u8> {
+    let mut assembled = Vec::with_capacity(download.bytes);
+    let mut chunks = 0usize;
+    while let Some(chunk) = app.take_segmented_download_chunk(download.operation).await.expect("take one segmented download chunk") {
+        assert!(!chunk.is_empty(), "a segmented download chunk is never empty");
+        assert!(chunk.len() <= semio_framework_plugin::app::ArtifactOutputChunks::CHUNK_BYTES, "chunk {} exceeds the wire's own page cap", chunks);
+        assembled.extend_from_slice(&chunk);
+        chunks += 1;
+        assert!(chunks <= download.bytes / semio_framework_plugin::app::ArtifactOutputChunks::CHUNK_BYTES + 2, "segmented drain never terminated");
+    }
+    assembled
 }
 
 /// 📬️ One `AppFrame::OperationCompleted` witness, projected to what a law can assert on.

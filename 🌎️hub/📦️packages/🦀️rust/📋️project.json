@@ -36,6 +36,17 @@
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo build --manifest \"🌎️hub/📦️packages/🦀️rust/Cargo.toml\" --release --bin os-hub"
       }
     },
+    "build-dev": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build-dev"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build-dev"
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {
@@ -473,7 +484,7 @@
     },
     "admin-live-journey-check": {
       "executor": "nx:run-commands",
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts admin-live-journey-check"
@@ -768,11 +779,12 @@
     },
     "gis-inference-ledger-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts gis-inference-ledger-oracle"
-      }
+      },
+      "outputs": []
     },
     "inference-relay-check": {
       "executor": "nx:run-commands",
@@ -849,6 +861,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "dependsOn": [
+        "build-dev",
         {
           "target": "build",
           "projects": [
@@ -866,6 +879,7 @@
     "dev-secure-suite": {
       "executor": "nx:run-commands",
       "dependsOn": [
+        "build-dev",
         {
           "target": "build",
           "projects": [
@@ -883,6 +897,7 @@
     "dev-secure-native": {
       "executor": "nx:run-commands",
       "dependsOn": [
+        "build-dev",
         {
           "target": "build",
           "projects": [
@@ -900,6 +915,7 @@
     "dev-secure-mcp": {
       "executor": "nx:run-commands",
       "dependsOn": [
+        "build-dev",
         {
           "target": "build",
           "projects": [
@@ -917,6 +933,7 @@
     "dev-secure-admin": {
       "executor": "nx:run-commands",
       "dependsOn": [
+        "build-dev",
         {
           "target": "build",
           "projects": [

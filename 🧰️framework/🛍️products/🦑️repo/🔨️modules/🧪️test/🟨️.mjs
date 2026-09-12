@@ -70,11 +70,61 @@ async function ownerHash(ownerRel) {
   return createHash("sha256").update(ownerRel).digest("hex").slice(0, 6);
 }
 
+/** 🦀️ The name `📜️script.ts`'s `rustSutCrate` links to mean "the generated host itself, not a subject" — mirrored here so the two never drift. */
+const RUST_HOST_SENTINEL_PACKAGE = "semio-repo-test-host";
+
+/** 🦀️ The rust adapter's own crate root, wherever it actually sits. Cargo needs one package boundary
+ * per crate, so an owner nested under `🏅️standards`/`🪆️subsets` links a crate rooted at an ANCESTOR
+ * directory — mirrors `rustSutCrate`'s walk-up in `📜️script.ts` so that ancestor becomes a cache input
+ * too, not just the owner's own colocated files. */
+function rustSutCratePath(workspaceRoot, ownerRel) {
+  let dir = ownerRel;
+  for (let depth = 0; depth < 16; depth += 1) {
+    const manifest = join(workspaceRoot, dir, "📦️packages", "🦀️rust", "Cargo.toml");
+    if (existsSync(manifest)) {
+      const name = readFileSync(manifest, "utf8").match(/^\s*name\s*=\s*"([^"]+)"/m)?.[1];
+      if (name !== undefined && name !== RUST_HOST_SENTINEL_PACKAGE) return `${dir}/📦️packages/🦀️rust`;
+      if (name === RUST_HOST_SENTINEL_PACKAGE) return null;
+    }
+    const parent = dir.split("/").slice(0, -1).join("/");
+    if (parent === "" || parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+/** 🔮️ Every `path`-based oracle host package an ANCESTOR of the owner (or the owner itself) contributes
+ * — mirrors `oracleHostPackagesFor`'s ancestor walk in `📜️script.ts`. A generated host links these
+ * crates/modules by that path, often far outside the owner's own directory (a sibling plugin's shared
+ * oracle crate), so the manifest alone is not enough: what it points AT is the real cache input. */
+function oracleContributionPaths(workspaceRoot, vocabulary, ownerRel) {
+  const manifestFilename = filenameForKind(vocabulary, vocabulary.testContributionFileKindId);
+  const paths = [];
+  let dir = ownerRel;
+  for (;;) {
+    const manifestAbs = join(workspaceRoot, dir, vocabulary.testContributionDirName, manifestFilename);
+    if (existsSync(manifestAbs)) {
+      try {
+        const parsed = JSON.parse(readFileSync(manifestAbs, "utf8"));
+        for (const entry of parsed.oracleHostPackages ?? []) if (typeof entry.path === "string") paths.push(entry.path);
+      } catch {
+        // 🧩️An unparsable manifest is already reported by the contract phase; discovery just skips it.
+      }
+    }
+    if (dir === "") break;
+    const idx = dir.lastIndexOf("/");
+    dir = idx === -1 ? "" : dir.slice(0, idx);
+  }
+  return paths;
+}
+
 /** 📥️ Cache inputs of one case: the feature, its fixtures, its adapters, the claimed sources, the contract. */
 function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
   const sharedFixtures = `${ownerRel}/${vocabulary.testFixturesDirName}`;
   const domain = vocabulary.testDomainPath;
   const featureFilename = filenameForKind(vocabulary, vocabulary.testFeatureFileKindId);
+  const rustAdapterFilename = filenameForKind(vocabulary, vocabulary.testAdapterFileKinds["🦀️rust"]);
+  const rustSutCrate = adapters.some((adapter) => adapter.endsWith(`/${rustAdapterFilename}`)) ? rustSutCratePath(workspaceRoot, ownerRel) : null;
   const inputs = [
     `{workspaceRoot}/${caseRel}/${featureFilename}`,
     ...(existsSync(join(workspaceRoot, sharedFixtures)) ? [`{workspaceRoot}/${sharedFixtures}/**/*`] : []),
@@ -86,6 +136,11 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
     `{workspaceRoot}/${domain}/**/*`,
     // 🧩️And every owner contribution, so adding or changing an oracle invalidates the cases that use it.
     `{workspaceRoot}/**/${vocabulary.testContributionDirName}/**/*`,
+    // 🦀️The rust adapter's own crate root, wherever it actually sits — often an ancestor of the owner.
+    ...(rustSutCrate === null ? [] : [`{workspaceRoot}/${rustSutCrate}/**/*`]),
+    // 🔮️Every path-based oracle host package an ancestor (or the owner itself) contributes: the crate
+    // or module a generated host actually links, not just the manifest that names it.
+    ...oracleContributionPaths(workspaceRoot, vocabulary, ownerRel).map((path) => `{workspaceRoot}/${path}/**/*`),
     "sharedGlobals",
   ];
   // 🧭️ A change to the owner's own sources must invalidate the case, or a subject regression would
@@ -161,7 +216,10 @@ async function testCaseProjects(configFiles, _options, context) {
               "test-subject": scoped("test-subject", `subject ${select}`),
               "test-parity": scoped("test-parity", `parity ${select}`),
               test: scoped("test", `run ${select}`),
-              ...Object.fromEntries(LEVELS.map((level) => [`test-${level}`, scoped(`test-${level}`, `run ${level} ${select}`, level !== "exhaustive")])),
+              // 🎚️Every level is cached alike: `inputsFor` already hashes the case's full owner-and-oracle
+              // closure, `SEMIO_TEST_LEVEL`/`SEMIO_TEST_BUDGET_MS` are hashed env, and outputs are declared —
+              // exhaustive is the most expensive level, not a less deterministic one.
+              ...Object.fromEntries(LEVELS.map((level) => [`test-${level}`, scoped(`test-${level}`, `run ${level} ${select}`)])),
             },
           },
         },
@@ -178,7 +236,7 @@ export default {
 };
 
 /** 🧪️ Exposed for the domain's own self-tests: the pure parts of the generation above. */
-export const internals = { isExcluded, projectNameFor, inputsFor, taxonomy };
+export const internals = { isExcluded, projectNameFor, inputsFor, taxonomy, rustSutCratePath, oracleContributionPaths };
 
 /** 📁️ Convenience for tools that need the case directories without loading Nx. */
 export function discoverCaseDirs(workspaceRoot) {

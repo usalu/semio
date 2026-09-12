@@ -2,9 +2,9 @@
   "$schema": "./🧬️schema/🔣️.json",
   "version": 1,
   "uncached": [
-    "activate",
     "audit",
     "bench",
+    "cache-report",
     "cache-verify",
     "ci-baseline",
     "clean",
@@ -24,13 +24,11 @@
     "purge",
     "seed",
     "setup",
-    "test-discover",
     "test-doctor",
     "test-e2e",
     "test-fixture-generate",
     "test-fixture-reproduce",
     "test-inventory",
-    "test-metrics",
     "update"
   ],
   "uncachedExact": [
@@ -41,6 +39,11 @@
     "parity",
     "scale-fixture",
     "semio"
+  ],
+  "cachedExact": [
+    "hub-live-catalog-check",
+    "hub-live-catalog-native-check",
+    "hub-live-catalog-oracle"
   ],
   "continuous": [
     "dev",
@@ -499,7 +502,12 @@
     "guardAgeMs": 172800000,
     "cargo": {
       "budgetBytes": 85899345920,
-      "unusedAgeMs": 604800000
+      "unusedAgeMs": 604800000,
+      "incremental": {
+        "budgetBytes": 25769803776,
+        "unusedAgeMs": 86400000,
+        "guardAgeMs": 3600000
+      }
     },
     "vite": {
       "unusedAgeMs": 1209600000

@@ -1,8 +1,8 @@
 import { existsSync, lstatSync, readdirSync, rmdirSync, rmSync, unlinkSync } from "node:fs";
-import { dirname, join, relative, sep } from "node:path";
+import { basename, dirname, join, relative, sep } from "node:path";
 
-export type CacheUnitKind = "cargo-build" | "cargo-incremental" | "cargo-target-file" | "directory";
-/** 📦️ One independently deletable slice of a cache area: a compilation unit, an incremental crate dir, an uplifted file, or a whole scratch directory. */
+export type CacheUnitKind = "cargo-build" | "cargo-incremental" | "cargo-incremental-session" | "cargo-target-file" | "directory";
+/** 📦️ One independently deletable slice of a cache area: a compilation unit, an incremental crate dir, a stale finalized incremental session, an uplifted file, or a whole scratch directory. */
 export interface CacheUnit {
   readonly path: string;
   readonly bytes: number;
@@ -14,6 +14,7 @@ export interface CacheAreaInput {
   readonly name: string;
   readonly budgetBytes: number | null;
   readonly unusedAgeMs: number;
+  readonly guardAgeMs?: number;
   readonly units: readonly CacheUnit[];
 }
 export interface AreaPlan {
@@ -33,8 +34,9 @@ export interface PrunePlan {
 /**
  * 📐️ Pure age-then-budget eviction over an abstract cache tree; no filesystem access, so it is identically
  * testable in every language. Age deletions run first; if an area still exceeds its budget, the remaining
- * units are evicted oldest-first, but never past the guard age (`recencyMs` within `guardAgeMs` of `nowMs`)
- * and never while `lockHeld` — those bytes are reported as `guardedOverBudgetBytes` instead of deleted.
+ * units are evicted oldest-first, but never past the guard age (`recencyMs` within the area's own
+ * `guardAgeMs`, falling back to the shared `guardAgeMs`, of `nowMs`) and never while `lockHeld` — those
+ * bytes are reported as `guardedOverBudgetBytes` instead of deleted.
  */
 export function planCachePrune(areas: readonly CacheAreaInput[], nowMs: number, guardAgeMs: number): PrunePlan {
   const areaPlans = areas.map((area): AreaPlan => {
@@ -47,7 +49,7 @@ export function planCachePrune(areas: readonly CacheAreaInput[], nowMs: number, 
     const budgetDeletions: CacheUnit[] = [];
     let guardedOverBudgetBytes = 0;
     if (area.budgetBytes !== null && remainingBytes > area.budgetBytes) {
-      const guardCutoff = nowMs - guardAgeMs;
+      const guardCutoff = nowMs - (area.guardAgeMs ?? guardAgeMs);
       for (const unit of [...remaining].sort((left, right) => left.recencyMs - right.recencyMs || (left.path < right.path ? -1 : left.path > right.path ? 1 : 0))) {
         if (remainingBytes <= area.budgetBytes) break;
         if (unit.lockHeld || unit.recencyMs > guardCutoff) { guardedOverBudgetBytes += unit.bytes; continue; }
@@ -94,12 +96,9 @@ function measureUnit(root: string): { bytes: number; recencyMs: number } {
 
 const posix = (path: string): string => path.split(sep).join("/");
 
-/**
- * 🗃️ Walks Cargo's shared build-dir for its two evidenced unit shapes: `.../build/<package>/<unit-hash>/`
- * and `.../incremental/<crate>-<hash>/`. https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#build-dir
- */
-export function scanCargoBuildUnits(buildDir: string, signal: AbortSignal, onUnit?: (unit: CacheUnit) => void): CacheUnit[] {
-  const units: CacheUnit[] = [];
+/** 🔎️ Recursively finds every directory literally named `named` under `root`, at any depth (an optional target-triple/profile level in between is handled without guessing). */
+function findNamedDirs(root: string, named: string, signal: AbortSignal): string[] {
+  const found: string[] = [];
   const descend = (dir: string, depth: number): void => {
     signal.throwIfAborted();
     if (depth > 8 || !existsSync(dir)) return;
@@ -108,39 +107,91 @@ export function scanCargoBuildUnits(buildDir: string, signal: AbortSignal, onUni
       let stat;
       try { stat = lstatSync(path); } catch { continue; }
       if (!stat.isDirectory() || stat.isSymbolicLink()) continue;
-      if (name === "build") {
-        for (const pkg of safeReaddir(path)) for (const hash of safeReaddir(join(path, pkg))) {
-          signal.throwIfAborted();
-          const unitPath = join(path, pkg, hash);
-          let unitStat;
-          try { unitStat = lstatSync(unitPath); } catch { continue; }
-          if (!unitStat.isDirectory() || unitStat.isSymbolicLink()) continue;
-          const measured = measureUnit(unitPath);
-          const unit: CacheUnit = { path: posix(relative(buildDir, unitPath)), bytes: measured.bytes, recencyMs: measured.recencyMs, lockHeld: false, kind: "cargo-build" };
-          units.push(unit);
-          onUnit?.(unit);
-        }
-        continue;
-      }
-      if (name === "incremental") {
-        for (const crate of safeReaddir(path)) {
-          signal.throwIfAborted();
-          const unitPath = join(path, crate);
-          let unitStat;
-          try { unitStat = lstatSync(unitPath); } catch { continue; }
-          if (!unitStat.isDirectory() || unitStat.isSymbolicLink()) continue;
-          const measured = measureUnit(unitPath);
-          const unit: CacheUnit = { path: posix(relative(buildDir, unitPath)), bytes: measured.bytes, recencyMs: measured.recencyMs, lockHeld: false, kind: "cargo-incremental" };
-          units.push(unit);
-          onUnit?.(unit);
-        }
-        continue;
-      }
+      if (name === named) { found.push(path); continue; }
       descend(path, depth + 1);
     }
   };
-  descend(buildDir, 0);
+  descend(root, 0);
+  return found;
+}
+
+/** 🗃️ Walks Cargo's shared build-dir for compiled units: `.../build/<package>/<unit-hash>/`. https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#build-dir */
+export function scanCargoBuildUnits(buildDir: string, signal: AbortSignal, onUnit?: (unit: CacheUnit) => void): CacheUnit[] {
+  const units: CacheUnit[] = [];
+  for (const buildRoot of findNamedDirs(buildDir, "build", signal)) {
+    for (const pkg of safeReaddir(buildRoot)) for (const hash of safeReaddir(join(buildRoot, pkg))) {
+      signal.throwIfAborted();
+      const unitPath = join(buildRoot, pkg, hash);
+      let unitStat;
+      try { unitStat = lstatSync(unitPath); } catch { continue; }
+      if (!unitStat.isDirectory() || unitStat.isSymbolicLink()) continue;
+      const measured = measureUnit(unitPath);
+      const unit: CacheUnit = { path: posix(relative(buildDir, unitPath)), bytes: measured.bytes, recencyMs: measured.recencyMs, lockHeld: false, kind: "cargo-build" };
+      units.push(unit);
+      onUnit?.(unit);
+    }
+  }
   return units;
+}
+
+const sessionLockName = (sessionDirName: string): string => `${sessionDirName.split("-").slice(0, 3).join("-")}.lock`;
+
+/** 📏️ Measures one incremental session (its directory plus its sibling `.lock` file, which rustc keeps alongside even after finalizing). */
+function measureSession(crateDir: string, sessionName: string): { bytes: number; recencyMs: number } {
+  const measured = measureUnit(join(crateDir, sessionName));
+  let lockBytes = 0, lockRecencyMs = 0;
+  try { const lockStat = lstatSync(join(crateDir, sessionLockName(sessionName))); if (lockStat.isFile()) { lockBytes = lockStat.size; lockRecencyMs = Math.max(lockStat.atimeMs, lockStat.mtimeMs); } } catch {}
+  return { bytes: measured.bytes + lockBytes, recencyMs: Math.max(measured.recencyMs, lockRecencyMs) };
+}
+
+export interface CargoIncrementalScan {
+  readonly units: readonly CacheUnit[];
+  readonly staleSessions: readonly CacheUnit[];
+}
+
+/**
+ * 🗃️ Walks Cargo's shared build-dir for incremental crate dirs: `.../incremental/<crate>-<hash>/`, each holding
+ * one session per compile as `s-<timestamp>-<id>-working` (in progress) or a finalized `s-<timestamp>-<id>-<svh>`,
+ * with a `s-<timestamp>-<id>.lock` file alongside. https://rustc-dev-guide.rust-lang.org/queries/incremental-compilation-in-detail.html
+ *
+ * `units` is one `cargo-incremental` unit per crate dir, sized to only its newest finalized session plus any
+ * in-progress `-working` session (`lockHeld: true` whenever a `-working` session exists — a crate dir must
+ * never be deleted while one is present, however old it looks, since a crashed build can leave it stale for a
+ * long time without meaning it is safe to remove). `staleSessions` lists every finalized session rustc itself
+ * no longer needs (everything but the newest), as independent `cargo-incremental-session` units for
+ * unconditional compaction, regardless of the crate dir's own age or lock state.
+ */
+export function scanCargoIncrementalUnits(buildDir: string, signal: AbortSignal, onUnit?: (unit: CacheUnit) => void): CargoIncrementalScan {
+  const units: CacheUnit[] = [];
+  const staleSessions: CacheUnit[] = [];
+  for (const incrementalRoot of findNamedDirs(buildDir, "incremental", signal)) {
+    for (const crate of safeReaddir(incrementalRoot)) {
+      signal.throwIfAborted();
+      const crateDir = join(incrementalRoot, crate);
+      let crateStat;
+      try { crateStat = lstatSync(crateDir); } catch { continue; }
+      if (!crateStat.isDirectory() || crateStat.isSymbolicLink()) continue;
+      const sessions = safeReaddir(crateDir).filter((name) => {
+        if (!name.startsWith("s-") || name.endsWith(".lock")) return false;
+        try { const stat = lstatSync(join(crateDir, name)); return stat.isDirectory() && !stat.isSymbolicLink(); } catch { return false; }
+      });
+      const measured = sessions.map((name) => ({ name, working: name.endsWith("-working"), ...measureSession(crateDir, name) }));
+      const working = measured.filter((session) => session.working);
+      const finalized = measured.filter((session) => !session.working).sort((left, right) => right.recencyMs - left.recencyMs);
+      const [newest, ...stale] = finalized;
+      for (const session of stale) {
+        const unit: CacheUnit = { path: posix(relative(buildDir, join(crateDir, session.name))), bytes: session.bytes, recencyMs: session.recencyMs, lockHeld: false, kind: "cargo-incremental-session" };
+        staleSessions.push(unit);
+        onUnit?.(unit);
+      }
+      const crateBytes = (newest?.bytes ?? 0) + working.reduce((sum, session) => sum + session.bytes, 0);
+      const crateRecencyMs = Math.max(newest?.recencyMs ?? 0, ...working.map((session) => session.recencyMs), 0);
+      const unit: CacheUnit = { path: posix(relative(buildDir, crateDir)), bytes: crateBytes, recencyMs: crateRecencyMs, lockHeld: working.length > 0, kind: "cargo-incremental" };
+      units.push(unit);
+      onUnit?.(unit);
+    }
+  }
+  return { units, staleSessions };
 }
 
 const CARGO_SENTINEL_NAMES = new Set(["CACHEDIR.TAG"]);
@@ -187,7 +238,7 @@ export function scanDirectoryUnits(areaRoot: string, signal: AbortSignal, exclud
   return units;
 }
 
-/** 🗑️ Deletes one previously scanned unit and, for a flat target-dir file, prunes now-empty parent directories back to the area root. */
+/** 🗑️ Deletes one previously scanned unit: a flat target-dir file prunes now-empty parent directories back to the area root; a stale incremental session also removes its sibling `.lock` file. */
 export function deleteUnit(areaRoot: string, unit: CacheUnit): void {
   const absolute = join(areaRoot, ...unit.path.split("/"));
   if (unit.kind === "cargo-target-file") {
@@ -199,6 +250,11 @@ export function deleteUnit(areaRoot: string, unit: CacheUnit): void {
       try { rmdirSync(parent); } catch { break; }
       parent = dirname(parent);
     }
+    return;
+  }
+  if (unit.kind === "cargo-incremental-session") {
+    rmSync(absolute, { recursive: true, force: true });
+    try { unlinkSync(join(dirname(absolute), sessionLockName(basename(absolute)))); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
     return;
   }
   rmSync(absolute, { recursive: true, force: true });

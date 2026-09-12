@@ -4,9 +4,17 @@ import { FlowFeatureGroups, FlowOperation, FlowOperationFields, attachFlowSurfac
 
 //#region 🌐️BrowserConsumer
 
-export async function createFlowBrowserRuntime({ source, imports = {}, instantiate, ...hostOptions } = {}) {
+/** 🌐️ Opens the flow runtime over one wasm instance.
+ *
+ * `bindings` is the generated `flow_core.js` module namespace. It is separate from `source` because
+ * `source` carries only the RAW wasm exports, which cannot take an `HtmlCanvasElement` — the
+ * wasm-bindgen wrappers can, and that is how a flow surface reaches its own WebGPU presenter
+ * (`flowAttachSurfaceCanvas`). Without it every surface simply presents through the encoded draw
+ * list instead, which is also what a host with no WebGPU gets. */
+export async function createFlowBrowserRuntime({ source, imports = {}, instantiate, bindings, ...hostOptions } = {}) {
   if (source === undefined) throw new Error("Flow Wasm source is required");
   let exports = source?.exports ?? source;
+  let surfaceBindings = bindings;
   if (typeof exports?.flow_bridge_allocate !== "function") {
     if (instantiate) {
       let bytes = source?.module_or_path ?? source;
@@ -16,8 +24,9 @@ export async function createFlowBrowserRuntime({ source, imports = {}, instantia
       exports = (instantiated?.instance ?? instantiated)?.exports;
     } else {
       if (Reflect.ownKeys(imports).length !== 0) throw new Error("custom Flow imports require their exact embedding initializer");
-      const { default: initialize } = await import("../../../🫀️core/🕸️bindings/flow_core.js");
-      exports = await initialize({ module_or_path: source?.module_or_path ?? source });
+      const core = await import("../../../🫀️core/🕸️bindings/flow_core.js");
+      surfaceBindings ??= core;
+      exports = await core.default({ module_or_path: source?.module_or_path ?? source });
     }
   }
   const memory = exports?.memory;
@@ -29,7 +38,7 @@ export async function createFlowBrowserRuntime({ source, imports = {}, instantia
   return Object.freeze({
     openSession() {
       if (closing) throw new Error("Flow runtime is closed");
-      const session = new FlowSession(sessionAuthority, createFlowFeatures(host), () => sessions.delete(session));
+      const session = new FlowSession(sessionAuthority, createFlowFeatures(host), () => sessions.delete(session), surfaceBindings);
       sessions.add(session);
       return session;
     },
@@ -57,10 +66,12 @@ export class FlowSession {
   #closePromise;
   #release;
   #released = false;
+  #bindings;
 
-  constructor(authority, ready, release) {
+  constructor(authority, ready, release, bindings) {
     if (authority !== sessionAuthority) throw new Error("Flow sessions require their runtime owner");
     this.#release = release;
+    this.#bindings = bindings;
     this.#ready = Promise.resolve(ready).catch((error) => {
       if (isFlowSessionOpenRejected(error)) this.#releaseOnce();
       throw error;
@@ -78,7 +89,7 @@ export class FlowSession {
   attachCanvas(canvas, width, height, dpr) {
     return deferredFlowTask(this.#ready, (features) => {
       if (this.#closed) throw new Error("Flow session is closed");
-      return attachFlowSurface(features, canvas, { width, height, dpr });
+      return attachFlowSurface(features, canvas, { width, height, dpr, bindings: this.#bindings });
     });
   }
 

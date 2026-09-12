@@ -115,6 +115,14 @@ fn now_us() -> Option<u64> {
     semio_framework_job::default_now_us()
 }
 
+/// ⏱️ The share of one interactive step the browser frame caller may spend driving the frame build
+/// before it must hand the rest of its tick to the present half. Half of the ratified
+/// [`INTERACTIVE_STEP_CEILING_US`] — the other half belongs to `present_snapshot`, whose own prepared
+/// GPU opportunities are priced separately. Derived rather than chosen so it cannot drift away from
+/// the one ceiling every interactive site is measured against.
+#[cfg(target_arch = "wasm32")]
+const BROWSER_FRAME_BUILD_DRIVE_US: u64 = semio_framework_job::INTERACTIVE_STEP_CEILING_US / 2;
+
 fn batch_params(operation: OperationId, generation: Generation, cancel: CancelToken) -> BatchJobParams {
     BatchJobParams {
         operation,
@@ -321,6 +329,12 @@ impl ActiveFrameBuild {
                         ActiveFrameStep::Pending
                     }
                     crate::AppFrameTransactionStep::Pending => ActiveFrameStep::Pending,
+                    // 🌀️ Superseded inputs end THIS build with no frame and no fault; the caller's next
+                    // opportunity admits a fresh one against the current witness.
+                    crate::AppFrameTransactionStep::Superseded => {
+                        self.phase = ActiveFramePhase::Terminal;
+                        ActiveFrameStep::Complete(None)
+                    }
                     crate::AppFrameTransactionStep::Fault => {
                         self.cancel.cancel_now();
                         ActiveFrameStep::Pending
@@ -353,22 +367,36 @@ impl ActiveFrameBuild {
 }
 
 impl InteractiveJob for ActiveFrameBuild {
+    /// ⏱️ One step spends the WHOLE grant its [`StepContext`] was minted with
+    /// ([`batch_params`]: [`INTERACTIVE_LANE_FUEL`] fuel, [`INTERACTIVE_LANE_WALL_US`] wall), not one
+    /// [`Self::advance`].
+    ///
+    /// 🩸️ It used to yield after a single `advance`, and the browser session driver spends a whole
+    /// caller frame per step plus a second one consuming the outcome — so the chrome walk advanced ONE
+    /// child per ~32 ms at 62 fps. A retained window body ingests one document page per advance, and a
+    /// boot chrome pass is hundreds of them across seven surfaces, so the first frame could not
+    /// converge at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️wgpu-blank-paint-2026-09-12.md`). Every `advance` still carries its own
+    /// `os_renderer.frame.*` watchdog and quarantine admission, so the loop cannot hide an
+    /// over-ceiling phase; the budget is what ends the step.
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if cx.is_cancelled() {
-            self.cancel();
-        }
-        if cx.should_yield() {
-            return StepOutcome::Yield;
-        }
-        cx.consume_fuel(1);
-        match self.advance() {
-            ActiveFrameStep::Pending => StepOutcome::Yield,
-            ActiveFrameStep::Complete(frame) => {
-                self.completed = frame;
-                StepOutcome::Complete(CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                })
+        loop {
+            if cx.is_cancelled() {
+                self.cancel();
+            }
+            if cx.should_yield() {
+                return StepOutcome::Yield;
+            }
+            cx.consume_fuel(1);
+            match self.advance() {
+                ActiveFrameStep::Pending => {}
+                ActiveFrameStep::Complete(frame) => {
+                    self.completed = frame;
+                    return StepOutcome::Complete(CommitCandidate {
+                        state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                        output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                    });
+                }
             }
         }
     }
@@ -555,56 +583,78 @@ impl FrameBuildHandle {
                 }
                 return None;
             }
-            match session.poll() {
-                // 🌐️ The browser drives the step ON THE CALLER, never through a pool: this function
-                // only runs inside the dedicated `semio-frame-worker` isolate (the `web_sys::window()`
-                // guard above fails closed everywhere else), that isolate IS the frame thread, and a
-                // `wasm32-unknown-unknown` build has no second thread to submit to at all. The job
-                // legitimately owns `Rc<JsValue>` plugin handles and an `Rc` waker, which
-                // `try_submit_step`'s `J: Send` — the one call that really hands a job to another
-                // thread — rules out by construction. Contention is transient: the next
-                // `poll_runtime_and_resubmit` retries the same generation, exactly as a saturated
-                // pool submission used to.
-                semio_framework_job::WorkerJobPoll::Idle => {
-                    if let Ok((ticket, _)) = session.try_step_on_caller() {
-                        self.ticket = Some(ticket);
-                    }
-                }
-                semio_framework_job::WorkerJobPoll::Outcome => {
-                    if let Some(ticket) = self.ticket.take() {
-                        if let Ok(mut owner) = session.take_outcome(ticket) {
-                            if matches!(owner.outcome(), StepOutcome::Yield) {
-                                let _ = owner.take_outcome();
-                                let _ = owner.resume();
-                            } else {
-                                owner.begin_close();
-                            }
+            // 🌐️ The browser drives the step ON THE CALLER, never through a pool: this function
+            // only runs inside the dedicated `semio-frame-worker` isolate (the `web_sys::window()`
+            // guard above fails closed everywhere else), that isolate IS the frame thread, and a
+            // `wasm32-unknown-unknown` build has no second thread to submit to at all. The job
+            // legitimately owns `Rc<JsValue>` plugin handles and an `Rc` waker, which
+            // `try_submit_step`'s `J: Send` — the one call that really hands a job to another
+            // thread — rules out by construction. Contention is transient: the next
+            // `poll_runtime_and_resubmit` retries the same generation, exactly as a saturated
+            // pool submission used to.
+            //
+            // ⏱️ Step / take-outcome / resume are THREE session phases, so a driver that ran one
+            // phase per call spent two caller frames per job step and the frame build advanced at
+            // 31 steps a second — a boot chrome pass never converged (see [`ActiveFrameBuild::step`]).
+            // The loop runs the same phases back to back until the frame build finishes or this
+            // caller's own share of the interactive ceiling is gone.
+            let drive_deadline_us = now_us().map(|now| now.saturating_add(BROWSER_FRAME_BUILD_DRIVE_US));
+            let mut presentation = None;
+            let mut retire_session = false;
+            loop {
+                match session.poll() {
+                    semio_framework_job::WorkerJobPoll::Idle => match session.try_step_on_caller() {
+                        Ok((ticket, _)) => self.ticket = Some(ticket),
+                        Err(_) => break,
+                    },
+                    semio_framework_job::WorkerJobPoll::Outcome => {
+                        let Some(ticket) = self.ticket.take() else { break };
+                        let Ok(mut owner) = session.take_outcome(ticket) else { break };
+                        if !matches!(owner.outcome(), StepOutcome::Yield) {
+                            owner.begin_close();
+                            break;
                         }
+                        let _ = owner.take_outcome();
+                        let _ = owner.resume();
                     }
-                }
-                semio_framework_job::WorkerJobPoll::Terminal => {
-                    if let Ok(mut owner) = session.take_terminal() {
+                    semio_framework_job::WorkerJobPoll::Terminal => {
+                        let Ok(mut owner) = session.take_terminal() else { break };
                         let frame_generation = owner.job().generation;
                         let frame = owner.job_mut().completed.take();
                         owner.begin_close();
-                        return generation_is_fresh(generation, frame_generation).then_some(frame).flatten();
+                        presentation = generation_is_fresh(generation, frame_generation).then_some(frame).flatten();
+                        break;
                     }
-                }
-                semio_framework_job::WorkerJobPoll::Closing => {
-                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                    if session.terminal_is_empty() {
-                        self.session = None;
+                    semio_framework_job::WorkerJobPoll::Closing => {
+                        let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                        retire_session = session.terminal_is_empty();
+                        break;
                     }
+                    _ => break,
                 }
-                _ => {}
+                if drive_deadline_us.is_none_or(|deadline| now_us().is_none_or(|now| now >= deadline)) {
+                    break;
+                }
             }
-            return None;
+            if retire_session {
+                self.session = None;
+            }
+            return presentation;
         }
-        if self.last_submitted_generation != Some(generation) {
-            self.cancel = root_cancel_token();
-            self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone()));
-            self.last_submitted_generation = Some(generation);
-        }
+        // 🔁️ No live session means the previous frame finished (or never started), and the caller
+        // already refuses to produce while a presentation is pending — so the next frame build starts
+        // HERE, every opportunity.
+        //
+        // 🩸️ This used to admit only when `generation` differed from the last admitted one. The browser
+        // frame generation advances on host EVENTS, not on redraws, so an idle shell admitted exactly
+        // one build for its whole life: the first frame completed with its retained window bodies still
+        // mid-ingress, and no second frame was ever built to finish them — a permanently blank canvas
+        // that still asked for frames (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+        // `📓️wgpu-blank-paint-2026-09-12.md`). One-build-at-a-time is enforced by `self.session`, which
+        // is the authority that gate was standing in for.
+        self.cancel = root_cancel_token();
+        self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone()));
+        self.last_submitted_generation = Some(generation);
         None
     }
 

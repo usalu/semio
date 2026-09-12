@@ -87,7 +87,6 @@ fn main() {
         std::process::exit(status);
     }
     let plugin_filter = arg_value("--plugin").unwrap_or_else(|| "studio".to_string());
-    let modules_root = env::var("SEMIO_PLUGIN_MODULES").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../../../🧑‍💻dev/🔌️plugin-modules"));
     // 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b-bench) — `--scale <registry.json>
     // --scale-wasm <fixture.wasm> --report <out.json> [--shards <K>]` bypasses ShellState/GPU/winit
     // entirely and drives `semio_framework_actor::Kernel` + `WasmtimeRuntime` directly against the
@@ -105,6 +104,18 @@ fn main() {
         let shard_count: u16 = arg_value("--shards").and_then(|v| v.parse().ok()).unwrap_or(8);
         std::process::exit(drive_entrypoint(semio_framework_os_renderer_wgpu::scale_bench::run(PathBuf::from(registry_path), PathBuf::from(wasm_path), shard_count, PathBuf::from(report_path))));
     }
+    // 🔌️ THE staging root, handed in by the launcher (`🧊️wgpu/📦️packages/🦀️rust/📜️script.ts`'s
+    // `NativeRunScript`, which sets it to `pluginModulesRoot(profile)` after the Nx activation closure
+    // has written it). There is deliberately NO fallback path: a compiled-in default is exactly how this
+    // binary spent two days serving a module tree nothing had restaged
+    // (26/09/09/PROCEDURAL-3D-END-TO-END). Refusing loudly costs one line of setup and cannot drift.
+    let modules_root = match env::var("SEMIO_PLUGIN_MODULES") {
+        Ok(value) if !value.trim().is_empty() => PathBuf::from(value),
+        _ => {
+            eprintln!("SEMIO_PLUGIN_MODULES is unset: run this binary through `bun nx run @semio-tech/framework-renderer-wgpu:native` (or export the staging root printed by `activate-<variant>-wgpu-<profile>`)");
+            std::process::exit(2);
+        }
+    };
     // 🧪️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END — `--smoke` boots the shell (real
     // identity/directory/plugin path, no GPU/window) and dumps its widget tree as JSON instead of
     // opening a real window, for environments that cannot drive one.

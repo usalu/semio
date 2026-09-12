@@ -2,6 +2,7 @@
 import { createFreshComponentTests } from "../../🧪️tests/🆕️fresh-component/🟦️.ts";
 import { buildCargoArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
 import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { isGeneratedPath } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 /**
  * 🛂️ `@semio-tech/os-plugin-describe-rs` task router: `bun ./📜️script.ts <build|test|describe>`.
  * `describe <component.wasm> --core <core.wasm> --out <dir>` builds (if needed) and execs the
@@ -530,7 +531,7 @@ async function freshRun(command: string, args: string[], cwd: string, env: NodeJ
   if (!Number.isSafeInteger(budgetMs) || budgetMs <= 0 || budgetMs > 86_400_000) throw new Error("fresh process budget must be 1..86400000ms");
   const retained = control.diagnosticsRoot !== undefined;
   const root = control.diagnosticsRoot ?? tmpdir();
-  if (!isAbsolute(root) || (retained && !root.split(/[\\/]/u).includes("🗑️generated"))) throw new Error("fresh process evidence root must be an absolute ticket-generated directory");
+  if (!isAbsolute(root) || (retained && !isGeneratedPath(root))) throw new Error("fresh process evidence root must be an absolute directory inside a generated directory");
   const info = lstatSync(root);
   if (!info.isDirectory() || info.isSymbolicLink()) throw new Error("fresh process evidence root must be a regular directory");
   if (command === "cargo" && args.some((arg) => arg === "--message-format" || arg.startsWith("--message-format="))) throw new Error("fresh Cargo diagnostics format is producer-owned");

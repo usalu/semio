@@ -329,6 +329,10 @@ pub(crate) fn charge_turn_execution_us(spent_us: u64) {
 #[cfg(test)]
 #[path = "🧪️tests/⏱️execution/🦀️.rs"]
 mod turn_execution_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/📥️inbound-request/🦀️.rs"]
+mod inbound_request_tests;
 //#endregion ⏱️TurnExecution
 
 /// 🧠️ Repository-owned actor ABI entrypoint. The component-model wrapper above and the native
@@ -428,10 +432,14 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     }
     let mut close_instances: Vec<u32> = events.iter().filter_map(|event| if let Event::InstanceClose(request) = event { Some(request.lifetime.instance_id) } else { None }).collect();
     let mut document_backbone_effects = Vec::new();
+    // ↩️ One `Effect::Respond` per inbound `Event::Request` this turn served — kept apart from the
+    // document-backbone effects so the answer's ordering against them is explicit rather than
+    // incidental (answers trail, so a request that also wrote the document publishes the write first).
+    let mut inbound_request_effects: Vec<Effect> = Vec::new();
     trace_turn_phase_retention("lifecycle");
-    let _ = step_reactor_close()?;
-    let _ = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().advance_close_one());
     let retirement_deadline = std::time::Instant::now() + std::time::Duration::from_millis(u64::from(budget.deadline_ms));
+    retire_while_progress_fallible(retirement_deadline, REACTOR_CLOSE_UNITS_PER_TURN, step_reactor_close)?;
+    retire_while_progress_bounded(retirement_deadline, REACTOR_CLOSE_UNITS_PER_TURN, || COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().advance_close_one()));
     PATCHES.with(|patches| {
         for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
             if unit > 0 && unit % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline {
@@ -687,12 +695,28 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 TEST_FUTURE_EXECUTOR.with(|executor| executor.wake(id));
             }
             Event::Wake => {}
-            Event::Request { .. } => {}
+            // 📥️ The inbound half of the `request`/`respond` seam (`📜️.wit`'s `request-event`,
+            // "every 'someone else calls INTO this actor' seam is now one inbound `request`,
+            // answered with the `respond` effect within a bounded number of turns"). This actor's
+            // installed `ExtensionBundle` is the ONE capability table that answers it, so the
+            // request is served inline and answered on the SAME turn — an extension handler is a
+            // pure `Fn(&[u8]) -> Result<Vec<u8>, Fault>` with nothing to await. An actor with no
+            // bundle answers the bundle's own typed refusal (`extension.inactive`/
+            // `extension.missing`), never silence: dropping the event stranded every caller's
+            // parked request forever (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+            Event::Request { req, capability, payload, .. } => {
+                let result = match crate::plugin_runtime::extension_invoke(&capability, &payload).await {
+                    Ok(answer) => semio_framework::kernel::RequestOutcome::Ok(answer),
+                    Err(fault) => semio_framework::kernel::RequestOutcome::Err(store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&fault).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.request-fault-encode"), error.to_string()))?)),
+                };
+                inbound_request_effects.push(Effect::Respond { req, result });
+            }
             Event::Activate { .. } | Event::SuspendRequest | Event::CapabilityChanged { .. } | Event::QuotaChanged { .. } => {}
         }
     }
 
     let mut effects: Vec<Effect> = document_backbone_effects;
+    effects.extend(inbound_request_effects);
     let mut cold_pair_ingress = semio_framework::kernel::ColdPairIngressStatus::Idle;
     if let Some(page) = cold_pair_page {
         let lifetime = page.header.lifetime;
@@ -1342,6 +1366,47 @@ fn retire_while_progress(deadline: std::time::Instant, mut unit: impl FnMut() ->
     }
 }
 
+/// 🧹️ [`retire_while_progress`] with its own unit ceiling — for a ladder whose fixed slot geometry is
+/// wider than the patch ladder's 256 units.
+// 🚫️async: E1 pure bounded retirement driver called from the turn's own close ladder — see R9.
+fn retire_while_progress_bounded(deadline: std::time::Instant, units: usize, mut unit: impl FnMut() -> bool) {
+    for index in 0..units {
+        if !unit() {
+            return;
+        }
+        if index % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= deadline {
+            return;
+        }
+    }
+}
+
+/// 🧹️ [`retire_while_progress_bounded`] for a ladder unit that may fault — the fault propagates out
+/// of the turn instead of being swallowed by the driver.
+// 🚫️async: E1 pure bounded retirement driver called from the turn's own close ladder — see R9.
+fn retire_while_progress_fallible(deadline: std::time::Instant, units: usize, mut unit: impl FnMut() -> Result<bool, semio_framework::Fault>) -> Result<(), semio_framework::Fault> {
+    for index in 0..units {
+        if !unit()? {
+            return Ok(());
+        }
+        if index % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= deadline {
+            return Ok(());
+        }
+    }
+    Ok(())
+}
+
+/// 🚪️ Instance-close ladder units per reactor turn. The reactor close walks FIXED slot geometry —
+/// [`super::REACTOR_TASK_SLOTS`] task slots, the request registry's own slot array, the armed-timer
+/// array — one slot per unit, and until 2026-09-12 it took exactly ONE of those units per reactor
+/// turn. Measured (`🧫️fixtures/🚪️close-ladder`, ticket 26/09/09): a generation3d editor reached
+/// `Retired` after **2 052** close turns whether the session had loaded zero documents or eight with
+/// thirty-two preview renders — the cost is the geometry, not the retained data. In the browser each
+/// of those turns is one worker round trip, so the ⌘⌥V role switch spent 62–87 s inside
+/// `retireInstanceLifecycle` and then failed `plugin-ui.lifecycle-close-budget-exhausted`. Driving the
+/// whole geometry in ONE turn, cut short by the turn's own wall-clock budget every
+/// [`PATCH_CLOSE_DEADLINE_STRIDE`] units, makes a close cost a bounded handful of round trips — the
+/// same correction [`PATCH_CLOSE_UNITS_PER_TURN`] applied to the patch ladder.
+const REACTOR_CLOSE_UNITS_PER_TURN: usize = 4_096;
 /// 🧹️ Retained terminal retirement units per reactor turn, bounded so one turn stays inside its
 /// interactive ceiling — [`PATCH_CLOSE_DEADLINE_STRIDE`] cuts the run short on the turn's own
 /// wall-clock budget, exactly like the reconcile loop above it.

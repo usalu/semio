@@ -3,6 +3,14 @@
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use std::collections::HashSet;
 
+/// 🗑️ Removes every selected entity from the document AND retires the ids it just destroyed from the
+/// framework-owned `vortex` selection through the one sanctioned reducer channel
+/// ([`Puzzle3dActionCtx::clear_selection`]) — a delete that leaves its own victims selected turns the
+/// NEXT `Delete` into an empty edit against a phantom id, and leaves the gumball and the inspector
+/// bound to an object the world no longer carries (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B31: the
+/// browser census read `before=2 after=2` for 30 s while the command log recorded
+/// `delete-object id=object-1`). That write is why this tool's publication contract carries the
+/// `Interaction` lane beside `Artifact`.
 pub fn delete_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
     let object_ids: Vec<String> = ctx.selected_object_ids();
     let vortex_ids: HashSet<String> = ctx.selected_vortex_ids().into_iter().collect();
@@ -22,4 +30,5 @@ pub fn delete_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
     ctx.scene.fixture.attractions.retain(|attraction| !attraction_ids.contains(&attraction.id) && !object_ids.iter().any(|id| attraction.attracting.starts_with(&format!("{id}:")) || attraction.attracted.starts_with(&format!("{id}:"))));
     ctx.scene.fixture.target_volumes.retain(|volume| !target_volume_ids.contains(&volume.id));
     ctx.scene.fixture.references.retain(|reference| !reference_ids.contains(&reference.id));
+    ctx.clear_selection();
 }

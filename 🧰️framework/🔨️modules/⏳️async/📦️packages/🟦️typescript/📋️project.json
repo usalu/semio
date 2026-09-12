@@ -9,6 +9,24 @@
         "command": "bun ./📜️script.ts info"
       },
       "outputs": []
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "twin": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts twin",
+        "forwardAllArgs": true
+      }
     }
   }
 }

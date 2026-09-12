@@ -271,53 +271,37 @@ fn check_face_loop_winding(body: &Body, issues: &mut Vec<ValidationIssue>) {
     }
 }
 
-/// 🩺️ A solid's outer shell must have a positive signed volume (face normals net outward); void
-/// (inner) shells must be inverted relative to it — same sign as the outer shell means the void
-/// was not correctly flipped (audit §6.12: "manifold orientation ... incomplete").
+/// ⚖️ The shell-volume probe tolerance [`BodyValidationJob`]'s orientation phase integrates at.
+const ORIENTATION_PROBE_TOL: f64 = 1e-3;
+
+/// ⚖️ The chord tolerance the sliver-face probe measures area at.
+const SLIVER_PROBE_TOL: f64 = 1e-3;
+
+/// 🩺️ ONE edge's degeneracy verdict — the atomic unit of the former `check_degenerate_geometry`'s
+/// first loop. A point edge (a pole closing a periodic patch) is legitimate topology and is never
+/// flagged.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn check_solid_orientation(body: &Body, issues: &mut Vec<ValidationIssue>) {
-    const PROBE_TOL: f64 = 1e-3;
-    for (solid_id, solid) in body.solids.iter() {
-        let Ok(outer_v) = mass_properties::shell_signed_volume(body, solid.outer, PROBE_TOL) else { continue };
-        if outer_v < 0.0 {
-            issues.push(ValidationIssue { entity: format!("solid-{}", solid_id.raw_index()), code: "shell-orientation-inward", message: format!("outer shell's signed volume is negative ({outer_v}); face normals appear to point inward") });
-        }
-        for &void_shell in &solid.inners {
-            if let Ok(void_v) = mass_properties::shell_signed_volume(body, void_shell, PROBE_TOL) {
-                if outer_v.signum() == void_v.signum() {
-                    issues.push(ValidationIssue {
-                        entity: format!("solid-{}-void-shell-{}", solid_id.raw_index(), void_shell.raw_index()),
-                        code: "void-shell-not-inverted",
-                        message: "void (inner) shell's signed volume has the same sign as the outer shell — it should be inverted relative to the solid's exterior".to_string(),
-                    });
-                }
-            }
-        }
+fn degenerate_edge_issue(body: &Body, edge_id: EdgeId) -> Option<ValidationIssue> {
+    if is_point_edge(body, edge_id) {
+        return None;
     }
+    let edge = body.edges.get(edge_id)?;
+    let curve = body.curves3.get(edge.curve)?;
+    let len = curve_ops::arc_length(curve, edge.range.0, edge.range.1, 1e-9);
+    (len < edge.tol.value()).then(|| ValidationIssue { entity: format!("edge-{}", edge_id.raw_index()), code: "degenerate-edge", message: format!("edge length {len} is below its own tolerance {}", edge.tol.value()) })
 }
 
-/// 🩺️ Flags edges shorter than their own tolerance and faces smaller than their tolerance squared
-/// — degenerate/sliver topology a downstream Boolean or sew pass would choke on (audit §6.12:
-/// "tiny/sliver topology, degenerate edges ... incomplete").
+/// 🩺️ ONE face's sliver verdict — the atomic unit of the former `check_degenerate_geometry`'s
+/// second loop, and the dearest single call in the whole validator (`face_area` tessellates the
+/// trimmed patch): measured at 1.6 s for the three faces of `🍩️sphere-cut-with-torus` on a native
+/// debug build, which is precisely why it is a step boundary and not part of a whole-body pass
+/// (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn check_degenerate_geometry(body: &Body, issues: &mut Vec<ValidationIssue>) {
-    for (edge_id, edge) in body.edges.iter() {
-        if is_point_edge(body, edge_id) {
-            continue;
-        }
-        let Some(curve) = body.curves3.get(edge.curve) else { continue };
-        let len = curve_ops::arc_length(curve, edge.range.0, edge.range.1, 1e-9);
-        if len < edge.tol.value() {
-            issues.push(ValidationIssue { entity: format!("edge-{}", edge_id.raw_index()), code: "degenerate-edge", message: format!("edge length {len} is below its own tolerance {}", edge.tol.value()) });
-        }
-    }
-    for (face_id, face) in body.faces.iter() {
-        let Ok(area) = mass_properties::face_area(body, face_id, 1e-3) else { continue };
-        let tol2 = face.tol.value() * face.tol.value();
-        if area < tol2 {
-            issues.push(ValidationIssue { entity: format!("face-{}", face_id.raw_index()), code: "sliver-face", message: format!("face area {area} is below tol² ({tol2})") });
-        }
-    }
+fn sliver_face_issue(body: &Body, face_id: FaceId) -> Option<ValidationIssue> {
+    let face = body.faces.get(face_id)?;
+    let area = mass_properties::face_area(body, face_id, SLIVER_PROBE_TOL).ok()?;
+    let tol2 = face.tol.value() * face.tol.value();
+    (area < tol2).then(|| ValidationIssue { entity: format!("face-{}", face_id.raw_index()), code: "sliver-face", message: format!("face area {area} is below tol² ({tol2})") })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -378,21 +362,275 @@ fn check_self_intersection_probe(body: &Body, issues: &mut Vec<ValidationIssue>)
 /// `warning-` are advisory (self-intersection probe); every other code is an ERROR — strong
 /// enough to reject a broken solid outright, not merely note it (ticket goal: "a validator strong
 /// enough to reject broken solids").
+///
+/// ⏱️ Unbudgeted façade over [`BodyValidationJob`], the ONE implementation — exactly the relation
+/// `tessellate_solid` has to `TessellationJob` (see that type's own doc): there is no second pass
+/// to drift from, so a caller with an interactive ceiling and a caller with none agree by
+/// construction.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate_body(body: &Body) -> Vec<ValidationIssue> {
-    let mut issues = Vec::new();
-    check_loop_rings(body, &mut issues);
-    check_edge_valence(body, &mut issues);
-    check_tolerance_containment(body, &mut issues);
-    check_missing_pcurves(body, &mut issues);
-    check_same_parameter(body, &mut issues);
-    check_shell_closure_and_orientation(body, &mut issues);
-    check_face_loop_winding(body, &mut issues);
-    check_solid_orientation(body, &mut issues);
-    check_degenerate_geometry(body, &mut issues);
-    check_self_intersection_probe(body, &mut issues);
-    issues
+    BodyValidationJob::new(body).run_to_completion(body)
 }
+
+// #endregion 🔖️Report
+
+// #region ⏱️ResumableValidation
+
+/// ⏱️ What a [`BodyValidationJob`] is currently checking. Phases run in declaration order and
+/// reproduce [`validate_body`]'s historical check order exactly; `Complete` is terminal.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum BodyValidationPhase {
+    /// 🔗 Every loop's coedge ring, in one whole-body unit (measured in microseconds).
+    #[default]
+    LoopRings,
+    /// 🪢 Edge valence, one whole-body unit.
+    EdgeValence,
+    /// 📏 Tolerance containment, one whole-body unit.
+    ToleranceContainment,
+    /// 🗺️ Missing pcurves, one whole-body unit.
+    MissingPcurves,
+    /// 📐 Same-parameter agreement, one whole-body unit.
+    SameParameter,
+    /// 🐚 Shell closure and orientation, one whole-body unit.
+    ShellClosure,
+    /// 🔄 Face loop winding, one whole-body unit.
+    FaceLoopWinding,
+    /// ⚖️ Shell signed volumes, ONE FACE per unit — the divergence-theorem sum is accumulated face
+    /// by face so a solid whose shell costs seconds never costs them inside one step.
+    SolidOrientation,
+    /// 🖇️ Degenerate edges, ONE EDGE per unit.
+    DegenerateEdges,
+    /// 🔺 Sliver faces, ONE FACE per unit.
+    DegenerateFaces,
+    /// 🪞 The self-intersection probe, one whole-body unit.
+    SelfIntersection,
+    Complete,
+}
+
+impl BodyValidationPhase {
+    /// 🏷️ The stable wire tag every host/extension/UI layer names this phase by.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn tag(self) -> &'static str {
+        match self {
+            Self::LoopRings => "loopRings",
+            Self::EdgeValence => "edgeValence",
+            Self::ToleranceContainment => "toleranceContainment",
+            Self::MissingPcurves => "missingPcurves",
+            Self::SameParameter => "sameParameter",
+            Self::ShellClosure => "shellClosure",
+            Self::FaceLoopWinding => "faceLoopWinding",
+            Self::SolidOrientation => "solidOrientation",
+            Self::DegenerateEdges => "degenerateEdges",
+            Self::DegenerateFaces => "degenerateFaces",
+            Self::SelfIntersection => "selfIntersection",
+            Self::Complete => "complete",
+        }
+    }
+}
+
+/// 📈 Monotone progress of one resumable validation. `units_total` is fixed at construction, so
+/// the ratio a surface paints never moves backwards.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct BodyValidationProgress {
+    pub units_done: usize,
+    pub units_total: usize,
+    pub phase: BodyValidationPhase,
+}
+
+/// ⚖️ One shell whose signed volume the orientation phase accumulates face by face.
+struct ShellVolumeUnit {
+    solid: crate::standards::v1::subsets::brep::schema::snapshot::arena::SolidId,
+    shell: crate::standards::v1::subsets::brep::schema::snapshot::arena::ShellId,
+    outer: bool,
+    faces: Vec<FaceId>,
+    /// ⚖️ `None` once any face refused to integrate — the same "skip this shell entirely" verdict
+    /// the whole-shell `shell_signed_volume(..)?` produced before.
+    total: Option<f64>,
+}
+
+/// ⏱️ [`validate_body`] split into budgetable units so a host can run it inside an interactive
+/// step ceiling across many turns, report progress, and never block a worker's event loop long
+/// enough for a liveness watchdog to read the silence as death.
+///
+/// The unit is one whole cheap check, or ONE face / ONE edge inside the two checks that dominate
+/// the cost (`solidOrientation`'s per-face volume integral and `degenerateFaces`' per-face area).
+/// A pathological single face still costs one whole unit — the same bound
+/// `TessellationJob`'s own doc states, for the same reason: abandoning a face mid-quadrature would
+/// throw its work away.
+pub struct BodyValidationJob {
+    phase: BodyValidationPhase,
+    issues: Vec<ValidationIssue>,
+    shells: Vec<ShellVolumeUnit>,
+    shell_cursor: usize,
+    shell_face_cursor: usize,
+    edges: Vec<EdgeId>,
+    edge_cursor: usize,
+    faces: Vec<FaceId>,
+    face_cursor: usize,
+    cheap_done: usize,
+    units_total: usize,
+}
+
+impl BodyValidationJob {
+    /// 🧪 Plans one validation of `body`. The plan (which shells, edges and faces exist) is read
+    /// ONCE here, so `units_total` is fixed and the caller may re-present the same body on every
+    /// step without the total moving.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn new(body: &Body) -> Self {
+        let mut shells = Vec::new();
+        for (solid_id, solid) in body.solids.iter() {
+            shells.push(ShellVolumeUnit { solid: solid_id, shell: solid.outer, outer: true, faces: body.shell_faces(solid.outer), total: Some(0.0) });
+            for &void_shell in &solid.inners {
+                shells.push(ShellVolumeUnit { solid: solid_id, shell: void_shell, outer: false, faces: body.shell_faces(void_shell), total: Some(0.0) });
+            }
+        }
+        let edges: Vec<EdgeId> = body.edges.iter().map(|(id, _)| id).collect();
+        let faces: Vec<FaceId> = body.faces.iter().map(|(id, _)| id).collect();
+        let shell_faces: usize = shells.iter().map(|unit| unit.faces.len()).sum();
+        let units_total = CHEAP_CHECK_UNITS + shell_faces + edges.len() + faces.len();
+        Self { phase: BodyValidationPhase::LoopRings, issues: Vec::new(), shells, shell_cursor: 0, shell_face_cursor: 0, edges, edge_cursor: 0, faces, face_cursor: 0, cheap_done: 0, units_total }
+    }
+
+    /// 📈 This job's progress right now — safe to read between steps and after termination.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn progress(&self) -> BodyValidationProgress {
+        let shell_faces_done: usize = self.shells.iter().take(self.shell_cursor).map(|unit| unit.faces.len()).sum::<usize>() + self.shell_face_cursor;
+        BodyValidationProgress { units_done: (self.cheap_done + shell_faces_done + self.edge_cursor + self.face_cursor).min(self.units_total), units_total: self.units_total, phase: self.phase }
+    }
+
+    /// ✅ True once every unit has run and [`Self::into_issues`] is final.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn is_complete(&self) -> bool {
+        matches!(self.phase, BodyValidationPhase::Complete)
+    }
+
+    /// 🩺️ Every finding so far. Only final once [`Self::is_complete`] answers true.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn into_issues(self) -> Vec<ValidationIssue> {
+        self.issues
+    }
+
+    /// ♾️ Runs every remaining unit in one call — the unbudgeted façade [`validate_body`] is.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn run_to_completion(mut self, body: &Body) -> Vec<ValidationIssue> {
+        while !self.is_complete() {
+            self.step(body, usize::MAX);
+        }
+        self.into_issues()
+    }
+
+    /// ⏱️ Advances by at most `budget` units. A `budget` of zero is a legal progress probe that
+    /// performs no work.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn step(&mut self, body: &Body, budget: usize) -> BodyValidationProgress {
+        let mut spent = 0usize;
+        while spent < budget && !self.is_complete() {
+            match self.phase {
+                BodyValidationPhase::LoopRings => self.cheap(body, check_loop_rings, BodyValidationPhase::EdgeValence),
+                BodyValidationPhase::EdgeValence => self.cheap(body, check_edge_valence, BodyValidationPhase::ToleranceContainment),
+                BodyValidationPhase::ToleranceContainment => self.cheap(body, check_tolerance_containment, BodyValidationPhase::MissingPcurves),
+                BodyValidationPhase::MissingPcurves => self.cheap(body, check_missing_pcurves, BodyValidationPhase::SameParameter),
+                BodyValidationPhase::SameParameter => self.cheap(body, check_same_parameter, BodyValidationPhase::ShellClosure),
+                BodyValidationPhase::ShellClosure => self.cheap(body, check_shell_closure_and_orientation, BodyValidationPhase::FaceLoopWinding),
+                BodyValidationPhase::FaceLoopWinding => self.cheap(body, check_face_loop_winding, BodyValidationPhase::SolidOrientation),
+                BodyValidationPhase::SolidOrientation => {
+                    if self.shell_cursor >= self.shells.len() {
+                        self.emit_orientation_issues();
+                        self.phase = BodyValidationPhase::DegenerateEdges;
+                        continue;
+                    }
+                    let unit = &mut self.shells[self.shell_cursor];
+                    if self.shell_face_cursor >= unit.faces.len() {
+                        if unit.faces.is_empty() {
+                            unit.total = None;
+                        }
+                        self.shell_cursor += 1;
+                        self.shell_face_cursor = 0;
+                        continue;
+                    }
+                    let face = unit.faces[self.shell_face_cursor];
+                    match mass_properties::face_volume_contribution(body, face, ORIENTATION_PROBE_TOL) {
+                        Ok(contribution) => {
+                            if let Some(total) = unit.total.as_mut() {
+                                *total += contribution;
+                            }
+                        }
+                        Err(_) => unit.total = None,
+                    }
+                    self.shell_face_cursor += 1;
+                }
+                BodyValidationPhase::DegenerateEdges => {
+                    if self.edge_cursor >= self.edges.len() {
+                        self.phase = BodyValidationPhase::DegenerateFaces;
+                        continue;
+                    }
+                    if let Some(issue) = degenerate_edge_issue(body, self.edges[self.edge_cursor]) {
+                        self.issues.push(issue);
+                    }
+                    self.edge_cursor += 1;
+                }
+                BodyValidationPhase::DegenerateFaces => {
+                    if self.face_cursor >= self.faces.len() {
+                        self.phase = BodyValidationPhase::SelfIntersection;
+                        continue;
+                    }
+                    if let Some(issue) = sliver_face_issue(body, self.faces[self.face_cursor]) {
+                        self.issues.push(issue);
+                    }
+                    self.face_cursor += 1;
+                }
+                BodyValidationPhase::SelfIntersection => self.cheap(body, check_self_intersection_probe, BodyValidationPhase::Complete),
+                BodyValidationPhase::Complete => break,
+            }
+            spent += 1;
+        }
+        self.progress()
+    }
+
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    fn cheap(&mut self, body: &Body, check: fn(&Body, &mut Vec<ValidationIssue>), next: BodyValidationPhase) {
+        check(body, &mut self.issues);
+        self.cheap_done += 1;
+        self.phase = next;
+    }
+
+    /// ⚖️ Emits the orientation verdicts once every shell's per-face sum is complete, in the exact
+    /// solid-then-void order the whole-body check produced.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    fn emit_orientation_issues(&mut self) {
+        let mut index = 0usize;
+        while index < self.shells.len() {
+            let Some(outer_v) = self.shells[index].total.filter(|_| self.shells[index].outer) else {
+                index += 1;
+                continue;
+            };
+            let solid = self.shells[index].solid;
+            if outer_v < 0.0 {
+                self.issues.push(ValidationIssue { entity: format!("solid-{}", solid.raw_index()), code: "shell-orientation-inward", message: format!("outer shell's signed volume is negative ({outer_v}); face normals appear to point inward") });
+            }
+            index += 1;
+            while index < self.shells.len() && !self.shells[index].outer {
+                if let Some(void_v) = self.shells[index].total {
+                    if outer_v.signum() == void_v.signum() {
+                        let void_shell = self.shells[index].shell;
+                        self.issues.push(ValidationIssue {
+                            entity: format!("solid-{}-void-shell-{}", solid.raw_index(), void_shell.raw_index()),
+                            code: "void-shell-not-inverted",
+                            message: "void (inner) shell's signed volume has the same sign as the outer shell — it should be inverted relative to the solid's exterior".to_string(),
+                        });
+                    }
+                }
+                index += 1;
+            }
+        }
+    }
+}
+
+/// 🔢 How many whole-body units the cheap checks contribute to `units_total` — the phases that
+/// measured in microseconds and are therefore not worth a per-entity cursor.
+const CHEAP_CHECK_UNITS: usize = 8;
+
+// #endregion ⏱️ResumableValidation
 
 // #region 🔖️Tests
 

@@ -19,6 +19,7 @@
           "name": { "type": "string", "minLength": 1 },
           "budgetBytes": { "type": ["integer", "null"], "minimum": 0 },
           "unusedAgeMs": { "type": "integer", "minimum": 0 },
+          "guardAgeMs": { "type": "integer", "minimum": 0 },
           "units": {
             "type": "array",
             "items": {
@@ -30,7 +31,7 @@
                 "bytes": { "type": "integer", "minimum": 0 },
                 "recencyMs": { "type": "integer", "minimum": 0 },
                 "lockHeld": { "type": "boolean" },
-                "kind": { "enum": ["cargo-build", "cargo-incremental", "cargo-target-file", "directory"] }
+                "kind": { "enum": ["cargo-build", "cargo-incremental", "cargo-incremental-session", "cargo-target-file", "directory"] }
               }
             }
           }

@@ -517,6 +517,60 @@ export function dispose(handle) {
     wasm.dispose(ptr0, len0);
 }
 
+/**
+ * 🔌️ Binds one flow surface's canvas to a WebGPU device. Resolves `true` when the canvas will
+ * present on the GPU and `false` when no adapter/device/surface could be had — never rejects,
+ * because a host without WebGPU must still reach a painted canvas through the 2D replay path.
+ * @param {number} surface
+ * @param {HTMLCanvasElement} canvas
+ * @param {number} logical_width
+ * @param {number} logical_height
+ * @param {number} dpr
+ * @returns {Promise<any>}
+ */
+export function flowAttachSurfaceCanvas(surface, canvas, logical_width, logical_height, dpr) {
+    _assertNum(surface);
+    _assertNum(logical_width);
+    _assertNum(logical_height);
+    const ret = wasm.flowAttachSurfaceCanvas(surface, canvas, logical_width, logical_height, dpr);
+    return ret;
+}
+
+/**
+ * 🧹️ Releases a surface's device, swapchain and canvas retention.
+ * @param {number} surface
+ */
+export function flowDetachSurfaceCanvas(surface) {
+    _assertNum(surface);
+    wasm.flowDetachSurfaceCanvas(surface);
+}
+
+/**
+ * 📐️ Resizes an attached surface's swapchain; a no-op for a surface that presents in 2D.
+ * @param {number} surface
+ * @param {number} logical_width
+ * @param {number} logical_height
+ * @param {number} dpr
+ */
+export function flowResizeSurfaceCanvas(surface, logical_width, logical_height, dpr) {
+    _assertNum(surface);
+    _assertNum(logical_width);
+    _assertNum(logical_height);
+    wasm.flowResizeSurfaceCanvas(surface, logical_width, logical_height, dpr);
+}
+
+/**
+ * 🔎️ Whether this surface presents on the GPU — the host reads it to decide whether to keep a
+ * 2D context off the canvas (a canvas admits exactly one context kind, for its whole life).
+ * @param {number} surface
+ * @returns {boolean}
+ */
+export function flowSurfaceCanvasPresentsOnGpu(surface) {
+    _assertNum(surface);
+    const ret = wasm.flowSurfaceCanvasPresentsOnGpu(surface);
+    return ret !== 0;
+}
+
 export function initialize_browser_clock() {
     wasm.initialize_browser_clock();
 }
@@ -1963,17 +2017,17 @@ function __wbg_get_imports() {
             arg0.writeTexture(arg1, getArrayU8FromWasm0(arg2, arg3), arg4, arg5);
         }, arguments); },
         __wbindgen_cast_0000000000000001: function() { return logError(function (arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 2148, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 2158, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
             const ret = makeMutClosure(arg0, arg1, wasm_bindgen_458697782d79938e___convert__closures_____invoke___wasm_bindgen_458697782d79938e___JsValue______true_);
             return ret;
         }, arguments); },
         __wbindgen_cast_0000000000000002: function() { return logError(function (arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 2448, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 2458, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
             const ret = makeMutClosure(arg0, arg1, wasm_bindgen_458697782d79938e___convert__closures_____invoke___wasm_bindgen_458697782d79938e___JsValue__core_7a2330d63e03cc2c___result__Result_____wasm_bindgen_458697782d79938e___JsError___true_);
             return ret;
         }, arguments); },
         __wbindgen_cast_0000000000000003: function() { return logError(function (arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [NamedExternref("GPUUncapturedErrorEvent")], shim_idx: 2149, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [NamedExternref("GPUUncapturedErrorEvent")], shim_idx: 2159, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
             const ret = makeMutClosure(arg0, arg1, wasm_bindgen_458697782d79938e___convert__closures_____invoke___wgpu_bd4cf1f8f3ffcf01___backend__webgpu__webgpu_sys__gen_GpuUncapturedErrorEvent__GpuUncapturedErrorEvent______true_);
             return ret;
         }, arguments); },

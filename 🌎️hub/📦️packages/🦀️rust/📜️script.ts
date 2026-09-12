@@ -10,6 +10,7 @@ import Ajv from "ajv";
 import { requireMcpBinary } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { buildCargoArtifacts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
 import { repoCacheDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { blake3Hex } from "../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
 import {
@@ -861,6 +862,13 @@ async function freeLoopbackPort(): Promise<number> {
 
 function hubBinaryPath(repoRoot: string): string {
   return join(cargoTargetDirectory(repoRoot), "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
+}
+
+/** 📦️ Reads the Nx-cached dev-profile deliverable (`os-hub:build-dev`, staged like `framework-renderer-wgpu:native-build`) that `DevScript` execs instead of building inline. */
+function hubDevBinaryPath(root: string): string {
+  const path = join(root, "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
+  if (!existsSync(path)) throw new Error(`Missing Nx-staged os-hub dev binary: ${path}; run: bun nx run os-hub:build-dev`);
+  return path;
 }
 
 type LocalHubRun = {
@@ -12623,24 +12631,34 @@ function runNativeDocumentAdmissionLaws(repoRoot: string): void {
   console.log(`native-document-admission-laws: nativeExact=${suffixes.length} mcpExact=${mcpSuffixes.length} passed`);
 }
 
+/** 🏗️ Stages the dev-profile `os-hub` binary as a cached Nx package deliverable, mirroring
+ * `framework-renderer-wgpu:native-build`'s `dist/native-<profile>` pattern, so `DevScript` execs a
+ * built artifact instead of running `cargo build` inline on every launch. */
+class BuildDevScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw new Error("Select build-dev through Nx without additional arguments");
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub"], this.repoRoot, { output: "dist/build-dev" });
+  }
+}
+
 /** 🔗️ `runCargo`'s `env` arg replaces `process.env` wholesale (see `runCmdInternal`'s
  * `opts.env ?? process.env`), so this inherits the full process env and only defaults the port —
  * otherwise the launcher's `OS_HUB_PORT`/`OS_HUB_DATA` (and `PATH`) would be silently dropped. */
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     buildAdminSpa(this.repoRoot);
-    runCargo(["build", "--manifest-path", "Cargo.toml"], this.root);
+    const binaryPath = hubDevBinaryPath(this.root);
     const secureSuite = segments[0] === "secure-suite";
     const secureNative = secureSuite || segments[0] === "secure-native";
     const secureMcp = secureSuite || segments[0] === "secure-mcp";
     const secureAdmin = secureSuite || segments[0] === "secure-admin";
     if (secureNative) {
       proveNativeCredentialSourceOrder(this.repoRoot);
-      runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-wgpu:native-build", "--skip-nx-cache", "--", process.env.SEMIO_PLUGIN ?? "s"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-wgpu:native-build", "--", process.env.SEMIO_PLUGIN ?? "s"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     }
     if (secureMcp) {
       proveMcpCredentialSourceOrder(this.repoRoot);
-      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     }
     const profiles: readonly LocalProfile[] = [
       { profileId: "developer", subject: "local-developer-01", displayName: "Local Developer", allowedClientClasses: secureSuite ? ["native", "mcp", "react-relay"] : ["native", "mcp"] },
@@ -12650,8 +12668,9 @@ class DevScript extends BundleScript {
     let trustedCatalog = trustedBootstrapCurrent(dataRoot);
     if (!trustedCatalog) {
       const receipt = await materializeTrustedStdioGisBundle(this.repoRoot, dataRoot);
-      const binaryPath = hubBinaryPath(this.repoRoot);
-      const validation = { binaryPath, cargoTargetDir: dirname(dirname(binaryPath)) };
+      runCargo(["build", "--manifest-path", "Cargo.toml"], this.root);
+      const validationBinaryPath = hubBinaryPath(this.repoRoot);
+      const validation = { binaryPath: validationBinaryPath, cargoTargetDir: dirname(dirname(validationBinaryPath)) };
       await validateAndPublishTrustedStdioGisCandidate(this.repoRoot, this.root, dataRoot, receipt, validation);
       trustedCatalog = trustedBootstrapCurrent(dataRoot);
       if (!trustedCatalog) throw new Error("trusted stdio+GIS candidate did not publish an exact current generation");
@@ -12660,6 +12679,7 @@ class DevScript extends BundleScript {
       port: Number(process.env[OS_HUB_PORT_ENV] ?? OS_HUB_PORT),
       dataDir: dataRoot,
       adminSubjects: secureAdmin ? ["semio.local.bootstrap/v1:local-administrator-01"] : undefined,
+      binaryPath,
     });
     let relay: LocalBrowserRelay | undefined;
     let adminRelay: LocalAdminRelay | undefined;
@@ -17217,6 +17237,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("gis-inference-ledger-check", GisInferenceLedgerCheckScript)
   .register("gis-map-frozen-binding-check", GisMapFrozenBindingCheckScript)
   .register("native-document-open-check", NativeDocumentOpenCheckScript)
+  .register("build-dev", BuildDevScript)
   .register("dev", DevScript)
   .register("secure-local-smoke", SecureLocalSmokeScript);
 

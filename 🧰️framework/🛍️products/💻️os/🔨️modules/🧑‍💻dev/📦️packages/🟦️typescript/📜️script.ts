@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧭️ `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
-import { ACTOR_COMPONENT_EXPORTS, assertActorComponentExports, artifactFiles, browserModuleRoot, finalizePluginDescriptor, PLUGIN_DESCRIPTOR_PROBE_SOURCE } from "../../../🔌️plugin/📦️packages/🟦️typescript/📜️script.ts";
-import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, publishActivationReceipt, readActivationReceipt } from "../../♻️activation/🟦️.ts";
+import { ACTOR_COMPONENT_EXPORTS, assertActorComponentExports, artifactFiles, finalizePluginDescriptor, PLUGIN_DESCRIPTOR_PROBE_SOURCE } from "../../../🔌️plugin/📦️packages/🟦️typescript/📜️script.ts";
+import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, newestComponentSourceMtime, nextActivationReceipt, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../♻️activation/🟦️.ts";
 import { closeTestBrowserHostStagingV1, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, prepareTestBrowserHostRootsV1, resolveTestBrowserHostRootsV1, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, type TestBrowserHostRootsV1, writeTestBrowserGisMaterializationReceiptV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import { stageArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { cargoTargetDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
@@ -51,7 +51,6 @@ import { decodeDocumentPackBytes, decodePackValue, DOCUMENT_EXECUTION_TARGET_COM
 import type { PackValue } from "@semio-tech/framework-os";
 import {
   CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BYTES,
-  PLUGIN_MODULES_ROOT,
   PLUGIN_SOURCE_WATCH_PATH,
   backboneDbHandleFor,
   descriptorRouteDecision,
@@ -92,7 +91,11 @@ import { DISTRIBUTION_LAYOUT, distributionOutputOwner, parseDistributionManifest
 type OwnedParityImage = { readonly width: number; readonly height: number; readonly data: Uint8Array };
 
 const repoRoot = getWorkspaceRoot();
-const pluginOutRoot = PLUGIN_MODULES_ROOT;
+
+/** @emoji 🎚️ The staging profile this process produces and serves — `ship` builds the release tree, every
+ * other mode the dev tree. Paired with {@link pluginWasmProfile}, which selects the matching cargo profile. */
+function devStagingProfile(): "dev" | "release" { return semioBuildMode() === "ship" ? "release" : "dev"; }
+const pluginOutRoot = pluginModulesRoot(devStagingProfile());
 
 /** @emoji 🧵️ Publishes the single package-agnostic shard worker at `🔌️plugin-modules/🧵️shard/`, the
  * URL `ShardClient` pool members are constructed from (H2 design). Idempotent: rewritten on every
@@ -217,10 +220,18 @@ async function readPackageName(cratePath: string): Promise<string> {
   return match[1]!;
 }
 
+/** @emoji 🔑️ The `stageArtifacts` ownership key one component's staged module directory carries — byte
+ * for byte the key `@semio-tech/framework-plugin-web`'s `materialize <profile> --manifest <Cargo.toml>`
+ * writes, so the catalog builder and the per-crate Nx target own the SAME directory in the one staging
+ * root instead of each claiming a tree of its own. */
+function componentArtifactOwner(target: PluginRegistryEntry, profile: "dev" | "release"): string {
+  return `${target.cratePath.split(/[\\/]/).join("/")}/Cargo.toml:browser:${profile}`;
+}
+
 /** 🛡️Rejects unexpected output children without removing retained files before a build. */
 function assertPluginOutputChildren(outDir: string, componentBase: string): void {
   if (!existsSync(outDir)) return;
-  const files = new Set([PLUGIN_HOST_SHIM_FILE, MODULE_BRIDGE_FILE, `${componentBase}.js`, `${componentBase}.d.ts`, `${componentBase}.core.wasm`, "🔣️.json", "🛂️.descriptor.semio"]);
+  const files = new Set([PLUGIN_HOST_SHIM_FILE, MODULE_BRIDGE_FILE, `${componentBase}.js`, `${componentBase}.d.ts`, `${componentBase}.core.wasm`, "🔣️.json", "🛂️.descriptor.semio", ".nx-artifact.json"]);
   for (const entry of readdirSync(outDir, { withFileTypes: true })) {
     if (entry.isDirectory() && entry.name === "interfaces") continue;
     if (entry.isFile() && files.has(entry.name)) continue;
@@ -362,22 +373,29 @@ async function buildPluginCargo(target: PluginRegistryEntry): Promise<{ readonly
  * plugin build" per its own doc, just once per BUILD rather than once per PLUGIN). */
 async function materializePlugin(target: PluginRegistryEntry, artifact: string): Promise<void> {
   const outDir = join(pluginOutRoot, moduleDirectoryName(target.pluginId));
-  mkdirSync(outDir, { recursive: true });
+  mkdirSync(pluginOutRoot, { recursive: true });
   const jsBase = target.wasmOut.replace(/\.wasm$/, "");
   const componentBase = `${jsBase}_component`;
   assertPluginOutputChildren(outDir, componentBase);
-  writeFileSync(join(outDir, "🟨️.js"), hostShimSource());
-  // 🪶️ Transpile straight from cargo's own build output — plugin-modules never receives a copy of the
-  // full component `.wasm` (see `emitRustArtifacts`'s doc comment). The browser only ever fetches
-  // jco's extracted `${componentBase}.core.wasm`, so shipping the untranspiled component alongside it
-  // was pure duplicate ~60MB-class weight per plugin; native `os run` now reads straight from `target/`.
-  // 🚀️ T-P8: the ASYNC (non-blocking-spawn) transpile — see its doc — is what makes `buildPluginCatalog`'s
-  // bounded-parallel materialize stage actually overlap in wall-clock time, not just in scheduling.
-  await transpilePluginComponentAsync(artifact, outDir, componentBase, pluginWebMaterializeContext());
-  await describeBuiltPlugin(target, artifact, join(outDir, `${componentBase}.js`));
-  if (!stagePluginDescriptor(target, outDir)) throw new Error(`Missing fresh descriptor for ${target.pluginId}`);
-  const jsOut = join(outDir, MODULE_BRIDGE_FILE);
-  writeFileSync(jsOut, pluginComponentBridgeSource(componentBase, target.wasmOut));
+  const temporary = mkdtempSync(`${outDir}.materialize-`);
+  try {
+    writeFileSync(join(temporary, "🟨️.js"), hostShimSource());
+    // 🪶️ Transpile straight from cargo's own build output — plugin-modules never receives a copy of the
+    // full component `.wasm` (see `emitRustArtifacts`'s doc comment). The browser only ever fetches
+    // jco's extracted `${componentBase}.core.wasm`, so shipping the untranspiled component alongside it
+    // was pure duplicate ~60MB-class weight per plugin; native `os run` now reads straight from `target/`.
+    // 🚀️ T-P8: the ASYNC (non-blocking-spawn) transpile — see its doc — is what makes `buildPluginCatalog`'s
+    // bounded-parallel materialize stage actually overlap in wall-clock time, not just in scheduling.
+    await transpilePluginComponentAsync(artifact, temporary, componentBase, pluginWebMaterializeContext());
+    await describeBuiltPlugin(target, artifact, join(temporary, `${componentBase}.js`));
+    if (!stagePluginDescriptor(target, temporary)) throw new Error(`Missing fresh descriptor for ${target.pluginId}`);
+    writeFileSync(join(temporary, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, target.wasmOut));
+    // 🧱️ Published through the SAME `stageArtifacts` ownership key `@semio-tech/framework-plugin-web`'s
+    // `materialize-<profile>` uses, so this catalog builder and the per-crate Nx target are two producers of
+    // ONE tree rather than two trees: either may replace a module directory the other staged, and neither
+    // can leave a half-written module visible to a running dev server.
+    stageArtifacts(outDir, componentArtifactOwner(target, devStagingProfile()), artifactFiles(temporary));
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
   // 🧩️ Publish extension artifacts before the hot-swap marker: the browser reloads `/🧩️extension-modules/...`
   // from the SSE event, so the install root must already serve the new files.
   publishBuiltExtension(target, outDir);
@@ -928,9 +946,9 @@ class PluginSizeScript extends BundleScript {
  * folder, not inside the plugin crate itself. Watching just `target.cratePath` misses them, so a
  * schema or fixture edit never triggers a hot-swap rebuild. Framework-hosted plugin crates
  * (`framework/...`) keep the narrow crate-only watch instead — widening to all of `framework/` would
- * watch the entire monorepo's shared core. Cargo's own `target/` output lives at the repo root and
- * built wasm lands in `framework/os/dev/plugin-modules`, so widening the watch root here
- * cannot cause a rebuild to re-trigger itself. */
+ * watch the entire monorepo's shared core. Cargo's own `target/` output lives at the repo root and built
+ * wasm lands in the one staging root under `🔌️plugin/📦️packages/🟦️typescript/dist/<profile>/`, so
+ * widening the watch root here cannot cause a rebuild to re-trigger itself. */
 function pluginWatchRoot(target: PluginRegistryEntry): string {
   const segments = target.cratePath.split("/");
   const topLevel = segments[0];
@@ -1287,8 +1305,7 @@ async function waitForPluginBuildLeaseReady(variant: string, deadlineMs: number)
  * process claimed readiness. */
 function pluginBuildOutputsPresent(): boolean {
   try {
-    const modules = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules");
-    return existsSync(modules) && readdirSync(modules).length > 0;
+    return existsSync(pluginOutRoot) && readdirSync(pluginOutRoot).length > 0;
   } catch {
     return false;
   }
@@ -1327,28 +1344,21 @@ function releasePluginBuildLease(variant: string): void {
 }
 //#endregion 🔖️PluginBuildLease
 
-/** @emoji 🧊️ Stages the Nx-cached `materialize-<profile>` output (already verified fresh by
- * `PreparationScript`, which runs first) into the live `🔌️plugin-modules/` root the wgpu native runner's
- * own `SEMIO_PLUGIN_MODULES` env constant reads. The react path needs no such copy — its Vite dev server
- * serves `browserModuleRoot(profile)` directly — so this exists only for the renderer that still reads a
- * fixed filesystem path instead of an HTTP route. */
-function stageWgpuPluginModules(plugins: readonly { readonly pluginId: string }[], moduleRoot: string): void {
-  mkdirSync(pluginOutRoot, { recursive: true });
-  for (const relative of [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY]) {
-    const destination = join(pluginOutRoot, relative);
-    rmSync(destination, { recursive: true, force: true });
-    cpSync(join(moduleRoot, relative), destination, { recursive: true });
-  }
+/** @emoji 🧊️ Publishes the wgpu lane's runtime prerequisites straight out of the ONE staging root
+ * (`pluginModulesRoot(profile)`, already verified complete above): every selected extension into the
+ * install root the trunk bundle and the native runner both mount, the guest typst font asset, and the
+ * hot-swap marker. It deliberately copies NO module: the native runner's `SEMIO_PLUGIN_MODULES` and the
+ * bundle's `copy-dir` read that same staging root, so a per-variant mirror would only be a third tree to
+ * drift (ticket 26/09/09/PROCEDURAL-3D-END-TO-END — a two-day-old `🌀️procedural` served from a mirror
+ * nothing had restaged). */
+function publishWgpuRuntimePrerequisites(plugins: readonly { readonly pluginId: string }[], moduleRoot: string): void {
   const catalog = new Map(readGeneratedCatalogProjection().entries.map((entry) => [entry.pluginId, entry]));
   for (const plugin of plugins) {
-    const directory = moduleDirectoryName(plugin.pluginId), outDir = join(pluginOutRoot, directory);
-    rmSync(outDir, { recursive: true, force: true });
-    cpSync(join(moduleRoot, directory), outDir, { recursive: true });
     const target = catalog.get(plugin.pluginId);
-    if (target) publishBuiltExtension(target, outDir);
+    if (target) publishBuiltExtension(target, join(moduleRoot, moduleDirectoryName(plugin.pluginId)));
   }
   ensureGuestSlimTypstFontsAsset();
-  writeFileSync(join(pluginOutRoot, MODULE_HOT_SWAP_FILE), `${JSON.stringify({ pluginId: "*", rebuiltAt: Date.now() })}\n`);
+  writeFileSync(join(moduleRoot, MODULE_HOT_SWAP_FILE), `${JSON.stringify({ pluginId: "*", rebuiltAt: Date.now() })}\n`);
 }
 
 class PreparationScript extends BundleScript {
@@ -1357,7 +1367,7 @@ class PreparationScript extends BundleScript {
     if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["dev", "release"].includes(profile) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("prepare <variant> react|wgpu <dev|release>");
     const playground = playgroundCatalog.find((row) => row.variant === variant);
     if (!playground) throw new Error(`Missing generated playground ${variant}`);
-    const moduleRoot = browserModuleRoot(profile as "dev" | "release"), registry = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
+    const moduleRoot = pluginModulesRoot(profile as "dev" | "release"), registry = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
     const session = (await import(pathToFileURL(join(registry, "dist/sessions", variant, "🟦️session.ts")).href)).PLAYGROUND_SESSION;
     if (session.variant !== variant || session.registryPluginId !== playground.pluginId) throw new Error("Prepared session identity mismatch");
     for (const plugin of session.plugins) {
@@ -1367,7 +1377,7 @@ class PreparationScript extends BundleScript {
     }
     for (const path of [join(PREVIEW2_VENDOR_RELATIVE, ".nx-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) if (!existsSync(join(moduleRoot, path))) throw new Error(`Missing browser support ${path}`);
     const fonts = validateFontAsset(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET)));
-    if (renderer === "wgpu") stageWgpuPluginModules(session.plugins, moduleRoot);
+    if (renderer === "wgpu") publishWgpuRuntimePrerequisites(session.plugins, moduleRoot);
     console.log(`Prepared ${variant} ${renderer} ${profile}: ${session.plugins.length} components, session, browser support and ${fonts} fonts`);
   }
 }
@@ -1412,14 +1422,15 @@ class ActivationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     await new PreparationScript(this.root).run(args);
     const [variant, renderer, selectedProfile] = args, profile = selectedProfile as "dev" | "release";
-    // 🧊️ The wgpu native runner reads `pluginOutRoot` directly (already staged by `PreparationScript`
-    // above) instead of an activation receipt served over HTTP — there is no Vite runtime root to
-    // publish extensions into, so activation IS preparation for this renderer.
+    // 🧊️ The wgpu native runner reads `pluginModulesRoot(profile)` directly (the one staging root every
+    // producer wrote before `PreparationScript` accepted it) instead of an activation receipt served over
+    // HTTP — there is no Vite runtime root to publish extensions into, so activation IS preparation for
+    // this renderer, and this branch is a trivial, cacheable confirmation.
     if (renderer === "wgpu") {
       console.log(`Activated ${variant} wgpu ${profile}`);
       return;
     }
-    const runtime = developmentRuntimeRoot(this.root, variant, profile), receiptRoot = join(runtime, "activation"), moduleRoot = browserModuleRoot(profile);
+    const runtime = developmentRuntimeRoot(this.root, variant, profile), receiptRoot = join(runtime, "activation"), moduleRoot = pluginModulesRoot(profile);
     const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🟦️session.ts");
     const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
     const catalog = new Map(readGeneratedCatalogProjection().entries.map((entry) => [entry.pluginId, entry]));
@@ -1449,6 +1460,67 @@ class ActivationScript extends BundleScript {
   }
 }
 
+/** @emoji 🔎️ Collects one variant's staged-module freshness facts out of the ONE staging root: the
+ * activation receipt names what was activated, each component's owner tree supplies the newest source
+ * mtime, and the extension install root supplies the published package hash. Read-only — it never builds,
+ * never writes, and never blocks a serve; its whole job is that a served module which is behind its own
+ * crate says so out loud instead of looking like "the rebuild did not take". */
+export function collectStagedModuleFacts(options: {
+  readonly moduleRoot: string;
+  readonly installRoot: string;
+  readonly receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string }[] };
+  readonly components: readonly PluginRegistryEntry[];
+}): readonly StagedModuleFacts[] {
+  const activated = new Map((options.receipt?.plugins ?? []).map((row) => [row.pluginId, row.artifactSha256]));
+  return options.components.map((target): StagedModuleFacts => {
+    const directoryName = moduleDirectoryName(target.pluginId);
+    const newest = newestComponentSourceMtime(join(repoRoot, target.cratePath, "..", ".."));
+    const installedMeta = join(options.installRoot, directoryName, EXTENSION_INSTALL_META);
+    let installedPackageHash: string | undefined;
+    if (existsSync(installedMeta)) {
+      try { installedPackageHash = JSON.parse(readFileSync(installedMeta, "utf8")).packageHash as string; } catch { installedPackageHash = undefined; }
+    }
+    return {
+      pluginId: target.pluginId,
+      role: target.role === "extension" ? "extension" : "plugin",
+      activationTracked: options.receipt !== undefined,
+      stagedAtMs: stagedModuleMtime(join(options.moduleRoot, directoryName)),
+      newestSourceMs: newest?.mtimeMs,
+      newestSourcePath: newest ? relative(repoRoot, newest.path).split(/[\\/]/).join("/") : undefined,
+      receiptArtifactSha256: activated.get(target.pluginId),
+      installedPackageHash,
+    };
+  });
+}
+
+/** @emoji 📣️ Prints one `[stale]` line per component whose served bytes are behind, each naming the exact
+ * Nx target that fixes it. Called at serve start and again on every activation-receipt change, so a
+ * restage that lands while the server runs retires its own warning. */
+export function reportStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "dev" | "release", facts: readonly StagedModuleFacts[]): readonly StagedModuleVerdict[] {
+  const verdicts = facts.map(stagedModuleVerdict);
+  const lines = stagedModuleReportLines(verdicts, `bun nx run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`);
+  for (const line of lines) console.warn(line);
+  if (lines.length === 0) console.log(`[fresh] ${facts.length} staged components match their sources and the activation receipt`);
+  return verdicts;
+}
+
+/** @emoji 🔎️ Serve-start freshness pass over the one staging root — never throws: a dev server that
+ * refuses to start over a stale module is worse than one that says which module is stale. */
+function reportServeStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "dev" | "release", runtime: string, receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string }[] }): void {
+  try {
+    const selected = new Set(filterProjectedPluginRegistry(readGeneratedCatalogProjection(), resolveCatalogFilterPluginId(variant)).map((entry) => entry.pluginId));
+    const components = readGeneratedCatalogProjection().entries.filter((entry) => selected.has(entry.pluginId));
+    reportStagedModuleFreshness(variant, renderer, profile, collectStagedModuleFacts({
+      moduleRoot: pluginModulesRoot(profile),
+      installRoot: renderer === "react" ? join(runtime, "extensions") : extensionOutRoot,
+      receipt,
+      components,
+    }));
+  } catch (error) {
+    console.warn(`[stale] freshness check unavailable: ${String(error)}`);
+  }
+}
+
 class ServeScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [variant, renderer, selectedProfile, ...serverArgs] = args;
@@ -1456,6 +1528,7 @@ class ServeScript extends BundleScript {
     const profile = selectedProfile as "dev" | "release", runtime = developmentRuntimeRoot(this.root, variant, profile);
     const receipt = readActivationReceipt(join(runtime, "activation"));
     if (receipt.variant !== variant || receipt.profile !== profile) throw new Error("Server activation identity mismatch");
+    reportServeStagedModuleFreshness(variant, "react", profile, runtime, receipt);
     const resolved = resolvePlaygroundFilter(variant);
     await runViteBunxDev(this.root, serverArgs, { portEnv: "S_OS_PORT", defaultPort: String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, variant, renderer)), fixedPort: true, env: { SEMIO_PLUGIN: variant, SEMIO_RENDERER: renderer, SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev", SEMIO_BRAND: resolved.brand ?? "", VITE_SEMIO_PLUGIN: variant, VITE_SEMIO_RENDERER: renderer, VITE_SEMIO_APP_ID: resolved.appId ?? "", ...frameworkOsLockedPrefsEnv() } });
   }
@@ -1493,8 +1566,12 @@ class DevScript extends BundleScript {
     ensureAppleDeveloperDir();
     // 🚀️ Consumes the Nx-cached `materialize-<profile>` outputs (`activate-<variant>-wgpu-<profile>`,
     // generated by `playgroundPreparationTargets`) instead of a raw serial `cargo`+jco catalog build —
-    // see `WgpuPreparationScript` below for how those already-built modules reach `pluginOutRoot`.
+    // see `PreparationScript`/`publishWgpuRuntimePrerequisites` above for how those already-built modules
+    // become readable at `pluginModulesRoot(profile)`, the one path the native runner reads.
     if (!served) await activatePlaygroundRuntime(plugin, profile, "wgpu");
+    // 🔎️ The trunk bundle `copy-dir`s the one staging root, so the same staleness that would poison a
+    // react serve poisons this one — said out loud here, before trunk spends three minutes copying it.
+    reportServeStagedModuleFreshness(plugin, "wgpu", profile, developmentRuntimeRoot(this.root, plugin, profile));
     const defaultPort = String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, plugin, renderer));
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     const port = Number(process.env.S_OS_PORT ?? defaultPort);
@@ -5578,5 +5655,5 @@ if (import.meta.main) {
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../../🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts");
-  await registerTests1(import.meta.vitest, { ACTIVATION_RECEIPT_FILE, ACTOR_COMPONENT_EXPORTS, DISTRIBUTION_LAYOUT, EXTENSION_WATCH_MARKER, EventEmitter, MODULE_EXTENSION_ROUTE, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_HOST_SHIM_FILE, PLUGIN_MODULES_ROOT, PLUGIN_SOURCE_WATCH_PATH, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, assertActorComponentExports, assertExtensionOutputsFresh, assertNoStalePublicPluginOutputs, assertPluginCatalogComplete, assertPluginOutputChildren, atTestLevel, awaitChildExit, awaitHttpOk, awaitTcpReady, backboneDbHandleFor, basename, buildEngineWasm, buildPluginCatalog, cargoProfileDir, catalogSmokeExitCode, catalogSmokeMarkdown, checkDistributionBundle, checkScaleFixtureArtifacts, closeTestBrowserHostStagingV1, compareOwnedParityPixels, cpSync, createConcurrencyLimiter, createHash, createReadStream, cropOwnedParityRgba, decodePackValue, decodeParityScreenshot, descriptorRouteDecision, devContract, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, encodePackValue, encodeParityDiff, ensureParityPlaywrightBrowsersPath, exactSpaceCreateArtifactArgs, existsSync, fileURLToPath, finalizePluginDescriptor, hostShimSource, isAbsolute, join, linkedSessionEngines, mkdirSync, mkdtempSync, moduleIdForDirectoryName, moduleRoutePath, packValueToExactJson, parseDistributionManifest, parseDistributionStaticInputs, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, pathToFileURL, pluginCargoArgs, pluginComponentBridgeSource, pluginOutRoot, pluginWasmProfile, prepareTestBrowserHostRootsV1, publishDistributionBundle, readActivationReceipt, readFileSync, readdirSync, relative, renderScaleFixtureArtifacts, repoRoot, resolve, resolveTestBrowserHostRootsV1, rewriteJcoAsyncResultLifting, rewriteJcoComponentAssetUrls, rewritePreview2ShimImportSource, rmSync, scaleFixtureGeneratedDir, scanBuiltPluginModules, shardWorkerSource, stagePluginDescriptor, statSync, stateProbeCandidates, stateProbeChangedPaths, stateProbeSnapshot, summarizeCatalogSmoke, tmpdir, unlinkSync, watch, writeFileSync, writeTestBrowserGisMaterializationReceiptV1 }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { ACTIVATION_RECEIPT_FILE, ACTOR_COMPONENT_EXPORTS, DISTRIBUTION_LAYOUT, EXTENSION_WATCH_MARKER, EventEmitter, MODULE_EXTENSION_ROUTE, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_HOST_SHIM_FILE, PLUGIN_SOURCE_WATCH_PATH, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, assertActorComponentExports, assertExtensionOutputsFresh, assertNoStalePublicPluginOutputs, assertPluginCatalogComplete, assertPluginOutputChildren, atTestLevel, awaitChildExit, awaitHttpOk, awaitTcpReady, backboneDbHandleFor, basename, buildEngineWasm, buildPluginCatalog, cargoProfileDir, catalogSmokeExitCode, catalogSmokeMarkdown, checkDistributionBundle, checkScaleFixtureArtifacts, closeTestBrowserHostStagingV1, compareOwnedParityPixels, cpSync, createConcurrencyLimiter, createHash, createReadStream, cropOwnedParityRgba, decodePackValue, decodeParityScreenshot, descriptorRouteDecision, devContract, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, encodePackValue, encodeParityDiff, ensureParityPlaywrightBrowsersPath, exactSpaceCreateArtifactArgs, existsSync, fileURLToPath, finalizePluginDescriptor, hostShimSource, isAbsolute, join, linkedSessionEngines, mkdirSync, mkdtempSync, moduleIdForDirectoryName, moduleRoutePath, packValueToExactJson, parseDistributionManifest, parseDistributionStaticInputs, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, pathToFileURL, pluginCargoArgs, pluginComponentBridgeSource, pluginOutRoot, pluginWasmProfile, prepareTestBrowserHostRootsV1, publishDistributionBundle, readActivationReceipt, readFileSync, readdirSync, relative, renderScaleFixtureArtifacts, repoRoot, resolve, resolveTestBrowserHostRootsV1, rewriteJcoAsyncResultLifting, rewriteJcoComponentAssetUrls, rewritePreview2ShimImportSource, rmSync, scaleFixtureGeneratedDir, scanBuiltPluginModules, shardWorkerSource, stagePluginDescriptor, statSync, stateProbeCandidates, stateProbeChangedPaths, stateProbeSnapshot, summarizeCatalogSmoke, tmpdir, unlinkSync, watch, writeFileSync, writeTestBrowserGisMaterializationReceiptV1 }, { directory: import.meta.dir, url: import.meta.url });
 }

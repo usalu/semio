@@ -338,6 +338,10 @@ impl RoundedRectRadii {
     pub fn new(top_left: f64, top_right: f64, bottom_right: f64, bottom_left: f64) -> Self {
         Self { top_left, top_right, bottom_right, bottom_left }
     }
+    /// 🧾️ Clockwise corner radii from top-left, the order `ctx.roundRect` itself takes.
+    pub fn as_clockwise(self) -> [f64; 4] {
+        [self.top_left, self.top_right, self.bottom_right, self.bottom_left]
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -347,6 +351,15 @@ pub struct RoundedRect {
 }
 
 impl RoundedRect {
+    /// 🧾️ The normalized body rectangle, for encoders that emit the primitive itself rather than
+    /// its flattening (`canvas::draw_list`, whose `ctx.roundRect` twin needs the exact corners).
+    pub fn rect(self) -> Rect {
+        self.rect
+    }
+    /// 🧾️ The four normalized corner radii, clockwise from top-left.
+    pub fn radii(self) -> RoundedRectRadii {
+        self.radii
+    }
     pub fn new(rect: Rect, radii: RoundedRectRadii) -> Self {
         let rect = Rect::new(rect.x0.min(rect.x1), rect.y0.min(rect.y1), rect.x0.max(rect.x1), rect.y0.max(rect.y1));
         let max_radius = rect.width().min(rect.height()) / 2.0;
@@ -392,6 +405,14 @@ impl Circle {
     pub fn new(center: Point, radius: f64) -> Self {
         Self { center, radius }
     }
+    /// 🧾️ Center point, for encoders that emit the primitive rather than its flattening.
+    pub fn center(self) -> Point {
+        self.center
+    }
+    /// 🧾️ Radius, for encoders that emit the primitive rather than its flattening.
+    pub fn radius(self) -> f64 {
+        self.radius
+    }
     /// ⭕️ A full-circle elliptical-arc flattening ([`elliptical_arc_segments`], radii `(r, r)`),
     /// explicitly closed.
     pub fn path_elements(&self, tolerance: f64) -> Vec<PathEl> {
@@ -408,6 +429,14 @@ pub struct Line {
 impl Line {
     pub fn new(p0: Point, p1: Point) -> Self {
         Self { p0, p1 }
+    }
+    /// 🧾️ Start point, for encoders that emit the primitive rather than its flattening.
+    pub fn p0(self) -> Point {
+        self.p0
+    }
+    /// 🧾️ End point, for encoders that emit the primitive rather than its flattening.
+    pub fn p1(self) -> Point {
+        self.p1
     }
     /// 📏️ Exact — a single line segment needs no flattening, so `tolerance` is unused.
     pub fn path_elements(&self, _tolerance: f64) -> Vec<PathEl> {
@@ -432,6 +461,11 @@ impl Arc {
     }
     pub fn eval(self, t: f64) -> Point {
         elliptical_point(self.center, self.radii, self.x_rotation, self.start_angle + t * self.sweep)
+    }
+    /// 🧾️ `(center, radii, start_angle, sweep, x_rotation)` — the exact `ctx.ellipse` arguments,
+    /// for encoders that emit the primitive rather than its flattening.
+    pub fn parameters(self) -> (Point, (f64, f64), f64, f64, f64) {
+        (self.center, self.radii, self.start_angle, self.sweep, self.x_rotation)
     }
     /// 🌓️ [`elliptical_arc_segments`] over this arc's own angle range — open (no `ClosePath`),
     /// since an arc is a curve, not necessarily a closed region.

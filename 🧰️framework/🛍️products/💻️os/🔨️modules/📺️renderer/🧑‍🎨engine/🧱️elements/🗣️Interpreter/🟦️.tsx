@@ -992,7 +992,9 @@ function ContainerView({ store, record, context }: { readonly store: UiDocumentS
   const presence = usePresenceOverlayEntry(record.key);
   const style: CSSProperties = { ...layoutSpecStyle(record.layout), position: record.layout.kind === "overlay" ? "relative" : undefined };
   const dataAttrs = styleSpecDataAttributes(record.style);
-  const children = (record.children ?? []).map((childId) => <UiNodeView key={childId} store={store} id={childId} context={context} />);
+  const childIds = record.children ?? [];
+  const childReactKeys = uiChildReactKeys(store.getState(), childIds);
+  const children = childIds.map((childId, index) => <UiNodeView key={childReactKeys[index]} store={store} id={childId} context={context} />);
   const role = component.role === "form" ? "form" : component.role === "toolbar" ? "toolbar" : undefined;
   const activateBinding = (record.bindings ?? []).find((binding) => binding.trigger === "activate");
 
@@ -1247,7 +1249,44 @@ export function uiNodeDomId(surface: SurfaceId, key: string, fallbackNodeId: UiN
 function nodeDomId(store: UiDocumentStore, record: UiNodeRecord): string {
   return uiNodeDomId(store.getState().surface, record.key, record.id);
 }
+
+/** 🪪️ React reconciliation keys for a sibling run — the SAME authored identity {@link uiNodeDomId}
+ * already addresses a node by, applied to reconciliation instead of to the DOM.
+ *
+ * `builtNodeToSnapshot` mints `UiNodeId`s by pre-order DFS over the WHOLE body, so inserting one node
+ * anywhere ahead of a sibling renumbers that sibling and everything after it. Keying children on that
+ * number therefore turns any upstream shape change into a React key change — and a key change is an
+ * unmount of the entire subtree, however unchanged it is. Measured on `window:procedural-main`: one
+ * eval-status refresh grew the outline tree by four port rows (`profile@wire`,
+ * `extrusion-axis@vector`, `extrusion-axis@errors`, `extrude@solid`), which moved the node-graph
+ * surface from id 30 to 34 and its container from 29 to 33, and React tore down and rebuilt the flow
+ * host — a second wasm flow session, a second canvas, a second wasm-side surface, ~5.7 s of attach and
+ * a graph that stayed blank for 39 s — for a surface node whose own content had not changed
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+ *
+ * A node's authored `key` survives renumbering, so it IS the key wherever it exists and is unique
+ * among its siblings; a keyless or ambiguous sibling falls back to the minted id, which stays correct
+ * (React only needs sibling-local uniqueness) and is simply not stable. The `k:`/`#` prefixes keep the
+ * two namespaces from ever colliding. */
+export function uiSiblingReactKeys(siblings: readonly { readonly id: UiNodeId; readonly key: string }[]): readonly string[] {
+  const occurrences = new Map<string, number>();
+  for (const sibling of siblings) if (sibling.key) occurrences.set(sibling.key, (occurrences.get(sibling.key) ?? 0) + 1);
+  return siblings.map((sibling) => (sibling.key && occurrences.get(sibling.key) === 1 ? `k:${sibling.key}` : `#${sibling.id}`));
+}
+
+/** 🪪️ {@link uiSiblingReactKeys} for a child-id run resolved against a live document state. A child id
+ * with no record keeps the id fallback rather than being dropped — the caller still renders it. */
+export function uiChildReactKeys(state: UiDocumentState, children: readonly UiNodeId[]): readonly string[] {
+  return uiSiblingReactKeys(children.map((id) => ({ id, key: state.nodes.get(id)?.key ?? "" })));
+}
 //#endregion 🪪️StableDomIds
+
+/** 🌲️ One tree row's inline controls, reconciled on {@link uiSiblingReactKeys} like every other
+ * sibling run — a row's control renumbers with the body exactly as its owning surface does. */
+function renderTreeItemControls(store: UiDocumentStore, controls: readonly UiNodeRecord[], context: UiInterpreterContext): readonly ReactElement[] {
+  const keys = uiSiblingReactKeys(controls);
+  return controls.map((child, index) => <UiNodeView key={keys[index]} store={store} id={child.id} context={context} />);
+}
 
 function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue, leftoverIds?: readonly string[]): TreeDataItem {
   const { record, props } = node;
@@ -1269,7 +1308,7 @@ function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node
     isHidden: props.dimmed ?? undefined,
     draggable: props.draggable ?? undefined,
     dragData: props.dragData ? (Object.fromEntries(Object.entries(props.dragData).filter((entry): entry is [string, string] => entry[1] !== undefined)) as Record<string, string>) : undefined,
-    control: controlRecords.length > 0 && controlRecords.length !== (activatableControl ? 1 : 0) ? <>{controlRecords.filter((child) => child !== activatableControl).map((child) => <UiNodeView key={String(child.id)} store={store} id={child.id} context={context} />)}</> : undefined,
+    control: controlRecords.length > 0 && controlRecords.length !== (activatableControl ? 1 : 0) ? <>{renderTreeItemControls(store, controlRecords.filter((child) => child !== activatableControl), context)}</> : undefined,
     items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds)) : undefined,
     onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : activatableControl ? () => dispatchTrigger(context, activatableControl, "activate") : undefined,
     onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
@@ -1531,7 +1570,7 @@ if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️unknown-component-placeholder/🟦️.tsx");
   await registerTests1(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps }, { directory: import.meta.dir, url: import.meta.url });
   const { registerTests1: registerContainerNodeIdTests } = await import("./🧪️tests/🪪️container-node-ids/🟦️.tsx");
-  await registerContainerNodeIdTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
+  await registerContainerNodeIdTests(import.meta.vitest, { UiDocumentStore, UiNodeView, uiChildReactKeys, uiSiblingReactKeys }, { url: import.meta.url });
   const { registerTests1: registerSurfaceSceneLaneTests } = await import("./🧪️tests/🚚️surface-scene-lanes/🟦️.tsx");
   await registerSurfaceSceneLaneTests(
     import.meta.vitest,

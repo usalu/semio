@@ -79,7 +79,7 @@
       }
     },
     "cache-verify": {
-      "cache": true,
+      "cache": false,
       "options": {
         "command": "bun ./📜️script.ts cache-verify"
       }

@@ -12,26 +12,39 @@ const includeBackboneWorker = process.env.SEMIO_INCLUDE_BACKBONE_WORKER === "1";
 const includeAgentBridge = process.env.SEMIO_INCLUDE_AGENT_BRIDGE === "1";
 const backboneWorkerSuite = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts");
 const engineSuite = (name: string, extension = "ts") => resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/${name}/🟦️.${extension}`);
+// 🧱️ A suite co-located with the ELEMENT it covers, rather than under `🧑‍🎨engine/🧪️tests/`. These are not
+// reachable by this package's default `include` glob either, so every one of them must be named here — a
+// co-located suite that no runner includes is a gate that reads green while measuring nothing
+// (`🛠️ShellHelpers/🧪️tests/🧩️component` was exactly that: the whole segmented-download drain corpus, in no
+// include list at all — ticket 26/09/02 wave B38).
+const elementSuite = (element: string, name: string, extension = "ts") =>
+  resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/${element}/🧪️tests/${name}/🟦️.${extension}`);
 const engineTestSuites = [
   engineSuite("⚡️quick"),
   engineSuite("🎮️browser-interactive-job-port"),
   engineSuite("🏛️space-administration", "tsx"),
   engineSuite("👥️scoped-presence", "tsx"),
   engineSuite("🎚️window-measure-controls", "tsx"),
+  engineSuite("🖱️world3d-interaction", "tsx"),
   engineSuite("📇️directory-home-bootstrap", "tsx"),
   engineSuite("📇️session-authority-notice", "tsx"),
   engineSuite("📡️actor-backbone"),
   engineSuite("📨️browser-frame-transport"),
   engineSuite("📥️wgpu-intake-budget"),
+  engineSuite("📥️inbound-request"),
   engineSuite("🔬️wgpu-extension-dispatch"),
+  engineSuite("🔀️surface-switch"),
   engineSuite("🔬️window-host-context"),
   engineSuite("🔬️artifact-creation-ready-opening"),
   engineSuite("🔬️document-opening"),
   engineSuite("🔬️engine-contract"),
   engineSuite("🚪️opening"),
+  engineSuite("📌️view-state-carriage"),
+  engineSuite("🧩️contributions-push"),
   engineSuite("🧩️package-integration"),
   engineSuite("🧯️router-plugin-faults"),
   engineSuite("🩺️window-fault"),
+  elementSuite("🛠️ShellHelpers", "🧩️component"),
 ] as const;
 const playwrightEngineTestSuites = [engineSuite("📚️storybook-hosts-no-wasm"), engineSuite("📚️storybook-hosts-wasm")] as const;
 const rootPolicySelfTestSuites = ["interactivity-live-reconcile", "interactivity-mounted-engine-surface-lifetime", "interactivity-mounted-frame-transaction"].map((id) => resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️${id}/🟦️.ts`));

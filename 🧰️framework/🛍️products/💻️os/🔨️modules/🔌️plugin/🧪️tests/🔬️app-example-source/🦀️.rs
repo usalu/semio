@@ -13,10 +13,11 @@ mod example_source_tests {
         assert_eq!(source.id(), "nakagin");
         assert_eq!(source.document(), "{\"kind\":\"demo\"}");
         assert_eq!(source.payload(), source.document_json());
-        let definition = ExampleDefinition::from(&source);
+        let dialect = ArtifactDialect { artifact_kind: "s.test.example-source.puzzle2d-play".into(), standard: "1".into(), subset: "*".into() };
+        let definition = source.clone().into_example_definition(dialect.clone());
         assert_eq!(definition.id, "nakagin");
         assert_eq!(definition.artifact_json, "{\"kind\":\"demo\"}");
-        assert!(definition.app_id.is_empty());
+        assert_eq!(definition.dialect, dialect, "an example is stamped with the dialect it was authored for, never with one app of it");
         let app = App::from_builder(
             App::builder(canonical_test_app_id("puzzle2d-play"), LocalizedLabel::data("Puzzle"))
                 .await

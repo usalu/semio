@@ -1,0 +1,994 @@
+{
+  "note": "🔀️ Surface ROLE and app MODE switching, plus the transactional in-place session switch (quiesce → create → seal → retire → publish → seed → refresh) its 6018 mid-chain tear-down forced. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+  "dialects": {
+    "generation3d": {
+      "artifactKind": "s.procedural.generation3d",
+      "standard": "1",
+      "subset": "*"
+    },
+    "generation2d": {
+      "artifactKind": "s.procedural.generation2d",
+      "standard": "1",
+      "subset": "*"
+    },
+    "puzzle3d": {
+      "artifactKind": "s.puzzle.puzzle3d",
+      "standard": "1",
+      "subset": "*"
+    }
+  },
+  "manifests": {
+    "procedural": [
+      {
+        "id": "s.procedural.generation2d@1/*#editor",
+        "role": "editor",
+        "dialect": "generation2d"
+      },
+      {
+        "id": "s.procedural.generation3d@1/*#editor",
+        "role": "editor",
+        "dialect": "generation3d"
+      },
+      {
+        "id": "s.procedural.generation3d@1/*#viewer",
+        "role": "viewer",
+        "dialect": "generation3d"
+      }
+    ],
+    "puzzle": [
+      {
+        "id": "s.puzzle.puzzle3d@1/*#editor",
+        "role": "editor",
+        "dialect": "puzzle3d"
+      }
+    ],
+    "dialectless": [
+      {
+        "id": "legacy-host-app",
+        "role": "editor"
+      }
+    ]
+  },
+  "boot": [
+    {
+      "id": "query-role-viewer-beats-the-playground-app-pin",
+      "manifest": "procedural",
+      "search": "?plugin=generation3d&role=viewer",
+      "envRole": "editor",
+      "defaultAppId": "s.procedural.generation3d@1/*#editor",
+      "pinnedAppId": null,
+      "expectedRole": "viewer",
+      "expectedAppId": "s.procedural.generation3d@1/*#viewer"
+    },
+    {
+      "id": "query-role-editor-keeps-the-editor",
+      "manifest": "procedural",
+      "search": "?plugin=generation3d&role=editor",
+      "envRole": "viewer",
+      "defaultAppId": "s.procedural.generation3d@1/*#editor",
+      "pinnedAppId": null,
+      "expectedRole": "editor",
+      "expectedAppId": "s.procedural.generation3d@1/*#editor"
+    },
+    {
+      "id": "no-query-falls-back-to-the-env-role",
+      "manifest": "procedural",
+      "search": "?plugin=generation3d",
+      "envRole": "viewer",
+      "defaultAppId": "s.procedural.generation3d@1/*#editor",
+      "pinnedAppId": null,
+      "expectedRole": "viewer",
+      "expectedAppId": "s.procedural.generation3d@1/*#viewer"
+    },
+    {
+      "id": "unrecognized-query-role-falls-back-to-the-env-role",
+      "manifest": "procedural",
+      "search": "?role=spectator",
+      "envRole": "editor",
+      "defaultAppId": "s.procedural.generation3d@1/*#editor",
+      "pinnedAppId": null,
+      "expectedRole": "editor",
+      "expectedAppId": "s.procedural.generation3d@1/*#editor"
+    },
+    {
+      "id": "empty-search-with-no-env-boots-the-editor",
+      "manifest": "procedural",
+      "search": "",
+      "envRole": "editor",
+      "defaultAppId": "s.procedural.generation3d@1/*#editor",
+      "pinnedAppId": null,
+      "expectedRole": "editor",
+      "expectedAppId": "s.procedural.generation3d@1/*#editor"
+    },
+    {
+      "id": "an-explicit-app-pin-is-projected-onto-the-requested-role",
+      "manifest": "procedural",
+      "search": "?role=viewer",
+      "envRole": "editor",
+      "defaultAppId": null,
+      "pinnedAppId": "s.procedural.generation3d@1/*#editor",
+      "expectedRole": "viewer",
+      "expectedAppId": "s.procedural.generation3d@1/*#viewer"
+    },
+    {
+      "id": "a-role-with-no-declared-sibling-keeps-the-anchor",
+      "manifest": "procedural",
+      "search": "?role=viewer",
+      "envRole": "editor",
+      "defaultAppId": "s.procedural.generation2d@1/*#editor",
+      "pinnedAppId": null,
+      "expectedRole": "viewer",
+      "expectedAppId": "s.procedural.generation2d@1/*#editor"
+    },
+    {
+      "id": "a-single-app-plugin-keeps-its-only-surface",
+      "manifest": "puzzle",
+      "search": "?role=viewer",
+      "envRole": "editor",
+      "defaultAppId": "s.puzzle.puzzle3d@1/*#editor",
+      "pinnedAppId": null,
+      "expectedRole": "viewer",
+      "expectedAppId": "s.puzzle.puzzle3d@1/*#editor"
+    },
+    {
+      "id": "no-anchor-at-all-prefers-the-requested-role",
+      "manifest": "procedural",
+      "search": "?role=viewer",
+      "envRole": "editor",
+      "defaultAppId": null,
+      "pinnedAppId": null,
+      "expectedRole": "viewer",
+      "expectedAppId": "s.procedural.generation3d@1/*#viewer"
+    },
+    {
+      "id": "an-undeclared-pin-is-a-boot-error",
+      "manifest": "procedural",
+      "search": "?role=viewer",
+      "envRole": "editor",
+      "defaultAppId": null,
+      "pinnedAppId": "s.procedural.nowhere@1/*#editor",
+      "expectedRole": "viewer",
+      "expectedAppId": null
+    }
+  ],
+  "group": [
+    {
+      "id": "two-surfaces-for-the-open-dialect-render-the-group",
+      "manifest": "procedural",
+      "dialect": "generation3d",
+      "expected": {
+        "editor": "s.procedural.generation3d@1/*#editor",
+        "viewer": "s.procedural.generation3d@1/*#viewer"
+      }
+    },
+    {
+      "id": "one-surface-for-the-open-dialect-hides-the-group",
+      "manifest": "procedural",
+      "dialect": "generation2d",
+      "expected": null
+    },
+    {
+      "id": "a-single-app-plugin-hides-the-group",
+      "manifest": "puzzle",
+      "dialect": "puzzle3d",
+      "expected": null
+    },
+    {
+      "id": "an-app-without-a-dialect-hides-the-group",
+      "manifest": "dialectless",
+      "dialect": null,
+      "expected": null
+    }
+  ],
+  "roleTargets": [
+    {
+      "id": "editor-session-asking-for-viewer",
+      "manifest": "procedural",
+      "dialect": "generation3d",
+      "currentRole": "editor",
+      "requested": "viewer",
+      "expected": "s.procedural.generation3d@1/*#viewer"
+    },
+    {
+      "id": "viewer-session-asking-for-editor",
+      "manifest": "procedural",
+      "dialect": "generation3d",
+      "currentRole": "viewer",
+      "requested": "editor",
+      "expected": "s.procedural.generation3d@1/*#editor"
+    },
+    {
+      "id": "asking-for-the-role-already-mounted",
+      "manifest": "procedural",
+      "dialect": "generation3d",
+      "currentRole": "editor",
+      "requested": "editor",
+      "expected": null
+    },
+    {
+      "id": "asking-for-a-role-the-dialect-does-not-declare",
+      "manifest": "procedural",
+      "dialect": "generation2d",
+      "currentRole": "editor",
+      "requested": "viewer",
+      "expected": null
+    }
+  ],
+  "switch": [
+    {
+      "id": "a-role-switch-quiesces-seals-and-retires-the-predecessor",
+      "manifest": "procedural",
+      "session": {
+        "pluginId": "procedural",
+        "instanceId": 7,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      },
+      "request": {
+        "pluginId": "procedural",
+        "appId": "s.procedural.generation3d@1/*#viewer",
+        "viewState": false
+      },
+      "quiesce": {
+        "settled": true,
+        "pending": 0
+      },
+      "expected": {
+        "status": "switched",
+        "steps": [
+          "quiesce:7",
+          "seal:7",
+          "create:s.procedural.generation3d@1/*#viewer",
+          "retire:7",
+          "publish:s.procedural.generation3d@1/*#viewer",
+          "seed:s.procedural.generation3d@1/*#viewer",
+          "refresh:s.procedural.generation3d@1/*#viewer"
+        ],
+        "trace": [
+          "quiesce",
+          "seal",
+          "create",
+          "retire-started",
+          "publish",
+          "seed",
+          "refresh",
+          "retire"
+        ],
+        "sessionAppId": "s.procedural.generation3d@1/*#viewer",
+        "instanceId": 8,
+        "created": 1,
+        "retired": [
+          7
+        ],
+        "pending": 0,
+        "retireFailures": 0
+      },
+      "createFails": false,
+      "retireMode": "resolve"
+    },
+    {
+      "id": "switching-back-quiesces-and-retires-the-viewer-instance",
+      "manifest": "procedural",
+      "session": {
+        "pluginId": "procedural",
+        "instanceId": 8,
+        "appId": "s.procedural.generation3d@1/*#viewer"
+      },
+      "request": {
+        "pluginId": "procedural",
+        "appId": "s.procedural.generation3d@1/*#editor",
+        "viewState": false
+      },
+      "quiesce": {
+        "settled": true,
+        "pending": 0
+      },
+      "expected": {
+        "status": "switched",
+        "steps": [
+          "quiesce:8",
+          "seal:8",
+          "create:s.procedural.generation3d@1/*#editor",
+          "retire:8",
+          "publish:s.procedural.generation3d@1/*#editor",
+          "seed:s.procedural.generation3d@1/*#editor",
+          "refresh:s.procedural.generation3d@1/*#editor"
+        ],
+        "trace": [
+          "quiesce",
+          "seal",
+          "create",
+          "retire-started",
+          "publish",
+          "seed",
+          "refresh",
+          "retire"
+        ],
+        "sessionAppId": "s.procedural.generation3d@1/*#editor",
+        "instanceId": 9,
+        "created": 1,
+        "retired": [
+          8
+        ],
+        "pending": 0,
+        "retireFailures": 0
+      },
+      "createFails": false,
+      "retireMode": "resolve"
+    },
+    {
+      "id": "a-predecessor-that-will-not-go-quiet-refuses-the-switch",
+      "manifest": "procedural",
+      "session": {
+        "pluginId": "procedural",
+        "instanceId": 7,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      },
+      "request": {
+        "pluginId": "procedural",
+        "appId": "s.procedural.generation3d@1/*#viewer",
+        "viewState": false
+      },
+      "quiesce": {
+        "settled": false,
+        "pending": 2
+      },
+      "expected": {
+        "status": "draining",
+        "steps": [
+          "quiesce:7"
+        ],
+        "trace": [
+          "quiesce"
+        ],
+        "sessionAppId": "s.procedural.generation3d@1/*#editor",
+        "instanceId": 7,
+        "created": 0,
+        "retired": [],
+        "pending": 2,
+        "retireFailures": 0
+      },
+      "createFails": false,
+      "retireMode": "resolve"
+    },
+    {
+      "id": "switching-to-the-mounted-app-creates-and-retires-nothing",
+      "manifest": "procedural",
+      "session": {
+        "pluginId": "procedural",
+        "instanceId": 7,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      },
+      "request": {
+        "pluginId": "procedural",
+        "appId": "s.procedural.generation3d@1/*#editor",
+        "viewState": false
+      },
+      "quiesce": {
+        "settled": true,
+        "pending": 0
+      },
+      "expected": {
+        "status": "unchanged",
+        "steps": [],
+        "trace": [],
+        "sessionAppId": "s.procedural.generation3d@1/*#editor",
+        "instanceId": 7,
+        "created": 0,
+        "retired": [],
+        "pending": 0,
+        "retireFailures": 0
+      },
+      "createFails": false,
+      "retireMode": "resolve"
+    },
+    {
+      "id": "switching-to-the-mounted-app-with-a-view-state-only-republishes",
+      "manifest": "procedural",
+      "session": {
+        "pluginId": "procedural",
+        "instanceId": 7,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      },
+      "request": {
+        "pluginId": "procedural",
+        "appId": "s.procedural.generation3d@1/*#editor",
+        "viewState": true
+      },
+      "quiesce": {
+        "settled": true,
+        "pending": 0
+      },
+      "expected": {
+        "status": "republished",
+        "steps": [
+          "publish:s.procedural.generation3d@1/*#editor",
+          "refresh:s.procedural.generation3d@1/*#editor"
+        ],
+        "trace": [
+          "publish",
+          "refresh"
+        ],
+        "sessionAppId": "s.procedural.generation3d@1/*#editor",
+        "instanceId": 7,
+        "created": 0,
+        "retired": [],
+        "pending": 0,
+        "retireFailures": 0
+      },
+      "createFails": false,
+      "retireMode": "resolve"
+    },
+    {
+      "id": "an-unmounted-shell-creates-without-quiescing-or-retiring",
+      "manifest": "procedural",
+      "session": null,
+      "request": {
+        "pluginId": "procedural",
+        "appId": "s.procedural.generation3d@1/*#viewer",
+        "viewState": false
+      },
+      "quiesce": {
+        "settled": true,
+        "pending": 0
+      },
+      "expected": {
+        "status": "mounted",
+        "steps": [
+          "create:s.procedural.generation3d@1/*#viewer",
+          "publish:s.procedural.generation3d@1/*#viewer",
+          "seed:s.procedural.generation3d@1/*#viewer",
+          "refresh:s.procedural.generation3d@1/*#viewer"
+        ],
+        "trace": [
+          "create",
+          "publish",
+          "seed",
+          "refresh"
+        ],
+        "sessionAppId": "s.procedural.generation3d@1/*#viewer",
+        "instanceId": 1,
+        "created": 1,
+        "retired": [],
+        "pending": 0,
+        "retireFailures": 0
+      },
+      "createFails": false,
+      "retireMode": "resolve"
+    },
+    {
+      "id": "an-undeclared-target-creates-nothing-and-keeps-the-session",
+      "manifest": "procedural",
+      "session": {
+        "pluginId": "procedural",
+        "instanceId": 7,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      },
+      "request": {
+        "pluginId": "procedural",
+        "appId": "s.procedural.nowhere@1/*#viewer",
+        "viewState": false
+      },
+      "quiesce": {
+        "settled": true,
+        "pending": 0
+      },
+      "expected": {
+        "status": "unresolvable",
+        "steps": [],
+        "trace": [],
+        "sessionAppId": "s.procedural.generation3d@1/*#editor",
+        "instanceId": 7,
+        "created": 0,
+        "retired": [],
+        "pending": 0,
+        "retireFailures": 0
+      },
+      "createFails": false,
+      "retireMode": "resolve"
+    },
+    {
+      "id": "a-successor-that-cannot-be-created-unseals-the-predecessor-it-keeps",
+      "manifest": "procedural",
+      "session": {
+        "pluginId": "procedural",
+        "instanceId": 7,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      },
+      "request": {
+        "pluginId": "procedural",
+        "appId": "s.procedural.generation3d@1/*#viewer",
+        "viewState": false
+      },
+      "quiesce": {
+        "settled": true,
+        "pending": 0
+      },
+      "createFails": true,
+      "expected": {
+        "status": "create-failed",
+        "steps": [
+          "quiesce:7",
+          "seal:7",
+          "unseal:7"
+        ],
+        "trace": [
+          "quiesce",
+          "seal",
+          "create-failed",
+          "unseal"
+        ],
+        "sessionAppId": "s.procedural.generation3d@1/*#editor",
+        "instanceId": 7,
+        "created": 0,
+        "retired": [],
+        "pending": 0,
+        "retireFailures": 0
+      },
+      "retireMode": "resolve"
+    },
+    {
+      "id": "a-predecessor-whose-close-ladder-never-finishes-does-not-delay-the-successor",
+      "manifest": "procedural",
+      "session": {
+        "pluginId": "procedural",
+        "instanceId": 7,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      },
+      "request": {
+        "pluginId": "procedural",
+        "appId": "s.procedural.generation3d@1/*#viewer",
+        "viewState": false
+      },
+      "quiesce": {
+        "settled": true,
+        "pending": 0
+      },
+      "expected": {
+        "status": "switched",
+        "steps": [
+          "quiesce:7",
+          "seal:7",
+          "create:s.procedural.generation3d@1/*#viewer",
+          "retire:7",
+          "publish:s.procedural.generation3d@1/*#viewer",
+          "seed:s.procedural.generation3d@1/*#viewer",
+          "refresh:s.procedural.generation3d@1/*#viewer"
+        ],
+        "trace": [
+          "quiesce",
+          "seal",
+          "create",
+          "retire-started",
+          "publish",
+          "seed",
+          "refresh"
+        ],
+        "sessionAppId": "s.procedural.generation3d@1/*#viewer",
+        "instanceId": 8,
+        "created": 1,
+        "retired": [
+          7
+        ],
+        "pending": 0,
+        "retireFailures": 0
+      },
+      "createFails": false,
+      "retireMode": "never"
+    },
+    {
+      "id": "a-predecessor-retirement-that-fails-never-blocks-the-successor",
+      "manifest": "procedural",
+      "session": {
+        "pluginId": "procedural",
+        "instanceId": 7,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      },
+      "request": {
+        "pluginId": "procedural",
+        "appId": "s.procedural.generation3d@1/*#viewer",
+        "viewState": false
+      },
+      "quiesce": {
+        "settled": true,
+        "pending": 0
+      },
+      "expected": {
+        "status": "switched",
+        "steps": [
+          "quiesce:7",
+          "seal:7",
+          "create:s.procedural.generation3d@1/*#viewer",
+          "retire:7",
+          "publish:s.procedural.generation3d@1/*#viewer",
+          "seed:s.procedural.generation3d@1/*#viewer",
+          "refresh:s.procedural.generation3d@1/*#viewer"
+        ],
+        "trace": [
+          "quiesce",
+          "seal",
+          "create",
+          "retire-started",
+          "publish",
+          "seed",
+          "refresh",
+          "retire-failed"
+        ],
+        "sessionAppId": "s.procedural.generation3d@1/*#viewer",
+        "instanceId": 8,
+        "created": 1,
+        "retired": [
+          7
+        ],
+        "pending": 0,
+        "retireFailures": 1
+      },
+      "createFails": false,
+      "retireMode": "reject"
+    }
+  ],
+  "modeSteps": [
+    {
+      "id": "edit-steps-forward-to-generate",
+      "modeIds": [
+        "edit",
+        "generate"
+      ],
+      "activeModeId": "edit",
+      "step": 1,
+      "expected": "generate"
+    },
+    {
+      "id": "generate-wraps-forward-to-edit",
+      "modeIds": [
+        "edit",
+        "generate"
+      ],
+      "activeModeId": "generate",
+      "step": 1,
+      "expected": "edit"
+    },
+    {
+      "id": "edit-wraps-backward-to-generate",
+      "modeIds": [
+        "edit",
+        "generate"
+      ],
+      "activeModeId": "edit",
+      "step": -1,
+      "expected": "generate"
+    },
+    {
+      "id": "three-modes-step-backward",
+      "modeIds": [
+        "a",
+        "b",
+        "c"
+      ],
+      "activeModeId": "c",
+      "step": -1,
+      "expected": "b"
+    },
+    {
+      "id": "an-unknown-active-mode-steps-from-the-first",
+      "modeIds": [
+        "edit",
+        "generate"
+      ],
+      "activeModeId": "dropped",
+      "step": 1,
+      "expected": "generate"
+    },
+    {
+      "id": "a-single-mode-app-has-nothing-to-step-to",
+      "modeIds": [
+        "view"
+      ],
+      "activeModeId": "view",
+      "step": 1,
+      "expected": null
+    }
+  ],
+  "keybindings": [
+    {
+      "controlId": "playground.navbar.roles.editor",
+      "chord": "mod+alt+e",
+      "aria": "Control+Alt+E",
+      "event": {
+        "key": "e",
+        "ctrlKey": true,
+        "altKey": true,
+        "metaKey": false,
+        "shiftKey": false
+      },
+      "dispatches": {
+        "requested": "editor",
+        "currentRole": "viewer",
+        "expectedAppId": "s.procedural.generation3d@1/*#editor"
+      }
+    },
+    {
+      "controlId": "playground.navbar.roles.viewer",
+      "chord": "mod+alt+v",
+      "aria": "Control+Alt+V",
+      "event": {
+        "key": "v",
+        "ctrlKey": true,
+        "altKey": true,
+        "metaKey": false,
+        "shiftKey": false
+      },
+      "dispatches": {
+        "requested": "viewer",
+        "currentRole": "editor",
+        "expectedAppId": "s.procedural.generation3d@1/*#viewer"
+      }
+    },
+    {
+      "controlId": "ui.shell.mode.next",
+      "chord": "mod+alt+arrowright",
+      "aria": "Control+Alt+ArrowRight",
+      "event": {
+        "key": "ArrowRight",
+        "ctrlKey": true,
+        "altKey": true,
+        "metaKey": false,
+        "shiftKey": false
+      },
+      "dispatches": null
+    },
+    {
+      "controlId": "ui.shell.mode.previous",
+      "chord": "mod+alt+arrowleft",
+      "aria": "Control+Alt+ArrowLeft",
+      "event": {
+        "key": "ArrowLeft",
+        "ctrlKey": true,
+        "altKey": true,
+        "metaKey": false,
+        "shiftKey": false
+      },
+      "dispatches": null
+    }
+  ],
+  "keybindingOverride": {
+    "controlId": "playground.navbar.roles.viewer",
+    "keys": "mod+shift+8",
+    "aria": "Control+Shift+8"
+  },
+  "gate": {
+    "note": "🚦️ Two switches that overlap: the gate REFUSES the second rather than queueing it, so one tear-down can never interleave with another.",
+    "first": {
+      "appId": "s.procedural.generation3d@1/*#viewer",
+      "status": "switched"
+    },
+    "second": {
+      "appId": "s.procedural.generation3d@1/*#editor",
+      "status": "busy"
+    },
+    "expectedRetired": [
+      7
+    ],
+    "expectedCreated": 1
+  },
+  "work": [
+    {
+      "id": "both-work-kinds-on-one-instance-count-together",
+      "begin": [
+        [
+          "procedural",
+          1,
+          "typed-operation"
+        ],
+        [
+          "procedural",
+          1,
+          "extension-invocation"
+        ],
+        [
+          "procedural",
+          2,
+          "typed-operation"
+        ]
+      ],
+      "release": [
+        0
+      ],
+      "pending": [
+        [
+          "procedural",
+          1,
+          1
+        ],
+        [
+          "procedural",
+          2,
+          1
+        ]
+      ],
+      "total": 2
+    },
+    {
+      "id": "a-release-that-runs-twice-cannot-drive-the-count-negative",
+      "begin": [
+        [
+          "procedural",
+          1,
+          "typed-operation"
+        ]
+      ],
+      "release": [
+        0,
+        0
+      ],
+      "pending": [
+        [
+          "procedural",
+          1,
+          0
+        ]
+      ],
+      "total": 0
+    },
+    {
+      "id": "instances-of-one-plugin-are-counted-apart",
+      "begin": [
+        [
+          "procedural",
+          1,
+          "typed-operation"
+        ],
+        [
+          "procedural",
+          2,
+          "extension-invocation"
+        ]
+      ],
+      "release": [
+        1
+      ],
+      "pending": [
+        [
+          "procedural",
+          1,
+          1
+        ],
+        [
+          "procedural",
+          2,
+          0
+        ]
+      ],
+      "total": 1
+    }
+  ],
+  "quiesce": [
+    {
+      "id": "settles-when-the-last-round-trip-completes",
+      "pending": [
+        2,
+        2,
+        1,
+        0
+      ],
+      "budgetMs": 1000,
+      "pollMs": 40,
+      "expected": {
+        "settled": true,
+        "pending": 0,
+        "sleeps": 3
+      }
+    },
+    {
+      "id": "already-quiet-never-sleeps",
+      "pending": [
+        0
+      ],
+      "budgetMs": 1000,
+      "pollMs": 40,
+      "expected": {
+        "settled": true,
+        "pending": 0,
+        "sleeps": 0
+      }
+    },
+    {
+      "id": "work-that-never-drains-refuses-within-the-budget",
+      "pending": [
+        1
+      ],
+      "budgetMs": 120,
+      "pollMs": 40,
+      "expected": {
+        "settled": false,
+        "pending": 1,
+        "sleeps": 3
+      }
+    }
+  ],
+  "sealed": {
+    "slots": 3,
+    "seal": [
+      [
+        "procedural",
+        1
+      ],
+      [
+        "procedural",
+        2
+      ],
+      [
+        "procedural",
+        1
+      ],
+      [
+        "procedural",
+        3
+      ],
+      [
+        "procedural",
+        4
+      ]
+    ],
+    "expectedSize": 3,
+    "expectedSealed": [
+      [
+        "procedural",
+        1,
+        false
+      ],
+      [
+        "procedural",
+        2,
+        true
+      ],
+      [
+        "procedural",
+        3,
+        true
+      ],
+      [
+        "procedural",
+        4,
+        true
+      ],
+      [
+        "puzzle",
+        2,
+        false
+      ]
+    ],
+    "drop": {
+      "pluginId": "procedural",
+      "instanceId": 2,
+      "what": "action",
+      "detail": "setActiveExample",
+      "code": "shell.surface-switch.sealed-instance",
+      "text": "[DEBUG] shell.surface-switch.sealed-instance dropped action for procedural#2 (setActiveExample)"
+    },
+    "dropWithoutDetail": {
+      "pluginId": "procedural",
+      "instanceId": 3,
+      "what": "host effects",
+      "text": "[DEBUG] shell.surface-switch.sealed-instance dropped host effects for procedural#3"
+    },
+    "unseal": {
+      "note": "🔄️ The predecessor a failed switch KEEPS must not stay sealed — every later action on the surface the user still sees would be dropped forever.",
+      "target": [
+        "procedural",
+        2
+      ],
+      "sealedAfterUnseal": false,
+      "sizeAfterUnseal": 2
+    }
+  },
+  "busyLabel": [
+    {
+      "locale": "en",
+      "text": "Finishing the current operation…"
+    },
+    {
+      "locale": "de",
+      "text": "Laufender Vorgang wird abgeschlossen…"
+    }
+  ]
+}

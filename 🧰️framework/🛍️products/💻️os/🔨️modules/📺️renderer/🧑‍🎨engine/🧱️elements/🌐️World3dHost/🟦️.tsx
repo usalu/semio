@@ -42,6 +42,7 @@ import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, to
 import {
   CATALOGUE_DRAG_MIME,
   CELEBRATE_STAMP_DURATION_MS,
+  childElementId,
   cn,
   ContextMenuController,
   formatKeybindingShortcut,
@@ -66,6 +67,7 @@ import {
   usePaneSlot,
   useShellScopeOptional,
   useUiDriver,
+  windowChromeClearedTopOffset,
   type Anchor,
   type ContextMenuItem,
   type GumballConfig,
@@ -80,7 +82,7 @@ import {
   type UiLabel,
 } from "@semio-tech/ui-react";
 import { isIconName } from "@semio-tech/assets";
-import { windowElementId, type ComponentSceneHostProps, type ContextMenuItemSpec, type MergeMode, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
+import { windowElementId, world3dComputeStatusV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type MergeMode, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
 import {
   cadVec3ToThree,
   computeWorldProjectionPose,
@@ -117,7 +119,7 @@ import { CAMERA_SYNC_DEBOUNCE_MS } from "../📐️Canvas2dHost/🟦️.tsx";
 import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { base64ToBytes } from "../🖌️Paint2dHost/🟦️.tsx";
-import { contextMenuGroupLabel, createCoalescingActionDispatcher, createInFlightSkippingInterval, isolatedJobDriveIsActive, takeIsolatedJobUiPoll, isRevealCutoffHidden, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
+import { contextMenuGroupLabel, createCoalescingActionDispatcher, declareSurfaceCancelAction, createInFlightSkippingInterval, isolatedJobDriveIsActive, takeIsolatedJobUiPoll, isRevealCutoffHidden, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -1240,19 +1242,78 @@ export type LeftoverWorldSelectionOverlayV1 = {
   readonly gumballAnchorId: string | null;
   readonly activeUtility?: string | null;
   readonly activeToolId?: string | null;
+  readonly brushPreviewJson?: string | null;
 };
 
-let leftoverWorldSelectionOverlay: LeftoverWorldSelectionOverlayV1 | null = null;
+/** 🪟️ The overlay fields ONE pane owns. Everything else in the overlay is the document's, shared by
+ * every pane of it: `ids`/`gumball*` are a document selection (B20) and `activeToolId` is a
+ * mode-level tool. Hover, the armed window utility and its brush preview belong to the window
+ * INSTANCE that resolved them (wave B9), so one pane arming Brush must never read back in another. */
+const LEFTOVER_WORLD_WINDOW_FIELDS = ["hoveredId", "hoveredDomain", "activeUtility", "brushPreviewJson"] as const;
+
+/** 🪟️ Where ONE leftover publication has authority: a single pane, the document's shared fields only,
+ * or every pane at once — the last is what a mode-level tool activation is (it clears every window's
+ * utility, `🏛️ShellHost`'s `clearAllWindowUtilities`). */
+export type LeftoverWorldOverlayScopeV1 = { readonly kind: "window"; readonly windowId: string } | { readonly kind: "document" } | { readonly kind: "allWindows" };
+
+const leftoverWorldOverlayByWindow = new Map<string, LeftoverWorldSelectionOverlayV1>();
+let leftoverWorldDocumentOverlay: LeftoverWorldSelectionOverlayV1 | null = null;
 const leftoverWorldSelectionListeners = new Set<() => void>();
 
-/** 🕹️ Host leftover InteractionView overlay — vite-live until guest scene.selectionJson republishes. */
-export function publishLeftoverWorldSelectionV1(overlay: LeftoverWorldSelectionOverlayV1 | null): void {
-  leftoverWorldSelectionOverlay = overlay;
+/** 🪪️ `document`'s own shared fields with `window`'s per-pane fields laid over them. */
+function leftoverWorldOverlayForWindowFieldsV1(document: LeftoverWorldSelectionOverlayV1, window: LeftoverWorldSelectionOverlayV1): LeftoverWorldSelectionOverlayV1 {
+  const merged: Record<string, unknown> = { ...document };
+  for (const field of LEFTOVER_WORLD_WINDOW_FIELDS) merged[field] = window[field];
+  return merged as unknown as LeftoverWorldSelectionOverlayV1;
+}
+
+/** 🕹️ Host leftover InteractionView overlay — vite-live until guest scene.selectionJson republishes.
+ *
+ * A `window` publication owns only that pane's window fields; the document slot takes the
+ * publication's shared fields and KEEPS its own window fields, so arming Brush in one pane leaves
+ * every other pane exactly as it was (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B39). */
+export function publishLeftoverWorldSelectionV1(overlay: LeftoverWorldSelectionOverlayV1 | null, scope: LeftoverWorldOverlayScopeV1): void {
+  if (scope.kind === "allWindows") leftoverWorldOverlayByWindow.clear();
+  if (scope.kind === "window") {
+    if (overlay) leftoverWorldOverlayByWindow.set(scope.windowId, overlay);
+    else leftoverWorldOverlayByWindow.delete(scope.windowId);
+  }
+  if (!overlay) leftoverWorldDocumentOverlay = null;
+  else if (scope.kind === "allWindows" || !leftoverWorldDocumentOverlay) leftoverWorldDocumentOverlay = overlay;
+  else leftoverWorldDocumentOverlay = leftoverWorldOverlayForWindowFieldsV1(overlay, leftoverWorldDocumentOverlay);
   for (const listener of leftoverWorldSelectionListeners) listener();
 }
 
+/** 🗂️ The document-scoped overlay: the shared selection plus the window fields of the last
+ * document-wide publication. Readers that are about the DOCUMENT (the Outliner/Inspection tree, the
+ * armed mode-level tool) read this; a pane reads {@link leftoverWorldWindowOverlayV1}. */
 export function leftoverWorldSelectionOverlayV1(): LeftoverWorldSelectionOverlayV1 | null {
-  return leftoverWorldSelectionOverlay;
+  return leftoverWorldDocumentOverlay;
+}
+
+/** 🪟️ What ONE pane's record must be overlaid with: the document's shared fields under this pane's
+ * own window fields, falling back to the document-wide ones for a pane that has published none. */
+export function leftoverWorldWindowOverlayV1(windowId: string | null | undefined): LeftoverWorldSelectionOverlayV1 | null {
+  const own = windowId ? leftoverWorldOverlayByWindow.get(windowId) : undefined;
+  if (!own) return leftoverWorldDocumentOverlay;
+  return leftoverWorldOverlayForWindowFieldsV1(leftoverWorldDocumentOverlay ?? own, own);
+}
+
+/** 🖌️ The pane whose own overlay is armed with a brush, for the host's brush-preview refresh lane —
+ * an arm lives in exactly one pane now, so "is anything armed" is a search, not a global read. */
+export function leftoverWorldArmedWindowOverlayV1(): LeftoverWorldSelectionOverlayV1 | null {
+  for (const [windowId, overlay] of leftoverWorldOverlayByWindow) {
+    if (leftoverOverlayArmedBrushUtilityV1(overlay.activeUtility)) return leftoverWorldWindowOverlayV1(windowId);
+  }
+  return leftoverWorldDocumentOverlay;
+}
+
+/** 🖌️ The window instance id whose own overlay is armed with a brush, or `undefined`. */
+export function leftoverWorldArmedWindowIdV1(): string | undefined {
+  for (const [windowId, overlay] of leftoverWorldOverlayByWindow) {
+    if (leftoverOverlayArmedBrushUtilityV1(overlay.activeUtility)) return windowId;
+  }
+  return undefined;
 }
 
 /**
@@ -1354,8 +1415,8 @@ export function mergeWorldInteractionWithLeftoverV1(base: WorldInteractionRecord
   };
 }
 
-function mergeWorldSelectionWithLeftover(base: WorldSelectionRecord, instances: readonly WorldInstanceRecord[] = []): WorldSelectionRecord {
-  return mergeWorldSelectionWithLeftoverV1(base, leftoverWorldSelectionOverlay, instances);
+function mergeWorldSelectionWithLeftover(base: WorldSelectionRecord, windowId: string | null | undefined, instances: readonly WorldInstanceRecord[] = []): WorldSelectionRecord {
+  return mergeWorldSelectionWithLeftoverV1(base, leftoverWorldWindowOverlayV1(windowId), instances);
 }
 
 /** 🔦️ What ONE pane publishes as `data-selection-json` — the state the pane actually PAINTS, after
@@ -1618,6 +1679,23 @@ export function resolveWorldContextMenuTarget(interaction: WorldInteractionRecor
   if (hoveredId?.startsWith("reference:")) return { kind: "reference", id: hoveredId.slice("reference:".length) };
   if (hoveredId) return { kind: "object", id: hoveredId };
   return null;
+}
+
+/** @emoji 🪧️ The `surface` half of one world right-click's {@link PluginContextMenuRequest}: the entity under
+ * the pointer as the single `hits` row, and the painted selection as per-domain `selection` groups. The hit
+ * target rides THIS request — an editor reads it straight off `ContextMenuSurfaceTarget.hits` — so no
+ * separate target-recording dispatch precedes the menu. `contextMenuAt`, the action that used to carry it,
+ * no longer exists in any world-3d app (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM moved the
+ * target onto the request); dispatching it anyway only produced an `undeclaredActionDiagnostic` drop on
+ * every right-click. */
+export function world3dContextMenuSurfaceV1(
+  target: WorldContextMenuTarget | null,
+  selection: Pick<WorldSelectionRecord, "ids" | "componentIds">,
+): { readonly hits: readonly { readonly domain: string; readonly id: string }[]; readonly selection: readonly { readonly domain: string; readonly ids: readonly string[] }[] } {
+  const groups: { readonly domain: string; readonly ids: readonly string[] }[] = [];
+  if ((selection.ids?.length ?? 0) > 0) groups.push({ domain: "object", ids: [...(selection.ids ?? [])] });
+  if ((selection.componentIds?.length ?? 0) > 0) groups.push({ domain: "feature", ids: (selection.componentIds ?? []).map(String) });
+  return { hits: target ? [{ domain: target.kind, id: target.id }] : [], selection: groups };
 }
 
 /** @emoji 🚫️ Instance-mesh picking must be disabled for fill/brush engagements — otherwise a click meant for a vortex marker or a fill/voxel gesture falls through and selects/gumballs the underlying object instead. */
@@ -2943,7 +3021,7 @@ function WorldInstancesLayer({
     [applyGumballLivePreview, onGumballDragEnd],
   );
 
-  const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentMergeArg(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
+  const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentPickMergeMode(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
 
   const paintFromHit = (objectId: string, mesh: WorldMeshData, event: { faceIndex?: number | null; uv?: { x: number; y: number } }) => {
     if (!onPaintAt) return;
@@ -3393,6 +3471,59 @@ function FillDiagnosticOverlay({ diagnostic }: { readonly diagnostic: WorldFillD
   );
 }
 
+/**
+ * @emoji ⏳️ The compute-status pane: what the producer says it is doing, how far it has got, and —
+ * while it says so — a real button that stops it.
+ *
+ * 🛑️ The affordance is a `<button>`, not a clickable div, so it is in the tab order, answers Enter
+ * and Space for free and reads as a control to a screen reader. Its label comes from the shell's own
+ * `ui.common.cancel` bundle (both languages, no default) while the PHASE label comes from the
+ * producer's `{en, de}` pair — the surface never invents either. Interaction-friendliness is a
+ * CLAUDE.md law, and an expensive operation with progress but no stop is only half of it
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+ */
+function WorldComputeStatusPane({
+  status,
+  glassClass,
+  locale,
+  onCancel,
+}: {
+  readonly status: ReturnType<typeof world3dComputeStatusV1>;
+  readonly glassClass: string;
+  readonly locale: string | undefined;
+  readonly onCancel: () => void;
+}) {
+  if (!status.computing && !status.cancellable && status.phase !== "cancelled") return null;
+  const german = (locale ?? "en").toLowerCase().startsWith("de");
+  const phaseText = status.phaseLabel ? (german ? status.phaseLabel.de : status.phaseLabel.en) : null;
+  const percent = status.unitsTotal > 0 ? Math.round(status.ratio * 100) : null;
+  return (
+    <div
+      className={cn("pointer-events-auto flex items-center gap-single rounded px-single py-half text-xs shadow-sm", glassClass)}
+      data-level="pane"
+      data-slot="world-compute-status"
+      data-compute-phase={status.phase}
+      data-compute-cancellable={status.cancellable ? "" : undefined}
+      data-compute-ratio={status.unitsTotal > 0 ? String(status.ratio) : undefined}
+      role="status"
+      aria-busy={status.computing ? "true" : undefined}
+    >
+      {status.computing ? <Spinner size="small" /> : null}
+      <span data-slot="world-compute-phase">{phaseText ?? shellLabel("ui.common.loading")}</span>
+      {percent === null ? null : (
+        <span data-slot="world-compute-progress">
+          {status.unitsDone}/{status.unitsTotal} ({percent}%)
+        </span>
+      )}
+      {status.cancellable ? (
+        <button type="button" data-slot="world-compute-cancel" data-cancel-action={status.cancelAction} className="rounded border px-half py-0 text-xs" onClick={onCancel}>
+          {shellLabel("ui.common.cancel")}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 function EngagementPreviewLayer({ items, color }: { readonly items: readonly WorldEngagementPreviewItem[]; readonly color: string }) {
   if (!items.length) return null;
   return (
@@ -3491,8 +3622,10 @@ export function world3dMarqueePointerCaptureArmed(distancePx: number): boolean {
   return distancePx > MARQUEE_DRAG_THRESHOLD_PX;
 }
 
-/** @emoji 🎯️ Generic add/remove/toggle/replace merge, mirrors `selectionMergeIds` from `@semio-tech/ui-react` for non-string id sets. */
-function mergeIdSet<T>(mode: ReturnType<typeof marqueeModeFromModifiers>, current: readonly T[], incoming: readonly T[]): T[] {
+/** @emoji 🎯️ The five-word `MergeMode` set algebra for non-string id sets — mirrors `selectionMergeIds`
+ * from `@semio-tech/ui-react`, which is string-only. `range` has no ordered topology in a world
+ * viewport, so it replaces (see `🕹️interaction/🧫️fixtures/🎯️merge-modes.json`, `range.unorderedDomains`). */
+function mergeIdSet<T>(mode: MergeMode, current: readonly T[], incoming: readonly T[]): T[] {
   const currentSet = new Set(current);
   const incomingSet = new Set(incoming);
   if (mode === "replace" || mode === "range") return [...incomingSet];
@@ -3511,14 +3644,6 @@ function mergeIdSet<T>(mode: ReturnType<typeof marqueeModeFromModifiers>, curren
   return [...currentSet];
 }
 
-/** @emoji 🖱️ additive→add, subtractive→remove, invertive→toggle, replace/range→replace (whole-instance picks/marquee). */
-function instanceMergeArg(mode: ReturnType<typeof marqueeModeFromModifiers>): string {
-  if (mode === "additive") return "add";
-  if (mode === "subtractive") return "remove";
-  if (mode === "invertive") return "toggle";
-  return "replace";
-}
-
 /** @emoji 🎯️ Resolves a world surface's declared selection mode before falling back to the shared selection toolbar. */
 export function resolveWorldMergeMode(
   configuredMode: MergeMode | undefined,
@@ -3535,11 +3660,16 @@ export function resolveWorldMergeMode(
   return "replace";
 }
 
-/** @emoji 🖱️ Same as {@link instanceMergeArg} but a bare click (no modifiers) defaults to invertive. */
-function componentMergeArg(mode: ReturnType<typeof marqueeModeFromModifiers>): string {
-  if (mode === "additive") return "add";
-  if (mode === "subtractive") return "remove";
-  return "toggle";
+/** @emoji 🖱️ The component (vertex/edge/face) pick's one deviation from the whole-instance pick: a BARE
+ * click toggles instead of replacing, because component picking is an accumulate gesture. Every other
+ * chord resolves exactly as {@link resolveWorldMergeMode} says. The result is a `MergeMode` — the ONE
+ * merge vocabulary of `🕹️interaction/🧬️schema/🔣️.json`, pinned by
+ * `🕹️interaction/🧫️fixtures/🎯️merge-modes.json`. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END deleted the
+ * `instanceMergeArg`/`componentMergeArg` translation into a private `add`/`remove`/`toggle` spelling:
+ * the framework's `parse_merge_mode` rejects those words, so every modifier-click on a domain-bound
+ * world scene faulted with `interactionSelect: unknown merge '…'`. */
+export function componentPickMergeMode(mode: MergeMode): MergeMode {
+  return mode === "replace" ? "invertive" : mode;
 }
 
 function pointInMarqueeRect(sx: number, sy: number, marquee: readonly SelectionMarqueePoint[]): boolean {
@@ -3930,6 +4060,7 @@ function WorldGumballHitStamp({
       { kind: "moveX", x: target[0] + scale * tip, y: target[1], z: target[2] },
       { kind: "moveY", x: target[0], y: target[1] + scale * tip, z: target[2] },
       { kind: "moveZ", x: target[0], y: target[1], z: target[2] + scale * tip },
+      { kind: "origin", x: target[0], y: target[1], z: target[2] },
     ];
     const hits = handles.map((handle) => {
       const projected = new Vector3(handle.x, handle.y, handle.z).project(camera);
@@ -4044,12 +4175,26 @@ export function snapWorldPointToGrid(point: readonly [number, number, number], g
 
 //#region WorldRelocateGesture
 /** @emoji 🚚️ Which object a Relocate-utility press grabs. A press with NOTHING selected grabs the object
- * under the pointer outright (direct manipulation, no select-then-drag ceremony); once a selection
- * exists the selection is the GATE — a press outside it grabs nothing and falls through to the ordinary
- * marquee/pick path, so the user can re-select without the scene jumping under the cursor.
- * `selectedIds` is the leftover/object id list {@link world3dGumballSelectionArgsV1} already resolves. */
+ * under the pointer outright (direct manipulation, no select-then-drag ceremony); a press on a DIFFERENT
+ * object than the selected one grabs nothing and falls through to the ordinary marquee/pick path, so the
+ * user can re-select without the scene jumping under the cursor.
+ * `selectedIds` is the leftover/object id list {@link world3dGumballSelectionArgsV1} already resolves.
+ *
+ * 🎯️ A press on EMPTY GROUND while a selection exists grabs the selection's anchor and treats the press
+ * as the gesture's BASE POINT — the two-point move ("pick a base point, pick a target point") every CAD
+ * tool spells this way, and exactly what {@link world3dRelocateDispatchArgsV1} already computes:
+ * `origin + (to - from)`, a travel DELTA, never "put the object under the cursor". The base point
+ * therefore never had to be on the object, and requiring it there made the utility unusable whenever the
+ * grab point was occluded, off-screen or simply small on screen — measured on the live `:6013` shell
+ * (wasm #53, ticket 26/09/02 wave B34, `📓️2026-09-12-wave-B34-interaction-scope.md` §2): a press at
+ * `local={x:739,y:342}` resolved the ground point `[9.76,42.24,0]` with `ids=["seed-left-001"]` live and
+ * nothing under the pointer, i.e. refused only because the press sat 265 px from the one object's
+ * projected origin.
+ * The cost is deliberate: inside this utility an empty-ground press is a base point rather than a
+ * marquee, and a press without travel commits nothing ({@link GUMBALL_TRANSFORM_EPSILON}), so Escape and
+ * `clearSelection` stay the way to drop a selection. */
 export function world3dRelocateDragTargetV1(pressedId: string | null | undefined, selectedIds: readonly string[]): string | null {
-  if (!pressedId) return null;
+  if (!pressedId) return selectedIds[0] ?? null;
   if (selectedIds.length === 0) return pressedId;
   return selectedIds.includes(pressedId) ? pressedId : null;
 }
@@ -4398,14 +4543,25 @@ function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, came
   return (a * e - b * d) / denominator;
 }
 
+/** @emoji 🪪️ Element id of one world surface's projection pane. A world surface is mounted once per OPEN WINDOW
+ * INSTANCE of its kind (`WindowInstanceIdContext`), and {@link Pane} renders its `id` on the pane root plus two
+ * derived control ids (`…pane.fold`, `…pane.foldControl`), so the bare `framework.worldOrbit.projection` it used
+ * to carry put three DUPLICATE DOM ids in the document per extra pane — invalid HTML, and it makes the pane
+ * unaddressable through `<label for>`, `aria-labelledby` and any automation. The instance segment is the same
+ * camelCase {@link childElementId} convention the window element ids use (`…projection.puzzle3dMainPerspective`). */
+export function world3dProjectionPaneElementId(windowElementSegment: string): string {
+  return childElementId("framework.worldOrbit.projection", windowElementSegment);
+}
+
 /** @emoji 🔀️ Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`), defaulting to bottom-right under the navigation cube — the cube sits above the folded chrome and the unfolded pane grows over it. Falls back to a local overlay when no pane host is mounted yet (or outside one). */
-function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
+export function WorldOrbitProjectionSwitchPane({ spec, onSpecChange, windowElementSegment }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void; readonly windowElementSegment: string }) {
   const [anchor, setAnchor] = useState<Anchor>("bottom-right");
   const [folded, setFolded] = useState(true);
   const projectionLabel = useLabel("ui.host.projection");
+  const paneId = world3dProjectionPaneElementId(windowElementSegment);
   const pane = (
-    <Pane id="framework.worldOrbit.projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon={worldProjectionSpecIconId(spec) as IconName} label={projectionLabel}>
-      <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
+    <Pane id={paneId} anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon={worldProjectionSpecIconId(spec) as IconName} label={projectionLabel}>
+      <WorldProjectionKindSwitch id={paneId} spec={spec} onSpecChange={onSpecChange} />
     </Pane>
   );
   const portaled = usePaneSlot(pane);
@@ -4538,8 +4694,17 @@ export function world3dInstancePickUsesInteractionDomain(record: { readonly inte
   return typeof record?.interactionId === "string" && record.interactionId.length > 0;
 }
 
-export function world3dSelectionActionArgs(domainId: string, granularity: string, ids: readonly string[], merge: string) {
-  const targets = ids.map((id) => ({ granularity, id }));
+/** @emoji 🖱️ A selection is a SET of topology ids, so the target list this builds is one: the same id
+ * can be handed in twice (several rendered instances of one channel, a pick batch the caller did not
+ * run through {@link interactionTargetsForInstances}), and a `Select` must be idempotent per id —
+ * the host never emits a duplicate target. Live defect 2026-09-12 (ticket
+ * 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️selection-dedupe-2026-09-12.md`): the guest republished one
+ * picked id twice, and only a set on BOTH sides makes that unrepresentable. */
+/** 🎯️ `merge` is a `MergeMode` — the ONE vocabulary of `🕹️interaction/🧬️schema/🔣️.json`, put on the
+ * wire verbatim. A host must NOT translate it: the framework's `parse_merge_mode` accepts exactly
+ * those five words and faults on anything else. */
+export function world3dSelectionActionArgs(domainId: string, granularity: string, ids: readonly string[], merge: MergeMode) {
+  const targets = [...new Set(ids)].map((id) => ({ granularity, id }));
   return { domainId, targets: JSON.stringify(targets), merge, method: "pick" };
 }
 
@@ -4693,18 +4858,19 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     leftoverWorldSelectionListeners.add(listener);
     return () => leftoverWorldSelectionListeners.delete(listener);
   }, leftoverWorldSelectionOverlayV1, leftoverWorldSelectionOverlayV1);
-  const selection = useMemo(() => mergeWorldSelectionWithLeftover(parseSelection(scene?.selectionJson ?? "{}"), instances), [leftoverSelectionEpoch, scene?.selectionJson, instances]);
+  const selection = useMemo(() => mergeWorldSelectionWithLeftover(parseSelection(scene?.selectionJson ?? "{}"), windowInstanceId, instances), [leftoverSelectionEpoch, scene?.selectionJson, instances, windowInstanceId]);
   const vortices = useMemo(() => parseJsonArray<WorldVortexRecord>(scene?.vorticesJson), [scene?.vorticesJson]);
   const attractions = useMemo(() => parseJsonArray<WorldAttractionRecord>(scene?.attractionsJson), [scene?.attractionsJson]);
   const targetVolumes = useMemo(() => parseJsonArray<WorldTargetVolumeRecord>(scene?.targetVolumesJson), [scene?.targetVolumesJson]);
-  const interaction = useMemo(() => mergeWorldInteractionWithLeftoverV1(parseInteraction(scene?.interactionJson), leftoverWorldSelectionOverlayV1()), [leftoverSelectionEpoch, scene?.interactionJson]);
+  const interaction = useMemo(() => mergeWorldInteractionWithLeftoverV1(parseInteraction(scene?.interactionJson), leftoverWorldWindowOverlayV1(windowInstanceId)), [leftoverSelectionEpoch, scene?.interactionJson, windowInstanceId]);
   const lod = useMemo(() => parseLod(scene?.lodJson), [scene?.lodJson]);
   const engagementPreview = useMemo(() => parseEngagementPreview(scene?.engagementPreviewJson), [scene?.engagementPreviewJson]);
   const retainedBrushPreviewByVortexRef = useRef<Record<string, string>>({});
   const brushPreviewJson = useMemo(() => {
     const interaction = parseInteraction(scene?.interactionJson);
-    const hover = leftoverHoveredVortexFullIdV1(leftoverWorldSelectionOverlayV1()) ?? interaction.hoveredVortexFullId;
-    const leftoverPreview = leftoverWorldSelectionOverlayV1()?.brushPreviewJson;
+    const paneLeftover = leftoverWorldWindowOverlayV1(windowInstanceId);
+    const hover = leftoverHoveredVortexFullIdV1(paneLeftover) ?? interaction.hoveredVortexFullId;
+    const leftoverPreview = paneLeftover?.brushPreviewJson;
     const published = leftoverPreview || scene?.brushPreviewJson || interaction.brushPreviewJson;
     const decided = retainWorldBrushPreviewJsonV1(published, hover, retainedBrushPreviewByVortexRef.current);
     retainedBrushPreviewByVortexRef.current = decided.retained;
@@ -4712,7 +4878,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       console.log("[DEBUG] puzzle3d.brushPreview.bind", { published: published?.length ?? 0, spine: scene?.brushPreviewJson?.length ?? 0, interaction: interaction.brushPreviewJson?.length ?? 0, hover, decided: decided.json.length, windowInstanceId });
     }
     return decided.json;
-  }, [leftoverSelectionEpoch, scene?.brushPreviewJson, scene?.interactionJson]);
+  }, [leftoverSelectionEpoch, scene?.brushPreviewJson, scene?.interactionJson, windowInstanceId]);
   const brushPreview = useMemo(() => parseWorldBrushPreview(brushPreviewJson || undefined), [brushPreviewJson]);
   const latestFillIdentityRef = useRef<readonly [number, number, number, number, number] | null>(null);
   const suppliedFillDiagnostic = brushPreview?.fillBuildPreview ?? null;
@@ -4737,13 +4903,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const fit = useMemo(() => parseFit(scene?.fitJson), [scene?.fitJson]);
   // 🧵️ Off-main-thread compute status (see `World3dScene.statusJson`) — the meshes above stay the
   // last-known-good (stale) cache while a plugin worker's `flowEvalTick` chain is still resolving.
-  const computing = useMemo(() => {
-    try {
-      return (JSON.parse(scene?.statusJson ?? "{}") as { readonly computing?: boolean; readonly label?: string }).computing === true;
-    } catch {
-      return false;
-    }
-  }, [scene?.statusJson]);
+  const computeStatus = useMemo(() => world3dComputeStatusV1(scene?.statusJson), [scene?.statusJson]);
+  const computing = computeStatus.computing;
+  // 🛑️ While this surface offers a cancel affordance it DECLARES the action id to the shell, so the
+  // shell's one action funnel can retire the requesting instance's in-flight extension requests
+  // before forwarding the gesture — without the shell ever learning a domain verb from code
+  // (`isDeclaredSurfaceCancelAction`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+  const cancelActionId = computeStatus.cancellable ? computeStatus.cancelAction : "";
+  useEffect(() => declareSurfaceCancelAction(cancelActionId), [cancelActionId]);
   const activeUtility = interaction.activeUtility ?? "select";
   const fillMode = activeUtility === "fill";
   const visibleBrushPreview = fillMode ? (fillDiagnostic?.candidateGhost ? brushPreview : null) : brushPreview;
@@ -4814,6 +4981,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const marqueeStartRef = useRef<SelectionMarqueePoint | null>(null);
   const vorticesRef = useRef(vortices);
   vorticesRef.current = vortices;
+  const referencesRef = useRef(references);
+  referencesRef.current = references;
   const wasMarqueeDragRef = useRef(false);
   const [marqueeCommitHold, setMarqueeCommitHold] = useState<{
     readonly mergedComponentIds: readonly number[] | null;
@@ -4856,6 +5025,27 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         args: { surfaceId: node.surfaceId, windowId: windowInstanceId ?? node.surfaceId, ...args },
       });
     },
+    [node.controllerId, node.surfaceId, onAction, windowInstanceId],
+  );
+
+  /** 🏁️ `dispatch`'s awaitable twin for every SELF-GATING lane — the coalescing hover dispatchers and the
+   * two background tick intervals. `dispatch` discards `onAction`'s promise, and `onAction` is what settles
+   * on the guest's `OperationCompleted` frame, so each gate built on "at most one round trip outstanding"
+   * (`createCoalescingActionDispatcher`, `createInFlightSkippingInterval`) cleared itself on the next
+   * microtask and gated NOTHING. Wave B33 measured one 70-move brush hover storm enqueuing 72
+   * `interactionHover` + 85 `suggestionsTick` turns with 11/10 of them settled, after which the next user
+   * action (`addTargetVolume`) waited behind the backlog past its 30 s budget
+   * (`📓️2026-09-12-wave-B33-full-run-vs-fresh-lane.md` §3). Same envelope as `dispatch`, awaitable — the
+   * shape `dispatchBrushMesh` already uses for the mesh page lane. */
+  const dispatchSettled = useCallback(
+    (action: string, args?: Record<string, unknown>) =>
+      Promise.resolve(
+        onAction({
+          controllerId: node.controllerId,
+          action,
+          args: { surfaceId: node.surfaceId, windowId: windowInstanceId ?? node.surfaceId, ...args },
+        }),
+      ),
     [node.controllerId, node.surfaceId, onAction, windowInstanceId],
   );
 
@@ -4937,20 +5127,21 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     [dispatch, interactionDomainId, node.surfaceId, references, selectionMode],
   );
 
-  const handleReferenceHover = useCallback(
-    (id: string | null) => {
-      if (interactionDomainId) {
-        const target = id ? world3dMarkerInteractionTarget("reference", id, references.find((entry) => entry.id === id)) : null;
-        dispatch("interactionHover", world3dHoverActionArgs(interactionDomainId, target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.reference, target?.id));
-        return;
-      }
-      if (!id) {
-        dispatch("referenceHover", {});
-        return;
-      }
-      dispatch("referenceHover", { referenceId: id });
-    },
-    [dispatch, interactionDomainId, references],
+  /** 🏁️ Reference-marker hover is a POINTERMOVE lane like the instance and vortex ones, so it coalesces onto
+   * the latest marker and keeps one round trip outstanding — it used to dispatch one guest turn per move with
+   * no gate at all, the same unbounded shape wave B33 measured on the vortex lane (§3). The record lookup
+   * reads `referencesRef` so a republished scene cannot rebuild the dispatcher and drop its in-flight state. */
+  const handleReferenceHover = useMemo(
+    () =>
+      createCoalescingActionDispatcher<string | null>((id) => {
+        if (interactionDomainId) {
+          const target = id ? world3dMarkerInteractionTarget("reference", id, referencesRef.current.find((entry) => entry.id === id)) : null;
+          return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId, target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.reference, target?.id));
+        }
+        if (!id) return dispatchSettled("referenceHover", {});
+        return dispatchSettled("referenceHover", { referenceId: id });
+      }),
+    [dispatchSettled, interactionDomainId],
   );
 
   const handleTargetVolumeSelect = useCallback(
@@ -5209,10 +5400,23 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   useEffect(() => {
     hoveredVortexFullIdRef.current = world3dRetainLocalVortexHover(hoveredVortexFullIdRef.current, interaction.hoveredVortexFullId);
   }, [interaction.hoveredVortexFullId]);
+  /** 🕰️ Every per-gesture brush-preview tick travels ONE single-flight lane: at most one `suggestionsTick`
+   * outstanding, and however many gestures ask while it is crossing, exactly one follow-up tick. A hover, its
+   * reply and a refused brush place each used to enqueue their own tick straight into the serialized guest
+   * queue, so one 70-move hover storm left 85 of them pending and the next user command (`addTargetVolume`)
+   * waited behind the whole backlog past its 30 s budget (wave B33 §3). The sequence number is what makes
+   * two successive requests distinct values for the coalescer — a constant would dedupe to the FIRST tick and
+   * never ask again. Preview latency is unchanged: the next tick still leaves the moment the guest answers. */
+  const suggestionsTickSeqRef = useRef(0);
+  const sendSuggestionsTick = useMemo(() => createCoalescingActionDispatcher<number>(() => dispatchSettled("suggestionsTick")), [dispatchSettled]);
+  const requestSuggestionsTick = useCallback(() => {
+    suggestionsTickSeqRef.current += 1;
+    sendSuggestionsTick(suggestionsTickSeqRef.current);
+  }, [sendSuggestionsTick]);
   useEffect(() => {
     if (!brushMode || !interaction.hoveredVortexFullId) return;
-    void dispatch("suggestionsTick");
-  }, [brushMode, dispatch, interaction.hoveredVortexFullId]);
+    requestSuggestionsTick();
+  }, [brushMode, interaction.hoveredVortexFullId, requestSuggestionsTick]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Alt" || event.key === "AltGraph") altHeldRef.current = event.type === "keydown";
@@ -5301,9 +5505,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     if (!(menuPending || brushMode)) return;
     return createInFlightSkippingInterval(() => {
       if (interactivePluginActionInFlight()) return undefined;
-      return dispatch("suggestionsTick");
+      return dispatchSettled("suggestionsTick");
     }, 120);
-  }, [brushMode, dispatch, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
+  }, [brushMode, dispatchSettled, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
 
   const leftoverArmedToolId = leftoverWorldSelectionOverlayV1()?.activeToolId;
   const fillBuildShouldTick = worldFillBuildShouldTick(activeUtility, interaction.fillBuild, leftoverArmedToolId);
@@ -5313,15 +5517,15 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     return createInFlightSkippingInterval(() => {
       if (interactivePluginActionInFlight()) return undefined;
       if (!worldFillBuildHostTickAllowed(true, isolatedJobDriveIsActive(), takeIsolatedJobUiPoll())) return undefined;
-      return dispatch("fillBuildTick");
+      return dispatchSettled("fillBuildTick");
     }, 120);
-  }, [activeUtility, dispatch, fillBuildShouldTick, interaction.fillBuild, leftoverArmedToolId]);
+  }, [activeUtility, dispatchSettled, fillBuildShouldTick, interaction.fillBuild, leftoverArmedToolId]);
 
   const selectionArgs = useCallback(() => world3dGumballSelectionArgsV1(selection), [selection]);
 
   const handleInstancePointerDown = useCallback(
     (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => {
-      const merge = instanceMergeArg(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
+      const merge = resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode);
       const record = instances.find((entry) => entry.id === id);
       if (record?.disabled) {
         dispatch("worldPick", { granularity: selectionMode, id: null, merge });
@@ -5343,36 +5547,38 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     [dispatch, instances, interactionDomainId, interactionGranularity, persistentSelectionMode, selection.selectionMergeMode, selectionMode],
   );
 
+  // 🏁️ Both hover dispatchers RETURN their round trip: `createCoalescingActionDispatcher` keeps at most one
+  // outstanding and coalesces the rest onto the latest target, and it can only do that for a `dispatch`
+  // whose promise it can see — `dispatch` discards `onAction`'s, so the awaitable twin is the only shape
+  // that arms the gate (wave B33 §3: 72 hover turns enqueued by one 70-move storm, 11 settled).
   const dispatchInstanceHover = useMemo(
     () =>
       createCoalescingActionDispatcher<string | null>((id) => {
         if (interactionDomainId) {
-          if (id == null && leftoverBrushRetainGuestHoverV1(activeUtility, leftoverWorldSelectionOverlayV1())) return;
+          if (id == null && leftoverBrushRetainGuestHoverV1(activeUtility, leftoverWorldWindowOverlayV1(windowInstanceId))) return undefined;
           const target = id == null ? null : (instancesRef.current.find((entry) => entry.id === id)?.interactionId ?? id);
-          dispatch("interactionHover", world3dHoverActionArgs(interactionDomainId, interactionGranularity, target));
-          return;
+          return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId, interactionGranularity, target));
         }
-        if (id == null) dispatch("setHover", {});
-        else dispatch("setHover", { objectId: id, mode: "mesh", id: 0 });
+        if (id == null) return dispatchSettled("setHover", {});
+        return dispatchSettled("setHover", { objectId: id, mode: "mesh", id: 0 });
       }),
-    [activeUtility, dispatch, interactionDomainId, interactionGranularity],
+    [activeUtility, dispatchSettled, interactionDomainId, interactionGranularity, windowInstanceId],
   );
 
   const dispatchVortexHover = useMemo(
     () =>
       createCoalescingActionDispatcher<string | null>((fullId) => {
         if (interactionDomainId) {
-          if (!fullId && leftoverBrushRetainGuestHoverV1(activeUtility, leftoverWorldSelectionOverlayV1())) return;
+          if (!fullId && leftoverBrushRetainGuestHoverV1(activeUtility, leftoverWorldWindowOverlayV1(windowInstanceId))) return undefined;
           const target = fullId ? world3dMarkerInteractionTarget("vortex", fullId, vorticesRef.current.find((entry) => entry.fullId === fullId)) : null;
           const args = world3dHoverActionArgs(interactionDomainId, target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex, target?.id);
           console.warn(`[DEBUG] interactionHover dispatch domain=${interactionDomainId} gran=${target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex} id=${target?.id ?? "null"}`);
-          dispatch("interactionHover", args);
-          return;
+          return dispatchSettled("interactionHover", args);
         }
-        if (!fullId) dispatch("worldVortexHover", {});
-        else dispatch("worldVortexHover", { fullId });
+        if (!fullId) return dispatchSettled("worldVortexHover", {});
+        return dispatchSettled("worldVortexHover", { fullId });
       }),
-    [activeUtility, dispatch, interactionDomainId],
+    [activeUtility, dispatchSettled, interactionDomainId, windowInstanceId],
   );
 
   const handleInstancePointerMove = useCallback(
@@ -5399,15 +5605,15 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       console.warn(`[DEBUG] vortex-hover hop fullId=${fullId ?? "null"} keep=${hoveredVortexFullIdRef.current ?? "null"} brush=${brushMode}`);
       if (fullId) {
         dispatchVortexHover(fullId);
-        if (brushMode) void dispatch("suggestionsTick");
+        if (brushMode) requestSuggestionsTick();
       }
     },
-    [brushMode, dispatch, dispatchVortexHover],
+    [brushMode, dispatchVortexHover, requestSuggestionsTick],
   );
 
   const handleVortexSelect = useCallback(
     (fullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
-      const merge = instanceMergeArg(resolveWorldMergeMode(selection.selectionMergeMode, event ?? {}, persistentSelectionMode));
+      const merge = resolveWorldMergeMode(selection.selectionMergeMode, event ?? {}, persistentSelectionMode);
       if (interactionDomainId) {
         const target = world3dMarkerInteractionTarget("vortex", fullId, vortices.find((entry) => entry.fullId === fullId));
         dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, target.granularity, [target.id], merge));
@@ -5527,12 +5733,12 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       pendingBrushPlaceRef.current = true;
       const keep = hoveredVortexFullIdRef.current;
       if (keep) dispatchVortexHover(keep);
-      if (brushMode) void dispatch("suggestionsTick");
+      if (brushMode) requestSuggestionsTick();
       return;
     }
     pendingBrushPlaceRef.current = false;
     dispatch("addBrushObject", args);
-  }, [brushMode, brushPreview, dispatch, dispatchVortexHover, interaction.activeUtility]);
+  }, [brushMode, brushPreview, dispatch, dispatchVortexHover, interaction.activeUtility, requestSuggestionsTick]);
   useEffect(() => {
     if (!pendingBrushPlaceRef.current) return;
     const args = brushObjectPlacementArgs(brushPreview);
@@ -5696,17 +5902,21 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
       const payload = gumballTransformDeltaBetweenPoses(selection.transformMode, before, after, selectionArgs(), kind);
       if (!payload) {
-        const dx = after.position[0] - before.position[0];
-        const dy = after.position[1] - before.position[1];
-        const dz = after.position[2] - before.position[2];
-        const axis = kind === "moveX" || kind === "moveY" || kind === "moveZ" ? kind : null;
-        console.info("[DEBUG] gumball pose delta skipped", { transformMode: selection.transformMode, kind, dx, dy, dz, before: [...before.position], after: [...after.position], args: selectionArgs() });
-        if (axis) {
-          const step = 0.5;
-          const synthesized = { ...selectionArgs(), dx: axis === "moveX" ? step : 0, dy: axis === "moveY" ? step : 0, dz: axis === "moveZ" ? step : 0 };
-          console.info("[DEBUG] gumball pose delta synthesized", { action: "translateSelection", kind: axis, ids: synthesized.ids, dx: synthesized.dx, dy: synthesized.dy, dz: synthesized.dz });
-          return Promise.resolve(dispatch("translateSelection", synthesized));
-        }
+        // 🧯️ A drag whose pose did not move commits NOTHING. It used to synthesize a fixed 0.5 translate
+        // along the handle's axis instead — a document edit the user never made, minted precisely when the
+        // gesture failed to say anything (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B31). The record below
+        // is what a zero-delta drag owes: the numbers that produced it, so the cause is read off the
+        // gesture rather than covered by a fabricated move.
+        console.info("[DEBUG] gumball pose delta skipped", {
+          transformMode: selection.transformMode,
+          kind,
+          dx: after.position[0] - before.position[0],
+          dy: after.position[1] - before.position[1],
+          dz: after.position[2] - before.position[2],
+          before: [...before.position],
+          after: [...after.position],
+          args: selectionArgs(),
+        });
         return Promise.resolve();
       }
       console.info("[DEBUG] gumball pose delta", { action: payload.action, ids: payload.args.ids, mode: payload.args.mode });
@@ -5761,7 +5971,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
    * {@link world3dRelocateDragTargetV1}), pins the ground point the drag starts from and paints the shared
    * world ghost at the object's own origin. Answers whether it took the press, so the marquee never opens
    * underneath an in-progress relocate. A LOCKED object is grabbed on purpose — the guest answers the
-   * commit with its `selection_locked` notice, which is a visible refusal instead of a dead gesture. */
+   * commit with its `selection_locked` notice, which is a visible refusal instead of a dead gesture.
+   * A press on empty ground with a live selection is the gesture's BASE POINT, not a miss — see
+   * {@link world3dRelocateDragTargetV1} for why the base point never had to be on the object. */
   const beginRelocateDrag = useCallback(
     (event: React.PointerEvent<HTMLDivElement>): boolean => {
       const host = hostRef.current;
@@ -6016,7 +6228,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (interaction.suggestionMenu?.open) {
         handleSuggestionClose();
       }
-      const merge = instanceMergeArg(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
+      const merge = resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode);
       if (interactionDomainId) {
         dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, interactionGranularity, [], merge));
         return;
@@ -6212,24 +6424,18 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         event.preventDefault();
         event.stopPropagation();
         void (async () => {
-          if (target) dispatch("contextMenuAt", { kind: target.kind, id: target.id });
-          const selectionGroups = [];
-          if ((selection.ids?.length ?? 0) > 0) selectionGroups.push({ domain: "object", ids: [...(selection.ids ?? [])] });
-          if ((selection.componentIds?.length ?? 0) > 0) selectionGroups.push({ domain: "feature", ids: (selection.componentIds ?? []).map(String) });
-          const hits = target ? [{ domain: target.kind, id: target.id }] : [];
-          console.warn(`[DEBUG] world3d-contextmenu request surface=${node.surfaceId} window=${windowInstanceId ?? "null"} hits=${JSON.stringify(hits)} groups=${JSON.stringify(selectionGroups)}`);
+          const surface = world3dContextMenuSurfaceV1(target, selection);
           const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
               menu: { id: "world3d", args: null },
-              surface: { surfaceId: node.surfaceId, kind: "world3d", hits, selection: selectionGroups },
+              surface: { surfaceId: node.surfaceId, kind: "world3d", hits: [...surface.hits], selection: surface.selection.map((group) => ({ domain: group.domain, ids: [...group.ids] })) },
               windowInstanceId: windowInstanceId ?? undefined,
               point: { x: event.clientX, y: event.clientY },
             },
             mapWorldContextMenuSpecs,
             shellContextMenuFallback,
           );
-          console.warn(`[DEBUG] world3d-contextmenu reply items=${menu.items?.length ?? -1} surface=${node.surfaceId} window=${windowInstanceId ?? "null"} hits=${JSON.stringify(hits)} groups=${JSON.stringify(selectionGroups)} ownsSuggestion=${suggestionMenuOwnsThisWindow}`);
           setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
         })();
       }}
@@ -6253,24 +6459,28 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         overlay={
           <>
             {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
-            <WorldOrbitProjectionSwitchPane spec={worldProjectionSpec} onSpecChange={handleProjectionKindChange} />
-            <div className="pointer-events-auto absolute left-3 top-3 z-40" data-slot="world-frame-instances">
+            <WorldOrbitProjectionSwitchPane spec={worldProjectionSpec} onSpecChange={handleProjectionKindChange} windowElementSegment={windowInstanceId ?? node.surfaceId} />
+            {/* 🚧️ Scene overlays are window CONTENT, so they start below the window's own floating chrome
+                control row ({@link windowChromeClearedTopOffset}) and stay out of the top-left corner the
+                folded engagement's quick-action rail owns — a control painted into that band covers the
+                pane toggles and, at `z-40`, swallows their pointer events outright. */}
+            <div
+              data-slot="world-view-overlay-rail"
+              className="pointer-events-none absolute z-40 flex flex-col items-end gap-single"
+              style={{ top: windowChromeClearedTopOffset, right: "var(--spacing-single)" }}
+            >
               <button
                 id={`world3d-frame-instances-${windowInstanceId ?? node.surfaceId}`}
                 type="button"
-                className={cn("pointer-events-auto rounded px-2 py-1 text-xs shadow-sm", glassClass)}
+                data-slot="world-frame-instances"
+                className={cn("pointer-events-auto rounded px-single py-half text-xs shadow-sm", glassClass)}
                 data-level="pane"
                 onClick={handleFrameVisibleInstances}
               >
-                Frame
+                {shellLabel("ui.host.frameVisible")}
               </button>
+              <WorldComputeStatusPane status={computeStatus} glassClass={glassClass} locale={shellScope?.i18n.language} onCancel={() => dispatch(computeStatus.cancelAction)} />
             </div>
-            {computing ? (
-              <div className={cn("pointer-events-none absolute right-3 top-3 flex items-center gap-2 rounded px-2 py-1 text-xs shadow-sm", glassClass)} data-level="pane" role="status" aria-busy="true">
-                <Spinner size="small" />
-                <span>{shellLabel("ui.common.loading")}</span>
-              </div>
-            ) : null}
             {fillDiagnostic ? <FillDiagnosticOverlay diagnostic={fillDiagnostic} /> : null}
           </>
         }

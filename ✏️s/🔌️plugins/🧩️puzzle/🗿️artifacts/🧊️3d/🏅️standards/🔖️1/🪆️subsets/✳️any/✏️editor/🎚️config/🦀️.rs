@@ -55,6 +55,17 @@ fn default_selection_method() -> String {
 fn default_window_ids() -> Vec<String> {
     vec![crate::editor::puzzle3d::modes::edit::windows::main::WINDOW_KIND_ID.to_string()]
 }
+
+/// 🏷️ The example a freshly created document was seeded from. `ArtifactApp::initial_snapshot` builds
+/// that document out of [`crate::editor::puzzle3d::default_fixture`] — the Concrete Forest example —
+/// so the config lane has to say so from the FIRST render. Defaulting it to `""` made a boot document
+/// claim it came from no example at all, which is `export_fixture`'s only input for the download name
+/// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B30): Concrete Forest exported as the generic
+/// `puzzle-3d.json` until the user switched examples at least once. `set_active_example("")` still
+/// writes the empty id explicitly, so a deliberately blanked document keeps the generic name.
+fn default_active_example_id() -> String {
+    crate::editor::puzzle3d::PUZZLE3D_EXAMPLE_CONCRETE_FOREST.into()
+}
 //#endregion 🔖️Defaults
 
 //#region 🔖️Camera
@@ -198,7 +209,7 @@ pub struct Puzzle3dRuntime {
     #[value(default)]
     pub panel_pages: HashMap<String, u32>,
     /// 🏷️ Projected from [`Puzzle3dConfig::active_example_id`] — see its doc.
-    #[value(default)]
+    #[value(default = "default_active_example_id")]
     pub active_example_id: String,
 }
 
@@ -234,7 +245,7 @@ impl Default for Puzzle3dRuntime {
             active_tool_id: None,
             window_ids: default_window_ids(),
             panel_pages: HashMap::new(),
-            active_example_id: String::new(),
+            active_example_id: default_active_example_id(),
         }
     }
 }
@@ -255,14 +266,16 @@ pub struct Puzzle3dConfig {
     /// preference, and the only thing `export_fixture` can name its download after: a
     /// `Puzzle3dFixture` carries `schema`/`domain` only (both examples author the same pair), and
     /// `set_active_example` replaces the fixture wholesale, so nothing downstream of it remembers
-    /// which example the user is looking at unless this field does.
-    #[value(default)]
+    /// which example the user is looking at unless this field does. Defaults to
+    /// [`default_active_example_id`] — the example `initial_snapshot` actually seeds the document
+    /// from — never to the blank id.
+    #[value(default = "default_active_example_id")]
     pub active_example_id: String,
 }
 
 impl Default for Puzzle3dConfig {
     fn default() -> Self {
-        Self { fill_count: 0, overlap_budget: default_overlap_budget(), object_kind_weights: HashMap::new(), vortex_kind_weights: HashMap::new(), active_example_id: String::new() }
+        Self { fill_count: 0, overlap_budget: default_overlap_budget(), object_kind_weights: HashMap::new(), vortex_kind_weights: HashMap::new(), active_example_id: default_active_example_id() }
     }
 }
 

@@ -1,18 +1,37 @@
 {
   "version": 1,
   "nowMs": 10000000,
-  "guardAgeMs": 1000,
+  "guardAgeMs": 2000,
   "areas": [
     {
       "name": "cargo",
-      "budgetBytes": 150,
+      "budgetBytes": 50,
       "unusedAgeMs": 5000,
       "units": [
         { "path": "build/pkg/aaa", "bytes": 100, "recencyMs": 9994000, "lockHeld": false, "kind": "cargo-build" },
-        { "path": "incremental/crate-bbb", "bytes": 90, "recencyMs": 9994000, "lockHeld": true, "kind": "cargo-incremental" },
         { "path": "target/deps/lib.rlib", "bytes": 120, "recencyMs": 9995000, "lockHeld": false, "kind": "cargo-target-file" },
-        { "path": "build/pkg/ddd", "bytes": 70, "recencyMs": 9997000, "lockHeld": false, "kind": "cargo-build" },
-        { "path": "incremental/crate-eee", "bytes": 60, "recencyMs": 9999500, "lockHeld": false, "kind": "cargo-incremental" }
+        { "path": "build/pkg/ddd", "bytes": 70, "recencyMs": 9997000, "lockHeld": false, "kind": "cargo-build" }
+      ]
+    },
+    {
+      "name": "cargo-incremental",
+      "budgetBytes": 1000,
+      "unusedAgeMs": 5000,
+      "guardAgeMs": 500,
+      "units": [
+        { "path": "incremental/crate-locked", "bytes": 1000, "recencyMs": 9000000, "lockHeld": true, "kind": "cargo-incremental" },
+        { "path": "incremental/crate-old", "bytes": 50, "recencyMs": 9990000, "lockHeld": false, "kind": "cargo-incremental" },
+        { "path": "incremental/crate-guardtest", "bytes": 80, "recencyMs": 9998000, "lockHeld": false, "kind": "cargo-incremental" },
+        { "path": "incremental/crate-fresh", "bytes": 20, "recencyMs": 9999900, "lockHeld": false, "kind": "cargo-incremental" }
+      ]
+    },
+    {
+      "name": "cargo-incremental-sessions",
+      "budgetBytes": null,
+      "unusedAgeMs": 0,
+      "units": [
+        { "path": "incremental/crate-old/s-aaa-111-stale", "bytes": 40, "recencyMs": 9990000, "lockHeld": false, "kind": "cargo-incremental-session" },
+        { "path": "incremental/crate-fresh/s-bbb-222-stale", "bytes": 15, "recencyMs": 9999999, "lockHeld": false, "kind": "cargo-incremental-session" }
       ]
     },
     {
@@ -35,7 +54,9 @@
     }
   ],
   "expected": {
-    "cargo": { "totalBytes": 440, "unitCount": 5, "ageDeletions": ["build/pkg/aaa", "target/deps/lib.rlib"], "budgetDeletions": ["build/pkg/ddd"], "retainedBytes": 150, "guardedOverBudgetBytes": 90 },
+    "cargo": { "totalBytes": 290, "unitCount": 3, "ageDeletions": ["build/pkg/aaa", "target/deps/lib.rlib"], "budgetDeletions": ["build/pkg/ddd"], "retainedBytes": 0, "guardedOverBudgetBytes": 0 },
+    "cargo-incremental": { "totalBytes": 1150, "unitCount": 4, "ageDeletions": ["incremental/crate-old"], "budgetDeletions": ["incremental/crate-guardtest"], "retainedBytes": 1020, "guardedOverBudgetBytes": 1020 },
+    "cargo-incremental-sessions": { "totalBytes": 55, "unitCount": 2, "ageDeletions": ["incremental/crate-old/s-aaa-111-stale", "incremental/crate-fresh/s-bbb-222-stale"], "budgetDeletions": [], "retainedBytes": 0, "guardedOverBudgetBytes": 0 },
     "vite": { "totalBytes": 90, "unitCount": 2, "ageDeletions": ["consumer-a"], "budgetDeletions": [], "retainedBytes": 40, "guardedOverBudgetBytes": 0 },
     "agents": { "totalBytes": 50, "unitCount": 2, "ageDeletions": ["stray-session-1"], "budgetDeletions": [], "retainedBytes": 20, "guardedOverBudgetBytes": 0 }
   }

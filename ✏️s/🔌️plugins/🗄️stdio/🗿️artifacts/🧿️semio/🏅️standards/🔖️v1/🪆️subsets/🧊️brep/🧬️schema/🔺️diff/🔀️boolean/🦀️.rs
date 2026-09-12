@@ -43,6 +43,8 @@ use crate::standards::v1::subsets::brep::schema::inferences::bounding_volume::fa
 use crate::standards::v1::subsets::brep::schema::inferences::classification::{point_in_face_uv, point_in_face_uv_closure};
 use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::{closest_point_on_solid, shell_signed_volume, solid_bounding_box, solid_volume, AxisAlignedBox};
 use crate::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
+use crate::standards::v1::subsets::brep::schema::inferences::validation_report::BodyValidationJob;
+#[cfg(test)]
 use crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::closest_parameter;
@@ -72,24 +74,10 @@ pub enum BooleanOp {
 /// operation's [`crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpDelta`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn boolean_solid(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_tol(tol)?;
-    require_solid(body, a)?;
-    require_solid(body, b)?;
-    if a == b {
-        return Err(KernelError::InvalidInput("boolean operands must be distinct solids".into()));
+    match boolean_job(body, a, b, op, tol, rec)? {
+        BooleanAdmission::Answered(id) => Ok(id),
+        BooleanAdmission::Job(job) => job.run_to_completion(body, rec),
     }
-
-    let bb_a = solid_bounding_box(body, a)?;
-    let bb_b = solid_bounding_box(body, b)?;
-    if aabb_finite(&bb_a) && aabb_finite(&bb_b) {
-        if let Some(id) = trivial_topology_fast_path(body, a, b, (&bb_a, &bb_b), op, tol, rec)? {
-            return Ok(id);
-        }
-        if let Some(id) = box_fast_path(body, a, b, (&bb_a, &bb_b), op, tol, rec)? {
-            return Ok(id);
-        }
-    }
-    exact_imprint_boolean(body, a, b, op, tol, rec)
 }
 
 /// 🔀 Successively cuts `tools` from `target` (folded [`BooleanOp::Cut`]).
@@ -396,191 +384,538 @@ enum ImprintKind {
     Open,
 }
 
-/// 🔀 The general exact pipeline: imprint every overlapping face pair, classify every resulting
-/// piece against the other solid, select per `op`, stitch the survivors into shell(s)/solid(s).
+/// 🔀 One (face-of-A, face-of-B) imprint unit: intersect the two supports, clip every resulting
+/// curve to both trims, and queue the imprint each side owes. The atomic unit of
+/// [`BooleanPhase::Imprint`] — extracted verbatim out of the former `exact_imprint_boolean`'s inner
+/// loop so the budgeted walk and the unbudgeted one run the SAME code (ticket
+/// `26/09/09/PROCEDURAL-3D-END-TO-END`). A pair with nothing to imprint returns `Ok(())`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn exact_imprint_boolean(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let pre_existing_solids: HashSet<SolidId> = body.solids.iter().map(|(id, _)| id).collect();
-    let faces_a_all = body.solid_faces(a);
-    let faces_b_all = body.solid_faces(b);
-
-    let coincident = find_coincident_face_pairs(body, &faces_a_all, &faces_b_all, tol);
-    let coincident_b: HashSet<FaceId> = coincident.iter().map(|&(_, fb)| fb).collect();
-    let coincident_a: HashSet<FaceId> = coincident.iter().map(|&(fa, _)| fa).collect();
-    let faces_b: Vec<FaceId> = faces_b_all.iter().copied().filter(|f| !coincident_b.contains(f)).collect();
-    let faces_a: Vec<FaceId> = faces_a_all;
-
-    let mut pending_a: HashMap<FaceId, Vec<Pending>> = HashMap::new();
-    let mut pending_b: HashMap<FaceId, Vec<Pending>> = HashMap::new();
-    // 🔗 Imprint endpoints are welded against each other AND against both operands' existing
-    // boundary vertices: an intersection segment that ends exactly on a pole (a plane through a
-    // sphere's centre ends its arc there) must reuse that pole's vertex, otherwise the chain's end
-    // is a fresh id that `splice_boundary_vertex` cannot find on the ring.
-    let mut weld: Vec<(Pnt3, VertexId)> = Vec::new();
-    for &face in faces_a.iter().chain(faces_b_all.iter()) {
-        for coedge_id in body.face_coedges(face) {
-            let Some((vertex_id, _)) = body.coedge_endpoints(coedge_id) else { continue };
-            let Some(vertex) = body.vertices.get(vertex_id) else { continue };
-            if !weld.iter().any(|&(_, existing)| existing == vertex_id) {
-                weld.push((vertex.position, vertex_id));
-            }
-        }
+#[allow(clippy::too_many_arguments)]
+fn imprint_face_pair(
+    body: &mut Body,
+    (fa, fb): (FaceId, FaceId),
+    (sa, bb_a): (&Surface, &crate::standards::v1::subsets::brep::schema::engine::Aabb),
+    tol: f64,
+    weld: &mut Vec<(Pnt3, VertexId)>,
+    (pending_a, pending_b): (&mut HashMap<FaceId, Vec<Pending>>, &mut HashMap<FaceId, Vec<Pending>>),
+    rec: &mut OpRecorder,
+) -> Result<(), KernelError> {
+    let Ok(bb_b) = face_aabb(body, fb) else { return Ok(()) };
+    if !aabb_overlap(bb_a, &bb_b, tol) {
+        return Ok(());
     }
-
-    for &fa in &faces_a {
-        if coincident_a.contains(&fa) {
+    let Some(face_b) = body.faces.get(fb).cloned() else { return Ok(()) };
+    let Some(sb) = body.surfaces.get(face_b.surface).cloned() else { return Ok(()) };
+    let Ok(curves) = intersect_surface_surface(sa, &sb, tol) else { return Ok(()) };
+    for ic in &curves {
+        // A near-tangent pair (e.g. two spheres offset by barely more than the sum of
+        // their radii) can still produce a genuine but near-zero-radius contact circle
+        // from `intersect_surface_surface`'s own tolerant overlap test — a real curve
+        // object, not a numerical error, but one whose enclosed area/length is below the
+        // tolerance at which its precise topology (which side of the seam it grazes, its
+        // own trim gap) is even meaningful. Physically this is single-point external
+        // tangency: zero intersection area, nothing to imprint. Skipping it here (rather
+        // than imprinting a degenerate sliver) is what keeps the tangent-sphere union's
+        // volume the exact, un-carved sum of both spheres.
+        let bracket = intcurve_finite_bracket(body, ic, fa, fb);
+        if curve3_extent(&ic.curve3, bracket) <= tol {
             continue;
         }
-        let Some(face_a) = body.faces.get(fa).cloned() else { continue };
-        let Some(sa) = body.surfaces.get(face_a.surface).cloned() else { continue };
-        let Ok(bb_a) = face_aabb(body, fa) else { continue };
-        for &fb in &faces_b {
-            let Ok(bb_b) = face_aabb(body, fb) else { continue };
-            if !aabb_overlap(&bb_a, &bb_b, tol) {
+        for (t0, t1, full_period, touches) in clip_intcurve_to_faces(body, ic, fa, fb, tol) {
+            if (t1 - t0).abs() < 1e-9 {
                 continue;
             }
-            let Some(face_b) = body.faces.get(fb).cloned() else { continue };
-            let Some(sb) = body.surfaces.get(face_b.surface).cloned() else { continue };
-            let Ok(curves) = intersect_surface_surface(&sa, &sb, tol) else { continue };
-            for ic in &curves {
-                // A near-tangent pair (e.g. two spheres offset by barely more than the sum of
-                // their radii) can still produce a genuine but near-zero-radius contact circle
-                // from `intersect_surface_surface`'s own tolerant overlap test — a real curve
-                // object, not a numerical error, but one whose enclosed area/length is below the
-                // tolerance at which its precise topology (which side of the seam it grazes, its
-                // own trim gap) is even meaningful. Physically this is single-point external
-                // tangency: zero intersection area, nothing to imprint. Skipping it here (rather
-                // than imprinting a degenerate sliver) is what keeps the tangent-sphere union's
-                // volume the exact, un-carved sum of both spheres.
-                let bracket = intcurve_finite_bracket(body, ic, fa, fb);
-                if curve3_extent(&ic.curve3, bracket) <= tol {
-                    continue;
+            let p0 = ic.curve3.eval(t0);
+            let p1 = ic.curve3.eval(t1);
+            if !full_period && p0.distance(p1) <= tol.max(1e-9) {
+                continue; // degenerate near-zero chord — nothing useful to imprint
+            }
+            let (kind_a, kind_b, t0, t1) = if full_period {
+                let outer_a = body.faces.get(fa).and_then(|f| f.outer);
+                let outer_b = body.faces.get(fb).and_then(|f| f.outer);
+                // `touches` (from `clip_intcurve_to_faces`) are the ACTUAL parameters where
+                // the curve grazes a boundary, wherever those really are — empty means
+                // neither support's trim showed a gap, so it's genuinely interior on both.
+                let touch_pts: Vec<Pnt3> = touches.iter().map(|&t| ic.curve3.eval(t)).collect();
+                let ka = if outer_a.is_some_and(|l| touch_pts.iter().any(|&p| point_touches_loop_boundary(body, l, p, tol))) { ImprintKind::SeamCrossing } else { ImprintKind::Interior };
+                let kb = if outer_b.is_some_and(|l| touch_pts.iter().any(|&p| point_touches_loop_boundary(body, l, p, tol))) { ImprintKind::SeamCrossing } else { ImprintKind::Interior };
+                // A `SeamCrossing` split needs its own imprint edge's (v0==v1) vertex
+                // placed exactly AT the physical seam touch — `split_face_by_seam_crossing`
+                // finds the vertex on the loop via `splice_boundary_vertex`'s point-on-edge
+                // test, which only succeeds if the vertex genuinely lies on the seam edge.
+                // The un-anchored `(t0, t1)` range (the clip's own arbitrary domain start,
+                // not the touch point) places the vertex at `curve3.eval(t0)` instead —
+                // almost never on the seam. Re-anchor the SAME closed period to start at
+                // the first detected touch parameter instead (harmless for `Interior`: any
+                // start point on a closed loop is topologically equivalent there).
+                if (matches!(ka, ImprintKind::SeamCrossing) || matches!(kb, ImprintKind::SeamCrossing)) && !touches.is_empty() {
+                    let anchor = touches[0];
+                    (ka, kb, anchor, anchor + (t1 - t0))
+                } else {
+                    (ka, kb, t0, t1)
                 }
-                for (t0, t1, full_period, touches) in clip_intcurve_to_faces(body, ic, fa, fb, tol) {
-                    if (t1 - t0).abs() < 1e-9 {
-                        continue;
-                    }
-                    let p0 = ic.curve3.eval(t0);
-                    let p1 = ic.curve3.eval(t1);
-                    if !full_period && p0.distance(p1) <= tol.max(1e-9) {
-                        continue; // degenerate near-zero chord — nothing useful to imprint
-                    }
-                    let (kind_a, kind_b, t0, t1) = if full_period {
-                        let outer_a = body.faces.get(fa).and_then(|f| f.outer);
-                        let outer_b = body.faces.get(fb).and_then(|f| f.outer);
-                        // `touches` (from `clip_intcurve_to_faces`) are the ACTUAL parameters where
-                        // the curve grazes a boundary, wherever those really are — empty means
-                        // neither support's trim showed a gap, so it's genuinely interior on both.
-                        let touch_pts: Vec<Pnt3> = touches.iter().map(|&t| ic.curve3.eval(t)).collect();
-                        let ka = if outer_a.is_some_and(|l| touch_pts.iter().any(|&p| point_touches_loop_boundary(body, l, p, tol))) { ImprintKind::SeamCrossing } else { ImprintKind::Interior };
-                        let kb = if outer_b.is_some_and(|l| touch_pts.iter().any(|&p| point_touches_loop_boundary(body, l, p, tol))) { ImprintKind::SeamCrossing } else { ImprintKind::Interior };
-                        // A `SeamCrossing` split needs its own imprint edge's (v0==v1) vertex
-                        // placed exactly AT the physical seam touch — `split_face_by_seam_crossing`
-                        // finds the vertex on the loop via `splice_boundary_vertex`'s point-on-edge
-                        // test, which only succeeds if the vertex genuinely lies on the seam edge.
-                        // The un-anchored `(t0, t1)` range (the clip's own arbitrary domain start,
-                        // not the touch point) places the vertex at `curve3.eval(t0)` instead —
-                        // almost never on the seam. Re-anchor the SAME closed period to start at
-                        // the first detected touch parameter instead (harmless for `Interior`: any
-                        // start point on a closed loop is topologically equivalent there).
-                        if (matches!(ka, ImprintKind::SeamCrossing) || matches!(kb, ImprintKind::SeamCrossing)) && !touches.is_empty() {
-                            let anchor = touches[0];
-                            (ka, kb, anchor, anchor + (t1 - t0))
-                        } else {
-                            (ka, kb, t0, t1)
-                        }
-                    } else {
-                        (ImprintKind::Open, ImprintKind::Open, t0, t1)
-                    };
-                    // A segment can run exactly ALONG one operand's pre-existing boundary edge (a
-                    // plane through a sphere's own centre meets it in that sphere's own seam
-                    // meridian). Imprinting a second, geometrically identical edge there would
-                    // leave duplicate topology, so the existing edge is subdivided and REUSED as
-                    // the shared edge, and that operand queues no imprint of its own — the
-                    // boundary it needs is already there.
-                    let along_a = if full_period { None } else { coincident_boundary_edge(body, fa, ic, (t0, t1), tol) };
-                    let along_b = if full_period || along_a.is_some() { None } else { coincident_boundary_edge(body, fb, ic, (t0, t1), tol) };
-                    let endpoints = (ic.curve3.eval(t0), ic.curve3.eval(t1));
-                    let edge_id = match (along_a, along_b) {
-                        (Some(_), _) => boundary_subedge(body, fa, endpoints, (tol, &mut weld), rec)?,
-                        (None, Some(_)) => boundary_subedge(body, fb, endpoints, (tol, &mut weld), rec)?,
-                        (None, None) => build_imprint_edge(body, ic, (t0, t1), full_period, (tol, &mut weld), rec),
-                    };
-                    let prange = oriented_prange(body, edge_id, endpoints, (t0, t1));
-                    let pca = body.curves2.insert(pcurve_for_clip(&sa, &ic.curve3, &ic.pcurve_a, (t0, t1), tol));
-                    let pcb = body.curves2.insert(pcurve_for_clip(&sb, &ic.curve3, &ic.pcurve_b, (t0, t1), tol));
-                    if along_a.is_none() {
-                        pending_a.entry(fa).or_default().push(Pending { edge_id, pcurve_id: pca, prange, kind: kind_a });
-                    }
-                    if along_b.is_none() {
-                        pending_b.entry(fb).or_default().push(Pending { edge_id, pcurve_id: pcb, prange, kind: kind_b });
-                    }
-                }
+            } else {
+                (ImprintKind::Open, ImprintKind::Open, t0, t1)
+            };
+            // A segment can run exactly ALONG one operand's pre-existing boundary edge (a
+            // plane through a sphere's own centre meets it in that sphere's own seam
+            // meridian). Imprinting a second, geometrically identical edge there would
+            // leave duplicate topology, so the existing edge is subdivided and REUSED as
+            // the shared edge, and that operand queues no imprint of its own — the
+            // boundary it needs is already there.
+            let along_a = if full_period { None } else { coincident_boundary_edge(body, fa, ic, (t0, t1), tol) };
+            let along_b = if full_period || along_a.is_some() { None } else { coincident_boundary_edge(body, fb, ic, (t0, t1), tol) };
+            let endpoints = (ic.curve3.eval(t0), ic.curve3.eval(t1));
+            let edge_id = match (along_a, along_b) {
+                (Some(_), _) => boundary_subedge(body, fa, endpoints, (tol, weld), rec)?,
+                (None, Some(_)) => boundary_subedge(body, fb, endpoints, (tol, weld), rec)?,
+                (None, None) => build_imprint_edge(body, ic, (t0, t1), full_period, (tol, weld), rec),
+            };
+            let prange = oriented_prange(body, edge_id, endpoints, (t0, t1));
+            let pca = body.curves2.insert(pcurve_for_clip(sa, &ic.curve3, &ic.pcurve_a, (t0, t1), tol));
+            let pcb = body.curves2.insert(pcurve_for_clip(&sb, &ic.curve3, &ic.pcurve_b, (t0, t1), tol));
+            if along_a.is_none() {
+                pending_a.entry(fa).or_default().push(Pending { edge_id, pcurve_id: pca, prange, kind: kind_a });
+            }
+            if along_b.is_none() {
+                pending_b.entry(fb).or_default().push(Pending { edge_id, pcurve_id: pcb, prange, kind: kind_b });
             }
         }
     }
-
-    let mut pieces_a: Vec<FaceId> = Vec::new();
-    for &fa in &faces_a {
-        if coincident_a.contains(&fa) {
-            pieces_a.push(fa);
-            continue;
-        }
-        match pending_a.remove(&fa) {
-            Some(list) => pieces_a.extend(apply_pending_imprints(body, fa, list, tol, rec)?),
-            None => pieces_a.push(fa),
-        }
-    }
-    let mut pieces_b: Vec<FaceId> = Vec::new();
-    for &fb in &faces_b {
-        match pending_b.remove(&fb) {
-            Some(list) => pieces_b.extend(apply_pending_imprints(body, fb, list, tol, rec)?),
-            None => pieces_b.push(fb),
-        }
-    }
-
-    let mut selected: Vec<FaceId> = Vec::new();
-    for &f in &pieces_a {
-        if coincident_a.contains(&f) {
-            if matches!(op, BooleanOp::Unite | BooleanOp::Intersect) {
-                selected.push(f);
-            }
-            continue;
-        }
-        let class = classify_face_against_solid(body, f, b, tol)?;
-        if keep_face(op, true, class) {
-            selected.push(f);
-        }
-    }
-    for &f in &pieces_b {
-        let class = classify_face_against_solid(body, f, a, tol)?;
-        if keep_face(op, false, class) {
-            if matches!(op, BooleanOp::Cut) {
-                flip_face(body, f);
-            }
-            selected.push(f);
-        }
-    }
-
-    if selected.is_empty() {
-        return Err(KernelError::Boolean(BooleanError::InvalidResult("exact boolean selection kept no faces".into())));
-    }
-
-    let selected_set: HashSet<FaceId> = selected.iter().copied().collect();
-    let result = stitch_selected_faces(body, &selected, tol, rec)?;
-
-    remove_solid_and_orphans(body, a, &selected_set, rec);
-    remove_solid_and_orphans(body, b, &selected_set, rec);
-    gc_orphan_edges_and_vertices(body, rec);
-
-    let issues = issues_scoped_to_new_solids(body, &pre_existing_solids, validate_body(body));
-    if !issues.is_empty() {
-        let listed: Vec<String> = issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect();
-        return Err(KernelError::Boolean(BooleanError::InvalidResult(format!("exact boolean result failed validation: {} issue(s): {}", issues.len(), listed.join(" | ")))));
-    }
-    Ok(result)
+    Ok(())
 }
 
+// #endregion 🔖️Imprint
+
+// #region ⏱️ResumableBoolean
+
+/// ⏱️ What a [`BooleanJob`] is currently doing. Phases run in declaration order; `Complete` and
+/// `Cancelled` are terminal.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum BooleanPhase {
+    /// ✂️ Imprinting one (face-of-A, face-of-B) pair per unit.
+    #[default]
+    Imprint,
+    /// 🧩 Applying A's queued imprints, one face per unit.
+    ApplyA,
+    /// 🧩 Applying B's queued imprints, one face per unit.
+    ApplyB,
+    /// 🎯 Classifying one piece of A against B per unit.
+    ClassifyA,
+    /// 🎯 Classifying one piece of B against A per unit.
+    ClassifyB,
+    /// 🧵 Stitching the selected faces into shells/solids and retiring the operands.
+    Stitch,
+    /// 🩺 Validating the result, one [`BodyValidationJob`] unit per unit.
+    Validate,
+    Complete,
+    Cancelled,
+}
+
+impl BooleanPhase {
+    /// 🏷️ The stable wire tag every host/extension/UI layer names this phase by.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn tag(self) -> &'static str {
+        match self {
+            Self::Imprint => "imprint",
+            Self::ApplyA => "applyA",
+            Self::ApplyB => "applyB",
+            Self::ClassifyA => "classifyA",
+            Self::ClassifyB => "classifyB",
+            Self::Stitch => "stitch",
+            Self::Validate => "validate",
+            Self::Complete => "complete",
+            Self::Cancelled => "cancelled",
+        }
+    }
+}
+
+/// 📈 Progress of one resumable boolean. `units_done` never decreases. `units_total` is the plan
+/// known SO FAR and is revised upward exactly once — when the stitch lands and the result's
+/// validation plan (how many entities there are to check) can finally be read; nothing about the
+/// post-stitch body is knowable before the stitch.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct BooleanProgress {
+    pub units_done: usize,
+    pub units_total: usize,
+    pub faces_done: usize,
+    pub faces_total: usize,
+    pub phase: BooleanPhase,
+}
+
+/// ⏱️ Outcome of one budgeted [`BooleanJob::step`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BooleanStep {
+    /// 🔁 Budget spent, work remains — call `step` again.
+    Working(BooleanProgress),
+    /// ✅ Terminal: the result solid is live in the body.
+    Done(SolidId),
+    /// 🛑 Terminal: [`BooleanJob::cancel`] retired the job; no solid is produced.
+    Cancelled(BooleanProgress),
+}
+
+/// 🔀 What [`boolean_job`] admitted: either a fast path already answered (microseconds, nothing to
+/// resume), or the general engine owes a resumable job.
+pub enum BooleanAdmission {
+    /// ⚡️ A trivial/box fast path answered exactly, in place.
+    Answered(SolidId),
+    /// ⏱️ The general exact engine, as a budgetable job.
+    Job(BooleanJob),
+}
+
+/// ⏱️ The general exact imprint→classify→select→stitch→validate pipeline split into budgetable
+/// units, so a host can run it inside an interactive step ceiling across many turns, report
+/// progress, and cancel it — the boolean twin of
+/// [`crate::standards::v1::subsets::brep::schema::inferences::tessellation::TessellationJob`].
+///
+/// One unit is one face PAIR (imprint), one face (apply/classify) or one
+/// [`BodyValidationJob`] unit (validate). Measured on `🍩️sphere-cut-with-torus` in a native debug
+/// build the whole operation costs 4.5 s, of which the stitch is 1.5 s and the validation 3.0 s —
+/// so the validation's per-face units are the ones that actually make this preemptible, and the
+/// stitch (one unit, group + signed-volume probe + containment) is the coarsest step this design
+/// admits (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
+///
+/// 🚧️ A cancelled or failed job leaves the imprints it already applied in the body — exactly what
+/// a boolean that returns `Err` mid-pipeline has always left. The operand handles stay valid (a
+/// split face covers the same surface region); nothing is rolled back, because the kernel has no
+/// transaction.
+pub struct BooleanJob {
+    a: SolidId,
+    b: SolidId,
+    op: BooleanOp,
+    tol: f64,
+    pre_existing_solids: HashSet<SolidId>,
+    coincident_a: HashSet<FaceId>,
+    faces_a: Vec<FaceId>,
+    faces_b: Vec<FaceId>,
+    /// 🔗 Per-face-of-A support cache: the surface and AABB the whole `fb` row is tested against,
+    /// read once per row instead of once per pair.
+    row: Option<(Surface, crate::standards::v1::subsets::brep::schema::engine::Aabb)>,
+    weld: Vec<(Pnt3, VertexId)>,
+    pending_a: HashMap<FaceId, Vec<Pending>>,
+    pending_b: HashMap<FaceId, Vec<Pending>>,
+    pieces_a: Vec<FaceId>,
+    pieces_b: Vec<FaceId>,
+    selected: Vec<FaceId>,
+    result: Option<SolidId>,
+    validation: Option<BodyValidationJob>,
+    cursor_a: usize,
+    cursor_b: usize,
+    apply_a: usize,
+    apply_b: usize,
+    classify_a: usize,
+    classify_b: usize,
+    units_done: usize,
+    units_total: usize,
+    phase: BooleanPhase,
+}
+
+impl BooleanJob {
+    /// 🔀 Plans the general exact boolean of `a` and `b`. Every plan input (which faces exist,
+    /// which pairs are coincident, the weld table) is read ONCE here, so the walk below is a pure
+    /// cursor advance.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn new(body: &Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64) -> Self {
+        let pre_existing_solids: HashSet<SolidId> = body.solids.iter().map(|(id, _)| id).collect();
+        let faces_a_all = body.solid_faces(a);
+        let faces_b_all = body.solid_faces(b);
+        let coincident = find_coincident_face_pairs(body, &faces_a_all, &faces_b_all, tol);
+        let coincident_b: HashSet<FaceId> = coincident.iter().map(|&(_, fb)| fb).collect();
+        let coincident_a: HashSet<FaceId> = coincident.iter().map(|&(fa, _)| fa).collect();
+        let faces_b: Vec<FaceId> = faces_b_all.iter().copied().filter(|f| !coincident_b.contains(f)).collect();
+        let faces_a: Vec<FaceId> = faces_a_all;
+        // 🔗 Imprint endpoints are welded against each other AND against both operands' existing
+        // boundary vertices: an intersection segment that ends exactly on a pole (a plane through a
+        // sphere's centre ends its arc there) must reuse that pole's vertex, otherwise the chain's
+        // end is a fresh id that `splice_boundary_vertex` cannot find on the ring.
+        let mut weld: Vec<(Pnt3, VertexId)> = Vec::new();
+        for &face in faces_a.iter().chain(faces_b_all.iter()) {
+            for coedge_id in body.face_coedges(face) {
+                let Some((vertex_id, _)) = body.coedge_endpoints(coedge_id) else { continue };
+                let Some(vertex) = body.vertices.get(vertex_id) else { continue };
+                if !weld.iter().any(|&(_, existing)| existing == vertex_id) {
+                    weld.push((vertex.position, vertex_id));
+                }
+            }
+        }
+        let units_total = faces_a.len() * faces_b.len() + 2 * (faces_a.len() + faces_b.len()) + 1;
+        Self {
+            a,
+            b,
+            op,
+            tol,
+            pre_existing_solids,
+            coincident_a,
+            faces_a,
+            faces_b,
+            row: None,
+            weld,
+            pending_a: HashMap::new(),
+            pending_b: HashMap::new(),
+            pieces_a: Vec::new(),
+            pieces_b: Vec::new(),
+            selected: Vec::new(),
+            result: None,
+            validation: None,
+            cursor_a: 0,
+            cursor_b: 0,
+            apply_a: 0,
+            apply_b: 0,
+            classify_a: 0,
+            classify_b: 0,
+            units_done: 0,
+            units_total,
+            phase: BooleanPhase::Imprint,
+        }
+    }
+
+    /// 📈 This job's progress right now — safe to read between steps and after termination.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn progress(&self) -> BooleanProgress {
+        BooleanProgress {
+            units_done: self.units_done,
+            units_total: self.units_total.max(self.units_done),
+            faces_done: self.apply_a + self.apply_b + self.classify_a + self.classify_b,
+            faces_total: 2 * (self.faces_a.len() + self.faces_b.len()),
+            phase: self.phase,
+        }
+    }
+
+    /// 🛑 Retires this job at the next observable boundary. A completed job is never cancelled —
+    /// supersession may only retire work still in flight, never destroy a result already paid for
+    /// (the same law `TessellationJob::cancel` states).
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn cancel(&mut self) {
+        if matches!(self.phase, BooleanPhase::Complete) {
+            return;
+        }
+        self.phase = BooleanPhase::Cancelled;
+        self.pending_a.clear();
+        self.pending_b.clear();
+        self.weld.clear();
+        self.validation = None;
+    }
+
+    /// ✅ True once the job reached a terminal phase.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn is_terminal(&self) -> bool {
+        matches!(self.phase, BooleanPhase::Complete | BooleanPhase::Cancelled)
+    }
+
+    /// ♾️ Runs every remaining unit in one call — the unbudgeted façade [`boolean_solid`] is.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn run_to_completion(mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+        loop {
+            match self.step(body, rec, usize::MAX)? {
+                BooleanStep::Done(id) => return Ok(id),
+                BooleanStep::Cancelled(_) => return Err(KernelError::Boolean(BooleanError::InvalidResult("boolean cancelled".into()))),
+                BooleanStep::Working(_) => continue,
+            }
+        }
+    }
+
+    /// ⏱️ Advances by at most `budget` units. A `budget` of zero is a legal progress probe that
+    /// performs no work.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn step(&mut self, body: &mut Body, rec: &mut OpRecorder, budget: usize) -> Result<BooleanStep, KernelError> {
+        match self.phase {
+            BooleanPhase::Complete => return Ok(BooleanStep::Done(self.result.ok_or_else(|| KernelError::Boolean(BooleanError::InvalidResult("completed boolean carries no solid".into())))?)),
+            BooleanPhase::Cancelled => return Ok(BooleanStep::Cancelled(self.progress())),
+            _ => {}
+        }
+        let mut spent = 0usize;
+        while spent < budget {
+            match self.phase {
+                BooleanPhase::Imprint => {
+                    if self.cursor_a >= self.faces_a.len() {
+                        self.phase = BooleanPhase::ApplyA;
+                        continue;
+                    }
+                    let fa = self.faces_a[self.cursor_a];
+                    if self.coincident_a.contains(&fa) || self.faces_b.is_empty() {
+                        self.cursor_a += 1;
+                        self.cursor_b = 0;
+                        self.row = None;
+                        continue;
+                    }
+                    if self.row.is_none() {
+                        let Some(face_a) = body.faces.get(fa).cloned() else {
+                            self.cursor_a += 1;
+                            self.cursor_b = 0;
+                            continue;
+                        };
+                        let Some(sa) = body.surfaces.get(face_a.surface).cloned() else {
+                            self.cursor_a += 1;
+                            self.cursor_b = 0;
+                            continue;
+                        };
+                        let Ok(bb_a) = face_aabb(body, fa) else {
+                            self.cursor_a += 1;
+                            self.cursor_b = 0;
+                            continue;
+                        };
+                        self.row = Some((sa, bb_a));
+                    }
+                    if self.cursor_b >= self.faces_b.len() {
+                        self.cursor_a += 1;
+                        self.cursor_b = 0;
+                        self.row = None;
+                        continue;
+                    }
+                    let fb = self.faces_b[self.cursor_b];
+                    let (sa, bb_a) = self.row.take().expect("row cached above");
+                    let outcome = imprint_face_pair(body, (fa, fb), (&sa, &bb_a), self.tol, &mut self.weld, (&mut self.pending_a, &mut self.pending_b), rec);
+                    self.row = Some((sa, bb_a));
+                    outcome?;
+                    self.cursor_b += 1;
+                }
+                BooleanPhase::ApplyA => {
+                    if self.apply_a >= self.faces_a.len() {
+                        self.phase = BooleanPhase::ApplyB;
+                        continue;
+                    }
+                    let fa = self.faces_a[self.apply_a];
+                    if self.coincident_a.contains(&fa) {
+                        self.pieces_a.push(fa);
+                    } else {
+                        match self.pending_a.remove(&fa) {
+                            Some(list) => {
+                                let pieces = apply_pending_imprints(body, fa, list, self.tol, rec)?;
+                                self.pieces_a.extend(pieces);
+                            }
+                            None => self.pieces_a.push(fa),
+                        }
+                    }
+                    self.apply_a += 1;
+                }
+                BooleanPhase::ApplyB => {
+                    if self.apply_b >= self.faces_b.len() {
+                        self.phase = BooleanPhase::ClassifyA;
+                        continue;
+                    }
+                    let fb = self.faces_b[self.apply_b];
+                    match self.pending_b.remove(&fb) {
+                        Some(list) => {
+                            let pieces = apply_pending_imprints(body, fb, list, self.tol, rec)?;
+                            self.pieces_b.extend(pieces);
+                        }
+                        None => self.pieces_b.push(fb),
+                    }
+                    self.apply_b += 1;
+                }
+                BooleanPhase::ClassifyA => {
+                    if self.classify_a >= self.pieces_a.len() {
+                        self.phase = BooleanPhase::ClassifyB;
+                        continue;
+                    }
+                    let f = self.pieces_a[self.classify_a];
+                    if self.coincident_a.contains(&f) {
+                        if matches!(self.op, BooleanOp::Unite | BooleanOp::Intersect) {
+                            self.selected.push(f);
+                        }
+                    } else {
+                        let class = classify_face_against_solid(body, f, self.b, self.tol)?;
+                        if keep_face(self.op, true, class) {
+                            self.selected.push(f);
+                        }
+                    }
+                    self.classify_a += 1;
+                }
+                BooleanPhase::ClassifyB => {
+                    if self.classify_b >= self.pieces_b.len() {
+                        self.phase = BooleanPhase::Stitch;
+                        continue;
+                    }
+                    let f = self.pieces_b[self.classify_b];
+                    let class = classify_face_against_solid(body, f, self.a, self.tol)?;
+                    if keep_face(self.op, false, class) {
+                        if matches!(self.op, BooleanOp::Cut) {
+                            flip_face(body, f);
+                        }
+                        self.selected.push(f);
+                    }
+                    self.classify_b += 1;
+                }
+                BooleanPhase::Stitch => {
+                    if self.selected.is_empty() {
+                        return Err(KernelError::Boolean(BooleanError::InvalidResult("exact boolean selection kept no faces".into())));
+                    }
+                    let selected_set: HashSet<FaceId> = self.selected.iter().copied().collect();
+                    let result = stitch_selected_faces(body, &self.selected, self.tol, rec)?;
+                    remove_solid_and_orphans(body, self.a, &selected_set, rec);
+                    remove_solid_and_orphans(body, self.b, &selected_set, rec);
+                    gc_orphan_edges_and_vertices(body, rec);
+                    self.result = Some(result);
+                    let validation = BodyValidationJob::new(body);
+                    self.units_total = self.units_done + 1 + validation.progress().units_total;
+                    self.validation = Some(validation);
+                    self.phase = BooleanPhase::Validate;
+                    self.units_done += 1;
+                    spent += 1;
+                    continue;
+                }
+                BooleanPhase::Validate => {
+                    let Some(validation) = self.validation.as_mut() else {
+                        self.phase = BooleanPhase::Complete;
+                        continue;
+                    };
+                    if validation.is_complete() {
+                        let issues = issues_scoped_to_new_solids(body, &self.pre_existing_solids, self.validation.take().expect("checked above").into_issues());
+                        if !issues.is_empty() {
+                            let listed: Vec<String> = issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect();
+                            return Err(KernelError::Boolean(BooleanError::InvalidResult(format!("exact boolean result failed validation: {} issue(s): {}", issues.len(), listed.join(" | ")))));
+                        }
+                        self.phase = BooleanPhase::Complete;
+                        continue;
+                    }
+                    let before = validation.progress().units_done;
+                    let after = validation.step(body, budget - spent).units_done;
+                    let advanced = after.saturating_sub(before).max(1);
+                    self.units_done += advanced;
+                    spent += advanced;
+                    continue;
+                }
+                BooleanPhase::Complete => return Ok(BooleanStep::Done(self.result.ok_or_else(|| KernelError::Boolean(BooleanError::InvalidResult("completed boolean carries no solid".into())))?)),
+                BooleanPhase::Cancelled => return Ok(BooleanStep::Cancelled(self.progress())),
+            }
+            self.units_done += 1;
+            spent += 1;
+        }
+        match self.phase {
+            BooleanPhase::Complete => Ok(BooleanStep::Done(self.result.ok_or_else(|| KernelError::Boolean(BooleanError::InvalidResult("completed boolean carries no solid".into())))?)),
+            BooleanPhase::Cancelled => Ok(BooleanStep::Cancelled(self.progress())),
+            _ => Ok(BooleanStep::Working(self.progress())),
+        }
+    }
+}
+
+/// 🔀 Admits a boolean: runs the microsecond-cheap trivial/box fast paths in place and, when
+/// neither applies, hands back the general engine as a resumable [`BooleanJob`]. This is the
+/// entry point an interactive host drives; [`boolean_solid`] is the unbudgeted façade over it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn boolean_job(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<BooleanAdmission, KernelError> {
+    require_tol(tol)?;
+    require_solid(body, a)?;
+    require_solid(body, b)?;
+    if a == b {
+        return Err(KernelError::InvalidInput("boolean operands must be distinct solids".into()));
+    }
+    let bb_a = solid_bounding_box(body, a)?;
+    let bb_b = solid_bounding_box(body, b)?;
+    if aabb_finite(&bb_a) && aabb_finite(&bb_b) {
+        if let Some(id) = trivial_topology_fast_path(body, a, b, (&bb_a, &bb_b), op, tol, rec)? {
+            return Ok(BooleanAdmission::Answered(id));
+        }
+        if let Some(id) = box_fast_path(body, a, b, (&bb_a, &bb_b), op, tol, rec)? {
+            return Ok(BooleanAdmission::Answered(id));
+        }
+    }
+    Ok(BooleanAdmission::Job(BooleanJob::new(body, a, b, op, tol)))
+}
+
+// #endregion ⏱️ResumableBoolean
+
+// #region 🔖️Scoping
 /// 🔀 Filters `issues` down to the ones attributable to solids the boolean just CREATED — a
 /// pre-existing operand may already have carried invalid topology, and the boolean must not be
 /// blamed for it. Resolves each issue's `entity` string against a forward map of every string

@@ -32,6 +32,10 @@ typegen = []
 [dependencies]
 serde = { version = "1.0.228", features = ["derive"] }
 semio-framework-job = { workspace = true }
+# 🧱️ `boxed_fixed_slots` — `JobReplayLog`'s fixed record table is built straight on the heap so a
+# 1 024-record array never lands in the constructing frame. Unconditional: `semio-framework-job`
+# above already pulls this crate in on every target.
+semio-framework-async = { workspace = true }
 # 🌱️ `protocol::value::{DslValue, ToValue, FromValue, ValueError}` — the SAME nominal type
 # `semio-framework-os-kernel` re-exports (`os_dsl::schema` re-exports `protocol::value::*`
 # unchanged; see `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs`), so an additive

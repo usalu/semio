@@ -597,7 +597,11 @@ export type DomainSelection = { granularity: string, ids: Array<string>, anchorI
 /**
  * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
-label: unknown, iconId: IconName, artifactJson: string, appId: string, };"####,
+label: unknown, iconId: IconName, artifactJson: string,
+/**
+ * 🎯️ The DIALECT this example is authored for, never one app of it. An example is a document of an artifact's subset, and every surface bound to that subset — the editor and the viewer alike — opens the same eight fixtures; `SubsetDeclaration.examples` already models them that way. Stamped at registration from the registering app's own `AppDefinition.dialect`, and resolved by [`examples_for_app`] (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+ */
+dialect: ArtifactDialect, };"####,
         },
         SchemaMetadata {
             name: "ExecutionClass",
@@ -1096,7 +1100,8 @@ export type PreviewMode = "none" | "dryRun" | "diff";"####,
             name: "ProgramContributionEntry",
             version: 1,
             typescript: r####"/**
- * 🧩️ One host-aggregated plugin contribution entry (`contributionsJson` wire shape).
+ * 🧩️ One host-aggregated plugin contribution entry — the element shape of the paged
+ * `setContributions` command payload, never a view-state field.
  */
 export type ProgramContributionEntry = { pluginId: string, topicContribution: TopicContribution | null, };"####,
         },
@@ -1698,7 +1703,13 @@ activeUtilityByWindowId: { [key in string]?: string },
  * mutually exclusive with `active_utility_id`: activating one clears the other (see the React
  * shell's `onAction` interceptors).
  */
-activeToolId?: string, panelJson?: string, contributionsJson?: string,
+activeToolId?: string,
+/**
+ * 📌️ Host-owned panel state, opaque to the guest — the ONE long string a view context carries.
+ * Contributions are NOT a view-state field: the host publisher installs them by the paged
+ * `setContributions` command run and the guest folds them into its own registry.
+ */
+panelJson?: string,
 /**
  * 🗣️ Active UI locale; plugins resolve their own label set from this via `resolve_labels`/
  * `app_labels!`. Non-optional — the shell always resolves one (see `initUiLocaleSync`/

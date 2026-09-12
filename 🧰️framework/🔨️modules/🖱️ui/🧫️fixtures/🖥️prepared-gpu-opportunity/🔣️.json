@@ -1,0 +1,118 @@
+{
+  "ceilingUs": 2000,
+  "sustainedOverrunOpportunities": 4,
+  "coldStart": {
+    "phase": "ClearScene",
+    "elapsedUs": 2601,
+    "platform": "apple metal-3 through a browser OffscreenCanvas",
+    "verdict": "recorded"
+  },
+  "runs": [
+    {
+      "elapsedUs": [
+        2601
+      ],
+      "terminal": false,
+      "run": 1
+    },
+    {
+      "elapsedUs": [
+        2601,
+        900
+      ],
+      "terminal": false,
+      "run": 0
+    },
+    {
+      "elapsedUs": [
+        2601,
+        2601,
+        2601
+      ],
+      "terminal": false,
+      "run": 3
+    },
+    {
+      "elapsedUs": [
+        2601,
+        2601,
+        2601,
+        2601
+      ],
+      "terminal": true,
+      "run": 4
+    },
+    {
+      "elapsedUs": [
+        2601,
+        2601,
+        2601,
+        1,
+        2601,
+        2601,
+        2601
+      ],
+      "terminal": false,
+      "run": 3
+    },
+    {
+      "elapsedUs": [
+        2000
+      ],
+      "terminal": false,
+      "run": 0
+    },
+    {
+      "elapsedUs": [
+        2001,
+        2001,
+        2001,
+        2001,
+        2001
+      ],
+      "terminal": true,
+      "run": 4
+    }
+  ],
+  "glassCommandPages": {
+    "comment": "One command page per measured step: the step that retires the glass section carries index == len and addresses nothing.",
+    "rows": [
+      {
+        "region": 0,
+        "len": 0,
+        "addressed": null,
+        "stale": false
+      },
+      {
+        "region": 0,
+        "len": 3,
+        "addressed": 0,
+        "stale": false
+      },
+      {
+        "region": 2,
+        "len": 3,
+        "addressed": 2,
+        "stale": false
+      },
+      {
+        "region": 3,
+        "len": 3,
+        "addressed": null,
+        "stale": false
+      },
+      {
+        "region": 4,
+        "len": 3,
+        "addressed": null,
+        "stale": true
+      },
+      {
+        "region": 1,
+        "len": 0,
+        "addressed": null,
+        "stale": true
+      }
+    ]
+  }
+}

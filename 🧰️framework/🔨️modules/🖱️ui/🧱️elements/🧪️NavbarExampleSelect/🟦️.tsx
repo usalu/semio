@@ -41,7 +41,16 @@ export interface NavbarExampleSelectProps {
   readonly includeNoExample?: boolean;
 }
 
-/** @emoji 🧪️ Center-navbar dropdown for switching playground examples (kits, graphs, shape sources). */
+/** @emoji 🧪️ Center-navbar dropdown for switching playground examples (kits, graphs, shape sources).
+ *
+ * 🆔️ `id` names the TRIGGER — the combobox the user presses and the one element whose text is the
+ * active example's label — matching the wgpu shell, which handles a press on the bare control id
+ * `playground.navbar.fixture` (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`). It used to be spent on
+ * `${id}.label`/`${id}.select`/`${id}.trigger` only, so `#playground.navbar.fixture` resolved to
+ * nothing at all and every reader fell back to the first `[role="combobox"]` in the document (the
+ * history panel's command filter on this shell) — ticket 26/09/02/PUZZLE-3D-END-TO-END wave B30.
+ * The visually-hidden `${id}.label` stays OUTSIDE the trigger so the trigger's own text is the active
+ * example's label and nothing else. */
 function NavbarExampleSelect({ id, label, value, options, onValueChange, className, includeNoExample = true }: NavbarExampleSelectProps) {
   const exampleLabel = useLabel("ui.common.example");
   const noExampleLabel = useLabel("ui.common.noExample");
@@ -58,7 +67,7 @@ function NavbarExampleSelect({ id, label, value, options, onValueChange, classNa
     <div className={cn("flex min-w-0 max-w-md flex-1 items-center justify-center px-single", className)}>
       <Label id={`${id}.label`} label={resolvedLabel} className="sr-only" />
       <Select id={`${id}.select`} value={resolvedValue} onValueChange={(next) => onValueChange(normalizePlaygroundExampleId(next))}>
-        <SelectTrigger className="h-medium w-full min-w-[12rem] max-w-md" id={`${id}.trigger`} size="sm">
+        <SelectTrigger className="h-medium w-full min-w-[12rem] max-w-md" id={id} size="sm">
           <span className="flex min-w-0 flex-1 items-center gap-single">
             {selectedOption ? <span data-slot="navbar-example-icon" className="inline-flex shrink-0"><Icon icon={selectedOption.icon} size="small" /></span> : null}
             <SelectValue placeholder={resolvedLabel} />

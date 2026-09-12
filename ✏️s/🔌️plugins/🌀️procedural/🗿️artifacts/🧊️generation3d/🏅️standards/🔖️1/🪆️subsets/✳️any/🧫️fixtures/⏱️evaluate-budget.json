@@ -1,0 +1,214 @@
+{
+  "format": "semio.generation3d.evaluate-budget",
+  "version": 1,
+  "note": "The BUDGET law of the `evaluate` capability. `🛑️preview-cancel.json` says what an explicit gesture does to work in flight; this says how a long operator's evaluation is CUT into interactive steps in the first place, so that there is a boundary for the gesture — and for a liveness watchdog — to land on at all. Language-agnostic: an implementation in any language must fold these envelopes and answer the same outcomes, the same published status and the same continuation.",
+  "capability": "evaluate",
+  "cancelCapability": "evaluateCancel",
+  "responseAction": "flowEvalResolve",
+  "requestFields": [
+    "operatorId",
+    "inputJson",
+    "nodeHash",
+    "budget",
+    "wallMicros",
+    "windowId",
+    "windowKindId",
+    "extensionId"
+  ],
+  "envelopeFields": [
+    "done",
+    "cancellable",
+    "phase",
+    "unitsDone",
+    "unitsTotal",
+    "outputJson"
+  ],
+  "phaseLabels": {
+    "idle": { "en": "Idle", "de": "Bereit" },
+    "computing": { "en": "Computing", "de": "Berechnen" },
+    "imprinting": { "en": "Imprinting intersections", "de": "Schnittkurven werden eingeprägt" },
+    "splitting": { "en": "Splitting faces", "de": "Flächen werden geteilt" },
+    "classifying": { "en": "Classifying faces", "de": "Flächen werden klassifiziert" },
+    "stitching": { "en": "Stitching shells", "de": "Schalen werden vernäht" },
+    "validating": { "en": "Validating solid", "de": "Körper wird geprüft" },
+    "complete": { "en": "Complete", "de": "Fertig" },
+    "cancelled": { "en": "Cancelled", "de": "Abgebrochen" }
+  },
+  "jobPhaseTags": {
+    "imprint": "imprinting",
+    "applyA": "splitting",
+    "applyB": "splitting",
+    "classifyA": "classifying",
+    "classifyB": "classifying",
+    "stitch": "stitching",
+    "validate": "validating",
+    "complete": "complete",
+    "cancelled": "cancelled",
+    "idle": "idle"
+  },
+  "laws": {
+    "oneRequestOneStep": "An `evaluate` request is answered within the requester's own wall allowance, ALWAYS. An operator that cannot finish inside it answers `done: false` with its progress; the chain re-emits the IDENTICAL request and the extension resumes the job it parked under the same `nodeHash`. This is the same resumption mechanism budgeted `tessellate` uses — no timers, no parked futures, because a plugin has nowhere to hold one.",
+    "unbudgetedOperatorsAreUnchanged": "An operator with no sub-structure completes inside the first round trip and its envelope is indistinguishable in latency from the one-shot call it replaces. Only an operator that offers a resumable job can ever answer `done: false`.",
+    "progressIsMonotone": "`unitsDone` never decreases across the round trips of one evaluation. `unitsTotal` is the plan known so far and may be revised UPWARD exactly once, when a stage that could only be planned after an earlier one ran finally reports its size.",
+    "workingSeedsNothing": "A working envelope seeds no node cache entry. Seeding a partial evaluation would publish a half-built solid as if it were the answer.",
+    "workingIsInFlight": "While an evaluation is working, the published status reports `inFlight >= 1`, a non-idle phase and a ratio below 1 — even though NO tessellation has been admitted. A preview that reports `idle` while its kernel is busy is the defect this fixture exists to forbid.",
+    "cancelledOwesNothing": "A cancelled envelope seeds nothing and arms nothing: the gesture that produced it already quiesced every latch, and arming here would restart the chain the user stopped.",
+    "completeSeedsTheOutput": "A complete envelope's `outputJson` is exactly the out dictionary the unbudgeted evaluation would have produced — a stepped answer and a one-shot answer are indistinguishable downstream, including the `{\"error\": …}` body a refused evaluation carries.",
+    "anUnknownPhaseIsComputing": "A phase tag the surface's vocabulary does not know reads as `computing`, never as `idle`: the envelope that carried it said the job is still working.",
+    "aBareDictionaryIsAFinishedEvaluation": "A response body that is not an envelope at all is read as a finished evaluation whose output IS that body. It is the only reading that cannot lose an answer.",
+    "theBudgetKeepsTheWorkerAlive": "The wall allowance is chosen below the host's shard liveness window, not merely below its termination threshold: a guest turn that never yields blocks the worker's event loop and its progress ticker with it, so a long turn and a dead worker are indistinguishable to the host. Returning between steps is what makes them distinguishable."
+  },
+  "rows": [
+    {
+      "id": "working-envelope-arms-one-more-round-trip",
+      "why": "The headline case: a boolean that spent its wall allowance inside the validation stage.",
+      "envelope": {
+        "done": false,
+        "cancellable": true,
+        "phase": "validate",
+        "unitsDone": 12,
+        "unitsTotal": 40,
+        "outputJson": ""
+      },
+      "outcome": "working",
+      "seeds": false,
+      "rearmsTicks": 1,
+      "status": {
+        "phase": "validating",
+        "inFlight": 1,
+        "evalUnitsDone": 12,
+        "evalUnitsTotal": 40,
+        "ratio": 0.3,
+        "cancellable": true
+      }
+    },
+    {
+      "id": "an-unknown-phase-is-computing-not-idle",
+      "why": "A future operator's own vocabulary must never be published as `idle`.",
+      "envelope": {
+        "done": false,
+        "cancellable": true,
+        "phase": "solverIteration",
+        "unitsDone": 1,
+        "unitsTotal": 4,
+        "outputJson": ""
+      },
+      "outcome": "working",
+      "seeds": false,
+      "rearmsTicks": 1,
+      "status": {
+        "phase": "computing",
+        "inFlight": 1,
+        "evalUnitsDone": 1,
+        "evalUnitsTotal": 4,
+        "ratio": 0.25,
+        "cancellable": true
+      }
+    },
+    {
+      "id": "complete-envelope-seeds-the-output",
+      "why": "The terminal case: the job finished inside this round trip.",
+      "envelope": {
+        "done": true,
+        "cancellable": false,
+        "phase": "complete",
+        "unitsDone": 40,
+        "unitsTotal": 40,
+        "outputJson": "{\"solid\":\"brep:solid-9\"}"
+      },
+      "outcome": "complete",
+      "seeds": true,
+      "seededOutputJson": "{\"solid\":\"brep:solid-9\"}",
+      "rearmsTicks": 1,
+      "status": {
+        "phase": "idle",
+        "inFlight": 0,
+        "evalUnitsDone": 0,
+        "evalUnitsTotal": 0,
+        "ratio": 1.0,
+        "cancellable": false
+      }
+    },
+    {
+      "id": "a-refused-evaluation-still-completes",
+      "why": "The error body travels inside the output exactly as an unbudgeted refusal always did.",
+      "envelope": {
+        "done": true,
+        "cancellable": false,
+        "phase": "complete",
+        "unitsDone": 1,
+        "unitsTotal": 1,
+        "outputJson": "{\"error\":\"unknown kind: brep.bool.nope\"}"
+      },
+      "outcome": "complete",
+      "seeds": true,
+      "seededOutputJson": "{\"error\":\"unknown kind: brep.bool.nope\"}",
+      "rearmsTicks": 1,
+      "status": {
+        "phase": "idle",
+        "inFlight": 0,
+        "evalUnitsDone": 0,
+        "evalUnitsTotal": 0,
+        "ratio": 1.0,
+        "cancellable": false
+      }
+    },
+    {
+      "id": "cancelled-envelope-owes-nothing",
+      "why": "The gesture already stopped the chain; this answer only observes it.",
+      "envelope": {
+        "done": true,
+        "cancellable": false,
+        "phase": "cancelled",
+        "unitsDone": 12,
+        "unitsTotal": 40,
+        "outputJson": ""
+      },
+      "outcome": "cancelled",
+      "seeds": false,
+      "rearmsTicks": 0,
+      "status": {
+        "phase": "idle",
+        "inFlight": 0,
+        "evalUnitsDone": 0,
+        "evalUnitsTotal": 0,
+        "ratio": 1.0,
+        "cancellable": false
+      }
+    },
+    {
+      "id": "a-bare-output-dictionary-is-a-finished-evaluation",
+      "why": "An answer that predates the envelope contract must still be an answer, never a lost one.",
+      "bareOutputJson": "{\"solid\":\"brep:solid-3\"}",
+      "outcome": "complete",
+      "seeds": true,
+      "seededOutputJson": "{\"solid\":\"brep:solid-3\"}",
+      "rearmsTicks": 1,
+      "status": {
+        "phase": "idle",
+        "inFlight": 0,
+        "evalUnitsDone": 0,
+        "evalUnitsTotal": 0,
+        "ratio": 1.0,
+        "cancellable": false
+      }
+    }
+  ],
+  "steppedOperator": {
+    "operatorId": "brep.bool.cut",
+    "why": "The one operator family measured long enough to trip the host's 16 s shard watchdog inside a single turn: `🍩️sphere-cut-with-torus` costs 4.5 s of exact boolean natively (1.5 s of it stitching, 3.0 s validating) and over 16 s in the served wasm.",
+    "minimumRoundTripsUnderATightBudget": 2,
+    "phaseOrder": [
+      "imprint",
+      "applyA",
+      "applyB",
+      "classifyA",
+      "classifyB",
+      "stitch",
+      "validate",
+      "complete"
+    ],
+    "steppedEqualsOneShot": "Driving the job one unit at a time must produce the SAME out dictionary as the one-shot evaluation of the same input. The stepped path IS the algorithm; there is no second implementation to drift from.",
+    "cancelMidWay": "Cancelling between steps terminates the job with phase `cancelled`; a job that already produced its output is never retired by a later cancel."
+  }
+}

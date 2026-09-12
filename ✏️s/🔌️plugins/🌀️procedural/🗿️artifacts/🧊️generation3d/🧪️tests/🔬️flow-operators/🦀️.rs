@@ -86,3 +86,80 @@ pub fn installed() {
         install_flow_extension_manifest(MATH_EXTENSION_PLUGIN_ID, &semio_s_plugin_flow_extension_math::extension_manifest_json()).expect("contributed math extension admission");
     });
 }
+
+/// 🧩️ The host's `contributionsJson` for the generation3d closure, built the way
+/// `buildContributionsJson` (`🎠️kernel/🟦️.ts`) builds it: one `{pluginId, topicContribution}` entry
+/// per `flow.extension` topic contribution the staged extension plugins declare, JSON-encoded as an
+/// array. The two manifests come from the extension crates themselves, so this is the SAME payload
+/// the served shell pushes — not a hand-written stand-in. Surface-neutral on purpose: the editor
+/// laws and the viewer laws push the identical closure.
+pub fn staged_flow_extension_contributions_json(extra: &[(&str, String)]) -> String {
+    let entries: Vec<semio_framework::manifest::ProgramContributionEntry> = [
+        (BREP_EXTENSION_PLUGIN_ID, resolve_ready(semio_s_plugin_flow_extension_brep::extension_manifest_json())),
+        (MATH_EXTENSION_PLUGIN_ID, semio_s_plugin_flow_extension_math::extension_manifest_json()),
+    ]
+    .into_iter()
+    .chain(extra.iter().map(|(plugin_id, manifest_json)| (*plugin_id, manifest_json.clone())))
+    .map(|(plugin_id, manifest_json)| semio_framework::manifest::ProgramContributionEntry {
+        plugin_id: plugin_id.to_string(),
+        topic_contribution: Some(semio_framework::manifest::TopicContribution::new("flow.extension", dsl::DslValue::object([("manifestJson".to_string(), dsl::DslValue::String(manifest_json))]))),
+    })
+    .collect();
+    protocol::json::to_json_string(&entries)
+}
+
+/// 🔗 Retires both linked extension installers for the length of a law and puts them back
+/// afterwards — panic or not. A `--lib` binary links the packs the served guest only ever receives
+/// as host contributions, and a linked pack SHADOWS the contributed stub, so a law about the served
+/// shape has to reach it explicitly. Surface-neutral: the editor's late-install law and the
+/// viewer's own run the identical guard. The registry is process-wide and this guard is a guest in
+/// it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub struct UnlinkedFlowExtensions {
+    taken: Vec<(&'static str, fn(&mut Registry))>,
+}
+
+impl UnlinkedFlowExtensions {
+    pub fn take() -> Self {
+        let taken = [BREP_EXTENSION_FLOW_ID, MATH_EXTENSION_FLOW_ID]
+            .into_iter()
+            .filter_map(|extension_id| semio_framework_os_flow::unregister_linked_flow_extension_installer(extension_id).map(|install| (extension_id, install)))
+            .collect::<Vec<_>>();
+        assert_eq!(taken.len(), 2, "both linked packs must be registered before a law retires them");
+        Self { taken }
+    }
+}
+
+impl Drop for UnlinkedFlowExtensions {
+    fn drop(&mut self) {
+        for (extension_id, install) in self.taken.drain(..) {
+            register_linked_flow_extension_installer(extension_id, install);
+        }
+        // 🔁️ Two replacements, not one: the installer table is only read while a registry is BUILT,
+        // and the installer answers de-duplicate on the contribution map alone — re-pushing the
+        // closure the law already pushed would rebuild nothing and silently leave the packs
+        // unlinked for every later test in this binary.
+        semio_framework_os_flow::sync_host_flow_extension_contributions("[]".to_string()).expect("the law leaves the process-wide registry as it found it");
+        let contributions = staged_flow_extension_contributions_json(&[]);
+        semio_framework_os_flow::sync_host_flow_extension_contributions(contributions).expect("the law leaves the process-wide registry as it found it");
+        assert!(
+            std::thread::panicking() || semio_framework_os_flow::flow_extension_invocation_address(BREP_EXTENSION_FLOW_ID).is_ok(),
+            "the restored registry must address the geometry kernel again"
+        );
+    }
+}
+
+/// 🧹️ Walks a bare [`semio_framework_os_flow::FlowEvalSession`] down its explicit close ladder.
+/// Surface-neutral on purpose: BOTH testkits need it, and a viewer test may not reach through
+/// `::editor::` (`policyViewerPurityBreaches`), so the one implementation lives here beside the
+/// other shared test guards (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn retire_flow_eval_session(mut session: semio_framework_os_flow::FlowEvalSession) {
+    session.begin_close();
+    for _ in 0..1_000_000 {
+        match session.close_step(1, 65_536) {
+            semio_framework_job::InteractiveJobCloseStep::Pending { .. } => continue,
+            semio_framework_job::InteractiveJobCloseStep::Complete => return,
+            semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("a positive close grant must never block the evaluation session"),
+        }
+    }
+    panic!("the evaluation session did not reach terminal-empty under a positive close grant");
+}

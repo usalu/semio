@@ -1,11 +1,12 @@
 /** 🌊️ Qualifies actor-isolated canonical async result and stream imports through JCO/Wasm. */
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import Ajv from "ajv";
 import { buildClosedBrowserActorArtifactV1 } from "../../📜️script.ts";
 import { runExactCargoLawProcess } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
 const testSourceDirectory = fileURLToPath(new URL("../../🧫️fixtures/🌊️actor-import/", import.meta.url));
 
@@ -16,14 +17,8 @@ type JcoPolicy = Readonly<{ asyncMode: "jspi"; asyncImports: readonly string[] }
 type EmittedAsyncBinding = Readonly<{ trampoline: string; fnName: string }>;
 type Fixture = Readonly<{ identity: Readonly<{ component: string; canonicalInterface: string; expectedImports: readonly string[]; jco: JcoPolicy; emittedAsyncBindings: readonly EmittedAsyncBinding[]; unsupportedImport: string; productionHostAsyncAbiQualified: true; artifactPolicy: string }>; actors: readonly ActorSpec[]; limits: Readonly<{ buildBudgetMs: number; runtimeBudgetMs: number; maximumOutputBytes: number; actors: number }>; streamClose: Readonly<{ phase: "closed"; activeInvocations: 0; cancellations: 1; result: "rejected"; locked: false }>; guestStreamDrop: Readonly<{ phase: "closed"; activeInvocations: 0; cancellations: 1; result: "fulfilled"; locked: false }>; lateStreamFault: Readonly<{ code: string; message: string }>; failedStreamRetirement: Readonly<{ code: string; message: string; cancelMessage: string }> }>;
 
-function targetRoot(): string {
-  const target = process.env.CARGO_TARGET_DIR;
-  assert(target && resolve(target).split(/[\\/]/u).includes("🗑️generated"), "actor import fixture requires ticket-generated CARGO_TARGET_DIR");
-  return resolve(target);
-}
-
 /** 🧪️ Builds the standalone guest and executes two independent canonical actors. */
-export async function testCanonicalActorAsyncImport(repoRoot: string, closeFactory?: ActorImportFactoryPort, closeActorBundle?: ActorImportFactoryPort, pendingHostClose = true): Promise<void> {
+export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRoot: string, closeFactory?: ActorImportFactoryPort, closeActorBundle?: ActorImportFactoryPort, pendingHostClose = true): Promise<void> {
   const fixtureRoot = testSourceDirectory;
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as Fixture;
   const schemaDocument = JSON.parse(readFileSync(resolve(fixtureRoot, "../../🧬️schema/🔣️.json"), "utf8"));
@@ -32,14 +27,13 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, closeFacto
   const validate = ajv.getSchema(`${schemaDocument.$id}#/$defs/ActorImportV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   assert.equal(new Set(fixture.actors.map(actor => actor.actorId)).size, fixture.limits.actors);
-  const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  assert(artifactBase?.includes("🗑️generated"), "actor import fixture requires ticket-generated evidence root");
-  mkdirSync(artifactBase, { recursive: true });
-  const evidence = mkdtempSync(join(artifactBase, "actor-import-"));
+  rmSync(evidenceRoot, { recursive: true, force: true });
+  mkdirSync(evidenceRoot, { recursive: true });
+  const evidence = mkdtempSync(join(evidenceRoot, "actor-import-"));
   const manifest = join(fixtureRoot, "👽️guest", "📦️packages", "🦀️rust", "Cargo.toml");
   const build = await runExactCargoLawProcess("cargo", ["build", "--manifest-path", manifest, "--target", "wasm32-wasip2", "--release", "--offline"], {
     cwd: repoRoot,
-    env: { ...process.env, CARGO_TARGET_DIR: targetRoot(), CARGO_BUILD_JOBS: "1" },
+    env: { ...process.env, CARGO_TARGET_DIR: cargoTargetDirectory(repoRoot), CARGO_BUILD_JOBS: "1" },
     budgetMs: fixture.limits.buildBudgetMs,
     maxOutputBytes: 8 * 1024 * 1024,
     stdoutPath: join(evidence, "cargo.stdout"),
@@ -47,7 +41,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, closeFacto
     cancelled: () => false,
   });
   assert.equal(build.status, 0, `${build.reason}: ${build.stderr}`);
-  const component = readFileSync(join(targetRoot(), "wasm32-wasip2", "release", "semio_browser_actor_import_guest.wasm"));
+  const component = readFileSync(join(cargoTargetDirectory(repoRoot), "wasm32-wasip2", "release", "semio_browser_actor_import_guest.wasm"));
   const componentPath = join(evidence, "actor-import.component.wasm");
   const jcoRoot = join(evidence, "jco");
   mkdirSync(jcoRoot);

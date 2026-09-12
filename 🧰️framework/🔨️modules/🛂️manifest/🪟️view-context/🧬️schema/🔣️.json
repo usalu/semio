@@ -31,10 +31,6 @@
       "type": "string",
       "maxLength": 65536
     },
-    "contributionsJson": {
-      "type": "string",
-      "maxLength": 65536
-    },
     "locale": {
       "enum": [
         "en",

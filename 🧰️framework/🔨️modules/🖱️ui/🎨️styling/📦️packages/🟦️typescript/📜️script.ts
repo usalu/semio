@@ -22,6 +22,14 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript).register("test", TestScript);
+/** 🪞️ Node twin: the `🔁️animation-scope` fixture cases with NO test framework — the independent oracle
+ * for the bun suite's postcss-validated laws. */
+class TwinScript extends BundleScript {
+  async run(): Promise<void> {
+    await import("../../🧪️tests/🔬️node-twin/🟦️.ts");
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript).register("test", TestScript).register("twin", TwinScript);
 
 await runBundleScriptMain(router, import.meta.url);

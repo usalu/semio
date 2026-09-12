@@ -32,12 +32,12 @@ type Block5dWorldRuntime = { readonly selectedIds: readonly string[]; readonly h
 /** @emoji 🖱️ Story-local mirror of `instanceMergeArg`/`componentMergeArg` — see `../3d/World.stories.tsx`'s copy. */
 function applyStoryWorldMerge(current: readonly string[], id: string, merge: string): string[] {
   const set = new Set(current);
-  if (merge === "replace") return [id];
-  if (merge === "add") {
+  if (merge === "replace" || merge === "range") return [id];
+  if (merge === "additive") {
     set.add(id);
     return [...set];
   }
-  if (merge === "remove") {
+  if (merge === "subtractive") {
     set.delete(id);
     return [...set];
   }

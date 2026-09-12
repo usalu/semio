@@ -47,6 +47,15 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive"
       }
+    },
+    "twin": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts twin",
+        "forwardAllArgs": true
+      }
     }
   }
 }

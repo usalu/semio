@@ -73,6 +73,29 @@ export function brep_invoke(method: string, args_json: string): string;
 
 export function dispose(handle: string): void;
 
+/**
+ * 🔌️ Binds one flow surface's canvas to a WebGPU device. Resolves `true` when the canvas will
+ * present on the GPU and `false` when no adapter/device/surface could be had — never rejects,
+ * because a host without WebGPU must still reach a painted canvas through the 2D replay path.
+ */
+export function flowAttachSurfaceCanvas(surface: number, canvas: HTMLCanvasElement, logical_width: number, logical_height: number, dpr: number): Promise<any>;
+
+/**
+ * 🧹️ Releases a surface's device, swapchain and canvas retention.
+ */
+export function flowDetachSurfaceCanvas(surface: number): void;
+
+/**
+ * 📐️ Resizes an attached surface's swapchain; a no-op for a surface that presents in 2D.
+ */
+export function flowResizeSurfaceCanvas(surface: number, logical_width: number, logical_height: number, dpr: number): void;
+
+/**
+ * 🔎️ Whether this surface presents on the GPU — the host reads it to decide whether to keep a
+ * 2D context off the canvas (a canvas admits exactly one context kind, for its whole life).
+ */
+export function flowSurfaceCanvasPresentsOnGpu(surface: number): boolean;
+
 export function initialize_browser_clock(): void;
 
 export function tessellate(handle: string, tolerance: number): string;
@@ -84,6 +107,10 @@ export interface InitOutput {
     readonly brep_invoke: (a: number, b: number, c: number, d: number) => [number, number];
     readonly dispose: (a: number, b: number) => void;
     readonly tessellate: (a: number, b: number, c: number) => [number, number];
+    readonly flowAttachSurfaceCanvas: (a: number, b: any, c: number, d: number, e: number) => any;
+    readonly flowDetachSurfaceCanvas: (a: number) => void;
+    readonly flowResizeSurfaceCanvas: (a: number, b: number, c: number, d: number) => void;
+    readonly flowSurfaceCanvasPresentsOnGpu: (a: number) => number;
     readonly flow_bridge_allocate: (a: number) => number;
     readonly flow_bridge_begin_close: () => void;
     readonly flow_bridge_poll: (a: number, b: number, c: number, d: bigint, e: bigint) => number;

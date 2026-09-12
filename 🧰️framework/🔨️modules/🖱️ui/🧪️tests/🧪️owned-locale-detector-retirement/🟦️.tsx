@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, testSource: TestSource): Promise<void> {
-  const { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef } = dependencies;
+  const { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef } = dependencies;
   type Anchor = any;
   type Camera = any;
   type CanvasPickTarget = any;
@@ -382,12 +382,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
       const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
-      expect(css).toMatch(/@property --celebrate-border-angle[\s\S]*?inherits:\s*true/);
+      expect(css).toMatch(/@property --celebrate-border-angle[\s\S]*?inherits:\s*false/);
       expect(css).toMatch(/\[data-celebrated="true"\][\s\S]*?--celebrate-conic:/);
-      expect(css).not.toMatch(/\[data-celebrated="true"\][\s\S]*?animation:\s*celebrate-border-spin/);
       expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?background:\s*var\(--celebrate-conic\)/);
       expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?padding:\s*var\(--celebrate-border-padding\)/);
-      expect(css).not.toMatch(/\[data-celebrated="true"\]::after[\s\S]*?animation:\s*celebrate-border-burst/);
+      expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?animation:[\s\S]*?celebrate-border-spin[\s\S]*?celebrate-border-burst/);
       expect(css).toContain("#endregion 🎉️CelebrateContent");
       expect(css).toMatch(/\[data-celebrated="true"\]:is\([\s\S]*?\[data-slot="button-group-item"\]/);
       expect(css).toMatch(/\[data-celebrated="true"\]\[data-slot="introduction-interaction-label"\][\s\S]*?background-clip:\s*text/);
@@ -409,28 +408,36 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(celebrateContent).not.toContain('[data-slot="tree-row-content"]');
     });
 
-    it("border effect phase clocks run on unlayered :root and consumers paint inherited vars only", async () => {
+    it("border effect phase clocks run on the painting element, never on the document root", async () => {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
       const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      // 🩺️ An animated registered custom property declared `inherits: true` and started on `:root`
+      // re-resolves EVERY element's computed style on EVERY frame — measured at 112.3 s of style
+      // recalculation out of 129.0 s of main-thread task time on the generation3d example, which paced
+      // the plugin host's more-work→poll pump at one macrotask per frame (ticket 2026/09/09,
+      // 📓️host-reconcile-silence-2026-09-12.md). The derived law lives in
+      // 🎨️styling/🧫️fixtures/🔁️animation-scope; these are the named consumers it protects.
       const unlayeredRoot = css.match(/^:root \{[\s\S]*?\n\}/m)?.[0] ?? "";
-      expect(unlayeredRoot).toMatch(/animation:[\s\S]*?loading-border-spin/);
-      expect(unlayeredRoot).toMatch(/animation:[\s\S]*?waiting-border-spin/);
-      expect(unlayeredRoot).toMatch(/animation:[\s\S]*?introduced-border-pulse/);
-      expect(unlayeredRoot).toMatch(/animation:[\s\S]*?celebrate-border-spin/);
-      expect(css).toMatch(/@property --loading-border-angle[\s\S]*?inherits:\s*true/);
-      expect(css).toMatch(/@property --waiting-border-angle[\s\S]*?inherits:\s*true/);
-      expect(css).toMatch(/@property --introduced-border-width[\s\S]*?inherits:\s*true/);
-      expect(css).toMatch(/@property --celebrate-border-padding[\s\S]*?inherits:\s*true/);
+      expect(unlayeredRoot).not.toMatch(/animation:/);
+      expect(css).toMatch(/@property --loading-border-angle[\s\S]*?inherits:\s*false/);
+      expect(css).toMatch(/@property --waiting-border-angle[\s\S]*?inherits:\s*false/);
+      expect(css).toMatch(/@property --introduced-border-width[\s\S]*?inherits:\s*false/);
+      expect(css).toMatch(/@property --celebrate-border-padding[\s\S]*?inherits:\s*false/);
       expect(css).toMatch(/@utility border-loading[\s\S]*?opacity:\s*var\(--loading-border-pulse-opacity\)/);
+      expect(css).toMatch(/@utility border-loading[\s\S]*?animation:[\s\S]*?loading-border-spin[\s\S]*?loading-border-pulse/);
       expect(css).toMatch(/@utility border-waiting[\s\S]*?opacity:\s*var\(--waiting-border-pulse-opacity\)/);
+      expect(css).toMatch(/@utility border-waiting[\s\S]*?animation:[\s\S]*?waiting-border-spin[\s\S]*?waiting-border-pulse/);
       expect(css).toMatch(/\[data-introduced="true"\][\s\S]*?box-shadow:\s*inset 0 0 0 var\(--introduced-border-width\)/);
-      expect(css).not.toMatch(/\[data-introduced="true"\][\s\S]*?animation:\s*introduced-border-pulse/);
+      expect(css).toMatch(/\[data-introduced="true"\] \{[\s\S]*?animation:\s*introduced-border-pulse/);
       expect(css).toMatch(/\.window-silhouette-border-introduced[\s\S]*?stroke-width:\s*var\(--introduced-border-width\)/);
+      expect(css).toMatch(/\.window-silhouette-border-introduced[\s\S]*?animation:\s*introduced-border-pulse/);
       expect(css).toMatch(/\.window-silhouette-border-loading[\s\S]*?stroke-dashoffset:\s*var\(--loading-border-dashoffset\)/);
+      expect(css).toMatch(/\.window-silhouette-border-loading[\s\S]*?animation:[\s\S]*?window-silhouette-border-loading-dash/);
       expect(css).toMatch(/\.window-silhouette-border-celebrated-mask[\s\S]*?stroke-width:\s*var\(--celebrate-border-padding\)/);
-      expect(css).not.toMatch(/\.window-silhouette-border-celebrated-fill[\s\S]*?animation:\s*celebrate-border-spin/);
+      expect(css).toMatch(/\.window-silhouette-border-celebrated-mask[\s\S]*?animation:\s*celebrate-border-burst/);
+      expect(css).toMatch(/\.window-silhouette-border-celebrated-fill[\s\S]*?animation:\s*celebrate-border-spin/);
       expect(css).toContain("[data-window-silhouette]");
       expect(css).toContain("[data-window-silhouette-border]");
       expect(css).toContain("[data-window-silhouette-gap]");
@@ -3832,6 +3839,65 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       dock.unmount();
     });
 
+    it("keeps the mode dock tab bar band clear of the hosted window's own chrome control row", async () => {
+      const { render } = await import("@testing-library/react");
+      const { STYLING_METRICS, uiSpacingPx: spacingPx } = await import("@semio-tech/ui-styling");
+      const chrome = STYLING_METRICS.chrome;
+      const control = chrome.controlHeightUiSpacing;
+      const pad = chrome.paddingStandardUiSpacing;
+      // 🚧️ The dock's cap row is `min-h-medium`, so its band is [0, control]. The dock body is a
+      // silhouette content plane pulled up by exactly that clearance, and its compensating padding is
+      // what puts the hosted window back below the band: the window's own top pane row then occupies
+      // [clearance + pad, clearance + pad + control]. Drop the padding (the `edgeless`/dead-line opt-out
+      // leaking through a nested window) and the same row occupies [pad, pad + control] — inside the tab
+      // bar's own band, which is how `mode-dock-tab-*` came to answer `elementFromPoint` at every window
+      // pane toggle's centre.
+      const dockCapBand = [0, control] as const;
+      const clearance = control;
+      const chromeRowCleared = [clearance + pad, clearance + pad + control] as const;
+      const chromeRowHoisted = [pad, pad + control] as const;
+      expect(chromeRowCleared[0]).toBeGreaterThanOrEqual(dockCapBand[1]);
+      expect(chromeRowHoisted[0]).toBeLessThan(dockCapBand[1]);
+      expect(spacingPx(chromeRowCleared[0])).toBe(spacingPx(clearance) + spacingPx(pad));
+
+      const stacked = render(
+        <div className="h-layout-story w-layout-story-md">
+          <Mode
+            windows={[
+              {
+                id: "left",
+                title: uiDataLabel("Left"),
+                iconId: "app-window",
+                children: <div data-window-content-layout="edgeless">Left Pane</div>,
+                search: { input: { id: "left-engagement", value: "", placeholder: uiDataLabel("brush, fill <n>"), onChange: () => undefined, onSubmit: () => undefined } },
+              },
+              { id: "right", title: uiDataLabel("Right"), iconId: "app-window", children: <div>Right Pane</div> },
+            ]}
+            layout={{
+              kind: "row",
+              children: [
+                { kind: "stack", children: [{ kind: "window", id: "left" }], activeId: "left" },
+                { kind: "stack", children: [{ kind: "window", id: "right" }], activeId: "right" },
+              ],
+            }}
+            activeWindowId="left"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      const stack = stacked.container.querySelector('[data-slot="mode-dock-stack"]') as HTMLElement;
+      const capRow = stack.querySelector('[data-slot="mode-dock-tabbar"]') as HTMLElement;
+      const plane = stack.querySelector('[data-slot="mode-dock-stack-body"]') as HTMLElement;
+      expect(capRow.querySelector('[data-slot="mode-dock-tab"]')).toBeTruthy();
+      expect(plane.className).toContain("window-silhouette-content-plane");
+      // 🪟️ The plane HOSTS a whole window, which is the case `🖌️ui.css`'s opt-out guard has to exclude —
+      // the window's chrome toggles live in that window, not in this plane's own content.
+      expect(plane.querySelector('[data-slot="window"]')).toBeTruthy();
+      expect(plane.querySelector('[data-slot="window-search-overlay"]')).toBeTruthy();
+      expect(capRow.compareDocumentPosition(plane) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      stacked.unmount();
+    });
+
     it("PanelChromeTabBar renders a width placeholder without tab chips while the panel is open", async () => {
       const { render } = await import("@testing-library/react");
       const StubIcon = (): null => null;
@@ -6098,6 +6164,36 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(shouldActivateSearchPossibleOnConfirm("", true, 2)).toBe(true);
       expect(shouldActivateSearchPossibleOnConfirm("f", false, 2)).toBe(true);
       expect(shouldActivateSearchPossibleOnConfirm("f", false, 0)).toBe(false);
+    });
+
+    it("a controlled search line keeps the typed draft while the program's published value stands still", async () => {
+      expect(searchControlledLineV1("", null)).toBe("");
+      expect(searchControlledLineV1("", { text: "Brush", base: "" })).toBe("Brush");
+      expect(searchControlledLineV1("Fill3", { text: "Brush", base: "" })).toBe("Fill3");
+      expect(searchControlledLineV1("Brush", { text: "Brush", base: "Brush" })).toBe("Brush");
+
+      const sent: string[] = [];
+      const submitted: string[] = [];
+      // 🗣️ The puzzle3d window engagement: the guest stores the line and does NOT republish it, so
+      // `value` stays "" across the whole exchange. Before this rule every keystroke snapped the field
+      // back to "" and `onSubmit` carried an empty verb.
+      const { rerender } = render(<Search active input={{ id: "line", placeholder: uiDataLabel("brush, fill <n>"), value: "", onChange: (text: string) => sent.push(text), onSubmit: (text: string) => submitted.push(text) }} />);
+      const field = screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement;
+      fireEvent.change(field, { target: { value: "brush" } });
+      rerender(<Search active input={{ id: "line", placeholder: uiDataLabel("brush, fill <n>"), value: "", onChange: (text: string) => sent.push(text), onSubmit: (text: string) => submitted.push(text) }} />);
+      // ⌨️ `normalizeEngagementActionText` PascalCases the line (`fill 5` → `Fill5`), and the guest's
+      // `strip_engagement_prefix` matches alphanumerics case-insensitively, so `Brush` is the verb.
+      await waitFor(() => expect((screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement).value).toBe("Brush"));
+      expect(sent).toEqual(["Brush"]);
+      fireEvent.keyDown(field, { key: "Enter" });
+      await waitFor(() => expect(submitted).toEqual(["Brush"]));
+      // 🧹️ The confirm RELEASES the line — the guest's own `engagement_submit` empties
+      // `engagement_input`, and its published "" leads again from here.
+      await waitFor(() => expect((screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement).value).toBe(""));
+      // 📢️ A program that DOES author the line wins it back: a published value other than the one that
+      // stood when the edit began replaces the draft.
+      rerender(<Search active input={{ id: "line", placeholder: uiDataLabel("brush, fill <n>"), value: "fill 3", onChange: (text: string) => sent.push(text), onSubmit: (text: string) => submitted.push(text) }} />);
+      await waitFor(() => expect((screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement).value).toBe("Fill3"));
     });
 
     it("Search Space and Enter activate inline suggestion without opening possibles list", async () => {
@@ -8632,7 +8728,14 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
           />,
         );
         expect(document.querySelector('[data-slot="select-content"]')).toBeNull();
-        await user.click(document.getElementById("playground.navbar.fixture.trigger")!);
+        // 🆔️ The component's own id names the TRIGGER: it is the control a press addresses and the one
+        // element whose text is the active example, so `#playground.navbar.fixture` must resolve to the
+        // combobox itself and read exactly that label — never the visually-hidden "Example" caption.
+        const exampleTrigger = document.getElementById("playground.navbar.fixture")!;
+        expect(exampleTrigger.getAttribute("role")).toBe("combobox");
+        expect(exampleTrigger.textContent).toContain("Nakagin Capsule Tower with an intentionally long label");
+        expect(exampleTrigger.textContent).not.toContain("Example");
+        await user.click(exampleTrigger);
         const exampleMarkup = document.body.innerHTML;
   
         expect(selectMarkup).toContain('data-slot="select-chevron"');
