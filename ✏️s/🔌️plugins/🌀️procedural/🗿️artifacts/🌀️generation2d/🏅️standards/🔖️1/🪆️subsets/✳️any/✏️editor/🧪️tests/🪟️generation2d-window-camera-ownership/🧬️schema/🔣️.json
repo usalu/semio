@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/test/procedural/generation2d/window-camera-ownership",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["document", "appConfig", "windowInstances", "baseConfigs", "mutations", "expected", "rejections", "canvasCommands"],
+  "properties": {
+    "document": { "type": "object" },
+    "appConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["showMode"],
+      "properties": { "showMode": { "type": "string" }, "selectedGenerationId": { "anyOf": [{"type":"string"},{"type":"null"}] } }
+    },
+    "windowInstances": { "type": "array", "items": { "$ref": "#/$defs/windowInstance" }, "minItems": 7 },
+    "baseConfigs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generation2d-main", "generation2d-preview", "generation2d-generate-preview"],
+      "properties": {
+        "generation2d-main": { "$ref": "#/$defs/config" },
+        "generation2d-preview": { "$ref": "#/$defs/config" },
+        "generation2d-generate-preview": { "$ref": "#/$defs/config" }
+      }
+    },
+    "mutations": { "type": "array", "items": { "$ref": "#/$defs/addressedMutation" }, "minItems": 6 },
+    "expected": { "type": "object", "additionalProperties": { "$ref": "#/$defs/config" } },
+    "rejections": { "type": "array", "items": { "$ref": "#/$defs/rejection" }, "minItems": 3 },
+    "canvasCommands": { "type": "array", "minItems": 4, "maxItems": 4, "prefixItems": [{"const":"canvas-pointer-down"},{"const":"canvas-pointer-move"},{"const":"canvas-pointer-up"},{"const":"canvas-wheel"}], "items": false }
+  },
+  "$defs": {
+    "viewport": {
+      "type": "object", "additionalProperties": false, "required": ["x", "y", "zoom"],
+      "properties": { "x": {"type":"number"}, "y": {"type":"number"}, "zoom": {"type":"number", "exclusiveMinimum":0} }
+    },
+    "config": { "type": "object", "additionalProperties": false, "required": ["viewport"], "properties": { "viewport": { "$ref": "#/$defs/viewport" } } },
+    "windowInstance": { "type": "object", "additionalProperties": false, "required": ["id", "windowKindId"], "properties": { "id": {"type":"string"}, "windowKindId": {"type":"string"} } },
+    "addressedMutation": {
+      "type": "object", "additionalProperties": false, "required": ["windowId", "windowKindId", "mutation"],
+      "properties": {
+        "windowId": {"type":"string"}, "windowKindId": {"enum":["generation2d-main","generation2d-preview","generation2d-generate-preview"]},
+        "mutation": { "type":"object", "additionalProperties":false, "required":["kind","config"], "properties":{"kind":{"const":"snapshot"},"config":{"$ref":"#/$defs/config"}} }
+      }
+    },
+    "rejection": {
+      "type":"object", "additionalProperties":false, "required":["windowId","claimedWindowKindId","code"],
+      "properties":{"windowId":{"anyOf":[{"type":"string"},{"type":"null"}]},"claimedWindowKindId":{"enum":["generation2d-main","generation2d-preview","generation2d-generate-preview"]},"code":{"type":"string"}}
+    }
+  }
+}

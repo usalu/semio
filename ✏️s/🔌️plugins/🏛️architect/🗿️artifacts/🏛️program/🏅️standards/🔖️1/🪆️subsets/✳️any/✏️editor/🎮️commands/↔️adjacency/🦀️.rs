@@ -78,8 +78,7 @@ pub mod set_adjacency_kind {
 }
 
 pub mod set_adjacency_filter {
-    use crate::editor::architect::catalog::adjacency_kind_from_id;
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::ProgramSnapshot;
     use dsl::{FromValue, ToValue};
@@ -91,9 +90,7 @@ pub mod set_adjacency_filter {
         pub kind: Option<String>,
     }
 
-    pub fn handle(payload: &SetAdjacencyFilter, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let mut next = cfg.snapshot.clone();
-        next.adjacency_kind_filter = payload.kind.as_deref().and_then(adjacency_kind_from_id);
-        Ok(Emit::config(snapshot(next)))
+    pub fn handle(_payload: &SetAdjacencyFilter, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+        Ok(Emit::default())
     }
 }

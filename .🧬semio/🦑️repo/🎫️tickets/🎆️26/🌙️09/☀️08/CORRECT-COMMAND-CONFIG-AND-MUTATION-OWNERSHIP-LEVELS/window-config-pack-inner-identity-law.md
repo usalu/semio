@@ -12,7 +12,9 @@ The authored native test registers a real `WindowConfigOwnerRegistry` with the s
 
 `abstraction-ownership-validation:window-config-pack-identity` passed in3.0s through Bun/Nx with all3 strict neutral cases and strict TypeScript. Log: `🗑️generated/window-config-pack-identity-neutral-1.log`. Rustfmt parsed the native source and the scoped diff check passed.
 
-Native execution is pending after the Pack/FEM queue. No foreign-inner-id runtime failure or production correction is claimed yet. The test is expected to expose the inspected missing check. A future correction must retain/release rejected decoded candidates correctly; do not add an unbounded synchronous rejection drop merely to satisfy this small fixture.
+Native1 executed through the registered Bun/Nx route and exited1 in1m55s. The same-window case is admitted and all its registry owners close. The next same-kind foreign-window case is incorrectly admitted by the real registry, failing the required false admission after its explicit cleanup. The test result is0/1 with691 filtered in0.08s. All three case executions precede the assertion loop, but the third colon-containing case's assertions and result log are not reached; its admission and cleanup outcome is therefore not established by this run's output. The diagnostic now prints each observation during collection so future failures preserve all case results. Log: `🗑️generated/window-config-pack-identity-native-1.log`.
+
+This proves the missing inner identity boundary at runtime. Production remains unchanged. The correction must retain/release rejected decoded candidates correctly; do not add an unbounded synchronous rejection drop merely to satisfy this small fixture.
 
 ## Files And Commands
 

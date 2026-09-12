@@ -245,7 +245,7 @@ fn generation2d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     operation: &AppOperationContext,
     session: &mut FlowEvalSession,
 ) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, Fault> {
@@ -255,6 +255,13 @@ fn generation2d_retained_reduce(
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: None };
     match command {
+        Generation2dCommand::NodeGraphViewport(payload) => {
+            let context = context.ok_or_else(|| Fault::from("generation2d-main-window-context-required"))?;
+            let view = context.view_state.as_ref().ok_or_else(|| Fault::from("generation2d-main-window-view-required"))?;
+            let mut next = flow_window::config::from_snapshot(context.window_config.as_ref());
+            next.viewport = payload.viewport;
+            Ok(Emit { window_config_mutations: vec![flow_window::config::addressed(view, next)?], ..Default::default() })
+        }
         Generation2dCommand::NodeGraphEdit(payload) => node_graph_edit::apply_selected(payload, &doc, &interaction.selection.get("graph").map(|selection| selection.ids.clone()).unwrap_or_default()),
         _ => command.dispatch(&doc, &cfg, session),
     }
@@ -455,7 +462,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dBounded
     const TOOL_IDS: &'static [&'static str] = GENERATION2D_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
-        ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setShowMode", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "generate", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -841,7 +848,6 @@ fn generation2d_config_text_bytes(config: &Generation2dConfig) -> usize {
 
 fn generation2d_config_publication_bytes(mutation: &Generation2dConfigMutation) -> Result<usize, String> {
     let bytes = match mutation {
-        Generation2dConfigMutation::SetCamera { .. } => 0,
         Generation2dConfigMutation::SetShowMode { value } => value.len(),
         Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id } => selected_generation_id.as_ref().map_or(0, String::len),
         _ => return Err("generation2d-config-unsupported-mutation".into()),
@@ -913,10 +919,6 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConf
         let mutation = self.mutation.as_ref().ok_or_else(|| "generation2d-config-mutation-owner-missing".to_string())?;
         let mut next = base.get().clone();
         let inverse = match mutation {
-            Generation2dConfigMutation::SetCamera { camera } => {
-                next.camera = camera.clone();
-                Generation2dConfigMutation::SetCamera { camera: base.get().camera.clone() }
-            }
             Generation2dConfigMutation::SetShowMode { value } => {
                 next.show_mode = value.clone();
                 Generation2dConfigMutation::SetShowMode { value: base.get().show_mode.clone() }
@@ -1316,6 +1318,12 @@ impl ArtifactEditor for Generation2dPlayApp {
         Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
 
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        flow_window::config::register(registry)?;
+        edit_preview::config::register(registry)?;
+        generate_preview::config::register(registry)
+    }
+
     /// 🧾️ BOTH factories' proofs, in registration order — `validate_tool_job_rows` matches this
     /// catalogue against the registered factories exactly.
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
@@ -1564,7 +1572,8 @@ impl ArtifactEditor for Generation2dPlayApp {
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         if body_key == generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW {
             let labels = generation2d_labels(view_state);
-            let node = generate_preview::render(cfg.snapshot, transient.snapshot.generation_preview_text.as_deref(), labels)?;
+            let window_config = generate_preview::config::current(cfg);
+            let node = generate_preview::render(&window_config, transient.snapshot.generation_preview_text.as_deref(), labels)?;
             return Ok(semio_framework_plugin::built_to_component_tree(node));
         }
         owner
@@ -1817,11 +1826,20 @@ fn generation2d_render_body(
     let config = cfg.snapshot;
     let labels = generation2d_labels(view_state);
     let rendered = match body_key {
-        flow_window::GENERATION2D_PLAY_BODY_MAIN => flow_window::render(document, config, session),
-        edit_preview::GENERATION2D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, session),
+        flow_window::GENERATION2D_PLAY_BODY_MAIN => {
+            let window_config = flow_window::config::current(cfg);
+            flow_window::render(document, &window_config, session)
+        }
+        edit_preview::GENERATION2D_PLAY_BODY_PREVIEW => {
+            let window_config = edit_preview::config::current(cfg);
+            edit_preview::render(document, config, &window_config, session)
+        }
         generations::GENERATION2D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, view_state.locale, view_state.terminology),
         form::GENERATION2D_PLAY_BODY_GENERATE_FORM => form::render(document, &document.generation, labels),
-        generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(config, None, labels),
+        generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW => {
+            let window_config = generate_preview::config::current(cfg);
+            generate_preview::render(&window_config, None, labels)
+        }
         document_panel::GENERATION2D_PLAY_BODY_DOCUMENT => document_panel::render(document, config, labels),
         catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
         inspection_panel::GENERATION2D_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),

@@ -63,7 +63,6 @@ import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/
 import {
   Script,
   ScriptRouter,
-  authorArtifactScaffold,
   buildBudgetMs,
   canonicalFilenameForKind,
   canonicalFilenamesForKind,
@@ -132,8 +131,6 @@ import {
   TEST_LEVELS,
   tryRun,
   type BreachRecord,
-  type ArtifactScaffoldLeaf,
-  type ArtifactScaffoldOptions,
   type PackageRole,
   type LcovFileRecord,
   type TestLevel,
@@ -181,24 +178,12 @@ import {
   subsetIdForDirectoryName,
   type PathEmojiEntry,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import {
-  applyTaxonomyPlan,
-  canonicalJson,
-  inventoryTaxonomySources,
-  inventoryTaxonomy,
-  parseTaxonomyPlan,
-  planTaxonomy,
-  taxonomyPlanDigest,
-  TICKET_GENERATED_OUTPUT_DIRECTORY,
-  verifyTaxonomy,
-  type TaxonomySourceInventory,
-} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
-import { taxonomyCliArtifactPath, taxonomyCliGuardedPath, taxonomyCliInventoryOptions, taxonomyCliOptions, taxonomyCliPlanOperationConsoleFields, taxonomyCliPlanOperationCounts, taxonomyCliPlanOperationSummaryRows, taxonomyCliPrintJson, taxonomyCliProgress, taxonomyCliRequireCommittedApply, taxonomyCliTicket, taxonomyCliValidateOperationOptions, taxonomyCliWriteJson, taxonomyCliWriteSummary, taxonomyTicketDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🟦️.ts";
-import { publishTaxonomyInventoryArtifactShards } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/📇️inventory/📦️publication/🟦️.ts";
+import { POLICY_SKIP_DIRS, policyReadFileSafe, policyReaddirSafe } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts";
+import { verifyTaxonomy } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
+import { taxonomyTicketDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🟦️.ts";
 import { POLICY_MUTATION_PLAN_DIR, POLICY_MUTATIONS_FACET, POLICY_RS_COMPONENT_LEAF_NAME, POLICY_TS_COMPONENT_LEAF, policyArtifactRootOfMutationsDir, policyLeadingEmojiPrefix, policyStripEmoji, policyStructuralRelativeLocator } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { mutationTaxonomySourceAdmission, policyFindAllMutationsDirs } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts";
 import { policyKebabToPascal, policyMutationDirectOwnerBreachesView, policyMutationEnumVariantNames, policyMutationSemanticIdentity, policyMutationStructuralBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts";
-import { runMutationTaxonomyCli } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts";
 import { policyListMutationDirs } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts";
 import { CleanScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts";
 import { CleanMechanismNewScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🎮️command/🟦️.ts";
@@ -210,6 +195,8 @@ import { policyExtractGraphqlSchemaFields } from "./🧰️framework/🛍️prod
 import { policyExtractJsonSchemaFields } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🔣️json-schema/🟦️.ts";
 import { policyExtractProtobufSchemaFields } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts";
 import { policySchemaFieldDifferences } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/⚖️comparison/🟦️.ts";
+import { policyArtifactOwnershipFieldParity } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/⚖️laws/🪪️ownership-field-parity/🟦️.ts";
+import { policyArtifactSchemaBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, linkSync, lstatSync, mkdirSync, chownSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
@@ -373,6 +360,11 @@ export class SetupScript extends Script {
     runCmd("cargo", ["install", crate, "--version", version, "--locked"], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 
+  private ensureRustTarget(target: string): void {
+    const installed = runProbe("rustup", ["target", "list", "--installed"]);
+    if (installed.status !== 0 || !installed.stdout.split(/\r?\n/).includes(target)) runCmd("rustup", ["target", "add", target], { cwd: this.root, ...orchestratorBudgetOpts() });
+  }
+
   private runDependencies(kind: string): void {
     const opts = { cwd: this.root, ...orchestratorBudgetOpts() };
     if (kind === "python") runCmd("uv", ["sync", "--locked", "--all-packages", "--all-groups"], opts);
@@ -384,8 +376,11 @@ export class SetupScript extends Script {
     else if (kind === "wasm") {
       this.ensureCargoTool("wasm-pack", ["wasm-pack"], "0.15.0");
       this.ensureCargoTool("wasm-bindgen-cli", ["wasm-bindgen"], wasmBindgenVersion(readFileSync(join(this.root, "Cargo.lock"), "utf8")));
+      this.ensureRustTarget("wasm32-wasip2");
+    } else if (kind === "trunk") {
       this.ensureCargoTool("trunk", ["trunk"], "0.21.14");
-      runCmd("rustup", ["target", "add", "wasm32-unknown-unknown", "wasm32-wasip2"], opts);
+      this.ensureRustTarget("wasm32-unknown-unknown");
+      console.log("[deps-trunk] Pinned Trunk and the Rust WebAssembly target are ready");
     } else if (kind === "tools") {
       this.ensureCargoTool("cargo-nextest", ["cargo", "nextest"], "0.9.140");
       this.ensureCargoTool("cargo-llvm-cov", ["cargo", "llvm-cov"], "0.8.7");
@@ -7280,6 +7275,39 @@ export class VerifyScript extends Script {
       }
       return;
     }
+    if (segments[0] === "architect-window-ownership") {
+      const windowsRoot = join(this.root, "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows");
+      const configRoots = ["📋️register", "↔️adjacency", "🕸️graph", "📓️report"].map((window) => join(windowsRoot, window, "🎚️config"));
+      const oracle = join(configRoots[0]!, "🧪️tests/🔬️window-ownership/🟦️.ts");
+      const { testArchitectWindowOwnershipOracle } = await import(oracle);
+      testArchitectWindowOwnershipOracle();
+      runCmd(
+        "bun",
+        [
+          join(this.root, "node_modules/typescript/bin/tsc"),
+          "--noEmit",
+          "--strict",
+          "--target",
+          "ESNext",
+          "--module",
+          "ESNext",
+          "--moduleResolution",
+          "bundler",
+          "--resolveJsonModule",
+          "--allowImportingTsExtensions",
+          "--esModuleInterop",
+          "--skipLibCheck",
+          ...configRoots.map((root) => join(root, "🧬️schema/🟦️.ts")),
+          oracle,
+        ],
+        { cwd: this.root },
+      );
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-architect-program", "--lib", "architect_window_ownership_", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
     if (segments[0] === "writer-window-state") {
       const { testWriterWindowStateOracle } = await import("./✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🟦️.ts");
       testWriterWindowStateOracle();
@@ -7455,12 +7483,23 @@ export class VerifyScript extends Script {
       const { testRetainedPackPhysicalOwnership } = await import(`${testRoot}/🟦️.ts`);
       testRetainedPackPhysicalOwnership();
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
+      if (segments[1] === "outer-native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--lib", "retained_pack_outer_", "--", "--nocapture"], this.root);
+        return;
+      }
+      if (segments[1] === "catalog-native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "retained_pack_catalog_", "--", "--nocapture"], this.root);
+        return;
+      }
       if (segments[1] === "native") {
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "value::list::", "--", "--nocapture"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "retained_pack_source_laws", "--", "--nocapture"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "write_then_read_round_trip_with_compressed_segment_and_chunk", "--", "--nocapture"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--lib", "retained_mounted_laws", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--lib", "retained_pack_outer_", "--", "--nocapture"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--lib", "retained_mounted_laws", "--", "--nocapture"], this.root);
       }
       return;
@@ -7501,6 +7540,16 @@ export class VerifyScript extends Script {
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "window_config_pack_identity_", "--", "--nocapture", "--test-threads=1"], this.root);
       }
+      return;
+    }
+    if (segments[0] === "fem-scalar-owners-native") {
+      if (segments.length !== 1) throw new Error("fem-scalar-owners-native accepts no arguments");
+      const testPath = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🔢️scalar-owners/🟦️.ts");
+      const { testFemScalarOwnerOracle } = await import(testPath);
+      testFemScalarOwnerOracle();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", "pcg_job_initial_precondition_", "subspace_factor_cursor_", "subspace_publication_"], this.root);
       return;
     }
     if (segments[0] === "fem3d-numerical-child-native") {
@@ -14912,7 +14961,6 @@ export class Neo4jCypherExport {
  */
 
 //#region 🔧️PolicyFsScan
-const POLICY_SKIP_DIRS = new Set(["compose", "node_modules", ".git", ".🧬semio", "target", "dist", "build", "coverage", "🤖️generated", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
 
 /** 🔀️Concept renames that must resolve to the SAME canonical component id on both sides of the taxonomy migration (see the master ticket's discovery contract: `📡️protocol` -> `📡️spr`). */
 const POLICY_COMPONENT_ALIASES: Record<string, string> = { protocol: "spr" };
@@ -17035,35 +17083,6 @@ function policyMcpConfigBreaches(repoRoot: string): BreachRecord[] {
  * removed the Shape-V1-only, plugins-only discoverer — land one notch lower still (`"low"`, via
  * `policyNewSurfacePriority`), because nothing has ever triaged them.
  */
-
-function policyReaddirSafe(repoRoot: string, relDir: string): { name: string; isDirectory: boolean }[] {
-  try {
-    return readdirSync(join(repoRoot, relDir), { withFileTypes: true })
-      .filter((e) => !POLICY_SKIP_DIRS.has(e.name))
-      .map((e) => ({ name: e.name, isDirectory: e.isDirectory() }));
-  } catch {
-    return [];
-  }
-}
-
-/**
- * 📖️Reads a repo-relative file, returning `""` when it has vanished between the directory walk and
- * the read. Sibling of [[policyReaddirSafe]].
- *
- * Every rule here walks a file list and then reads each entry, which races against concurrent
- * sessions deleting files mid-run — a real crash, not a hypothetical: `policyDeclarativeRegistration`
- * died on `ENOENT` while artifact `⚙️engine/` directories were being dissolved beneath it, taking the
- * whole `policy` command down for every session. `""` rather than a skip is deliberate and correct:
- * these rules pattern-match content to find violations, and **a file that no longer exists has no
- * violations in it**, so empty content yields the right answer with no call-site restructuring.
- */
-function policyReadFileSafe(repoRoot: string, ...parts: string[]): string {
-  try {
-    return readFileSync(join(repoRoot, ...parts), "utf8");
-  } catch {
-    return "";
-  }
-}
 
 type PolicyRustSourceEntry = Readonly<{ path: string; source: string }>;
 type PolicyRustSourceEvidence = Readonly<{ production: PolicyRustSourceEntry; tests: readonly PolicyRustSourceEntry[] }>;
@@ -21274,424 +21293,6 @@ function policyInferenceFamilyBreaches(repoRoot: string): BreachRecord[] {
 }
 //#endregion 🔧️PolicyRuleInferenceFamily
 
-//#region 🔧️PolicyRuleArtifactSchemas
-/**
- * 🧬️Wave W2 artifact-schema facet scanners (ARTIFACT-SCHEMA-FACETS).
- * Three facets × five `schemaFormats` leaves must agree on canonical camelCase fields; extractors are the
- * compiler this design deliberately does not have. Nested `📸️snapshot` / `🔺️diff` children are recognized
- * via taxonomy `schemaChildDirs` / `representationDirs` / `ioDirectionDirs` in `policyTaxonomyDirsBreaches`.
- */
-
-
-
-
-
-
-
-/** 🧭️ Canonical document facets relative to each artifact standard/subset owner. */
-const POLICY_SCHEMA_FACET_RELS = ["🧬️schema", "🧬️schema/📸️snapshot", "🧬️schema/🔺️diff"] as const;
-
-/** 🗿️ Finds standard/subset document owners across products and plugins without descending into artifact internals. */
-export function policyDiscoverArtifactSchemaOwners(repoRoot: string): string[] {
-  const taxonomy = loadTaxonomy(), owners: string[] = [], pending = ["✏️s/🔌️plugins", "🧰️framework"];
-  const directories = (path: string) => policyReaddirSafe(repoRoot, path).filter((entry) => entry.isDirectory && !entry.name.startsWith(".") && entry.name !== "🗑️generated");
-  while (pending.length) {
-    const parent = pending.pop()!;
-    for (const entry of directories(parent)) {
-      const path = `${parent}/${entry.name}`;
-      if (entry.name !== taxonomy.artifactsDirName) { pending.push(path); continue; }
-      for (const artifact of directories(path)) {
-        const standards = `${path}/${artifact.name}/${taxonomy.standardsDirName}`;
-        for (const standard of directories(standards)) {
-          const subsets = `${standards}/${standard.name}/${taxonomy.subsetsDirName}`;
-          for (const subset of directories(subsets)) owners.push(`${subsets}/${subset.name}`);
-        }
-      }
-    }
-  }
-  return owners.sort();
-}
-
-
-
-
-
-/**
- * 🏷️ The export id one schema facet declares: the `title` of its normative JSON Schema, which is also the
- * root export the generated `🔣️schema-catalog.json` catalogues for that scope. There is no prefix table and
- * no name derived from a path — a facet that declares no export id is a breach, never a silent skip.
- */
-function policyDeclaredSchemaExportName(repoRoot: string, facetRel: string): string | null {
-  const taxonomy = loadTaxonomy();
-  const format = taxonomy.schemaFormats[taxonomy.schemaFacetKinds![resolveSchemaFacetKind(facetRel, taxonomy)]!.normativeFormat]!;
-  const abs = join(repoRoot, facetRel, canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy));
-  if (!existsSync(abs)) return null;
-  try {
-    const parsed = JSON.parse(readFileSync(abs, "utf8")) as { title?: unknown };
-    return typeof parsed.title === "string" && parsed.title ? parsed.title : null;
-  } catch {
-    return null;
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/** 🗂️Load every schemaFormats leaf for one facet; returns null entries for missing files. */
-function policyLoadSchemaFacetLeaves(
-  repoRoot: string,
-  facetRel: string,
-): { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] {
-  const taxonomy = loadTaxonomy();
-  const expected = policyDeclaredSchemaExportName(repoRoot, facetRel);
-  const out: { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] = [];
-  for (const [formatId, format] of schemaFacetFormatEntries(facetRel, taxonomy)) {
-    const leafFilename = canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy);
-    const relPath = `${facetRel}/${leafFilename}`;
-    const abs = join(repoRoot, relPath);
-    if (!existsSync(abs)) {
-      out.push({ formatId, leafFilename, fieldCasing: format.fieldCasing, relPath, extract: null });
-      continue;
-    }
-    const text = readFileSync(abs, "utf8");
-    let extract: PolicySchemaLeafExtract;
-    switch (formatId) {
-      case "🦀️rust":
-        extract = policyExtractRustSchemaFields(text, expected);
-        break;
-      case "🟦️typescript":
-        extract = policyExtractTypescriptSchemaFile(abs, text, expected);
-        break;
-      case "🔗️graphql":
-        extract = policyExtractGraphqlSchemaFields(text, expected);
-        break;
-      case "🔣️jsonschema":
-        extract = policyExtractJsonSchemaFields(text);
-        break;
-      case "🛰️protobuf":
-        extract = policyExtractProtobufSchemaFields(text, expected);
-        break;
-      case "📜️wit":
-        extract = { typeName: "", fields: [] };
-        break;
-      default:
-        extract = { typeName: "", fields: [] };
-        break;
-    }
-    out.push({ formatId, leafFilename, fieldCasing: format.fieldCasing, relPath, extract });
-  }
-  return out;
-}
-
-/**
- * 📏️Facet completeness + normative leaf: all three facet dirs, each with every schemaFormats leaf
- * and the `artifactSchemaSpecFilenames` normative JSON Schema leaf.
- */
-function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string, owners: readonly string[]): BreachRecord[] {
-  const taxonomy = loadTaxonomy();
-  const normativeByFacet = taxonomy.artifactSchemaSpecFileKinds ?? {};
-  const breaches: BreachRecord[] = [];
-  for (const artRel of owners) {
-    for (const facetRel of POLICY_SCHEMA_FACET_RELS) {
-      const facetAbs = `${artRel}/${facetRel}`;
-      if (!existsSync(join(repoRoot, facetAbs))) {
-        breaches.push({
-          id: `artifact-schema-facet-missing-${facetAbs}`,
-          summary: `"${artRel}" is missing required schema facet ${facetRel}/`,
-          kind: "artifact-schema/facet-completeness",
-          scope: artRel,
-          priority: "high",
-          reason: "Every artifact standard/subset must expose 🧬️schema, 🧬️schema/📸️snapshot, and 🧬️schema/🔺️diff facets.",
-          solution: `Create ${facetAbs}/ with all five schemaFormats leaves (and the normative ${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)}).`,
-        });
-        continue;
-      }
-      for (const [formatId, format] of schemaFacetFormatEntries(facetAbs, taxonomy)) {
-        const leafFilename = canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy);
-        const leafRel = `${facetAbs}/${leafFilename}`;
-        if (existsSync(join(repoRoot, leafRel))) continue;
-        breaches.push({
-          id: `artifact-schema-leaf-missing-${leafRel}`,
-          summary: `"${facetAbs}" is missing schemaFormats leaf ${leafFilename} (${formatId})`,
-          kind: "artifact-schema/facet-completeness",
-          scope: artRel,
-          priority: "high",
-          reason: "Each schema facet must carry every schemaFormats leaf for its facet kind from 🔣️taxonomy.json.",
-          solution: `Add handcrafted ${leafRel}.`,
-        });
-      }
-      const normativeFileKindId = normativeByFacet[facetRel];
-      if (normativeFileKindId) {
-        const normative = canonicalPrimaryFilenameForKind(normativeFileKindId, taxonomy);
-        const normativeRel = `${facetAbs}/${normative}`;
-        if (!existsSync(join(repoRoot, normativeRel))) {
-          breaches.push({
-            id: `artifact-schema-normative-missing-${normativeRel}`,
-            summary: `"${facetAbs}" is missing normative artifactSchemaSpecFilenames leaf ${normative}`,
-            kind: "artifact-schema/normative-leaf",
-            scope: artRel,
-            priority: "high",
-            reason: ("Within a facet the " + canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId) + " JSON Schema leaf is normative; the other four mirror it."),
-            solution: `Add ${normativeRel} as the source of truth for this facet's fields.`,
-          });
-        }
-      }
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️Field parity: all five leaves of one facet declare the identical canonical field set with identical
- * optionality and cardinality; JSON Schema is the truth when others disagree. Optionality of a `map`
- * field is exempt for protobuf only, because proto3 rejects an `optional` label on a map entry field
- * and therefore cannot express presence for it at all.
- * @see https://protobuf.dev/programming-guides/proto3/#maps
- */
-function policyArtifactSchemaFieldParityBreaches(repoRoot: string, owners: readonly string[]): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  for (const artRel of owners) {
-    for (const facetRel of POLICY_SCHEMA_FACET_RELS) {
-      const facetAbs = `${artRel}/${facetRel}`;
-      if (!existsSync(join(repoRoot, facetAbs))) continue;
-      const leaves = policyLoadSchemaFacetLeaves(repoRoot, facetAbs);
-      if (leaves.some((l) => l.extract === null)) continue;
-      const jsonLeaf = leaves.find((l) => l.formatId === "🔣️jsonschema");
-      if (!jsonLeaf?.extract) continue;
-      const truth = new Map(jsonLeaf.extract.fields.map((f) => [f.name, f]));
-      for (const leaf of leaves) {
-        if (leaf.formatId === "🔣️jsonschema" || !leaf.extract) continue;
-        const seen = new Map(leaf.extract.fields.map((f) => [f.name, f]));
-        for (const [name, truthField] of truth) {
-          const other = seen.get(name);
-          if (!other) {
-            breaches.push({
-              id: `artifact-schema-field-parity-missing-${leaf.relPath}-${name}`,
-              summary: `"${leaf.relPath}" is missing field "${name}" present in normative JSON Schema`,
-              kind: "artifact-schema/field-parity",
-              scope: artRel,
-              priority: "high",
-              reason: `Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=${truthField.optional}, cardinality=${truthField.cardinality}).`,
-              solution: `Add field "${name}" to ${leaf.relPath} matching ${jsonLeaf.relPath} (optional=${truthField.optional}, cardinality=${truthField.cardinality}, scalar=${truthField.scalar}).`,
-            });
-            continue;
-          }
-          const optionalityComparable = !(leaf.formatId === "🛰️protobuf" && truthField.cardinality === "map");
-          const cardinalityComparable = !(
-            truthField.cardinality === "fixedList"
-            && other.cardinality === "list"
-            && (leaf.formatId === "🟦️typescript" || leaf.formatId === "🔗️graphql" || leaf.formatId === "🛰️protobuf")
-          );
-          if ((optionalityComparable && other.optional !== truthField.optional) || (cardinalityComparable && other.cardinality !== truthField.cardinality)) {
-            breaches.push({
-              id: `artifact-schema-field-parity-shape-${leaf.relPath}-${name}`,
-              summary: `"${leaf.relPath}" field "${name}" disagrees with normative JSON Schema optionality/cardinality`,
-              kind: "artifact-schema/field-parity",
-              scope: artRel,
-              priority: "high",
-              reason: `Normative ${jsonLeaf.relPath} declares "${name}" as optional=${truthField.optional}, cardinality=${truthField.cardinality}; ${leaf.formatId} has optional=${other.optional}, cardinality=${other.cardinality}.`,
-              solution: `Change "${name}" in ${leaf.relPath} to match ${jsonLeaf.relPath} (optional=${truthField.optional}, cardinality=${truthField.cardinality}).`,
-            });
-          }
-        }
-        for (const name of seen.keys()) {
-          if (truth.has(name)) continue;
-          breaches.push({
-            id: `artifact-schema-field-parity-extra-${leaf.relPath}-${name}`,
-            summary: `"${leaf.relPath}" declares extra field "${name}" absent from normative JSON Schema`,
-            kind: "artifact-schema/field-parity",
-            scope: artRel,
-            priority: "high",
-            reason: `JSON Schema at ${jsonLeaf.relPath} is normative; extra fields in other formats break cross-format identity.`,
-            solution: `Remove "${name}" from ${leaf.relPath}, or add it to ${jsonLeaf.relPath} if it is a real artifact field.`,
-          });
-        }
-      }
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️State-class parity: snapshot facet fields equal exactly the `artifact`-lane fields of the artifact facet.
- */
-function policyArtifactSchemaStateParityBreaches(repoRoot: string, owners: readonly string[]): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  for (const artRel of owners) {
-    const artifactFacet = `${artRel}/🧬️schema`;
-    const snapshotFacet = `${artRel}/🧬️schema/📸️snapshot`;
-    if (!existsSync(join(repoRoot, artifactFacet)) || !existsSync(join(repoRoot, snapshotFacet))) continue;
-    const artLeaves = policyLoadSchemaFacetLeaves(repoRoot, artifactFacet);
-    const snapLeaves = policyLoadSchemaFacetLeaves(repoRoot, snapshotFacet);
-    const artJson = artLeaves.find((l) => l.formatId === "🔣️jsonschema")?.extract;
-    const snapJson = snapLeaves.find((l) => l.formatId === "🔣️jsonschema")?.extract;
-    if (!artJson || !snapJson) continue;
-    const persistent = artJson.fields.filter((f) => f.state === "artifact");
-    const snapMap = new Map(snapJson.fields.map((f) => [f.name, f]));
-    const persMap = new Map(persistent.map((f) => [f.name, f]));
-    for (const f of persistent) {
-      const s = snapMap.get(f.name);
-      if (!s) {
-        breaches.push({
-          id: `artifact-schema-state-parity-missing-${artRel}-${f.name}`,
-          summary: `Snapshot facet is missing artifact-lane field "${f.name}"`,
-          kind: "artifact-schema/state-parity",
-          scope: artRel,
-          priority: "high",
-          reason: "XSnapshot must equal exactly the artifact-lane fields of XArtifact (equality, not subset).",
-          solution: `Add "${f.name}" to ${snapshotFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)} (and the other four leaves) matching the artifact facet.`,
-        });
-        continue;
-      }
-      if (s.optional !== f.optional || s.cardinality !== f.cardinality) {
-        breaches.push({
-          id: `artifact-schema-state-parity-shape-${artRel}-${f.name}`,
-          summary: `Snapshot field "${f.name}" shape differs from the artifact-lane field`,
-          kind: "artifact-schema/state-parity",
-          scope: artRel,
-          priority: "high",
-          reason: `Artifact-lane field "${f.name}" is optional=${f.optional}, cardinality=${f.cardinality}; snapshot has optional=${s.optional}, cardinality=${s.cardinality}.`,
-          solution: `Align "${f.name}" in ${snapshotFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)} with ${artifactFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)}.`,
-        });
-      }
-    }
-    for (const name of snapMap.keys()) {
-      if (persMap.has(name)) continue;
-      breaches.push({
-        id: `artifact-schema-state-parity-extra-${artRel}-${name}`,
-        summary: `Snapshot facet has non-artifact-lane field "${name}"`,
-        kind: "artifact-schema/state-parity",
-        scope: artRel,
-        priority: "high",
-        reason: "XSnapshot may only contain the artifact-lane fields of XArtifact.",
-        solution: `Remove "${name}" from ${snapshotFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)}, or move it into the artifact lane on the artifact facet if it belongs there.`,
-      });
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️Diff coverage: every non-transient artifact field has a diff entry; no transient field does.
- */
-function policyArtifactSchemaDiffCoverageBreaches(repoRoot: string, owners: readonly string[]): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  for (const artRel of owners) {
-    const artifactFacet = `${artRel}/🧬️schema`;
-    const diffFacet = `${artRel}/🧬️schema/🔺️diff`;
-    if (!existsSync(join(repoRoot, artifactFacet)) || !existsSync(join(repoRoot, diffFacet))) continue;
-    const artJson = policyLoadSchemaFacetLeaves(repoRoot, artifactFacet).find((l) => l.formatId === "🔣️jsonschema")?.extract;
-    const diffJson = policyLoadSchemaFacetLeaves(repoRoot, diffFacet).find((l) => l.formatId === "🔣️jsonschema")?.extract;
-    if (!artJson || !diffJson) continue;
-    const diffNames = new Set(diffJson.fields.map((f) => f.name));
-    for (const f of artJson.fields) {
-      if (f.state === "transient") {
-        if (diffNames.has(f.name)) {
-          breaches.push({
-            id: `artifact-schema-diff-effect-${artRel}-${f.name}`,
-            summary: `Diff facet must not cover transient field "${f.name}"`,
-            kind: "artifact-schema/diff-coverage",
-            scope: artRel,
-            priority: "high",
-            reason: "Transient fields are ephemeral local-only UI state — never shared, never diffed — and must not appear in XDiff.",
-            solution: `Remove "${f.name}" from ${diffFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)}.`,
-          });
-        }
-        continue;
-      }
-      if (!diffNames.has(f.name)) {
-        breaches.push({
-          id: `artifact-schema-diff-coverage-${artRel}-${f.name}`,
-          summary: `Diff facet is missing entry for non-transient artifact field "${f.name}"`,
-          kind: "artifact-schema/diff-coverage",
-          scope: artRel,
-          priority: "high",
-          reason: "Every artifact field whose state lane is not transient must have a same-named diff entry.",
-          solution: `Add sparse diff entry "${f.name}" to ${diffFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)} matching §7.3 cardinality rules.`,
-        });
-      }
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️Type-name parity: the export id the facet's normative JSON Schema declares (`title`, the same root
- * export `🔣️schema-catalog.json` catalogues) is spelled identically in all five leaves of that facet.
- */
-function policyArtifactSchemaTypeNameParityBreaches(repoRoot: string, owners: readonly string[]): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  for (const artRel of owners) {
-    for (const facetRel of POLICY_SCHEMA_FACET_RELS) {
-      const facetAbs = `${artRel}/${facetRel}`;
-      if (!existsSync(join(repoRoot, facetAbs))) continue;
-      const expected = policyDeclaredSchemaExportName(repoRoot, facetAbs);
-      if (!expected) {
-        breaches.push({
-          id: `artifact-schema-export-undeclared-${facetAbs}`,
-          summary: `"${facetAbs}" declares no export id in its normative JSON Schema`,
-          kind: "artifact-schema/type-name-parity",
-          scope: artRel,
-          priority: "high",
-          reason: "A scope names its exports itself: the facet's JSON Schema title is the root export id every other format must spell.",
-          solution: `Declare the PascalCase root export as "title" in ${facetAbs}/${canonicalPrimaryFilenameForKind(loadTaxonomy().schemaFormats["🔣️jsonschema"]!.fileKindId)}.`,
-        });
-        continue;
-      }
-      const leaves = policyLoadSchemaFacetLeaves(repoRoot, facetAbs);
-      for (const leaf of leaves) {
-        if (!leaf.extract) continue;
-        if (leaf.extract.typeName === expected) continue;
-        breaches.push({
-          id: `artifact-schema-type-name-missing-${leaf.relPath}`,
-          summary: `"${leaf.relPath}" does not declare the facet export ${expected}`,
-          kind: "artifact-schema/type-name-parity",
-          scope: artRel,
-          priority: "high",
-          reason: `Every leaf of facet ${facetRel} must declare the export id its JSON Schema title names (${expected}).`,
-          solution: `Declare ${expected} as the top-level type in ${leaf.relPath}.`,
-        });
-      }
-    }
-  }
-  return breaches;
-}
-
-/** ⚖️Aggregates artifact-schema facet scanners (completeness, parity, coverage). */
-export function policyArtifactSchemaBreaches(repoRoot: string): BreachRecord[] {
-  const owners = policyDiscoverArtifactSchemaOwners(repoRoot);
-  return [
-    ...policyArtifactSchemaFacetCompletenessBreaches(repoRoot, owners),
-    ...policyArtifactSchemaFieldParityBreaches(repoRoot, owners),
-    ...policyArtifactSchemaStateParityBreaches(repoRoot, owners),
-    ...policyArtifactSchemaDiffCoverageBreaches(repoRoot, owners),
-    ...policyArtifactSchemaTypeNameParityBreaches(repoRoot, owners),
-  ];
-}
-//#endregion 🔧️PolicyRuleArtifactSchemas
 
 //#region 🔧️PolicyRuleAppSchemas
 /**
@@ -22198,26 +21799,6 @@ function abstractionOwnershipRustCommands(source: string): string[] {
 }
 
 
-
-/** 🗿️ Audits exact document, snapshot and diff field names across all authored representations. */
-export function policyArtifactOwnershipFieldParity(root: string): { path: string; missing: string[]; extra: string[] }[] {
-  const fixture = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧫️fixtures/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { artifactSchemas: string[] };
-  const paths = new Set(fixture.artifactSchemas);
-  for (const path of fixture.artifactSchemas) if (!path.includes("/🔺️diff/")) paths.add(join(dirname(path), "📸️snapshot/🔣️.json"));
-  const representations = [["🦀️.rs", policyExtractRustSchemaFields], ["🟦️.ts", policyExtractTypescriptSchemaFields], ["🔗️.graphql", policyExtractGraphqlSchemaFields], ["🛰️.proto", policyExtractProtobufSchemaFields]] as const;
-  const breaches: { path: string; missing: string[]; extra: string[] }[] = [];
-  for (const path of paths) {
-    const schema = JSON.parse(readFileSync(join(root, path), "utf8")) as { title: string; properties: Record<string, unknown> };
-    for (const [filename, extract] of representations) {
-      const source = join(dirname(path), filename), text = policyReadFileSafe(root, source);
-      const declaration = filename === "🟦️.ts" ? policyExtractTypescriptSchemaFile(join(root, source), text, schema.title) : extract(text, schema.title);
-      const difference = policySchemaFieldDifferences(Object.keys(schema.properties ?? {}), declaration.fields.map((field) => field.name));
-      if (!declaration.typeName) difference.missing.unshift(`declaration:${schema.title}`);
-      if (difference.missing.length || difference.extra.length) breaches.push({ path: source, ...difference });
-    }
-  }
-  return breaches.sort((left, right) => left.path.localeCompare(right.path));
-}
 
 /** 🧪️ Compares language-independent ownership vectors with the independent Ajv schema evaluator. */
 export function abstractionOwnershipChecks(root: string): number {

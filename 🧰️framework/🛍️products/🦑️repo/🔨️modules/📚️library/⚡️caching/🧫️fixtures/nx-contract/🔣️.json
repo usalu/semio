@@ -363,13 +363,13 @@
       "project": "@semio-tech/framework-renderer-wgpu",
       "target": "native-build",
       "consumer": "native",
-      "output": "{projectRoot}/dist/native-dev"
+      "output": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/native-dev"
     },
     {
       "project": "@semio-tech/framework-renderer-wgpu",
       "target": "native-build-release",
       "consumer": "native-release",
-      "output": "{projectRoot}/dist/native-release"
+      "output": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/native-release"
     }
   ],
   "svgExport": {

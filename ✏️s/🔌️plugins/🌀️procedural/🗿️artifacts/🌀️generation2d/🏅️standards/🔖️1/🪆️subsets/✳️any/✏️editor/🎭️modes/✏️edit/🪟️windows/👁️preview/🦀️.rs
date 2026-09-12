@@ -7,6 +7,9 @@ use crate::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+
 //#region 🔖️Constants
 pub const GENERATION2D_PLAY_WINDOW_PREVIEW: &str = "generation2d-preview";
 pub const GENERATION2D_PLAY_BODY_PREVIEW: &str = "generation2d.play.preview";
@@ -37,7 +40,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Overlays evaluated draw-handle layers, plus (in `"wire"` show mode) a schematic node box per
 /// visible widget.
-pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, session: &FlowEvalSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, window_config: &config::Generation2dEditPreviewWindowConfig, session: &FlowEvalSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.fixture;
     let eval_json = session.eval_json();
     let prefix = "generation2d-preview";
@@ -54,7 +57,7 @@ pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, sess
     // 🕹️ `render` carries no `InteractionView` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM),
     // so the schematic wire overlay always shows every widget now (the pre-migration "nothing
     // selected" fallback), rather than filtering to a selection it can no longer read.
-    if config.show_mode == "wire" {
+    if app_config.show_mode == "wire" {
         for widget in &fixture.widgets {
             let id = crate::widget_id(widget).to_string();
             let (x, y) = fixture.layout.get(&id).map_or((48.0, 240.0), |layout| (layout.x, layout.y));
@@ -77,7 +80,7 @@ pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, sess
     crate::scene_surface(
         GENERATION2D_PLAY_SURFACE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: dsl::json::to_string(&dsl::json::Value::from(layers)), snapshot: None },
+        &Canvas2dScene { camera_x: window_config.viewport.x, camera_y: window_config.viewport.y, zoom: window_config.viewport.zoom, layers_json: dsl::json::to_string(&dsl::json::Value::from(layers)), snapshot: None },
     )
 }
 //#endregion 🔖️Render

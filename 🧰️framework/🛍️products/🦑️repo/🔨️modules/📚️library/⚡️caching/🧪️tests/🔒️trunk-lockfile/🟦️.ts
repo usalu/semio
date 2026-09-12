@@ -4,10 +4,33 @@ import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { runInNewContext } from "node:vm";
 
 /** 🔒️ Keeps Trunk's build/serve Cargo invocation on the committed dependency lock. */
 export async function testTrunkLockfile(workspace: string, native = false): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8"));
+  const workspaceProject = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8")), tooling = workspaceProject.targets[fixture.tooling.target];
+  assert.ok(tooling, "Trunk acquisition must have an explicit Nx prerequisite");
+  assert.equal(tooling.cache, false);
+  assert.deepEqual(tooling.outputs, []);
+  assert.equal(tooling.options.command, fixture.tooling.command);
+  assert.ok(workspaceProject.targets["deps-wasm"].dependsOn.includes(fixture.tooling.target));
+  const ts = require("typescript"), setupSource = ts.createSourceFile("setup.ts", readFileSync(join(workspace, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+  const setup = setupSource.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "SetupScript");
+  const members = ["ensureCargoTool", "ensureRustTarget", "runDependencies"].map(name => {
+    const method = setup.members.find((node: any) => node.name?.text === name); assert.ok(method, name); return method.getText(setupSource);
+  });
+  const code = ts.transpileModule(`class Preparation { root="fixture"; ${members.join("\n")} }`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  for (const row of fixture.tooling.cases) {
+    const commands: string[][] = [];
+    const preparation = runInNewContext(`${code}; new Preparation();`, {
+      orchestratorBudgetOpts: () => ({}), console: { log: () => {} },
+      runProbe: (command: string) => ({ status: 0, stdout: command === "trunk" ? row.version : row.targets }),
+      runCmd: (command: string, args: string[]) => { commands.push([command, ...args]); }
+    });
+    preparation.runDependencies("trunk");
+    assert.deepEqual(commands, row.commands, "Preparation must be pinned and avoid reinstalling ready tooling");
+  }
   for (const config of fixture.configs) {
     const path = config.trunk;
     const source = readFileSync(join(workspace, path), "utf8"), parsed = Bun.TOML.parse(source) as { build: Record<string, unknown>; hooks?: { stage: string; command: string; command_arguments: string[] }[] };
@@ -20,6 +43,12 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
     assert.equal(resolve(dirname(join(workspace, path)), hook.command_arguments[0]), resolve(import.meta.dir, "../../🦀️cargo/📜️script.ts"));
     assert.equal(resolve(workspace, hook.command_arguments.at(-1)!), join(dirname(join(workspace, path)), "Cargo.toml"));
     const projectPath = join(workspace, config.project), project = JSON.parse(readFileSync(projectPath, "utf8")), target = project.targets[fixture.target];
+    for (const consumer of fixture.tooling.consumers) assert.ok(project.targets[consumer].dependsOn.includes(`workspace:${fixture.tooling.target}`), `${consumer} must schedule Trunk preparation before execution`);
+    const routerSource = readFileSync(join(dirname(projectPath), "📜️script.ts"), "utf8");
+    assert.doesNotMatch(routerSource, /\bensure(?:Trunk|WasmTarget)\s*\(/, "Trunk build and serve must consume the Nx preparation");
+    const graph = { nodes: { workspace: { name: "workspace", type: "app", data: { root: ".", targets: { [fixture.tooling.target]: tooling } } }, renderer: { name: "renderer", type: "lib", data: { root: "renderer", targets: { wasm: project.targets.wasm, "generate-browser-boot": { ...project.targets["generate-browser-boot"], dependsOn: [] }, "generate-frame-worker": { ...project.targets["generate-frame-worker"], dependsOn: [] } } } } }, dependencies: { workspace: [], renderer: [] } };
+    const tasks = require("nx/src/tasks-runner/create-task-graph").createTaskGraph(graph, {}, ["renderer"], ["wasm"], undefined, {}, false);
+    assert.ok(tasks.dependencies["renderer:wasm"].includes(`workspace:${fixture.tooling.target}`));
     assert.equal(project.name, fixture.project);
     assert.deepEqual(target.outputs, []);
     assert.ok(target.options.command.includes("native cargo metadata --manifest"));
@@ -33,6 +62,7 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
     for (const file of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
       const editor = Bun.JSONC.parse(readFileSync(join(workspace, file), "utf8"));
       assert.equal(editor.configurations.filter((value: any) => value.command === `bun nx run ${fixture.project}:${fixture.target}`).length, 1, file);
+      assert.equal(editor.configurations.filter((value: any) => value.command === `bun nx run workspace:${fixture.tooling.target}`).length, 1, file);
     }
     if (native) {
       const env = { ...process.env }; delete env.NO_COLOR; delete env.FORCE_COLOR;
@@ -42,6 +72,7 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
     }
   }
   console.log(`[DEBUG] Trunk locked metadata hook matches Bun/smol-toml${native ? " and native Trunk config" : ""} PASS`);
+  console.log("[DEBUG] Trunk prerequisite graph is explicit; ready, stale and missing tooling follow the pinned preparation contract PASS");
 }
 
 /** 🔬️ Proves stale-lock rejection before compilation, including subsequent native watch rebuilds. */

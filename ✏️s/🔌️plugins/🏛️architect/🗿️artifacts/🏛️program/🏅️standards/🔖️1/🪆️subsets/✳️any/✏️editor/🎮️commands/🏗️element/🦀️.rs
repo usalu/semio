@@ -3,7 +3,7 @@
 
 pub mod add_element {
     use crate::editor::architect::catalog::default_element;
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::schema::mutations as leaves;
     use crate::ProgramSnapshot;
@@ -20,11 +20,9 @@ pub mod add_element {
     /// become the selection here — selection is framework-owned `InteractionState` now, only ever
     /// mutated by the framework's own injected `interactionSelect` handling, never by an app
     /// command's `Emit` (mirrors note's `add-block`).
-    pub fn handle(payload: &AddElement, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &AddElement, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let element = default_element(payload.name.clone());
-        let mut next = cfg.snapshot.clone();
-        next.active_register = "elements".into();
-        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: element })], config_mutations: snapshot(next), ..Default::default() })
+        Ok(Emit::mutations(vec![ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: element })]))
     }
 }
 

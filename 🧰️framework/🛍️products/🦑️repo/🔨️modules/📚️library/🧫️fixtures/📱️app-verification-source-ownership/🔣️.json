@@ -51,6 +51,11 @@
       "exports": ["validateOracleManifest", "oraclePlatformKey", "oracleManifest", "oracleToolDirectory", "fileSha256", "ensureOracleTool", "oracleEnvironment"]
     },
     {
+      "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🛠️toolchain/🔣️.json",
+      "language": "json",
+      "exports": []
+    },
+    {
       "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution/🟦️.ts",
       "language": "typescript",
       "exports": ["runOraclePython", "DepsScript", "SetupScript", "StatusScript", "RunScript", "NativeScript", "EpJsonScript", "EmitScript", "TestScript"]
@@ -137,6 +142,18 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📱️app-verification-source-ownership/🟦️.ts",
       "owners": ["✏️s/🔌️plugins/🔋️energy/🔮️oracles/🛠️toolchain/🟦️.ts"]
+    }
+  ],
+  "sourceDataConsumers": [
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🛠️toolchain/🟦️.ts",
+      "owners": ["✏️s/🔌️plugins/🔋️energy/🔮️oracles/🛠️toolchain/🔣️.json"],
+      "evidence": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🛠️toolchain/🔣️.json"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution/🟦️.ts",
+      "owners": ["✏️s/🔌️plugins/🔋️energy/🔮️oracles/🔣️.json"],
+      "evidence": "resolve(packageRoot, \"../..\", \"🔣️.json\")"
     }
   ],
   "registration": {

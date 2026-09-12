@@ -2,6 +2,16 @@
 @import "tailwindcss";
 @import "../🎨️palette/🎨️.css";
 @plugin "@tailwindcss/typography";
+/* 🧱️ The 🖱️ui module IS the class-name surface of this stylesheet, so it scans itself. Only the file
+   that carries `@import "tailwindcss"` has its `@source` honoured, and only relative to itself — the
+   two `@source` lines further out in `🧵️styles/🎨️.css` are resolved somewhere else entirely and reach
+   nothing here. Without this line every utility used ONLY inside `🧱️elements`/`🎯️targets` was dropped
+   from the served CSS while the same class name used in a consumer's own tree survived, so the loss
+   was invisible: `.z-menu`, `.z-dialog`, `.z-pane`, `.z-base` and `max-h-layout-command` were all
+   absent on the puzzle3d React serve, which left `ContextMenuChrome` at `z-index: auto` and painted
+   the shell's context menu UNDER the world canvas — `document.elementFromPoint` over a menu row
+   answered `CANVAS`, so no pointer could ever reach a row (wave B55, measured 2026-09-13 on :6013). */
+@source "../../";
 
 /* 🩹️ Tailwind v4's production CSS pass silently drops `@layer base` custom properties it decides are
    "unused" (its content scan only credits a property as used through a Tailwind-generated utility class,

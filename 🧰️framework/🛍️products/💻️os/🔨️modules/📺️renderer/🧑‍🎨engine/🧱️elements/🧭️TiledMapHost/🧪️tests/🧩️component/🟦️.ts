@@ -8,11 +8,88 @@
 
 // #region 🔌️Adapters
 import { afterEach, describe, expect, it, vi } from "vitest";
+import ts from "typescript";
 import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, MapRenderer } from "../../🟦️.tsx";
 import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
+import repaintFixture from "./🧫️repaint.json";
+import rendererSource from "../../🟦️.tsx?raw";
 // #endregion 🔌️Adapters
 
 const bytes = (n: number): ArrayBuffer => new ArrayBuffer(n);
+
+describe("MapRenderer idle appearance updates", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it.each(repaintFixture.cases)("repaints $name after the frame loop becomes idle", async ({ method, args }) => {
+    vi.useFakeTimers();
+    const renderFrame = vi.fn();
+    const session = {
+      renderFrame, visibleTilesRevision: () => 0, visibleVectorTilesRevision: () => 0,
+      visibleTilesJson: () => "[]", visibleVectorTilesJson: () => "[]",
+      prefetchTilesJson: () => "[]", prefetchVectorTilesJson: () => "[]",
+      setRenderMode: vi.fn(), setVectorStyle: vi.fn(), setLayerVisibilityJson: vi.fn(),
+      setLayerStrokeScaleJson: vi.fn(), syncInteraction: vi.fn(), free: vi.fn(),
+    } as unknown as MapWasmSession;
+    const renderer = new MapRenderer("/osm/{z}/{x}/{y}.png", "/vt/{z}/{x}/{y}.pbf", session);
+    try {
+      renderer.startLoop();
+      await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
+      const initialFrames = renderFrame.mock.calls.length;
+      expect(initialFrames).toBeGreaterThan(0);
+      await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
+      expect(renderFrame).toHaveBeenCalledTimes(initialFrames);
+      Reflect.apply(Reflect.get(renderer, method), renderer, args);
+      await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
+      expect(renderFrame.mock.calls.length).toBeGreaterThan(initialFrames);
+      const updatedFrames = renderFrame.mock.calls.length;
+      await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
+      expect(renderFrame).toHaveBeenCalledTimes(updatedFrames);
+    } finally {
+      renderer.dispose();
+    }
+  });
+
+  it("returns to idle when a pan pointer is cancelled", async () => {
+    vi.useFakeTimers();
+    const renderFrame = vi.fn();
+    const session = {
+      renderFrame, visibleTilesRevision: () => 0, visibleVectorTilesRevision: () => 0,
+      visibleTilesJson: () => "[]", visibleVectorTilesJson: () => "[]",
+      prefetchTilesJson: () => "[]", prefetchVectorTilesJson: () => "[]", free: vi.fn(),
+    } as unknown as MapWasmSession;
+    const renderer = new MapRenderer("/osm/{z}/{x}/{y}.png", "/vt/{z}/{x}/{y}.pbf", session);
+    const source = ts.createSourceFile("map.tsx", rendererSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    let initializer = "";
+    const visit = (node: ts.Node): void => {
+      if (ts.isVariableDeclaration(node) && node.name.getText(source) === "onPointerCancel") initializer = node.initializer!.getText(source);
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+    expect(initializer).not.toBe("");
+    const callback = ts.transpileModule(`const callback = ${initializer};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+    const pointer = { current: { leftDown: true, middleDown: true } };
+    const panningRef = { current: true };
+    const cancel = new Function("rendererRef", "pointer", "panningRef", "resetMarquee", "canvas", "mirrorSessionCameraToReact", `${callback}\nreturn callback;`)({ current: renderer }, pointer, panningRef, vi.fn(), { hasPointerCapture: () => false }, vi.fn());
+    const target = new EventTarget();
+    target.addEventListener(repaintFixture.cancelledPan.event, cancel);
+    try {
+      renderer.startLoop();
+      renderer.beginContinuousInteraction(repaintFixture.cancelledPan.reason);
+      await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
+      const event = new Event(repaintFixture.cancelledPan.event);
+      Object.defineProperty(event, "pointerId", { value: repaintFixture.cancelledPan.pointerId });
+      target.dispatchEvent(event);
+      await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
+      expect(pointer.current.middleDown).toBe(false);
+      expect(panningRef.current).toBe(false);
+      const frames = renderFrame.mock.calls.length;
+      await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
+      expect(renderFrame).toHaveBeenCalledTimes(frames);
+    } finally {
+      renderer.dispose();
+    }
+  });
+});
 
 //#region 🔖️ByteLru
 describe("createByteLru", () => {

@@ -1,5 +1,5 @@
 //! 🔬️ Architect play app commands — the analytical passes: validation, the analysis kinds, and the
-//! report kinds. Each records its outcome in the document register AND caches it in the config.
+//! report kinds. Analyses retain their current write-only cache; reports exist only as authored records.
 
 pub mod run_validation {
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
@@ -52,12 +52,13 @@ pub mod run_analysis {
 
 pub mod run_report {
     use crate::editor::architect::catalog::{report_kind_from_str, report_record_from};
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
+    use crate::editor::architect::modes::edit::windows::report::config;
     use crate::op::ProgramMutation;
     use crate::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::inferences::build_report;
     use crate::ProgramSnapshot;
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, ViewModel};
     use semio_framework_value_derive::{FromValue, ToValue};
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -66,14 +67,25 @@ pub mod run_report {
         pub report_kind: String,
     }
 
-    pub fn handle(payload: &RunReport, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &RunReport, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+        handle_with_view(payload, doc, None)
+    }
+
+    /// 📑️ Creates the authored report and selects it only for the exact invoking Report window.
+    pub fn handle_with_view(
+        payload: &RunReport,
+        doc: &ArtifactView<'_, ProgramSnapshot>,
+        view: Option<&ViewModel>,
+    ) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let kind = report_kind_from_str(&payload.report_kind);
         let report = build_report(program, kind);
         let record = report_record_from(program, kind, &report);
-        let mut next = cfg.snapshot.clone();
-        next.active_report_json = dsl::json::to_json_string(&report);
-        next.last_result_json = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(&report)));
-        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateReportRecord(leaves::create_report_record::CreateReportRecord { report_record: record })], config_mutations: snapshot(next), ..Default::default() })
+        let selected_report_id = record.header.id.clone();
+        let mut emit = Emit { artifact_mutations: vec![ProgramMutation::CreateReportRecord(leaves::create_report_record::CreateReportRecord { report_record: record })], ..Default::default() };
+        if let Some(mutation) = config::addressed_if_report(view, selected_report_id)? {
+            emit.window_config_mutations.push(mutation);
+        }
+        Ok(emit)
     }
 }

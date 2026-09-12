@@ -20,5 +20,15 @@ export function testFemScalarOwnerOracle(): void {
     direction = applyPatch(direction, patch, true, false).newDocument;
     assert.deepEqual(direction, step);
   });
-  console.log(`[DEBUG] FEM scalar owners match NumPy ${fixture.oracle.version}: three non-diagonal RHS columns and three retained precondition steps`);
+  const publication = fixture.publication;
+  assert.deepEqual(publication.eigenvalues, [...publication.diagonal].sort((left, right) => left - right));
+  for (const modes of publication.requestedModes) {
+    let values = applyPatch(publication.previous, [{ op: "replace", path: "", value: [] }], true, false).newDocument;
+    publication.steps.forEach((step, index) => {
+      values = applyPatch(values, [{ op: "add", path: "/-", value: publication.eigenvalues[index] }], true, false).newDocument;
+      assert.deepEqual(values, step);
+    });
+    assert.deepEqual(values.slice(0, modes), publication.eigenvalues.slice(0, modes));
+  }
+  console.log(`[DEBUG] FEM scalar owners match NumPy ${fixture.oracle.version}: three non-diagonal RHS columns, three retained precondition steps and two complete modal publication prefixes`);
 }

@@ -2,7 +2,7 @@
 //! adding, removing and patching its rows.
 
 pub mod select_register {
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::ProgramSnapshot;
     use dsl::{FromValue, ToValue};
@@ -14,17 +14,15 @@ pub mod select_register {
         pub register_id: String,
     }
 
-    pub fn handle(payload: &SelectRegister, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let mut next = cfg.snapshot.clone();
-        next.active_register = payload.register_id.clone();
-        Ok(Emit::config(snapshot(next)))
+    pub fn handle(_payload: &SelectRegister, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+        Ok(Emit::default())
     }
 }
 
 pub mod add_register_item {
     use crate::editor::architect::behavior::apply_template;
     use crate::editor::architect::catalog::add_register_item_operation;
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::{EntityId, ProgramSnapshot};
     use dsl::{FromValue, ToValue};
@@ -42,7 +40,7 @@ pub mod add_register_item {
     /// the selection here — selection is framework-owned `InteractionState` now, only ever mutated by
     /// the framework's own injected `interactionSelect` handling, never by an app command's `Emit`
     /// (mirrors note's `add-block`).
-    pub fn handle(payload: &AddRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &AddRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         if let Some(template_id) = &payload.template_id {
             let template_id = EntityId(template_id.clone());
@@ -54,9 +52,7 @@ pub mod add_register_item {
         let Some((operation, _id)) = add_register_item_operation(program, &payload.register_id, &payload.name) else {
             return Ok(Emit::default());
         };
-        let mut next = cfg.snapshot.clone();
-        next.active_register = payload.register_id.clone();
-        Ok(Emit { artifact_mutations: vec![operation], config_mutations: snapshot(next), ..Default::default() })
+        Ok(Emit::mutations(vec![operation]))
     }
 }
 

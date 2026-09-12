@@ -29,6 +29,7 @@ export async function testGeneratorOwnership(workspace: string, output: string):
   assert.deepEqual(tasks.dependencies["package:generate"].sort(), ["browser:generate-boot", "browser:generate-worker"]);
   assert.ok(projects.package.targets.generate.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
   await plugin.createDependencies({}, { workspaceRoot: root, projects });
+  assert.deepEqual(await plugin.createDependencies({}, { workspaceRoot: root, projects: {} }), []);
   const invalid = structuredClone(fixture.contract);
   invalid.outputRoots[0].producer.ownerPath = "missing";
   put(`${library}/🔣️taxonomy.json`, JSON.stringify({ generatorContracts: { fixture: invalid } }));

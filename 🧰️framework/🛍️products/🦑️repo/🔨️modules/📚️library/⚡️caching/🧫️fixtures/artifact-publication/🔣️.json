@@ -1,5 +1,11 @@
 {
   "owner": "gis:browser-support",
   "files": { "support.js": "export const ready = true;\n", "nested/worker.js": "postMessage('ready');\n" },
-  "cancelReason": "cancelled publication"
+  "cancelReason": "cancelled publication",
+  "cargo": { "name": "gis-artifact-fixture", "stdout": "GIS artifact ready\n" },
+  "wasm": [
+    { "name": "success", "status": 0, "output": true },
+    { "name": "failure", "status": 1, "output": false },
+    { "name": "missing", "status": 0, "output": false }
+  ]
 }

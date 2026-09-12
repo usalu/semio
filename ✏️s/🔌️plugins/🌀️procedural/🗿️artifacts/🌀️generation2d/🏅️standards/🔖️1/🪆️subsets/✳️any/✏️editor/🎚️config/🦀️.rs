@@ -1,16 +1,15 @@
 //! 🧮️ Generation2d play app — view state (`Generation2dConfig`) and its operation enum
 //! (`Generation2dConfigMutation`).
 //!
-//! This is APP state, not document state: selection, camera, and show-mode live here rather than under `🗿️artifacts/`, since none of it survives into the `.generation2d`
+//! This is APP state, not document state: show-mode and generation selection live here rather than under `🗿️artifacts/`, since neither survives into the `.generation2d`
 //! document. It still round-trips through a real `ArtifactStore` (with a real `backwards`), so every
 //! edit is VCS'd exactly like document content.
 
 use protocol::Mutation;
-use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Config
-/// 🧮️ `Generation2dPlayApp::Config` — the pure-trait config artifact. The graph camera, the show-mode
-/// display toggle and generation selection all round-trip through the
+/// 🧮️ `Generation2dPlayApp::Config` — the pure-trait config artifact. The show-mode display toggle
+/// and generation selection round-trip through the
 /// config `ArtifactStore` exactly like document content, with a real `backwards` per
 /// [`Generation2dConfigMutation`]. Selection/hover moved to the framework's own `graph` interaction
 /// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see
@@ -21,9 +20,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(id = "procedural.generation2dcfg")]
 #[dsl(layout = "lines")]
 pub struct Generation2dConfig {
-    /// 🗺️ The node-graph camera.
-    #[dsl(block)]
-    pub camera: CameraJson,
     /// 👁️ Display mode (`"preview"`/`"generate"`/`"wire"`).
     pub show_mode: String,
     /// 👁️ Active generation selection.
@@ -76,7 +72,7 @@ impl store::ArtifactPack for Generation2dConfig {
 
 impl Default for Generation2dConfig {
     fn default() -> Self {
-        Self { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, show_mode: default_show_mode(), selected_generation_id: None }
+        Self { show_mode: default_show_mode(), selected_generation_id: None }
     }
 }
 
@@ -97,11 +93,6 @@ pub enum Generation2dConfigMutation {
     Snapshot {
         #[dsl(block)]
         config: Generation2dConfig,
-    },
-    #[dsl(key = "camera")]
-    SetCamera {
-        #[dsl(block)]
-        camera: CameraJson,
     },
     #[dsl(key = "show-mode")]
     SetShowMode { value: String },
@@ -189,22 +180,6 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
         },
         protocol::MutationLeafDescriptor {
             schema_version: 1,
-            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-camera",
-            semantic_kind: "set-camera",
-            display_name: "Set Camera",
-            emoji: "⚙️",
-            aggregate_variant: "SetCamera",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
             owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-show-mode",
             semantic_kind: "set-show-mode",
             display_name: "Set Show Mode",
@@ -240,9 +215,8 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
             Generation2dConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            Generation2dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[1],
-            Generation2dConfigMutation::SetShowMode { .. } => &Self::DESCRIPTORS[2],
-            Generation2dConfigMutation::SetSelectedGeneration { .. } => &Self::DESCRIPTORS[3],
+            Generation2dConfigMutation::SetShowMode { .. } => &Self::DESCRIPTORS[1],
+            Generation2dConfigMutation::SetSelectedGeneration { .. } => &Self::DESCRIPTORS[2],
         }
     }
 
@@ -252,7 +226,6 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
         let mut next = base.clone();
         match self {
             Generation2dConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            Generation2dConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             Generation2dConfigMutation::SetShowMode { value } => next.show_mode = value.clone(),
             Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id } => next.selected_generation_id = selected_generation_id.clone(),
         }

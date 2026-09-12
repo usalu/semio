@@ -88,6 +88,21 @@ impl FromValue for Viewport3dOrbit {
 
 macro_rules! projection_string_enum {
     ($name:ty, $($variant:path => $value:literal),+ $(,)?) => {
+        impl serde::Serialize for $name {
+            fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+                serializer.serialize_str(match self { $($variant => $value),+ })
+            }
+        }
+
+        impl<'de> serde::Deserialize<'de> for $name {
+            fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+                match <String as serde::Deserialize>::deserialize(deserializer)?.as_str() {
+                    $($value => Ok($variant),)+
+                    value => Err(serde::de::Error::unknown_variant(value, &[$($value),+])),
+                }
+            }
+        }
+
         impl ToValue for $name {
             fn to_value(&self) -> DslValue {
                 DslValue::String(match self { $($variant => $value),+ }.into())
@@ -106,43 +121,35 @@ macro_rules! projection_string_enum {
 }
 
 /// 📐️ Selected projection family in a complete editable preference bank.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dProjectionKind { Orthographic, Axonometric, Oblique, OnePoint, TwoPoint, ThreePoint, Curvilinear }
 
 /// 🧭️ Cardinal viewport face shared by orthographic and active orientations.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dOrthographicView { Plan, Top, Bottom, Front, Back, Left, Right }
 
 /// 📐️ Axonometric preset family.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dAxonometricVariant { Isometric, Dimetric, Trimetric }
 
 /// 🧭️ Axonometric corner quadrant.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dAxonometricQuadrant { Ne, Nw, Se, Sw }
 
 /// 🌐️ Optional active corner hemisphere.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dAxonometricHemisphere { Upper, Lower }
 
 /// 📐️ Oblique projection preset family.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dObliqueVariant { Cabinet, Cavalier, Military }
 
 /// 🧭️ One-point perspective axis selection.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dOnePointAxis { X, Y, Z }
 
 /// 🐟️ Curvilinear projection mapping.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dCurvilinearMapping { Fisheye, Panini }
 
 projection_string_enum!(Viewport3dProjectionKind,
@@ -461,7 +468,23 @@ impl<T> Default for NonNullOption<T> {
 
 impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for NonNullOption<T> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        <T as serde::Deserialize>::deserialize(deserializer).map(|value| Self(Some(value)))
+        struct Visitor<T>(std::marker::PhantomData<T>);
+
+        impl<'de, T: serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<T> {
+            type Value = NonNullOption<T>;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.write_str("a non-null optional viewport projection value") }
+
+            fn visit_some<D: serde::Deserializer<'de>>(self, deserializer: D) -> Result<Self::Value, D::Error> {
+                <T as serde::Deserialize>::deserialize(deserializer).map(|value| NonNullOption(Some(value)))
+            }
+
+            fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E> { Err(E::custom("viewport projection option cannot be null")) }
+
+            fn visit_unit<E: serde::de::Error>(self) -> Result<Self::Value, E> { Err(E::custom("viewport projection option cannot be null")) }
+        }
+
+        deserializer.deserialize_option(Visitor(std::marker::PhantomData))
     }
 }
 

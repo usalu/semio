@@ -1,0 +1,40 @@
+{
+  "document": {
+    "bytes": "architect-program-document-v1",
+    "reports": [
+      { "id": "report-left", "title": "Left Report" },
+      { "id": "report-right", "title": "Right Report" }
+    ]
+  },
+  "windows": {
+    "register": {
+      "left": { "id": "architect-register-left", "kind": "architect-register", "config": { "activeRegister": "elements" } },
+      "right": { "id": "architect-register-right", "kind": "architect-register", "config": { "activeRegister": "risks" } }
+    },
+    "adjacency": {
+      "left": { "id": "architect-adjacency-left", "kind": "architect-adjacency", "config": {} },
+      "right": { "id": "architect-adjacency-right", "kind": "architect-adjacency", "config": { "adjacencyKindFilter": "prohibited" } }
+    },
+    "graph": {
+      "left": { "id": "architect-graph-left", "kind": "architect-graph", "config": { "viewport": { "x": 0, "y": 0, "zoom": 1 } } },
+      "right": { "id": "architect-graph-right", "kind": "architect-graph", "config": { "viewport": { "x": 90, "y": -30, "zoom": 2 } } }
+    },
+    "report": {
+      "left": { "id": "architect-report-left", "kind": "architect-report", "config": {} },
+      "right": { "id": "architect-report-right", "kind": "architect-report", "config": { "selectedReportId": "report-right" } }
+    }
+  },
+  "leftMutations": {
+    "register": { "kind": "set-active-register", "activeRegister": "requirements" },
+    "adjacency": { "kind": "set-adjacency-kind-filter", "adjacencyKindFilter": "preferred" },
+    "graph": { "kind": "set-viewport", "viewport": { "x": -20, "y": 12.5, "zoom": 1.75 } },
+    "report": { "kind": "select-report", "selectedReportId": "report-left" }
+  },
+  "expectedLeft": {
+    "register": { "activeRegister": "requirements" },
+    "adjacency": { "adjacencyKindFilter": "preferred" },
+    "graph": { "viewport": { "x": -20, "y": 12.5, "zoom": 1.75 } },
+    "report": { "selectedReportId": "report-left" }
+  },
+  "deletedReportSelection": { "selectedReportId": "report-deleted" }
+}

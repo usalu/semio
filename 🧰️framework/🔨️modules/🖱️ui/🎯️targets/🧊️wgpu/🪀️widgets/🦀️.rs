@@ -189,9 +189,12 @@ pub enum WidgetNode<E> {
 }
 
 const PANEL_HEADER: f32 = 24.0;
-pub(crate) const TREE_ROW_HEIGHT: f32 = 24.0;
-pub(crate) const TREE_INDENT_PER_LEVEL: f32 = 10.0;
-pub(crate) const TREE_TOGGLE_WIDTH: f32 = 14.0;
+/// 🌳️ The ONE tree row pitch, straight off `dom.treeRowUiSpacing` — the token React's `Tree` rows
+/// carry as `h-workbench`, and the same number `Theme::tree_row_height` hands the retained
+/// layout/paint/hit path (`layout::TreeRowMetrics`).
+pub(crate) const TREE_ROW_HEIGHT: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_ROW_UI_SPACING) as f32;
+pub(crate) const TREE_INDENT_PER_LEVEL: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_INDENT_PER_LEVEL_UI_SPACING) as f32;
+pub(crate) const TREE_TOGGLE_WIDTH: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_TOGGLE_UI_SPACING) as f32;
 pub(crate) const TREE_ICON_SIZE: f32 = 14.0;
 pub(crate) const TREE_SECTION_GAP: f32 = 8.0;
 

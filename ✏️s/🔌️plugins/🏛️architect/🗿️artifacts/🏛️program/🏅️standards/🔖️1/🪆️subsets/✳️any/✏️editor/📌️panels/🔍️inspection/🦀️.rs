@@ -1,6 +1,5 @@
 //! 🔍️ Architect inspection panel — the document-wide register summary.
 
-use crate::editor::architect::config::{active_register, ArchitectConfig};
 use crate::editor::architect::{ui_children, ui_label, ui_node};
 use crate::ProgramSnapshot;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
@@ -29,10 +28,9 @@ pub fn definition() -> PanelTabDefinition {
 /// tell which entity is currently selected — it always shows the document-wide register summary
 /// now; the per-selected-entity typed inspector branches (element/stakeholder/adjacency/
 /// requirement/risk/generic, keyed off the deleted `cfg.selected_ids`) are gone with it.
-pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let values = [
         ("schema", "Schema", program.schema.clone()),
-        ("active-register", "Active Register", active_register(cfg).to_string()),
         ("elements", "Elements", program.elements.len().to_string()),
         ("stakeholders", "Stakeholders", program.stakeholders.len().to_string()),
         ("adjacencies", "Adjacencies", program.adjacencies.len().to_string()),

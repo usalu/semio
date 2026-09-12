@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "wire", "admission", "physicalOwnership", "multiByteChunk", "outerCancellation", "anchors", "segments", "registries", "hostile", "valueTags"],
+  "required": ["schema", "wire", "admission", "physicalOwnership", "retainedCatalog", "multiByteChunk", "outerCancellation", "anchors", "segments", "registries", "hostile", "valueTags"],
   "properties": {
     "schema": {"const": "semio.retained-canonical-pack-laws.v1"},
     "wire": {"const": "SPK/1.0"},
@@ -50,6 +50,114 @@
         }
       }
     },
+    "retainedCatalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["constructionAllocates", "completedOwnership", "storage", "limits", "allocationPhases", "symbols", "cumulativeLimit", "countLimits", "pageCrossing", "invalidUtf8", "grants", "cancellation", "terminal"],
+      "properties": {
+        "constructionAllocates": {"const": false},
+        "completedOwnership": {"const": "cursor-borrowed"},
+        "storage": {"const": ["scalar-pages", "symbol-span-pages", "chunk-entry-pages", "observed-header-pages"]},
+        "limits": {"const": ["symbol-count", "symbol-utf8-bytes", "symbol-scalars", "chunk-count", "allocation-bytes"]},
+        "allocationPhases": {"const": ["symbol-spans", "symbol-scalars", "chunk-entries", "observed-headers"]},
+        "symbols": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["text", "utf8", "scalars"],
+            "properties": {
+              "text": {"type": "string"},
+              "utf8": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 255}},
+              "scalars": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 1114111}}
+            }
+          }
+        },
+        "cumulativeLimit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["values", "eachMaximumBytes", "totalMaximumBytes", "totalBytes", "acceptedBeforeRefusal"],
+          "properties": {
+            "values": {"type": "array", "minItems": 2, "items": {"type": "string"}},
+            "eachMaximumBytes": {"type": "integer", "minimum": 1},
+            "totalMaximumBytes": {"type": "integer", "minimum": 1},
+            "totalBytes": {"type": "integer", "minimum": 2},
+            "acceptedBeforeRefusal": {"type": "integer", "minimum": 1}
+          }
+        },
+        "countLimits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maximumSymbols", "maximumPlusOneSymbols", "maximumChunks", "maximumPlusOneChunks"],
+          "properties": {
+            "maximumSymbols": {"const": 2},
+            "maximumPlusOneSymbols": {"const": 3},
+            "maximumChunks": {"const": 2},
+            "maximumPlusOneChunks": {"const": 3}
+          }
+        },
+        "pageCrossing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pageBytes", "leadByteIndex", "utf8", "scalar"],
+          "properties": {
+            "pageBytes": {"const": 4096},
+            "leadByteIndex": {"const": 4095},
+            "utf8": {"const": [226, 130, 172]},
+            "scalar": {"const": 8364}
+          }
+        },
+        "invalidUtf8": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["malformedAfterPrefix", "truncatedAfterPrefix", "firstFaultPreserved"],
+          "properties": {
+            "malformedAfterPrefix": {"const": [97, 226, 40, 161]},
+            "truncatedAfterPrefix": {"const": [97, 240, 144, 141]},
+            "firstFaultPreserved": {"const": true}
+          }
+        },
+        "grants": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["opportunitiesPerGrant", "pendingInputPreserved", "zeroAllocationMutates", "subexactAllocationMutates", "subexactCloseMutates", "actualBackingAccounted", "overgrantFaultSticky"],
+          "properties": {
+            "opportunitiesPerGrant": {"const": 1},
+            "pendingInputPreserved": {"const": true},
+            "zeroAllocationMutates": {"const": false},
+            "subexactAllocationMutates": {"const": false},
+            "subexactCloseMutates": {"const": false},
+            "actualBackingAccounted": {"const": true},
+            "overgrantFaultSticky": {"const": true}
+          }
+        },
+        "cancellation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["phase", "partialSymbolBytes", "partialSymbolScalars", "aggregateAllocationEqualsRelease"],
+          "properties": {
+            "phase": {"const": "partial-symbol"},
+            "partialSymbolBytes": {"const": [97, 226]},
+            "partialSymbolScalars": {"const": [97]},
+            "aggregateAllocationEqualsRelease": {"const": true}
+          }
+        },
+        "terminal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pending", "partialSymbolBytes", "partialSymbolScalars", "logicalItems", "allocatedBytes", "receiptClosed"],
+          "properties": {
+            "pending": {"const": false},
+            "partialSymbolBytes": {"const": 0},
+            "partialSymbolScalars": {"const": 0},
+            "logicalItems": {"const": 0},
+            "allocatedBytes": {"const": 0},
+            "receiptClosed": {"const": true}
+          }
+        }
+      }
+    },
     "multiByteChunk": {
       "type": "object",
       "additionalProperties": false,
@@ -64,9 +172,19 @@
     "outerCancellation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["demandDelegation", "subexactGrant", "exactGrant", "workFuelPerCloseOpportunity", "terminal"],
+      "required": ["demandDelegation", "constructionCeilings", "subexactGrant", "exactGrant", "workFuelPerCloseOpportunity", "terminal"],
       "properties": {
         "demandDelegation": {"const": ["field-decoder", "vcs", "snapshot", "mounted-source"]},
+        "constructionCeilings": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["singleDemand", "cumulativeRetained", "oversizedNestedOwner"],
+          "properties": {
+            "singleDemand": {"const": "maximum-close-byte-demand"},
+            "cumulativeRetained": {"const": "maximum-retained-close-bytes"},
+            "oversizedNestedOwner": {"const": "returned-for-close"}
+          }
+        },
         "subexactGrant": {
           "type": "object",
           "additionalProperties": false,

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.app.architect.program.register_window_config;
+
+message ArchitectRegisterWindowConfig {
+  string active_register = 1;
+}
+
+message SetArchitectRegisterWindowActiveRegister {
+  string active_register = 1;
+}

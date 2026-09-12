@@ -1,0 +1,451 @@
+{
+  "provenance": {
+    "what": "The language-neutral oracle for a tree's row geometry: theme metrics + an authored tree of N rows -> the rect of every row, in that row's own parent space.",
+    "why": "On the wgpu target a tree row mounted as a keyed Stack with no arena children of its own (its icon, label, description and actions live inline on the owning Tree's spec), so the retained mounted layout measured it as padding_standard * 2 = 6.4 px and published THAT as the row's rect, while the painter stepped its own private cursor by a hardcoded 24.0. Hit-testing reads the published rects, so five clicks on the painted 'Add Generation' label dispatched nothing. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 📓️wgpu-tree-row-hit-test-2026-09-12.md.",
+    "rule": "Layout and paint share ONE row metric, and hit registration derives from the rects layout published - never a second geometry.",
+    "implementations": {
+      "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🌳️tree-row-rects/🦀️.rs",
+      "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌳️tree-row-rects/🟦️.ts"
+    }
+  },
+  "metrics": {
+    "source": "🖱️ui/🎨️styling/🔣️.json metrics.dom.treeRowUiSpacing x metrics.chrome.uiSpacingCompactPx",
+    "uiSpacingCompactPx": 3.2,
+    "treeRowUiSpacing": 7.5,
+    "rowHeightPx": 24.0,
+    "reactTwin": "domSizePx(\"treeRowUiSpacing\") in 🧱️elements/🌳️Tree/🟦️.tsx (treeRowHeightPx), --size-workbench = 1.5 * --size-small",
+    "rustTwin": "Theme::tree_row_height / layout::TreeRowMetrics::from_theme"
+  },
+  "rules": {
+    "sectionHeader": "A section contributes one header row of rowHeightPx when it is labelled, and none when it is not.",
+    "itemRow": "Every visible item contributes exactly one row of rowHeightPx, plus the rows of its nested items when it is expanded (default_open) and has any.",
+    "hidden": "An item whose presence is not visible contributes no row and no rect.",
+    "collapsed": "A collapsed item's nested rows contribute nothing.",
+    "width": "A row spans its tree's full width; x is 0 in its parent's space.",
+    "y": "A row's y is its parent's own header band (a section) or own row (an item), plus the heights of the preceding sibling rows."
+  },
+  "cases": [
+    {
+      "name": "one-labelled-section-of-three-flat-rows",
+      "why": "The generation3d Generations window shape: a labelled section whose rows are plain leaves. The defect measured every one of these at 6.4 px.",
+      "treeWidth": 308.992,
+      "tree": {
+        "sections": [
+          {
+            "id": "generations",
+            "label": "Generations",
+            "items": [
+              {
+                "id": "gen-a"
+              },
+              {
+                "id": "gen-b"
+              },
+              {
+                "id": "gen-c"
+              }
+            ]
+          }
+        ]
+      },
+      "treeHeight": 96.0,
+      "rects": [
+        {
+          "path": [
+            "generations"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 308.992,
+          "height": 96.0
+        },
+        {
+          "path": [
+            "generations",
+            "gen-a"
+          ],
+          "x": 0.0,
+          "y": 24.0,
+          "width": 308.992,
+          "height": 24.0
+        },
+        {
+          "path": [
+            "generations",
+            "gen-b"
+          ],
+          "x": 0.0,
+          "y": 48.0,
+          "width": 308.992,
+          "height": 24.0
+        },
+        {
+          "path": [
+            "generations",
+            "gen-c"
+          ],
+          "x": 0.0,
+          "y": 72.0,
+          "width": 308.992,
+          "height": 24.0
+        }
+      ]
+    },
+    {
+      "name": "unlabelled-action-section-first-row-is-the-add-generation-row",
+      "why": "The exact defect row: generate mode's unlabelled actions section, whose single row is 'Add Generation'. Published at [3.2, 16, 308.992, 6.4]; the painter drew it at [0, 0, 308.992, 24].",
+      "treeWidth": 308.992,
+      "tree": {
+        "sections": [
+          {
+            "id": "actions",
+            "items": [
+              {
+                "id": "add-generation"
+              }
+            ]
+          }
+        ]
+      },
+      "treeHeight": 24.0,
+      "rects": [
+        {
+          "path": [
+            "actions"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 308.992,
+          "height": 24.0
+        },
+        {
+          "path": [
+            "actions",
+            "add-generation"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 308.992,
+          "height": 24.0
+        }
+      ]
+    },
+    {
+      "name": "two-sections-stack-in-order",
+      "why": "The live generate-mode Generations window: a labelled list section above an unlabelled actions section. Pins that a section's y is the sum of the preceding sections.",
+      "treeWidth": 308.992,
+      "tree": {
+        "sections": [
+          {
+            "id": "generations",
+            "label": "Generations",
+            "items": [
+              {
+                "id": "gen-a"
+              },
+              {
+                "id": "gen-b"
+              }
+            ]
+          },
+          {
+            "id": "actions",
+            "items": [
+              {
+                "id": "add-generation"
+              }
+            ]
+          }
+        ]
+      },
+      "treeHeight": 96.0,
+      "rects": [
+        {
+          "path": [
+            "generations"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 308.992,
+          "height": 72.0
+        },
+        {
+          "path": [
+            "generations",
+            "gen-a"
+          ],
+          "x": 0.0,
+          "y": 24.0,
+          "width": 308.992,
+          "height": 24.0
+        },
+        {
+          "path": [
+            "generations",
+            "gen-b"
+          ],
+          "x": 0.0,
+          "y": 48.0,
+          "width": 308.992,
+          "height": 24.0
+        },
+        {
+          "path": [
+            "actions"
+          ],
+          "x": 0.0,
+          "y": 72.0,
+          "width": 308.992,
+          "height": 24.0
+        },
+        {
+          "path": [
+            "actions",
+            "add-generation"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 308.992,
+          "height": 24.0
+        }
+      ]
+    },
+    {
+      "name": "an-expanded-row-owns-its-nested-rows",
+      "why": "A row's height is its own row plus every nested row it reveals, so a pointer aiming at a nested row never lands on its parent.",
+      "treeWidth": 200.0,
+      "tree": {
+        "sections": [
+          {
+            "id": "outline",
+            "items": [
+              {
+                "id": "branch",
+                "defaultOpen": true,
+                "items": [
+                  {
+                    "id": "leaf-a"
+                  },
+                  {
+                    "id": "leaf-b"
+                  }
+                ]
+              },
+              {
+                "id": "after"
+              }
+            ]
+          }
+        ]
+      },
+      "treeHeight": 96.0,
+      "rects": [
+        {
+          "path": [
+            "outline"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 200.0,
+          "height": 96.0
+        },
+        {
+          "path": [
+            "outline",
+            "branch"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 200.0,
+          "height": 72.0
+        },
+        {
+          "path": [
+            "outline",
+            "branch",
+            "leaf-a"
+          ],
+          "x": 0.0,
+          "y": 24.0,
+          "width": 200.0,
+          "height": 24.0
+        },
+        {
+          "path": [
+            "outline",
+            "branch",
+            "leaf-b"
+          ],
+          "x": 0.0,
+          "y": 48.0,
+          "width": 200.0,
+          "height": 24.0
+        },
+        {
+          "path": [
+            "outline",
+            "after"
+          ],
+          "x": 0.0,
+          "y": 72.0,
+          "width": 200.0,
+          "height": 24.0
+        }
+      ]
+    },
+    {
+      "name": "a-collapsed-row-hides-its-nested-rows",
+      "why": "A collapsed branch is one row, and the row after it sits directly beneath - the painter skips the nested rows, so the layout must too.",
+      "treeWidth": 200.0,
+      "tree": {
+        "sections": [
+          {
+            "id": "outline",
+            "items": [
+              {
+                "id": "branch",
+                "items": [
+                  {
+                    "id": "leaf-a"
+                  },
+                  {
+                    "id": "leaf-b"
+                  }
+                ]
+              },
+              {
+                "id": "after"
+              }
+            ]
+          }
+        ]
+      },
+      "treeHeight": 48.0,
+      "rects": [
+        {
+          "path": [
+            "outline"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 200.0,
+          "height": 48.0
+        },
+        {
+          "path": [
+            "outline",
+            "branch"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 200.0,
+          "height": 24.0
+        },
+        {
+          "path": [
+            "outline",
+            "after"
+          ],
+          "x": 0.0,
+          "y": 24.0,
+          "width": 200.0,
+          "height": 24.0
+        }
+      ]
+    },
+    {
+      "name": "a-hidden-row-takes-no-space",
+      "why": "Hidden means not rendered at all - no row, no rect, and no gap where it would have been.",
+      "treeWidth": 200.0,
+      "tree": {
+        "sections": [
+          {
+            "id": "outline",
+            "items": [
+              {
+                "id": "shown"
+              },
+              {
+                "id": "hidden",
+                "hidden": true
+              },
+              {
+                "id": "after"
+              }
+            ]
+          }
+        ]
+      },
+      "treeHeight": 48.0,
+      "rects": [
+        {
+          "path": [
+            "outline"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 200.0,
+          "height": 48.0
+        },
+        {
+          "path": [
+            "outline",
+            "shown"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 200.0,
+          "height": 24.0
+        },
+        {
+          "path": [
+            "outline",
+            "after"
+          ],
+          "x": 0.0,
+          "y": 24.0,
+          "width": 200.0,
+          "height": 24.0
+        }
+      ]
+    }
+  ],
+  "hitTests": [
+    {
+      "case": "two-sections-stack-in-order",
+      "point": {
+        "x": 86.0,
+        "y": 84.0
+      },
+      "expects": "actions/add-generation",
+      "why": "The painted 'Add Generation' label. Under the defect this point fell outside the published 6.4 px row and dispatched nothing."
+    },
+    {
+      "case": "two-sections-stack-in-order",
+      "point": {
+        "x": 40.0,
+        "y": 30.0
+      },
+      "expects": "generations/gen-a",
+      "why": "The first list row under its section header."
+    },
+    {
+      "case": "two-sections-stack-in-order",
+      "point": {
+        "x": 40.0,
+        "y": 60.0
+      },
+      "expects": "generations/gen-b",
+      "why": "The second list row - proof the pitch is the row metric and not a distributed remainder."
+    },
+    {
+      "case": "an-expanded-row-owns-its-nested-rows",
+      "point": {
+        "x": 10.0,
+        "y": 36.0
+      },
+      "expects": "outline/branch/leaf-a",
+      "why": "A nested row wins over the branch row that contains it."
+    }
+  ]
+}

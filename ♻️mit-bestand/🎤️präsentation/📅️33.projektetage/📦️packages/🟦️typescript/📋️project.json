@@ -4,6 +4,7 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts",
       "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/**/*.ts",
       "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/**/*"
     ]

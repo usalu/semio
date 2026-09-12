@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.app.procedural.generation2d.main_window_config;
+import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🛰️.proto";
+message Generation2dMainWindowConfig {
+  semio.framework.ui.viewport.Viewport2d viewport = 1;
+}

@@ -53,7 +53,10 @@ fn window_config_pack_identity_rejects_foreign_inner_window_and_preserves_target
                     break;
                 }
             }
-            observed.push((row["id"].as_str().unwrap().to_owned(), admitted, row["accepted"].as_bool().unwrap(), unchanged, closed && registry.terminal_is_empty()));
+            let id = row["id"].as_str().unwrap().to_owned();
+            let terminal_empty = closed && registry.terminal_is_empty();
+            eprintln!("[DEBUG] Window Pack identity {id}: admitted={admitted}, target_unchanged={unchanged}, terminal_empty={terminal_empty}");
+            observed.push((id, admitted, row["accepted"].as_bool().unwrap(), unchanged, terminal_empty));
         }
         observed
     });
@@ -63,6 +66,5 @@ fn window_config_pack_identity_rejects_foreign_inner_window_and_preserves_target
         if !expected {
             assert!(unchanged, "{id}: refusal preserves target generation, revision and snapshot backing");
         }
-        eprintln!("[DEBUG] Window Pack identity {id}: admitted={admitted}, target_unchanged={unchanged}, terminal_empty={closed}");
     }
 }

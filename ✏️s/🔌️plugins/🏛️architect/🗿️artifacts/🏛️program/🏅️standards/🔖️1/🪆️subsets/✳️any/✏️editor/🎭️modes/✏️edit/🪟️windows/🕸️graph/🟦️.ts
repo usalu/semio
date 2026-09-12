@@ -1,22 +1,15 @@
+import type { Viewport2d } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
+
 /** 🕸️ Architect editor — Graph window: typed twin of `🦀️.rs`'s view boundary. Mirrors
- * `render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode`'s signature — the program
+ * `render(program: &ProgramSnapshot, cfg: &ArchitectGraphWindowConfig) -> UiNode`'s signature — the program
  * elements and their adjacencies as an undirected node-graph surface, laid out on a circle. */
 
-/** 🎥️ Ephemeral node-graph camera — mirrors the Rust `GraphCamera` struct, parsed from
- * `nodeGraphViewport`'s typed viewport payload and, on render, reassembled from the config's flattened
- * `graph_camera_{x,y,zoom}` fields. */
-export interface ArchitectGraphCamera {
-  x: number;
-  y: number;
-  zoom: number;
-}
-
 /** 🕸️ The Graph window's typed view-model — mirrors the Rust `render()` boundary's inputs: the whole
- * program document (read for its elements/adjacencies) plus the config-derived camera. */
+ * program document (read for its elements/adjacencies) plus the exact window's shared viewport. */
 export interface ArchitectGraphViewModel {
   windowKindId: "architect-graph";
   bodyKey: "architect.graph";
-  camera: ArchitectGraphCamera;
+  viewport: Viewport2d;
 }
 
 export const ARCHITECT_WINDOW_GRAPH = "architect-graph" as const;

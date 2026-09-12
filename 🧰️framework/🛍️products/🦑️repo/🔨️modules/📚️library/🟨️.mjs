@@ -1075,10 +1075,14 @@ function createDependenciesImplementation(_options, context) {
   };
   const authorityPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
   const generators = existsSync(authorityPath) ? JSON.parse(readFileSync(authorityPath, "utf8")).generatorContracts ?? {} : {};
-  for (const contract of Object.values(generators)) for (const output of contract.outputRoots ?? []) {
-    if (!output.producer) continue;
-    const producer = output.producer, separator = producer.target.lastIndexOf(":"), name = producer.target.slice(0, separator);
-    if (byRoot.get(resolve(workspaceRoot, producer.ownerPath)) !== name || !projects[name]?.targets?.[producer.target.slice(separator + 1)]) throw new Error(`Generator output has no Nx producer: ${output.path}`);
+  for (const contract of Object.values(generators)) {
+    const participants = [contract.ownerPath, ...contract.outputRoots.flatMap((output) => output.producer ? [output.producer.ownerPath] : [])];
+    if (!participants.some((root) => typeof root === "string" && byRoot.has(resolve(workspaceRoot, root)))) continue;
+    for (const output of contract.outputRoots) {
+      if (!output.producer) continue;
+      const producer = output.producer, separator = producer.target.lastIndexOf(":"), name = producer.target.slice(0, separator);
+      if (byRoot.get(resolve(workspaceRoot, producer.ownerPath)) !== name || !projects[name]?.targets?.[producer.target.slice(separator + 1)]) throw new Error(`Generator output has no Nx producer: ${output.path}`);
+    }
   }
   for (const [name, project] of Object.entries(projects)) {
     const go = goManifest(project.root, workspaceRoot);

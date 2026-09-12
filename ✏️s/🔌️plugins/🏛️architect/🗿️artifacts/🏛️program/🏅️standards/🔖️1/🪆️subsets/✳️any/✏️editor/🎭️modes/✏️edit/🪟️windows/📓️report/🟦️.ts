@@ -1,15 +1,11 @@
-/** 📄️ Architect editor — Report window: typed twin of `🦀️.rs`'s view boundary. Mirrors
- * `render(cfg: &ArchitectConfig) -> UiNode`'s signature — the last generated `ProgramReport`,
- * rendered as a section tree. No program document parameter: this window reads only the config's
- * cached `active_report_json`, unlike its four siblings. */
+/** 📄️ Architect editor — Report window: typed twin of `🦀️.rs`'s view boundary. The exact window
+ * stores only a selected authored ReportRecord identity and resolves its content from ProgramSnapshot. */
 
-/** 📄️ The Report window's typed view-model — mirrors the Rust `render()` boundary's sole input: the
- * config's cached report JSON (parsed on the Rust side by `parse_active_report`; `null` renders the
- * "Run validation, analysis, or report…" placeholder). */
+/** 📄️ The Report window's typed view-model. Missing ids remain explicit missing-record states. */
 export interface ArchitectReportViewModel {
   windowKindId: "architect-report";
   bodyKey: "architect.report";
-  activeReportJson: string;
+  selectedReportId?: string;
 }
 
 export const ARCHITECT_WINDOW_REPORT = "architect-report" as const;

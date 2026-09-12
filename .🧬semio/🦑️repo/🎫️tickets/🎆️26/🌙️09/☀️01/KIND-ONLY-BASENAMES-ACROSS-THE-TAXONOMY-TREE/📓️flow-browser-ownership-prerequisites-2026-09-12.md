@@ -41,3 +41,5 @@ The exact existing browser-types fixture and native tests must follow the move. 
 - generated/coordinator/flow-browser-current-nx-prerequisite.log
 
 All raw output/cache paths are disposable ticket-owned generated files; retain this report after cleanup.
+
+Additional concrete consumer from the current configuration baseline: 2D's Vitest `@semio-tech/flow-core` alias resolves under nonexistent `framework/🔨️modules/🛍️products/…/flow_core.js`. Include that alias in the actual Flow projection closure. The filesystem probe is not a test-execution result; rebind through the real producer contract and validate its native consumer rather than manufacturing a replacement module. See `📓️current-vitest-configuration-consumer-baseline-2026-09-12.md`.

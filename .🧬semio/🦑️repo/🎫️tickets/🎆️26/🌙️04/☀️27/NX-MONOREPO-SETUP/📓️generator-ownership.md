@@ -43,3 +43,23 @@ The broader suite then passed WGPU parity but failed a pre-existing command-impo
 The permanent combined ownership/projection/publication regression passed in 36.4 seconds after the missing-directory fix. In a private workspace, native Nx invoked the production WGPU renderer helpers and package publisher, starting with absent output directories. All six emitted artifacts matched the live canonical projection byte for byte. An unchanged run executed no producer. Removing all six output files and rerunning restored every byte without producer execution. An observable frame-worker source change reran the worker and package target while retaining the boot cache and unchanged declaration bytes. This does not delete or overwrite any active development artifacts.
 
 The test copies exact canonical input files into its private fixture and pins its own workspace, Nx data and cache paths. Third-party controls include native Nx scheduling/storage, Bun's compiler file-read census, and the existing Ajv/esbuild boot tests. Full repository validation with this new permanent regression and reviewed publication import budgets is running.
+
+## Empty-Checkout Discovery Correction
+
+The broad suite passed the publication regression and reached its empty-checkout tooling test, which failed because the fixture had not copied the inferred-test dependency helper. Adding that module exposed two further assumptions: inferred test discovery eagerly read the test command router despite finding no canonical cases, and physical-producer binding validation attempted to bind contracts whose participants were all absent.
+
+Discovery now computes command inputs only after identifying an actual canonical test case. Producer validation is scoped to contracts with a discovered participant; it still rejects a missing/mismatched producer when the package owner exists. A direct empty-project assertion was added alongside the existing invalid-producer regression. The bootstrap fixture includes the new plugin helper. Both focused tests are running before another full-suite retry.
+
+Root setup already contains a Trunk 0.21.14 pin in its wasm dependency branch, alongside wasm-pack 0.15.0, lock-selected wasm-bindgen and both Rust wasm targets. A future Trunk prerequisite refactor should reuse that existing authority instead of inventing a separate version.
+
+
+The corrected empty-checkout bootstrap test passed in 9.4 seconds, preserving foreign graph/cache storage, acquiring only pinned tooling and using the repository plugins to synchronize its private application fixture. The ownership, projection and six-artifact native restoration tests passed again in 17.1 seconds with the participant-scoped validation. A complete `repo:test` rerun is active. The remaining build-contract report now records an additional confirmed compiler-output defect: the real WGPU wasm target is cacheable with an empty output list despite writing Trunk deliverables. This is outside the completed generator partition and keeps the overall goal open.
+
+
+The complete retry passed all native command, WGPU restoration, inferred Rust input/hot-reload, dependency bootstrap, cancellation and inventory checks, then failed in editor/playground verification because the registry command router no longer exports `generatePlaygroundRegistry`. The test now imports the current playground discovery and session modules directly and shares one discovered playground list across its assertions. No registry compatibility export was introduced. Another full run is active; the 3m35s preceding run is not an overall pass.
+
+## Native Editor Coverage
+
+The following complete run failed after 4m31s on a missing native scale-fixture build launcher. A census against the native graph found ten missing build/check/test commands: nine across the package-body oracle, WGPU renderer Rust package and viewport Rust package, plus the scale-fixture native build. The seed now contains those nine entries in its existing Rust grouping and corrects the generic scale build entry from `build-wasm` to `build`; the separate wasm launcher remains.
+
+The focused native census passed in 1.3s with zero missing commands. Actual `@semio-tech/plugin-registry:generate` regenerated `.vscode/launch.json` successfully through Nx in 40.1s, including its discovery prerequisite. A complete `repo:test` retry now uses streamed output. Its result remains pending.

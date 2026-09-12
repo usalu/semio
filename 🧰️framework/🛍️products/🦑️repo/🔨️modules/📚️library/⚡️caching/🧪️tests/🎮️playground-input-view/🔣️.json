@@ -1,0 +1,7 @@
+{
+  "variants": ["fixture-b", "fixture-a"],
+  "cases": [
+    { "provided": false, "created": 1 },
+    { "provided": true, "created": 0 }
+  ]
+}

@@ -256,27 +256,40 @@ fn update_kind_weights_soft_replans_tail_without_rebuilding_queue() {
     assert!(engine.fill_steps_pending_for_test() > 0, "fill planning must continue after weight edits");
 }
 
+/// 🗺️ A scene sync invalidates the brush derivation PER OBJECT: an identical scene invalidates nothing,
+/// a new object enqueues exactly its own targets and nothing else, and only a fill-plan member change
+/// invalidates every candidate.
+///
+/// 🧾️ This law used to read `assert_ne!(work_pending, before)` for "a changed scene must rebuild the
+/// queue" — it pinned the whole-document wipe itself, which is the defect: on the 340-object
+/// brush-painted document every sync (and the 120 ms `suggestionsTick`/`fillBuildTick` cadence behind an
+/// interactive mutation) threw away every resolved candidate and re-walked the whole object × vortex
+/// product (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B54).
 #[test]
-fn set_scene_with_identical_json_preserves_precompute_progress() {
+fn a_scene_sync_invalidates_the_brush_derivation_per_object() {
     let mut engine = Puzzle3dCollision::new();
     let json = single_object_scene_json();
     engine.set_scene(&json).expect("first set_scene should succeed");
     let queue_len_before = engine.work_pending_for_test();
-    assert!(queue_len_before > 0, "rebuild_queue should have enqueued at least the fill steps");
+    assert!(queue_len_before > 0, "the first sync arms at least the fill steps");
     let progress_before = engine.precompute_progress_for_test();
     engine.precompute_step(4);
     let queue_len_after_step = engine.work_pending_for_test();
     assert!(engine.precompute_progress_for_test() > progress_before, "precompute_step should have completed some precompute work");
 
     engine.set_scene(&json).expect("resync with identical json should succeed");
-    assert_eq!(engine.work_pending_for_test(), queue_len_after_step, "identical scene JSON must not rebuild (wipe) the queue");
+    assert_eq!(engine.work_pending_for_test(), queue_len_after_step, "an identical scene invalidates nothing at all");
 
-    // A genuinely different scene (different object count) must still rebuild.
     let mut scene: serde_json::Value = serde_json::from_str(&json).unwrap();
-    scene["fixture"]["objects"].as_array_mut().unwrap().push(serde_json::json!({ "id": "extra", "objectKind": "Host", "meshUrl": "/test/host.glb", "origin": [5.0, 0.0, 0.0], "orientation": [0.0, 0.0, 0.0, 1.0], "vortices": [] }));
-    let changed_json = serde_json::to_string(&scene).unwrap();
-    engine.set_scene(&changed_json).expect("set_scene with a genuinely different scene should succeed");
-    assert_ne!(engine.work_pending_for_test(), queue_len_after_step, "a changed scene must rebuild the queue");
+    scene["fixture"]["objects"].as_array_mut().unwrap().push(serde_json::json!({ "id": "extra", "objectKind": "Host", "meshUrl": "/test/host.glb", "origin": [5.0, 0.0, 0.0], "orientation": [0.0, 0.0, 0.0, 1.0], "vortices": [{ "id": "v0", "vortexKind": "port-a", "position": [0.0, 0.0, 0.0], "direction": [0.0, 0.0, -1.0] }] }));
+    let grown_json = serde_json::to_string(&scene).unwrap();
+    engine.set_scene(&grown_json).expect("set_scene with one added object should succeed");
+    assert_eq!(engine.work_pending_for_test(), queue_len_after_step + 1, "one added object enqueues exactly its own one brush target, and no other object's");
+
+    let mut replanned: serde_json::Value = serde_json::from_str(&grown_json).unwrap();
+    replanned["overlapBudget"] = serde_json::json!(0.5);
+    engine.set_scene(&serde_json::to_string(&replanned).unwrap()).expect("set_scene with a new overlap budget should succeed");
+    assert_eq!(engine.work_pending_for_test(), engine.fill_steps_pending_for_test(), "a fill-plan member change invalidates every candidate and clears the queue for a whole-scene rebuild");
 }
 
 #[test]

@@ -69,6 +69,8 @@ if (args[0] === "verify-abstraction-ownership") {
   testFrameworkEmptyStateContract();
   runCmd("bun", [root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: root });
   if (args[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "framework_empty_state_contract_", "--", "--nocapture"], root);
+} else if (args[0] === "fem-scalar-owners-native") {
+  runCmd("bun", [root + "/📜️script.ts", "verify", ...args], { cwd: root });
 } else if (args[0] === "fem3d-numerical-child-native") {
   await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-3d", "--features", "component-app-assembly", "--lib", "live_visual::tests::", "--", "--nocapture"], root);
 } else if (args[0] === "fem2d-window-config-contract" || args[0] === "fem3d-window-config-contract") {

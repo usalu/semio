@@ -382,13 +382,22 @@ impl store::ArtifactEnvelopeOwnedFieldCatalog<ComposedParentSnapshot, RecursiveF
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         path: store::OwnedSchemaPath,
-    ) -> Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<ComposedParentSnapshot, RecursiveFixtureMutation>> {
-        Box::new(store::ArtifactEnvelopeFreshVcsAuthority::new(
+    ) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<ComposedParentSnapshot, RecursiveFixtureMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot>>> {
+        store::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
             std::sync::Arc::new(ComposedParentOwnedRetirementFactory::<ComposedParentSnapshot>::default()),
             std::sync::Arc::new(ComposedParentOwnedRetirementFactory::<RecursiveFixtureMutation>::default()),
             self.edit_history_decoder(),
-        ))
+        )
+        .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<ComposedParentSnapshot, RecursiveFixtureMutation>>)
+    }
+
+    fn maximum_vcs_close_byte_demand(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+    }
+
+    fn maximum_retained_vcs_close_bytes(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
     fn begin_snapshot(

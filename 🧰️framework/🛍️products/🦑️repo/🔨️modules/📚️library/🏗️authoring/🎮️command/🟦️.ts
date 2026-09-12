@@ -57,7 +57,21 @@ export class CleanMechanismNewScript extends Script {
       if (kind === "mutation") {
         if (positional.length !== 2) throw new Error("usage: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [options]");
         const [owner, name] = positional as [string, string];
-        const result = newScaffoldMutationTree(repoRoot, owner, name, { composite: flags.has("--composite"), text: flags.has("--text"), binary: flags.has("--binary"), typescript: flags.has("--typescript"), graphql: flags.has("--graphql"), protobuf: flags.has("--protobuf"), jsonSchema: flags.has("--json-schema") }, dryRun);
+        const result = newScaffoldMutationTree(
+          repoRoot,
+          owner,
+          name,
+          {
+            composite: flags.has("--composite"),
+            text: flags.has("--text"),
+            binary: flags.has("--binary"),
+            typescript: flags.has("--typescript"),
+            graphql: flags.has("--graphql"),
+            protobuf: flags.has("--protobuf"),
+            jsonSchema: flags.has("--json-schema"),
+          },
+          dryRun,
+        );
         this.report(`${owner}/${name}`, result.created, result.skipped, dryRun);
         for (const edit of result.updated) console.log(`  ${dryRun ? "~ (dry-run)" : "~"} ${edit}`);
         return;

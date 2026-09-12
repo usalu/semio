@@ -69,7 +69,7 @@ export function newScaffoldStandardTree(repoRoot: string, standardRel: string, d
   const taxonomy = loadTaxonomy();
   const rustLeaf = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🦀️rust"]!, taxonomy);
   const typescriptLeaf = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🟦️typescript"]!, taxonomy);
-  const subsetsManifest = canonicalFilenameForKind(taxonomy.subsetsManifestFileKindId, taxonomy);
+  const subsetsManifest = canonicalFilenameForKind(taxonomy.subsetsManifestFileKindId!, taxonomy);
   newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/${rustLeaf}`, newScaffoldRustLeaf("standard root (standard() -> StandardDeclaration stub; mounts subsets)"), created, skipped, dryRun);
   newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/${typescriptLeaf}`, newScaffoldTsLeaf("standard root"), created, skipped, dryRun);
   const manifest = { standard: policyStripEmoji(standardRel.split("/").pop() ?? ""), subsets: { "*": {} } };

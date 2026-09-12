@@ -2,9 +2,11 @@
 
 use crate::editor::architect::catalog::register_entities;
 use crate::editor::architect::chrome::{entity_id_from_json, entity_name_from_json};
-use crate::editor::architect::config::{active_register, ArchitectConfig};
 use crate::ProgramSnapshot;
 use semio_framework_plugin::{BlockListScene, Label, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_REGISTER: &str = "architect-register";
@@ -58,8 +60,8 @@ struct RegisterBlockItem {
     kind: String,
 }
 
-pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let register = active_register(cfg);
+pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let register = cfg.active_register.as_str();
     let entities = register_entities(program, register);
     if entities.is_empty() {
         return semio_framework_plugin::built_text_node(Label::data(format!("No entities in register '{register}'."))).map_err(|_| crate::editor::architect::ui_capacity_error());

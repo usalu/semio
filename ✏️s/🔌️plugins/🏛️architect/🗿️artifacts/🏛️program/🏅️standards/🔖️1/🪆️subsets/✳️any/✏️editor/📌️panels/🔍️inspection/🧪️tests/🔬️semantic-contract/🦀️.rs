@@ -9,12 +9,11 @@ fn project(node: BuiltNode) -> serde_json::Value {
 fn architect_semantic_panels_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️panels.json")).expect("neutral semantic vectors");
     let program = crate::sample_plugin();
-    let cfg = ArchitectConfig::default();
-    let tree = project(render(&program, &cfg).expect("inspector"));
+    let tree = project(render(&program).expect("inspector"));
     let fields = tree["children"][0]["children"].as_array().expect("summary fields");
     assert_eq!(serde_json::Value::Array(fields.iter().map(|field| field["component"]["label"].clone()).collect()), vectors["summaryFields"]);
-    assert_eq!(fields[1]["children"][0]["component"]["value"], vectors["activeRegister"]);
-    let node = crate::editor::architect::modes::edit::windows::adjacency::render(&program, &cfg).expect("adjacency");
+    let adjacency_cfg = crate::editor::architect::modes::edit::windows::adjacency::config::ArchitectAdjacencyWindowConfig::default();
+    let node = crate::editor::architect::modes::edit::windows::adjacency::render(&program, &adjacency_cfg).expect("adjacency");
     let binding: serde_json::Value = serde_json::to_value(&node.children[1].children[1].bindings[0]).expect("independent adjacency binding oracle");
     project(node);
     assert_eq!(binding["args"]["cycle"], true);
@@ -31,12 +30,15 @@ fn architect_semantic_panels_match_the_json_oracle() {
     for total in vectors["viewerTotals"].as_array().expect("totals") {
         assert!(tree.to_string().contains(total.as_str().expect("total")));
     }
+    let graph_cfg = crate::editor::architect::modes::edit::windows::graph::config::ArchitectGraphWindowConfig::default();
+    let register_cfg = crate::editor::architect::modes::edit::windows::register::config::ArchitectRegisterWindowConfig::default();
+    let report_cfg = crate::editor::architect::modes::edit::windows::report::config::ArchitectReportWindowConfig::default();
     for node in [
-        crate::editor::architect::modes::edit::windows::graph::render(&program, &cfg).expect("graph"),
-        crate::editor::architect::modes::edit::windows::register::render(&program, &cfg).expect("register"),
-        crate::editor::architect::modes::edit::windows::report::render(&cfg).expect("report placeholder"),
+        crate::editor::architect::modes::edit::windows::graph::render(&program, &graph_cfg).expect("graph"),
+        crate::editor::architect::modes::edit::windows::register::render(&program, &register_cfg).expect("register"),
+        crate::editor::architect::modes::edit::windows::report::render(&program, &report_cfg, &semio_framework_plugin::ViewModel::default()).expect("report placeholder"),
         crate::editor::architect::modes::edit::windows::trace::render(&program).expect("trace"),
-        crate::editor::architect::panels::document::render(&program, &cfg).expect("document"),
+        crate::editor::architect::panels::document::render(&program).expect("document"),
     ] {
         project(node);
     }

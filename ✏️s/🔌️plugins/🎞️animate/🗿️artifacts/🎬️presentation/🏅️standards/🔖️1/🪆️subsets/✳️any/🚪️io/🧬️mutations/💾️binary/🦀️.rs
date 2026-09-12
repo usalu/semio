@@ -309,13 +309,22 @@ pub fn presentation_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDec
 }
 
 impl store::ArtifactEnvelopeOwnedFieldCatalog<PresentationSnapshot, PresentationMutation> for PresentationEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<PresentationSnapshot, PresentationMutation>> {
-        Box::new(store::ArtifactEnvelopeFreshVcsAuthority::new(
+    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<PresentationSnapshot, PresentationMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot>>> {
+        store::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
             std::sync::Arc::new(PresentationFreshSnapshotRetirementFactory),
             std::sync::Arc::new(PresentationUnexpectedMutationRetirementFactory),
             self.edit_history_decoder(),
-        ))
+        )
+        .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<PresentationSnapshot, PresentationMutation>>)
+    }
+
+    fn maximum_vcs_close_byte_demand(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+    }
+
+    fn maximum_retained_vcs_close_bytes(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
     fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot>> {

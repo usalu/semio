@@ -2,14 +2,12 @@
   "schema": "architect.program",
   "summaryFields": [
     "Schema",
-    "Active Register",
     "Elements",
     "Stakeholders",
     "Adjacencies",
     "Requirements",
     "Risks"
   ],
-  "activeRegister": "elements",
   "controller": "s.architect.program@1/*#editor",
   "adjacencyArgs": [
     "cycle",

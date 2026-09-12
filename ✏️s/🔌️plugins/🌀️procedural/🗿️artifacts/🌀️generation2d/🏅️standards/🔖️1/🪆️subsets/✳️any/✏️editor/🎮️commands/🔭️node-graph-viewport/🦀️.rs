@@ -3,7 +3,6 @@
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
 use crate::Generation2dSnapshot;
-use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework::Viewport2d;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -16,7 +15,6 @@ pub struct NodeGraphViewport {
     pub viewport: Viewport2d,
 }
 
-pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    let viewport = payload.viewport;
-    Ok(Emit::config(vec![Generation2dConfigMutation::SetCamera { camera: CameraJson { x: viewport.x, y: viewport.y, zoom: viewport.zoom } }]))
+pub fn handle(_payload: &NodeGraphViewport, _doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
+    Ok(Emit::default())
 }

@@ -5,14 +5,9 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "camera",
     "showMode"
   ],
   "properties": {
-    "camera": {
-      "$ref": "https://semio.tech/schema/s/procedural/generation2d/artifact.json#/$defs/CameraJson",
-      "x-semio-state": "config"
-    },
     "showMode": {
       "type": "string",
       "x-semio-state": "config"

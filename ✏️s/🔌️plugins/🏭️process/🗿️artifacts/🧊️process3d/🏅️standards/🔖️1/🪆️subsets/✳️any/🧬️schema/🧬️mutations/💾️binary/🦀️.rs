@@ -2050,13 +2050,22 @@ impl store::ArtifactEnvelopeSprConflictAuthority for Process3dRejectedConflictAu
 pub struct Process3dEnvelopeOwnedFieldCatalog;
 
 impl store::ArtifactEnvelopeOwnedFieldCatalog<Process3dSnapshot, Process3dMutation> for Process3dEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Process3dSnapshot, Process3dMutation>> {
-        Box::new(store::ArtifactEnvelopeFreshVcsAuthority::new(
+    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Process3dSnapshot, Process3dMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot>>> {
+        store::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
             std::sync::Arc::new(Process3dSnapshotRetirementFactory),
             std::sync::Arc::new(Process3dMutationRetirementFactory),
             self.edit_history_decoder(),
-        ))
+        )
+        .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Process3dSnapshot, Process3dMutation>>)
+    }
+
+    fn maximum_vcs_close_byte_demand(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+    }
+
+    fn maximum_retained_vcs_close_bytes(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
     fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot>> {

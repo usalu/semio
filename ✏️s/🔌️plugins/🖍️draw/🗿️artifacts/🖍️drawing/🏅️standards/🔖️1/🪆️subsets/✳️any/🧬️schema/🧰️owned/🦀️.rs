@@ -448,6 +448,23 @@ fn decode_drawing_mutation_pack(bytes: &[u8]) -> Result<DrawingMutation, ()> {
     DrawingMutation::decode_op(bytes).map_err(|_| ())
 }
 
+macro_rules! drawing_owned_field_close_capacity {
+    (ArtifactEnvelopeSnapshotFieldAuthority) => {
+        fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+            Ok(usize::from(self.retirement.is_some()) * DRAWING_OWNED_FIELD_BYTES)
+        }
+
+        fn maximum_close_byte_demand(&self) -> usize {
+            store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        }
+
+        fn maximum_retained_close_bytes(&self) -> usize {
+            store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        }
+    };
+    (ArtifactEnvelopeMutationFieldAuthority) => {};
+}
+
 macro_rules! drawing_owned_field_authority {
     ($state:ident, $authority:ident, $value:ty, $authority_trait:ident, $target_trait:ident, $publish:ident, $decode:path, $factory:expr, $kind:literal) => {
         #[expect(clippy::large_enum_variant, reason = "The active decoder keeps its fixed path and admitted hex authority inline without a second allocation at the state transition.")]
@@ -529,6 +546,8 @@ macro_rules! drawing_owned_field_authority {
                 self.state = $state::Published;
                 Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
             }
+
+            drawing_owned_field_close_capacity!($authority_trait);
 
             fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
                 if maximum_items == 0 {
@@ -629,13 +648,22 @@ impl store::ArtifactEnvelopeSprConflictAuthority for DrawingRejectedConflictAuth
 pub struct DrawingEnvelopeOwnedFieldCatalog;
 
 impl store::ArtifactEnvelopeOwnedFieldCatalog<DrawingSnapshot, DrawingMutation> for DrawingEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<DrawingSnapshot, DrawingMutation>> {
-        Box::new(store::ArtifactEnvelopeFreshVcsAuthority::new(
+    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<DrawingSnapshot, DrawingMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<DrawingSnapshot>>> {
+        store::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
             std::sync::Arc::new(DrawingSnapshotRetirementFactory),
             std::sync::Arc::new(DrawingMutationRetirementFactory),
             self.edit_history_decoder(),
-        ))
+        )
+        .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<DrawingSnapshot, DrawingMutation>>)
+    }
+
+    fn maximum_vcs_close_byte_demand(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+    }
+
+    fn maximum_retained_vcs_close_bytes(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
     fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<DrawingSnapshot>> {

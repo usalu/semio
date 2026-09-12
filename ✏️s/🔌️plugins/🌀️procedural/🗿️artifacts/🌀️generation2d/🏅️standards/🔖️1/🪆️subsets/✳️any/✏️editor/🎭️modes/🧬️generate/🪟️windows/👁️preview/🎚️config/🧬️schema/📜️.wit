@@ -1,0 +1,8 @@
+package semio:procedural-generation2d-generate-preview-window-config@1.0.0;
+
+interface config {
+    record viewport2d { x: f64, y: f64, zoom: f64 }
+    record generate-preview-window-config { viewport: viewport2d }
+}
+
+world generation2d-generate-preview-window-config { export config; }

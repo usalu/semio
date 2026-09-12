@@ -2,14 +2,7 @@ syntax = "proto3";
 package semio.app.generation.2d;
 message Generation2dConfig {
   // @state config
-  CameraJson camera = 1;
+  string show_mode = 1;
   // @state config
-  string show_mode = 2;
-  // @state config
-  optional string selected_generation_id = 3;
-}
-message CameraJson {
-  double x = 1;
-  double y = 2;
-  double zoom = 3;
+  optional string selected_generation_id = 2;
 }

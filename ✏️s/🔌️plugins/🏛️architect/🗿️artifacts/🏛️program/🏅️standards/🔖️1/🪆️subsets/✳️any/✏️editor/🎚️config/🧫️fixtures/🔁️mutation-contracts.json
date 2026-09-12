@@ -1,14 +1,9 @@
 {
   "base": {
-    "activeRegister": "",
     "searchQuery": "",
     "searchHistoryJson": "",
-    "activeReportJson": "",
     "lastResultJson": "",
-    "lastAnalysisJson": "",
-    "graphCameraX": 0.0,
-    "graphCameraY": 0.0,
-    "graphCameraZoom": 1.0
+    "lastAnalysisJson": ""
   },
   "cases": [
     {
@@ -16,30 +11,18 @@
       "mutation": {
         "ReplaceConfig": {
           "config": {
-            "activeRegister": "requirements",
             "searchQuery": "Überblick",
             "searchHistoryJson": "[]",
-            "activeReportJson": "{}",
             "lastResultJson": "[]",
-            "lastAnalysisJson": "{}",
-            "graphCameraX": -20.0,
-            "graphCameraY": 12.5,
-            "graphCameraZoom": 2.0,
-            "adjacencyKindFilter": "preferred"
+            "lastAnalysisJson": "{}"
           }
         }
       },
       "expected": {
-        "activeRegister": "requirements",
         "searchQuery": "Überblick",
         "searchHistoryJson": "[]",
-        "activeReportJson": "{}",
         "lastResultJson": "[]",
-        "lastAnalysisJson": "{}",
-        "graphCameraX": -20.0,
-        "graphCameraY": 12.5,
-        "graphCameraZoom": 2.0,
-        "adjacencyKindFilter": "preferred"
+        "lastAnalysisJson": "{}"
       }
     }
   ]

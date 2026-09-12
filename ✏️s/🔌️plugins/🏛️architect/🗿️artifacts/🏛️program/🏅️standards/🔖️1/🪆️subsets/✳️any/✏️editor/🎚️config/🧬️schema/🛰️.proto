@@ -1,33 +1,13 @@
 syntax = "proto3";
 package semio.app.architect.architect;
 
-enum AdjacencyKind {
-  ADJACENCY_KIND_UNSPECIFIED = 0;
-  ADJACENCY_KIND_REQUIRED = 1;
-  ADJACENCY_KIND_PREFERRED = 2;
-  ADJACENCY_KIND_OPTIONAL = 3;
-  ADJACENCY_KIND_PROHIBITED = 4;
-}
-
 message ArchitectConfig {
   // @state config
-  string active_register = 1;
+  string search_query = 1;
   // @state config
-  string search_query = 2;
+  string search_history_json = 2;
   // @state config
-  string search_history_json = 3;
+  string last_result_json = 3;
   // @state config
-  string active_report_json = 4;
-  // @state config
-  string last_result_json = 5;
-  // @state config
-  string last_analysis_json = 6;
-  // @state config
-  optional AdjacencyKind adjacency_kind_filter = 7;
-  // @state config
-  double graph_camera_x = 8;
-  // @state config
-  double graph_camera_y = 9;
-  // @state config
-  double graph_camera_zoom = 10;
+  string last_analysis_json = 4;
 }

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.app.architect.program.graph_window_config;
+import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🛰️.proto";
+
+message ArchitectGraphWindowConfig {
+  semio.framework.ui.viewport.Viewport2d viewport = 1;
+}
+
+message SetArchitectGraphWindowViewport {
+  semio.framework.ui.viewport.Viewport2d viewport = 1;
+}

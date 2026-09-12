@@ -1,6 +1,11 @@
 {
   "name": "abstraction-ownership-validation",
   "targets": {
+    "fem-scalar-owners-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts fem-scalar-owners-native" }
+    },
     "window-config-pack-identity": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1028,6 +1033,20 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts framework-retained-pack-ownership native"
+      }
+    },
+    "framework-retained-pack-outer-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-retained-pack-ownership outer-native"
+      }
+    },
+    "framework-retained-pack-catalog-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-retained-pack-ownership catalog-native"
       }
     },
     "node-graph-viewport-ownership": {

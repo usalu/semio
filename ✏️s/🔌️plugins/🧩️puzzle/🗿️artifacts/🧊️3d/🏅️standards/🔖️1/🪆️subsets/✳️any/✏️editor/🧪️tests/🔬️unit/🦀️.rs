@@ -364,8 +364,10 @@ pub(crate) mod context {
 
     pub async fn settle_with_items(app: &mut Puzzle3dApp, maximum_items: usize) -> Puzzle3dSettled {
         let mut settled = Puzzle3dSettled::default();
+        let census_before = semio_framework_plugin::app::typed_operation_unit_census();
         for _ in 0..1_048_576 {
             if !app.has_pending_typed_operations() {
+                settled.census = semio_framework_plugin::app::typed_operation_unit_census() - census_before;
                 return settled;
             }
             settled.turns += 1;
@@ -409,6 +411,11 @@ pub(crate) mod context {
         /// turns × per-turn cost and a turn count that grows with the document is the shape that burns a
         /// 30-second interaction budget.
         pub turns: usize,
+        /// 📊️ What those turns spent their publication units on, split by ladder. Ticket
+        /// 26/09/02/PUZZLE-3D-END-TO-END wave B54: a turn now drives a bounded RUN of units, so `turns`
+        /// alone can no longer say where a mutation's cost went and `turns` vs `census.units` is the
+        /// wave's whole before/after ratio.
+        pub census: semio_framework_plugin::app::TypedOperationUnitCensus,
         pub effects: Vec<Effect>,
         pub events: Vec<semio_framework_plugin::AppEvent>,
         pub scope: Option<UiDirtyScope>,

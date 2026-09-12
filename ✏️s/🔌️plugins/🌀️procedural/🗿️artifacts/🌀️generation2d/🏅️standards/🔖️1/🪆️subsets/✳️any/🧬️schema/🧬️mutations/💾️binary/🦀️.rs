@@ -2007,8 +2007,8 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
                 self.state = Generation2dPackSnapshotState::Drive;
                 return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
-            if let Some(exact) = self.session.as_ref().expect("P2 mounted pack session retained").next_source_allocation_bytes().map_err(|_| self.diagnostic("generation2d-envelope.snapshot-source-allocation", retained.start + self.relative as u64))? {
-                let step = self.session.as_mut().expect("P2 mounted pack session retained").reserve_source_page(exact).map_err(|_| self.diagnostic("generation2d-envelope.snapshot-source-allocation", retained.start + self.relative as u64))?;
+            if let Some(exact) = self.session.as_mut().expect("P2 mounted pack session retained").next_retained_allocation_bytes().map_err(|_| self.diagnostic("generation2d-envelope.snapshot-source-allocation", retained.start + self.relative as u64))? {
+                let step = self.session.as_mut().expect("P2 mounted pack session retained").reserve_retained_allocation(exact).map_err(|_| self.diagnostic("generation2d-envelope.snapshot-source-allocation", retained.start + self.relative as u64))?;
                 if !step.progressed {
                     return Err(self.diagnostic("generation2d-envelope.snapshot-source-allocation-stalled", retained.start + self.relative as u64));
                 }
@@ -2031,6 +2031,14 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
         }
         if self.state == Generation2dPackSnapshotState::Drive {
             cx.set_stage("generation2d-retained-canonical-pack");
+            if let Some(exact) = self.session.as_mut().expect("P2 mounted pack session retained").next_retained_allocation_bytes().map_err(|_| self.diagnostic("generation2d-envelope.snapshot-retained-allocation", token.start))? {
+                let step = self.session.as_mut().expect("P2 mounted pack session retained").reserve_retained_allocation(exact).map_err(|_| self.diagnostic("generation2d-envelope.snapshot-retained-allocation", token.start))?;
+                if !step.progressed {
+                    return Err(self.diagnostic("generation2d-envelope.snapshot-retained-allocation-stalled", token.start));
+                }
+                cx.consume_fuel(1);
+                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            }
             cx.consume_fuel(1);
             if !self.session.as_mut().expect("P2 mounted pack session retained").grant().map_err(|_| self.diagnostic("generation2d-envelope.snapshot-pack-malformed", token.start))? {
                 return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
@@ -2042,7 +2050,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
         }
         if self.state == Generation2dPackSnapshotState::CloseSession {
             cx.consume_fuel(1);
-            let maximum_bytes = self.session.as_ref().expect("P2 mounted pack session retained").next_source_release_allocation_bytes().unwrap_or(0);
+            let maximum_bytes = self.session.as_ref().expect("P2 mounted pack session retained").next_retained_release_allocation_bytes().unwrap_or(0);
             if matches!(
                 self.session.as_mut().expect("P2 mounted pack session retained").close_step(1, maximum_bytes).map_err(|_| self.diagnostic("generation2d-envelope.snapshot-session-close", token.start))?,
                 crate::standards::v1::subsets::any::schema::snapshot::binary::Generation2dMountedPackCloseStep::Pending { .. }
@@ -2074,7 +2082,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
 
     fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
         if let Some(session) = self.session.as_ref() {
-            return Ok(session.next_source_release_allocation_bytes().unwrap_or(0));
+            return Ok(session.next_retained_release_allocation_bytes().unwrap_or(0));
         }
         Ok(usize::from(self.retirement.is_some()) * store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
     }
@@ -2084,7 +2092,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
     }
 
     fn maximum_retained_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
@@ -2389,13 +2397,22 @@ pub fn generation2d_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDec
 }
 
 impl store::ArtifactEnvelopeOwnedFieldCatalog<Generation2dSnapshot, Generation2dMutation> for Generation2dEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>> {
-        Box::new(store::ArtifactEnvelopeFreshVcsAuthority::new(
+    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot>>> {
+        store::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
             std::sync::Arc::new(Generation2dRetainedSnapshotRetirementFactory),
             std::sync::Arc::new(Generation2dRetainedMutationRetirementFactory),
             self.edit_history_decoder(),
-        ))
+        )
+        .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>>)
+    }
+
+    fn maximum_vcs_close_byte_demand(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+    }
+
+    fn maximum_retained_vcs_close_bytes(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
     fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot>> {

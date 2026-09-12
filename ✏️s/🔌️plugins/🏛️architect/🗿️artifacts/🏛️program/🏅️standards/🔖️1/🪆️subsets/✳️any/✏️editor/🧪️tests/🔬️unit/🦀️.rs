@@ -77,11 +77,10 @@ pub(crate) mod context {
 }
 
 use super::*;
-use crate::editor::architect::catalog::{analysis_kind_from_str, register_entities};
-use crate::editor::architect::unit_tests::context;
+use crate::editor::architect::catalog::analysis_kind_from_str;
 use crate::registers::{AdjacencyKind, AnalysisKind};
 use crate::standards::v1::subsets::any::schema::inferences::export_registers_csv;
-use semio_framework_plugin::PluginApp;
+use semio_framework_plugin::{artifact_app_laws, PluginApp};
 use serde_json::json;
 
 //#region 🔖️CommandSurface
@@ -105,7 +104,7 @@ fn every_command() -> Vec<ArchitectCommand> {
         ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {}),
         ArchitectCommand::ImportProgram(import_program::ImportProgram { payload: "text".into() }),
         ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
-        ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d::default() }),
+        ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d::default() }),
         ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: "a".into(), element_b_id: "b".into(), kind: None, cycle: true }),
         ArchitectCommand::Search(query::Search { query: "hall".into() }),
         ArchitectCommand::SetAdjacencyFilter(set_adjacency_filter::SetAdjacencyFilter { kind: None }),
@@ -191,7 +190,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
-    let mut app = artifact_app_laws::new_app().await;
+    let mut app = context::new_app().await;
     assert!(context::render(&mut app, "architect.nope").await.contains("Unknown body"));
 }
 //#endregion 🔖️Manifest
@@ -252,12 +251,12 @@ async fn search_finds_sample_elements() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn select_register_switches_active_register() {
+async fn select_register_does_not_mutate_the_application_cache() {
     let program = sample_plugin();
     let initial = ArchitectPlayApp::initial_config();
     let emit = context::drive_with_config(&ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "stakeholders".into() }), &program, &initial);
-    assert_eq!(context::config_after(&emit, &initial).active_register, "stakeholders");
-    assert!(!register_entities(&program, "stakeholders").is_empty());
+    assert!(emit.config_mutations.is_empty());
+    assert_eq!(context::config_after(&emit, &initial), initial);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -273,11 +272,14 @@ async fn patch_register_item_updates_element_name() {
 
 #[semio_framework_async_macros::async_test]
 async fn formatted_report_renders_section_headings() {
-    let program = sample_plugin();
+    let mut program = sample_plugin();
     let initial = ArchitectPlayApp::initial_config();
     let emit = context::drive_with_config(&ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }), &program, &initial);
-    let config = context::config_after(&emit, &initial);
-    let json = context::render_direct(report_window::ARCHITECT_BODY_REPORT, &program, &config);
+    let Some(ProgramMutation::CreateReportRecord(payload)) = emit.artifact_mutations.first() else { panic!("authored report record") };
+    let selected_report_id = payload.report_record.header.id.clone();
+    program.reports.push(payload.report_record.clone());
+    let config = report_window::config::ArchitectReportWindowConfig { selected_report_id: Some(selected_report_id) };
+    let json = context::project_render(report_window::render(&program, &config, &semio_framework_plugin::ViewModel::default()));
     assert!(json.contains("Overview"));
     assert!(json.contains("architect-report.section"));
 }
@@ -304,7 +306,7 @@ async fn import_registers_csv_action_sets_plugin() {
 
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_through_the_wrapper() {
-    let mut app = artifact_app_laws::new_app().await;
+    let mut app = context::new_app().await;
     let before = app.snapshot().expect("projection").elements.len();
     context::dispatch(&mut app, ArchitectCommand::AddElement(add_element::AddElement { name: "Ward".into() })).await;
     assert_eq!(app.snapshot().expect("projection").elements.len(), before + 1);
@@ -325,7 +327,13 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
     let mut app = context::app_with_registry().await;
-    let result = context::dispatch(&mut app, ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() })).await;
+    let view = semio_framework_plugin::ViewModel {
+        window_id: Some("architect-register-test".into()),
+        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "architect-register-test".into(), window_kind_id: register_window::ARCHITECT_WINDOW_REGISTER.into() }],
+        ..Default::default()
+    };
+    let meta = semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
+    let result = app.dispatch_typed(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }), &meta).await.expect("select exact Register window");
     assert!(result.mutations.is_empty(), "selectRegister is a view action and must never reach document operations under kind discipline");
 }
 

@@ -4824,6 +4824,110 @@
         "repo-schema-field-discovery"
       ]
     },
+    "repo-discovery-source-access": {
+      "emoji": "📖️",
+      "slugPattern": "^source-access$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "discovery"
+      ]
+    },
+    "repo-schema-artifact": {
+      "emoji": "🗿️",
+      "slugPattern": "^artifact$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "repo-schema-artifact-owner-discovery": {
+      "emoji": "🔍️",
+      "slugPattern": "^owner-discovery$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-artifact"
+      ]
+    },
+    "repo-schema-artifact-export-identity": {
+      "emoji": "🏷️",
+      "slugPattern": "^export-identity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-artifact"
+      ]
+    },
+    "repo-schema-artifact-facet-leaves": {
+      "emoji": "📚️",
+      "slugPattern": "^facet-leaves$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-artifact"
+      ]
+    },
+    "repo-schema-artifact-laws": {
+      "emoji": "⚖️",
+      "slugPattern": "^laws$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-artifact"
+      ]
+    },
+    "repo-schema-artifact-facet-completeness-law": {
+      "emoji": "🧩️",
+      "slugPattern": "^facet-completeness$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-artifact-laws"
+      ]
+    },
+    "repo-schema-artifact-field-parity-law": {
+      "emoji": "📏️",
+      "slugPattern": "^field-parity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-artifact-laws"
+      ]
+    },
+    "repo-schema-artifact-state-parity-law": {
+      "emoji": "💾️",
+      "slugPattern": "^state-parity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-artifact-laws"
+      ]
+    },
+    "repo-schema-artifact-diff-coverage-law": {
+      "emoji": "🔺️",
+      "slugPattern": "^diff-coverage$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-artifact-laws"
+      ]
+    },
+    "repo-schema-artifact-type-name-parity-law": {
+      "emoji": "🏷️",
+      "slugPattern": "^type-name-parity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-artifact-laws"
+      ]
+    },
+    "repo-schema-artifact-ownership-field-parity-law": {
+      "emoji": "🪪️",
+      "slugPattern": "^ownership-field-parity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-artifact-laws"
+      ]
+    },
+    "repo-schema-artifact-law-aggregate": {
+      "emoji": "📋️",
+      "slugPattern": "^aggregate$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-artifact-laws"
+      ]
+    },
     "vulkan-target": {
       "emoji": "🌋️",
       "slugPattern": "^vulkan$",
@@ -6447,6 +6551,30 @@
       "allowEmojiOnly": false,
       "parentKindIds": [
         "repo-normalization-mutation"
+      ]
+    },
+    "repo-process": {
+      "emoji": "🏃️",
+      "slugPattern": "^process$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-process-environment": {
+      "emoji": "🌿️",
+      "slugPattern": "^environment$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-process"
+      ]
+    },
+    "repo-process-environment-test-output": {
+      "emoji": "🧪️",
+      "slugPattern": "^test-output$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-process-environment"
       ]
     }
   },

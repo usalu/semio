@@ -31,5 +31,11 @@ This read-only index supports the eventual exact ticket file union. It is not a 
 | 📓️sol-tool-disposition-correction-2026-09-12.md | Exact changed files |
 | 📓️sol-ui-render-2026-09-12.md | Complete move map; Consumer changes |
 | 📓️sol-ui-taxonomy-2026-09-12.md | Move Map; Wiring and Consumer Repairs |
+| 📓️sol-root-taxonomy-workflow-extraction-2026-09-12.md | Final owner inventory; Exact resumed-pass mutation attribution |
+| 📓️sol-root-schema-field-extraction-2026-09-12.md | Owner inventory; Exact mutation attribution |
+| 📓️sol-print-macro-staging-2026-09-12.md | Authored File Attribution |
+| 📓️sol-root-clean-scaffold-extraction-2026-09-12.md | Exact file attribution |
 
 Before closing the ticket, combine actual created/updated/removed paths from these sections and their explicit source maps, the subsequent workflow/print/remaining executor reports, root repair reports, and retained authored ticket controls. Inspect ambiguous narrative lists against the lane’s schema/fixture map; a matching heading alone does not prove complete exact attribution. Keep protocol/output hashes, never introduce implementation-body snapshots, and exclude disposable generated scratch. No product file was changed by this index.
+
+Root subsequently inspected the new cleanup report's complete exact-attribution section: thirty unique repository-relative paths are listed, and all thirty exist at the21:50UTC snapshot. That is list integrity, not a shared-diff attribution claim or additional runtime validation. The newer reports above extend the index; final app/generator/artifact reports must still be added when complete.

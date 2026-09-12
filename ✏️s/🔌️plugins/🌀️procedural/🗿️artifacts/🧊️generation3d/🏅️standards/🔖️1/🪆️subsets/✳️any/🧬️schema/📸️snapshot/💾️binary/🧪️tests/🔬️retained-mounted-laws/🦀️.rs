@@ -15,8 +15,8 @@ fn synapse_digest(synapse: &semio_framework_artifact_flow_flow::SynapseSpec) -> 
 
 fn admit(session: &mut Generation3dMountedPackSession, value: u8) {
     loop {
-        if let Some(exact) = session.next_source_allocation_bytes().expect("P3 source allocation query") {
-            let step = session.reserve_source_page(exact).expect("P3 source allocation grant");
+        if let Some(exact) = session.next_retained_allocation_bytes().expect("P3 source allocation query") {
+            let step = session.reserve_retained_allocation(exact).expect("P3 source allocation grant");
             assert!(step.progressed);
             continue;
         }
@@ -27,15 +27,14 @@ fn admit(session: &mut Generation3dMountedPackSession, value: u8) {
 
 fn close(session: &mut Generation3dMountedPackSession) {
     session.request_cancel();
-    let admitted_allocation_bytes = session.progress().map_or(0, |progress| progress.allocated_bytes);
-    let mut retained_allocation_bytes = admitted_allocation_bytes;
+    let admitted_allocation_bytes = session.retained_allocated_bytes();
     let mut released_allocation_bytes = 0;
     for _ in 0..100_000 {
-        let maximum_bytes = session.next_source_release_allocation_bytes().unwrap_or(0);
+        let maximum_bytes = session.next_retained_release_allocation_bytes().unwrap_or(0);
         let step = session.close_step(1, maximum_bytes).expect("P3 retained session close");
-        let next_retained_allocation_bytes = session.progress().map_or(0, |progress| progress.allocated_bytes);
-        released_allocation_bytes += retained_allocation_bytes - next_retained_allocation_bytes;
-        retained_allocation_bytes = next_retained_allocation_bytes;
+        if let Generation3dMountedPackCloseStep::Pending { released_bytes, .. } = step {
+            released_allocation_bytes += released_bytes;
+        }
         if step == Generation3dMountedPackCloseStep::Complete {
             assert!(session.terminal_is_empty());
             assert_eq!(released_allocation_bytes, admitted_allocation_bytes);
@@ -91,6 +90,10 @@ fn non_empty_canonical_snapshot_round_trips_one_grant_at_a_time() {
     session.seal().expect("exact snapshot seal");
     let mut ready = false;
     for _ in 0..1_000_000 {
+        if let Some(exact) = session.next_retained_allocation_bytes().expect("P3 retained allocation query") {
+            assert!(session.reserve_retained_allocation(exact).expect("P3 retained allocation grant").progressed);
+            continue;
+        }
         if session.grant().expect("one retained snapshot grant") {
             ready = true;
             break;

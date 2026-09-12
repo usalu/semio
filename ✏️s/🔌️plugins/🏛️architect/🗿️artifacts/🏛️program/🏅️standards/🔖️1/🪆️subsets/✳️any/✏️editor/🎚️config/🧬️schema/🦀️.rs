@@ -1,5 +1,4 @@
 //! 🧬️ schema leaf
-use crate::registers::AdjacencyKind;
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
@@ -9,25 +8,13 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.architect.architect.config")]
 pub struct ArchitectConfig {
     #[state(config)]
-    pub active_register: String,
-    #[state(config)]
     pub search_query: String,
     #[state(config)]
     pub search_history_json: String,
     #[state(config)]
-    pub active_report_json: String,
-    #[state(config)]
     pub last_result_json: String,
     #[state(config)]
     pub last_analysis_json: String,
-    #[state(config)]
-    pub adjacency_kind_filter: Option<AdjacencyKind>,
-    #[state(config)]
-    pub graph_camera_x: f64,
-    #[state(config)]
-    pub graph_camera_y: f64,
-    #[state(config)]
-    pub graph_camera_zoom: f64,
 }
 
 //region 📎 App-schema descriptor

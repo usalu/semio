@@ -1,11 +1,8 @@
 //! 🧮️ Architect play app — the view state (`Config`) and its operation surface.
 //!
-//! Everything the pre-B1 `RefCell<ArchitectPlayRuntime>` held (selection, active register, search,
-//! cached report/analysis JSON, adjacency filter, graph camera) lives here, written via whole-snapshot
-//! `ArchitectConfigMutation::ReplaceConfig` values from the `🎮️commands/*` handlers.
+//! The unmounted search and analysis caches remain here until their result surface has a bounded owner.
+//! Register, Adjacency, Graph, and Report state belongs to registered exact-window configurations.
 
-use crate::registers::AdjacencyKind;
-use crate::standards::v1::subsets::any::schema::inferences::ProgramReport;
 use crate::standards::v1::subsets::any::schema::inferences::SearchQuery;
 #[cfg(test)]
 use protocol::Mutation;
@@ -22,24 +19,16 @@ use protocol::MutationDiff;
 #[dsl(extension = "architectcfg")]
 #[dsl(layout = "lines")]
 pub struct ArchitectConfig {
-    pub active_register: String,
     pub search_query: String,
     /// 🔎️ `Vec<SearchQuery>` serialized as JSON — `SearchQuery` has no `dsl::DslField` binding of its
     /// own, so (like `positions_json`/`camera_json` on other migrated apps) it round-trips as text.
     pub search_history_json: String,
-    /// 📋️ The currently rendered `ProgramReport` (the report window), serialized as JSON.
-    pub active_report_json: String,
     /// 🐛️ Generic last-action-result debug dump (search hits / validation diagnostics / analysis
-    /// result / report) — the pre-B1 `last_report_json` field, renamed since it no longer overlaps
-    /// with `active_report_json` above.
+    /// result) retained outside the mounted window migration until a result owner exists.
     pub last_result_json: String,
     /// 🧮️ The last computed `AnalysisResult`, serialized as JSON — write-only state today (no render
     /// path reads it back), kept for state fidelity with the pre-B1 runtime.
     pub last_analysis_json: String,
-    pub adjacency_kind_filter: Option<AdjacencyKind>,
-    pub graph_camera_x: f64,
-    pub graph_camera_y: f64,
-    pub graph_camera_zoom: f64,
 }
 
 //#region 🔖️ArtifactCodec
@@ -89,16 +78,10 @@ impl store::ArtifactPack for ArchitectConfig {
 impl Default for ArchitectConfig {
     fn default() -> Self {
         Self {
-            active_register: String::new(),
             search_query: String::new(),
             search_history_json: String::new(),
-            active_report_json: String::new(),
             last_result_json: String::new(),
             last_analysis_json: String::new(),
-            adjacency_kind_filter: None,
-            graph_camera_x: 0.0,
-            graph_camera_y: 0.0,
-            graph_camera_zoom: 1.0,
         }
     }
 }
@@ -120,25 +103,8 @@ pub use mutations::*;
 //#endregion 🔖️Config
 
 //#region 🔖️Readers
-/// 🧮️ Reads `cfg.active_register`, defaulting to `"elements"` for a config that predates
-/// `ArchitectPlayApp::initial_config`'s default (or was constructed bare in a test).
-pub fn active_register(cfg: &ArchitectConfig) -> &str {
-    if cfg.active_register.is_empty() {
-        "elements"
-    } else {
-        cfg.active_register.as_str()
-    }
-}
-
 pub fn parse_search_history(cfg: &ArchitectConfig) -> Vec<SearchQuery> {
     dsl::json::from_json_str(&cfg.search_history_json).unwrap_or_default()
-}
-
-pub fn parse_active_report(cfg: &ArchitectConfig) -> Option<ProgramReport> {
-    if cfg.active_report_json.is_empty() {
-        return None;
-    }
-    dsl::json::from_json_str(&cfg.active_report_json).ok()
 }
 
 /// 🧮️ The whole-snapshot config edit every command handler emits.

@@ -3,7 +3,7 @@
 //! `status_summary` inference the sibling editor surface's own document panel uses — this file itself
 //! imports nothing from that sibling surface (`policyViewerPurityBreaches` forbids it outright). A
 //! viewer has no per-session config (`Config = NoConfig`, contract §2.2), so unlike the editor's own
-//! Register window (which reads `ArchitectConfig::active_register` to show ONE selected register) this
+//! Register window (which reads its exact `ArchitectRegisterWindowConfig::active_register` to show ONE selected register) this
 //! window shows every register at once — a genuinely useful, config-free read-only equivalent, not a
 //! narrower stand-in for the one it mirrors.
 

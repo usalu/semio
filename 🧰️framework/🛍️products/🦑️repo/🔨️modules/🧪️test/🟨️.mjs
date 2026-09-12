@@ -178,7 +178,7 @@ async function testCaseProjects(configFiles, _options, context) {
   const policy = JSON.parse(readFileSync(join(workspaceRoot, dirname(TAXONOMY_REL), "⚡️caching/🔣️policy.json"), "utf8"));
   const state = { manifests: new Map(), closures: new Map(), names: new Map(), plans: new Map() };
   const javascript = policy.toolchains.javascript;
-  const commandInputs = [...native.relativeScriptInputs([join(workspaceRoot, vocabulary.testDomainPath, "📜️script.ts")], workspaceRoot), ...javascript.files.map((path) => `{workspaceRoot}/${path}`), ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime }))];
+  let commandInputs;
 
   for (const configFile of configFiles) {
     if (configFile.includes("\uFFFD")) continue;
@@ -191,6 +191,7 @@ async function testCaseProjects(configFiles, _options, context) {
     const ownerRel = dirname(testsRel);
     const caseSlug = basename(caseRel);
     if (!canonicalCase(vocabulary, ownerRel, caseSlug)) continue;
+    commandInputs ??= [...native.relativeScriptInputs([join(workspaceRoot, vocabulary.testDomainPath, "📜️script.ts")], workspaceRoot), ...javascript.files.map((path) => `{workspaceRoot}/${path}`), ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime }))];
 
     const adapters = [];
     for (const fileKindId of Object.values(vocabulary.testAdapterFileKinds)) {

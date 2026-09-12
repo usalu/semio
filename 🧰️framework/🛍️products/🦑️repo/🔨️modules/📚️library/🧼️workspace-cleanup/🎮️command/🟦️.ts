@@ -27,7 +27,7 @@ export class CleanScript extends Script {
     if (segments[0] === "test") {
       // 🧪️ Marker-guarded removal of generated test state, delegated to its owner. Never descends
       // into `compose/`, never follows a symlink, never deletes an unmarked directory.
-      const domain = String(repoTaxonomy(this.root).testDomainPath ?? "");
+      const domain = String((loadCatalogTaxonomy() as unknown as Readonly<{ testDomainPath?: string }>).testDomainPath ?? "");
       if (domain === "") throw new Error("🔣️taxonomy.json declares no testDomainPath — `clean test` has no owner to delegate to.");
       runCmd("bun", [join(this.root, domain, "📜️script.ts"), "clean", ...segments.slice(1)], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
       return;
@@ -66,5 +66,4 @@ export class CleanScript extends Script {
     const status = runCmdStatus("bun", [cachingScript, "cache-prune", ...(dry ? ["--dry-run"] : [])], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log(`[clean] cache-prune ${status === 0 ? "ok" : `unavailable (exit ${status})`} ${repoCacheDirectory(this.root)}`);
   }
-
 }

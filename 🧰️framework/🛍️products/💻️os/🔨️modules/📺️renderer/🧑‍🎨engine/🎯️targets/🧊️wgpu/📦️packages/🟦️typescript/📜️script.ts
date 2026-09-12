@@ -17,16 +17,14 @@ import {
   runBundleScriptMain,
   runCargoTestBudgeted,
   runExactCargoLaws,
-  runCmd,
   runCmdStatus,
-  runProbe,
   runVitest,
   spawnDaemon,
   frameworkOsPlaygroundDefaultPort,
   loadFrameworkOsPlaygroundCatalog,
 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { startAssetServer } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
-import { buildCargoArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
+import { nativeRendererBinary } from "../../🏗️compiler/🦀️native/📜️script.ts";
 import { pluginModulesRoot } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import type { PlaygroundAssetSpec } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
@@ -35,7 +33,6 @@ import { checkFrameWorker, generateFrameWorker, renderFrameWorker } from "../../
 
 const repoRoot = getWorkspaceRoot();
 const rustPackageRoot = resolve(import.meta.dir, "../🦀️rust");
-const wasmTarget = "wasm32-unknown-unknown";
 const crateName = "semio-framework-os-renderer-wgpu";
 const outDir = join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules/🧊️wgpu");
 const NATIVE_RUNNER_BENIGN_ENV_KEY = "SEMIO_DIRECT_CHILD_BENIGN";
@@ -131,20 +128,6 @@ async function runInteractiveCommand(command: string, args: string[], cwd: strin
   }
 }
 
-function ensureWasmTarget(): void {
-  const probe = runProbe("rustup", ["target", "list", "--installed"]);
-  if (!probe.stdout.includes(wasmTarget)) {
-    runCmd("rustup", ["target", "add", wasmTarget]);
-  }
-}
-
-function ensureTrunk(): void {
-  const probe = runProbe("trunk", ["--version"]);
-  if (probe.status !== 0) {
-    runCmd("cargo", ["install", "trunk", "--locked"], { budgetMs: buildBudgetMs() });
-  }
-}
-
 /** @emoji 🔁️ Publishes Trunk's wasm-bindgen pair under the stable names the React shell's
  * `🎬️renderer-boot` requests (`/renderer-modules/wgpu/semio_framework_renderer_wgpu.js`). `Trunk.toml`
  * pins `filehash = false`, so both emitted names ARE the crate id and are addressed by name; the
@@ -187,8 +170,6 @@ function resolveNativeAppArgs(catalog: ReturnType<typeof loadFrameworkOsPlaygrou
 
 class TrunkBuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    ensureTrunk();
-    ensureWasmTarget();
     await checkBrowserBoot(this.root);
     await checkFrameWorker(this.root);
     assertBundleModuleRoutes(this.root);
@@ -204,8 +185,6 @@ class TrunkBuildScript extends BundleScript {
 
 class TrunkServeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    ensureTrunk();
-    ensureWasmTarget();
     await checkBrowserBoot(this.root);
     await checkFrameWorker(this.root);
     assertBundleModuleRoutes(this.root);
@@ -223,11 +202,7 @@ class TrunkServeScript extends BundleScript {
 }
 //#endregion 🌐️ DevServer
 
-/** 🔖️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b-bench): `--scale <registry.json>` selects the
- * headless scale-bench mode (`scale_bench::run` in `../../🧊️renderer/🦀️.rs`) — no ShellState/GPU/winit, no plugin
- * catalog, so `NativeBuildScript`/`NativeRunScript` skip the plugin-wasm-program build and asset
- * server entirely in this mode and just build/run `semio-wgpu-native` itself with the scale flags
- * passed straight through, mirroring `--smoke`'s existing pass-through idiom. */
+/** ⚖️ Reads one option for the headless native scale benchmark. */
 function scaleModeArgValue(segments: readonly string[], flag: string): string | undefined {
   const index = segments.indexOf(flag);
   return index >= 0 ? segments[index + 1] : undefined;
@@ -242,25 +217,10 @@ function scaleModePassthroughArgs(segments: readonly string[]): string[] {
   return args;
 }
 
-function nativeBinaryPath(ship: boolean): string {
-  const name = process.platform === "win32" ? "semio-wgpu-native.exe" : "semio-wgpu-native";
-  const path = join(rustPackageRoot, "dist", ship ? "native-release" : "native-dev", name);
-  if (!existsSync(path)) throw new Error(`Missing Nx native renderer artifact: ${path}`);
-  return path;
-}
-
-class NativeBuildScript extends BundleScript {
-  async run([profile, ...args]: string[]): Promise<void> {
-    if (!["dev", "release"].includes(profile) || args.length) throw new Error("Select native-build or native-build-release through Nx without additional arguments");
-    await buildCargoArtifacts(join(rustPackageRoot, "Cargo.toml"), ["-p", crateName, "--bin", "semio-wgpu-native", "--features", "native-bin", ...(profile === "release" ? ["--release"] : [])], repoRoot, { output: `dist/native-${profile}` });
-  }
-}
-
 class NativeRunScript extends BundleScript {
   async run([profile, ...segments]: string[]): Promise<void> {
     if (!["dev", "release"].includes(profile) || segments.some((argument) => argument === "--release" || argument === "--dist")) throw new Error("Select native or native-release through Nx");
-    const ship = profile === "release";
-    const executable = nativeBinaryPath(ship);
+    const executable = nativeRendererBinary(rustPackageRoot, profile);
     if (segments.includes("--scale")) {
       if (runNativeBinary(executable, scaleModePassthroughArgs(segments), process.env) !== 0) {
         throw new Error("native wgpu scale-bench run failed");
@@ -595,7 +555,6 @@ const router = new ScriptRouter(import.meta.dir)
       }
     },
   )
-  .register("native-build", NativeBuildScript)
   .register("test", TestScript)
   .register("test-native", NativeTestScript)
   .register("directory-retained-home-bootstrap-source-check", DirectoryRetainedHomeBootstrapSourceCheckScript)

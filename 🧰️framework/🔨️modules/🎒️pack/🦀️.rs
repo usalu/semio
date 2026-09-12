@@ -29,8 +29,9 @@ pub fn content_hash(bytes: &[u8]) -> ContentHash {
 #[cfg(feature = "deflate")]
 pub use crate::codec::DeflateCodec;
 pub use crate::format::{
-    encode_symbols, read_footer_only, recover, Footer, Header, Manifest, PackFile, PackIdentitySegment, PackWriter, RecoveryReport, RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogCursor, RetainedPackCatalogEvent,
-    RetainedPackChunkEntry, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSegmentHeader, RetainedPackSourceAllocationError,
+    encode_symbols, read_footer_only, recover, Footer, Header, Manifest, PackFile, PackIdentitySegment, PackWriter, RecoveryReport, RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError,
+    RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCatalogFault, RetainedPackCatalogProgress, RetainedPackChunkEntry, RetainedPackManifest, RetainedPackSymbolSpan,
+    RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSegmentHeader, RetainedPackSourceAllocationError,
     RetainedPackSourceAllocationStep, RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceProgress, Superblock, RETAINED_PACK_MAXIMUM_PAGES,
     VerificationLevel, WriteOptions, FOOTER_MAGIC, FOOTER_SIZE, FORMAT_VERSION_MAJOR, FORMAT_VERSION_MINOR, HEADER_SIZE, MAGIC, OPTIONAL_CANONICAL, OPTIONAL_HAS_SCHEMA, OPTIONAL_STREAMED, REQUIRED_CHUNKED, REQUIRED_COMPRESSED, REQUIRED_ENCRYPTED,
     REQUIRED_FOOTER_CHAIN, RETAINED_PACK_PAGE_BYTES,

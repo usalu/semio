@@ -31,5 +31,15 @@
     ]
   },
   "project": "@semio-tech/framework-renderer-wgpu",
-  "target": "lockfile-check"
+  "target": "lockfile-check",
+  "tooling": {
+    "target": "deps-trunk",
+    "command": "bun ./📜️script.ts setup deps trunk",
+    "consumers": ["wasm", "serve", "dev"],
+    "cases": [
+      { "version": "trunk 0.21.14", "targets": "wasm32-unknown-unknown\n", "commands": [] },
+      { "version": "trunk 0.21.13", "targets": "wasm32-unknown-unknown\n", "commands": [["cargo", "install", "trunk", "--version", "0.21.14", "--locked"]] },
+      { "version": "", "targets": "", "commands": [["cargo", "install", "trunk", "--version", "0.21.14", "--locked"], ["rustup", "target", "add", "wasm32-unknown-unknown"]] }
+    ]
+  }
 }

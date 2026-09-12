@@ -70,54 +70,35 @@
       "directoryName": "🗑️removal",
       "parentKindId": "repo-workspace-cleanup",
       "kindId": "repo-workspace-cleanup-removal",
-      "declarations": [
-        "cleanRemovePath",
-        "runWorkspaceClean"
-      ]
+      "declarations": ["cleanRemovePath", "runWorkspaceClean"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts",
       "directoryName": "🎮️command",
       "parentKindId": "repo-workspace-cleanup",
       "kindId": "repo-workspace-cleanup-command",
-      "declarations": [
-        "CleanScript"
-      ]
+      "declarations": ["CleanScript"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts",
       "directoryName": "🔁️workflow",
       "parentKindId": "repo-normalization-command-contract",
       "kindId": "repo-normalization-command-workflow",
-      "declarations": [
-        "runTaxonomyCliWorkflow"
-      ]
+      "declarations": ["runTaxonomyCliWorkflow"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🧱️contract/🟦️.ts",
       "directoryName": "🧱️contract",
       "parentKindId": "repo-authoring",
       "kindId": "repo-authoring-contract",
-      "declarations": [
-        "NEW_SCAFFOLD_MARKER",
-        "NEW_SCAFFOLD_TICKET_PATH",
-        "newScaffoldEmptyFacetMarkdown",
-        "newScaffoldRustLeaf",
-        "newScaffoldTsLeaf"
-      ]
+      "declarations": ["NEW_SCAFFOLD_MARKER", "NEW_SCAFFOLD_TICKET_PATH", "newScaffoldEmptyFacetMarkdown", "newScaffoldRustLeaf", "newScaffoldTsLeaf"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🗿️artifact-tree/🟦️.ts",
       "directoryName": "🗿️artifact-tree",
       "parentKindId": "repo-authoring",
       "kindId": "repo-authoring-artifact-tree",
-      "declarations": [
-        "newScaffoldArtifactTree",
-        "newScaffoldIoTree",
-        "newScaffoldStandardTree",
-        "newScaffoldSubsetTree",
-        "newScaffoldWriteIfAbsent"
-      ]
+      "declarations": ["newScaffoldArtifactTree", "newScaffoldIoTree", "newScaffoldStandardTree", "newScaffoldSubsetTree", "newScaffoldWriteIfAbsent"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🧬️mutation-tree/🟦️.ts",
@@ -147,21 +128,21 @@
       "directoryName": "🎮️command",
       "parentKindId": "repo-authoring",
       "kindId": "repo-authoring-command",
-      "declarations": [
-        "CleanMechanismNewScript",
-        "newResolveChildDir"
-      ]
+      "declarations": ["CleanMechanismNewScript", "newResolveChildDir"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts",
       "directoryName": "📇️direct-owner-index",
       "parentKindId": "repo-normalization-mutation",
       "kindId": "repo-normalization-mutation-direct-owner-index",
-      "declarations": [
-        "MUTATION_DIRECTORY_VIEW",
-        "MutationDirectoryView",
-        "policyListMutationDirs"
-      ]
+      "declarations": ["MUTATION_DIRECTORY_VIEW", "MutationDirectoryView", "policyListMutationDirs"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+      "directoryName": "🧪️test-output",
+      "parentKindId": "repo-process-environment",
+      "kindId": "repo-process-environment-test-output",
+      "declarations": ["repoTestArtifactEnvironment"]
     }
   ],
   "contexts": [
@@ -224,57 +205,63 @@
       "directoryName": "📇️direct-owner-index",
       "parentKindId": "repo-normalization-mutation",
       "kindId": "repo-normalization-mutation-direct-owner-index"
+    },
+    {
+      "directoryName": "🏃️process",
+      "parentKindId": "members-of-modules",
+      "kindId": "repo-process"
+    },
+    {
+      "directoryName": "🌿️environment",
+      "parentKindId": "repo-process",
+      "kindId": "repo-process-environment"
+    },
+    {
+      "directoryName": "🧪️test-output",
+      "parentKindId": "repo-process-environment",
+      "kindId": "repo-process-environment-test-output"
     }
   ],
   "consumers": [
     {
       "path": "📜️script.ts",
-      "owners": [
-        "🧼️workspace-cleanup/🎮️command/🟦️.ts",
-        "🏗️authoring/🎮️command/🟦️.ts",
-        "🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts"
-      ]
+      "owners": ["🧼️workspace-cleanup/🎮️command/🟦️.ts", "🏗️authoring/🎮️command/🟦️.ts", "🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️exact-cargo-laws/🟦️.ts",
-      "owners": [
-        "🧼️workspace-cleanup/🎮️command/🟦️.ts"
-      ]
+      "owners": ["🧼️workspace-cleanup/🎮️command/🟦️.ts"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧹️clean-ticket-runs/🟦️.ts",
-      "owners": [
-        "🧼️workspace-cleanup/🎮️command/🟦️.ts"
-      ]
+      "owners": ["🧼️workspace-cleanup/🎮️command/🟦️.ts"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛑️taxonomy-cli-cancellation/🟦️.ts",
-      "owners": [
-        "🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts",
-        "🧼️workspace-cleanup/🎮️command/🟦️.ts"
-      ]
+      "owners": ["🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts", "🧼️workspace-cleanup/🎮️command/🟦️.ts"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
-      "owners": [
-        "🧼️workspace-cleanup/🛡️protection/🟦️.ts",
-        "🧼️workspace-cleanup/🎮️command/🟦️.ts",
-        "🏗️authoring/🧬️mutation-tree/🟦️.ts"
-      ]
+      "owners": ["🧼️workspace-cleanup/🛡️protection/🟦️.ts", "🧼️workspace-cleanup/🎮️command/🟦️.ts", "🏗️authoring/🧬️mutation-tree/🟦️.ts"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪶️artifact-empty-facet-authoring/🟦️.ts",
-      "owners": [
-        "🏗️authoring/🗿️artifact-tree/🟦️.ts"
-      ]
+      "owners": ["🏗️authoring/🗿️artifact-tree/🟦️.ts", "🏃️process/🌿️environment/🧪️test-output/🟦️.ts"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts",
-      "owners": [
-        "🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts"
-      ]
+      "owners": ["🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "owners": ["🏃️process/🌿️environment/🧪️test-output/🟦️.ts"]
     }
   ],
+  "artifactEnvironment": {
+    "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+    "defaultRelativeRoot": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/sol-root-clean-scaffold-extraction/repo-lib-test-artifacts",
+    "explicitRelativeRoot": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/explicit-test-artifacts",
+    "routes": ["process-budgets", "exact-cargo-laws", "taxonomy-cli-cancellation", "artifact-empty-facet-authoring", "workspace-contract"]
+  },
   "route": {
     "target": "test-root-clean-scaffold-source",
     "command": "bun ./📜️script.ts test root-clean-scaffold-source",

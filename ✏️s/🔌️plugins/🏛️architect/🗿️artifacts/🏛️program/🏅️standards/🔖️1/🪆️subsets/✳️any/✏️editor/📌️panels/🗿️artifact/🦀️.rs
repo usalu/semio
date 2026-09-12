@@ -1,7 +1,5 @@
 //! 📄️ Architect document panel — program meta, per-register counts and the element list.
 
-use crate::editor::architect::catalog::register_len;
-use crate::editor::architect::config::{active_register, ArchitectConfig};
 use crate::editor::architect::ui_label;
 use crate::editor::architect::ARCHITECT_INTERACTION_PROGRAM;
 use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
@@ -37,7 +35,7 @@ pub fn definition() -> PanelTabDefinition {
 /// the active register is unrelated to entity selection) and sit in the SAME tree, unaffected —
 /// mirrors note's document panel (`action_rows` + bare `block_items` coexisting under one
 /// `.interaction_domain(...)?`).
-pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let summary = status_summary(program);
     let mut element_items = UiFixedList::default();
     for element in &program.elements {
@@ -48,7 +46,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framewo
     for item in [
         tree_item_desc("architect-document.meta.title", ui_label(format!("Title: {}", program.meta.title))?, None)?,
         tree_item_desc("architect-document.meta.project", ui_label(format!("Project: {} ({})", program.project.client_name, program.project.code))?, None)?,
-        tree_item_desc("architect-document.meta.entities", ui_label(format!("Entities tracked: {} (active register: {} / {})", summary.total_entities, active_register(cfg), register_len(program, active_register(cfg))))?, None)?,
+        tree_item_desc("architect-document.meta.entities", ui_label(format!("Entities tracked: {}", summary.total_entities))?, None)?,
     ] {
         meta.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect metadata row admission failed"))?;
     }

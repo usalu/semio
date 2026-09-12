@@ -2,12 +2,14 @@
 //! beside a lower-triangle pair tree, each pair cycling its `AdjacencyKind` on activation.
 
 use crate::editor::architect::chrome::{adjacency_kind_label, element_label};
-use crate::editor::architect::config::ArchitectConfig;
 use crate::editor::architect::ui_label;
 use crate::editor::architect::{architect_action, ui_value_bool, ui_value_map, ui_value_text};
 use crate::standards::v1::subsets::any::schema::inferences::{adjacency_matrix, detect_adjacency_conflicts};
 use crate::ProgramSnapshot;
 use semio_framework_plugin::{tree_item_desc, tree_item_with_action, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
+
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_ADJACENCY: &str = "architect-adjacency";
@@ -42,7 +44,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// @emoji 🔺️ Signature adjacency matrix — triangle glyph strip plus lower-triangle pair rows.
-pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectAdjacencyWindowConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let matrix = adjacency_matrix(program);
     let n = matrix.element_ids.len();
     if n == 0 {

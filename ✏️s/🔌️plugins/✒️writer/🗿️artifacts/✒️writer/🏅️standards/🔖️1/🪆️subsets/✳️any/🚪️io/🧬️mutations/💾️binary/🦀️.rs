@@ -1074,8 +1074,17 @@ impl store::ArtifactEnvelopeSprConflictAuthority for WriterRejectedConflictAutho
 pub struct WriterEnvelopeOwnedFieldCatalog;
 
 impl store::ArtifactEnvelopeOwnedFieldCatalog<WriterSnapshot, WriterMutation> for WriterEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<WriterSnapshot, WriterMutation>> {
-        Box::new(store::ArtifactEnvelopeFreshVcsAuthority::new(self.begin_snapshot(operation, generation, path), std::sync::Arc::new(WriterSnapshotRetirementFactory), std::sync::Arc::new(WriterMutationRetirementFactory), self.edit_history_decoder()))
+    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<WriterSnapshot, WriterMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot>>> {
+        store::ArtifactEnvelopeFreshVcsAuthority::try_new(self.begin_snapshot(operation, generation, path), std::sync::Arc::new(WriterSnapshotRetirementFactory), std::sync::Arc::new(WriterMutationRetirementFactory), self.edit_history_decoder())
+            .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<WriterSnapshot, WriterMutation>>)
+    }
+
+    fn maximum_vcs_close_byte_demand(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+    }
+
+    fn maximum_retained_vcs_close_bytes(&self) -> usize {
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
     fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot>> {

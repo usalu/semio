@@ -55,11 +55,11 @@ pub mod node_graph_edit {
 }
 
 pub mod node_graph_viewport {
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::ProgramSnapshot;
     use dsl::{FromValue, ToValue};
-    use semio_framework::Viewport2d;
+    use semio_framework_os_kernel::Viewport2d;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -69,11 +69,7 @@ pub mod node_graph_viewport {
         pub viewport: Viewport2d,
     }
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let mut next = cfg.snapshot.clone();
-        next.graph_camera_x = payload.viewport.x;
-        next.graph_camera_y = payload.viewport.y;
-        next.graph_camera_zoom = payload.viewport.zoom;
-        Ok(Emit::config(snapshot(next)))
+    pub fn handle(_payload: &NodeGraphViewport, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+        Ok(Emit::default())
     }
 }

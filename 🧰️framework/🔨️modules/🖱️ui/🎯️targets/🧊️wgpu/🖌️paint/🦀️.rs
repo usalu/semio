@@ -26,6 +26,7 @@ use crate::wgpu::component::ui::{
 use crate::wgpu::component::ui::{UiButtonNode, UiComponentSceneNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiTextNode, UiToggleNode};
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::geometry::Rect;
+use crate::wgpu::layout::{tree_row_control_rect, tree_section_header_height, TreeRowMetrics};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::{Level, Rgba, Theme};
 #[cfg(test)]
@@ -39,7 +40,6 @@ use crate::wgpu::Label;
 use crate::wgpu::UiTreeActionPlacement;
 
 const PANEL_HEADER: f32 = 24.0;
-const TREE_ROW_HEIGHT: f32 = 24.0;
 const TREE_INDENT_PER_LEVEL: f32 = 10.0;
 const TREE_TOGGLE_WIDTH: f32 = 14.0;
 const TREE_ICON_SIZE: f32 = 14.0;
@@ -287,6 +287,7 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
     if tree.sections.len() > RETAINED_NODE_COLLECTION_ITEMS {
         return RetainedNodePaintStep::Fault;
     }
+    let metrics = TreeRowMetrics::from_theme(theme);
     match cursor.phase {
         0 => {
             let result = retained_fixed_output(draw, |draw| draw.push_scissor(bounds));
@@ -317,7 +318,7 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
                 let color = if section.default_open.unwrap_or(true) { theme.text_element } else { theme.text_muted };
                 let result = retained_fixed_output(draw, |draw| {
                     if let Some(icons) = icons {
-                        push_icon(draw, icons, "folder", bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, cursor.row_y + (PANEL_HEADER - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, color);
+                        push_icon(draw, icons, "folder", bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, cursor.row_y + (metrics.header_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, color);
                     }
                 });
                 let _ = label;
@@ -328,10 +329,10 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
                 return RetainedNodePaintStep::Pending;
             };
             let color = if section.default_open.unwrap_or(true) { theme.text_element } else { theme.text_muted };
-            let label_bounds = Rect::new(bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard + TREE_ICON_SIZE + theme.gap_standard, cursor.row_y, bounds.w, PANEL_HEADER);
+            let label_bounds = Rect::new(bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard + TREE_ICON_SIZE + theme.gap_standard, cursor.row_y, bounds.w, metrics.header_height);
             match retained_text_node_step(label.as_str(), label_bounds, theme.font_size_small, color, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
-                    cursor.row_y += PANEL_HEADER;
+                    cursor.row_y += metrics.header_height;
                     cursor.advance(2);
                     RetainedNodePaintStep::Pending
                 }
@@ -367,7 +368,7 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
                 cursor.advance(8);
                 return RetainedNodePaintStep::Pending;
             }
-            let row = Rect::new(bounds.x, cursor.row_y, bounds.w, TREE_ROW_HEIGHT);
+            let row = Rect::new(bounds.x, cursor.row_y, bounds.w, metrics.row_height);
             let selected = item.presence.selected;
             let previewed = item.presence.state == UiState::Previewed;
             let result = retained_fixed_output(draw, |draw| {
@@ -390,12 +391,12 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
                 if item.items.as_ref().is_some_and(|items| !items.is_empty()) {
                     if let Some(icons) = icons {
                         let chevron = if item.default_open.unwrap_or(false) { "chevron-down" } else { "chevron-right" };
-                        push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (TREE_ROW_HEIGHT - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+                        push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (metrics.row_height - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
                     }
                 }
                 if let (Some(icons), Some(icon_id)) = (icons, item.icon_id) {
                     let color = if selected || previewed { theme.active_foreground } else { theme.text_element };
-                    push_icon(draw, icons, icon_id.as_str(), indent, row.y + (TREE_ROW_HEIGHT - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, color);
+                    push_icon(draw, icons, icon_id.as_str(), indent, row.y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, color);
                 }
             });
             cursor.advance(4);
@@ -417,7 +418,7 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             let previewed = item.presence.state == UiState::Previewed;
             let color = if selected || previewed { theme.active_foreground } else { theme.text_element };
             let color = if item.dimmed.unwrap_or(false) || item.presence.state == UiState::Disabled { color.with_alpha(color.a * 0.5) } else { color };
-            match retained_text_node_step(item.label.as_str(), Rect::new(label_x, cursor.row_y, bounds.w, TREE_ROW_HEIGHT), theme.font_size_body, color, atlas, draw, cursor) {
+            match retained_text_node_step(item.label.as_str(), Rect::new(label_x, cursor.row_y, bounds.w, metrics.row_height), theme.font_size_body, color, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
                     cursor.advance(5);
                     RetainedNodePaintStep::Pending
@@ -433,7 +434,7 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             };
             let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
             let offset = item.label.as_str().len().min(RETAINED_NODE_COLLECTION_ITEMS) as f32 * theme.font_size_body * 0.5;
-            match retained_text_node_step(description, Rect::new(indent + TREE_ICON_SIZE + theme.gap_standard + offset, cursor.row_y, bounds.w, TREE_ROW_HEIGHT), theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
+            match retained_text_node_step(description, Rect::new(indent + TREE_ICON_SIZE + theme.gap_standard + offset, cursor.row_y, bounds.w, metrics.row_height), theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
                     cursor.advance(6);
                     RetainedNodePaintStep::Pending
@@ -456,7 +457,7 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             let x = bounds.x + bounds.w - theme.gap_standard - cursor.item as f32 * (TREE_ICON_SIZE + theme.padding_standard);
             let result = retained_fixed_output(draw, |draw| {
                 if let Some(icons) = icons {
-                    push_icon(draw, icons, action.icon_id.as_str(), x, cursor.row_y + (TREE_ROW_HEIGHT - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
+                    push_icon(draw, icons, action.icon_id.as_str(), x, cursor.row_y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
                 }
             });
             if result.is_err() {
@@ -471,7 +472,8 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
                 cursor.advance(8);
                 return RetainedNodePaintStep::Pending;
             };
-            let control_rect = Rect::new(bounds.x + bounds.w - 120.0 - theme.gap_standard, cursor.row_y + (TREE_ROW_HEIGHT - theme.control_height) * 0.5, 120.0, theme.control_height);
+            let relative_control = tree_row_control_rect(bounds.w, &metrics);
+            let control_rect = Rect::new(bounds.x + relative_control.x, cursor.row_y + relative_control.y, relative_control.w, relative_control.h);
             if !cursor.chrome {
                 let result = retained_fixed_output(draw, |draw| push_control_border(draw, control_rect, theme, theme.border_normal, theme.input_bg));
                 cursor.chrome = true;
@@ -505,7 +507,7 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
         8 => {
             let Some(item) = retained_tree_item_at(tree, cursor) else { return RetainedNodePaintStep::Fault };
             if item.presence.visible() {
-                cursor.row_y += TREE_ROW_HEIGHT;
+                cursor.row_y += metrics.row_height;
             }
             cursor.selected = None;
             if item.default_open.unwrap_or(false) && item.items.as_ref().is_some_and(|items| !items.is_empty()) {
@@ -1170,8 +1172,6 @@ struct RetainedSyncTreeRecord {
     key: RetainedSyncKey,
     parent: Option<usize>,
     retained: Option<NodeId>,
-    y: f32,
-    height: f32,
     draggable: bool,
     section: bool,
 }
@@ -1182,7 +1182,6 @@ struct RetainedSyncTreeFrame {
     next_item: usize,
     items_pointer: usize,
     items_len: usize,
-    height: f32,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -1210,7 +1209,6 @@ pub(crate) struct RetainedInteractiveSyncCursor {
     select_width: f32,
     select_height: f32,
     tree_section: usize,
-    tree_section_y: f32,
     tree_depth: usize,
     tree_frames: [Option<RetainedSyncTreeFrame>; RETAINED_SYNC_DEPTH],
     tree_records: [Option<RetainedSyncTreeRecord>; RETAINED_SYNC_OUTPUTS],
@@ -1230,7 +1228,6 @@ impl Default for RetainedInteractiveSyncCursor {
             select_width: 0.0,
             select_height: 0.0,
             tree_section: 0,
-            tree_section_y: 0.0,
             tree_depth: 0,
             tree_frames: [None; RETAINED_SYNC_DEPTH],
             tree_records: [None; RETAINED_SYNC_OUTPUTS],
@@ -1258,7 +1255,6 @@ impl RetainedInteractiveSyncCursor {
         self.select_width = 0.0;
         self.select_height = 0.0;
         self.tree_section = 0;
-        self.tree_section_y = 0.0;
         self.tree_depth = 0;
         self.tree_item_count = 0;
         self.tree_apply = 0;
@@ -1295,19 +1291,12 @@ impl RetainedInteractiveSyncCursor {
 fn retained_sync_tree_item_step(cursor: &mut RetainedInteractiveSyncCursor) -> RetainedInteractiveSyncStep {
     let Some(frame) = cursor.tree_frames[cursor.tree_depth] else { return RetainedInteractiveSyncStep::Fault };
     if frame.next_item >= frame.items_len {
-        let complete = frame.height;
-        let record = frame.record;
-        let Some(output) = cursor.tree_records[record].as_mut() else { return RetainedInteractiveSyncStep::Fault };
-        output.height = complete;
         cursor.tree_frames[cursor.tree_depth] = None;
         if cursor.tree_depth == 0 {
-            cursor.tree_section_y += complete;
             cursor.tree_section += 1;
             cursor.phase = RetainedInteractiveSyncPhase::TreeSection;
         } else {
             cursor.tree_depth -= 1;
-            let Some(parent) = cursor.tree_frames[cursor.tree_depth].as_mut() else { return RetainedInteractiveSyncStep::Fault };
-            parent.height += complete;
         }
         return RetainedInteractiveSyncStep::Pending;
     }
@@ -1322,17 +1311,14 @@ fn retained_sync_tree_item_step(cursor: &mut RetainedInteractiveSyncCursor) -> R
     let Some(item_count) = cursor.tree_item_count.checked_add(1).filter(|count| *count <= RETAINED_SYNC_COLLECTION_ITEMS) else { return RetainedInteractiveSyncStep::Fault };
     let Some(record_index) = cursor.tree_record_len.checked_add(1).filter(|count| *count <= RETAINED_SYNC_OUTPUTS).map(|_| cursor.tree_record_len) else { return RetainedInteractiveSyncStep::Fault };
     let Some(key) = RetainedSyncKey::try_from_str(&item.id) else { return RetainedInteractiveSyncStep::Fault };
-    cursor.tree_records[record_index] = Some(RetainedSyncTreeRecord { key, parent: Some(frame.record), retained: None, y: frame.height, height: TREE_ROW_HEIGHT, draggable: item.draggable.unwrap_or(false), section: false });
+    cursor.tree_records[record_index] = Some(RetainedSyncTreeRecord { key, parent: Some(frame.record), retained: None, draggable: item.draggable.unwrap_or(false), section: false });
     cursor.tree_record_len += 1;
     cursor.tree_item_count = item_count;
     let children = item.items.as_deref().filter(|items| item.default_open.unwrap_or(false) && !items.is_empty());
     if let Some(children) = children {
         let Some(depth) = cursor.tree_depth.checked_add(1).filter(|depth| *depth < RETAINED_SYNC_DEPTH) else { return RetainedInteractiveSyncStep::Fault };
         cursor.tree_depth = depth;
-        cursor.tree_frames[depth] = Some(RetainedSyncTreeFrame { record: record_index, next_item: 0, items_pointer: children.as_ptr() as usize, items_len: children.len(), height: TREE_ROW_HEIGHT });
-    } else {
-        let Some(parent) = cursor.tree_frames[cursor.tree_depth].as_mut() else { return RetainedInteractiveSyncStep::Fault };
-        parent.height += TREE_ROW_HEIGHT;
+        cursor.tree_frames[depth] = Some(RetainedSyncTreeFrame { record: record_index, next_item: 0, items_pointer: children.as_ptr() as usize, items_len: children.len() });
     }
     RetainedInteractiveSyncStep::Pending
 }
@@ -1431,8 +1417,8 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
             cursor.finish()
         }
         RetainedInteractiveSyncPhase::TreeSection => {
-            let Some((sections_len, width)) = tree.node(id).and_then(|node| match &node.spec.0 {
-                UiNode::Tree(tree_node) => tree.accepted_layout(id).map(|layout| (tree_node.sections.len(), layout.width)),
+            let Some(sections_len) = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::Tree(tree_node) => tree.accepted_layout(id).map(|_| tree_node.sections.len()),
                 _ => None,
             }) else {
                 return RetainedInteractiveSyncStep::Fault;
@@ -1450,12 +1436,10 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
             };
             let Some(record_index) = cursor.tree_record_len.checked_add(1).filter(|count| *count <= RETAINED_SYNC_OUTPUTS).map(|_| cursor.tree_record_len) else { return RetainedInteractiveSyncStep::Fault };
             let Some(key) = RetainedSyncKey::try_from_str(&section.id) else { return RetainedInteractiveSyncStep::Fault };
-            let header = if section.label.is_some() { PANEL_HEADER } else { 0.0 };
-            cursor.tree_records[record_index] = Some(RetainedSyncTreeRecord { key, parent: None, retained: None, y: cursor.tree_section_y, height: header, draggable: false, section: true });
+            cursor.tree_records[record_index] = Some(RetainedSyncTreeRecord { key, parent: None, retained: None, draggable: false, section: true });
             cursor.tree_record_len += 1;
             cursor.tree_depth = 0;
-            cursor.tree_frames[0] = Some(RetainedSyncTreeFrame { record: record_index, next_item: 0, items_pointer: section.items.as_ptr() as usize, items_len: section.items.len(), height: header });
-            cursor.select_width = width;
+            cursor.tree_frames[0] = Some(RetainedSyncTreeFrame { record: record_index, next_item: 0, items_pointer: section.items.as_ptr() as usize, items_len: section.items.len() });
             cursor.phase = RetainedInteractiveSyncPhase::TreeItem;
             RetainedInteractiveSyncStep::Pending
         }
@@ -1492,10 +1476,6 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
             let Some(child) = cursor.matched.take() else { return RetainedInteractiveSyncStep::Fault };
             let Some(record) = cursor.tree_records[cursor.tree_apply] else { return RetainedInteractiveSyncStep::Fault };
             let Some(node) = tree.node_mut(child) else { return RetainedInteractiveSyncStep::Fault };
-            node.layout.x = 0.0;
-            node.layout.y = record.y;
-            node.layout.width = cursor.select_width;
-            node.layout.height = record.height;
             if !record.section {
                 node.flags.set(NodeFlags::DRAG_SOURCE, record.draggable);
             }
@@ -1560,7 +1540,7 @@ pub(crate) fn sync_interactive_state_node(tree: &mut UiTree, id: NodeId, theme: 
     }
 
     if tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::Tree(_))) {
-        sync_tree_row_layout(tree, id);
+        sync_tree_row_drag_sources(tree, id);
     }
 }
 
@@ -1589,69 +1569,39 @@ fn sync_select_popup_rows(tree: &mut UiTree, select_id: NodeId, items: &[UiSelec
     }
 }
 
-/// 🌳️ Gives each of a `Tree`'s synthesized per-section `Stack`s (`reconcile::children_of`'s `Tree`
-/// arm, keyed by `section.id`) real `LayoutBucket` geometry, cumulative down the tree exactly like
-/// `paint_tree_widget`'s own procedural walk (header height, then each item's row height including
-/// any expanded nested rows).
+/// 🌳️ Keeps every `Tree` row's `NodeFlags::DRAG_SOURCE` synced with its authored `draggable`
+/// (see `events::is_plain_stack_container`/`set_drag_payload`, the two consumers of that bit) —
+/// the `cfg(test)` twin of `sync_interactive_state_node_step`'s `Tree*` phases. Row GEOMETRY is
+/// deliberately absent here: `mounted_layout` is this target's single writer of tree row rects, so
+/// that layout and paint can never disagree (`📓️wgpu-tree-row-hit-test-2026-09-12.md`).
 #[cfg(test)]
-fn sync_tree_row_layout(tree: &mut UiTree, tree_id: NodeId) {
+fn sync_tree_row_drag_sources(tree: &mut UiTree, tree_id: NodeId) {
     let Some(tree_node) = tree.node(tree_id).and_then(|node| match &node.spec.0 {
         UiNode::Tree(tree_node) => Some(tree_node.clone()),
         _ => None,
     }) else {
         return;
     };
-    let width = tree.accepted_layout(tree_id).map_or(0.0, |layout| layout.width);
-    let mut section_y = 0.0;
     for section in &tree_node.sections {
         let Some(section_id) = find_child_by_key(tree, tree_id, &NodeKey::Explicit(section.id.clone())) else { continue };
-        let header_offset = if section.label.is_some() { PANEL_HEADER } else { 0.0 };
-        let mut item_y = header_offset;
         for item in &section.items {
-            item_y += sync_tree_item_layout(tree, section_id, item, item_y, width);
+            sync_tree_item_drag_source(tree, section_id, item);
         }
-        if let Some(node) = tree.node_mut(section_id) {
-            node.layout.x = 0.0;
-            node.layout.y = section_y;
-            node.layout.width = width;
-            node.layout.height = item_y;
-        }
-        section_y += item_y;
     }
 }
 
-/// 🌳️ Recursive per-item counterpart of `sync_tree_row_layout`, one level down — writes `item`'s own
-/// retained row `Stack` geometry (found by `item.id`, `reconcile::tree_item_row`'s key) at
-/// `y_offset` relative to `parent` (its retained parent row/section), then recurses into any
-/// expanded nested `items` relative to *this* row, mirroring `paint_tree_item`'s identical
-/// recursion. Also keeps `NodeFlags::DRAG_SOURCE` synced with `item.draggable` (see
-/// `events::is_plain_stack_container`/`set_drag_payload` for the two consumers of that bit). Returns
-/// the total height (own row + any expanded nested rows) consumed, for the caller's own cursor.
 #[cfg(test)]
-fn sync_tree_item_layout(tree: &mut UiTree, parent: NodeId, item: &UiTreeItemNode, y_offset: f32, width: f32) -> f32 {
+fn sync_tree_item_drag_source(tree: &mut UiTree, parent: NodeId, item: &UiTreeItemNode) {
     if !item.presence.visible() {
-        return 0.0;
+        return;
     }
-    let Some(item_id) = find_child_by_key(tree, parent, &NodeKey::Explicit(item.id.clone())) else {
-        return TREE_ROW_HEIGHT;
-    };
-    let expandable = item.items.as_ref().is_some_and(|items| !items.is_empty());
-    let expanded = expandable && item.default_open.unwrap_or(false);
-    let mut nested_height = 0.0;
-    if expanded {
-        for nested in item.items.as_ref().unwrap() {
-            nested_height += sync_tree_item_layout(tree, item_id, nested, TREE_ROW_HEIGHT + nested_height, width);
-        }
-    }
-    let total_height = TREE_ROW_HEIGHT + nested_height;
+    let Some(item_id) = find_child_by_key(tree, parent, &NodeKey::Explicit(item.id.clone())) else { return };
     if let Some(node) = tree.node_mut(item_id) {
-        node.layout.x = 0.0;
-        node.layout.y = y_offset;
-        node.layout.width = width;
-        node.layout.height = total_height;
         node.flags.set(NodeFlags::DRAG_SOURCE, item.draggable.unwrap_or(false));
     }
-    total_height
+    for nested in item.items.iter().flatten() {
+        sync_tree_item_drag_source(tree, item_id, nested);
+    }
 }
 //#endregion 🔖️InteractiveStateSync
 
@@ -2175,6 +2125,7 @@ fn paint_group(node: &UiGroupNode, bounds: Rect, theme: &Theme, atlas: &mut Font
 #[cfg(test)]
 fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     draw.push_scissor(bounds);
+    let metrics = TreeRowMetrics::from_theme(theme);
     let mut y = bounds.y;
     for section in &node.sections {
         if let Some(label) = &section.label {
@@ -2185,10 +2136,10 @@ fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut
             let text_color = if collapsed { theme.text_muted } else { theme.text_element };
             let label_x = bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard;
             if let Some(icons) = icons {
-                push_icon(draw, icons, "folder", label_x, y + (PANEL_HEADER - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
+                push_icon(draw, icons, "folder", label_x, y + (metrics.header_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
             }
-            draw_text_on(draw, atlas, label.as_str(), label_x + TREE_ICON_SIZE + theme.gap_standard, y + (PANEL_HEADER + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, text_color);
-            y += PANEL_HEADER;
+            draw_text_on(draw, atlas, label.as_str(), label_x + TREE_ICON_SIZE + theme.gap_standard, y + (metrics.header_height + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, text_color);
+            y += tree_section_header_height(section, &metrics);
         }
         for item in &section.items {
             y = paint_tree_item(item, bounds.x, bounds.w, y, 1, node, theme, atlas, icons, draw, &[]);
@@ -2213,7 +2164,8 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
     if !item.presence.visible() {
         return y;
     }
-    let row = Rect::new(x, y, width, TREE_ROW_HEIGHT);
+    let metrics = TreeRowMetrics::from_theme(theme);
+    let row = Rect::new(x, y, width, metrics.row_height);
     let selected = item.presence.selected;
     let previewed = item.presence.state == UiState::Previewed;
     let dimmed = item.dimmed.unwrap_or(false) || item.presence.state == UiState::Disabled;
@@ -2238,7 +2190,7 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
     if expandable {
         if let Some(icons) = icons {
             let chevron = if item.default_open.unwrap_or(false) { "chevron-down" } else { "chevron-right" };
-            push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (TREE_ROW_HEIGHT - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+            push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (metrics.row_height - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
         }
     }
     // 🎨️ `widgets::render_tree_item`'s `text_color`: selected/previewed rows use `active_foreground`
@@ -2248,13 +2200,13 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
     let text_color = if selected || previewed { theme.active_foreground } else { theme.text_element };
     let text_color = if dimmed { text_color.with_alpha(text_color.a * 0.5) } else { text_color };
     if let (Some(icons), Some(icon_id)) = (icons, item.icon_id) {
-        push_icon(draw, icons, icon_id.as_str(), indent, row.y + (TREE_ROW_HEIGHT - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
+        push_icon(draw, icons, icon_id.as_str(), indent, row.y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
     }
     let label_x = indent + if item.icon_id.is_some() { TREE_ICON_SIZE + theme.gap_standard } else { 0.0 };
-    draw_text_on(draw, atlas, item.label.as_str(), label_x, row.y + (TREE_ROW_HEIGHT + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, text_color);
+    draw_text_on(draw, atlas, item.label.as_str(), label_x, row.y + (metrics.row_height + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, text_color);
     if let Some(description) = &item.description {
         let (label_w, _) = atlas.measure_text(item.label.as_str(), theme.font_size_body);
-        draw_text_on(draw, atlas, description, label_x + label_w + theme.gap_standard, row.y + (TREE_ROW_HEIGHT + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
+        draw_text_on(draw, atlas, description, label_x + label_w + theme.gap_standard, row.y + (metrics.row_height + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
     }
     let mut actions_x = row.x + row.w - theme.gap_standard;
     if let Some(icons) = icons {
@@ -2263,7 +2215,7 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
                 continue;
             }
             actions_x -= TREE_ICON_SIZE + theme.padding_standard;
-            push_icon(draw, icons, action.icon_id.as_str(), actions_x, row.y + (TREE_ROW_HEIGHT - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
+            push_icon(draw, icons, action.icon_id.as_str(), actions_x, row.y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
         }
     }
     // 🎛️ An inline per-row control (e.g. a small toggle/select embedded in a tree row), static data
@@ -2273,7 +2225,7 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
         let control_rect = Rect::new(row.x + row.w - control_w - theme.gap_standard, row.y + (row.h - theme.control_height) * 0.5, control_w, theme.control_height);
         paint_control(control, control_rect, theme, atlas, icons, draw);
     }
-    let mut next_y = y + TREE_ROW_HEIGHT;
+    let mut next_y = y + metrics.row_height;
     if expandable && item.default_open.unwrap_or(false) {
         for (index, child) in item.items.as_ref().unwrap().iter().enumerate() {
             let mut child_is_last = is_last_at_level.to_vec();

@@ -2,12 +2,12 @@
 //! 🧵️ Fixed-credit mounted layout and text worker with one cursor opportunity per grant.
 
 use crate::wgpu::arena::NodeId;
-use crate::wgpu::component::ui::UiNode;
+use crate::wgpu::component::ui::{UiNode, UiTreeItemNode, UiTreeNode};
 use crate::wgpu::engine::UiSurfaceToken;
 use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
-use crate::wgpu::layout::{gap_for_token, padding_for_token};
+use crate::wgpu::layout::{gap_for_token, padding_for_token, tree_item_height, tree_node_height, tree_row_control_rect, tree_section_header_height, tree_section_height, TreeRowMetrics, TREE_ROW_MAX_DEPTH};
 use crate::wgpu::theme::Theme;
-use crate::wgpu::tree::{AcceptedLayout, NodeFlags, UiTree};
+use crate::wgpu::tree::{AcceptedLayout, NodeFlags, NodeKey, UiTree};
 
 pub(crate) const LAYOUT_NODE_CREDITS: usize = 4_096;
 pub(crate) const LAYOUT_GLYPH_CREDITS: usize = 16_384;
@@ -46,7 +46,70 @@ enum LayoutNodeKind {
     Stack { horizontal: bool, gap: f32, padding: f32 },
     Field { top: f32 },
     Section { gap: f32 },
+    /// 🌳️ A `Tree`, measured from its own spec through `layout`'s shared row geometry rather than
+    /// from arena children — a tree's rows carry no children of their own, so aggregating them
+    /// measured a whole tree as the sum of its rows' padding.
+    Tree { height: f32 },
+    TreeSection { header: f32, height: f32 },
+    TreeRow { row: f32, height: f32 },
     Leaf,
+}
+
+/// 🌳️ The `UiTreeNode` spec that owns the row `id` mounts as — the nearest `UiNode::Tree`
+/// ancestor, the same walk `events::find_tree_item_spec` does to re-derive a row's authored item.
+fn owning_tree_spec(tree: &UiTree, id: NodeId) -> Option<&UiTreeNode> {
+    let mut ancestor = tree.node(id)?.parent;
+    let mut hops = 0usize;
+    while let Some(candidate) = ancestor {
+        if hops >= TREE_ROW_MAX_DEPTH {
+            return None;
+        }
+        hops += 1;
+        let node = tree.node(candidate)?;
+        if let UiNode::Tree(tree_node) = &node.spec.0 {
+            return Some(tree_node);
+        }
+        ancestor = node.parent;
+    }
+    None
+}
+
+fn find_tree_item<'a>(items: &'a [UiTreeItemNode], id: &str, depth: usize) -> Option<&'a UiTreeItemNode> {
+    if depth >= TREE_ROW_MAX_DEPTH {
+        return None;
+    }
+    for item in items {
+        if item.id == id {
+            return Some(item);
+        }
+        if let Some(found) = item.items.as_deref().and_then(|nested| find_tree_item(nested, id, depth + 1)) {
+            return Some(found);
+        }
+    }
+    None
+}
+
+/// 🌳️ Classifies the synthesized row `id` against the `Tree` that owns it — a section row when its
+/// parent is the tree itself and its key names one of that tree's sections, an item row when its
+/// parent is already a row and its key names one of that tree's items. Anything else is an ordinary
+/// container that merely happens to live inside a tree, and keeps its own kind.
+fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<LayoutNodeKind>, metrics: &TreeRowMetrics) -> Option<LayoutNodeKind> {
+    let parent_kind = parent_kind?;
+    if !matches!(parent_kind, LayoutNodeKind::Tree { .. } | LayoutNodeKind::TreeSection { .. } | LayoutNodeKind::TreeRow { .. }) {
+        return None;
+    }
+    let NodeKey::Explicit(key) = &tree.node(id)?.key else { return None };
+    let owner = owning_tree_spec(tree, id)?;
+    match parent_kind {
+        LayoutNodeKind::Tree { .. } => {
+            let section = owner.sections.iter().find(|section| &section.id == key)?;
+            Some(LayoutNodeKind::TreeSection { header: tree_section_header_height(section, metrics), height: tree_section_height(section, metrics) })
+        }
+        _ => {
+            let item = owner.sections.iter().find_map(|section| find_tree_item(&section.items, key, 0))?;
+            Some(LayoutNodeKind::TreeRow { row: metrics.row_height, height: tree_item_height(item, metrics) })
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -336,9 +399,16 @@ impl MountedLayoutJob {
             self.fault = Some(MountedLayoutFault::Stale);
             return (0, 0);
         };
+        let metrics = TreeRowMetrics::from_theme(&self.theme);
+        let parent_kind = parent.and_then(|index| self.nodes.get(index)).map(|input| input.kind);
         let kind = match &node.spec.0 {
             UiNode::Text(_) => LayoutNodeKind::Text,
-            UiNode::Stack(stack) => LayoutNodeKind::Stack { horizontal: stack.direction == "horizontal", gap: gap_for_token(&self.theme, stack.gap.as_deref()), padding: padding_for_token(&self.theme, stack.padding.as_deref()) },
+            UiNode::Tree(tree_node) => LayoutNodeKind::Tree { height: tree_node_height(tree_node, &metrics) },
+            UiNode::Stack(stack) => tree_row_kind(tree, id, parent_kind, &metrics).unwrap_or(LayoutNodeKind::Stack {
+                horizontal: stack.direction == "horizontal",
+                gap: gap_for_token(&self.theme, stack.gap.as_deref()),
+                padding: padding_for_token(&self.theme, stack.padding.as_deref()),
+            }),
             UiNode::Field(_) => LayoutNodeKind::Field { top: self.theme.font_size_small + gap_for_token(&self.theme, Some("standard")) },
             UiNode::Section(_) => LayoutNodeKind::Section { gap: self.theme.gap_standard },
             _ => LayoutNodeKind::Leaf,
@@ -507,6 +577,7 @@ impl MountedLayoutJob {
             LayoutNodeKind::Stack { horizontal: false, gap, padding } => IntrinsicSize { width: aggregate.max_width + padding * 2.0, height: aggregate.height_sum + gap * aggregate.count.saturating_sub(1) as f32 + padding * 2.0 },
             LayoutNodeKind::Field { top } => IntrinsicSize { width: aggregate.max_width, height: aggregate.height_sum + top },
             LayoutNodeKind::Section { gap } => IntrinsicSize { width: aggregate.max_width, height: aggregate.height_sum + SECTION_HEADER_HEIGHT + gap * aggregate.count.saturating_sub(1) as f32 },
+            LayoutNodeKind::Tree { height } | LayoutNodeKind::TreeSection { height, .. } | LayoutNodeKind::TreeRow { height, .. } => IntrinsicSize { width: aggregate.max_width, height },
             LayoutNodeKind::Leaf => IntrinsicSize { width: aggregate.max_width, height: aggregate.height_sum },
         };
         if matches!(input.kind, LayoutNodeKind::Text) {
@@ -563,6 +634,14 @@ impl MountedLayoutJob {
                 }
                 LayoutNodeKind::Field { top } => (0.0, top, parent_result.width, (parent_result.height - top).max(0.0)),
                 LayoutNodeKind::Section { .. } => (0.0, SECTION_HEADER_HEIGHT + parent.child_offset, parent_result.width, input.intrinsic.height),
+                LayoutNodeKind::TreeSection { header, .. } => (0.0, header + parent.child_offset, parent_result.width, input.intrinsic.height),
+                LayoutNodeKind::TreeRow { row, .. } => match input.kind {
+                    LayoutNodeKind::TreeRow { .. } => (0.0, row + parent.child_offset, parent_result.width, input.intrinsic.height),
+                    _ => {
+                        let rect = tree_row_control_rect(parent_result.width, &TreeRowMetrics::from_theme(&self.theme));
+                        (rect.x, rect.y, rect.w, rect.h)
+                    }
+                },
                 _ => (0.0, parent.child_offset, parent_result.width, input.intrinsic.height),
             }
         };
@@ -573,10 +652,12 @@ impl MountedLayoutJob {
         }
         if let Some(parent_index) = input.parent {
             let parent_kind = self.nodes.get(parent_index).map(|parent| parent.kind);
+            let child_is_row = matches!(input.kind, LayoutNodeKind::TreeRow { .. });
             if let Some(parent) = self.nodes.get_mut(parent_index) {
                 parent.child_offset += match parent_kind {
                     Some(LayoutNodeKind::Stack { horizontal: true, gap, .. }) => width + gap,
                     Some(LayoutNodeKind::Stack { horizontal: false, gap, .. }) | Some(LayoutNodeKind::Section { gap }) => height + gap,
+                    Some(LayoutNodeKind::TreeRow { .. }) if !child_is_row => 0.0,
                     _ => height,
                 };
             }

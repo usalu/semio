@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.app.architect.program.report_window_config;
+
+message ArchitectReportWindowConfig {
+  optional string selected_report_id = 1;
+}
+
+message SelectArchitectReportWindowRecord {
+  optional string selected_report_id = 1;
+}

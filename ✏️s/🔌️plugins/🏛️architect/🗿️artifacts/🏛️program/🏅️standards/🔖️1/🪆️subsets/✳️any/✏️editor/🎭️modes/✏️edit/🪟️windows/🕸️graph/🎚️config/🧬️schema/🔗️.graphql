@@ -1,0 +1,13 @@
+type ArchitectGraphWindowConfig {
+  viewport: Viewport2d!
+}
+
+input ArchitectGraphWindowViewportInput {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+input SetArchitectGraphWindowViewport {
+  viewport: ArchitectGraphWindowViewportInput!
+}

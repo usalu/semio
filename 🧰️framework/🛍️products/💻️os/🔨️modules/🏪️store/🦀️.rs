@@ -5297,7 +5297,8 @@ pub mod pack_rt {
 
     pub use crate::os_pack::{RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
     pub use pack::{
-        RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent,
+        RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCatalogFault,
+        RetainedPackCatalogProgress, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent,
         RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep, RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceProgress, MAGIC, RETAINED_PACK_MAXIMUM_PAGES,
         RETAINED_PACK_PAGE_BYTES,
     };
@@ -5468,7 +5469,8 @@ pub mod pack_rt {
 pub mod mounted_pack_rt {
     pub use crate::os_pack::{PackLimits, RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
     pub use pack::{
-        RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent,
+        RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCatalogFault,
+        RetainedPackCatalogProgress, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent,
         RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep, RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceProgress, MAGIC, RETAINED_PACK_MAXIMUM_PAGES,
         RETAINED_PACK_PAGE_BYTES,
     };
@@ -6605,7 +6607,14 @@ pub trait ArtifactEnvelopeSprConflictAuthority: Send {
 
 /// @emoji 🏭️ Mandatory domain catalog for every nested envelope decoder; there is no default implementation.
 pub trait ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>: Send + Sync {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeVcsFieldAuthority<P, Mutation>>;
+    fn begin_vcs(
+        &self,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        path: OwnedSchemaPath,
+    ) -> Result<Box<dyn ArtifactEnvelopeVcsFieldAuthority<P, Mutation>>, Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>>;
+    fn maximum_vcs_close_byte_demand(&self) -> usize;
+    fn maximum_retained_vcs_close_bytes(&self) -> usize;
     fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>;
     fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeMutationFieldAuthority<Mutation>>;
     fn begin_spr_conflict(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSprConflictAuthority>;
@@ -8170,7 +8179,8 @@ pub const ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES: usize = 4_096;
 pub const ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES: usize = 262_144;
 pub const ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES: usize = ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES / ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 pub const ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES: usize = ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES * 4;
-pub const ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES: usize = ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES + ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+pub const ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES: usize = ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES + ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+pub const ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES: usize = ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES + ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactEnvelopeDecodePage {
@@ -8315,15 +8325,13 @@ where
 
     fn release_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Option<semio_framework_job::StepOutcome> {
         cx.set_stage("artifact-envelope-decode-close");
-        if let Some(fields) = self.fields.as_mut() {
-            let maximum_bytes = match fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(0) } else { owner.next_close_byte_demand() }) {
-                Ok(Ok(maximum_bytes)) => match self.checked_field_close_byte_demand(maximum_bytes) {
-                    Ok(maximum_bytes) => maximum_bytes,
-                    Err(diagnostic) => {
-                        self.record_release_fault(diagnostic);
-                        return Some(semio_framework_job::StepOutcome::Yield);
-                    }
-                },
+        if self.fields.is_some() {
+            // 📏️ The owner's own byte demand is read under its lease, then the lease is RELEASED before the
+            // ledger check: `checked_field_close_byte_demand` borrows `*self`, and the lease borrow is still
+            // live for `close_step` below, so the two must not overlap.
+            let demand = self.fields.as_mut().expect("release step holds its field decoder lease").with_owner(|owner| if owner.terminal_is_empty() { Ok(0) } else { owner.next_close_byte_demand() });
+            let demanded = match demand {
+                Ok(Ok(maximum_bytes)) => maximum_bytes,
                 Ok(Err(diagnostic)) => {
                     self.record_release_fault(diagnostic);
                     return Some(semio_framework_job::StepOutcome::Yield);
@@ -8334,6 +8342,14 @@ where
                     return Some(semio_framework_job::StepOutcome::Yield);
                 }
             };
+            let maximum_bytes = match self.checked_field_close_byte_demand(demanded) {
+                Ok(maximum_bytes) => maximum_bytes,
+                Err(diagnostic) => {
+                    self.record_release_fault(diagnostic);
+                    return Some(semio_framework_job::StepOutcome::Yield);
+                }
+            };
+            let fields = self.fields.as_mut().expect("release step holds its field decoder lease");
             let close = fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(SnapshotRetirementStep::Complete) } else { owner.close_step(1, maximum_bytes) });
             let step = match close {
                 Ok(Ok(step)) => step,
@@ -9200,28 +9216,26 @@ pub struct ArtifactEnvelopeFreshVcsAuthority<P: Send + 'static, Mutation: Send +
     initial_snapshot_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
     edit_decoder: Arc<dyn ArtifactOwnedHistoryEntryDecoder<Edit<Mutation>>>,
+    maximum_snapshot_close_byte_demand: usize,
+    maximum_retained_snapshot_close_bytes: usize,
     terminal: bool,
 }
 
 impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
-    pub fn new(
-        snapshot: Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>,
-        initial_snapshot_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
-        mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
-        edit_decoder: Arc<dyn ArtifactOwnedHistoryEntryDecoder<Edit<Mutation>>>,
-    ) -> Self {
-        match Self::try_new(snapshot, initial_snapshot_factory, mutation_factory, edit_decoder) {
-            Ok(authority) => authority,
-            Err(_) => unreachable!("the framework-owned fresh VCS catalog is a validated static schema"),
-        }
-    }
-
     pub fn try_new(
         snapshot: Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>,
         initial_snapshot_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
         edit_decoder: Arc<dyn ArtifactOwnedHistoryEntryDecoder<Edit<Mutation>>>,
     ) -> Result<Self, Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>> {
+        let maximum_snapshot_close_byte_demand = snapshot.maximum_close_byte_demand();
+        let maximum_retained_snapshot_close_bytes = snapshot.maximum_retained_close_bytes();
+        if maximum_snapshot_close_byte_demand > ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+            || maximum_retained_snapshot_close_bytes > ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+            || maximum_snapshot_close_byte_demand > maximum_retained_snapshot_close_bytes
+        {
+            return Err(snapshot);
+        }
         let cursor = match OwnedSchemaNestedRecordCursor::try_new(OwnedSchemaRecordSpec { fields: ARTIFACT_ENVELOPE_FRESH_VCS_FIELDS }) {
             Ok(cursor) => cursor,
             Err(_) => return Err(snapshot),
@@ -9241,6 +9255,8 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshVcsAuthor
             initial_snapshot_factory,
             mutation_factory,
             edit_decoder,
+            maximum_snapshot_close_byte_demand,
+            maximum_retained_snapshot_close_bytes,
             terminal: false,
         })
     }
@@ -9560,7 +9576,11 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeVcsFieldAuthor
     fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
         if let Some(snapshot) = self.snapshot.as_ref() {
             if !snapshot.terminal_is_empty() {
-                return snapshot.next_close_byte_demand();
+                let demand = snapshot.next_close_byte_demand()?;
+                if demand > self.maximum_snapshot_close_byte_demand {
+                    return Err(Self::diagnostic("artifact-envelope.snapshot-close-demand-over-admitted-maximum"));
+                }
+                return Ok(demand);
             }
         }
         if self.retirement.is_some() || self.active.as_ref().is_some_and(|active| !matches!(active, ArtifactEnvelopeFreshVcsActive::Snapshot { .. })) {
@@ -9570,11 +9590,11 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeVcsFieldAuthor
     }
 
     fn maximum_close_byte_demand(&self) -> usize {
-        ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        self.maximum_snapshot_close_byte_demand.max(ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
     }
 
     fn maximum_retained_close_bytes(&self) -> usize {
-        ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES
+        self.maximum_retained_snapshot_close_bytes + ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic> {
@@ -9584,7 +9604,14 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeVcsFieldAuthor
         self.pending = None;
         if let Some(snapshot) = self.snapshot.as_mut() {
             if !snapshot.terminal_is_empty() {
-                let step = snapshot.close_step(maximum_items, maximum_bytes)?;
+                let demand = snapshot.next_close_byte_demand()?;
+                if demand > self.maximum_snapshot_close_byte_demand {
+                    return Err(Self::diagnostic("artifact-envelope.snapshot-close-demand-over-admitted-maximum"));
+                }
+                if maximum_bytes < demand {
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                let step = snapshot.close_step(maximum_items.min(1), demand)?;
                 if !matches!(step, SnapshotRetirementStep::Complete) {
                     return Ok(step);
                 }
@@ -9678,6 +9705,7 @@ impl<P: Send, Mutation: Send> ArtifactEnvelopeDecodedRecordTarget<P, Mutation> f
 enum ArtifactEnvelopeFreshRecordActive<P, Mutation> {
     String { field_id: u16, authority: OwnedSchemaStringAuthority<256> },
     Vcs { reservation: ArtifactEnvelopeFieldReservation, authority: Box<dyn ArtifactEnvelopeVcsFieldAuthority<P, Mutation>>, publishing: bool },
+    RejectedSnapshot { reservation: ArtifactEnvelopeFieldReservation, authority: Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>> },
     Empty { authority: OwnedSchemaEmptyArrayAuthority },
 }
 
@@ -9697,6 +9725,8 @@ pub struct ArtifactEnvelopeFreshFieldDecoder<P: Send + 'static, Mutation: Send +
     active: Option<ArtifactEnvelopeFreshRecordActive<P, Mutation>>,
     pending_completed: Option<Box<dyn ArtifactEnvelopeCompletedRecord<P, Mutation>>>,
     active_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
+    maximum_vcs_close_byte_demand: usize,
+    maximum_retained_vcs_close_bytes: usize,
     terminal: bool,
 }
 
@@ -9710,6 +9740,8 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFieldDeco
         completed: Arc<ArtifactEnvelopeCompletedRecordRegistry<P, Mutation>>,
         completion: Arc<ArtifactEnvelopeDecodeCompletion>,
     ) -> Self {
+        let maximum_vcs_close_byte_demand = catalog.maximum_vcs_close_byte_demand();
+        let maximum_retained_vcs_close_bytes = catalog.maximum_retained_vcs_close_bytes();
         Self {
             operation,
             generation,
@@ -9724,6 +9756,8 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFieldDeco
             active: None,
             pending_completed: None,
             active_retirement: None,
+            maximum_vcs_close_byte_demand,
+            maximum_retained_vcs_close_bytes,
             terminal: false,
         }
     }
@@ -9751,7 +9785,21 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFieldDeco
             }
             ARTIFACT_ENVELOPE_VCS_FIELD => {
                 let reservation = self.target.reserve_field(field_id)?;
-                self.active = Some(ArtifactEnvelopeFreshRecordActive::Vcs { reservation, authority: self.catalog.begin_vcs(self.operation, self.generation, OwnedSchemaPath::field("vcs").unwrap_or(OwnedSchemaPath::ROOT)), publishing: false });
+                match self.catalog.begin_vcs(self.operation, self.generation, OwnedSchemaPath::field("vcs").unwrap_or(OwnedSchemaPath::ROOT)) {
+                    Ok(authority) => {
+                        if authority.maximum_close_byte_demand() > self.maximum_vcs_close_byte_demand
+                            || authority.maximum_retained_close_bytes() > self.maximum_retained_vcs_close_bytes
+                        {
+                            self.active = Some(ArtifactEnvelopeFreshRecordActive::Vcs { reservation, authority, publishing: false });
+                            return Err(Self::diagnostic("vcs", "artifact-envelope.vcs-close-capacity-contract"));
+                        }
+                        self.active = Some(ArtifactEnvelopeFreshRecordActive::Vcs { reservation, authority, publishing: false });
+                    }
+                    Err(authority) => {
+                        self.active = Some(ArtifactEnvelopeFreshRecordActive::RejectedSnapshot { reservation, authority });
+                        return Err(Self::diagnostic("vcs", "artifact-envelope.vcs-construction-capacity"));
+                    }
+                }
             }
             ARTIFACT_ENVELOPE_EDIT_MESSAGES_FIELD => {
                 self.active = Some(ArtifactEnvelopeFreshRecordActive::Empty { authority: OwnedSchemaEmptyArrayAuthority::new(OwnedSchemaPath::field("editMessages").unwrap_or(OwnedSchemaPath::ROOT)) });
@@ -9844,6 +9892,10 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P
                     }
                 }
             }
+            ArtifactEnvelopeFreshRecordActive::RejectedSnapshot { .. } => {
+                self.active = Some(active);
+                Err(Self::diagnostic("vcs", "artifact-envelope.vcs-construction-capacity"))
+            }
             ArtifactEnvelopeFreshRecordActive::Empty { authority } => match authority.accept(token, terminal) {
                 Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete),
                 Ok(step) => {
@@ -9903,6 +9955,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P
         if let Some(active) = self.active.as_ref() {
             return match active {
                 ArtifactEnvelopeFreshRecordActive::Vcs { authority, .. } => authority.next_close_byte_demand(),
+                ArtifactEnvelopeFreshRecordActive::RejectedSnapshot { authority, .. } => authority.next_close_byte_demand(),
                 ArtifactEnvelopeFreshRecordActive::String { .. } | ArtifactEnvelopeFreshRecordActive::Empty { .. } => Ok(0),
             };
         }
@@ -9920,11 +9973,11 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P
     }
 
     fn maximum_close_byte_demand(&self) -> usize {
-        ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        self.maximum_vcs_close_byte_demand.max(ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
     }
 
     fn maximum_retained_close_bytes(&self) -> usize {
-        ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES
+        self.maximum_retained_vcs_close_bytes.saturating_add(ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES)
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic> {
@@ -9943,10 +9996,19 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P
                         return Err(Self::diagnostic("vcs", "artifact-envelope.vcs-close-false-terminal"));
                     }
                 }
+                ArtifactEnvelopeFreshRecordActive::RejectedSnapshot { authority, .. } => {
+                    let step = authority.close_step(maximum_items.min(1), maximum_bytes)?;
+                    if !matches!(step, SnapshotRetirementStep::Complete) {
+                        return Ok(step);
+                    }
+                    if !authority.terminal_is_empty() {
+                        return Err(Self::diagnostic("vcs", "artifact-envelope.snapshot-rejection-close-false-terminal"));
+                    }
+                }
                 ArtifactEnvelopeFreshRecordActive::Empty { .. } => {}
             }
             let reservation = match active {
-                ArtifactEnvelopeFreshRecordActive::Vcs { reservation, .. } => Some(*reservation),
+                ArtifactEnvelopeFreshRecordActive::Vcs { reservation, .. } | ArtifactEnvelopeFreshRecordActive::RejectedSnapshot { reservation, .. } => Some(*reservation),
                 _ => None,
             };
             self.active = None;

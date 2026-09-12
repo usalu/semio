@@ -282,13 +282,16 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
     for _ in 0..200_000 {
         let deadline = semio_framework_job::default_now_us().unwrap().checked_add(8_000).unwrap();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, deadline), cancel.clone(), semio_framework_job::default_now_us, &mut preview);
+        let before = (child.stage, child.node_cursor, child.scalar_axis, child.reaction_entry, child.child_outcome.is_some());
         let started = std::time::Instant::now();
         terminal = child.step(&doc, &mut fields, &mut backing, freshness(19), operation, &mut context).unwrap_or_else(|fault| {
             panic!("[DEBUG] production numerical child at {:?}/{}: {}", child.stage, context.stage(), String::from_utf8_lossy(&fault))
         });
-        assert_eq!(context.fuel_remaining(), 0, "numerical stage {:?}, context {}, terminal={terminal}, expired={}, elapsed_us={}", child.stage, context.stage(), context.deadline_exceeded(), started.elapsed().as_micros());
+        let elapsed_us = started.elapsed().as_micros();
+        let after = (child.stage, child.node_cursor, child.scalar_axis, child.reaction_entry, child.child_outcome.is_some());
+        assert_eq!(context.fuel_remaining(), 0, "[DEBUG] numerical before={before:?}, after={after:?}, context {}, terminal={terminal}, expired={}, elapsed_us={elapsed_us}", context.stage(), context.deadline_exceeded());
         last_stage = context.stage();
-        assert!(started.elapsed().as_micros() < 8_000);
+        assert!(elapsed_us < 8_000, "[DEBUG] numerical before={before:?}, after={after:?}, context {}, terminal={terminal}, expired={}, elapsed_us={elapsed_us}", context.stage(), context.deadline_exceeded());
         if terminal {
             break;
         }

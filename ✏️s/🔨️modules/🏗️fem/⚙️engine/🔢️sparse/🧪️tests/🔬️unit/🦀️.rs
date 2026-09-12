@@ -439,6 +439,55 @@ fn subspace_factor_cursor_matches_numpy_for_three_nondiagonal_right_hand_sides()
     eprintln!("[DEBUG] Subspace factor cursor matches three independent NumPy solves with one retained scalar per transition");
 }
 
+/// 🎶 Modal publication replaces every scalar before exposing terminal convergence.
+#[test]
+fn subspace_publication_restarts_at_zero_and_commits_convergence_after_the_last_scalar() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔢️scalar-owners/🔣️.json")).unwrap();
+    let case = &fixture["publication"];
+    let diagonal: Vec<f64> = serde_json::from_value(case["diagonal"].clone()).unwrap();
+    let eigenvalues: Vec<f64> = serde_json::from_value(case["eigenvalues"].clone()).unwrap();
+    let previous: Vec<f64> = serde_json::from_value(case["previous"].clone()).unwrap();
+    let expected: Vec<Vec<f64>> = serde_json::from_value(case["steps"].clone()).unwrap();
+    for modes in serde_json::from_value::<Vec<usize>>(case["requestedModes"].clone()).unwrap() {
+        let mut mass = Coo::new(3);
+        for index in 0..3 { mass.add(index, index, 1.0); }
+        let operation = test_operation(997 + modes as u64);
+        let factor = LdltFactor { n: 3, l_cols: vec![Vec::new(), Vec::new(), Vec::new()], d: diagonal.clone() };
+        let mut job = SubspaceIterationJob::new(operation, factor, mass.to_csr(), 3, modes, 30);
+        job.state.factor_validation_complete = true;
+        job.state.x = MatD::zeros(3, 3);
+        job.state.work.candidate_x = MatD::zeros(3, 3);
+        job.state.work.theta = eigenvalues.clone();
+        job.state.final_theta = previous.clone();
+        job.state.converged_count = modes;
+        job.reset_cursor(SubspaceStage::ConvergenceMode);
+        job.state.work.first = modes;
+        let pointer = job.state.final_theta.as_ptr();
+        let capacity = job.state.final_theta.capacity();
+        let mut sequence = 0;
+        let mut observations = Vec::new();
+        for fuel in [0, 1, 0, 1, 1, 1, 1, 1] {
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            let yielded = matches!(job.step(&mut context), StepOutcome::Yield);
+            observations.push((yielded && context.fuel_remaining() == 0, job.state.final_theta.clone(), job.state.converged, job.state.work.first, job.state.iteration, job.state.final_theta.as_ptr() == pointer && job.state.final_theta.capacity() == capacity, job.terminal_writer.is_none()));
+        }
+        let solution = job.solution();
+        for _ in 0..1_024 {
+            if matches!(InteractiveJob::close_step(&mut job, 1, NUMERICAL_OWNER_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) { break; }
+        }
+        assert!(InteractiveJob::terminal_is_empty(&job));
+        for (index, (yielded, values, converged, cursor, iteration, retained, no_terminal)) in observations.into_iter().enumerate() {
+            assert!(yielded && retained && no_terminal, "publication opportunity {index}, modes {modes}: yielded={yielded}, retained={retained}, no_terminal={no_terminal}");
+            assert_eq!(values, if index < 3 { &previous } else { &expected[(index - 3).min(2)] }.clone(), "publication scalar {index}, modes {modes}");
+            assert_eq!(converged, index == 7, "publication convergence {index}, modes {modes}");
+            assert_eq!(iteration, usize::from(index == 7));
+            if index == 1 || index == 2 { assert_eq!(cursor, 0); }
+        }
+        assert_eq!(solution.values, eigenvalues[..modes]);
+    }
+    eprintln!("[DEBUG] Subspace publication retains its backing and publishes all NumPy eigenvalues before terminal convergence");
+}
+
 fn drive_pcg_job(mut job: PcgJob, operation: Operation) -> (VecD, PcgStats) {
     let mut sequence = 0;
     loop {

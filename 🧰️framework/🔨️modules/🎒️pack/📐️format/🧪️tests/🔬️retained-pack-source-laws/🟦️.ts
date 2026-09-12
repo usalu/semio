@@ -20,6 +20,27 @@ export function testRetainedPackPhysicalOwnership(): void {
   assert.equal(corpus.outerCancellation.subexactGrant.mutates, false);
   assert.equal(corpus.outerCancellation.workFuelPerCloseOpportunity, 1);
   assert.deepEqual(corpus.outerCancellation.demandDelegation, ["field-decoder", "vcs", "snapshot", "mounted-source"]);
+  assert.deepEqual(corpus.outerCancellation.constructionCeilings, {
+    singleDemand: "maximum-close-byte-demand",
+    cumulativeRetained: "maximum-retained-close-bytes",
+    oversizedNestedOwner: "returned-for-close",
+  });
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+  for (const symbol of corpus.retainedCatalog.symbols) {
+    assert.deepEqual([...encoder.encode(symbol.text)], symbol.utf8);
+    assert.deepEqual([...symbol.text].map((scalar) => scalar.codePointAt(0)), symbol.scalars);
+    assert.equal(decoder.decode(Uint8Array.from(symbol.utf8)), symbol.text);
+  }
+  const cumulativeBytes = corpus.retainedCatalog.cumulativeLimit.values.map((value) => encoder.encode(value).byteLength);
+  assert(cumulativeBytes.every((bytes) => bytes <= corpus.retainedCatalog.cumulativeLimit.eachMaximumBytes));
+  assert.equal(cumulativeBytes.reduce((sum, bytes) => sum + bytes, 0), corpus.retainedCatalog.cumulativeLimit.totalBytes);
+  assert(cumulativeBytes.slice(0, corpus.retainedCatalog.cumulativeLimit.acceptedBeforeRefusal).reduce((sum, bytes) => sum + bytes, 0) <= corpus.retainedCatalog.cumulativeLimit.totalMaximumBytes);
+  assert(cumulativeBytes.reduce((sum, bytes) => sum + bytes, 0) > corpus.retainedCatalog.cumulativeLimit.totalMaximumBytes);
+  assert.equal(corpus.retainedCatalog.pageCrossing.leadByteIndex + 1, corpus.retainedCatalog.pageCrossing.pageBytes);
+  assert.equal(decoder.decode(Uint8Array.from(corpus.retainedCatalog.pageCrossing.utf8)).codePointAt(0), corpus.retainedCatalog.pageCrossing.scalar);
+  assert.throws(() => decoder.decode(Uint8Array.from(corpus.retainedCatalog.invalidUtf8.malformedAfterPrefix)));
+  assert.throws(() => decoder.decode(Uint8Array.from(corpus.retainedCatalog.invalidUtf8.truncatedAfterPrefix)));
   const release: Operation[] = [
     { op: "replace", path: "/length", value: 0 },
     { op: "replace", path: "/capacity", value: 0 },
@@ -28,5 +49,15 @@ export function testRetainedPackPhysicalOwnership(): void {
   ];
   const terminal = applyPatch({ rootCapacity: 1, length: 1, capacity: 1, allocatedBytes: corpus.physicalOwnership.pageItemMinimumBytes }, release, true).newDocument;
   assert.deepEqual(terminal, corpus.physicalOwnership.terminal);
-  console.log("[DEBUG] Retained Pack physical source fixture agrees with Ajv 2020 and fast-json-patch; chunk observations=1 raw-byte-events=5 terminal-ledger=zero");
+  const catalogRelease: Operation[] = [
+    { op: "replace", path: "/pending", value: false },
+    { op: "replace", path: "/partialSymbolBytes", value: 0 },
+    { op: "replace", path: "/partialSymbolScalars", value: 0 },
+    { op: "replace", path: "/logicalItems", value: 0 },
+    { op: "replace", path: "/allocatedBytes", value: 0 },
+    { op: "replace", path: "/receiptClosed", value: true },
+  ];
+  const catalogTerminal = applyPatch({ pending: true, partialSymbolBytes: 2, partialSymbolScalars: 1, logicalItems: 3, allocatedBytes: 8192, receiptClosed: false }, catalogRelease, true).newDocument;
+  assert.deepEqual(catalogTerminal, corpus.retainedCatalog.terminal);
+  console.log("[DEBUG] Retained Pack physical source and catalog fixtures agree with Ajv 2020, fast-json-patch and platform UTF-8; catalog symbols=3 pending-preserved=true terminal-ledgers=zero");
 }

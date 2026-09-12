@@ -364,6 +364,7 @@
     "wasm": {
       "executor": "nx:run-commands",
       "dependsOn": [
+        "workspace:deps-trunk",
         "generate-browser-boot",
         "generate-frame-worker"
       ],
@@ -375,6 +376,7 @@
     "serve": {
       "executor": "nx:run-commands",
       "dependsOn": [
+        "workspace:deps-trunk",
         "generate-browser-boot",
         "generate-frame-worker"
       ],
@@ -389,6 +391,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "dependsOn": [
+        "workspace:deps-trunk",
         "generate-browser-boot",
         "generate-frame-worker"
       ],
@@ -431,10 +434,10 @@
         "^production"
       ],
       "outputs": [
-        "{projectRoot}/dist/native-dev"
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/native-dev"
       ],
       "options": {
-        "command": "bun ./📜️script.ts native-build dev",
+        "command": "bun \"../../🏗️compiler/🦀️native/📜️script.ts\" build dev",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
       }
@@ -448,10 +451,10 @@
         "^production"
       ],
       "outputs": [
-        "{projectRoot}/dist/native-release"
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/native-release"
       ],
       "options": {
-        "command": "bun ./📜️script.ts native-build release",
+        "command": "bun \"../../🏗️compiler/🦀️native/📜️script.ts\" build release",
         "cwd": "{projectRoot}"
       }
     },

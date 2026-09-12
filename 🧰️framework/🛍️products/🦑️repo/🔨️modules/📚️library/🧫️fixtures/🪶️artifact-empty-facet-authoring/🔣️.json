@@ -14,11 +14,11 @@
     "🎭️modes/{mode}/🎮️commands/📝️.md", "🎭️modes/{mode}/🎚️config/📝️.md", "🎭️modes/{mode}/👥️presence/📝️.md", "🎭️modes/{mode}/🫧️transient/📝️.md",
     "🎭️modes/{mode}/🪟️windows/🪟️main/🦀️.rs", "🎭️modes/{mode}/🪟️windows/🪟️main/🟦️.ts",
     "🎭️modes/{mode}/🪟️windows/🪟️main/🎬️actions/📝️.md", "🎭️modes/{mode}/🪟️windows/🪟️main/🪛️utilities/📝️.md",
-    "🎭️modes/{mode}/🪟️windows/🪟️main/🎚️options/📝️.md", "🎭️modes/{mode}/🪟️windows/🪟️main/🎚️config/📝️.md",
+    "🎭️modes/{mode}/🪟️windows/🪟️main/☑️options/📝️.md", "🎭️modes/{mode}/🪟️windows/🪟️main/🎚️config/📝️.md",
     "🎭️modes/{mode}/🪟️windows/🪟️main/👥️presence/📝️.md", "🎭️modes/{mode}/🪟️windows/🪟️main/🫧️transient/📝️.md"
   ],
   "subsetLayout": [
-    "🦀️.rs", "🟦️.ts", "🧬️schema/🦀️component.rs", "🧬️schema/🟦️.ts", "🚪️io/🦀️.rs", "🚪️io/🟦️.ts",
+    "🦀️.rs", "🟦️.ts", "🧬️schema/🦀️.rs", "🧬️schema/🟦️.ts", "🚪️io/🦀️.rs", "🚪️io/🟦️.ts",
     "🚪️io/📸️snapshot/📝️text/🦀️.rs", "🚪️io/📸️snapshot/💾️binary/🦀️.rs",
     "🚪️io/🔺️diff/📝️text/🦀️.rs", "🚪️io/🔺️diff/💾️binary/🦀️.rs",
     "🚪️io/💡️inferences/📝️.md", "🚪️io/🧬️mutations/📝️.md",

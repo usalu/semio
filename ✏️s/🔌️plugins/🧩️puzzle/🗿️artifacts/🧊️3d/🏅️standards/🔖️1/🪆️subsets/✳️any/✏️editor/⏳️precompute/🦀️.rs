@@ -1555,15 +1555,15 @@ const BRUSH_INDEX_CELL_SIZE: f32 = 8.0;
 ///
 /// [`Self::plan`] names the members the fill plan and the compatibility tables are derived from: any of
 /// them invalidates every candidate, so that case stays the whole-scene rebuild.
-struct Puzzle3dSceneInvalidation {
-    stale: std::collections::HashSet<String>,
-    pending: Vec<String>,
-    topology: bool,
-    plan: bool,
+pub(crate) struct Puzzle3dSceneInvalidation {
+    pub(crate) stale: std::collections::HashSet<String>,
+    pub(crate) pending: Vec<String>,
+    pub(crate) topology: bool,
+    pub(crate) plan: bool,
 }
 
 impl Puzzle3dSceneInvalidation {
-    fn between(previous: &SceneConfig, next: &SceneConfig) -> Self {
+    pub(crate) fn between(previous: &SceneConfig, next: &SceneConfig) -> Self {
         let plan = previous.kind_catalogs != next.kind_catalogs
             || previous.kind_compatibility != next.kind_compatibility
             || previous.overlap_budget != next.overlap_budget
@@ -1723,6 +1723,12 @@ impl Puzzle3dCollision {
 
     fn brush_lane_active(&self) -> bool {
         self.brush_queue_preparing || !self.brush_queue.is_empty()
+    }
+
+    /// 📊️ How many resolved brush candidates the engine still holds — the observable that says whether a
+    /// scene sync invalidated per object or per document.
+    pub(crate) fn brush_candidate_cache_len(&self) -> usize {
+        self.brush_cache.len()
     }
 
     fn re_enqueue_brush_targets(&mut self) {
@@ -2772,6 +2778,11 @@ impl Default for Puzzle3dPrecomputeSession {
 }
 
 impl Puzzle3dPrecomputeSession {
+    /// 📊️ See [`Puzzle3dCollision::brush_candidate_cache_len`].
+    pub(crate) fn brush_candidate_cache_len(&self) -> usize {
+        self.engine.brush_candidate_cache_len()
+    }
+
     pub fn new() -> Self {
         Self { engine: Puzzle3dCollision::new(), fill_job: None, fill_admission: None, fill_terminal: None, fill_observation: FillObservation::default(), fill_applied_count: 0, fill_faulted: false, fill_fault_notice: false, last_emitted_fill_checkpoint: RefCell::new(Vec::new()), brush_live_target: None }
     }

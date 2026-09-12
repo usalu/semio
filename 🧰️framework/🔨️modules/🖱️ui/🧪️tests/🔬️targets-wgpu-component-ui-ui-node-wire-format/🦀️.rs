@@ -100,6 +100,7 @@ mod ui_node_wire_format_tests {
                         camera_json: "{}".into(),
                         meshes_json: "[]".into(),
                         instances_json: "[]".into(),
+                        instances_delta_json: None,
                         selection_json: "{}".into(),
                         vortices_json: None,
                         attractions_json: None,

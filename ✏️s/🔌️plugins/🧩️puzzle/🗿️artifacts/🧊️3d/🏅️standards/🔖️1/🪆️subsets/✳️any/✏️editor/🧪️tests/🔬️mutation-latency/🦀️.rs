@@ -243,3 +243,202 @@ async fn latency_census(app: &mut Puzzle3dApp, example: &'static str) -> Puzzle3
         delete_us,
     }
 }
+
+//#region 🔖️B54TurnCensus
+/// 🧊️ A document `factor`× the size of Nakagin, built by cloning its objects under fresh ids — the
+/// brush-painted condition the checkpoint battery fails under (161 `puzzle3d.brush.*` objects on top of
+/// the authored 180) without driving a brush stroke, so a native law can measure the same size.
+fn scaled_nakagin_scene(factor: usize) -> Puzzle3dScene {
+    let mut fixture = NAKAGIN_EXAMPLE_FIXTURE.clone();
+    let authored = fixture.objects.clone();
+    for copy in 1..factor {
+        for object in &authored {
+            let mut clone = object.clone();
+            clone.id = format!("{}#b54-{copy}", object.id);
+            clone.origin[0] += 120.0 * copy as f64;
+            fixture.objects.push(clone);
+        }
+    }
+    Puzzle3dScene { fixture, runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() }
+}
+
+/// 📊️ One document size's publication cost, as turns against the units those turns carried.
+struct Puzzle3dTurnCensus {
+    label: &'static str,
+    objects: usize,
+    translate_turns: usize,
+    translate_units: u64,
+    translate_census: semio_framework_plugin::app::TypedOperationUnitCensus,
+    delete_turns: usize,
+    delete_units: u64,
+    delete_census: semio_framework_plugin::app::TypedOperationUnitCensus,
+}
+
+impl Puzzle3dTurnCensus {
+    /// ⏱️ Host turns the PUBLICATION ladder cost, with the native worker pool's wall-clock poll spin
+    /// removed — see the law's own docstring for why that term can never be a gate.
+    fn translate_ladder_turns(&self) -> usize {
+        self.translate_turns.saturating_sub(self.translate_census.worker as usize)
+    }
+
+    fn delete_ladder_turns(&self) -> usize {
+        self.delete_turns.saturating_sub(self.delete_census.worker as usize)
+    }
+}
+
+impl std::fmt::Display for Puzzle3dTurnCensus {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            formatter,
+            "label={} objects={} ladder={}/{}turns translate={}turns/{}units [{}] delete={}turns/{}units [{}]",
+            self.label, self.objects, self.translate_ladder_turns(), self.delete_ladder_turns(), self.translate_turns, self.translate_units, self.translate_census, self.delete_turns, self.delete_units, self.delete_census
+        )
+    }
+}
+
+/// ⏱️ Selects the first object, translates it, then selects the first object again and deletes it,
+/// answering the host-grant turns and the publication units each of the two spent.
+async fn turn_census(app: &mut Puzzle3dApp, label: &'static str) -> Puzzle3dTurnCensus {
+    let objects = object_count(app);
+    let victim = first_object_id(app);
+    select_id(app, crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before translate");
+    let (result, translated) = dispatch_reporting_with_items(app, "translateSelection", Some(&json!({ "ids": [victim.as_str()], "dx": 3.5, "dy": 0.0, "dz": 0.0 })), None, SETTLE_HOST_TURN_ITEMS).await;
+    result.expect("translate dispatches");
+    let victim = first_object_id(app);
+    select_id(app, crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before delete");
+    let (result, deleted) = dispatch_reporting_with_items(app, "deleteSelection", None, None, SETTLE_HOST_TURN_ITEMS).await;
+    result.expect("delete dispatches");
+    Puzzle3dTurnCensus {
+        label,
+        objects,
+        translate_turns: translated.turns,
+        translate_units: translated.census.units,
+        translate_census: translated.census,
+        delete_turns: deleted.turns,
+        delete_units: deleted.census.units,
+        delete_census: deleted.census,
+    }
+}
+
+/// ⏱️ Wave B54 measurement: what one `translateSelection` and one `deleteSelection` cost in HOST TURNS
+/// and in publication UNITS at three document sizes. Not a gate — it prints the attribution table the
+/// wave's report quotes. Run with `--nocapture`.
+#[semio_framework_async_macros::async_test]
+async fn b54_measures_the_turns_and_units_one_mutation_costs_per_document_size() {
+    let mut app = app().await;
+    let small = turn_census(&mut app, "concrete-forest").await;
+    eprintln!("[DEBUG] b54.turns {small}");
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
+    let nakagin = turn_census(&mut app, "nakagin").await;
+    eprintln!("[DEBUG] b54.turns {nakagin}");
+    assert!(nakagin.objects > small.objects, "the two measurements must differ in document size: {} / {}", small.objects, nakagin.objects);
+}
+
+/// ⏱️ Wave B54 LAW: one mutation's PUBLICATION LADDER completes within a bounded, size-independent
+/// number of host turns.
+///
+/// 🧾️ A turn is one host↔guest round trip and it is the unit a browser actually pays. Before this wave
+/// every publication unit was its own turn, so one mutation spent 21 round trips walking a state machine
+/// whose steps are all document-independent: 17 store units (stage the batch, prepare the item, fold it,
+/// retire its preparation owner, validate the cursor, preflight, commit, mint the receipt), 3
+/// acknowledgeable result pages, 1 slot retirement. [`Puzzle3dApp`]'s ladder now drives a bounded RUN of
+/// units per turn ([`semio_framework_plugin::app::TYPED_OPERATION_PUBLICATION_PUMPS`]), so what a turn
+/// costs is the number of pages the host must ACKNOWLEDGE — a protocol constant — not the number of
+/// steps the machine takes.
+///
+/// ⚠️ [`Puzzle3dTurnCensus::worker_turns`] is EXCLUDED, and must be: on native the interactive worker pool
+/// has real threads, so `drive_typed_operation_worker` submits a job step and returns immediately and the
+/// harness POLLS it — the count is wall-clock divided by poll cost (measured 520–1 610 for the same
+/// one-object translate across runs), never a browser round trip. Only the publication ladder is
+/// deterministic enough to be a gate; the worker term is measured in the wave's report instead.
+///
+/// 🎯️ The shape this forbids is the one that burned the 30-second budget: a per-command round-trip count
+/// that no document size can explain and that no amount of payload work can reduce.
+#[semio_framework_async_macros::async_test]
+async fn one_mutation_publishes_in_a_bounded_size_independent_number_of_host_turns() {
+    const LADDER_TURN_CEILING: usize = 8;
+    let mut app = app().await;
+    let small = turn_census(&mut app, "concrete-forest").await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
+    let large = turn_census(&mut app, "nakagin").await;
+    eprintln!("[DEBUG] b54.law.turns small={small} large={large}");
+    assert!(large.objects >= 100, "the law needs a document where O(1) and O(n) differ; got {}", large.objects);
+    for census in [&small, &large] {
+        assert!(
+            census.translate_ladder_turns() <= LADDER_TURN_CEILING,
+            "a translate on {} objects must publish within {LADDER_TURN_CEILING} host turns, not one per unit: {census}",
+            census.objects
+        );
+        assert!(census.delete_ladder_turns() <= LADDER_TURN_CEILING, "a delete on {} objects must publish within {LADDER_TURN_CEILING} host turns: {census}", census.objects);
+        assert!(
+            census.translate_census.store >= census.translate_ladder_turns() as u64,
+            "the turn must carry MORE than one publication unit or the run bought nothing: {census}"
+        );
+    }
+    assert_eq!(
+        small.translate_census.store, large.translate_census.store,
+        "the publication ladder is document-INDEPENDENT, so its unit count may not move with the document: {small} / {large}"
+    );
+}
+
+/// 🗺️ Wave B54 LAW: a pose edit on a large document invalidates the precompute derivation of exactly the
+/// objects that changed — O(changed) index cells and cached candidates, not O(n).
+///
+/// 🧾️ Every scene sync whose `SceneConfig` differed at all used to be a whole-document `rebuild_queue`:
+/// `brush_cache` cleared for all 340 objects, both prepare cursors reset to zero so the entire
+/// object × vortex product was re-walked, the fill preparation restarted. The background
+/// `suggestionsTick`/`fillBuildTick` cadence re-paid that every 120 ms while an interactive mutation
+/// waited behind it, which is how a translate that reads ONE object burned a 30-second budget.
+#[test]
+fn a_pose_edit_invalidates_the_precompute_derivation_of_o_changed_objects() {
+    let large = scaled_nakagin_scene(2);
+    assert!(large.fixture.objects.len() >= 340, "the law needs a document where O(changed) and O(n) differ; got {}", large.fixture.objects.len());
+    let base = scene_config(&large).expect("the authored document builds an engine scene");
+
+    let mut moved_fixture = large.clone();
+    moved_fixture.fixture.objects[11].origin[1] += 2.25;
+    let moved = scene_config(&moved_fixture).expect("the moved document builds an engine scene");
+    let invalidation = crate::editor::puzzle3d::precompute::Puzzle3dSceneInvalidation::between(&base, &moved);
+    let vortices = large.fixture.objects[11].vortices.len();
+    eprintln!("[DEBUG] b54.invalidation objects={} moved=1 stale={} pending={} topology={} plan={}", large.fixture.objects.len(), invalidation.stale.len(), invalidation.pending.len(), invalidation.topology, invalidation.plan);
+    assert!(!invalidation.plan, "a pose edit changes no fill-plan member, so it must not fall back to the whole-scene rebuild");
+    assert!(!invalidation.topology, "a pose edit adds and removes no object, so the fill preparation must not restart");
+    assert_eq!(invalidation.stale.len(), vortices, "a pose edit invalidates exactly the moved object's own brush targets");
+    assert_eq!(invalidation.pending.len(), vortices, "and re-queues exactly those");
+
+    let mut removed_fixture = large.clone();
+    let removed = removed_fixture.fixture.objects.remove(0);
+    let shortened = scene_config(&removed_fixture).expect("the shortened document builds an engine scene");
+    let invalidation = crate::editor::puzzle3d::precompute::Puzzle3dSceneInvalidation::between(&base, &shortened);
+    assert!(invalidation.topology, "a removal moves the object topology, so the fill preparation restarts");
+    assert!(!invalidation.plan, "a removal still changes no fill-plan member");
+    assert_eq!(invalidation.stale.len(), removed.vortices.len(), "deleting the FIRST of {} objects invalidates only its own targets — an index-addressed diff would invalidate the whole tail", large.fixture.objects.len());
+
+    let mut replanned_fixture = large.clone();
+    replanned_fixture.runtime.overlap_budget += 0.25;
+    let replanned = scene_config(&replanned_fixture).expect("the replanned document builds an engine scene");
+    assert!(crate::editor::puzzle3d::precompute::Puzzle3dSceneInvalidation::between(&base, &replanned).plan, "a fill-plan member change invalidates every candidate and must take the whole-scene rebuild");
+}
+
+/// 🗺️ Wave B54 LAW: the engine ITSELF keeps the candidates of the objects a pose edit did not touch.
+///
+/// 🧾️ The law above pins the diff; this one pins that the diff is what the live engine acts on, by
+/// syncing a scene, warming the brush lane, moving one object and requiring the cache to survive.
+#[test]
+fn a_pose_edit_keeps_the_brush_candidates_of_every_object_it_did_not_touch() {
+    let large = scaled_nakagin_scene(2);
+    let mut session = Puzzle3dPrecomputeSession::new();
+    sync_precompute_session(&mut session, &large);
+    for _ in 0..2_048 {
+        session.precompute_step_lane(crate::standards::v1::subsets::any::schema::PrecomputeLane::Brush, 8);
+    }
+    let warmed = session.brush_candidate_cache_len();
+    assert!(warmed > 0, "the brush lane must resolve at least one candidate before the law can measure what a sync keeps");
+    let mut moved = large.clone();
+    moved.fixture.objects[11].origin[1] += 2.25;
+    sync_precompute_session(&mut session, &moved);
+    let kept = session.brush_candidate_cache_len();
+    eprintln!("[DEBUG] b54.cache objects={} warmed={warmed} kept={kept}", large.fixture.objects.len());
+    assert!(kept + large.fixture.objects[11].vortices.len() >= warmed, "a pose edit on one of {} objects must keep every other object's resolved candidates: {warmed} → {kept}", large.fixture.objects.len());
+}
+//#endregion 🔖️B54TurnCensus

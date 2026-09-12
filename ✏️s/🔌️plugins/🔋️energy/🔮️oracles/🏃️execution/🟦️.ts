@@ -16,7 +16,7 @@ function oraclePythonModule(packageRoot: string): string {
 export function runOraclePython(repoRoot: string, packageRoot: string, args: string[], budgetMs?: number): Promise<void> {
   const module = oraclePythonModule(packageRoot);
   const inline = `import sys; from importlib import import_module; sys.exit(import_module(${JSON.stringify(module)}).main(sys.argv[1:]))`;
-  const env = oracleEnvironment(repoRoot, packageRoot);
+  const env = oracleEnvironment(repoRoot);
   env.PYTHONPATH = [join(repoRoot, PYTHON_OWNER), env.PYTHONPATH ?? ""].filter(Boolean).join(delimiter);
   env.PYTHONDONTWRITEBYTECODE = "1";
   return runTestBudgeted("uv", ["run", "--locked", "--no-sync", "--project", packageRoot, "python", "-c", inline, ...args], { cwd: packageRoot, env, budgetMs });
@@ -30,14 +30,14 @@ export class DepsScript extends BundleScript {
 
 export class SetupScript extends BundleScript {
   async run(): Promise<void> {
-    for (const tool of oracleManifest(this.root).tools) await ensureOracleTool(this.repoRoot, tool);
+    for (const tool of oracleManifest(this.repoRoot).tools) await ensureOracleTool(this.repoRoot, tool);
     await runOraclePython(this.repoRoot, this.root, ["status"]);
   }
 }
 
 export class StatusScript extends BundleScript {
   async run(): Promise<void> {
-    const manifest = oracleManifest(this.root);
+    const manifest = oracleManifest(this.repoRoot);
     for (const tool of manifest.tools) {
       const directory = oracleToolDirectory(this.repoRoot, tool);
       console.log(`[oracle] ${tool.tool} ${tool.version} -> ${directory}${existsSync(directory) ? "" : " (missing — run setup)"}`);

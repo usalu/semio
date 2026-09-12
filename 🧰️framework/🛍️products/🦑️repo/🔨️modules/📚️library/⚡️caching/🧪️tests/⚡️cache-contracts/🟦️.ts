@@ -78,6 +78,10 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testGeneratorOwnership(workspace, output);
   await testWgpuGeneratorOwnership(workspace);
   await testWgpuGeneratorPublication(workspace, output);
+  const { testNativeRendererOutputs } = await import("../🧊️native-renderer-outputs/🟦️.ts");
+  await testNativeRendererOutputs(workspace, output);
+  const { testPlaygroundInputView } = await import("../🎮️playground-input-view/🟦️.ts");
+  await testPlaygroundInputView(workspace);
   const { testInferredNativeInputs } = await import("../../../../🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts");
   await testInferredNativeInputs(workspace, output);
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures");
@@ -779,12 +783,14 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     }
     console.log("[DEBUG] Component and activation contracts passed; checking editor and playground contracts");
     const registryRoot = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
-    const registry = await import(join(registryRoot, "📜️script.ts"));
+    const { generatePlaygroundRegistry } = await import(join(registryRoot, "🎮️playground/🔎️discovery/🟦️.ts"));
+    const { buildPlaygroundSession } = await import(join(registryRoot, "🎮️playground/🧭️session/🟦️.ts"));
+    const playgrounds = generatePlaygroundRegistry(root);
     const launch = await import(join(registryRoot, "🚀️launch/🟦️.ts"));
-    const configurations = Bun.JSONC.parse(launch.generateLaunchJson(root, registry.generatePlaygroundRegistry(root), componentLaunchers)).configurations;
+    const configurations = Bun.JSONC.parse(launch.generateLaunchJson(root, playgrounds, componentLaunchers)).configurations;
     for (const project of contracts) for (const [name, target] of Object.entries(project.targets) as [string, any][]) if (target.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts") && ["build", "check", "test"].includes(name)) assert.ok(configurations.some((row: any) => row.command === `bun nx run ${project.name}:${name}`), `Missing native editor command ${project.name}:${name}`);
     const preparationProject = contracts.find((project) => project.name === vectors.playgroundPreparation.project)!;
-    for (const playground of registry.generatePlaygroundRegistry(root)) {
+    for (const playground of playgrounds) {
       for (const engine of playground.engines) assert.ok(contracts.some((project) => resolve(root, project.root) === resolve(root, engine) && project.targets.wasm), `Engine ${engine} must name an authored producer`);
       for (const profile of vectors.playgroundPreparation.profiles) {
         const targetName = `prepare-${playground.variant}-react-${profile}`, preparation = preparationProject.targets[targetName];
@@ -818,7 +824,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
           assert.equal(server.options.command, `bun ./📜️script.ts serve ${playground.variant} react ${profile}`);
           assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${serverName}`).length, 1);
         }
-        const components = registry.buildPlaygroundSession(playground.variant).plugins.map((row: any) => `${componentLaunchers.find((entry) => entry.pluginId === row.pluginId)!.project}:materialize-${profile}`);
+        const components = buildPlaygroundSession(playground.variant).plugins.map((row: any) => `${componentLaunchers.find((entry) => entry.pluginId === row.pluginId)!.project}:materialize-${profile}`);
         assert.deepEqual([...preparation.dependsOn].sort(), [...new Set([`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, vectors.playgroundPreparation.fonts, ...vectors.playgroundPreparation.engines, ...components])].sort());
         assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${targetName}`).length, 1);
       }

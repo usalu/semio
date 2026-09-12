@@ -43,6 +43,8 @@ The refined design must keep generic lifecycle, typed/encoded mutation preparati
 
 ## Concrete Window-Load Validation Gap To Exercise
 
+Runtime follow-up: `window-config-pack-inner-identity-law.md` now records native1's actual foreign-inner-window admission failure. The source finding below has an executed counterexample; retained rejection remains unimplemented.
+
 Root confirmed the current TypedWindowConfigStoreOwner::load implementation at plugin/window/config source lines457–470 parses the complete Pack/SPR, compares only envelope.schema with O::SCHEMA, reconstructs applied/redo IDs, then resets the partition requested by the outer window_id. It does not compare the decoded envelope id with the partition's generated window-config:{kind}:{window_id} identity. This is a source-level missing check; no foreign-inner-id native counterexample has yet been run.
 
 The retained window-load slice should add that exact mismatch row and preserve the previous partition, input ownership and bounded decoded-candidate retirement on refusal. A schema-only happy-path reopen is insufficient evidence. Do not add a synchronous drop of a rejected large decoded envelope merely to make an identity assertion pass; validation and retained retirement belong in the window-load capability already proposed by the audit.

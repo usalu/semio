@@ -1427,6 +1427,11 @@ impl RetainedVarintCursor {
         }
         Ok(RetainedVarintStep::Complete(self.value))
     }
+
+    fn preview(self, byte: u8, offset: u64) -> Result<RetainedVarintStep, PackError> {
+        let mut cursor = self;
+        cursor.admit(byte, offset)
+    }
 }
 
 #[derive(Debug)]
@@ -1720,7 +1725,7 @@ impl Drop for RetainedPackSegmentCursor {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RetainedPackChunkEntry {
     pub offset: u64,
     pub stored_len: u64,
@@ -1729,11 +1734,67 @@ pub struct RetainedPackChunkEntry {
     pub blake3: [u8; 32],
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RetainedPackSymbolSpan {
+    pub scalar_start: u64,
+    pub scalar_len: u64,
+    pub utf8_len: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RetainedPackManifest {
+    pub schema_symbol: Option<u64>,
+    pub schema_hash: [u8; 32],
+    pub doc_span: ByteRange,
+    pub doc_frame_count: u64,
+    pub symbols_span: ByteRange,
+    pub chunk_table_span: ByteRange,
+    pub field_index_span: ByteRange,
+    pub uncompressed_body_len: u64,
+    pub field_count: u64,
+    pub chunk_count: u64,
+    pub symbol_count: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RetainedPackCatalog {
-    pub manifest: Manifest,
-    pub symbols: Vec<String>,
-    pub chunks: Vec<RetainedPackChunkEntry>,
+    pub manifest: RetainedPackManifest,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RetainedPackCatalogFault {
+    pub code: &'static str,
+    pub offset: u64,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct RetainedPackCatalogAllocationStep {
+    pub progressed: bool,
+    pub allocated_bytes: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RetainedPackCatalogAllocationError {
+    pub allocated_bytes: usize,
+    pub fault: RetainedPackCatalogFault,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct RetainedPackCatalogProgress {
+    pub symbols: usize,
+    pub symbol_capacity: usize,
+    pub symbol_utf8_bytes: usize,
+    pub symbol_scalars: usize,
+    pub symbol_scalar_capacity: usize,
+    pub chunks: usize,
+    pub chunk_capacity: usize,
+    pub observed_chunks: usize,
+    pub observed_chunk_capacity: usize,
+    pub allocated_bytes: usize,
+    pub partial_symbol_bytes: usize,
+    pub pending_input: bool,
+    pub complete: bool,
+    pub handed_back: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1796,7 +1857,7 @@ struct RetainedUtf8Cursor {
 }
 
 impl RetainedUtf8Cursor {
-    fn admit(&mut self, byte: u8, offset: u64) -> Result<Option<char>, PackError> {
+    fn admit(&mut self, byte: u8) -> Result<Option<char>, &'static str> {
         if self.remaining == 0 {
             match byte {
                 0x00..=0x7f => return Ok(Some(byte as char)),
@@ -1815,12 +1876,12 @@ impl RetainedUtf8Cursor {
                     self.minimum = 0x10000;
                     self.remaining = 3;
                 }
-                _ => return Err(PackError::Malformed { what: "utf8", offset, detail: "invalid leading byte".into() }),
+                _ => return Err("retained-pack.catalog-utf8-leading"),
             }
             return Ok(None);
         }
         if byte & 0xc0 != 0x80 {
-            return Err(PackError::Malformed { what: "utf8", offset, detail: "invalid continuation byte".into() });
+            return Err("retained-pack.catalog-utf8-continuation");
         }
         self.value = (self.value << 6) | (byte & 0x3f) as u32;
         self.remaining -= 1;
@@ -1829,21 +1890,26 @@ impl RetainedUtf8Cursor {
         }
         let value = self.value;
         if value < self.minimum || (0xd800..=0xdfff).contains(&value) || value > 0x10ffff {
-            return Err(PackError::Malformed { what: "utf8", offset, detail: "non-scalar or overlong codepoint".into() });
+            return Err("retained-pack.catalog-utf8-scalar");
         }
-        char::from_u32(value).map(Some).ok_or(PackError::Malformed { what: "utf8", offset, detail: "invalid scalar".into() })
+        char::from_u32(value).map(Some).ok_or("retained-pack.catalog-utf8-scalar")
     }
 
     fn complete(&self) -> bool {
         self.remaining == 0
     }
+
+    fn preview(self, byte: u8) -> Result<Option<char>, &'static str> {
+        let mut cursor = self;
+        cursor.admit(byte)
+    }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 enum RetainedSymbolsPhase {
     Count(RetainedVarintCursor),
     Length(RetainedVarintCursor),
-    Text { remaining: u64 },
+    Text { scalar_start: usize, utf8_len: usize, remaining: usize },
     Complete,
 }
 
@@ -1851,67 +1917,93 @@ struct RetainedSymbolsCursor {
     phase: RetainedSymbolsPhase,
     expected: usize,
     maximum: usize,
-    maximum_string_bytes: usize,
-    current: String,
+    maximum_utf8_bytes: usize,
+    maximum_scalars: usize,
+    total_utf8_bytes: usize,
     utf8: RetainedUtf8Cursor,
+    closed: bool,
 }
 
 impl RetainedSymbolsCursor {
-    fn new(maximum: usize, maximum_string_bytes: usize) -> Self {
-        Self { phase: RetainedSymbolsPhase::Count(RetainedVarintCursor::default()), expected: 0, maximum, maximum_string_bytes, current: String::new(), utf8: RetainedUtf8Cursor::default() }
+    fn new(maximum: usize, maximum_utf8_bytes: usize, maximum_scalars: usize) -> Self {
+        Self { phase: RetainedSymbolsPhase::Count(RetainedVarintCursor::default()), expected: 0, maximum, maximum_utf8_bytes, maximum_scalars, total_utf8_bytes: 0, utf8: RetainedUtf8Cursor::default(), closed: false }
     }
 
-    fn admit(&mut self, byte: u8, offset: u64, symbols: &mut Vec<String>) -> Result<Option<u64>, PackError> {
+    fn admit<const S: usize, const C: usize>(
+        &mut self,
+        byte: u8,
+        offset: u64,
+        spans: &mut crate::value::list::PagedList<RetainedPackSymbolSpan, S>,
+        scalars: &mut crate::value::list::PagedList<char, C>,
+    ) -> Result<Option<u64>, &'static str> {
         match self.phase {
-            RetainedSymbolsPhase::Count(mut cursor) => match cursor.admit(byte, offset)? {
+            RetainedSymbolsPhase::Count(mut cursor) => match cursor.admit(byte, offset).map_err(|_| "retained-pack.catalog-symbol-count-varint")? {
                 RetainedVarintStep::Pending => self.phase = RetainedSymbolsPhase::Count(cursor),
                 RetainedVarintStep::Complete(count) => {
-                    self.expected = usize::try_from(count).map_err(|_| PackError::LimitExceeded("symbol count"))?;
+                    self.expected = usize::try_from(count).map_err(|_| "retained-pack.catalog-symbol-count")?;
                     if self.expected > self.maximum {
-                        return Err(PackError::LimitExceeded("symbol count exceeds retained registry"));
+                        return Err("retained-pack.catalog-symbol-count");
                     }
                     self.phase = if self.expected == 0 { RetainedSymbolsPhase::Complete } else { RetainedSymbolsPhase::Length(RetainedVarintCursor::default()) };
                 }
             },
-            RetainedSymbolsPhase::Length(mut cursor) => match cursor.admit(byte, offset)? {
+            RetainedSymbolsPhase::Length(mut cursor) => match cursor.admit(byte, offset).map_err(|_| "retained-pack.catalog-symbol-length-varint")? {
                 RetainedVarintStep::Pending => self.phase = RetainedSymbolsPhase::Length(cursor),
                 RetainedVarintStep::Complete(len) => {
-                    let len = usize::try_from(len).map_err(|_| PackError::LimitExceeded("symbol length"))?;
-                    if len > self.maximum_string_bytes {
-                        return Err(PackError::LimitExceeded("symbol exceeds retained string bytes"));
+                    let len = usize::try_from(len).map_err(|_| "retained-pack.catalog-symbol-bytes")?;
+                    self.total_utf8_bytes = self.total_utf8_bytes.checked_add(len).filter(|total| *total <= self.maximum_utf8_bytes).ok_or("retained-pack.catalog-symbol-bytes")?;
+                    let scalar_start = scalars.len();
+                    if len == 0 {
+                        spans.push_reserved(RetainedPackSymbolSpan { scalar_start: scalar_start as u64, scalar_len: 0, utf8_len: 0 }).map_err(|_| "retained-pack.catalog-symbol-span-allocation")?;
+                        let index = spans.len() as u64 - 1;
+                        self.phase = if spans.len() == self.expected { RetainedSymbolsPhase::Complete } else { RetainedSymbolsPhase::Length(RetainedVarintCursor::default()) };
+                        return Ok(Some(index));
                     }
-                    self.current.try_reserve_exact(len).map_err(|_| PackError::LimitExceeded("symbol reservation"))?;
-                    self.phase = if len == 0 { RetainedSymbolsPhase::Text { remaining: 0 } } else { RetainedSymbolsPhase::Text { remaining: len as u64 } };
+                    self.phase = RetainedSymbolsPhase::Text { scalar_start, utf8_len: len, remaining: len };
                 }
             },
-            RetainedSymbolsPhase::Text { remaining } => {
+            RetainedSymbolsPhase::Text { scalar_start, utf8_len, remaining } => {
                 if remaining == 0 {
-                    return Err(PackError::Malformed { what: "symbols", offset, detail: "zero-length symbol must complete without a byte".into() });
+                    return Err("retained-pack.catalog-symbol-state");
                 }
-                if let Some(character) = self.utf8.admit(byte, offset)? {
-                    self.current.push(character);
+                if let Some(character) = self.utf8.admit(byte)? {
+                    if scalars.len() == self.maximum_scalars {
+                        return Err("retained-pack.catalog-symbol-scalars");
+                    }
+                    scalars.push_reserved(character).map_err(|_| "retained-pack.catalog-symbol-scalar-allocation")?;
                 }
                 let remaining = remaining - 1;
                 if remaining == 0 {
                     if !self.utf8.complete() {
-                        return Err(PackError::Malformed { what: "utf8", offset, detail: "truncated codepoint".into() });
+                        return Err("retained-pack.catalog-utf8-truncated");
                     }
-                    symbols.push(std::mem::take(&mut self.current));
-                    let index = symbols.len() as u64 - 1;
-                    self.phase = if symbols.len() == self.expected { RetainedSymbolsPhase::Complete } else { RetainedSymbolsPhase::Length(RetainedVarintCursor::default()) };
+                    spans
+                        .push_reserved(RetainedPackSymbolSpan { scalar_start: scalar_start as u64, scalar_len: (scalars.len() - scalar_start) as u64, utf8_len: utf8_len as u64 })
+                        .map_err(|_| "retained-pack.catalog-symbol-span-allocation")?;
+                    let index = spans.len() as u64 - 1;
+                    self.phase = if spans.len() == self.expected { RetainedSymbolsPhase::Complete } else { RetainedSymbolsPhase::Length(RetainedVarintCursor::default()) };
                     return Ok(Some(index));
                 }
-                self.phase = RetainedSymbolsPhase::Text { remaining };
+                self.phase = RetainedSymbolsPhase::Text { scalar_start, utf8_len, remaining };
             }
-            RetainedSymbolsPhase::Complete => return Err(PackError::Malformed { what: "symbols", offset, detail: "trailing symbol bytes".into() }),
-        }
-        if matches!(self.phase, RetainedSymbolsPhase::Text { remaining: 0 }) {
-            symbols.push(String::new());
-            let index = symbols.len() as u64 - 1;
-            self.phase = if symbols.len() == self.expected { RetainedSymbolsPhase::Complete } else { RetainedSymbolsPhase::Length(RetainedVarintCursor::default()) };
-            return Ok(Some(index));
+            RetainedSymbolsPhase::Complete => return Err("retained-pack.catalog-symbol-trailing"),
         }
         Ok(None)
+    }
+
+    fn partial_utf8_bytes(&self) -> usize {
+        match self.phase {
+            RetainedSymbolsPhase::Text { utf8_len, remaining, .. } => utf8_len - remaining,
+            _ => 0,
+        }
+    }
+
+    fn close(&mut self) {
+        self.phase = RetainedSymbolsPhase::Complete;
+        self.expected = 0;
+        self.total_utf8_bytes = 0;
+        self.utf8 = RetainedUtf8Cursor::default();
+        self.closed = true;
     }
 }
 
@@ -1938,25 +2030,25 @@ impl RetainedChunksCursor {
         Self { phase: RetainedChunksPhase::Count(RetainedVarintCursor::default()), expected: 0, maximum, values: [0; 3], crc: [0; 4], hash: [0; 32] }
     }
 
-    fn admit(&mut self, byte: u8, offset: u64, limits: &PackLimits, chunks: &mut Vec<RetainedPackChunkEntry>) -> Result<Option<u64>, PackError> {
+    fn admit<const N: usize>(&mut self, byte: u8, offset: u64, limits: &PackLimits, chunks: &mut crate::value::list::PagedList<RetainedPackChunkEntry, N>) -> Result<Option<u64>, &'static str> {
         match self.phase {
-            RetainedChunksPhase::Count(mut cursor) => match cursor.admit(byte, offset)? {
+            RetainedChunksPhase::Count(mut cursor) => match cursor.admit(byte, offset).map_err(|_| "retained-pack.catalog-chunk-count-varint")? {
                 RetainedVarintStep::Pending => self.phase = RetainedChunksPhase::Count(cursor),
                 RetainedVarintStep::Complete(count) => {
-                    self.expected = usize::try_from(count).map_err(|_| PackError::LimitExceeded("chunk count"))?;
+                    self.expected = usize::try_from(count).map_err(|_| "retained-pack.catalog-chunk-count")?;
                     if self.expected > self.maximum {
-                        return Err(PackError::LimitExceeded("chunk count exceeds retained registry"));
+                        return Err("retained-pack.catalog-chunk-count");
                     }
                     self.phase = if self.expected == 0 { RetainedChunksPhase::Complete } else { RetainedChunksPhase::Varint(0, RetainedVarintCursor::default()) };
                 }
             },
-            RetainedChunksPhase::Varint(field, mut cursor) => match cursor.admit(byte, offset)? {
+            RetainedChunksPhase::Varint(field, mut cursor) => match cursor.admit(byte, offset).map_err(|_| "retained-pack.catalog-chunk-varint")? {
                 RetainedVarintStep::Pending => self.phase = RetainedChunksPhase::Varint(field, cursor),
                 RetainedVarintStep::Complete(value) => {
                     self.values[field] = value;
                     if field == 2 {
                         if self.values[1] > limits.max_segment_len || self.values[2] > limits.max_segment_len {
-                            return Err(PackError::LimitExceeded("chunk entry length"));
+                            return Err("retained-pack.catalog-chunk-length");
                         }
                         self.phase = RetainedChunksPhase::Crc(0);
                     } else {
@@ -1971,24 +2063,47 @@ impl RetainedChunksCursor {
             RetainedChunksPhase::Hash(index) => {
                 self.hash[index] = byte;
                 if index + 1 == 32 {
-                    chunks.push(RetainedPackChunkEntry { offset: self.values[0], stored_len: self.values[1], raw_len: self.values[2], crc32: u32::from_le_bytes(self.crc), blake3: self.hash });
+                    chunks.push_reserved(RetainedPackChunkEntry { offset: self.values[0], stored_len: self.values[1], raw_len: self.values[2], crc32: u32::from_le_bytes(self.crc), blake3: self.hash }).map_err(|_| "retained-pack.catalog-chunk-allocation")?;
                     let item = chunks.len() as u64 - 1;
                     self.phase = if chunks.len() == self.expected { RetainedChunksPhase::Complete } else { RetainedChunksPhase::Varint(0, RetainedVarintCursor::default()) };
                     return Ok(Some(item));
                 }
                 self.phase = RetainedChunksPhase::Hash(index + 1);
             }
-            RetainedChunksPhase::Complete => return Err(PackError::Malformed { what: "chunk-table", offset, detail: "trailing chunk bytes".into() }),
+            RetainedChunksPhase::Complete => return Err("retained-pack.catalog-chunk-trailing"),
         }
         Ok(None)
     }
 }
 
+const RETAINED_PACK_MAXIMUM_SYMBOL_SPANS: usize = isize::MAX as usize / std::mem::size_of::<RetainedPackSymbolSpan>();
+const RETAINED_PACK_MAXIMUM_SYMBOL_SCALARS: usize = isize::MAX as usize / std::mem::size_of::<char>();
+const RETAINED_PACK_MAXIMUM_CHUNK_ENTRIES: usize = isize::MAX as usize / std::mem::size_of::<RetainedPackChunkEntry>();
+const RETAINED_PACK_MAXIMUM_OBSERVED_CHUNKS: usize = isize::MAX as usize / std::mem::size_of::<RetainedPackSegmentHeader>();
+type RetainedPackSymbolSpans = crate::value::list::PagedList<RetainedPackSymbolSpan, RETAINED_PACK_MAXIMUM_SYMBOL_SPANS>;
+type RetainedPackSymbolScalars = crate::value::list::PagedList<char, RETAINED_PACK_MAXIMUM_SYMBOL_SCALARS>;
+type RetainedPackChunkEntries = crate::value::list::PagedList<RetainedPackChunkEntry, RETAINED_PACK_MAXIMUM_CHUNK_ENTRIES>;
+type RetainedPackObservedChunks = crate::value::list::PagedList<RetainedPackSegmentHeader, RETAINED_PACK_MAXIMUM_OBSERVED_CHUNKS>;
+
+#[derive(Clone, Copy)]
+enum RetainedPackCatalogAllocationOwner {
+    SymbolSpans,
+    SymbolScalars,
+    Chunks,
+    ObservedChunks,
+}
+
 pub struct RetainedPackCatalogCursor {
     limits: PackLimits,
-    symbols: Vec<String>,
-    chunks: Vec<RetainedPackChunkEntry>,
-    observed_chunks: Vec<RetainedPackSegmentHeader>,
+    maximum_symbols: usize,
+    maximum_symbol_utf8_bytes: usize,
+    maximum_symbol_scalars: usize,
+    maximum_chunks: usize,
+    maximum_allocation_bytes: usize,
+    symbols: RetainedPackSymbolSpans,
+    symbol_scalars: RetainedPackSymbolScalars,
+    chunks: RetainedPackChunkEntries,
+    observed_chunks: RetainedPackObservedChunks,
     manifest: RetainedManifestCursor,
     symbol_parser: RetainedSymbolsCursor,
     chunk_parser: RetainedChunksCursor,
@@ -2005,27 +2120,44 @@ pub struct RetainedPackCatalogCursor {
     field_index_bytes: u64,
     complete: bool,
     handed_back: bool,
+    closing: bool,
+    fault: Option<RetainedPackCatalogFault>,
     closed: bool,
 }
 
 impl RetainedPackCatalogCursor {
-    pub fn try_new(limits: PackLimits, maximum_symbols: usize, maximum_chunks: usize, maximum_string_bytes: usize) -> Result<Self, PackError> {
-        if maximum_symbols > limits.max_symbols as usize || maximum_chunks as u64 > limits.max_items || maximum_string_bytes as u64 > limits.max_total_alloc {
-            return Err(PackError::LimitExceeded("retained catalog credits"));
+    pub fn try_new(
+        limits: PackLimits,
+        maximum_symbols: usize,
+        maximum_symbol_utf8_bytes: usize,
+        maximum_symbol_scalars: usize,
+        maximum_chunks: usize,
+        maximum_allocation_bytes: usize,
+    ) -> Result<Self, RetainedPackCatalogFault> {
+        let invalid = maximum_symbols > limits.max_symbols as usize
+            || maximum_symbols > RETAINED_PACK_MAXIMUM_SYMBOL_SPANS
+            || maximum_symbol_scalars > RETAINED_PACK_MAXIMUM_SYMBOL_SCALARS
+            || maximum_chunks as u64 > limits.max_items
+            || maximum_chunks > RETAINED_PACK_MAXIMUM_CHUNK_ENTRIES.min(RETAINED_PACK_MAXIMUM_OBSERVED_CHUNKS)
+            || maximum_symbol_utf8_bytes as u64 > limits.max_file_len
+            || maximum_symbol_scalars > maximum_symbol_utf8_bytes
+            || maximum_allocation_bytes > isize::MAX as usize;
+        if invalid {
+            return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-credits", offset: 0 });
         }
-        let mut symbols = Vec::new();
-        symbols.try_reserve_exact(maximum_symbols).map_err(|_| PackError::LimitExceeded("symbol registry reservation"))?;
-        let mut chunks = Vec::new();
-        chunks.try_reserve_exact(maximum_chunks).map_err(|_| PackError::LimitExceeded("chunk registry reservation"))?;
-        let mut observed_chunks = Vec::new();
-        observed_chunks.try_reserve_exact(maximum_chunks).map_err(|_| PackError::LimitExceeded("chunk segment registry reservation"))?;
         Ok(Self {
             limits,
-            symbols,
-            chunks,
-            observed_chunks,
+            maximum_symbols,
+            maximum_symbol_utf8_bytes,
+            maximum_symbol_scalars,
+            maximum_chunks,
+            maximum_allocation_bytes,
+            symbols: RetainedPackSymbolSpans::default(),
+            symbol_scalars: RetainedPackSymbolScalars::default(),
+            chunks: RetainedPackChunkEntries::default(),
+            observed_chunks: RetainedPackObservedChunks::default(),
             manifest: RetainedManifestCursor::new(),
-            symbol_parser: RetainedSymbolsCursor::new(maximum_symbols, maximum_string_bytes),
+            symbol_parser: RetainedSymbolsCursor::new(maximum_symbols, maximum_symbol_utf8_bytes, maximum_symbol_scalars),
             chunk_parser: RetainedChunksCursor::new(maximum_chunks),
             pending: None,
             active: None,
@@ -2040,54 +2172,225 @@ impl RetainedPackCatalogCursor {
             field_index_bytes: 0,
             complete: false,
             handed_back: false,
+            closing: false,
+            fault: None,
             closed: false,
         })
     }
 
     pub fn admit(&mut self, event: RetainedPackSegmentEvent) -> Result<(), RetainedPackSegmentEvent> {
-        if self.closed || self.complete || self.pending.is_some() {
+        if self.closed || self.closing || self.complete || self.fault.is_some() || self.pending.is_some() {
             return Err(event);
         }
         self.pending = Some(event);
         Ok(())
     }
 
-    pub fn grant(&mut self) -> Result<Option<RetainedPackCatalogEvent>, PackError> {
-        let Some(event) = self.pending.take() else { return Ok(None) };
+    fn allocated_bytes_checked(&self) -> Option<usize> {
+        self.symbols
+            .allocated_bytes()
+            .checked_add(self.symbol_scalars.allocated_bytes())?
+            .checked_add(self.chunks.allocated_bytes())?
+            .checked_add(self.observed_chunks.allocated_bytes())
+    }
+
+    pub fn allocated_bytes(&self) -> usize {
+        self.allocated_bytes_checked().unwrap_or(usize::MAX)
+    }
+
+    fn allocation_need(&self) -> Result<Option<(RetainedPackCatalogAllocationOwner, usize, u64)>, RetainedPackCatalogFault> {
+        if let Some(fault) = self.fault {
+            return Err(fault);
+        }
+        if self.closed || self.closing {
+            return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-closed", offset: 0 });
+        }
+        let Some(event) = self.pending else { return Ok(None) };
+        let need = match event {
+            RetainedPackSegmentEvent::Begin(segment) if self.active.is_none() && segment.kind == crate::KIND_CHUNK => {
+                let target = self.observed_chunks.len().checked_add(1).ok_or(RetainedPackCatalogFault { code: "retained-pack.catalog-observed-count", offset: segment.offset })?;
+                if target > self.maximum_chunks {
+                    return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-observed-count", offset: segment.offset });
+                }
+                (target > self.observed_chunks.capacity()).then_some((RetainedPackCatalogAllocationOwner::ObservedChunks, target, segment.offset))
+            }
+            RetainedPackSegmentEvent::RawByte { segment, index, value } if self.active == Some(segment) && segment.kind == crate::KIND_SYMBOLS => match self.symbol_parser.phase {
+                RetainedSymbolsPhase::Count(cursor) => match cursor.preview(value, segment.payload_offset + index).map_err(|_| RetainedPackCatalogFault { code: "retained-pack.catalog-symbol-count-varint", offset: segment.payload_offset + index })? {
+                    RetainedVarintStep::Pending => None,
+                    RetainedVarintStep::Complete(count) => {
+                        let target = usize::try_from(count).ok().filter(|count| *count <= self.maximum_symbols).ok_or(RetainedPackCatalogFault { code: "retained-pack.catalog-symbol-count", offset: segment.payload_offset + index })?;
+                        (target > self.symbols.capacity()).then_some((RetainedPackCatalogAllocationOwner::SymbolSpans, target, segment.payload_offset + index))
+                    }
+                },
+                RetainedSymbolsPhase::Length(cursor) => {
+                    if let RetainedVarintStep::Complete(len) = cursor.preview(value, segment.payload_offset + index).map_err(|_| RetainedPackCatalogFault { code: "retained-pack.catalog-symbol-length-varint", offset: segment.payload_offset + index })? {
+                        let total = usize::try_from(len).ok().and_then(|len| self.symbol_parser.total_utf8_bytes.checked_add(len)).filter(|total| *total <= self.maximum_symbol_utf8_bytes);
+                        if total.is_none() {
+                            return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-symbol-bytes", offset: segment.payload_offset + index });
+                        }
+                    }
+                    None
+                }
+                RetainedSymbolsPhase::Text { remaining, .. } => {
+                    if remaining == 0 {
+                        return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-symbol-state", offset: segment.payload_offset + index });
+                    }
+                    match self.symbol_parser.utf8.preview(value).map_err(|code| RetainedPackCatalogFault { code, offset: segment.payload_offset + index })? {
+                        Some(_) => {
+                            let target = self.symbol_scalars.len().checked_add(1).filter(|count| *count <= self.maximum_symbol_scalars).ok_or(RetainedPackCatalogFault {
+                                code: "retained-pack.catalog-symbol-scalars",
+                                offset: segment.payload_offset + index,
+                            })?;
+                            (target > self.symbol_scalars.capacity()).then_some((RetainedPackCatalogAllocationOwner::SymbolScalars, target, segment.payload_offset + index))
+                        }
+                        None => None,
+                    }
+                }
+                RetainedSymbolsPhase::Complete => None,
+            },
+            RetainedPackSegmentEvent::RawByte { segment, index, value } if self.active == Some(segment) && segment.kind == crate::KIND_CHUNK_TABLE => match self.chunk_parser.phase {
+                RetainedChunksPhase::Count(cursor) => match cursor.preview(value, segment.payload_offset + index).map_err(|_| RetainedPackCatalogFault { code: "retained-pack.catalog-chunk-count-varint", offset: segment.payload_offset + index })? {
+                    RetainedVarintStep::Pending => None,
+                    RetainedVarintStep::Complete(count) => {
+                        let target = usize::try_from(count).ok().filter(|count| *count <= self.maximum_chunks).ok_or(RetainedPackCatalogFault { code: "retained-pack.catalog-chunk-count", offset: segment.payload_offset + index })?;
+                        (target > self.chunks.capacity()).then_some((RetainedPackCatalogAllocationOwner::Chunks, target, segment.payload_offset + index))
+                    }
+                },
+                _ => None,
+            },
+            _ => None,
+        };
+        Ok(need)
+    }
+
+    fn requested_allocation_bytes(&self, owner: RetainedPackCatalogAllocationOwner) -> Result<usize, RetainedPackCatalogFault> {
+        let result = match owner {
+            RetainedPackCatalogAllocationOwner::SymbolSpans => self.symbols.next_allocation_bytes(),
+            RetainedPackCatalogAllocationOwner::SymbolScalars => self.symbol_scalars.next_allocation_bytes(),
+            RetainedPackCatalogAllocationOwner::Chunks => self.chunks.next_allocation_bytes(),
+            RetainedPackCatalogAllocationOwner::ObservedChunks => self.observed_chunks.next_allocation_bytes(),
+        };
+        result.map_err(|_| RetainedPackCatalogFault { code: "retained-pack.catalog-logical-capacity", offset: 0 })
+    }
+
+    pub fn next_allocation_bytes(&mut self) -> Result<Option<usize>, RetainedPackCatalogFault> {
+        let need = match self.allocation_need() {
+            Ok(need) => need,
+            Err(fault) => return self.remember(Err(fault)),
+        };
+        let Some((owner, _, offset)) = need else { return Ok(None) };
+        let requested = match self.requested_allocation_bytes(owner) {
+            Ok(requested) => requested,
+            Err(fault) => return self.remember(Err(fault)),
+        };
+        let result = self.allocated_bytes_checked()
+            .and_then(|allocated| allocated.checked_add(requested))
+            .filter(|total| *total <= self.maximum_allocation_bytes)
+            .ok_or(RetainedPackCatalogFault { code: "retained-pack.catalog-allocation-credits", offset });
+        if let Err(fault) = result {
+            return self.remember(Err(fault));
+        }
+        Ok(Some(requested))
+    }
+
+    pub fn reserve_allocation(&mut self, maximum_bytes: usize) -> Result<RetainedPackCatalogAllocationStep, RetainedPackCatalogAllocationError> {
+        let need = match self.allocation_need() {
+            Ok(need) => need,
+            Err(fault) => {
+                let first = *self.fault.get_or_insert(fault);
+                return Err(RetainedPackCatalogAllocationError { allocated_bytes: 0, fault: first });
+            }
+        };
+        let Some((owner, target, offset)) = need else {
+            return Ok(RetainedPackCatalogAllocationStep::default());
+        };
+        let requested = self.requested_allocation_bytes(owner).map_err(|fault| RetainedPackCatalogAllocationError { allocated_bytes: 0, fault })?;
+        if maximum_bytes < requested {
+            return Ok(RetainedPackCatalogAllocationStep::default());
+        }
+        let allocated = self.allocated_bytes_checked().ok_or(RetainedPackCatalogAllocationError {
+            allocated_bytes: 0,
+            fault: RetainedPackCatalogFault { code: "retained-pack.catalog-allocation-overflow", offset },
+        })?;
+        let remaining = self.maximum_allocation_bytes.checked_sub(allocated).ok_or(RetainedPackCatalogAllocationError {
+            allocated_bytes: 0,
+            fault: RetainedPackCatalogFault { code: "retained-pack.catalog-allocation-credits", offset },
+        })?;
+        if requested > remaining {
+            let fault = RetainedPackCatalogFault { code: "retained-pack.catalog-allocation-credits", offset };
+            self.fault.get_or_insert(fault);
+            return Err(RetainedPackCatalogAllocationError { allocated_bytes: 0, fault });
+        }
+        let result = match owner {
+            RetainedPackCatalogAllocationOwner::SymbolSpans => self.symbols.reserve_capacity_one(target, maximum_bytes.min(remaining)),
+            RetainedPackCatalogAllocationOwner::SymbolScalars => self.symbol_scalars.reserve_capacity_one(target, maximum_bytes.min(remaining)),
+            RetainedPackCatalogAllocationOwner::Chunks => self.chunks.reserve_capacity_one(target, maximum_bytes.min(remaining)),
+            RetainedPackCatalogAllocationOwner::ObservedChunks => self.observed_chunks.reserve_capacity_one(target, maximum_bytes.min(remaining)),
+        };
+        let step = match result {
+            Ok(step) => step,
+            Err(error) => {
+                let fault = RetainedPackCatalogFault { code: if error.allocated_bytes == 0 { "retained-pack.catalog-allocation" } else { "retained-pack.catalog-allocation-overgrant" }, offset };
+                if error.allocated_bytes != 0 {
+                    self.fault.get_or_insert(fault);
+                }
+                return Err(RetainedPackCatalogAllocationError { allocated_bytes: error.allocated_bytes, fault });
+            }
+        };
+        if self.allocated_bytes() > self.maximum_allocation_bytes {
+            let fault = RetainedPackCatalogFault { code: "retained-pack.catalog-allocation-overgrant", offset };
+            self.fault.get_or_insert(fault);
+            return Err(RetainedPackCatalogAllocationError { allocated_bytes: step.allocated_bytes, fault });
+        }
+        Ok(RetainedPackCatalogAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
+    }
+
+    fn remember<T>(&mut self, result: Result<T, RetainedPackCatalogFault>) -> Result<T, RetainedPackCatalogFault> {
+        match result {
+            Ok(value) => Ok(value),
+            Err(fault) => {
+                let first = *self.fault.get_or_insert(fault);
+                Err(first)
+            }
+        }
+    }
+
+    fn process_event(&mut self, event: RetainedPackSegmentEvent) -> Result<Option<RetainedPackCatalogEvent>, RetainedPackCatalogFault> {
         match event {
             RetainedPackSegmentEvent::Begin(segment) => {
                 if self.active.is_some() {
-                    return Err(PackError::Malformed { what: "retained-catalog", offset: segment.offset, detail: "nested segment begin".into() });
+                    return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-nested-begin", offset: segment.offset });
                 }
                 self.active = Some(segment);
                 if segment.kind == crate::KIND_DOCUMENT {
                     self.document_frames += 1;
                 }
                 if segment.kind == crate::KIND_CHUNK {
-                    if self.observed_chunks.len() == self.observed_chunks.capacity() {
-                        return Err(PackError::LimitExceeded("observed chunk segment registry"));
-                    }
-                    self.observed_chunks.push(segment);
+                    self.observed_chunks.push_reserved(segment).map_err(|_| RetainedPackCatalogFault { code: "retained-pack.catalog-observed-allocation", offset: segment.offset })?;
                 }
                 Ok(None)
             }
             RetainedPackSegmentEvent::RawByte { segment, index, value } => {
                 if self.active != Some(segment) {
-                    return Err(PackError::Malformed { what: "retained-catalog", offset: segment.offset, detail: "payload without active segment".into() });
+                    return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-payload-without-segment", offset: segment.offset });
                 }
                 match segment.kind {
                     crate::KIND_MANIFEST => {
-                        self.manifest.admit(value, segment.payload_offset + index)?;
+                        self.manifest.admit(value, segment.payload_offset + index).map_err(|_| RetainedPackCatalogFault { code: "retained-pack.catalog-manifest", offset: segment.payload_offset + index })?;
                         Ok(None)
                     }
-                    crate::KIND_SYMBOLS => Ok(self.symbol_parser.admit(value, segment.payload_offset + index, &mut self.symbols)?.map(|index| RetainedPackCatalogEvent::Item { kind: crate::KIND_SYMBOLS, index })),
+                    crate::KIND_SYMBOLS => Ok(self
+                        .symbol_parser
+                        .admit(value, segment.payload_offset + index, &mut self.symbols, &mut self.symbol_scalars)
+                        .map_err(|code| RetainedPackCatalogFault { code, offset: segment.payload_offset + index })?
+                        .map(|index| RetainedPackCatalogEvent::Item { kind: crate::KIND_SYMBOLS, index })),
                     crate::KIND_CHUNK_TABLE => {
-                        let item = self.chunk_parser.admit(value, segment.payload_offset + index, &self.limits, &mut self.chunks)?;
+                        let item = self.chunk_parser.admit(value, segment.payload_offset + index, &self.limits, &mut self.chunks).map_err(|code| RetainedPackCatalogFault { code, offset: segment.payload_offset + index })?;
                         if let Some(index) = item {
-                            let entry = &self.chunks[index as usize];
-                            let observed = self.observed_chunks.get(index as usize).ok_or(PackError::Malformed { what: "chunk-table", offset: segment.payload_offset + index, detail: "entry has no observed chunk segment".into() })?;
+                            let entry = self.chunks.get(index as usize).expect("admitted retained chunk entry");
+                            let observed = self.observed_chunks.get(index as usize).ok_or(RetainedPackCatalogFault { code: "retained-pack.catalog-chunk-unobserved", offset: segment.payload_offset + index })?;
                             if entry.offset != observed.payload_offset || entry.stored_len != observed.stored_len || entry.raw_len != observed.raw_len {
-                                return Err(PackError::Malformed { what: "chunk-table", offset: segment.payload_offset + index, detail: "entry does not match observed chunk framing".into() });
+                                return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-chunk-framing", offset: segment.payload_offset + index });
                             }
                             return Ok(Some(RetainedPackCatalogEvent::Item { kind: crate::KIND_CHUNK_TABLE, index }));
                         }
@@ -2115,18 +2418,18 @@ impl RetainedPackCatalogCursor {
             }
             RetainedPackSegmentEvent::Complete { segment, wire_len } => {
                 if self.active.take() != Some(segment) {
-                    return Err(PackError::Malformed { what: "retained-catalog", offset: segment.offset, detail: "segment completion mismatch".into() });
+                    return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-segment-completion", offset: segment.offset });
                 }
                 let span = ByteRange { offset: segment.offset, len: wire_len };
                 match segment.kind {
-                    crate::KIND_MANIFEST if self.manifest_span.replace(span).is_some() => return Err(PackError::Malformed { what: "manifest", offset: segment.offset, detail: "duplicate manifest".into() }),
-                    crate::KIND_SYMBOLS if self.symbols_span.replace(span).is_some() => return Err(PackError::Malformed { what: "symbols", offset: segment.offset, detail: "duplicate symbols".into() }),
-                    crate::KIND_CHUNK_TABLE if self.chunks_span.replace(span).is_some() => return Err(PackError::Malformed { what: "chunk-table", offset: segment.offset, detail: "duplicate chunk table".into() }),
+                    crate::KIND_MANIFEST if self.manifest_span.replace(span).is_some() => return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-manifest-duplicate", offset: segment.offset }),
+                    crate::KIND_SYMBOLS if self.symbols_span.replace(span).is_some() => return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-symbols-duplicate", offset: segment.offset }),
+                    crate::KIND_CHUNK_TABLE if self.chunks_span.replace(span).is_some() => return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-chunks-duplicate", offset: segment.offset }),
                     crate::KIND_DOCUMENT => {
                         self.document_span = Some(match self.document_span {
                             None => span,
                             Some(existing) if existing.offset + existing.len == span.offset => ByteRange { offset: existing.offset, len: existing.len + span.len },
-                            Some(_) => return Err(PackError::Malformed { what: "document", offset: segment.offset, detail: "document frames are not contiguous".into() }),
+                            Some(_) => return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-document-contiguous", offset: segment.offset }),
                         });
                     }
                     _ => {}
@@ -2139,7 +2442,7 @@ impl RetainedPackCatalogCursor {
                     || (self.symbols_span.is_some() && !matches!(self.symbol_parser.phase, RetainedSymbolsPhase::Complete))
                     || (self.chunks_span.is_some() && !matches!(self.chunk_parser.phase, RetainedChunksPhase::Complete))
                 {
-                    return Err(PackError::Truncated(self.document_bytes));
+                    return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-truncated", offset: self.document_bytes });
                 }
                 self.complete = true;
                 Ok(Some(RetainedPackCatalogEvent::Complete))
@@ -2147,25 +2450,53 @@ impl RetainedPackCatalogCursor {
         }
     }
 
+    pub fn grant(&mut self) -> Result<Option<RetainedPackCatalogEvent>, RetainedPackCatalogFault> {
+        if let Some(fault) = self.fault {
+            return Err(fault);
+        }
+        if self.closed || self.closing {
+            return Err(RetainedPackCatalogFault { code: "retained-pack.catalog-closed", offset: 0 });
+        }
+        match self.next_allocation_bytes() {
+            Ok(Some(_)) => return Ok(None),
+            Ok(None) => {}
+            Err(fault) => return self.remember(Err(fault)),
+        }
+        let Some(event) = self.pending.take() else { return Ok(None) };
+        let result = self.process_event(event);
+        self.remember(result)
+    }
+
     /// 🔤️ Borrows one already-verified symbol scalar without cloning the retained registry.
-    /// Mounted typed owners advance `character` by one only after their own grant is admitted.
-    pub fn symbol_char(&self, symbol: u64, character: usize) -> Result<Option<char>, PackError> {
-        let value = self.symbols.get(symbol as usize).ok_or(PackError::Malformed { what: "retained-symref", offset: symbol, detail: "symbol is outside the fixed retained registry".into() })?;
-        Ok(value.chars().nth(character))
+    pub fn symbol_char(&self, symbol: u64, character: usize) -> Result<Option<char>, RetainedPackCatalogFault> {
+        let span = self.symbols.get(symbol as usize).ok_or(RetainedPackCatalogFault { code: "retained-pack.catalog-symref", offset: symbol })?;
+        if character >= span.scalar_len as usize {
+            return Ok(None);
+        }
+        Ok(self.symbol_scalars.get(span.scalar_start as usize + character).copied())
     }
 
-    /// 📏️ Returns the scalar count of one retained symbol without materializing a copy.
-    pub fn symbol_chars(&self, symbol: u64) -> Result<usize, PackError> {
-        let value = self.symbols.get(symbol as usize).ok_or(PackError::Malformed { what: "retained-symref", offset: symbol, detail: "symbol is outside the fixed retained registry".into() })?;
-        Ok(value.chars().count())
+    /// 📏️ Returns the scalar count of one retained symbol in constant indexed work.
+    pub fn symbol_chars(&self, symbol: u64) -> Result<usize, RetainedPackCatalogFault> {
+        self.symbols.get(symbol as usize).map(|span| span.scalar_len as usize).ok_or(RetainedPackCatalogFault { code: "retained-pack.catalog-symref", offset: symbol })
     }
 
-    /// 📏️ Number of canonical document-body bytes already admitted to the value VM.
+    pub fn symbol_span(&self, symbol: u64) -> Result<RetainedPackSymbolSpan, RetainedPackCatalogFault> {
+        self.symbols.get(symbol as usize).copied().ok_or(RetainedPackCatalogFault { code: "retained-pack.catalog-symref", offset: symbol })
+    }
+
+    pub fn chunk(&self, index: u64) -> Result<RetainedPackChunkEntry, RetainedPackCatalogFault> {
+        self.chunks.get(index as usize).copied().ok_or(RetainedPackCatalogFault { code: "retained-pack.catalog-chunk-index", offset: index })
+    }
+
     pub fn document_bytes(&self) -> u64 {
         self.document_bytes
     }
 
-    pub fn take(&mut self, superblock: Superblock) -> Result<Option<RetainedPackCatalog>, PackError> {
+    pub fn take(&mut self, superblock: Superblock) -> Result<Option<RetainedPackCatalog>, RetainedPackCatalogFault> {
+        if let Some(fault) = self.fault {
+            return Err(fault);
+        }
         if !self.complete || self.handed_back {
             return Ok(None);
         }
@@ -2187,7 +2518,7 @@ impl RetainedPackCatalogCursor {
             || self.symbols_span.unwrap_or(ByteRange { offset: 0, len: 0 }) != raw.symbols_span
             || self.chunks_span.unwrap_or(ByteRange { offset: 0, len: 0 }) != raw.chunk_table_span
         {
-            return Err(PackError::Malformed { what: "manifest", offset: superblock.footer.manifest_offset, detail: "retained segment span mismatch".into() });
+            return self.remember(Err(RetainedPackCatalogFault { code: "retained-pack.catalog-manifest-span", offset: superblock.footer.manifest_offset }));
         }
         if self.document_span.unwrap_or(ByteRange { offset: 0, len: 0 }) != raw.doc_span
             || raw.doc_frame_count != self.document_frames
@@ -2196,34 +2527,150 @@ impl RetainedPackCatalogCursor {
             || raw.chunk_count != self.chunks.len() as u64
             || self.observed_chunks.len() != self.chunks.len()
         {
-            return Err(PackError::Malformed { what: "manifest", offset: superblock.footer.manifest_offset, detail: "retained catalog count mismatch".into() });
+            return self.remember(Err(RetainedPackCatalogFault { code: "retained-pack.catalog-manifest-count", offset: superblock.footer.manifest_offset }));
         }
         if self.document_hash.finalize().as_bytes() != &superblock.footer.content_hash.0 {
-            return Err(PackError::ContentHashMismatch);
+            return self.remember(Err(RetainedPackCatalogFault { code: "retained-pack.catalog-content-hash", offset: superblock.footer.file_len }));
         }
-        let manifest = resolve_manifest(&raw, &self.symbols)?;
-        let symbols = std::mem::take(&mut self.symbols);
-        let chunks = std::mem::take(&mut self.chunks);
-        self.observed_chunks.clear();
+        let schema_symbol = if self.symbols.is_empty() && raw.schema_symref == 0 {
+            None
+        } else if raw.schema_symref < self.symbols.len() as u64 {
+            Some(raw.schema_symref)
+        } else {
+            return self.remember(Err(RetainedPackCatalogFault { code: "retained-pack.catalog-schema-symref", offset: raw.schema_symref }));
+        };
+        let manifest = RetainedPackManifest {
+            schema_symbol,
+            schema_hash: raw.schema_hash,
+            doc_span: raw.doc_span,
+            doc_frame_count: raw.doc_frame_count,
+            symbols_span: raw.symbols_span,
+            chunk_table_span: raw.chunk_table_span,
+            field_index_span: raw.field_index_span,
+            uncompressed_body_len: raw.uncompressed_body_len,
+            field_count: raw.field_count,
+            chunk_count: raw.chunk_count,
+            symbol_count: raw.symbol_count,
+        };
         self.handed_back = true;
-        Ok(Some(RetainedPackCatalog { manifest, symbols, chunks }))
+        Ok(Some(RetainedPackCatalog { manifest }))
     }
 
-    pub fn close_step(&mut self, maximum_items: usize) -> RetainedPackCloseStep {
-        if maximum_items == 0 {
-            return RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    pub fn progress(&self) -> RetainedPackCatalogProgress {
+        RetainedPackCatalogProgress {
+            symbols: self.symbols.len(),
+            symbol_capacity: self.symbols.capacity(),
+            symbol_utf8_bytes: self.symbol_parser.total_utf8_bytes,
+            symbol_scalars: self.symbol_scalars.len(),
+            symbol_scalar_capacity: self.symbol_scalars.capacity(),
+            chunks: self.chunks.len(),
+            chunk_capacity: self.chunks.capacity(),
+            observed_chunks: self.observed_chunks.len(),
+            observed_chunk_capacity: self.observed_chunks.capacity(),
+            allocated_bytes: self.allocated_bytes(),
+            partial_symbol_bytes: self.symbol_parser.partial_utf8_bytes(),
+            pending_input: self.pending.is_some(),
+            complete: self.complete,
+            handed_back: self.handed_back,
         }
-        if self.symbols.pop().is_some() || self.chunks.pop().is_some() || self.observed_chunks.pop().is_some() {
-            return RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
+    }
+
+    pub fn fault(&self) -> Option<RetainedPackCatalogFault> {
+        self.fault
+    }
+
+    pub fn has_pending_input(&self) -> bool {
+        self.pending.is_some()
+    }
+
+    pub fn next_release_allocation_bytes(&self) -> Result<Option<usize>, &'static str> {
+        for (empty, terminal, demand) in [
+            (self.symbol_scalars.is_empty(), self.symbol_scalars.terminal_is_empty(), self.symbol_scalars.next_release_allocation_bytes()),
+            (self.symbols.is_empty(), self.symbols.terminal_is_empty(), self.symbols.next_release_allocation_bytes()),
+            (self.chunks.is_empty(), self.chunks.terminal_is_empty(), self.chunks.next_release_allocation_bytes()),
+            (self.observed_chunks.is_empty(), self.observed_chunks.terminal_is_empty(), self.observed_chunks.next_release_allocation_bytes()),
+        ] {
+            if !terminal {
+                return if empty { demand.map(Some) } else { Ok(None) };
+            }
         }
-        self.pending = None;
+        Ok(None)
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedPackCloseStep, &'static str> {
+        if maximum_items == 0 && maximum_bytes == 0 {
+            return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if maximum_items == 0
+            && (self.pending.is_some()
+                || self.active.is_some()
+                || !self.symbol_parser.closed
+                || !self.symbol_scalars.is_empty()
+                || !self.symbols.is_empty()
+                || !self.chunks.is_empty()
+                || !self.observed_chunks.is_empty())
+        {
+            return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        self.closing = true;
+        if maximum_items != 0 {
+            if self.pending.take().is_some() {
+                return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if self.active.take().is_some() {
+                return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.symbol_parser.closed {
+                self.symbol_parser.close();
+                return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if self.symbol_scalars.pop().is_some() || self.symbols.pop().is_some() || self.chunks.pop().is_some() || self.observed_chunks.pop().is_some() {
+                return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+        }
+        if self.pending.is_some()
+            || self.active.is_some()
+            || !self.symbol_parser.closed
+            || !self.symbol_scalars.is_empty()
+            || !self.symbols.is_empty()
+            || !self.chunks.is_empty()
+            || !self.observed_chunks.is_empty()
+        {
+            return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        for owner in [RetainedPackCatalogAllocationOwner::SymbolScalars, RetainedPackCatalogAllocationOwner::SymbolSpans, RetainedPackCatalogAllocationOwner::Chunks, RetainedPackCatalogAllocationOwner::ObservedChunks] {
+            let (terminal, step) = match owner {
+                RetainedPackCatalogAllocationOwner::SymbolScalars => (self.symbol_scalars.terminal_is_empty(), self.symbol_scalars.release_empty_page(maximum_bytes)),
+                RetainedPackCatalogAllocationOwner::SymbolSpans => (self.symbols.terminal_is_empty(), self.symbols.release_empty_page(maximum_bytes)),
+                RetainedPackCatalogAllocationOwner::Chunks => (self.chunks.terminal_is_empty(), self.chunks.release_empty_page(maximum_bytes)),
+                RetainedPackCatalogAllocationOwner::ObservedChunks => (self.observed_chunks.terminal_is_empty(), self.observed_chunks.release_empty_page(maximum_bytes)),
+            };
+            if !terminal {
+                let step = step?;
+                return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: step.released_allocation_bytes });
+            }
+        }
         self.closed = true;
         self.handed_back = true;
-        RetainedPackCloseStep::Complete
+        Ok(RetainedPackCloseStep::Complete)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.handed_back && self.symbols.is_empty() && self.chunks.is_empty() && self.observed_chunks.is_empty() && self.pending.is_none()
+        self.closed
+            && self.handed_back
+            && self.pending.is_none()
+            && self.active.is_none()
+            && self.symbol_parser.closed
+            && self.symbol_parser.partial_utf8_bytes() == 0
+            && self.symbol_scalars.terminal_is_empty()
+            && self.symbols.terminal_is_empty()
+            && self.chunks.terminal_is_empty()
+            && self.observed_chunks.terminal_is_empty()
+    }
+
+    #[cfg(test)]
+    fn retained_symbol_scalar_ptr(&self) -> Option<*const char> {
+        self.symbol_scalars.backing_ptr(0)
     }
 }
 

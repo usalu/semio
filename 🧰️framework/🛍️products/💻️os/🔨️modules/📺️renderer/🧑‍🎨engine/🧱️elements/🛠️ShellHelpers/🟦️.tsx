@@ -3894,9 +3894,17 @@ export type ActionPaneSlice = Pick<ActionPaneState, "expandedByWindowId" | "stag
 
 /**
  * 🧰️ Sibling of {@link utilityBarNode}: resolves a window kind's panel-eligible actions and returns a
- * bound {@link WindowActionPane}, or `undefined` when the window has no resolved actions (so the rail
+ * bound {@link WindowActionPane}, or `undefined` when the window has no panel-eligible action (so the rail
  * chip never renders). Rows render disabled while an active utility gates actions
  * (`allowsActionsWhileActive === false`).
+ *
+ * 🧹️ Panel-eligible means `inPalette` — the SAME curation `resolveCommands` gives the palette and
+ * `buildShellContextMenuItems` gives the shell fallback menu: an app declares its raw dispatch verbs
+ * (`worldPointerDown`, `registerBrushMesh`, `suggestionsTick`, …) and the framework declares its reserved
+ * ones (`interactionSelect`, `noteShellCommand`, `setActiveUtility`, …) as window actions purely so a
+ * surface can dispatch them, and a rail that renders them buries the user's own verbs: the puzzle3d
+ * perspective rail carried 96 rows and put `Export` at y=1990 inside an 807 px band, which is what
+ * `export-only` could not press (`📓️2026-09-13-wave-B53-nakagin-export-full-run.md` §3).
  */
 export function windowActionPaneNode(
   app: AppDefinition,
@@ -3911,7 +3919,7 @@ export function windowActionPaneNode(
   manifests: readonly { readonly apps: readonly unknown[] }[] = [],
   selectedArtifactKinds?: readonly ArtifactKindChoice[],
 ): ReactNode {
-  const resolvedActions = resolveWindowActions(app, windowKind);
+  const resolvedActions = resolveWindowActions(app, windowKind).filter((action) => action.inPalette);
   if (resolvedActions.length === 0) return undefined;
   const actions = resolvedActions.map((action) => ({
     ...action,

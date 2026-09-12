@@ -1,13 +1,10 @@
 //! 🧬️ schema leaf
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.generation.2d.config")]
 pub struct Generation2dConfig {
-    #[state(config)]
-    pub camera: CameraJson,
     #[state(config)]
     pub show_mode: String,
     #[state(config)]

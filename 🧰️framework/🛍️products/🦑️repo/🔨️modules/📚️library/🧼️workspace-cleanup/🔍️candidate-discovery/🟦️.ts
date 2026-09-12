@@ -1,7 +1,25 @@
 import { existsSync, lstatSync, readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { exactCargoGeneratedOutputHasLiveLease, HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, runProbe, SPACE_DATA_DIR_NAME } from "../../🟦️.ts";
-import { CLEAN_CACHE_DIR_NAME, CLEAN_CANONICAL_REPO_DIR, CLEAN_PROTECTION_VIEW, type CleanRemoval, cleanIntersectsProtected, cleanIsBuildArtifactDirName, cleanIsCanonicalRepoDir, cleanIsCanonicalTicketsDir, cleanIsMisplacedRepoDir, cleanIsMisplacedTicketsDir, cleanIsProtected, cleanIsSemioRootName, cleanIsTicketGeneratedOutputDir, cleanIsWindowsIllegalName, cleanTicketFolderForPath, cleanTicketManifestIsClosed } from "../🛡️protection/🟦️.ts";
+import {
+  CLEAN_CACHE_DIR_NAME,
+  CLEAN_CANONICAL_REPO_DIR,
+  CLEAN_PROTECTION_VIEW,
+  type CleanRemoval,
+  cleanIntersectsProtected,
+  cleanIsBuildArtifactDirName,
+  cleanIsCanonicalRepoDir,
+  cleanIsCanonicalTicketsDir,
+  cleanIsCargoTargetDir,
+  cleanIsMisplacedRepoDir,
+  cleanIsMisplacedTicketsDir,
+  cleanIsProtected,
+  cleanIsSemioRootName,
+  cleanIsTicketGeneratedOutputDir,
+  cleanIsWindowsIllegalName,
+  cleanTicketFolderForPath,
+  cleanTicketManifestIsClosed,
+} from "../🛡️protection/🟦️.ts";
 
 export const CLEAN_TICKET_FILE_MAX_BYTES = 5 * 1024 * 1024;
 export const CLEAN_TICKET_DIR_MAX_BYTES = 10 * 1024 * 1024;
@@ -192,7 +210,10 @@ export function cleanGitignoredMapForTicketRoots(root: string, ticketRoots: read
       budgetMs: 120_000,
     });
     if ((probe.status ?? 1) !== 0) continue;
-    for (const line of probe.stdout.split("\n").map((l) => l.trim()).filter(Boolean)) {
+    for (const line of probe.stdout
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean)) {
       const abs = join(root, line.replace(/\/$/, ""));
       const folder = cleanTicketFolderForPath(root, abs);
       if (folder) {

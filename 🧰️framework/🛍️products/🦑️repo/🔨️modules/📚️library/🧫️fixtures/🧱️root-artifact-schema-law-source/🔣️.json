@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts",
+      "directoryName": "📖️source-access",
+      "parentKindId": "discovery",
+      "kindId": "repo-discovery-source-access",
+      "declarations": [
+        "POLICY_SKIP_DIRS",
+        "POLICY_SOURCE_OPERATIONS",
+        "PolicySourceDirectoryResult",
+        "PolicySourceEntry",
+        "PolicySourceOperations",
+        "PolicySourceTextResult",
+        "policyReadFileSafe",
+        "policyReaddirSafe",
+        "policySourceAncestry",
+        "policySourceDirectory",
+        "policySourceText",
+        "policySourceUnavailableState"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/🔍️owner-discovery/🟦️.ts",
+      "directoryName": "🔍️owner-discovery",
+      "parentKindId": "repo-schema-artifact",
+      "kindId": "repo-schema-artifact-owner-discovery",
+      "declarations": ["policyDiscoverArtifactSchemaOwners"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/🏷️export-identity/🟦️.ts",
+      "directoryName": "🏷️export-identity",
+      "parentKindId": "repo-schema-artifact",
+      "kindId": "repo-schema-artifact-export-identity",
+      "declarations": ["policyDeclaredSchemaExportName"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/📚️facet-leaves/🟦️.ts",
+      "directoryName": "📚️facet-leaves",
+      "parentKindId": "repo-schema-artifact",
+      "kindId": "repo-schema-artifact-facet-leaves",
+      "declarations": ["POLICY_SCHEMA_FACET_RELS", "PolicyArtifactSchemaLeaf", "policyLoadSchemaFacetLeaves"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/⚖️laws/🧩️facet-completeness/🟦️.ts",
+      "directoryName": "🧩️facet-completeness",
+      "parentKindId": "repo-schema-artifact-laws",
+      "kindId": "repo-schema-artifact-facet-completeness-law",
+      "declarations": ["policyArtifactSchemaFacetCompletenessBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/⚖️laws/📏️field-parity/🟦️.ts",
+      "directoryName": "📏️field-parity",
+      "parentKindId": "repo-schema-artifact-laws",
+      "kindId": "repo-schema-artifact-field-parity-law",
+      "declarations": ["policyArtifactSchemaFieldParityBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/⚖️laws/💾️state-parity/🟦️.ts",
+      "directoryName": "💾️state-parity",
+      "parentKindId": "repo-schema-artifact-laws",
+      "kindId": "repo-schema-artifact-state-parity-law",
+      "declarations": ["policyArtifactSchemaStateParityBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/⚖️laws/🔺️diff-coverage/🟦️.ts",
+      "directoryName": "🔺️diff-coverage",
+      "parentKindId": "repo-schema-artifact-laws",
+      "kindId": "repo-schema-artifact-diff-coverage-law",
+      "declarations": ["policyArtifactSchemaDiffCoverageBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/⚖️laws/🏷️type-name-parity/🟦️.ts",
+      "directoryName": "🏷️type-name-parity",
+      "parentKindId": "repo-schema-artifact-laws",
+      "kindId": "repo-schema-artifact-type-name-parity-law",
+      "declarations": ["policyArtifactSchemaTypeNameParityBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/⚖️laws/🪪️ownership-field-parity/🟦️.ts",
+      "directoryName": "🪪️ownership-field-parity",
+      "parentKindId": "repo-schema-artifact-laws",
+      "kindId": "repo-schema-artifact-ownership-field-parity-law",
+      "declarations": ["policyArtifactOwnershipFieldParity"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts",
+      "directoryName": "📋️aggregate",
+      "parentKindId": "repo-schema-artifact-laws",
+      "kindId": "repo-schema-artifact-law-aggregate",
+      "declarations": ["policyArtifactSchemaBreaches"]
+    }
+  ],
+  "contexts": [
+    { "directoryName": "📖️source-access", "parentKindId": "discovery", "kindId": "repo-discovery-source-access" },
+    { "directoryName": "🗿️artifact", "parentKindId": "schema", "kindId": "repo-schema-artifact" },
+    { "directoryName": "🔍️owner-discovery", "parentKindId": "repo-schema-artifact", "kindId": "repo-schema-artifact-owner-discovery" },
+    { "directoryName": "🏷️export-identity", "parentKindId": "repo-schema-artifact", "kindId": "repo-schema-artifact-export-identity" },
+    { "directoryName": "📚️facet-leaves", "parentKindId": "repo-schema-artifact", "kindId": "repo-schema-artifact-facet-leaves" },
+    { "directoryName": "⚖️laws", "parentKindId": "repo-schema-artifact", "kindId": "repo-schema-artifact-laws" },
+    { "directoryName": "🧩️facet-completeness", "parentKindId": "repo-schema-artifact-laws", "kindId": "repo-schema-artifact-facet-completeness-law" },
+    { "directoryName": "📏️field-parity", "parentKindId": "repo-schema-artifact-laws", "kindId": "repo-schema-artifact-field-parity-law" },
+    { "directoryName": "💾️state-parity", "parentKindId": "repo-schema-artifact-laws", "kindId": "repo-schema-artifact-state-parity-law" },
+    { "directoryName": "🔺️diff-coverage", "parentKindId": "repo-schema-artifact-laws", "kindId": "repo-schema-artifact-diff-coverage-law" },
+    { "directoryName": "🏷️type-name-parity", "parentKindId": "repo-schema-artifact-laws", "kindId": "repo-schema-artifact-type-name-parity-law" },
+    { "directoryName": "🪪️ownership-field-parity", "parentKindId": "repo-schema-artifact-laws", "kindId": "repo-schema-artifact-ownership-field-parity-law" },
+    { "directoryName": "📋️aggregate", "parentKindId": "repo-schema-artifact-laws", "kindId": "repo-schema-artifact-law-aggregate" }
+  ],
+  "consumers": [
+    {
+      "path": "📜️script.ts",
+      "owners": ["🔍️discovery/📖️source-access/🟦️.ts", "🧬️schema/🗿️artifact/⚖️laws/🪪️ownership-field-parity/🟦️.ts", "🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🪪️field-parity/🟦️.ts",
+      "owners": ["🧬️schema/🗿️artifact/🔍️owner-discovery/🟦️.ts", "🧬️schema/🗿️artifact/⚖️laws/🪪️ownership-field-parity/🟦️.ts", "🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts"]
+    }
+  ],
+  "sourceStates": [
+    { "name": "missing source", "stat": "missing", "read": "text", "expected": "missing" },
+    { "name": "regular source", "stat": "file", "read": "text", "expected": "file" },
+    { "name": "directory is not a source leaf", "stat": "directory", "read": "text", "expected": "not-file" },
+    { "name": "symbolic link is not followed", "stat": "symlink", "read": "text", "expected": "symlink" },
+    { "name": "unreadable source remains evidence", "stat": "file", "read": "unreadable", "expected": "unreadable" }
+  ],
+  "discovery": {
+    "owner": "✏️s/🔌️plugins/🧪️fixture/🗿️artifacts/🧪️document/🏅️standards/🔖️1/🪆️subsets/✳️any",
+    "symlink": "✏️s/🔌️plugins/🪤️linked"
+  },
+  "lawKinds": [
+    "artifact-schema/facet-completeness",
+    "artifact-schema/normative-leaf",
+    "artifact-schema/field-parity",
+    "artifact-schema/state-parity",
+    "artifact-schema/diff-coverage",
+    "artifact-schema/type-name-parity",
+    "artifact-schema/source-unreadable"
+  ],
+  "route": {
+    "target": "test-root-artifact-schema-law-source",
+    "command": "bun ./📜️script.ts test root-artifact-schema-law-source",
+    "launchName": "🧬schema🗿artifact🧪root-artifact-schema-law-source",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-artifact-schema-law-source"
+  }
+}

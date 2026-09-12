@@ -1,0 +1,8 @@
+package semio:procedural-generation2d-main-window-config@1.0.0;
+
+interface config {
+    record viewport2d { x: f64, y: f64, zoom: f64 }
+    record main-window-config { viewport: viewport2d }
+}
+
+world generation2d-main-window-config { export config; }

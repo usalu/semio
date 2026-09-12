@@ -2783,7 +2783,15 @@ impl InteractiveJob for PcgJob {
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
         }
-        context.set_stage("fem.pcg");
+        context.set_stage(if self.state.stage == PcgStage::Complete {
+            "fem.pcg.complete-encode"
+        } else if self.state.preview_due {
+            "fem.pcg.preview-encode"
+        } else if self.state.checkpoint_due {
+            "fem.pcg.checkpoint-encode"
+        } else {
+            "fem.pcg"
+        });
         if context.should_yield() {
             return StepOutcome::Yield;
         }
@@ -4124,8 +4132,7 @@ impl SubspaceIterationJob {
             self.state.prev_theta[work.first] = work.theta[work.first];
             work.first += 1;
         } else {
-            self.state.converged = self.state.converged_count == self.state.p;
-            work.stage = SubspaceStage::PublishIteration;
+            self.reset_cursor(SubspaceStage::PublishIteration);
         }
     }
 
@@ -4196,6 +4203,7 @@ impl SubspaceIterationJob {
         }
         std::mem::swap(&mut self.state.x, &mut self.state.work.candidate_x);
         self.state.iteration += 1;
+        self.state.converged = self.state.converged_count == self.state.p;
         self.state.checkpoint_due = true;
         self.state.preview_due = true;
         self.state.publication_stage = 0;

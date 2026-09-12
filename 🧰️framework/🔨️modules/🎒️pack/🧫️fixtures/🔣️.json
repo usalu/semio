@@ -15,6 +15,48 @@
     "insufficientGrantDelta": 1,
     "terminal": {"rootCapacity": 0, "length": 0, "capacity": 0, "allocatedBytes": 0}
   },
+  "retainedCatalog": {
+    "constructionAllocates": false,
+    "completedOwnership": "cursor-borrowed",
+    "storage": ["scalar-pages", "symbol-span-pages", "chunk-entry-pages", "observed-header-pages"],
+    "limits": ["symbol-count", "symbol-utf8-bytes", "symbol-scalars", "chunk-count", "allocation-bytes"],
+    "allocationPhases": ["symbol-spans", "symbol-scalars", "chunk-entries", "observed-headers"],
+    "symbols": [
+      {"text": "", "utf8": [], "scalars": []},
+      {"text": "axis", "utf8": [97, 120, 105, 115], "scalars": [97, 120, 105, 115]},
+      {"text": "A€𐍈", "utf8": [65, 226, 130, 172, 240, 144, 141, 136], "scalars": [65, 8364, 66376]}
+    ],
+    "cumulativeLimit": {
+      "values": ["abcd", "efgh"],
+      "eachMaximumBytes": 4,
+      "totalMaximumBytes": 7,
+      "totalBytes": 8,
+      "acceptedBeforeRefusal": 1
+    },
+    "countLimits": {"maximumSymbols": 2, "maximumPlusOneSymbols": 3, "maximumChunks": 2, "maximumPlusOneChunks": 3},
+    "pageCrossing": {"pageBytes": 4096, "leadByteIndex": 4095, "utf8": [226, 130, 172], "scalar": 8364},
+    "invalidUtf8": {
+      "malformedAfterPrefix": [97, 226, 40, 161],
+      "truncatedAfterPrefix": [97, 240, 144, 141],
+      "firstFaultPreserved": true
+    },
+    "grants": {
+      "opportunitiesPerGrant": 1,
+      "pendingInputPreserved": true,
+      "zeroAllocationMutates": false,
+      "subexactAllocationMutates": false,
+      "subexactCloseMutates": false,
+      "actualBackingAccounted": true,
+      "overgrantFaultSticky": true
+    },
+    "cancellation": {
+      "phase": "partial-symbol",
+      "partialSymbolBytes": [97, 226],
+      "partialSymbolScalars": [97],
+      "aggregateAllocationEqualsRelease": true
+    },
+    "terminal": {"pending": false, "partialSymbolBytes": 0, "partialSymbolScalars": 0, "logicalItems": 0, "allocatedBytes": 0, "receiptClosed": true}
+  },
   "multiByteChunk": {
     "bytes": [17, 34, 51, 68, 85],
     "rawByteEvents": 5,
@@ -23,6 +65,11 @@
   },
   "outerCancellation": {
     "demandDelegation": ["field-decoder", "vcs", "snapshot", "mounted-source"],
+    "constructionCeilings": {
+      "singleDemand": "maximum-close-byte-demand",
+      "cumulativeRetained": "maximum-retained-close-bytes",
+      "oversizedNestedOwner": "returned-for-close"
+    },
     "subexactGrant": {"mutates": false, "releasedItems": 0, "releasedBytes": 0},
     "exactGrant": {"physicalReleaseObserved": true},
     "workFuelPerCloseOpportunity": 1,

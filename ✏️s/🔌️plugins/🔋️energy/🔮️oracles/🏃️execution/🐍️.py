@@ -40,7 +40,7 @@ LICENSES. EnergyPlus and the OpenStudio SDK are BSD-3-Clause. `ladybug-*`/`honey
 AGPL-3.0-only and are used here strictly as an out-of-process validation reference: nothing in this
 package is imported by, linked into, or reachable from any shipped semio artifact.
 
-@see ../🔣️.json — the pinned, sha256-verified toolchain this module runs against.
+@see ../🛠️toolchain/🔣️.json — the pinned, sha256-verified toolchain this module runs against.
 @see ../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/ENERGY-PLUGIN-END-TO-END/📓️bestest-contract.md
 """
 

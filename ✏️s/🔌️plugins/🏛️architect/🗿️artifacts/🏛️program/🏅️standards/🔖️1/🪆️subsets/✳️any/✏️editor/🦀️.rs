@@ -7,7 +7,7 @@
 //! pure derived reads over the document live in the artifact's own `🧬️schema` / `🧬️schema/💡️inferences`
 //! (see `//#region 🔧️Behavior` below for the app-scoped, `&mut`-taking counterpart).
 
-use crate::editor::architect::catalog::{analysis_kind_picker_options, parse_entity_id, parse_entity_id_from_args, parse_register_id, report_kind_picker_options, REGISTER_IDS};
+use crate::editor::architect::catalog::{adjacency_kind_from_id, analysis_kind_picker_options, parse_entity_id, parse_entity_id_from_args, parse_register_id, report_kind_picker_options, REGISTER_IDS};
 use crate::editor::architect::commands::adjacency::{set_adjacency_field, set_adjacency_filter, set_adjacency_kind};
 use crate::editor::architect::commands::analysis::{run_analysis, run_report, run_validation};
 use crate::editor::architect::commands::element::{add_element, remove_element};
@@ -1049,12 +1049,19 @@ impl ArtifactEditor for ArchitectPlayApp {
         Some(crate::editor::architect::config::schema::app_schema_descriptor())
     }
 
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<register_window::config::ArchitectRegisterWindowConfigOwner>()?;
+        registry.register::<adjacency_window::config::ArchitectAdjacencyWindowConfigOwner>()?;
+        registry.register::<graph_window::config::ArchitectGraphWindowConfigOwner>()?;
+        registry.register::<report_window::config::ArchitectReportWindowConfigOwner>()
+    }
+
     fn initial_snapshot() -> ProgramSnapshot {
         sample_plugin()
     }
 
     fn initial_config() -> ArchitectConfig {
-        ArchitectConfig { active_register: "elements".into(), ..ArchitectConfig::default() }
+        ArchitectConfig::default()
     }
 
     fn command_id(command: &ArchitectCommand) -> &'static str {
@@ -1099,7 +1106,7 @@ impl ArtifactEditor for ArchitectPlayApp {
             "nodeGraphEdit" => Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), dsl::json::to_json_string) })),
             "nodeGraphViewport" => {
                 let value = args.and_then(|value| value.get("viewport")).cloned().ok_or_else(|| Fault::from("nodeGraphViewport requires viewport"))?;
-                let viewport = dsl::from_dsl_value::<semio_framework::Viewport2d>(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
+                let viewport = dsl::from_dsl_value::<semio_framework_os_kernel::Viewport2d>(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
                 Ok(ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport }))
             }
             "setAdjacencyKind" => Ok(ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind {
@@ -1125,25 +1132,46 @@ impl ArtifactEditor for ArchitectPlayApp {
         doc: &ArtifactView<'_, ProgramSnapshot>,
         cfg: &ConfigView<'_, ArchitectConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+        match command {
+            ArchitectCommand::SelectRegister(payload) => {
+                let view = view_state.ok_or_else(|| Fault::from("architect-register-window-context-required"))?;
+                let mut emit = Emit::default();
+                emit.window_config_mutations.push(register_window::config::addressed(view, payload.register_id.clone())?);
+                Ok(emit)
+            }
+            ArchitectCommand::SetAdjacencyFilter(payload) => {
+                let view = view_state.ok_or_else(|| Fault::from("architect-adjacency-window-context-required"))?;
+                let filter = payload.kind.as_deref().and_then(adjacency_kind_from_id);
+                let mut emit = Emit::default();
+                emit.window_config_mutations.push(adjacency_window::config::addressed(view, filter)?);
+                Ok(emit)
+            }
+            ArchitectCommand::NodeGraphViewport(payload) => {
+                let view = view_state.ok_or_else(|| Fault::from("architect-graph-window-context-required"))?;
+                let mut emit = Emit::default();
+                emit.window_config_mutations.push(graph_window::config::addressed(view, payload.viewport.clone())?);
+                Ok(emit)
+            }
+            ArchitectCommand::RunReport(payload) => run_report::handle_with_view(payload, doc, view_state),
+            _ => command.dispatch(doc, cfg),
+        }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let program = doc.snapshot;
-        let config = cfg.snapshot;
         match body_key {
-            adjacency_window::ARCHITECT_BODY_ADJACENCY => adjacency_window::render(program, config),
-            graph_window::ARCHITECT_BODY_GRAPH => graph_window::render(program, config),
-            register_window::ARCHITECT_BODY_REGISTER => register_window::render(program, config),
-            report_window::ARCHITECT_BODY_REPORT => report_window::render(config),
+            adjacency_window::ARCHITECT_BODY_ADJACENCY => adjacency_window::render(program, &adjacency_window::config::current(cfg)),
+            graph_window::ARCHITECT_BODY_GRAPH => graph_window::render(program, &graph_window::config::current(cfg)),
+            register_window::ARCHITECT_BODY_REGISTER => register_window::render(program, &register_window::config::current(cfg)),
+            report_window::ARCHITECT_BODY_REPORT => report_window::render(program, &report_window::config::current(cfg), view_state),
             trace_window::ARCHITECT_BODY_TRACE => trace_window::render(program),
-            document_panel::ARCHITECT_BODY_DOCUMENT => document_panel::render(program, config),
+            document_panel::ARCHITECT_BODY_DOCUMENT => document_panel::render(program),
             catalogue_panel::ARCHITECT_BODY_CATALOGUE => catalogue_panel::render(),
-            inspection_panel::ARCHITECT_BODY_INSPECTION => inspection_panel::render(program, config),
+            inspection_panel::ARCHITECT_BODY_INSPECTION => inspection_panel::render(program),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),
         }
         .map(semio_framework_plugin::built_to_component_tree)
@@ -1183,7 +1211,7 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setAdjacencyField", LocalizedLabel::native("Set Adjacency Field", "Adjazenzfeld setzen"))
             .view_action("runValidation", LocalizedLabel::native("Run Validation", "Validierung ausführen"))
             .view_action("runAnalysis", LocalizedLabel::native("Run Analysis", "Analyse ausführen"))
-            .view_action("runReport", LocalizedLabel::native("Run Report", "Bericht erzeugen"))
+            .mutation("runReport", LocalizedLabel::native("Run Report", "Bericht erzeugen"))
             .action_with(ActionDefinition::new("search", LocalizedLabel::native("Search", "Suchen"), ActionKind::View, "search"))
             .action_with(ActionDefinition::new("exportProgram", LocalizedLabel::native("Export ProgramSnapshot", "Programm exportieren"), ActionKind::Shell, "download"))
             .action_with(ActionDefinition::new("exportRegistersCsv", LocalizedLabel::native("Export Registers CSV", "Register CSV exportieren"), ActionKind::Shell, "download"))

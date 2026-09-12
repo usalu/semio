@@ -1,0 +1,11 @@
+{
+  "settleMs": 1000,
+  "cancelledPan": { "event": "pointercancel", "reason": "pan", "pointerId": 7 },
+  "cases": [
+    { "name": "render mode", "method": "setRenderMode", "args": ["image"] },
+    { "name": "vector style", "method": "setVectorStyle", "args": ["figureGround"] },
+    { "name": "layer visibility", "method": "setLayerVisibilityJson", "args": ["{\"labels\":false}"] },
+    { "name": "layer stroke scale", "method": "setLayerStrokeScaleJson", "args": ["{\"roads\":2}"] },
+    { "name": "selection", "method": "syncInteraction", "args": ["{\"positions\":[\"station\"],\"routes\":[]}", "null"] }
+  ]
+}

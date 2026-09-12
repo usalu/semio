@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["project", "owner", "crate", "binary", "stdout", "changedStdout", "profiles"],
+  "properties": {
+    "project": { "type": "string", "minLength": 1 },
+    "owner": { "type": "string", "minLength": 1 },
+    "crate": { "type": "string", "minLength": 1 },
+    "binary": { "type": "string", "minLength": 1 },
+    "stdout": { "type": "string" },
+    "changedStdout": { "type": "string" },
+    "profiles": {
+      "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["profile", "target", "output"],
+        "properties": {
+          "profile": { "enum": ["dev", "release"] },
+          "target": { "enum": ["native-build", "native-build-release"] },
+          "output": { "enum": ["dist/native-dev", "dist/native-release"] }
+        }
+      }
+    }
+  }
+}

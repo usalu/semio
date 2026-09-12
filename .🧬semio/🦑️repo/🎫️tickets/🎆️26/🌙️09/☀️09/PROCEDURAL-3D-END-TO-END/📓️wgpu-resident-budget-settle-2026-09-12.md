@@ -393,7 +393,7 @@ scope here (`📓️node-graph-camera-fit-labels-2026-09-12.md` owns that axis).
 ```
 $ cargo check -p semio-framework-os-renderer-wgpu --target wasm32-unknown-unknown
 warning: `semio-framework-os-renderer-wgpu` (lib) generated 25 warnings
-    Finished `dev` profile
+    Finished `dev` profile                        # 22:2x, the bundle every deliverable run used
 
 $ cargo check -p semio-framework-ui-contract --lib        Finished
 $ cargo check -p semio-framework-os-infinite --lib        Finished
@@ -426,6 +426,8 @@ additionally verified by a string marker unique to the build under test inside t
 | `🖱️ui/🧬️contract` file relocations (`📦️packages/🦀️rust/*.rs` → taxonomy paths, `UiFixedListAllocationError` → `PagedListAllocationError`) landed mid-session and re-wrote `📃️document/🦀️.rs` under this lane's own edit. The law's `mod resident_refresh_tests;` registration survived and was re-verified green afterwards. |
 | `retained_document_root_permit_*` (5 tests, `🎟️resident/🌳️root/🧪️tests`) are RED on this tree — `root did not retire` / `Capacity`. Verified pre-existing: `git show HEAD:…` of both moved files is byte-identical to the working copy apart from `#[path]` strings. Not touched. |
 | `semio-framework-ui-viewport` went red at ~22:50 — `error[E0277]: the trait bound Viewport3dAxonometricHemisphere: Default is not satisfied` (`🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🦀️.rs:474,478`), 2 errors. It broke trunk's rebuild, so the 6118 serve kept correctly running this lane's last good bundle behind trunk's full-page **build-failure overlay**. The probe now removes that overlay (dev-server chrome, never app content) before each screenshot and logs the removal — `PROBE removed trunk overlay "Build failure…"`. Not this lane's files; not touched. |
+
+| At 23:05 and again at 23:12 the wasm build was red on a DIFFERENT peer edit — `error[E0502]: cannot borrow *self as immutable because it is also borrowed as mutable` at `💻️os/🔨️modules/🏪️store/🦀️.rs:8320` (`semio-framework-os-kernel`). Waited and retried twice; still in flight at hand-off. None of this lane's files are involved: every crate it touches checks green on its own (§9), and the last full green wgpu wasm build is the bundle the 6118 serve ran for all three deliverable runs. |
 
 Nothing was reverted and nothing was fought.
 

@@ -100,7 +100,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
   let forceKill: ReturnType<typeof setTimeout> | undefined;
   const delimiter = args.indexOf("--"), compilerArgs = delimiter < 0 ? [] : args.slice(delimiter);
   const cargoArgs = delimiter < 0 ? args : args.slice(0, delimiter);
-  const child = spawn("cargo", [options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], { cwd: repoRoot, env: process.env, detached: process.platform !== "win32", stdio: ["inherit", "pipe", "inherit"] });
+  const child = spawn("cargo", [options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], { cwd: repoRoot, env: { ...process.env, CARGO_TARGET_DIR: join(capture, "target") }, detached: process.platform !== "win32", stdio: ["inherit", "pipe", "inherit"] });
   const cancel = (): void => {
     cancelled = true;
     if (!child.pid) return;

@@ -1,27 +1,13 @@
 /** 🧬️ ArchitectConfig */
-export type AdjacencyKind = "required" | "preferred" | "optional" | "prohibited";
-
 export interface ArchitectConfig {
-  /** @state config */
-  activeRegister: string;
   /** @state config */
   searchQuery: string;
   /** @state config */
   searchHistoryJson: string;
   /** @state config */
-  activeReportJson: string;
-  /** @state config */
   lastResultJson: string;
   /** @state config */
   lastAnalysisJson: string;
-  /** @state config */
-  adjacencyKindFilter?: AdjacencyKind;
-  /** @state config */
-  graphCameraX: number;
-  /** @state config */
-  graphCameraY: number;
-  /** @state config */
-  graphCameraZoom: number;
 }
 
 //#region 🚪️Parsers
@@ -74,15 +60,9 @@ export const architectArchitectConfigGuardConstant = <T extends string | number 
 export function parseArchitectConfig(value: unknown, at = "$"): ArchitectConfig {
   const row = architectArchitectConfigGuardObject(value, at);
   return {
-    activeRegister: architectArchitectConfigGuardString(row["activeRegister"], `${at}.activeRegister`),
     searchQuery: architectArchitectConfigGuardString(row["searchQuery"], `${at}.searchQuery`),
     searchHistoryJson: architectArchitectConfigGuardString(row["searchHistoryJson"], `${at}.searchHistoryJson`),
-    activeReportJson: architectArchitectConfigGuardString(row["activeReportJson"], `${at}.activeReportJson`),
     lastResultJson: architectArchitectConfigGuardString(row["lastResultJson"], `${at}.lastResultJson`),
     lastAnalysisJson: architectArchitectConfigGuardString(row["lastAnalysisJson"], `${at}.lastAnalysisJson`),
-    adjacencyKindFilter: row["adjacencyKindFilter"] === undefined ? undefined : architectArchitectConfigGuardMember(row["adjacencyKindFilter"], `${at}.adjacencyKindFilter`, ["required", "preferred", "optional", "prohibited"] as const),
-    graphCameraX: architectArchitectConfigGuardNumber(row["graphCameraX"], `${at}.graphCameraX`),
-    graphCameraY: architectArchitectConfigGuardNumber(row["graphCameraY"], `${at}.graphCameraY`),
-    graphCameraZoom: architectArchitectConfigGuardNumber(row["graphCameraZoom"], `${at}.graphCameraZoom`),
   };
 }

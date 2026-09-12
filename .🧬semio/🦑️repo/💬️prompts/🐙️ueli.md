@@ -584,6 +584,20 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+All tools, commands and utlities () must be
+utilities can only be active when no tool or command is running.
+When a tool is active or  
+e.g.
+puzzle fill tool has a
+
+---
+
+Get all the dependencies right and only compile what is needed.
+e.g. puzzle 3d shouldnt compile flow because puzzle 3d shouldnt depend on flow.
+e.g. all the react renderer dev shouldnt compile wasm etc
+
+---
+
 Get rid of all testkits and just keep tests, fixtures, etc
 
 violstiond e.g.

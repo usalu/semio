@@ -1,5 +1,5 @@
 /** 📋️ Architect editor — Register window: typed twin of `🦀️.rs`'s view boundary. Mirrors
- * `render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode`'s signature — the active
+ * `render(program: &ProgramSnapshot, cfg: &ArchitectRegisterWindowConfig) -> UiNode`'s signature — the active
  * register's rows rendered as a block-list surface. */
 
 /** 📋️ One block-list item — mirrors the Rust `RegisterBlockItem` struct. */
@@ -18,7 +18,7 @@ export interface ArchitectRegisterBlockStep {
 }
 
 /** 📋️ The Register window's typed view-model — mirrors the Rust `render()` boundary's inputs: the
- * whole program document (read for the active register's rows) plus the config's active register id. */
+ * whole program document (read for the active register's rows) plus the exact window's register id. */
 export interface ArchitectRegisterViewModel {
   windowKindId: "architect-register";
   bodyKey: "architect.register";

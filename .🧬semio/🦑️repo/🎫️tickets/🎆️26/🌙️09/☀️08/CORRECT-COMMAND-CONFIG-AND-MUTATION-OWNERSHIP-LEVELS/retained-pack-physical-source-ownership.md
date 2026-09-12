@@ -54,15 +54,18 @@ The registered native target runs these focused filters in order:
 2. `semio-framework-pack` `retained_pack_source_laws`, including pointer/capacity preservation, allocation refusal, exact aggregate source release, cancellation after a consumed byte, the multi-byte chunk, hostile CRC, and the existing `CodecId(1)` retained route.
 3. `semio-framework-pack` `write_then_read_round_trip_with_compressed_segment_and_chunk`, the existing full-verification `CodecId(1)` PackFile/PackWriter regression.
 4. Generation2d `retained_mounted_laws`.
-5. Generation3d `retained_mounted_laws`.
+5. Generation2d `retained_pack_outer_` laws, covering exact demand delegation through Store/VCS/snapshot/mounted source, a non-mutating subexact grant, aggregate physical release conservation, cancelled terminal state, and owner-preserving rejection for oversized nested single-demand and cumulative-retained ceilings.
+6. Generation3d `retained_mounted_laws`.
 
-Native execution is pending the shared Cargo queue. The Pack library has compiled successfully as a dependency during the concurrent FEM validation, which confirms the public source constructor and immediate shared imports are coherent but does not replace the focused native laws.
+The 2026-09-12 focused native rerun completed through the ticket facade in 7m33s. It passed the 5 replication list laws, 8 Pack retained-source laws, the existing compressed `CodecId(1)` round trip, 2 Generation2d mounted laws, and 2 Generation3d mounted laws. Its durable output is `🗑️generated/retained-pack-native-coherence.log`.
+
+The schema-first outer-close contract then passed its four Ajv/JSON Patch and strict TypeScript cases in 4.5s; its durable output is `🗑️generated/retained-pack-outer-neutral.log`. The focused native outer run completed through the registered ticket facade in 2m41s. Both laws passed in 0.01s with 169 filtered tests: the live cancellation route refused a subexact external grant without changing the nested owner, then retired exactly the aggregate admitted source allocation and reached `Cancelled`; the construction laws returned both oversized single-demand and cumulative-retained nested owners for exact close. Its durable output is `🗑️generated/retained-pack-outer-native-1.log`.
 
 ## Remaining ownership work
 
 The catalog still owns `Vec` and `String` backings that are allocated eagerly and released without a physical byte ledger. The retained value stack and the deflate inflater also retain dynamic backing outside this source contract. The Generation mounted typed authorities contain further dynamic domain collections. Their source integration is real, but this report does not claim that the complete catalog, typed decoder, compressed path, mounted session, Store hydrator, or recursive archive path is physically retained.
 
-The normal Generation snapshot decode state asks the source for each exact close grant. The broader `ArtifactEnvelopeSnapshotFieldAuthority::close_step` cancellation path still receives an arbitrary Store retirement byte grant; an existing 4 KiB caller cannot release a `RetainedPackPage` backing larger than 4 KiB and will remain pending. Propagating the next physical grant through that Store-level retirement interface belongs to the later common hydration/grant slice. This source result does not claim that outer cancellation route is complete.
+The normal Generation snapshot decode and cancellation paths ask the mounted source for each exact close grant. Store now requires each field, VCS, and snapshot authority to report its next close-byte demand, maximum single demand, and maximum cumulative retained close bytes. Constructors validate the nested ceilings before admission and return an oversized owner intact. The active decoder consumes one work opportunity per close call, keeps physical released bytes in a separate cumulative ledger, and preserves the first close fault. The external close path refuses a caller grant below the current demand without mutating the nested owner. The focused outer native laws satisfy the acceptance gate for this propagation.
 
 The Store persisted-document capability boundary, semio envelope owner, common history hydrator, custom Semio Flow factory, archive ingress owner, and recursive publication laws remain later slices. No Store factory constructor was changed here.
 

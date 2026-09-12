@@ -3,12 +3,12 @@
   "$id": "https://semio.tech/schema/repo/app-verification-source-ownership.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["owners", "routers", "directoryContexts", "consumers", "registration"],
+  "required": ["owners", "routers", "directoryContexts", "consumers", "sourceDataConsumers", "registration"],
   "properties": {
     "owners": {
       "type": "array",
-      "minItems": 12,
-      "maxItems": 12,
+      "minItems": 13,
+      "maxItems": 13,
       "uniqueItems": true,
       "items": {
         "type": "object",
@@ -16,8 +16,8 @@
         "required": ["path", "language", "exports"],
         "properties": {
           "path": { "type": "string", "minLength": 1 },
-          "language": { "enum": ["typescript", "python"] },
-          "exports": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+          "language": { "enum": ["typescript", "python", "json"] },
+          "exports": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
         }
       }
     },
@@ -64,6 +64,22 @@
         "properties": {
           "path": { "type": "string", "minLength": 1 },
           "owners": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "sourceDataConsumers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "owners", "evidence"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "owners": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "evidence": { "type": "string", "minLength": 1 }
         }
       }
     },

@@ -2013,7 +2013,7 @@ import {
   peerIdsHovering,
   SyncAttachCard,
 } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, browserActorDispatchUiScopeV1, browserActorWindowConfigDispatchUiScopeV1, captureTutorialUiSnapshot, clipboardWriteFragmentFromEffect, createUiRefreshCoalescerV1, hostEffectRefreshScopeV1, mergeUiDirtyScopeV1, pasteActionWithRetainedFragment, pasteArgsFragment, programArmedToolRevealV1, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { windowActionPaneNode, applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, browserActorDispatchUiScopeV1, browserActorWindowConfigDispatchUiScopeV1, captureTutorialUiSnapshot, clipboardWriteFragmentFromEffect, createUiRefreshCoalescerV1, hostEffectRefreshScopeV1, mergeUiDirtyScopeV1, pasteActionWithRetainedFragment, pasteArgsFragment, programArmedToolRevealV1, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌️jsdom polyfills
@@ -7891,6 +7891,26 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     expect(rowByText(container, "Move")).toBeTruthy();
     expect(rowByText(container, "Undo")).toBeTruthy();
     expect(rowByText(container, "Flatten2")).toBeTruthy();
+  });
+
+  // 🧹️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B53: the rail is a user-facing surface, so it carries the
+  // SAME curation the command palette and the shell fallback menu already apply (`if (!action.inPalette)
+  // continue`). Without it the puzzle3d rail rendered 96 rows — `worldPointerDown`, `suggestionsTick`,
+  // `registerBrushMesh`, `interactionSelect`, `noteShellCommand`, … — and pushed `Export` to row 79 at
+  // y=1990 inside an 807 px band, 1 125 px below the fold (`📓️2026-09-13-wave-B53-nakagin-export-full-run.md` §3).
+  const paneRowIds = (actions: readonly ActionDefinition[]): string[] => {
+    const windowKind = { id: "main", actions } as unknown as AppWindowKindDefinition;
+    const app = { controllerId: "c", windowKinds: [windowKind], utilities: [] } as unknown as AppDefinition;
+    const node = windowActionPaneNode(app, windowKind, "main", { expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {} }, vi.fn(), vi.fn());
+    if (node === undefined) return [];
+    return [...render(createElement("div", null, node)).container.querySelectorAll('[id^="action."]')].map((row) => row.id);
+  };
+
+  it("renders only palette-eligible rows, and no rail at all when every declared action is dispatch plumbing", () => {
+    const action = (id: string, inPalette: boolean, category?: string): ActionDefinition => ({ id, label: id, iconId: "box", semantics: actionSemanticsForKind("shell"), kind: "shell", inPalette, ...(category === undefined ? {} : { category }), args: [] });
+    expect(paneRowIds([action("worldPointerDown", false), action("exportFixture", true, "file"), action("interactionSelect", false)])).toEqual(["action.category.file", "action.exportFixture"]);
+    cleanup();
+    expect(paneRowIds([action("worldPointerDown", false), action("noteShellCommand", false)])).toEqual([]);
   });
 });
 

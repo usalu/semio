@@ -1,8 +1,24 @@
 import { randomUUID } from "node:crypto";
-import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmdirSync, rmSync, type Stats, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, posix, relative, resolve } from "node:path";
-import { canonicalPrimaryFilenameForKind, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustStructure, loadCatalogTaxonomy as loadTaxonomy, mutationOwnerIdentity, mutationPayloadSchemaRelativePath } from "../../🔍️discovery/🟦️.ts";
-import { POLICY_MUTATION_PLAN_DIR, POLICY_MUTATIONS_FACET, POLICY_RS_COMPONENT_LEAF_NAME, POLICY_TS_COMPONENT_LEAF, policyLeadingEmojiPrefix, policyStripEmoji, policyStructuralRelativeLocator } from "../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
+import {
+  canonicalPrimaryFilenameForKind,
+  inspectRustModuleGraphFacts,
+  inspectRustMutationAggregateSpan,
+  inspectRustStructure,
+  loadCatalogTaxonomy as loadTaxonomy,
+  mutationOwnerIdentity,
+  mutationPayloadSchemaRelativePath,
+} from "../../🔍️discovery/🟦️.ts";
+import {
+  POLICY_MUTATION_PLAN_DIR,
+  POLICY_MUTATIONS_FACET,
+  POLICY_RS_COMPONENT_LEAF_NAME,
+  POLICY_TS_COMPONENT_LEAF,
+  policyLeadingEmojiPrefix,
+  policyStripEmoji,
+  policyStructuralRelativeLocator,
+} from "../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { policyListMutationDirs } from "../../🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts";
 import { policyKebabToPascal } from "../../🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts";
 import { NEW_SCAFFOLD_MARKER, newScaffoldRustLeaf, NEW_SCAFFOLD_TICKET_PATH, newScaffoldTsLeaf } from "../🧱️contract/🟦️.ts";
@@ -47,12 +63,42 @@ export function newMutationRustLeaf(parts: ReturnType<typeof newMutationSemantic
 }
 
 export function newMutationDescriptor(owner: string, parts: ReturnType<typeof newMutationSemanticParts>, options: NewMutationScaffoldOptions): string {
-  return `${JSON.stringify({ schemaVersion: 1, owner, semanticKind: parts.semanticKind, displayName: parts.semanticKind.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" "), emoji: parts.emoji, aggregateVariant: parts.variantName, payloadSchema: options.jsonSchema ? mutationPayloadSchemaRelativePath() : `${POLICY_RS_COMPONENT_LEAF_NAME}#Mutation`, textOpcode: options.text ? parts.semanticKind : null, binaryTag: null, invertibility: options.composite ? "plan" : "explicit-mutation", diffParticipation: options.composite ? "plan" : "detect", outcomeClasses: ["applied"], composition: options.composite ? "composite" : "atomic", requiredLanguageSurfaces: ["rust", ...(options.typescript ? ["typescript"] : []), ...(options.graphql ? ["graphql"] : []), ...(options.protobuf ? ["protobuf"] : []), ...(options.jsonSchema ? ["json-schema"] : []), ...(options.text ? ["text"] : []), ...(options.binary ? ["binary"] : [])] }, null, 2)}\n`;
+  return `${JSON.stringify(
+    {
+      schemaVersion: 1,
+      owner,
+      semanticKind: parts.semanticKind,
+      displayName: parts.semanticKind
+        .split("-")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" "),
+      emoji: parts.emoji,
+      aggregateVariant: parts.variantName,
+      payloadSchema: options.jsonSchema ? mutationPayloadSchemaRelativePath() : `${POLICY_RS_COMPONENT_LEAF_NAME}#Mutation`,
+      textOpcode: options.text ? parts.semanticKind : null,
+      binaryTag: null,
+      invertibility: options.composite ? "plan" : "explicit-mutation",
+      diffParticipation: options.composite ? "plan" : "detect",
+      outcomeClasses: ["applied"],
+      composition: options.composite ? "composite" : "atomic",
+      requiredLanguageSurfaces: [
+        "rust",
+        ...(options.typescript ? ["typescript"] : []),
+        ...(options.graphql ? ["graphql"] : []),
+        ...(options.protobuf ? ["protobuf"] : []),
+        ...(options.jsonSchema ? ["json-schema"] : []),
+        ...(options.text ? ["text"] : []),
+        ...(options.binary ? ["binary"] : []),
+      ],
+    },
+    null,
+    2,
+  )}\n`;
 }
 
 export type NewMutationScaffoldOwnedPath = { readonly absolute: string; readonly content?: string; readonly device: number; readonly inode: number };
 
-export function newMutationScaffoldLstat(path: string): ReturnType<typeof lstatSync> | null {
+export function newMutationScaffoldLstat(path: string): Stats | null {
   try {
     return lstatSync(path);
   } catch (error) {
@@ -73,7 +119,7 @@ export function newMutationScaffoldPath(repoRoot: string, relPath: string): stri
     cursor = join(cursor, segment);
     const stat = newMutationScaffoldLstat(cursor);
     if (!stat) continue;
-    if (stat.isSymbolicLink()) throw new Error(`new mutation: symlinked path is not writable: ${JSON.stringify(relPath)}`);
+    if (stat.isSymbolicLink()) throw new Error(`new mutation: scope contains a symlinked path and is not writable: ${JSON.stringify(relPath)}`);
     if (index < segments.length - 1 && !stat.isDirectory()) throw new Error(`new mutation: non-directory path segment is not writable: ${JSON.stringify(relPath)}`);
   }
   return absolute;
@@ -176,6 +222,7 @@ export function newScaffoldMutationTree(repoRoot: string, mutationsRel: string, 
   const normalizedRoot = resolve(repoRoot);
   const mutationRoot = resolve(normalizedRoot, mutationsRel);
   const rel = relative(normalizedRoot, mutationRoot).replaceAll("\\", "/");
+  if (rel === "compose" || rel.startsWith("compose/") || rel === "temp/compose" || rel.startsWith("temp/compose/")) throw new Error(`new mutation: scope is excluded from authoring: ${JSON.stringify(mutationsRel)}.`);
   if (policyStructuralRelativeLocator(rel) === null || !rel.endsWith(`/${POLICY_MUTATIONS_FACET}`)) throw new Error(`new mutation: scope must be a safe repository-relative ${POLICY_MUTATIONS_FACET} directory: ${JSON.stringify(mutationsRel)}.`);
   const taxonomy = loadTaxonomy();
   const identity = mutationOwnerIdentity(rel, name, taxonomy);
@@ -198,8 +245,8 @@ export function newScaffoldMutationTree(repoRoot: string, mutationsRel: string, 
     ...(options.text ? [{ relPath: `${leafRel}/📝️text/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: newScaffoldRustLeaf(`${parts.semanticKind} text codec contribution`) }] : []),
     ...(options.binary ? [{ relPath: `${leafRel}/💾️binary/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: newScaffoldRustLeaf(`${parts.semanticKind} binary codec contribution`) }] : []),
     ...(options.typescript ? [{ relPath: `${leafRel}/${POLICY_TS_COMPONENT_LEAF}`, content: newScaffoldTsLeaf(`${parts.semanticKind} mutation`) }] : []),
-    ...(options.graphql ? [{ relPath: `${leafRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🔗️graphql"].fileKindId, taxonomy)}`, content: `# 🧬️ ${NEW_SCAFFOLD_MARKER}: ${parts.variantName} GraphQL mutation input.\n` }] : []),
-    ...(options.protobuf ? [{ relPath: `${leafRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🛰️protobuf"].fileKindId, taxonomy)}`, content: `// 🧬️ ${NEW_SCAFFOLD_MARKER}: ${parts.variantName} protobuf mutation message.\n` }] : []),
+    ...(options.graphql ? [{ relPath: `${leafRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🔗️graphql"]!.fileKindId, taxonomy)}`, content: `# 🧬️ ${NEW_SCAFFOLD_MARKER}: ${parts.variantName} GraphQL mutation input.\n` }] : []),
+    ...(options.protobuf ? [{ relPath: `${leafRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🛰️protobuf"]!.fileKindId, taxonomy)}`, content: `// 🧬️ ${NEW_SCAFFOLD_MARKER}: ${parts.variantName} protobuf mutation message.\n` }] : []),
     ...(options.jsonSchema ? [{ relPath: `${leafRel}/${mutationPayloadSchemaRelativePath(taxonomy)}`, content: `${JSON.stringify({ $schema: "http://json-schema.org/draft-07/schema#", title: parts.variantName, type: "object" }, null, 2)}\n` }] : []),
   ];
   const aggregate = newMutationUpdateAggregate(normalizedRoot, rel, name, parts);

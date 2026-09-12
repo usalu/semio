@@ -9,6 +9,25 @@
     }
   },
   "targets": {
+    "fem-scalar-owners-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify fem-scalar-owners-native" }
+    },
+    "architect-window-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify architect-window-ownership oracle"
+      }
+    },
+    "architect-window-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify architect-window-ownership native"
+      }
+    },
     "window-config-pack-identity": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1652,8 +1671,18 @@
       },
       "parallelism": false,
       "dependsOn": [
-        "deps-wasm-opt"
+        "deps-wasm-opt",
+        "deps-trunk"
       ]
+    },
+    "deps-trunk": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "parallelism": false,
+      "options": {
+        "command": "bun ./📜️script.ts setup deps trunk"
+      }
     },
     "deps-wasm-opt": {
       "executor": "nx:run-commands",
@@ -2099,6 +2128,20 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts verify framework-retained-pack-ownership native"
+      }
+    },
+    "framework-retained-pack-outer-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership outer-native"
+      }
+    },
+    "framework-retained-pack-catalog-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership catalog-native"
       }
     },
     "framework-paged-list-ownership": {

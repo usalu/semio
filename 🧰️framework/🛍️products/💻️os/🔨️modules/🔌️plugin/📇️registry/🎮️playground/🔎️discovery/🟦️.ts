@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import type { RegistryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { discoverCatalogPackages, getWorkspaceRoot, registryExampleCatalog } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { discoverCatalogPackages, getWorkspaceRoot, registryCatalogInputView, registryExampleCatalog } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { generatePluginRegistry, parseTomlStringArray, readDescriptorJson, tomlBlocksAfterHeader, TAXONOMY, type GeneratePluginRegistryOptions, type PluginRegistryEntry } from "../../🔎️discovery/🟦️.ts";
 
 
@@ -157,16 +157,17 @@ export function parsePlaygroundsForCrate(manifestPath: string, pluginId: string,
 
 /** @emoji 🕹️ Scans every plugin/module crate for `[[package.metadata.semio.playground]]` rows and flattens them into one repo-wide catalog. */
 export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): PlaygroundEntry[] {
-  const entries = generatePluginRegistry(repoRoot, options);
+  const view = options.view ?? registryCatalogInputView(repoRoot, TAXONOMY);
+  const entries = generatePluginRegistry(repoRoot, { ...options, view });
   const playgrounds: PlaygroundEntry[] = [];
   for (const entry of entries) {
     const manifestPath = join(repoRoot, entry.cratePath, "Cargo.toml");
-    const crateAssets = parseAssetsForCrate(manifestPath, repoRoot, options.view);
-    const descriptor = readDescriptorJson(repoRoot, entry.cratePath, options.view);
-    for (const playground of parsePlaygroundsForCrate(manifestPath, entry.pluginId, entry.cratePath, repoRoot, options.view)) {
+    const crateAssets = parseAssetsForCrate(manifestPath, repoRoot, view);
+    const descriptor = readDescriptorJson(repoRoot, entry.cratePath, view);
+    for (const playground of parsePlaygroundsForCrate(manifestPath, entry.pluginId, entry.cratePath, repoRoot, view)) {
       const assets = crateAssets.filter((asset) => asset.app === undefined || asset.app === playground.app);
       const declared = declaredExampleIdsForPlayground(descriptor, playground.app);
-      playgrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, declared, options.view), assets });
+      playgrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, declared, view), assets });
     }
   }
   for (let i = 0; i < playgrounds.length; i++) {

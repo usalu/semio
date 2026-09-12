@@ -1,0 +1,18 @@
+syntax = "proto3";
+package semio.app.architect.program.adjacency_window_config;
+
+enum ArchitectAdjacencyWindowKindFilter {
+  ARCHITECT_ADJACENCY_WINDOW_KIND_FILTER_UNSPECIFIED = 0;
+  ARCHITECT_ADJACENCY_WINDOW_KIND_FILTER_REQUIRED = 1;
+  ARCHITECT_ADJACENCY_WINDOW_KIND_FILTER_PREFERRED = 2;
+  ARCHITECT_ADJACENCY_WINDOW_KIND_FILTER_OPTIONAL = 3;
+  ARCHITECT_ADJACENCY_WINDOW_KIND_FILTER_PROHIBITED = 4;
+}
+
+message ArchitectAdjacencyWindowConfig {
+  optional ArchitectAdjacencyWindowKindFilter adjacency_kind_filter = 1;
+}
+
+message SetArchitectAdjacencyWindowKindFilter {
+  optional ArchitectAdjacencyWindowKindFilter adjacency_kind_filter = 1;
+}

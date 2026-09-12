@@ -5,30 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "activeRegister",
     "searchQuery",
     "searchHistoryJson",
-    "activeReportJson",
     "lastResultJson",
-    "lastAnalysisJson",
-    "graphCameraX",
-    "graphCameraY",
-    "graphCameraZoom"
+    "lastAnalysisJson"
   ],
   "properties": {
-    "activeRegister": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "searchQuery": {
       "type": "string",
       "x-semio-state": "config"
     },
     "searchHistoryJson": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "activeReportJson": {
       "type": "string",
       "x-semio-state": "config"
     },
@@ -38,28 +25,6 @@
     },
     "lastAnalysisJson": {
       "type": "string",
-      "x-semio-state": "config"
-    },
-    "adjacencyKindFilter": {
-      "type": "string",
-      "enum": [
-        "required",
-        "preferred",
-        "optional",
-        "prohibited"
-      ],
-      "x-semio-state": "config"
-    },
-    "graphCameraX": {
-      "type": "number",
-      "x-semio-state": "config"
-    },
-    "graphCameraY": {
-      "type": "number",
-      "x-semio-state": "config"
-    },
-    "graphCameraZoom": {
-      "type": "number",
       "x-semio-state": "config"
     }
   }

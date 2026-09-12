@@ -1,0 +1,14 @@
+enum ArchitectAdjacencyWindowKindFilter {
+  required
+  preferred
+  optional
+  prohibited
+}
+
+type ArchitectAdjacencyWindowConfig {
+  adjacencyKindFilter: ArchitectAdjacencyWindowKindFilter
+}
+
+input SetArchitectAdjacencyWindowKindFilter {
+  adjacencyKindFilter: ArchitectAdjacencyWindowKindFilter
+}

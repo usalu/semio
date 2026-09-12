@@ -1,19 +1,6 @@
-enum AdjacencyKind {
-  required
-  preferred
-  optional
-  prohibited
-}
-
 type ArchitectConfig {
-  activeRegister: String! @state(class: CONFIG)
   searchQuery: String! @state(class: CONFIG)
   searchHistoryJson: String! @state(class: CONFIG)
-  activeReportJson: String! @state(class: CONFIG)
   lastResultJson: String! @state(class: CONFIG)
   lastAnalysisJson: String! @state(class: CONFIG)
-  adjacencyKindFilter: AdjacencyKind @state(class: CONFIG)
-  graphCameraX: Float! @state(class: CONFIG)
-  graphCameraY: Float! @state(class: CONFIG)
-  graphCameraZoom: Float! @state(class: CONFIG)
 }

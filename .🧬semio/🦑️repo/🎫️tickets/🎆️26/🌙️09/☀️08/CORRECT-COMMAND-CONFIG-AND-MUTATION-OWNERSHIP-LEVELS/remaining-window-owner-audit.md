@@ -1,5 +1,9 @@
 # Remaining Window Owner Audit
 
+## Home Finding Superseded — 2026-09-12
+
+The Home section below is historical. The refreshed source trace in `home-host-read-model-owner-refresh.md` establishes that `active_panel_tab` belongs to the host session's panel carriage, not an exact Home window. Root verified the browser's host-controller interception and `session.viewState.panelJson` update. Do not implement the older Home WindowConfig recommendation. `DirectoryHomeOwnerV1` orchestrates actions/ACKs but does not retain the directory read model; the OS projection and read-only guest boundary still require implementation. Native panel dispatch/persistence is receiving a separate read-only follow-up before removal of the Home mirror.
+
 ## Scope and method
 
 This is a read-only follow-up over the currently mounted Forms, Shooting,

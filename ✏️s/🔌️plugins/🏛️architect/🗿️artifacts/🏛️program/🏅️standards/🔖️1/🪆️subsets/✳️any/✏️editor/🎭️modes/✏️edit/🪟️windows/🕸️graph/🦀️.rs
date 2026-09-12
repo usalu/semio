@@ -1,10 +1,12 @@
 //! 🕸️ Architect graph window — the program elements and their adjacencies as an undirected
 //! node-graph surface, laid out on a circle.
 
-use crate::editor::architect::config::ArchitectConfig;
 use crate::standards::v1::subsets::any::schema::inferences::undirected_edges;
 use crate::ProgramSnapshot;
-use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, Viewport2d, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, SurfaceKind, WindowKindDefinition, WindowOptions};
+
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_GRAPH: &str = "architect-graph";
@@ -35,22 +37,8 @@ pub fn definition() -> WindowKindDefinition {
 }
 //#endregion 🔖️Definition
 
-//#region 🔖️Camera
-/// 🎥️ Ephemeral node-graph camera — read from `nodeGraphViewport`'s typed viewport payload and, on render,
-/// reassembled from `ArchitectConfig`'s flattened `graph_camera_{x,y,zoom}` fields.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct GraphCamera {
-    pub x: f64,
-    pub y: f64,
-    pub zoom: f64,
-}
-//#endregion 🔖️Camera
-
 //#region 🔖️Render
-pub fn graph_media_json(program: &ProgramSnapshot, _camera: &GraphCamera) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub fn graph_media_json(program: &ProgramSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let count = program.elements.len().max(1);
     let radius = 220.0;
     let center_x = 320.0;
@@ -93,11 +81,9 @@ pub fn graph_media_json(program: &ProgramSnapshot, _camera: &GraphCamera) -> (Ve
 /// and `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
 /// (unlike `UiNode::Tree`) — `selection`/`hover` are left at `NodeGraphScene::base`'s defaults
 /// (empty/none), matching `dag`'s main window's and `space`'s workflow window's identical gap.
-pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let camera = GraphCamera { x: cfg.graph_camera_x, y: cfg.graph_camera_y, zoom: cfg.graph_camera_zoom };
-    let (nodes, edges) = graph_media_json(program, &camera);
-    let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };
-    let scene = NodeGraphScene { editable: Some(true), capabilities_json: Some(r#"{"directedness":"undirected"}"#.into()), ..NodeGraphScene::base(nodes, edges, viewport) };
+pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectGraphWindowConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let (nodes, edges) = graph_media_json(program);
+    let scene = NodeGraphScene { editable: Some(true), capabilities_json: Some(r#"{"directedness":"undirected"}"#.into()), ..NodeGraphScene::base(nodes, edges, cfg.viewport.clone()) };
     semio_framework_plugin::scene_surface(ARCHITECT_BODY_GRAPH, semio_framework_ui_contract::SurfaceKind::NodeGraph, &scene)
 }
 //#endregion 🔖️Render

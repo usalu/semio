@@ -1,8 +1,6 @@
 /** 📋️ Architect viewer — Register window: typed twin of `🦀️.rs`'s view boundary. Mirrors
  * `render(program: &ProgramSnapshot) -> UiNode`'s read-only, document-wide register overview — every
- * non-empty register's entity count plus its draft/approved split. No per-session config (absent
- * entirely from the sibling editor surface's own Register window's typed twin, which additionally
- * carries an `activeRegister` selector — see the sibling surface's own file for that shape). */
+ * non-empty register's entity count plus its draft/approved split. No per-session config; the sibling editor surface instead owns its `activeRegister` selector in each exact Register window. */
 
 /** 📋️ Per-register entity count and dominant status — mirrors the Rust `RegisterStatusCount` struct. */
 export interface ArchitectViewRegisterStatusCount {

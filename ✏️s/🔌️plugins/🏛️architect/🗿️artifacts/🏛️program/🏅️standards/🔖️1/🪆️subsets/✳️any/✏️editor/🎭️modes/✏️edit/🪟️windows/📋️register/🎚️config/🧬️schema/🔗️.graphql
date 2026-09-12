@@ -1,0 +1,7 @@
+type ArchitectRegisterWindowConfig {
+  activeRegister: String!
+}
+
+input SetArchitectRegisterWindowActiveRegister {
+  activeRegister: String!
+}

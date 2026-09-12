@@ -481,10 +481,10 @@ export function isHostPluginFilter(pluginFilter?: string, repoRoot = getWorkspac
 
 
 
-/** 🎯️ Resolves variant aliases and closes every runtime dependency and consumed contribution. */
+/** 🎯️ Resolves aliases and runtime dependencies within the supplied catalog, or discovers an omitted catalog. */
 export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly PluginRegistryEntry[] = generatePluginRegistry(getWorkspaceRoot()), playgrounds?: readonly { readonly variant: string; readonly aliases: readonly string[]; readonly pluginId: string }[]): readonly string[] {
   const variantRow = playgrounds?.find((p) => p.variant === filterPlaygroundPlugin || p.aliases.includes(filterPlaygroundPlugin));
-  const targetPluginId = variantRow?.pluginId ?? resolveRegistryPluginIdForFilter(filterPlaygroundPlugin);
+  const targetPluginId = variantRow?.pluginId ?? (playgrounds === undefined ? resolveRegistryPluginIdForFilter(filterPlaygroundPlugin) : filterPlaygroundPlugin);
   return allEntries.some(row => row.pluginId === targetPluginId) ? runtimeComponentClosure(allEntries, [targetPluginId]) : [];
 }
 

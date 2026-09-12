@@ -1139,7 +1139,17 @@ impl Generation3dMountedPackSession {
         *self.source = Some(mounted::RetainedPackSourceCursor::try_new(pages, canonical, maximum_source_allocation_bytes)?);
         *self.anchor = Some(mounted::RetainedPackAnchorCursor::new());
         *self.segment = Some(mounted::RetainedPackSegmentCursor::try_new(limits()).map_err(|_| "generation3d-mounted.segment-preflight")?);
-        *self.catalog = Some(mounted::RetainedPackCatalogCursor::try_new(limits(), maximum_symbols as usize, self.maximum_items, canonical).map_err(|_| "generation3d-mounted.catalog-preflight")?);
+        *self.catalog = Some(
+            mounted::RetainedPackCatalogCursor::try_new(
+                limits(),
+                maximum_symbols as usize,
+                canonical,
+                canonical,
+                self.maximum_items,
+                store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,
+            )
+            .map_err(|_| "generation3d-mounted.catalog-preflight")?,
+        );
         *self.value = Some(mounted::RetainedValueCursor::try_new(limits()).map_err(|_| "generation3d-mounted.value-preflight")?);
         *self.typed = Some(Generation3dMountedTypedSnapshotOwner::new()?);
         self.phase = Generation3dMountedPackPhase::Ingress;
@@ -1211,6 +1221,9 @@ impl Generation3dMountedPackSession {
         if self.phase != Generation3dMountedPackPhase::Drive {
             return Err("generation3d-mounted.missing-seal");
         }
+        if self.next_retained_allocation_bytes()?.is_some() {
+            return Ok(false);
+        }
         if self.typed.as_mut().ok_or("generation3d-mounted.typed-owner")?.grant_symbol(self.catalog.as_ref().ok_or("generation3d-mounted.catalog-owner")?)? {
             return Ok(false);
         }
@@ -1232,6 +1245,17 @@ impl Generation3dMountedPackSession {
             let bytes = self.catalog.as_ref().expect("P3 catalog retained").document_bytes();
             self.value.as_mut().expect("P3 value owner retained").seal(bytes).map_err(|_| "generation3d-mounted.value-seal")?;
             self.value_sealed = true;
+            return Ok(false);
+        }
+        if self.catalog.as_ref().is_some_and(mounted::RetainedPackCatalogCursor::has_pending_input) {
+            let event = self.catalog.as_mut().expect("P3 catalog retained").grant().map_err(|_| "generation3d-mounted.catalog-malformed")?;
+            if let Some(event) = event {
+                match event {
+                    mounted::RetainedPackCatalogEvent::DocumentByte { index, value, .. } => self.document_byte = Some((index, value)),
+                    mounted::RetainedPackCatalogEvent::Complete => self.catalog_complete = true,
+                    _ => {}
+                }
+            }
             return Ok(false);
         }
         if self.document_byte.is_none() && !self.segment_complete && (self.segment.as_ref().ok_or("generation3d-mounted.segment-owner")?.preflight().is_err() || self.source_complete) {
@@ -1283,16 +1307,49 @@ impl Generation3dMountedPackSession {
         self.source.as_ref().map(mounted::RetainedPackSourceCursor::progress)
     }
 
-    pub fn next_source_allocation_bytes(&self) -> Result<Option<usize>, &'static str> {
-        let Some(source) = self.source.as_ref() else { return Ok(None) };
-        if source.has_reserved_page() { Ok(None) } else { source.next_allocation_bytes().map(Some) }
+    pub fn next_retained_allocation_bytes(&mut self) -> Result<Option<usize>, &'static str> {
+        let requested = if self.phase == Generation3dMountedPackPhase::Ingress {
+            let Some(source) = self.source.as_ref() else { return Ok(None) };
+            if source.has_reserved_page() { None } else { Some(source.next_allocation_bytes()?) }
+        } else if self.phase == Generation3dMountedPackPhase::Drive {
+            self.catalog.as_mut().ok_or("generation3d-mounted.catalog-owner")?.next_allocation_bytes().map_err(|fault| fault.code)?
+        } else {
+            None
+        };
+        if let Some(requested) = requested {
+            self.retained_allocated_bytes()
+                .checked_add(requested)
+                .filter(|total| *total <= store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES)
+                .ok_or("generation3d-mounted.retained-allocation-credits")?;
+        }
+        Ok(requested)
     }
 
-    pub fn reserve_source_page(&mut self, maximum_bytes: usize) -> Result<mounted::RetainedPackSourceAllocationStep, mounted::RetainedPackSourceAllocationError> {
-        self.source
-            .as_mut()
-            .ok_or(mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason: "generation3d-mounted.source-owner" })?
-            .reserve_page(maximum_bytes)
+    pub fn reserve_retained_allocation(&mut self, maximum_bytes: usize) -> Result<mounted::RetainedPackSourceAllocationStep, mounted::RetainedPackSourceAllocationError> {
+        let retained = self.retained_allocated_bytes();
+        let remaining = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES.saturating_sub(retained);
+        if self.phase == Generation3dMountedPackPhase::Ingress {
+            return self
+                .source
+                .as_mut()
+                .ok_or(mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason: "generation3d-mounted.source-owner" })?
+                .reserve_page(maximum_bytes.min(remaining));
+        }
+        if self.phase == Generation3dMountedPackPhase::Drive {
+            return self
+                .catalog
+                .as_mut()
+                .ok_or(mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason: "generation3d-mounted.catalog-owner" })?
+                .reserve_allocation(maximum_bytes.min(remaining))
+                .map(|step| mounted::RetainedPackSourceAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
+                .map_err(|error| mounted::RetainedPackSourceAllocationError { allocated_bytes: error.allocated_bytes, reason: error.fault.code });
+        }
+        Ok(mounted::RetainedPackSourceAllocationStep::default())
+    }
+
+    pub fn retained_allocated_bytes(&self) -> usize {
+        self.source.as_ref().map_or(0, mounted::RetainedPackSourceCursor::allocated_bytes)
+            + self.catalog.as_ref().map_or(0, mounted::RetainedPackCatalogCursor::allocated_bytes)
     }
 
     #[cfg(test)]
@@ -1326,9 +1383,7 @@ impl Generation3dMountedPackSession {
             return Ok(Generation3dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(catalog) = self.catalog_value.as_mut() {
-            if catalog.symbols.pop().is_some() || catalog.chunks.pop().is_some() {
-                return Ok(Generation3dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            }
+            let _ = catalog;
             drop(self.catalog_value.take());
             return Ok(Generation3dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1347,8 +1402,11 @@ impl Generation3dMountedPackSession {
             return Ok(Generation3dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(catalog) = self.catalog.as_mut() {
-            if catalog.close_step(1) != mounted::RetainedPackCloseStep::Complete {
-                return Ok(Generation3dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            match catalog.close_step(1, maximum_bytes)? {
+                mounted::RetainedPackCloseStep::Pending { released_items, released_bytes } => {
+                    return Ok(Generation3dMountedPackCloseStep::Pending { released_items, released_bytes });
+                }
+                mounted::RetainedPackCloseStep::Complete => {}
             }
             drop(self.catalog.take());
             return Ok(Generation3dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
@@ -1377,17 +1435,19 @@ impl Generation3dMountedPackSession {
         Ok(Generation3dMountedPackCloseStep::Complete)
     }
 
-    pub fn next_source_release_allocation_bytes(&self) -> Option<usize> {
+    pub fn next_retained_release_allocation_bytes(&self) -> Option<usize> {
         if self.document_byte.is_some()
             || self.page_len != 0
             || self.catalog_value.is_some()
             || self.typed.is_some()
             || self.value.is_some()
-            || self.catalog.is_some()
             || self.segment.is_some()
             || self.anchor.is_some()
         {
             return None;
+        }
+        if let Some(catalog) = self.catalog.as_ref() {
+            return catalog.next_release_allocation_bytes().ok().flatten();
         }
         self.source.as_ref()?.next_release_allocation_bytes().ok()
     }

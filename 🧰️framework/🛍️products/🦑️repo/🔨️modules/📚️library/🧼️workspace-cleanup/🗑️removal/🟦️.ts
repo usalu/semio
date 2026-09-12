@@ -1,12 +1,33 @@
 import { existsSync, rmSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { exactCargoGeneratedOutputHasLiveLease, runProbe } from "../../🟦️.ts";
-import { cleanBuildArtifactRemovals, cleanCollectMisplaced, cleanCollectWindowsIllegal, cleanDedupePreferDeepest, cleanDiscoverTicketFolders, cleanDiscoverTicketRoots, cleanGitignoredMapForTicketRoots, cleanPathBytes, cleanTicketGeneratedOutputRemovals, cleanTicketSizeRemovals } from "../🔍️candidate-discovery/🟦️.ts";
-import { CLEAN_PROTECTION_VIEW, type CleanRemoval, cleanIntersectsProtected, cleanIsProtected, cleanProjectRemovals, cleanProtectedPrefixes, cleanRemovalProtection, cleanTicketFolderForPath, cleanTicketGeneratedOutputTicketRoot, cleanTicketManifestIsClosed } from "../🛡️protection/🟦️.ts";
+import {
+  cleanBuildArtifactRemovals,
+  cleanCollectMisplaced,
+  cleanCollectWindowsIllegal,
+  cleanDedupePreferDeepest,
+  cleanDiscoverTicketFolders,
+  cleanDiscoverTicketRoots,
+  cleanGitignoredMapForTicketRoots,
+  cleanPathBytes,
+  cleanTicketGeneratedOutputRemovals,
+  cleanTicketSizeRemovals,
+} from "../🔍️candidate-discovery/🟦️.ts";
+import {
+  CLEAN_PROTECTION_VIEW,
+  type CleanRemoval,
+  cleanIntersectsProtected,
+  cleanIsProtected,
+  cleanProjectRemovals,
+  cleanProtectedPrefixes,
+  cleanRemovalProtection,
+  cleanTicketFolderForPath,
+  cleanTicketGeneratedOutputTicketRoot,
+  cleanTicketManifestIsClosed,
+} from "../🛡️protection/🟦️.ts";
 
 export function cleanRemovePath(root: string, abs: string, dry: boolean, protectedPrefixes: readonly string[], allowTicketGeneratedOutput = false, allowWindowsIllegal = false): boolean {
-  const allowedOpenTicket = (allowTicketGeneratedOutput ? cleanTicketGeneratedOutputTicketRoot(root, abs) : undefined)
-    ?? (allowWindowsIllegal ? cleanTicketFolderForPath(root, abs) : undefined);
+  const allowedOpenTicket = (allowTicketGeneratedOutput ? cleanTicketGeneratedOutputTicketRoot(root, abs) : undefined) ?? (allowWindowsIllegal ? cleanTicketFolderForPath(root, abs) : undefined);
   const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
   if (cleanIntersectsProtected(abs, applicablePrefixes) || (!allowedOpenTicket && cleanRemovalProtection(root, abs, CLEAN_PROTECTION_VIEW, allowedOpenTicket).length !== 0)) return false;
   if (allowedOpenTicket && exactCargoGeneratedOutputHasLiveLease(abs)) return false;

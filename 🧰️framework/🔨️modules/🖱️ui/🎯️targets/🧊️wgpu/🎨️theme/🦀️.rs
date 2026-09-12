@@ -103,6 +103,14 @@ pub struct Theme {
     pub panel_header_height: f32,
     pub control_height: f32,
     pub control_height_small: f32,
+    /// 🌳️ The ONE row pitch every tree presentation lays out, paints and hit-tests on —
+    /// `dom.treeRowUiSpacing` (7.5 × `--ui-spacing`), the same `--size-workbench` React's
+    /// `Tree` rows carry as `h-workbench`. See `layout::TreeRowMetrics`.
+    pub tree_row_height: f32,
+    /// 🌳️ Per-level tree indent — `dom.treeIndentPerLevelUiSpacing`, React's own gutter step.
+    pub tree_indent_per_level: f32,
+    /// 🌳️ Tree expand/collapse gutter width — `dom.treeToggleUiSpacing`.
+    pub tree_toggle_width: f32,
     pub glass_saturate: f32,
     pub font_size_body: f32,
     pub font_size_small: f32,
@@ -215,6 +223,9 @@ fn from_chrome(chrome: &ChromePalette, presence_appearance: PresenceAppearance) 
         panel_header_height: chrome_px(chrome_metrics::PANEL_HEADER_HEIGHT_UI_SPACING),
         control_height: chrome_px(chrome_metrics::CONTROL_HEIGHT_UI_SPACING),
         control_height_small: chrome_px(5.0),
+        tree_row_height: chrome_px(dom::TREE_ROW_UI_SPACING),
+        tree_indent_per_level: chrome_px(dom::TREE_INDENT_PER_LEVEL_UI_SPACING),
+        tree_toggle_width: chrome_px(dom::TREE_TOGGLE_UI_SPACING),
         glass_saturate: levels::GLASS_SATURATE as f32,
         font_size_body: typography::TEXT_SM_PX as f32,
         font_size_small: typography::TEXT_XS_PX as f32,

@@ -876,3 +876,15 @@ Ticket inputs: updated `🔬️native-inventory/🦀️test-inputs/📜️script
 - Renderer engine `🧪️tests/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts`: private canonical workspace freshness fixture.
 - Ticket probes `🔬️native-inventory/🧬️generator-ownership/📜️script.ts`, `🔬️native-inventory/🧊️wgpu/📜️script.ts`, `🔬️native-inventory/📦️command-boundaries/📜️script.ts`; retained generator-ownership/inventory/build-contract reports.
 - Actual generators refreshed frame-worker JS, boot JS, UI axes, plugin registry and `.vscode/launch.json`; concurrent changes to those shared generated files remain authoritative.
+
+Native editor follow-up: corrected the scale-fixture native build launcher and added WGPU Rust, viewport Rust and package-body oracle build/check/test launchers in `.vscode/🧩️launch.seed.jsonc`. Regenerated `.vscode/launch.json` through the registry Nx target. Added the retained ticket census `🔬️native-inventory/🚀️launch/📜️script.ts`; its generated native graph findings and logs remain under the ticket generated directory until completion.
+
+Native renderer output follow-up: added WGPU `🏗️compiler/🦀️native/📜️script.ts`, narrowed the TypeScript package router to native execution, and corrected both native build targets' output roots and commands in its `📋️project.json`. Updated the native binary expectations in caching `🧫️fixtures/nx-contract/🔣️.json`. Added caching `🧪️tests/🧊️native-renderer-outputs/{🔣️.json,🧬️schema/🔣️.json,🟦️.ts}`, registered the native Cargo/Nx restoration regression in cache-contracts, and added ticket `🔬️native-inventory/🧊️native-outputs/📜️script.ts` plus `📓️native-renderer-outputs.md`.
+
+Trunk preparation: changed root `📜️script.ts` and `📋️project.json`, WGPU TypeScript router/project metadata, the launcher seed and generated launch file, and caching Trunk lockfile fixture/test. Added ticket `🔬️native-inventory/🛠️trunk/📜️script.ts` and `📓️trunk-prerequisites.md`.
+
+Playground discovery: changed registry `🎮️playground/🔎️discovery/🟦️.ts` to reuse one input view. Added caching `🧪️tests/🎮️playground-input-view/{🔣️.json,🟦️.ts}`, registered it in cache-contracts, and added ticket `🔬️native-inventory/🎮️playground/📜️script.ts` and `📓️playground-discovery.md`. Native process sampling output belongs to the ticket generated directory.
+
+Projected session follow-up: registry `🔎️discovery/🟦️.ts` now resolves supplied catalog IDs without live discovery. The playground input-view test covers bare IDs, aliases and unknown IDs using existing runtime-component vectors and a guard against live reads; the ticket probe also compares every real default/explicit session projection.
+
+- Follow-up bootstrap correction: inferred-test plugin command inputs are deferred until a canonical case exists; the dependency-bootstrap neutral fixture includes `🧪️test/🕸️dependencies/🟨️.mjs`; CORE validates physical producer bindings only for contracts with discovered participants. Added ticket probe `🔬️native-inventory/🛠️tooling/📜️script.ts` and empty-project regression alongside invalid producer rejection.

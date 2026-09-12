@@ -13329,7 +13329,7 @@ pub mod app {
     pub const INTERACTIVE_TURN_WORKER_WALL_US: u64 = 4_000;
     /// 🏃️ Publication units one continuation unit may run before it hands its turn back, the exact twin of
     /// [`INTERACTIVE_TURN_WORKER_PUMPS`] for the publication ladder.
-    pub const TYPED_OPERATION_PUBLICATION_PUMPS: usize = 256;
+    pub const TYPED_OPERATION_PUBLICATION_PUMPS: usize = 1;
     const TYPED_OPERATION_HOST_OUTBOX_SLOTS: usize = 64;
     const TYPED_OPERATION_FAULT_BYTES: usize = 256;
 
@@ -22192,7 +22192,7 @@ pub mod app {
         #[cfg(test)]
         pub(crate) async fn test_history(&mut self) -> HistoryView {
             self.refresh_cache().await.expect("refresh cache");
-            self.build_history_view().await
+            self.build_history_view(None).await
         }
 
         /// @emoji 📸️ Materializes and returns the current snapshot — the typed counterpart to
@@ -22302,7 +22302,16 @@ pub mod app {
             }
         }
 
-        async fn build_history_view(&self) -> HistoryView {
+        /// 🧾️ Projects the whole command log into its host view, reusing the op text a PREVIOUS view
+        /// already printed for every edit that did not grow.
+        ///
+        /// ⏱️ Both reuses are what make this O(changed) instead of O(n²) (ticket
+        /// 26/09/02/PUZZLE-3D-END-TO-END wave B54). A mutation bumps `log_generation`, so
+        /// [`Self::refresh_cache`]'s incremental arm misses and this runs on every single completion —
+        /// and it used to resolve each row's edit by a LINEAR scan of the whole edit list (161 rows ×
+        /// 161 edits on the battery's brush-painted document) and re-`print_op` every operation of every
+        /// edit in the log, both for rows whose text had not changed since the last projection.
+        async fn build_history_view(&self, previous: Option<&HistoryView>) -> HistoryView {
             let applied_ids: HashSet<&str> = self.store.applied_edit_ids().iter().map(String::as_str).collect();
             let local_actor = self.store.local_actor_id();
             let config_applied_ids: HashSet<&str> = self.config_store.applied_edit_ids().iter().map(String::as_str).collect();
@@ -22311,14 +22320,20 @@ pub mod app {
             // awaiting once here is strictly cheaper than re-awaiting per row.
             let envelope = self.store.envelope();
             let config_envelope = self.config_store.envelope();
+            let edits_by_id: HashMap<&str, &protocol::Edit<A::Mutation>> = envelope.vcs.edits.iter().map(|edit| (edit.id.as_str(), edit)).collect();
+            let config_edits_by_id: HashMap<&str, &protocol::Edit<A::ConfigMutation>> = config_envelope.vcs.edits.iter().map(|edit| (edit.id.as_str(), edit)).collect();
+            let printed: HashMap<&str, &[String]> =
+                previous.map_or_else(HashMap::new, |previous| previous.commands.iter().filter_map(|row| row.edit_id.as_deref().map(|edit_id| (edit_id, row.op_lines.as_slice()))).collect());
             // 🌉️ Rewritten from a `.map(|entry| {...}).collect()` into an explicit loop (sync —
             // `Iterator::map` cannot take an async closure, and `OpText::print_op` is genuinely async).
             let mut commands: Vec<CommandView> = Vec::with_capacity(self.command_log.len());
             for entry in self.command_log.iter() {
-                let edit = entry.edit_id.as_deref().and_then(|edit_id| envelope.vcs.edits.iter().find(|edit| edit.id == edit_id));
+                let edit = entry.edit_id.as_deref().and_then(|edit_id| edits_by_id.get(edit_id).copied());
                 let mut op_lines = Vec::new();
                 if let Some(edit) = edit {
-                    for op in edit.forwards.iter() {
+                    let retained = entry.edit_id.as_deref().and_then(|edit_id| printed.get(edit_id).copied()).filter(|lines| lines.len() <= edit.forwards.len()).unwrap_or_default();
+                    op_lines.extend_from_slice(retained);
+                    for op in edit.forwards.iter().skip(retained.len()) {
                         op_lines.push(op.print_op());
                     }
                 }
@@ -22326,7 +22341,7 @@ pub mod app {
                 // with no recorded actor is treated as local, same as a real undo would.
                 let applied = entry.edit_id.as_deref().is_some_and(|edit_id| applied_ids.contains(edit_id));
                 let latest_config_edit_id = entry.config_edit_ids.last().map(String::as_str);
-                let config_edit = latest_config_edit_id.and_then(|edit_id| config_envelope.vcs.edits.iter().find(|edit| edit.id == edit_id));
+                let config_edit = latest_config_edit_id.and_then(|edit_id| config_edits_by_id.get(edit_id).copied());
                 let config_applied = latest_config_edit_id.is_some_and(|edit_id| config_applied_ids.contains(edit_id));
                 // ⏪️ Three disjoint ways a row earns "inverse": document edit-linked (applied +
                 // locally authored), config edit-linked (same, on the config store — B1's replacement
@@ -22430,6 +22445,11 @@ pub mod app {
                 Some((cached_key, _, config, _)) if cached_key.1 == key.1 => std::sync::Arc::clone(config),
                 _ => self.config_store.snapshot_owner(),
             };
+            // 🧾️ Whichever arm runs, the projection the previous cache holds is handed to the REBUILD so
+            // every row whose edit did not grow keeps the op text it already printed. A mutation bumps
+            // `log_generation`, so the incremental arm misses and the rebuild is what every completion
+            // actually pays. The `Arc` must NOT be cloned before `Arc::get_mut` below or the incremental
+            // arm can never take its unique reference again.
             let history = match cached {
                 Some((cached_key, _, _, mut history)) if cached_key.2 == key.2 && cached_key.3 == key.3 => {
                     let envelope = self.store.envelope();
@@ -22449,10 +22469,10 @@ pub mod app {
                     if extended == Some(true) {
                         history
                     } else {
-                        std::sync::Arc::new(self.build_history_view().await)
+                        std::sync::Arc::new(self.build_history_view(Some(history.as_ref())).await)
                     }
                 }
-                _ => std::sync::Arc::new(self.build_history_view().await),
+                retained => std::sync::Arc::new(self.build_history_view(retained.as_ref().map(|(_, _, _, history)| history.as_ref())).await),
             };
             self.cache = Some((key, snapshot, config, history));
             Ok(())
@@ -28095,7 +28115,7 @@ pub mod app {
             let window_transient = self.window_transient_store.capture(Some(view_state))?;
             if let Some(json) = snapshot_override_json {
                 let snapshot: A::Snapshot = dsl::json::from_json_str(json).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-                let history = self.build_history_view().await;
+                let history = self.build_history_view(None).await;
                 let doc = ArtifactView::new(&snapshot, &history);
                 let config = self.config_store.snapshot().unwrap_or_else(|_| A::Config::default());
                 let cfg = ConfigView { snapshot: &config, window: window_config.as_ref().map(|authority| &authority.snapshot) };

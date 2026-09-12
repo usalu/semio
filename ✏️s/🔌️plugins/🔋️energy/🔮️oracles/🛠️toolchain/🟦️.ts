@@ -1,13 +1,14 @@
 import { createHash } from "node:crypto";
 import { createReadStream, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { arch, platform } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { getRepoMetaDir, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 export type OraclePlatformAsset = { asset: string; bytes: number; sha256: string };
 export type OracleToolManifest = { tool: string; version: string; bundles: Record<string, string>; downloadUrlTemplate: string; stripComponents: number; binaries: Record<string, string>; platforms: Record<string, OraclePlatformAsset> };
 export type OracleManifest = { tools: OracleToolManifest[]; python: { version: string } };
 const ORACLE_PLATFORMS = ["darwin-arm64", "darwin-x64", "linux-arm64", "linux-x64", "win32-arm64", "win32-x64"] as const;
+const ORACLE_MANIFEST = "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🛠️toolchain/🔣️.json";
 
 /** 🛂️ Admits only complete, literal, cross-platform toolchain pins. */
 export function validateOracleManifest(value: unknown): OracleManifest {
@@ -29,9 +30,9 @@ export function oraclePlatformKey(): string {
   return `${platform()}-${arch()}`;
 }
 
-/** 📇️ Reads the committed toolchain pin table from its package container. */
-export function oracleManifest(packageRoot: string): OracleManifest {
-  return validateOracleManifest(JSON.parse(readFileSync(join(packageRoot, "🔣️.json"), "utf8")));
+/** 📇️ Reads the committed toolchain pin table from its semantic owner. */
+export function oracleManifest(repoRoot: string): OracleManifest {
+  return validateOracleManifest(JSON.parse(readFileSync(resolve(repoRoot, ORACLE_MANIFEST), "utf8")));
 }
 
 /** 🗂️ Resolves one pinned toolchain's repository cache owner. */
@@ -72,8 +73,8 @@ export async function ensureOracleTool(repoRoot: string, tool: OracleToolManifes
 }
 
 /** 🌍️ Binds every declared tool root into an oracle process environment. */
-export function oracleEnvironment(repoRoot: string, packageRoot: string): NodeJS.ProcessEnv {
+export function oracleEnvironment(repoRoot: string): NodeJS.ProcessEnv {
   const resolved: NodeJS.ProcessEnv = { ...process.env };
-  for (const tool of oracleManifest(packageRoot).tools) resolved[`SEMIO_ORACLE_${tool.tool.toUpperCase()}_ROOT`] = oracleToolDirectory(repoRoot, tool);
+  for (const tool of oracleManifest(repoRoot).tools) resolved[`SEMIO_ORACLE_${tool.tool.toUpperCase()}_ROOT`] = oracleToolDirectory(repoRoot, tool);
   return resolved;
 }

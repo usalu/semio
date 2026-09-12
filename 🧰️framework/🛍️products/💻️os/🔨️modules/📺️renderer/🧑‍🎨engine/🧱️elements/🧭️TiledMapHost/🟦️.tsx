@@ -409,18 +409,27 @@ export class MapRenderer {
   setRenderMode(mode: MapRenderMode): void {
     this.renderMode = mode;
     this.session.setRenderMode(mode);
+    this.invalidate();
   }
 
   setVectorStyle(style: MapVectorStyle): void {
     this.session.setVectorStyle(style);
+    this.invalidate();
   }
 
   setLayerVisibilityJson(json: string): void {
     this.session.setLayerVisibilityJson(json);
+    this.invalidate();
   }
 
   setLayerStrokeScaleJson(json: string): void {
     this.session.setLayerStrokeScaleJson(json);
+    this.invalidate();
+  }
+
+  syncInteraction(selectionJson: string, hoverJson: string): void {
+    syncMapInteraction(this.session, selectionJson, hoverJson);
+    this.invalidate();
   }
 
   setLodMode(mode: string): void {
@@ -897,7 +906,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
           }
         }
         renderer.syncDescriptor(scene.mapFixtureJson);
-        syncMapInteraction(renderer.session, scene.selectionJson, scene.hoverJson);
+        renderer.syncInteraction(scene.selectionJson, scene.hoverJson);
         await renderer.refreshTiles();
         renderer.startLoop();
       };
@@ -957,7 +966,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
 
   useEffect(() => {
     if (!scene || !rendererRef.current) return;
-    syncMapInteraction(rendererRef.current.session, scene.selectionJson, scene.hoverJson);
+    rendererRef.current.syncInteraction(scene.selectionJson, scene.hoverJson);
   }, [scene?.selectionJson, scene?.hoverJson]);
 
   useEffect(() => {

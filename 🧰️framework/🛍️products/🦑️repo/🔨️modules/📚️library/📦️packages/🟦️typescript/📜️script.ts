@@ -5,6 +5,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
 import { BundleScript, ScriptRouter, canonicalGoPlan, computeWorkspaces, runBundleScriptMain, runBunx, runCanonicalGoTests, resolveTestLevel, runTestBudgeted } from "./🟦️.ts";
+import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 
 /** 🧫️ Allocates one exclusive no-follow semantic run owner and its bundle directory. */
 export function transactionV2BundleRoot(repoRoot: string, runId: string): string {
@@ -61,15 +62,14 @@ class GoTestScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "process-budgets") {
-      if (process.env.SEMIO_TEST_ARTIFACT_DIR) mkdirSync(process.env.SEMIO_TEST_ARTIFACT_DIR, { recursive: true });
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts");
-      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot, budgetMs: 30_000 });
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "process-budgets"), budgetMs: 30_000 });
       return;
     }
     if (segments[0] === "exact-cargo-laws") {
       if (segments.length !== 1) throw new Error("Expected test exact-cargo-laws");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️exact-cargo-laws/🟦️.ts");
-      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "exact-cargo-laws") });
       return;
     }
     if (segments[0] === "go-input-projection") {
@@ -132,6 +132,12 @@ class TestScript extends BundleScript {
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 45_000 });
       return;
     }
+    if (segments[0] === "root-artifact-schema-law-source") {
+      if (segments.length !== 1) throw new Error("Expected test root-artifact-schema-law-source");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-artifact-schema-law-source/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 45_000 });
+      return;
+    }
     if (segments[0] === "framework-root-source-topology") {
       if (segments.length !== 1) throw new Error("Expected test framework-root-source-topology");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧰️framework-root-source-topology/🟦️.ts");
@@ -147,6 +153,12 @@ class TestScript extends BundleScript {
     if (segments[0] === "plugin-publication-source-ownership") {
       if (segments.length !== 1) throw new Error("Expected test plugin-publication-source-ownership");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📣️plugin-publication-source-ownership/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 30_000 });
+      return;
+    }
+    if (segments[0] === "app-verification-source-ownership") {
+      if (segments.length !== 1) throw new Error("Expected test app-verification-source-ownership");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📱️app-verification-source-ownership/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 30_000 });
       return;
     }
@@ -236,7 +248,7 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "taxonomy-cli-cancellation") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛑️taxonomy-cli-cancellation/🟦️.ts");
-      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "taxonomy-cli-cancellation") });
       return;
     }
     if (segments[0] === "inventory-artifact-shards") {
@@ -381,7 +393,7 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "artifact-empty-facet-authoring") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪶️artifact-empty-facet-authoring/🟦️.ts");
-      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "artifact-empty-facet-authoring"), budgetMs: 30_000 });
       return;
     }
     if (segments[0] === "readme-reviewed-fixture-inputs") {
@@ -552,7 +564,7 @@ class TestScript extends BundleScript {
       return;
     }
     const { rest } = resolveTestLevel(segments);
-    await runTestBudgeted(process.execPath, ["test", "../../🧪️tests/🔬️workspace-contract/🟦️.ts", ...rest], { cwd: this.root });
+    await runTestBudgeted(process.execPath, ["test", "../../🧪️tests/🔬️workspace-contract/🟦️.ts", ...rest], { cwd: this.root, env: repoTestArtifactEnvironment(this.repoRoot, "workspace-contract") });
   }
 }
 

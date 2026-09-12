@@ -10,13 +10,13 @@ async fn definition_declares_the_adjacency_surface_and_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_matrix_renders_a_triangle_strip_with_element_labels() {
-    let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &ArchitectConfig::default()));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &config::ArchitectAdjacencyWindowConfig::default()));
     assert!(json.contains('▲'));
     assert!(json.contains("Reception"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_empty_program_renders_the_placeholder() {
-    let json = crate::editor::architect::unit_tests::context::project_render(render(&empty_plugin(), &ArchitectConfig::default()));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&empty_plugin(), &config::ArchitectAdjacencyWindowConfig::default()));
     assert!(json.contains("Add program elements"));
 }

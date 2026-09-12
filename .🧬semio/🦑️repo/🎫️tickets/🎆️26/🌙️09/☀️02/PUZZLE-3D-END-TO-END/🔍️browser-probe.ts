@@ -30,6 +30,15 @@ const battery = process.argv.includes("--battery");
 const onlyArg = process.argv.find((a) => a.startsWith("--only="))?.slice(7);
 const only = onlyArg ? new Set(onlyArg.split(",").map((name) => name.trim()).filter(Boolean)) : null;
 const reloadBetweenGroups = process.argv.includes("--reload-between-groups");
+/** 🪣️ Value the Fill tool's parameter slider is driven to in `fill-apply-max`; `0` presses `End` (its
+ * maximum) as the step name says.
+ *
+ * 🧪️ This is NOT an object-count bound and cannot be one: the slider's rail is `min=0 max=1000`, and the
+ * `puzzle3d.brush.*` objects are registered by the fill BUILD job that the armed Fill tool starts, not by
+ * the slider. Measured on :6013 — `End` (1000) leaves 160 brush objects, `--paint-limit=12` leaves 127.
+ * What keeps the rest of the `mutate` group on a document its verdicts can reason about is
+ * {@link STEP_TRAILS_ITS_GROUP}, which runs the whole fill suite LAST. */
+const paintLimit = Number(process.argv.find((a) => a.startsWith("--paint-limit="))?.slice(14) ?? "0") || 0;
 const STEP_FLAGS = [
   "--clipboard", "--marquee", "--importexport", "--import", "--locked", "--brush", "--gumball", "--suggestions", "--undo", "--selection", "--fill", "--reserved-family", "--frame",
   "--windows", "--camera", "--projection", "--windowoptions", "--volume", "--relocate", "--engagement", "--contextmenu", "--outliner", "--catalogue", "--settings", "--keys", "--adddialog", "--locale",
@@ -267,6 +276,7 @@ await page.screenshot({ path: join(OUT, `probe-${stamp}-boot.png`) }).catch(() =
 if (booted && interact) {
   const step = async (name: string, fn: () => Promise<void>) => {
     const before = faults.length;
+    stepInstances = (await dumpInstances().catch(() => ({ count: -1 }))).count;
     try {
       await fn();
       await page.waitForTimeout(4000);
@@ -306,18 +316,40 @@ if (booted && interact) {
    * for can never be present (wave B33 §7.2). The step is self-contained — it frames, selects through the
    * outliner and disarms the utility itself — so leading the group costs it nothing. */
   const STEP_LEADS_ITS_GROUP: readonly string[] = ["context-menu-rows"];
+  /** 🪣️ Steps whose SIDE EFFECT is a document no later verdict can reason about, pushed to the back of
+   * their group (relative order preserved).
+   *
+   * 🧮️ The Fill suite is one of these: arming the Fill tool starts a build job that registers **160**
+   * `puzzle3d.brush.*` objects on the Concrete Forest fixture, and battery #61 ran `clipboard-copy-paste`,
+   * `locked-refusal`, `outliner-rows`, `catalogue-panel`, `volume-brush` and `selection-keybindings` — six
+   * steps, eleven verdicts — against that 161-object document while every one of them passes on the 1-2
+   * object fixture (wave B55 fresh lanes). Bounding the fill is not an option: the count is the build job's,
+   * not the slider's (see {@link paintLimit}). Running it last is, and it costs the fill suite nothing —
+   * its own precondition is the tool category, which `context-menu-rows`/`pick-object` still establish. */
+  const STEP_TRAILS_ITS_GROUP: readonly string[] = ["tool-category", "fill-tab", "fill-abort-engagement", "fill-wait-ready", "fill-apply-max", "fill-history"];
   const groupEntries = (group: StepGroup) => {
     const entries = plan.filter((entry) => entry.group === group);
     const leads = entries.filter((entry) => STEP_LEADS_ITS_GROUP.includes(entry.name));
-    return [...leads, ...entries.filter((entry) => !leads.includes(entry))];
+    const trails = entries.filter((entry) => STEP_TRAILS_ITS_GROUP.includes(entry.name));
+    const middle = entries.filter((entry) => !leads.includes(entry) && !trails.includes(entry));
+    return [...leads, ...middle, ...trails];
   };
   const verdicts: string[] = [];
   let passCount = 0;
   let failCount = 0;
   let currentStep = "boot";
   let currentSection = "§0";
+  let currentGroup: StepGroup | "boot" = "boot";
+  /** 🧮️ Instance count of `puzzle3d-main-perspective` sampled by {@link step} immediately BEFORE the step
+   * body, `-1` while none has been taken. Every `mutate` verdict carries it, because the same gesture on a
+   * 1-object document and on a 161-object one are two different measurements and a bare PASS/FAIL cannot
+   * tell them apart — battery #61 read `outliner-hide-control-present controls=[]`,
+   * `catalogue-add-selects-new-object added=0` and `copyEffects=["0","0"]` against a document the fill
+   * slider had painted 160 brush objects into, with nothing in the verdict saying so (wave B55). */
+  let stepInstances = -1;
   const verdict = (name: string, ok: boolean, note: string, expectTag?: 41 | 42) => {
-    const line = ok ? `verdict ${name} PASS` : `verdict ${name} FAIL${expectTag ? ` [expect-${expectTag}]` : ""} ${note}`;
+    const census = currentGroup === "mutate" ? ` instances=${stepInstances}@step-start` : "";
+    const line = ok ? `verdict ${name} PASS${census}` : `verdict ${name} FAIL${expectTag ? ` [expect-${expectTag}]` : ""}${census} ${note}`;
     verdicts.push(line);
     if (ok) passCount += 1;
     else failCount += 1;
@@ -336,6 +368,8 @@ if (booted && interact) {
       distinctFaults: faultKeys.size,
       guestDeathFaults: guestDeathFaults.length,
       firstHardFaultAt,
+      group: currentGroup,
+      instancesAtStepStart: stepInstances,
     });
     log(line);
   };
@@ -413,22 +447,40 @@ if (booted && interact) {
   const ensurePanel = async (tabId: string, bodySelector?: string) => {
     const body = bodySelector ?? PANEL_BODY_SELECTORS[tabId];
     const bodyCount = async () => (body ? evalSafe((selector) => document.querySelectorAll(selector).length, 0, body) : 0);
-    const tabActive = async () =>
+    /** 🪪️ Pressed state of the panel TAB BUTTON, read off the one element that publishes it.
+     *
+     * A `panel-tab-button` carries `data-slot="panel-tab-button" data-tab-id="<id>" aria-pressed="true|false"`
+     * and no `aria-selected`, `data-state` or `data-active` at all (measured on :6013). Two things made the
+     * old reader answer `true` for a tab that was not pressed, which is how battery #62's `outliner-rows`
+     * skipped the press and then measured the INSPECTION panel's rows
+     * (`ensurePanel framework.panel.artifact already-open active=true body=0`, `outliner row controls=[]`):
+     * it resolved the id with `getElementById` and climbed with `closest`, so any OTHER element sharing the
+     * id decided the answer; and it substring-tested a CONCATENATION of four attributes, in which a single
+     * `data-state="inactive"` matches `/active/`. Values are compared whole, and the tab button is addressed
+     * as itself. */
+    const tabButtonState = async () =>
       evalSafe(
         (id) => {
-          const tab = document.getElementById(id);
-          if (!tab) return null;
-          const button = (tab.closest('[role="tab"], [data-slot="panel-tab-button"]') ?? tab) as HTMLElement;
-          // 🪪️ `aria-pressed` is what a `panel-tab-button` actually publishes — the dump of the live
-          // control reads `aria-pressed=false` and carries no `aria-selected`, `data-state` or
-          // `data-active` at all (wave B45). Leaving it out made `tabActive` answer `false` for EVERY
-          // panel tab, which turned the tab's own state into dead weight.
-          const state = `${button.getAttribute("aria-selected") ?? ""}${button.getAttribute("data-state") ?? ""}${button.getAttribute("data-active") ?? ""}${button.getAttribute("aria-pressed") ?? ""}`;
-          return /true|active|selected|open/i.test(state);
+          const button = (document.querySelector(`[data-slot="panel-tab-button"][data-tab-id="${id}"]`) ??
+            document.querySelector(`[data-slot="panel-tab-button"][id="${id}"]`) ??
+            document.getElementById(id)) as HTMLElement | null;
+          if (!button) return null;
+          const read = (name: string) => (button.getAttribute(name) ?? "").trim().toLowerCase();
+          const ACTIVE = new Set(["true", "active", "open", "on", "selected"]);
+          return {
+            slot: button.getAttribute("data-slot"),
+            pressed: read("aria-pressed"),
+            selected: read("aria-selected"),
+            state: read("data-state"),
+            active: read("data-active"),
+            ok: ACTIVE.has(read("aria-pressed")) || ACTIVE.has(read("aria-selected")) || ACTIVE.has(read("data-state")) || ACTIVE.has(read("data-active")),
+            sharedIds: Array.from(document.querySelectorAll("[id]")).filter((el) => el.id === id).length,
+          };
         },
-        null as boolean | null,
+        null as null | { slot: string | null; pressed: string; selected: string; state: string; active: string; ok: boolean; sharedIds: number },
         tabId,
       );
+    const tabActive = async () => (await tabButtonState())?.ok ?? null;
     // 🧾️ EITHER observable proves the panel is open, and neither can veto the other. The body is the
     // richer signal — a branch tab that mounts its `order: 0` child never marks itself
     // (`framework.settings`) — but an open panel whose body has not been PUBLISHED yet renders zero rows,
@@ -441,7 +493,7 @@ if (booted && interact) {
     const present = await evalSafe((id) => Boolean(document.getElementById(id)), false, tabId);
     const before = { active: await tabActive(), body: await bodyCount() };
     if (isOpen(before)) {
-      log(`ensurePanel ${tabId} already-open active=${String(before.active)} body=${before.body} clicked=false`);
+      log(`ensurePanel ${tabId} already-open active=${String(before.active)} body=${before.body} clicked=false tab=${JSON.stringify(await tabButtonState())}`);
       return { opened: true, clicked: false, present, body: before.body, waitedMs: 0 };
     }
     if (!present) {
@@ -719,15 +771,35 @@ if (booted && interact) {
     });
     add("fill-apply-max", "§12", "mutate", process.argv.includes("--fill") || battery, async () => {
       const slider = page.locator('[role="slider"]').first();
-      if (await slider.count()) {
-        await slider.focus();
+      if (!(await slider.count())) {
+        log("no slider found for fill-apply");
+        return;
+      }
+      await slider.focus();
+      const rail = await evalSafe(
+        () => {
+          const node = document.querySelector('[role="slider"]');
+          const read = (name: string) => Number(node?.getAttribute(name) ?? "");
+          return { min: read("aria-valuemin"), max: read("aria-valuemax"), now: read("aria-valuenow") };
+        },
+        { min: NaN, max: NaN, now: NaN },
+      );
+      const target = paintLimit > 0 && Number.isFinite(rail.max) ? Math.min(paintLimit, rail.max) : rail.max;
+      log(`fill rail=${JSON.stringify(rail)} paintLimit=${paintLimit} target=${target}`);
+      if (paintLimit > 0 && Number.isFinite(target) && target < rail.max) {
+        await page.keyboard.press("Home");
+        await page.waitForTimeout(400);
+        const steps = Math.max(0, Math.round(target - (Number.isFinite(rail.min) ? rail.min : 0)));
+        for (let hop = 0; hop < steps; hop++) await page.keyboard.press("ArrowRight");
+      } else {
         await page.keyboard.press("End");
-        await page.waitForTimeout(8000);
-        const after = await fillState();
-        log(`fill state after End: ${JSON.stringify(after).slice(0, 600)}`);
-        log(`fill count after End: ${fillCountFromState(after)}`);
-        log(`fill census after End: ${JSON.stringify(fillConsoleCensus())}`);
-      } else log("no slider found for fill-apply");
+      }
+      await page.waitForTimeout(8000);
+      const after = await fillState();
+      log(`fill state after End: ${JSON.stringify(after).slice(0, 600)}`);
+      log(`fill count after End: ${fillCountFromState(after)}`);
+      log(`fill census after End: ${JSON.stringify(fillConsoleCensus())}`);
+      log(`fill instances after End: ${JSON.stringify(await dumpInstances()).slice(0, 200)}`);
     });
   }
   const chromeState = async () =>
@@ -3633,12 +3705,31 @@ if (booted && interact) {
               chain.push(`${node.tagName}${node.id ? `#${node.id}` : ""}${node.getAttribute("data-slot") ? `[${node.getAttribute("data-slot")}]` : ""}${node.hasAttribute("data-semio-portal-layer") ? "[portal-layer]" : ""} pe=${style.pointerEvents} z=${style.zIndex} pos=${style.position} iso=${style.isolation} tf=${style.transform === "none" ? "none" : "set"}`);
               if (chain.length >= 10) break;
             }
+            const chrome = row.closest('[data-slot="context-menu-content"]') as HTMLElement | null;
+            const sheets: string[] = [];
+            for (const sheet of Array.from(document.styleSheets)) {
+              let rules: CSSRuleList | null = null;
+              try {
+                rules = sheet.cssRules;
+              } catch {
+                sheets.push("cors-opaque");
+                continue;
+              }
+              for (const rule of Array.from(rules ?? [])) {
+                const text = (rule as CSSStyleRule).selectorText ?? "";
+                if (/\.z-menu\b|\.z-dialog\b|\.z-pane\b/.test(text)) sheets.push(`${text} { ${(rule as CSSStyleRule).style?.zIndex ?? "?"} }`);
+              }
+            }
             const hit = document.elementFromPoint(cx, cy) as HTMLElement | null;
             const stack = (document as unknown as { elementsFromPoint?: (x: number, y: number) => Element[] }).elementsFromPoint?.(cx, cy) ?? [];
             return {
               row: `${row.id || row.tagName} at ${Math.round(cx)},${Math.round(cy)}`,
               hit: hit ? `${hit.tagName}${hit.id ? `#${hit.id}` : ""} pe=${window.getComputedStyle(hit).pointerEvents} z=${window.getComputedStyle(hit).zIndex}` : "nothing",
               hitsRowOrDescendant: Boolean(hit && (hit === row || row.contains(hit))),
+              chromeClass: chrome?.className ?? "absent",
+              chromeZ: chrome ? window.getComputedStyle(chrome).zIndex : "absent",
+              zMenuToken: chrome ? window.getComputedStyle(chrome).getPropertyValue("--z-menu").trim() || "unset" : "absent",
+              levelZRules: sheets.slice(0, 8),
               stack: stack.slice(0, 8).map((el) => `${el.tagName}${el.id ? `#${el.id}` : ""}${el.getAttribute("data-slot") ? `[${el.getAttribute("data-slot")}]` : ""}`),
               chain,
             };
@@ -3970,10 +4061,12 @@ if (booted && interact) {
     for (const entry of entries) {
       currentStep = entry.name;
       currentSection = entry.section;
+      currentGroup = group;
       await step(entry.name, entry.run);
     }
     currentStep = `guest-alive-${group}`;
     currentSection = "§0";
+    currentGroup = "boot";
     const vitals = await guestVitals();
     const deaths = guestDeathFaults.length;
     verdict(
