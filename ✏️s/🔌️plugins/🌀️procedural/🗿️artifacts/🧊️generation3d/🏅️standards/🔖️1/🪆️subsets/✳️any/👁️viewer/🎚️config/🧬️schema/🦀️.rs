@@ -18,7 +18,7 @@ pub struct Generation3dViewConfig {
     #[state(config)]
     pub sun_json: String,
     #[state(config)]
-    pub active_example_id: String,
+    pub active_example_id: Option<String>,
 }
 
 //#region 🔁️Re-exports

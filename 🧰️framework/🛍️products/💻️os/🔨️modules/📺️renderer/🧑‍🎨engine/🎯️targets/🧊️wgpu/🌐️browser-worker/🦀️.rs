@@ -670,8 +670,34 @@ impl BrowserRendererBootstrap {
     }
 }
 
+/// 💥️ Routes a Rust panic in the frame Worker to `console.error`, ONCE, at boot.
+///
+/// ⚖️ `wasm32-unknown-unknown` has no stderr, and this crate installed no hook: a panic aborted the
+/// wasm instance with no message at all, and the only visible consequence was the NEXT call into a
+/// `#[wasm_bindgen] &mut self` method failing with `recursive use of an object detected which would
+/// lead to unsafe aliasing in rust` — the poisoned borrow the aborted call left behind. Measured on
+/// 6118: a marquee release on the World3d preview killed the renderer with exactly that message and
+/// nothing else, and every later pointer, wheel and key was silently dead
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`).
+///
+/// This is the same class of defect as the 27 dead `eprintln!` traces
+/// (`📓️wgpu-input-hit-runtime-2026-09-13.md` §3) and is fixed the same way: report it where the
+/// Worker can actually be heard.
+fn install_worker_panic_trace() {
+    use std::sync::Once;
+    static INSTALLED: Once = Once::new();
+    INSTALLED.call_once(|| {
+        let previous = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |info| {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!("[DEBUG] wgpu-worker panicked: {info}")));
+            previous(info);
+        }));
+    });
+}
+
 #[wasm_bindgen(js_name = semioWgpuWorkerBootstrap)]
 pub async fn semio_wgpu_worker_bootstrap(canvas: web_sys::OffscreenCanvas, plugins: JsValue, plugin_filter: String, width: u32, height: u32, dpr: f32, wake: js_sys::Function) -> Result<BrowserRendererBootstrap, JsValue> {
+    install_worker_panic_trace();
     if web_sys::window().is_some() {
         return Err(js_error("ui-isolate-forbidden", "the frame Worker renderer cannot boot in the browser UI isolate"));
     }

@@ -44,8 +44,6 @@ fn wire_host(law: &Value) -> DagHost {
     let viewport = &graph["viewport"];
     let mut host = DagHost::from_fixture_without_layout(DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges: vec![] });
     host.set_viewport(viewport["width"].as_u64().expect("viewport width") as u32, viewport["height"].as_u64().expect("viewport height") as u32, viewport["dpr"].as_f64().expect("viewport dpr"));
-    host.set_automatic_lod(false);
-    host.set_forced_draw_lod(Some(DagDrawLod::Full));
     host
 }
 
@@ -72,10 +70,29 @@ fn edit_rows(edits: &[DagGraphEdit]) -> Vec<Value> {
             DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
                 serde_json::json!({ "operation": "connect", "sourceNodeId": source_node_id, "sourcePortId": source_port_id, "targetNodeId": target_node_id, "targetPortId": target_port_id })
             }
-            DagGraphEdit::Disconnect { edge_id } => serde_json::json!({ "operation": "disconnect", "edgeId": edge_id }),
+            DagGraphEdit::Disconnect { synapse_id } => serde_json::json!({ "operation": "disconnect", "synapseId": synapse_id }),
         })
         .collect()
 }
+
+/// 📐️ The port rect the host itself PUBLISHES for an endpoint, in viewport pixels — the one geometry
+/// `entity_screen_json("handle", …)` hands a script, a demonstration or an assistive caller. Its
+/// centre is where anything that trusts the host aims.
+fn published_port_rect(host: &DagHost, endpoint: &str) -> (f64, f64, f64, f64) {
+    let geometry: Value = serde_json::from_str(&host.entity_screen_json("handle", endpoint)).expect("entity screen json");
+    assert_eq!(geometry["visible"].as_bool(), Some(true), "{endpoint} must be published as a visible port");
+    let rect = geometry["rect"].as_array().unwrap_or_else(|| panic!("{endpoint} must publish a rect"));
+    (rect[0].as_f64().expect("rect x"), rect[1].as_f64().expect("rect y"), rect[2].as_f64().expect("rect w"), rect[3].as_f64().expect("rect h"))
+}
+
+fn published_port_centre(host: &DagHost, endpoint: &str) -> (f64, f64) {
+    let (x, y, width, height) = published_port_rect(host, endpoint);
+    (x + width * 0.5, y + height * 0.5)
+}
+
+/// 🗑️ A screen point with no node, no port row and no minimap panel under it at any of the oracle's
+/// zoom bands — where a detached wire is dropped.
+const EMPTY_CANVAS_SCREEN: (f64, f64) = (8.0, 8.0);
 
 #[test]
 fn a_port_to_port_drag_creates_a_wire_and_journals_it_for_the_guest() {
@@ -113,6 +130,28 @@ fn a_port_to_port_drag_creates_a_wire_and_journals_it_for_the_guest() {
             "probe" => {
                 let (x, y) = port_screen_point(&host, gesture["at"].as_str().expect("probe endpoint"));
                 assert_eq!(host.screen_pointer_gesture_begins_at(x, y), case["expectedScreenPath"].as_bool().expect("expected screen path"), "{name}");
+            }
+            // 🖐️ The discriminator and the bounded fault set must be the SAME set, for every phase:
+            // wherever `derive_pointer_plan` answers `Unsupported`, hover and release over that point
+            // belong to the screen path too — the renderer asks `screen_pointer_gesture_begins_at`
+            // on all three phases and must never hand one of these points to the bounded path.
+            "probePhases" => {
+                let (x, y) = match gesture["at"].as_str() {
+                    Some(endpoint) => port_screen_point(&host, endpoint),
+                    None => (gesture["x"].as_f64().expect("probe x"), gesture["y"].as_f64().expect("probe y")),
+                };
+                let expected = case["expectedScreenPath"].as_bool().expect("expected screen path");
+                assert_eq!(host.screen_pointer_gesture_begins_at(x, y), expected, "{name}: the point's own path");
+                let projection = host.bounded_interaction_projection(0).expect("bounded projection");
+                for phase in [DagPointerPhase::Down, DagPointerPhase::Move, DagPointerPhase::Up] {
+                    let intent = DagPointerIntent { phase, x, y, button: 0, shift: false, ctrl_or_meta: false, alt: false, pan: false };
+                    let fault = host.derive_pointer_plan(projection, intent).err();
+                    match case["expectedBoundedFault"].as_str() {
+                        Some("Unsupported") => assert_eq!(fault, Some(DagInteractionPlanFault::Unsupported), "{name}: the bounded path must refuse {phase:?} here, which is why the screen path owns it"),
+                        Some(other) => panic!("{name}: unhandled expected fault {other}"),
+                        None => assert_eq!(fault, None, "{name}: the bounded path must describe {phase:?} here without a fault"),
+                    }
+                }
             }
             "probeScreenPoint" => {
                 let x = gesture["x"].as_f64().expect("probe x");
@@ -152,9 +191,26 @@ fn a_minimap_click_moves_the_camera() {
         host.set_minimap_widget_visible(true);
         host.set_camera(camera["x"].as_f64().expect("camera x"), camera["y"].as_f64().expect("camera y"), camera["zoom"].as_f64().expect("camera zoom"));
         let layout = host.minimap_widget_layout(host.width, host.height).unwrap_or_else(|| panic!("{name}: the minimap must be laid out for a camera that does not already show the whole graph"));
+        // 📐️ `minimap::layout` reports both rects as CORNERS `(x0, y0, x1, y1)`, not as origin+size —
+        // the same convention `minimap::point_in_rect` reads them back in.
+        let fraction = |rect: (f64, f64, f64, f64), tx: f64, ty: f64| (rect.0 + (rect.2 - rect.0) * tx, rect.1 + (rect.3 - rect.1) * ty);
+        // 🗺️ "Inside the panel, outside the viewport rectangle" is a RELATION between two rects whose
+        // sizes depend on the camera, not a fixed corner — so the law searches the panel for it
+        // rather than guessing a fraction that a different zoom would put back inside the viewport.
+        let outside_viewport = || {
+            for step_y in 0..20 {
+                for step_x in 0..20 {
+                    let point = fraction(layout.panel, 0.02 + f64::from(step_x) * 0.048, 0.02 + f64::from(step_y) * 0.048);
+                    if !DagHost::minimap_widget_point_in_rect(layout.viewport, point.0, point.1) {
+                        return Some(point);
+                    }
+                }
+            }
+            None
+        };
         let (x, y) = match case["at"].as_str().expect("minimap point") {
-            "panelTopLeftQuarter" => (layout.panel.0 + layout.panel.2 * 0.15, layout.panel.1 + layout.panel.3 * 0.15),
-            "viewportCentre" => (layout.viewport.0 + layout.viewport.2 * 0.5, layout.viewport.1 + layout.viewport.3 * 0.5),
+            "panelOutsideViewport" => outside_viewport().unwrap_or_else(|| panic!("{name}: the viewport rectangle must not fill the whole minimap panel")),
+            "viewportCentre" => fraction(layout.viewport, 0.5, 0.5),
             other => panic!("fixture minimap point {other}"),
         };
         assert!(host.screen_pointer_gesture_begins_at(x, y), "{name}: a minimap press belongs to the screen pointer path");
@@ -165,4 +221,100 @@ fn a_minimap_click_moves_the_camera() {
         assert_eq!(moved, case["expectedCameraMoves"].as_bool().expect("expected camera moves"), "{name}: camera {before:?} -> {after:?}");
         assert!(host.screen_pointer_gesture_active(), "{name}: the minimap drag holds the screen path until release");
     }
+}
+
+/// 📐️ LAW: the geometry the host PUBLISHES for a port is the geometry that grabs it — at every zoom
+/// band the graph draws nodes at, and pressed at the rect's centre, which is the only point a caller
+/// that trusts `entity_screen_json` can derive.
+///
+/// The defect this pins: `entity_screen_json("handle", …)` published the port ROW rect while
+/// `rim_handle_anchor_hit` accepted only a disc of `handle.radius + 1.5` WORLD units at the row's
+/// outer edge — 6.5 units into a 20-unit-wide row, so the published centre never grabbed at any zoom
+/// — and `allows_connection_hit_picking()` switched port hits off entirely below the Normal band.
+/// Two authorities for one affordance; the row that is painted, published and hovered was not the
+/// row that wires (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️generate-mode-interactions-2026-09-13.md` §4).
+#[test]
+fn the_port_geometry_the_host_publishes_is_the_geometry_that_grabs_a_wire() {
+    let law = law();
+    let grab = &law["grab"];
+    for band in grab["zooms"].as_array().expect("grab zooms") {
+        let zoom = band["zoom"].as_f64().expect("zoom");
+        for case in grab["cases"].as_array().expect("grab cases") {
+            let name = format!("{} @ zoom {zoom}", case["name"].as_str().expect("case name"));
+            let mut host = wire_host(&law);
+            host.set_camera(0.0, 0.0, zoom);
+            for setup in case["setup"].as_array().unwrap_or(&Vec::new()) {
+                let (from_x, from_y) = published_port_centre(&host, setup["from"].as_str().expect("setup from"));
+                let (to_x, to_y) = published_port_centre(&host, setup["to"].as_str().expect("setup to"));
+                host.pointer_down_screen(from_x, from_y, 0, false, false, false, false);
+                host.pointer_move_screen(to_x, to_y, false, false, false);
+                host.pointer_up_screen(to_x, to_y, false, false, false);
+                assert!(!host.fixture.edges.is_empty(), "{name}: the setup wire must exist before the case runs");
+                let _ = host.take_graph_edits();
+            }
+            let gesture = &case["gesture"];
+            match gesture["kind"].as_str().expect("gesture kind") {
+                "grabCentre" => {
+                    let endpoint = gesture["at"].as_str().expect("grab endpoint");
+                    let (x, y) = published_port_centre(&host, endpoint);
+                    assert!(host.screen_pointer_gesture_begins_at(x, y), "{name}: the published rect of {endpoint} must belong to the screen pointer path");
+                    host.pointer_down_screen(x, y, 0, false, false, false, false);
+                    assert_eq!(matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }), gesture_expects(case, "expectedDrawEdge"), "{name}: pressing the published centre of {endpoint} must draw a wire");
+                }
+                "wireCentres" => {
+                    let (from_x, from_y) = published_port_centre(&host, gesture["from"].as_str().expect("wire from"));
+                    let (to_x, to_y) = published_port_centre(&host, gesture["to"].as_str().expect("wire to"));
+                    host.pointer_down_screen(from_x, from_y, 0, false, false, false, false);
+                    host.pointer_move_screen(to_x, to_y, false, false, false);
+                    host.pointer_up_screen(to_x, to_y, false, false, false);
+                    assert_case_edits(&host.take_graph_edits(), case, &name);
+                    assert_case_edges(&host, case, &name);
+                }
+                "detach" => {
+                    let (x, y) = published_port_centre(&host, gesture["at"].as_str().expect("detach endpoint"));
+                    host.pointer_down_screen(x, y, 0, false, false, false, false);
+                    host.pointer_move_screen(EMPTY_CANVAS_SCREEN.0, EMPTY_CANVAS_SCREEN.1, false, false, false);
+                    host.pointer_up_screen(EMPTY_CANVAS_SCREEN.0, EMPTY_CANVAS_SCREEN.1, false, false, false);
+                    assert_case_edits(&host.take_graph_edits(), case, &name);
+                    assert_case_edges(&host, case, &name);
+                }
+                other => panic!("fixture grab gesture kind {other}"),
+            }
+        }
+    }
+}
+
+fn gesture_expects(case: &Value, key: &str) -> bool {
+    case[key].as_bool().unwrap_or_else(|| panic!("case must declare {key}"))
+}
+
+/// 🔗️ Asserts a case's declared journal: either the exact rows (`expectedEdits`) or, when only the
+/// KIND is knowable ahead of time because the synapse id is the host's own, the operation names.
+fn assert_case_edits(edits: &[DagGraphEdit], case: &Value, name: &str) {
+    let rows = edit_rows(edits);
+    if let Some(operations) = case["expectedEditOperations"].as_array() {
+        let actual: Vec<&str> = rows.iter().filter_map(|row| row["operation"].as_str()).collect();
+        for operation in operations {
+            assert!(actual.contains(&operation.as_str().expect("operation name")), "{name}: expected a {operation} among {actual:?}");
+        }
+        return;
+    }
+    let Some(expected) = case["expectedEdits"].as_array() else { return };
+    if expected.is_empty() {
+        assert!(rows.is_empty(), "{name}: this gesture must journal nothing, got {rows:?}");
+        return;
+    }
+    for row in expected {
+        assert!(rows.contains(row), "{name}: expected {row} among {rows:?}");
+    }
+}
+
+fn assert_case_edges(host: &DagHost, case: &Value, name: &str) {
+    let Some(edges) = case["expectedEdges"].as_array() else { return };
+    for edge in edges {
+        let source = edge["source"].as_str().expect("edge source");
+        let target = edge["target"].as_str().expect("edge target");
+        assert!(host.fixture.edges.iter().any(|candidate| candidate.source == source && candidate.target == target), "{name}: {source} -> {target} must be a live wire, got {:?}", host.fixture.edges.iter().map(|edge| (edge.source.as_str(), edge.target.as_str())).collect::<Vec<_>>());
+    }
+    assert_eq!(host.fixture.edges.len(), edges.len(), "{name}: the live wire count must be exactly what the case declares");
 }

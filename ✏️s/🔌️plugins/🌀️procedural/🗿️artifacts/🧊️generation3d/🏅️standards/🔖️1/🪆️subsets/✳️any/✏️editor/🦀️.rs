@@ -245,9 +245,12 @@ fn generation3d_render_body(
     let labels = generation3d_labels(view_state);
     let active_utility = view_state.active_utility_id.as_deref().unwrap_or("move");
     let selected_generation_id = config.selected_generation_id.as_deref();
+    if semio_framework_job::runtime_diagnostics_enabled() {
+        eprintln!("[DEBUG] gen3d render body={body_key} generations={} selected={selected_generation_id:?}", document.generation.as_state().generations.len());
+    }
     let node = match body_key {
         flow_window::GENERATION_3D_PLAY_BODY_MAIN => flow_window::render(document, config, session, marks, labels),
-        edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, preview_eval_text, session, active_utility, marks),
+        edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, preview_eval_text, session, active_utility, marks, labels),
         generations::GENERATION_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, selected_generation_id, view_state.locale, view_state.terminology),
         form::GENERATION_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.fixture, &document.generation, selected_generation_id, labels),
         generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.fixture, &document.generation, selected_generation_id, preview_eval_text, config, labels, active_utility, marks, session),
@@ -925,7 +928,12 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
         let cfg = ConfigView { snapshot: input.config, window: None };
         let emit = match input.command {
             Generation3dCommand::ImportDocumentRequest(_) => import_document_request::emit()?,
-            Generation3dCommand::ExportDocument(payload) => export_document::emit(payload, &doc)?,
+            // 👁️ The export reads the RETAINED session's already-tessellated preview, never a second
+            // evaluation — see `export_document::retained_preview` and `export_mesh_from_session`.
+            Generation3dCommand::ExportDocument(payload) => {
+                let preview = self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| owner.with_session(|session| export_document::retained_preview(&doc, &cfg, session)))?;
+                export_document::emit(payload, &doc, preview.as_ref())?
+            }
             Generation3dCommand::ImportDocument(payload) => {
                 let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
                 self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
@@ -2396,7 +2404,14 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             // commands: MISSING keyboard path"). `Fit graph` is NOT here: it is shell chrome over the
             // node-graph surface, not an app action, and it already carries its own `F`.
             .keybinding("delete,backspace", "deleteSelection")
-            .keybinding("mod+period", "cancelPreviewEval")
+            // ⌨️ `mod+.`, NOT `mod+period`: `ShellHost`'s chord matcher compares the last `+` segment
+            // against `event.key.toLowerCase()` verbatim (`🏛️ShellHost/🟦️.tsx`, `matches`), and the period
+            // key's `event.key` IS `"."` — a `period` spelling silently never matches. Measured against the
+            // running playground (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+            // 🪟 Scope: `cancelPreviewEval` is owned by the two preview windows below, and the same
+            // handler resolves a chord against the FOCUSED window kind's actions only, so this chord is live
+            // exactly while a preview window has focus — which is the verb's own meaning.
+            .keybinding("mod+.", "cancelPreviewEval")
             .keybinding("mod+shift+g", "addGeneration")
             .keybinding("mod+alt+d", "cycleShowMode")
             .keybinding("mod+alt+k", "cycleLodMode")
@@ -2770,13 +2785,10 @@ pub fn merge_preview_meshes(meshes: &[semio_framework_plugin::MeshData]) -> semi
     merged
 }
 
-pub fn export_mesh_from_document(projection: &Generation3dSnapshot) -> semio_framework_plugin::MeshData {
-    let config = Generation3dConfig::default();
-    let eval_json = crate::standards::v1::subsets::any::schema::with_host(&projection.fixture, |host| host.evaluate().unwrap_or_default());
-    let (meshes_json, _) = preview_payload_from_eval(&eval_json, &projection.fixture, &config);
-    // 🌉️ `MeshData` has its own first-party `FromValue` (see `mesh_data_for_preview_handle`'s
-    // note) — decode the per-mesh `data` field straight through the `pack::json`/`DslValue` bridge.
-    let meshes: Vec<semio_framework_plugin::MeshData> = dsl::json::parse(&meshes_json)
+/// 📦️ Every mesh a preview payload carries, merged — the half `export_mesh_from_document` and
+/// [`export_mesh_from_session`] share, so the decode/merge is written once.
+fn merged_meshes_from_payload(meshes_json: &str) -> semio_framework_plugin::MeshData {
+    let meshes: Vec<semio_framework_plugin::MeshData> = dsl::json::parse(meshes_json)
         .ok()
         .and_then(|value| value.as_array().cloned())
         .unwrap_or_default()
@@ -2785,6 +2797,34 @@ pub fn export_mesh_from_document(projection: &Generation3dSnapshot) -> semio_fra
         .filter_map(|data| dsl::FromValue::from_value(dsl::json::to_dsl_value(&data)).ok())
         .collect();
     merge_preview_meshes(&meshes)
+}
+
+/// 👁️ The document's merged preview mesh AS THE RETAINED SESSION ALREADY HAS IT — the evaluation
+/// `flowEvalResolve` folded and the bodies `flowTessellateResolve` delivered, with no second
+/// evaluation of anything.
+///
+/// 🐛️ This is what an export must read, and reading the other thing is a measured defect, not a
+/// preference: `export_mesh_from_document` builds a FRESH `FlowHost` and calls `host.evaluate()`
+/// synchronously. In the guest the brep/math operators are contributed by the HOST and reached only
+/// through the asynchronous extension chain, so that evaluation resolves nothing at all — "Export
+/// Document" on a fully painted 3-mesh preview faulted with `no preview geometry (no positions)`
+/// (measured live on 6018, ticket 26/09/09/PROCEDURAL-3D-END-TO-END io-surface lane).
+///
+/// ⏳️ It is also what makes the export's progress and cancellation the chain that already owns
+/// them: the expensive work is the `flowEvalTick` chain the status pill reports and the
+/// `cancelPreviewEval` button retires, and an export taken after it settles does no kernel work.
+pub fn export_mesh_from_session(snapshot: &Generation3dSnapshot, cfg: &Generation3dConfig, session: &FlowEvalSession) -> semio_framework_plugin::MeshData {
+    let payload = preview_payload(session.eval_json(), &snapshot.fixture, cfg, Some(session), &PreviewInteractionMarks::default());
+    merged_meshes_from_payload(&payload.meshes_json)
+}
+
+pub fn export_mesh_from_document(projection: &Generation3dSnapshot) -> semio_framework_plugin::MeshData {
+    let config = Generation3dConfig::default();
+    let eval_json = crate::standards::v1::subsets::any::schema::with_host(&projection.fixture, |host| host.evaluate().unwrap_or_default());
+    let (meshes_json, _) = preview_payload_from_eval(&eval_json, &projection.fixture, &config);
+    // 🌉️ `MeshData` has its own first-party `FromValue` (see `mesh_data_for_preview_handle`'s
+    // note) — decode the per-mesh `data` field straight through the `pack::json`/`DslValue` bridge.
+    merged_meshes_from_payload(&meshes_json)
 }
 
 pub fn generation3d_mesh_from_document(doc: &dsl::DslValue) -> Result<semio_framework_plugin::MeshData, String> {

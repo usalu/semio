@@ -1,0 +1,9 @@
+{
+  "note": "⌨️ Chord key tokens are matched against DOM KeyboardEvent.key verbatim on the last +-segment. Punctuation MUST be the character (mod+.), never a name (mod+period).",
+  "canonical": [
+    { "chord": "mod+.", "eventKey": "." },
+    { "chord": "mod+,", "eventKey": "," },
+    { "chord": "mod+/", "eventKey": "/" }
+  ],
+  "forbiddenKeyNames": ["period", "comma", "slash", "minus", "equal", "semicolon", "quote", "backquote", "bracketleft", "bracketright", "backslash"]
+}

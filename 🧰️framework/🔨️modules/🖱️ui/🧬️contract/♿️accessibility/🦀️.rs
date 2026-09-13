@@ -103,6 +103,12 @@ fn container_role_name(role: crate::ContainerRole) -> &'static str {
 /// ⌨️ Whether a component takes keyboard focus of its own — the same set the wgpu `EventRouter`'s
 /// `is_focusable` walks for Tab traversal, said once here so the projection and the traversal can
 /// never disagree about who is reachable.
+///
+/// [`crate::Component::Surface`] is in the set because it is an app's ONLY door to a scene it paints
+/// itself: the node-graph and World3d canvases carry their whole interaction surface inside a
+/// texture no assistive technology can walk, so a canvas nobody can Tab into is a canvas nobody can
+/// drive without a mouse. Its `application` role is exactly the ARIA promise that the widget handles
+/// its own arrow/Enter keys.
 pub fn accessibility_is_focusable(component: &crate::Component, activatable: bool) -> bool {
     match component {
         crate::Component::Button(_)
@@ -113,6 +119,7 @@ pub fn accessibility_is_focusable(component: &crate::Component, activatable: boo
         | crate::Component::NumberStepper(_)
         | crate::Component::Ring(_)
         | crate::Component::IconSelect(_)
+        | crate::Component::Surface(_)
         | crate::Component::TreeItem(_) => true,
         crate::Component::Container(_) => activatable,
         _ => false,

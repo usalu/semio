@@ -317,7 +317,20 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
         DispatchEvent::Scroll { delta_y, .. } => {
             app.wheel_delta += delta_y;
         }
+        // ⌨️ `DispatchEvent`'s POINTER variants carry no modifier state — only the key variants do
+        // (`PointerDown/Up/Move { pointer, x, y, button }`). This is therefore the one place the
+        // shell can learn that shift/ctrl/alt/meta are held, and `app.modifiers` is what the three
+        // pointer arms above read. Before this assignment `app.modifiers` was a closed loop —
+        // written only by `handle_pointer_*` from the value those same arms had just handed it — so
+        // it never left `PointerModifiers::default()`. Measured on 6118: every world3d intent carried
+        // `mods=----`, so shift-click published `merge:"replace"` instead of `additive`, and
+        // alt/shift + right-drag never reached `plan_world3d_drag`'s orbit/pan arms at all
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`).
+        // A modifier KeyDown/KeyUp reports the FULL post-event state (`Shift` down → `shift: true`,
+        // `Shift` up → `shift: false`), so mirroring both edges is exactly winit's
+        // `WindowEvent::ModifiersChanged` for the normalized dispatch path.
         DispatchEvent::KeyDown { key, modifiers } => {
+            app.modifiers = event_modifiers_to_pointer(modifiers);
             if (modifiers.ctrl || modifiers.meta) && key.eq_ignore_ascii_case("z") && app.undo_text_operation() {
                 return;
             }
@@ -329,6 +342,7 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
             }
         }
         DispatchEvent::KeyUp { key, modifiers } => {
+            app.modifiers = event_modifiers_to_pointer(modifiers);
             if let Some(action) = key_action_from_dispatch(&key, false) {
                 app.handle_key(action, event_modifiers_to_pointer(modifiers)).await;
             }

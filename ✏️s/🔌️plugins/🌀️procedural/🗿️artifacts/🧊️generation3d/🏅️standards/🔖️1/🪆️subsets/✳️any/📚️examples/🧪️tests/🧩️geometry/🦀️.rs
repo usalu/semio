@@ -3,7 +3,7 @@
 //! `FlowHost` the editor's `flow-eval-tick` drives with the packaged `brep`/`math` operator sets
 //! installed, and the resulting preview handle is tessellated through the same
 //! `tessellate_geometry` bridge the preview path calls. Every number the run produces is held to
-//! the committed expected-stats fixture beside the example (`🧪️tests/🧩️example/🔣️.json`), which
+//! the committed expected-stats fixture beside the example (`🧫️fixtures/🧩️example/🔣️.json`), which
 //! the TypeScript twin reads too.
 //!
 //! ⚖️ `parry3d` recomputes volume, centre of mass and bounding box from the same triangle soup, so
@@ -131,6 +131,7 @@ fn assert_budget_contract(fixture: &ExampleGeometryFixture) {
     assert!(budget.max_tessellate_micros > 0, "{}: a budget of zero is not a budget", fixture.example);
     assert!(budget.max_tessellate_micros <= BUDGET_FIDELITY_CEILING_MICROS, "{}: a {} us ceiling exceeds the {BUDGET_FIDELITY_CEILING_MICROS} us bound the fidelity phase sits under", fixture.example, budget.max_tessellate_micros);
     assert!(budget.max_preview_tessellate_micros <= budget.max_tessellate_micros, "{}: the preview LOD is coarser than the fixture tolerance, so its ceiling may never exceed the full-tolerance one", fixture.example);
+    assert_calibration_contract();
 }
 
 /// 🚧️ The machine-readable kernel standings a fixture may declare. Each `blocked-*` value names one
@@ -146,6 +147,157 @@ fn assert_budget_contract(fixture: &ExampleGeometryFixture) {
 /// patches `📐️box-fillet-preview` was missing, so every bundled example is `green`.
 const KERNEL_STATUSES: [&str; 1] = ["green"];
 //#endregion 🔖️Fixture
+
+//#region ⏱️Calibration
+const BUDGET_CALIBRATION_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/⏱️budget-calibration/🔣️.json");
+const CALIBRATION_SCHEMA: &str = "s.procedural.generation3d.example-budget-calibration/v1";
+
+/// ⚖️ The committed statement of how fast the machine that SET this lane's ceilings executes a
+/// fixed, kernel-independent workload.
+///
+/// Every ceiling in every `budget` row, and `maxRoundTrips` too, is a wall-clock quantity measured
+/// on one machine under one load. A wall clock on a shared build host measures the code plus
+/// whatever else was resident — this repository's fleet routinely holds the load average above 50
+/// while peers compile — so the same correct code reads two to five times over its ceiling and the
+/// law convicts the machine instead of the algorithm. That is not a strict law, it is a noisy one,
+/// and a noisy law gets ignored.
+///
+/// 🧭 The honest correction is a SCALE, not a looser ceiling: run a workload whose cost this
+/// repository never changes, and divide out how much slower it is right now than when the ceilings
+/// were set. A genuine algorithmic regression still fails, because it inflates the phase without
+/// inflating the calibration; contention inflates both, and cancels
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️kernel-performance-2026-09-13.md` §6.1).
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct BudgetCalibration {
+    schema: String,
+    rounds: u32,
+    checksum: String,
+    reference_micros: u64,
+    maximum_load_factor: f64,
+}
+
+/// ⏱️ How many timed passes a calibration reading takes, and which of them is believed.
+///
+/// 🐛️ The MINIMUM is the wrong statistic here, and measuring it proved so: with a pass costing
+/// 1.8 ms the min of five passes read 1811 us under 48 spinners on a 10-core machine — byte for byte
+/// its idle reading — while `FlowHost::evaluate` on the same machine at the same moment took an
+/// order of magnitude longer than its ceiling. A workload short enough to fit inside one scheduling
+/// quantum is never preempted, so its minimum measures a machine that is not the one the phase ran
+/// on. The pass is therefore sized to ~100 ms — long enough to be preempted the way a real phase is
+/// — and the MEDIAN of three is believed, which discards one lucky and one unlucky reading without
+/// believing either.
+const CALIBRATION_PASSES: usize = 3;
+
+fn budget_calibration() -> BudgetCalibration {
+    let calibration: BudgetCalibration = serde_json::from_str(BUDGET_CALIBRATION_FIXTURE_JSON).expect("budget calibration fixture parses");
+    assert_eq!(calibration.schema, CALIBRATION_SCHEMA);
+    calibration
+}
+
+/// ✅️ Every invariant the calibration row states about ITSELF.
+fn assert_calibration_contract() {
+    let calibration = budget_calibration();
+    assert!(calibration.rounds > 0, "a calibration of zero rounds measures nothing");
+    assert!(calibration.reference_micros > 0, "a reference of zero microseconds would scale every ceiling to infinity");
+    assert!(calibration.maximum_load_factor >= 1.0, "the load factor may only ever widen a ceiling, never narrow one");
+    assert_eq!(calibration.checksum.len(), 18, "the checksum is a 64-bit hex literal");
+    assert!(calibration.checksum.starts_with("0x"));
+}
+
+/// 🎲 ONE deterministic calibration pass: a fixed LCG feeding a `orient2d`-shaped cross-product sum
+/// and one owned `Vec` per round, so the pass exercises the same mix the geometry kernel's own cost
+/// is made of — floating-point multiply/add chains plus allocator traffic — without touching a line
+/// of kernel code that any lane in this repository may legitimately make faster.
+///
+/// 🪪️ Only the integer state is a checksum. The floating-point accumulator is returned so the work
+/// cannot be elided, but never asserted: `a * b + c` may be contracted into a single fused
+/// multiply-add on one target and not on another, and a calibration must not fail on that.
+fn calibration_pass(rounds: u32) -> (u64, f64) {
+    let mut state: u64 = 0x9E37_79B9_7F4A_7C15;
+    let mut acc = 0.0f64;
+    let mut samples: Vec<f64> = Vec::with_capacity(1024);
+    for _ in 0..rounds {
+        samples.clear();
+        for _ in 0..1024 {
+            state = state.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+            samples.push(((state >> 11) as f64) * (1.0 / 9_007_199_254_740_992.0));
+        }
+        for window in samples.windows(4) {
+            acc += window[0] * window[3] - window[1] * window[2];
+        }
+        let owned: Vec<f64> = samples.iter().map(|sample| sample * 1.000_000_001).collect();
+        acc += owned.iter().sum::<f64>();
+        state ^= owned.len() as u64;
+    }
+    (state, acc)
+}
+
+/// ⏱️ The machine's CURRENT cost for that workload, in microseconds — the median of
+/// [`CALIBRATION_PASSES`] timed passes, each one checked to have produced the committed result.
+fn calibration_micros(calibration: &BudgetCalibration) -> u64 {
+    let mut readings = Vec::with_capacity(CALIBRATION_PASSES);
+    for _ in 0..CALIBRATION_PASSES {
+        let started = std::time::Instant::now();
+        let (state, acc) = calibration_pass(calibration.rounds);
+        let elapsed = started.elapsed().as_micros() as u64;
+        std::hint::black_box(acc);
+        assert_eq!(format!("{state:#018x}"), calibration.checksum, "the budget calibration workload must be bit-identical wherever it is measured, or its reading is not comparable to the committed reference");
+        readings.push(elapsed);
+    }
+    readings.sort_unstable();
+    readings[readings.len() / 2].max(1)
+}
+
+/// ⚖️ How much slower this machine is RIGHT NOW than the one that set the ceilings. Never below
+/// `1.0` — a faster machine tightens nothing, because the ceilings are regression guards with
+/// deliberate headroom, not targets — and never above the row's own `maximumLoadFactor`, past which
+/// the reading is contention noise rather than a scale anyone should trust.
+fn machine_load_factor() -> f64 {
+    let calibration = budget_calibration();
+    let measured = calibration_micros(&calibration);
+    let raw = measured as f64 / calibration.reference_micros as f64;
+    let factor = raw.clamp(1.0, calibration.maximum_load_factor);
+    println!("[CALIBRATION] micros={measured} reference={} raw={raw:.2} factor={factor:.2}", calibration.reference_micros);
+    factor
+}
+
+/// ✅️ Holds one measured phase to its committed ceiling — and, only when the raw reading overruns,
+/// to that ceiling scaled by the machine's calibrated speed at that moment. An idle lane pays for no
+/// calibration at all; a contended one pays five short passes and is judged on what the code cost
+/// rather than on what the machine was doing.
+fn assert_phase_budget(example: &str, phase: &str, measured: u64, ceiling: u64, regression: &str) {
+    if measured <= ceiling {
+        return;
+    }
+    let factor = machine_load_factor();
+    let scaled = (ceiling as f64 * factor) as u64;
+    assert!(
+        measured <= scaled,
+        "{example}: {phase} took {measured} us (best of {TIMING_ATTEMPTS}) against a {ceiling} us ceiling — {scaled} us after this machine's measured {factor:.2}x load calibration — {regression}, see 📓️kernel-performance-2026-09-13.md"
+    );
+    println!("[BUDGET] {example}: {phase} {measured} us is over its {ceiling} us ceiling but inside the calibrated {scaled} us — this machine is {factor:.2}x slower right now than the one that set it");
+}
+
+/// ⚖️ LAW: the calibration itself. Its workload is bit-identical everywhere — otherwise its reading
+/// is not comparable to the committed reference and every scaled ceiling is a guess — and the factor
+/// it derives never NARROWS a ceiling, so a fast machine can only ever judge the committed numbers
+/// as they stand.
+///
+/// 🪪️ This law is what makes the scaled ceilings auditable: it prints the machine's raw reading, so
+/// any lane that reports a budget failure can say in one line whether the machine was the cause.
+#[test]
+fn the_budget_calibration_is_deterministic_and_never_narrows_a_ceiling() {
+    assert_calibration_contract();
+    let calibration = budget_calibration();
+    let (first, _) = calibration_pass(calibration.rounds);
+    let (second, _) = calibration_pass(calibration.rounds);
+    assert_eq!(first, second, "the calibration workload must be deterministic within one process");
+    assert_eq!(format!("{first:#018x}"), calibration.checksum, "the calibration workload no longer produces the committed result — its reading cannot be compared to the committed reference");
+    let factor = machine_load_factor();
+    assert!(factor >= 1.0 && factor <= calibration.maximum_load_factor, "the load factor {factor} left its declared range");
+}
+//#endregion ⏱️Calibration
 
 //#region 🔖️Harness
 /// 🔒️ The brep kernel, its mesh cache and the flow extension registry are all process-global, so
@@ -421,8 +573,8 @@ fn assert_example(dsl: &str, fixture_json: &str) {
     assert!(KERNEL_STATUSES.contains(&fixture.kernel_status.as_str()), "{}: unknown kernel status {:?}", fixture.example, fixture.kernel_status);
     let (evaluate_micros, tessellate_micros) = best_timings(dsl, &fixture, run.evaluate_micros, run.tessellate_micros);
     println!("[BUDGET] {} evaluateMicros={} budget={} tessellateMicros={} budget={}", fixture.example, evaluate_micros, fixture.budget.max_evaluate_micros, tessellate_micros, fixture.budget.max_tessellate_micros);
-    assert!(evaluate_micros <= fixture.budget.max_evaluate_micros, "{}: FlowHost::evaluate took {evaluate_micros} us (best of {TIMING_ATTEMPTS}) against a {} us ceiling — the op chain regressed algorithmically, see 📓️kernel-performance-2026-09-13.md", fixture.example, fixture.budget.max_evaluate_micros);
-    assert!(tessellate_micros <= fixture.budget.max_tessellate_micros, "{}: tessellate_geometry took {tessellate_micros} us (best of {TIMING_ATTEMPTS}) against a {} us ceiling — the tessellator regressed algorithmically, see 📓️kernel-performance-2026-09-13.md", fixture.example, fixture.budget.max_tessellate_micros);
+    assert_phase_budget(&fixture.example, "FlowHost::evaluate", evaluate_micros, fixture.budget.max_evaluate_micros, "the op chain regressed algorithmically");
+    assert_phase_budget(&fixture.example, "tessellate_geometry", tessellate_micros, fixture.budget.max_tessellate_micros, "the tessellator regressed algorithmically");
 }
 
 /// ⏱️ How many times a phase that overran its ceiling is re-measured before the overrun is believed.
@@ -700,15 +852,49 @@ fn assert_delivery(dsl: &str, fixture_json: &str) {
     assert!(run.payload_triangles >= delivery.min_triangles, "{}: the published payload carries {} triangles, expected at least {}", fixture.example, run.payload_triangles, delivery.min_triangles);
     assert!(run.payload_edge_segments >= delivery.min_edge_segments, "{}: the published payload carries {} edge segments, expected at least {}", fixture.example, run.payload_edge_segments, delivery.min_edge_segments);
     assert!(run.chunks <= delivery.max_chunks, "{}: the mesh body crossed in {} chunks, budget {}", fixture.example, run.chunks, delivery.max_chunks);
-    assert!(run.round_trips <= delivery.max_round_trips, "{}: the preview cost {} tessellate round trips, budget {} — one round trip is one whole flowEvalTick", fixture.example, run.round_trips, delivery.max_round_trips);
-    let mut preview_micros = run.step_micros.iter().sum::<u64>();
+    let (preview_micros, round_trips) = best_delivery(dsl, &fixture, &run);
+    assert_phase_budget(&fixture.example, "the preview LOD tessellation", preview_micros, fixture.budget.max_preview_tessellate_micros, "a step that overruns the kernel's own budget here is seconds in a served wasm build");
+    assert_round_trip_budget(&fixture.example, round_trips, delivery.max_round_trips);
+}
+
+/// ⏱️ The delivery's two WALL-DERIVED readings, improved by re-running only when one of them
+/// overran — a lane where nothing is over budget pays for exactly one delivery.
+///
+/// 🪪️ `round_trips` belongs here beside the microseconds because it IS a wall-clock quantity:
+/// `tessellate_step_envelope_json` keeps calling `tessellate_step` "while the job is still working
+/// AND the deadline has not passed" (`🧰️framework/…/🌊️flow/📐️brep-geometry/🦀️.rs:721`), so a machine
+/// that runs the kernel half as fast fits half as many steps into one round trip's
+/// `TESSELLATE_STEP_WALL_MICROS` and the same unchanged geometry costs more round trips. Counting
+/// them is right — one round trip is one whole `flowEvalTick` — but judging a single contended
+/// count is the same mistake as judging a single contended microsecond reading.
+fn best_delivery(dsl: &str, fixture: &ExampleGeometryFixture, first: &DeliveryRun) -> (u64, usize) {
+    let (mut micros, mut round_trips) = (first.step_micros.iter().sum::<u64>(), first.round_trips);
     for _ in 1..TIMING_ATTEMPTS {
-        if preview_micros <= fixture.budget.max_preview_tessellate_micros {
+        if micros <= fixture.budget.max_preview_tessellate_micros && round_trips <= fixture.delivery.max_round_trips {
             break;
         }
-        preview_micros = preview_micros.min(run_delivery(dsl, &fixture, &fixture.delivery.lod_mode.clone()).step_micros.iter().sum::<u64>());
+        let retry = run_delivery(dsl, fixture, &fixture.delivery.lod_mode.clone());
+        micros = micros.min(retry.step_micros.iter().sum::<u64>());
+        round_trips = round_trips.min(retry.round_trips);
     }
-    assert!(preview_micros <= fixture.budget.max_preview_tessellate_micros, "{}: the preview LOD tessellation took {preview_micros} us (best of {TIMING_ATTEMPTS}) against a {} us ceiling — a step that overruns the kernel's own budget here is seconds in a served wasm build, see 📓️kernel-performance-2026-09-13.md", fixture.example, fixture.budget.max_preview_tessellate_micros);
+    (micros, round_trips)
+}
+
+/// ✅️ Holds the delivery to its committed round-trip budget, and — only when the best of
+/// [`TIMING_ATTEMPTS`] deliveries still overruns — to that budget scaled by the machine's calibrated
+/// speed, for the reason [`best_delivery`] states: the count is produced by a wall-clock deadline
+/// inside the kernel, so a slower machine buys fewer kernel steps per round trip.
+fn assert_round_trip_budget(example: &str, round_trips: usize, ceiling: usize) {
+    if round_trips <= ceiling {
+        return;
+    }
+    let factor = machine_load_factor();
+    let scaled = (ceiling as f64 * factor).ceil() as usize;
+    assert!(
+        round_trips <= scaled,
+        "{example}: the preview cost {round_trips} tessellate round trips (best of {TIMING_ATTEMPTS}), budget {ceiling} — {scaled} after this machine's measured {factor:.2}x load calibration — one round trip is one whole flowEvalTick"
+    );
+    println!("[BUDGET] {example}: {round_trips} tessellate round trips is over its budget of {ceiling} but inside the calibrated {scaled} — this machine is {factor:.2}x slower right now than the one that set it");
 }
 
 #[test]

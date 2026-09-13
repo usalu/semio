@@ -68,6 +68,7 @@ import tutorialSerialFixture from "../../🧱️elements/🏛️ShellHost/🧫�
 import descriptorLoadFixture from "../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/📇️descriptor-load/🔣️.json";
 import kernelFixtureSchema from "../../../../../../../🔨️modules/🎠️kernel/🧬️schema/🔣️.json";
 import { createInstance as createTranslationOracle } from "i18next";
+import chordKeyTokensFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/⌨️chord-key-tokens.json";
 import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🔣️label-resolution.json";
 import tutorialInteractionFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🎥️tutorial-interaction/🔣️.json";
 import pluginAvailabilityRouteFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🔁️plugin-availability-route/🔣️.json";
@@ -2018,7 +2019,7 @@ import {
   peerIdsHovering,
   SyncAttachCard,
 } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import { windowActionPaneNode, applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, browserActorDispatchUiScopeV1, browserActorWindowConfigDispatchUiScopeV1, captureTutorialUiSnapshot, clipboardWriteFragmentFromEffect, createUiRefreshCoalescerV1, hostEffectRefreshScopeV1, mergeUiDirtyScopeV1, pasteActionWithRetainedFragment, pasteArgsFragment, programArmedToolRevealV1, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { windowActionPaneNode, applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, browserActorDispatchUiScopeV1, browserActorWindowConfigDispatchUiScopeV1, captureTutorialUiSnapshot, chordUsesCanonicalKeyTokens, clipboardWriteFragmentFromEffect, createUiRefreshCoalescerV1, hostEffectRefreshScopeV1, keyboardEventMatchesChord, mergeUiDirtyScopeV1, pasteActionWithRetainedFragment, pasteArgsFragment, programArmedToolRevealV1, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌️jsdom polyfills
@@ -2034,6 +2035,9 @@ if (!Element.prototype.scrollIntoView) Element.prototype.scrollIntoView = () => 
 //#endregion 🔌️jsdom polyfills
 
 const noopAction = () => {};
+
+/** 🌳️ Renders a panel body the way the dock does — through the tree's `emptyState`, full-width, never a property-layout control wrapper (ticket 26/09/02/PUZZLE-3D-END-TO-END, the inspection panel "shows nothing" defect). */
+const panelTreePanelHost = (config: ReturnType<typeof uiNodeToTreePanelConfig>): ReactElement => config.emptyState as ReactElement;
 
 //#region 🔌️PluginSessionOwnership
 describe("plugin session ownership", () => {
@@ -7443,9 +7447,6 @@ describe("s workflow flow routing", () => {
     expect(flowSpotlightSuggestionListScrollClass(true)).toContain("max-h-[min(24rem,70vh)]");
   });
 
-  // 🔍️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave N — the inspection panel "shows nothing" defect
-  const panelTreePanelHost = (config: ReturnType<typeof uiNodeToTreePanelConfig>): ReactElement => config.emptyState as ReactElement;
-
   it("hosts semantic panel bodies full-width via tree emptyState, not a property-layout control wrapper", () => {
     const config = uiNodeToTreePanelConfig(pendingPanelUiNode(), noopAction);
     expect(config.sections).toEqual([]);
@@ -7857,11 +7858,7 @@ describe("s workflow flow routing", () => {
   });
 
   it("folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId", async () => {
-    const panel = {
-      activePanelTab: "s-play-catalogue",
-      programs: [{ pluginId: "draw", workflowStepId: "draw", appId: "draw", label: "Draw", breadcrumb: ["draw"], yields: "2d.drawing" }],
-      spawnedApps: [] as const,
-    };
+    const panel = { activePanelTab: "s-play-catalogue", spawnedApps: [] as const };
     const spawned = { id: "app-draw-1", pluginId: "draw", instanceId: 1, appId: "draw", label: "Semio Emblem", breadcrumb: ["draw"] };
     const focused = studioPanelFocusingSpawned(panel, spawned);
     expect(focused.activeSpawnedId).toBe("app-draw-1");
@@ -7870,8 +7867,8 @@ describe("s workflow flow routing", () => {
     // viewState (the bug was committing the pre-spawn viewState and wiping activeSpawnedId).
     const baseViewState = { panelJson: JSON.stringify(panel) };
     const nextViewState = viewStateWithSpacePanel(baseViewState, focused);
-    const { packValueFromBase64 } = await import("@semio-tech/framework-os");
-    expect((packValueFromBase64(nextViewState.panelJson!) as { activeSpawnedId?: string }).activeSpawnedId).toBe("app-draw-1");
+    const { parsePanelState } = await import("../../🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts");
+    expect(parsePanelState(nextViewState)?.activeSpawnedId).toBe("app-draw-1");
     const refocused = studioPanelFocusingSpawned(focused, { ...spawned, label: "Renamed" });
     expect(refocused.spawnedApps).toHaveLength(1);
     expect(refocused.spawnedApps[0]?.label).toBe("Renamed");
@@ -8095,6 +8092,20 @@ describe("palette redirect and keybinding rule (P3/P4)", () => {
   it("only arg-carrying actions redirect to a staged form (P3 decision)", () => {
     expect(actionRequiresStagedForm(argAction)).toBe(true);
     expect(actionRequiresStagedForm(zeroAction)).toBe(false);
+  });
+
+  it("matches chord key tokens against event.key verbatim per ⌨️chord-key-tokens fixture", () => {
+    const forbidden = chordKeyTokensFixture.forbiddenKeyNames as string[];
+    for (const name of forbidden) {
+      expect(chordUsesCanonicalKeyTokens(`mod+${name}`)).toBe(false);
+      expect(keyboardEventMatchesChord({ key: ".", ctrlKey: true, metaKey: false, shiftKey: false, altKey: false }, `mod+${name}`)).toBe(false);
+    }
+    for (const row of chordKeyTokensFixture.canonical as { chord: string; eventKey: string }[]) {
+      expect(chordUsesCanonicalKeyTokens(row.chord)).toBe(true);
+      expect(
+        keyboardEventMatchesChord({ key: row.eventKey, ctrlKey: true, metaKey: false, shiftKey: false, altKey: false }, row.chord),
+      ).toBe(true);
+    }
   });
 
   it("keybinding intent: arg-less fires, arg-action opens unless already expanded and valid then executes (P4)", () => {

@@ -80,18 +80,29 @@ pub struct Generation3dViewConfig {
     /// 🌞️ JSON-encoded `semio_framework_plugin::WorldSunConfig`.
     #[value(default = "default_view_sun_json")]
     pub sun_json: String,
-    /// 🎨️ The bundled example this surface is looking at (`""` = the opened document itself).
+    /// 🎨️ What this surface is looking at, in the picker's own three states: `None` — nothing has
+    /// been picked, so the document this session OPENED; `Some("")` — the picker's `No example` row,
+    /// which shows NO example; `Some(id)` — that bundled example.
     ///
     /// 📚️ A read-only surface cannot rewrite its document, so picking an example is a CONFIG edit
     /// here, not a document mutation: `viewed_document` resolves this id to the example's projection
     /// and every read path (preview render, `flowEvalTick`, `pending_effects`, the interaction
     /// topology) goes through it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub active_example_id: String,
+    ///
+    /// 🕳️ `Some("")` is why this is an `Option` and not a bare `String`. A bare empty id had to mean
+    /// both "never picked" and "picked `No example`", so the row resolved to the opened document —
+    /// which in the playground IS a bundled example (the hexagonal mushroom column), so a row
+    /// labelled `No example` silently showed one. Measured on the served viewer 2026-09-13: picking
+    /// `No example` over `box-fillet-preview` published three meshes, `meshesLen 3641`, the column's
+    /// own numbers. The sibling surface's own row was fixed the same way and CLEARS
+    /// (`✏️editor/🎮️commands/🎨️set-active-example`); a label that promises no example must not load
+    /// one on either surface.
+    pub active_example_id: Option<String>,
 }
 
 impl Default for Generation3dViewConfig {
     fn default() -> Self {
-        Self { lod_mode: String::new(), show_mode: default_view_show_mode(), preview_camera: Generation3dViewCamera::default(), sun_json: default_view_sun_json(), active_example_id: String::new() }
+        Self { lod_mode: String::new(), show_mode: default_view_show_mode(), preview_camera: Generation3dViewCamera::default(), sun_json: default_view_sun_json(), active_example_id: None }
     }
 }
 

@@ -7790,6 +7790,29 @@ export class VerifyScript extends Script {
       }
       return;
     }
+    if (segments[0] === "media-export-encoding") {
+      const { testMediaExportEncodingContract } = await import("./🧰️framework/🔨️modules/🎠️kernel/🧪️tests/⬇️media-export-encoding/🟦️.ts");
+      testMediaExportEncodingContract();
+      // 🧬️ `tsc --strict` over the codec twin alone: it is self-contained by construction, whereas the
+      // law imports `🎠️kernel/🟦️.ts` and would drag the whole renderer graph (and its pre-existing,
+      // unrelated Bun-ism diagnostics) into this lane's verdict.
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--lib", "ESNext,DOM", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${join(this.root, "🧰️framework/🔨️modules/🚪️io/🔤️base64")}/🟦️.ts`], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-io-base64", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "media_export_encoding", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "spawned-job-drive") {
+      const { testSpawnedJobDriveContract } = await import("./🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧵️spawned-job-drive/🟦️.ts");
+      await testSpawnedJobDriveContract();
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "spawned_job_drive", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
     if (segments[0] === "generation3d-document-io") {
       const testRoot = join(this.root, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io");
       const { testGeneration3dDocumentIoSurface } = await import(`${testRoot}/🧪️tests/📄️document-surface/🟦️.ts`);

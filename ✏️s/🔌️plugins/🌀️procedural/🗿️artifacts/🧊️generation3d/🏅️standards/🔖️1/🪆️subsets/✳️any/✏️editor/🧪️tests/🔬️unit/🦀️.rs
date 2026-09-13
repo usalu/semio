@@ -40,17 +40,30 @@ pub(crate) mod context {
         }
     }
     
+    /// 🔎️ Names the authority a stalled close ladder was last waiting on, the way the framework's own
+    /// `artifact_app_laws::close_registered_fixture_app` does. A bare `is_err()`/`break` reported only
+    /// that the fixture never reached terminal-empty, which is the one thing that is never the cause —
+    /// every real diagnosis of this family started by recovering this string
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub(crate) fn close_ladder_witness<A: PluginApp>(app: &mut A) -> String {
+        let mut witness = String::new();
+        for _ in 0..1_000_000 {
+            if app.close_terminal_is_empty() {
+                return String::new();
+            }
+            match app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                Ok(semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } | semio_framework_plugin::PluginCloseStep::Blocked { reason }) => witness = format!(", last pending close authority: {reason}"),
+                Ok(_) => {}
+                Err(fault) => return format!(", close ladder faulted: {fault:?}"),
+            }
+        }
+        witness
+    }
+
     impl Drop for Generation3dAppFixture {
         fn drop(&mut self) {
-            for _ in 0..1_000_000 {
-                if self.0.close_terminal_is_empty() {
-                    return;
-                }
-                if self.0.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).is_err() {
-                    break;
-                }
-            }
-            assert!(std::thread::panicking() || self.0.close_terminal_is_empty(), "Generation3d app fixture did not reach its terminal-empty close witness");
+            let witness = close_ladder_witness(&mut self.0);
+            assert!(std::thread::panicking() || self.0.close_terminal_is_empty(), "Generation3d app fixture did not reach its terminal-empty close witness{witness}");
         }
     }
     
@@ -346,17 +359,19 @@ pub(crate) mod context {
 }
 
 pub(crate) mod serial_execution {
-    use std::sync::{Mutex, MutexGuard};
-    
-    static TEST_SERIAL: Mutex<()> = Mutex::new(());
-    
-    /// 🔒️ Serialises every test that drives the process-wide flow-eval kernel cache, and installs the
-    /// packaged `brep`/`math` operator sets before the first one runs — without that installation
-    /// `FlowHost::evaluate` answers `unknown kind: …` for every bundled fixture's nodes
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn lock() -> MutexGuard<'static, ()> {
-        crate::flow_operators::installed();
-        TEST_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+    //! 🔒️ The editor door onto this binary's ONE serial lock ([`crate::test_serial`]), which also
+    //! installs the packaged `brep`/`math` operator sets behind it — without that installation
+    //! `FlowHost::evaluate` answers `unknown kind: …` for every bundled fixture's nodes
+    //! (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    //!
+    //! 🐛️ This used to own a mutex of its own, disjoint from the viewer's and the publication
+    //! table's. All three guard the SAME process-global state — the flow extension registry, the
+    //! neural kernel cache and the publication lease table — so three locks serialised nothing
+    //! across surfaces and left a lock-order inversion available.
+
+    /// 🔒️ Takes the crate's one test serial lock.
+    pub(crate) fn lock() -> crate::test_serial::TestSerialGuard {
+        crate::test_serial::lock()
     }
 }
 
@@ -836,6 +851,8 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "import-document-request",
         "import-document",
         "export-document",
+        "cycle-show-mode",
+        "cycle-lod-mode",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
@@ -981,15 +998,18 @@ fn the_editor_binds_every_keyboard_verb_the_fixture_names() {
     let definition = create_generation3d_app();
     let rows = fixture["bindings"].as_array().expect("bindings");
     // 🧾️ Exactness, expressed against the APP-AUTHORED chords only: `build_definition` also mints a
-    // keybinding for every framework `History`/`Clipboard` action that carries its own `keys`, and
-    // those are never a plugin's to declare.
+    // keybinding for every framework `History`/`Clipboard`/`Interaction` action that carries its own
+    // `keys` — `undo`/`redo`, and the interaction domain's `escape`→`clearSelection` and
+    // `mod+a`→`selectAll` — and those are never a plugin's to declare. Exempting them by KIND rather
+    // than by id is deliberate: a framework that mints a fourth such chord tomorrow must not break a
+    // plugin fixture that never had a say in it.
     let named: std::collections::BTreeSet<&str> = rows.iter().map(|row| row["chord"].as_str().expect("chord")).collect();
     for binding in &definition.keybindings {
         if named.contains(binding.keys.as_str()) {
             continue;
         }
         let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == binding.action.action);
-        let framework_minted = action.is_some_and(|action| matches!(action.kind, semio_framework_plugin::ActionKind::History | semio_framework_plugin::ActionKind::Clipboard));
+        let framework_minted = action.is_some_and(|action| matches!(action.kind, semio_framework_plugin::ActionKind::History | semio_framework_plugin::ActionKind::Clipboard | semio_framework_plugin::ActionKind::Interaction));
         assert!(framework_minted, "{} reaches {} but the fixture never names it — the fixture is the WHOLE app keyboard surface", binding.keys, binding.action.action);
     }
     for row in rows {
@@ -1371,9 +1391,7 @@ async fn sun_measures_are_exposed_on_preview_windows() {
 /// `PreviewPipeline`/`MeshBridge` functions above, all of which are app
 /// behavior (they construct or take a [`Generation3dConfig`]), so the tests travel with them.
 use semio_framework_ui::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Vec3};
-use std::sync::MutexGuard;
-
-fn test_serial() -> MutexGuard<'static, ()> {
+fn test_serial() -> crate::test_serial::TestSerialGuard {
     crate::editor::generation3d::unit_tests::serial_execution::lock()
 }
 

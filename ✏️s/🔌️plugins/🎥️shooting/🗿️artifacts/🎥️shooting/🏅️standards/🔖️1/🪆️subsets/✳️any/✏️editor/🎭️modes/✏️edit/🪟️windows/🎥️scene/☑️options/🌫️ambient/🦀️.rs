@@ -18,7 +18,6 @@ pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMe
         loading: None,
         waiting: None,
         disabled: None,
-        reveal: None,
         on_change: crate::editor::shooting::shooting_window_action("setAmbientIntensity", None),
     }
 }

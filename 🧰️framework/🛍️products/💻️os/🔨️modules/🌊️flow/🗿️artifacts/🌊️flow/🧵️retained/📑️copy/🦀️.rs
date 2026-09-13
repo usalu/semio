@@ -393,14 +393,14 @@ impl<R: Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
     fn begin_close(&mut self) { self.owned.closing = true; }
     fn terminal_is_empty(&self) -> bool {
         let state = &*self.owned;
-        state.closing && state.tasks.is_empty() && state.result.is_none() && state.retirement.is_empty() && state.active_root_retirement.is_none() && state.source.is_none() && state.root_retirement.is_none()
+        state.closing && state.tasks.is_empty() && state.result.is_none() && state.retirement.terminal_is_empty() && state.active_root_retirement.is_none() && state.source.is_none() && state.root_retirement.is_none()
     }
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         use SnapshotRetirementStep as Step;
         if self.terminal_is_empty() { return Ok(Step::Complete); }
         let state = &mut *self.owned;
         if !state.closing || maximum_items == 0 || maximum_bytes == 0 { return Ok(Step::Blocked); }
-        if !state.retirement.is_empty() { return state.retirement.close_step(1, maximum_bytes); }
+        if !state.retirement.terminal_is_empty() { return state.retirement.close_page(1, maximum_bytes); }
         if let Some(task) = state.tasks.pop_front() { task.retire(&mut state.retirement); }
         else if let Some(result) = state.result.take() { result.retire(&mut state.retirement); }
         else if let Some(active) = state.active_root_retirement.as_mut() {

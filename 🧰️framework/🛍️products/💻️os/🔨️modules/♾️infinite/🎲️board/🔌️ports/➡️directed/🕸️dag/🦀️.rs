@@ -199,6 +199,29 @@ fn output_port_row_hit_bounds(node: &DagNodeSpec, port_index: usize) -> Option<(
     Some((x0, y_center - half, x1, y_center + half))
 }
 
+/// 🔌️ Share of a port ROW, from the node edge inward, that is the port's CONNECTOR: the zone a press
+/// grabs a wire in, and the rect [`DagHost::entity_screen_json`] publishes as where that port is. One
+/// geometry for both — publishing the whole row while grabbing a 6.5-world-unit disc at its edge made
+/// the published centre unpressable at every zoom (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️generate-mode-interactions-2026-09-13.md` §4). The remainder of the row stays node body: a
+/// computation node has NO header row ([`DAG_COMPUTATION_HEADER_ROWS`] is 0, its name is painted above
+/// the rectangle), so without that remainder it would have nowhere left to be dragged by.
+const DAG_PORT_CONNECTOR_ROW_SHARE: f64 = 0.4;
+
+/// 🔌️ An input port's connector rect: the outer [`DAG_PORT_CONNECTOR_ROW_SHARE`] of its row, grown
+/// outward past the node edge by the radius of the handle cap the engine paints there — so the zone
+/// covers exactly what a user sees of the port, inside chrome and outside cap alike.
+fn input_port_connector_bounds(node: &DagNodeSpec, port_index: usize) -> Option<(f64, f64, f64, f64)> {
+    let (x0, y0, x1, y1) = input_port_row_hit_bounds(node, port_index)?;
+    Some((x0 - DAG_HANDLE_WORLD_RADIUS, y0, (x0 + (x1 - x0) * DAG_PORT_CONNECTOR_ROW_SHARE).min(x1), y1))
+}
+
+/// 🔌️ An output port's connector rect — the same share measured inward from the node's right edge.
+fn output_port_connector_bounds(node: &DagNodeSpec, port_index: usize) -> Option<(f64, f64, f64, f64)> {
+    let (x0, y0, x1, y1) = output_port_row_hit_bounds(node, port_index)?;
+    Some(((x1 - (x1 - x0) * DAG_PORT_CONNECTOR_ROW_SHARE).max(x0), y0, x1 + DAG_HANDLE_WORLD_RADIUS, y1))
+}
+
 fn computation_port_center_y(node: &DagNodeSpec, port_index: usize) -> f64 {
     channel_row_center_y(node.y, node.height, port_index + DAG_COMPUTATION_HEADER_ROWS)
 }
@@ -1270,6 +1293,19 @@ fn dag_lod_resolve_zoom(zoom: f64) -> f64 {
     (zoom - DAG_LOD_ZOOM_SHIFT).max(0.05)
 }
 
+/// 🩺️ TEMPORARY (ticket 26/09/09 wire drag): names the live interaction for a `[DEBUG]` line.
+fn dag_interaction_label(interaction: &InteractionMode) -> &'static str {
+    match interaction {
+        InteractionMode::Idle => "idle",
+        InteractionMode::DrawEdge { .. } => "draw-edge",
+        InteractionMode::DragNode { .. } => "drag-node",
+        InteractionMode::DragNodes { .. } => "drag-nodes",
+        InteractionMode::SelectionPending { .. } => "selection-pending",
+        InteractionMode::AreaSelect { .. } => "area-select",
+        InteractionMode::Pan { .. } => "pan",
+    }
+}
+
 fn dag_lod_index(zoom: f64) -> usize {
     DAG_LOD_SCALE.resolve_index(dag_lod_resolve_zoom(zoom))
 }
@@ -1943,7 +1979,7 @@ pub struct DagHost {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DagGraphEdit {
     Connect { source_node_id: String, source_port_id: String, target_node_id: String, target_port_id: String },
-    Disconnect { edge_id: String },
+    Disconnect { synapse_id: String },
 }
 
 /// 📏️ How many wire edits one drain may carry. A single pointer gesture completes at most one wire,
@@ -2717,7 +2753,7 @@ impl DagHostRetirement {
         if let Some(edit) = self.pending_graph_edits.pop() {
             let values = match edit {
                 DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => vec![source_node_id, source_port_id, target_node_id, target_port_id],
-                DagGraphEdit::Disconnect { edge_id } => vec![edge_id],
+                DagGraphEdit::Disconnect { synapse_id } => vec![synapse_id],
             };
             let remaining_backing_bytes = dag_vec_backing_bytes(&values);
             return self.credit_owner(DagRetirementOwner::Strings { values, remaining_backing_bytes }, maximum_items, maximum_bytes);
@@ -3762,13 +3798,16 @@ impl DagHost {
             let br = world_to_screen(&cam, &viewport, Point::new(max_x, max_y));
             ([tl.x, tl.y, (br.x - tl.x).max(1.0), (br.y - tl.y).max(1.0)], ((tl.x + br.x) * 0.5, (tl.y + br.y) * 0.5))
         };
+        // 🔌️ A port is published as its CONNECTOR rect — the very rect `port_connector_handle_hit`
+        // grabs a wire in, so anything that aims at what the host reports (a demonstration, an
+        // assistive caller, a scripted drag) presses a point that wires.
         let handle_world_bounds = |widget_id: &str, port: &str| -> Option<(f64, f64, f64, f64)> {
             let node = self.fixture.nodes.iter().find(|node| node.id == widget_id)?;
             if let Some(index) = node.inputs().iter().position(|candidate| candidate.id == port) {
-                return input_port_row_hit_bounds(node, index);
+                return input_port_connector_bounds(node, index);
             }
             let index = node.outputs().iter().position(|candidate| candidate.id == port)?;
-            output_port_row_hit_bounds(node, index)
+            output_port_connector_bounds(node, index)
         };
         let nearest_center_screen = |candidates: &[(f64, f64, f64, f64)]| -> Option<(f64, f64, f64, f64)> {
             let mut best: Option<((f64, f64, f64, f64), f64)> = None;
@@ -4644,8 +4683,8 @@ impl DagHost {
     /// created in this same gesture has no synapse id yet and is simply not journalled — the guest
     /// never learned about it, so it has nothing to remove.
     fn journal_disconnect(&mut self, edge: EdgeId) {
-        let Some(edge_id) = self.edge_id_map.get(&edge).cloned() else { return };
-        self.push_graph_edit(DagGraphEdit::Disconnect { edge_id });
+        let Some(synapse_id) = self.edge_id_map.get(&edge).cloned() else { return };
+        self.push_graph_edit(DagGraphEdit::Disconnect { synapse_id });
     }
 
     /// 🔗️ Bounded push: the journal never grows past [`DAG_GRAPH_EDIT_CAPACITY`], and a duplicate of
@@ -4671,9 +4710,13 @@ impl DagHost {
         !matches!(self.engine.interaction, InteractionMode::Idle) || self.minimap_widget_drag.is_some() || self.pan_anchor.is_some() || self.widget_drag.is_some() || self.pending_port_insert.is_some()
     }
 
-    /// 🖱️ Whether a press at this SCREEN point begins such an interaction: the minimap widget, a
+    /// 🖱️ Whether this SCREEN point belongs to the screen pointer path at all: the minimap widget, a
     /// wire handle, a port insertion target, or an inline widget. Exactly the four hits
     /// `bounded_node_hit_index` answers `Unsupported` for, asked as a question instead of as a fault.
+    ///
+    /// 🖐️ It answers for every PHASE, not only a press: a hover or a release over one of these hits
+    /// is just as undescribable to the bounded plan path, and routing only presses left a plain move
+    /// across a port faulting the whole dispatch (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn screen_pointer_gesture_begins_at(&self, sx: f64, sy: f64) -> bool {
         if self.minimap_widget_pointer_hit(sx, sy).is_some() {
             return true;
@@ -4719,6 +4762,29 @@ impl DagHost {
         None
     }
 
+    /// 🔌️ The port whose CONNECTOR rect — the published one — contains this world point.
+    fn port_connector_handle_hit(&self, world_x: f64, world_y: f64) -> Option<HandleId> {
+        for node in self.fixture.nodes.iter().rev() {
+            for (port_idx, port) in node.inputs().iter().enumerate() {
+                let Some((x0, y0, x1, y1)) = input_port_connector_bounds(node, port_idx) else { continue };
+                if point_in_rect(world_x, world_y, x0, y0, x1, y1) {
+                    if let Some(hid) = self.handle_id_for_port(&node.id, &port.id) {
+                        return Some(hid);
+                    }
+                }
+            }
+            for (port_idx, port) in node.outputs().iter().enumerate() {
+                let Some((x0, y0, x1, y1)) = output_port_connector_bounds(node, port_idx) else { continue };
+                if point_in_rect(world_x, world_y, x0, y0, x1, y1) {
+                    if let Some(hid) = self.handle_id_for_port(&node.id, &port.id) {
+                        return Some(hid);
+                    }
+                }
+            }
+        }
+        None
+    }
+
     fn channel_row_handle_hit(&self, world_x: f64, world_y: f64) -> Option<HandleId> {
         if !self.draw_lod_for_frame().uses_channel_row_pick() {
             return None;
@@ -4747,21 +4813,17 @@ impl DagHost {
         None
     }
 
-    fn rim_handle_anchor_hit(&self, world_x: f64, world_y: f64) -> Option<HandleId> {
-        let hid = self.handle_anchor_hit(world_x, world_y)?;
-        let lod = self.draw_lod_for_frame();
-        if (lod.uses_input_row_connection_hitbox() || lod.uses_channel_row_pick()) && self.port_row_handle_hit(world_x, world_y, true, true).is_some() {
-            let handle = self.engine.handles.get(&hid)?;
-            let node = self.engine.nodes.get(&handle.node_id)?;
-            let pos = handle_position(node, handle);
-            let dx = world_x - pos.x;
-            let dy = world_y - pos.y;
-            let rim_tol = (handle.radius + 1.5).max(3.0);
-            if dx * dx + dy * dy > rim_tol * rim_tol {
-                return None;
-            }
+    /// 🔌️ The ONE port hit — the CONNECTOR rect, which is also the one rect
+    /// [`Self::entity_screen_json`] publishes for `"handle"`. Grabbing and publishing used to be two
+    /// different shapes (a 6.5-world-unit rim disc against the whole 20-unit row), so the published
+    /// centre never wired at any zoom, and a radius-11 anchor disc reached past the row centre and
+    /// stole the node drag (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️generate-mode-interactions-2026-09-13.md` §4).
+    fn port_pointer_handle_hit(&self, world_x: f64, world_y: f64) -> Option<HandleId> {
+        if !self.draw_lod_for_frame().allows_connection_hit_picking() {
+            return None;
         }
-        Some(hid)
+        self.port_connector_handle_hit(world_x, world_y)
     }
 
     fn fixture_draggable_node_hit(&self, world_x: f64, world_y: f64) -> Option<NodeId> {
@@ -4782,8 +4844,18 @@ impl DagHost {
         None
     }
 
+    /// 🔗️ Wire snapping belongs to a wire: while a node is being DRAGGED, snapping the pointer onto a
+    /// port anchor teleports the node to that anchor. Only a gesture that can still land on a port —
+    /// a press, or a wire in flight — is snapped.
+    fn connection_hit_world_while_wiring(&self, world_x: f64, world_y: f64) -> (f64, f64) {
+        if matches!(self.engine.interaction, InteractionMode::DrawEdge { .. }) {
+            return self.connection_hit_world(world_x, world_y);
+        }
+        (world_x, world_y)
+    }
+
     fn connection_hit_world(&self, world_x: f64, world_y: f64) -> (f64, f64) {
-        let Some(hid) = self.rim_handle_anchor_hit(world_x, world_y) else {
+        let Some(hid) = self.port_pointer_handle_hit(world_x, world_y) else {
             return (world_x, world_y);
         };
         let Some(handle) = self.engine.handles.get(&hid) else {
@@ -4797,7 +4869,7 @@ impl DagHost {
     }
 
     fn world_hits_handle(&self, world_x: f64, world_y: f64) -> bool {
-        self.rim_handle_anchor_hit(world_x, world_y).is_some()
+        self.port_pointer_handle_hit(world_x, world_y).is_some()
     }
 
     fn sync_channel_row_pointer_hover(&mut self, world_x: f64, world_y: f64) {
@@ -4823,17 +4895,12 @@ impl DagHost {
             return false;
         };
         use canvas::Point;
-        use graph::pick_merge_mode_for_modifiers;
 
+        // 🔌️ A press on a port ROW never arrives here any more — `port_pointer_handle_hit` claims it
+        // first, and the engine's own `HitObject::Endpoint` arm already selects that channel before it
+        // begins the wire. The channel-row pick this branch used to duplicate is that selection.
         let point = Point::new(world_x, world_y);
         self.engine.pointer_down_on_draggable_node_at(node_id, point, shift, ctrl_or_meta);
-        if self.draw_lod_for_frame().uses_channel_row_pick() {
-            if let Some(hid) = self.channel_row_handle_hit(world_x, world_y) {
-                let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.engine.selection_options.mode.as_str());
-                self.engine.select_handle_with_mode(hid, merge_mode.as_str());
-                self.engine.hover = Some(hid);
-            }
-        }
         true
     }
 
@@ -5197,6 +5264,7 @@ impl DagHost {
         let (hit_x, hit_y) = self.connection_hit_world(world.x, world.y);
         if self.world_hits_handle(hit_x, hit_y) {
             self.engine.pointer_down_screen(sx, sy, hit_x, hit_y, button, shift, ctrl_or_meta, alt);
+            dag_debug_log(&format!("[DEBUG] dag port press sx={sx:.1} sy={sy:.1} handle={:?} interaction={}", self.port_pointer_handle_hit(hit_x, hit_y).and_then(|hid| self.handle_key_map.get(&hid).cloned()), dag_interaction_label(&self.engine.interaction)));
             self.process_engine_events();
             self.sync_camera_from_engine();
             return;
@@ -5268,7 +5336,7 @@ impl DagHost {
             }
             return;
         }
-        let (hit_x, hit_y) = self.connection_hit_world(world.x, world.y);
+        let (hit_x, hit_y) = self.connection_hit_world_while_wiring(world.x, world.y);
         self.engine.pointer_move_screen(sx, sy, hit_x, hit_y, shift, ctrl_or_meta, alt);
         self.sync_channel_row_pointer_hover(world.x, world.y);
         self.sync_minimap_pointer_hover(world.x, world.y);
@@ -5284,6 +5352,7 @@ impl DagHost {
     }
 
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        dag_debug_log(&format!("[DEBUG] dag pointer up sx={sx:.1} sy={sy:.1} interaction={}", dag_interaction_label(&self.engine.interaction)));
         self.pan_anchor = None;
         self.minimap_widget_drag = None;
         self.sync_connection_hit_picking_for_lod();
@@ -5293,7 +5362,7 @@ impl DagHost {
             return;
         }
         let world = self.screen_to_world_point(sx, sy);
-        let (hit_x, hit_y) = self.connection_hit_world(world.x, world.y);
+        let (hit_x, hit_y) = self.connection_hit_world_while_wiring(world.x, world.y);
         self.engine.pointer_up_screen(sx, sy, hit_x, hit_y, shift, ctrl_or_meta, alt);
         self.process_engine_events();
         self.sync_node_positions_from_engine();

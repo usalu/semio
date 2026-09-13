@@ -1341,7 +1341,7 @@ pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
         .keybinding("mod+shift+s", CREATE_SURFACE_ACTION_ID)
         .keybinding("mod+shift+g", SET_SITE_ACTION_ID)
         .keybinding("mod+enter", simulation::START_ACTION_ID)
-        .keybinding("mod+period", simulation::CANCEL_ACTION_ID)
+        .keybinding("mod+.", simulation::CANCEL_ACTION_ID)
         .keybinding("mod+shift+enter", simulation::ADOPT_ACTION_ID)
         .default_layout(edit::layout());
     for tool_id in ENERGY_MODEL_RETAINED_TOOL_IDS {

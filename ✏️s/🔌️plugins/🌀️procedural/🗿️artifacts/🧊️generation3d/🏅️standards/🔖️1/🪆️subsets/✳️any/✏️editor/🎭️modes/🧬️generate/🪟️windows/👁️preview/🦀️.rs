@@ -96,7 +96,7 @@ pub fn render(
     let sun = cfg.sun();
     let selection_json = preview_selection_json(cfg, active_utility, &payload);
     let _ = GENERATION_3D_PLAY_APP_ID;
-    crate::scene_surface(
+    crate::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_GENERATE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
         &semio_framework_ui::wgpu::World3dScene {
@@ -105,6 +105,9 @@ pub fn render(
             domain_granularity_id: Some(GENERATION_3D_INTERACTION_GRANULARITY.into()),
             ..world3d_scene(preview_camera_json(cfg), payload.meshes_json, payload.instances_json, selection_json, &sun)
         },
+        labels.preview_canvas.as_str(),
+        labels.preview_canvas_hint.as_str(),
+        semio_framework_ui_contract::Liveness::Polite,
     )
 }
 //#endregion 🔖️Render

@@ -2,7 +2,7 @@
 use super::*;
 use ui_wgpu::wgpu::{SurfaceKind, UiComponentSceneNode, UiPresence, World3dScene, mesh3d_write_edge};
 
-fn take_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub(super) fn take_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority live") {
         actions.push(action.into_descriptor().expect("bounded action materializes"));
@@ -14,11 +14,11 @@ fn triangle_mesh_oracle() -> LegacyMeshOracleData {
     mesh_oracle_from_buffers(vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2])
 }
 
-fn mesh_oracle_from_buffers(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>) -> LegacyMeshOracleData {
+pub(super) fn mesh_oracle_from_buffers(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>) -> LegacyMeshOracleData {
     LegacyMeshOracleData { positions, normals, indices, face_ids: Vec::new(), vertex_ids: Vec::new(), edge_positions: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), colors: Vec::new() }
 }
 
-fn publish_oracle_mesh(data: LegacyMeshOracleData) -> Mesh3dLease {
+pub(super) fn publish_oracle_mesh(data: LegacyMeshOracleData) -> Mesh3dLease {
     assert!(data.positions.len().is_multiple_of(3));
     assert_eq!(data.normals.len(), data.positions.len());
     assert!(data.edge_positions.len().is_multiple_of(6));
@@ -70,7 +70,7 @@ fn publish_oracle_mesh(data: LegacyMeshOracleData) -> Mesh3dLease {
 
 fn assert_send<T: Send>() {}
 
-fn with_world_step_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
+pub(super) fn with_world_step_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
     let mut sequence = 0;
     let mut context = semio_framework_job::StepContext::new(
         semio_framework_job::OperationId(1),
@@ -733,7 +733,7 @@ fn world_marquee_result_pages_admit_exact_capacity_and_retire_one_target_per_gra
 }
 
 #[test]
-fn world_marquee_pages_build_one_target_field_per_grant_and_publish_atomically_fifo() {
+fn world_marquee_pages_build_one_target_per_grant_and_publish_atomically_fifo() {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.interaction_revision = 6;
     state.interaction_objects.revision = 6;
@@ -758,8 +758,18 @@ fn world_marquee_pages_build_one_target_field_per_grant_and_publish_atomically_f
     }
     let actions = take_actions(&mut input);
     assert_eq!(actions.len(), 2);
-    assert!(matches!(actions[0].args.as_ref().and_then(|args| args.get("targets")), Some(dsl::DslValue::Array(values)) if values.len() == WORLD_MARQUEE_RESULT_PAGE_CAPACITY));
-    assert!(matches!(actions[1].args.as_ref().and_then(|args| args.get("targets")), Some(dsl::DslValue::Array(values)) if values.len() == 1));
+    // 🎯️ `targets` is a JSON-encoded STRING, not a structured array: the framework's own decoder is
+    // `parse_interaction_targets`, which reads the arg with `DslValue::as_str`
+    // (`💻️os/🔨️modules/🔌️plugin/🦀️.rs`), and the manifest declares it `ActionArgDef::text`. An array
+    // makes `as_str` answer `None` and the guest faults the job — ticket
+    // 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`.
+    let page_targets = |action: &ActionDescriptor| {
+        let raw = action.args.as_ref().and_then(|args| args.get("targets")).and_then(|value| value.as_str()).expect("targets is JSON text");
+        serde_json::from_str::<Vec<serde_json::Value>>(raw).expect("targets decodes as the framework does")
+    };
+    assert_eq!(page_targets(&actions[0]).len(), WORLD_MARQUEE_RESULT_PAGE_CAPACITY);
+    assert_eq!(page_targets(&actions[1]).len(), 1);
+    assert_eq!(page_targets(&actions[0])[0]["granularity"], "object", "a marquee release is a pick, so it reports the pick granularity");
     assert_eq!(job.results.page_len, 0);
     assert_eq!(job.gesture.len, 0);
 }
@@ -1536,6 +1546,7 @@ fn scene_with_selection_and_domain(selection_json: &str, domain: Option<(&str, &
             camera_json: r#"{"position":[4.0,4.0,4.0],"target":[0.0,0.0,0.0],"up":[0.0,0.0,1.0],"fov":45.0}"#.into(),
             meshes_json: r#"[{"id":"mesh-1","data":{"positions":[0,0,0,1,0,0,0,1,0],"normals":[0,0,1,0,0,1,0,0,1],"indices":[0,1,2],"faceIds":[10],"vertexIds":[1,2,3],"edgePositions":[0,0,0,1,0,0],"edgeIds":[5]}}]"#.into(),
             instances_json: r#"[{"id":"obj-1","meshId":"mesh-1","position":[0,0,0],"rotation":[0,0,0,1],"scale":[1,1,1]}]"#.into(),
+            instances_delta_json: None,
             selection_json: selection_json.into(),
             vortices_json: None,
             attractions_json: None,
@@ -2941,4 +2952,51 @@ fn world_interaction_object_slot_table_is_heap_first_and_fits_a_bounded_thread_s
             drop(WorldInteractionObjectRegistry::default());
         },
     );
+}
+
+/// 🔘️ LAW: every mesh key the gumball draws is ENSURED on the GPU in the same build, and the plane it
+/// draws is pinned in the mesh pool.
+///
+/// The defect: `append_gumball_geometry` pushed three translucent `SceneDraw3d`s keyed
+/// `gumball-plane` and never called `gpu.ensure_mesh` for it — the one thing every other world draw
+/// site does. On the GPU a missing mesh is a FATAL `present_step` fault ("prepared frame submit step:
+/// prepared world mesh was missing"), not a skipped draw, so the first frame after ANY selection
+/// killed the whole frame loop. It sat unreachable while the wgpu host dropped the reserved tool job
+/// that applies a selection; the instant that job ran, the app died on the first click
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-spawn-job-effect-2026-09-13.md`).
+#[test]
+fn gumball_draws_ensure_the_plane_mesh_they_reference() {
+    let mut lines = Vec::new();
+    let mut translucent = Vec::new();
+    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    state.active_utility = "select".into();
+    state.meshes.insert(GUMBALL_PLANE_MESH.into(), publish_oracle_mesh(triangle_mesh_oracle())).expect("plane lease admitted");
+    state.mesh_versions.insert(GUMBALL_PLANE_MESH.into(), 7).expect("plane version admitted");
+    state.meshes.insert("mesh-1".into(), publish_oracle_mesh(triangle_mesh_oracle())).expect("body lease admitted");
+    state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: true, hovered: false }] });
+    state.selected_ids = vec!["obj-1".into()];
+    append_gumball_geometry(&mut lines, &mut translucent, &mut gpu, &state, &Camera3d::default(), &state.meshes, &state.mesh_versions);
+
+    assert_eq!(translucent.len(), 3, "the gumball draws one quad per axis plane");
+    let requested: Vec<(String, u64)> = gpu.mesh_requests[..gpu.mesh_request_len].iter().flatten().cloned().collect();
+    for draw in &translucent {
+        assert!(
+            requested.iter().any(|(key, version)| key == &draw.mesh_key && *version == draw.mesh_version),
+            "gumball draw {}@{} was never ensured on the GPU; requested={requested:?}",
+            draw.mesh_key,
+            draw.mesh_version
+        );
+    }
+    assert!(requested.iter().all(|(key, _)| key == GUMBALL_PLANE_MESH), "the gumball ensures nothing but its own plane: {requested:?}");
+}
+
+/// 🔘️ LAW: the gumball plane is PINNED in the mesh pool. It belongs to no document draw, so every
+/// `sync_mesh_pool` would otherwise see it as stale and evict the mesh the very next frame draws.
+#[test]
+fn the_gumball_plane_is_pinned_against_pool_eviction() {
+    let world = include_str!("../../🦀️.rs");
+    let pinned = world.split("const PINNED: &[&str] = &[").nth(1).expect("sync_mesh_pool declares a PINNED list").split("];").next().expect("PINNED list closes");
+    assert!(pinned.contains("GUMBALL_PLANE_MESH"), "the gumball plane must be pinned: {pinned}");
+    assert_eq!(GUMBALL_PLANE_MESH, "gumball-plane");
 }

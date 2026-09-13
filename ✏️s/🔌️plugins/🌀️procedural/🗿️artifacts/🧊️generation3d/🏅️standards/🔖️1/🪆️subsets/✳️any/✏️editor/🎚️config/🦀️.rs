@@ -60,9 +60,10 @@ fn next_in_ladder(ladder: &[&str], current: &str) -> String {
     ladder[index].to_string()
 }
 
-/// 🔁️ The show mode one `cycleShowMode` after `current`.
+/// 🔁️ The show mode one `cycleShowMode` after `current`. An unset `show_mode` reads as the `shaded`
+/// the preview window's measure displays for it, so the first cycle lands on `shaded+edges`.
 pub fn next_show_mode(current: &str) -> String {
-    next_in_ladder(&GENERATION_3D_SHOW_MODES, current)
+    next_in_ladder(&GENERATION_3D_SHOW_MODES, if current.is_empty() { GENERATION_3D_SHOW_MODES[0] } else { current })
 }
 
 /// 🔁️ The level of detail one `cycleLodMode` after `current`. An unset `lod_mode` reads as the

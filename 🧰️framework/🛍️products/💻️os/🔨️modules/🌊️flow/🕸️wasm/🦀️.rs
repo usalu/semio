@@ -4528,10 +4528,13 @@ impl FlowActionState for FlowAction2587 {
             FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_587),
             FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
             FlowProgramPhase::Domain => {
+                // 🔗️ A released gesture answers with what it did to the GRAPH — the guest's own
+                // `nodeGraphEdit` sub-operations. The renderer dispatches those narrow intents instead
+                // of re-publishing the whole fixture, and needs no second round trip to learn of them.
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
                         domain.host.pointer_up_screen(number(args, "sx")?, number(args, "sy")?, boolean(args, "shift")?, boolean(args, "ctrlOrMeta")?, boolean(args, "alt")?);
-                        ok()
+                        Ok(domain.host.take_graph_edits_json().into_bytes())
                     }
                 };
                 self.program.finish_domain(result)

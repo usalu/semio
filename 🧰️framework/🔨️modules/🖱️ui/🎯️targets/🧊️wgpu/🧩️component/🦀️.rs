@@ -1093,13 +1093,6 @@ pub mod layout {
             #[serde(default, skip_serializing_if = "Option::is_none")]
             #[value(default, skip_serializing_if = "Option::is_none")]
             disabled: Option<bool>,
-            /// 🪣️ When set, this is a reveal-group id: the host must NOT dispatch `onChange` on every drag
-            /// value — only on gesture commit (pointer-up) — and while dragging must locally cut off
-            /// instances tagged with this reveal group's id instead. See `WorldInstancesLayer`'s reveal
-            /// cutoff store and `revealCutoffs` in `World3dScene.interaction_json`.
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            #[value(default, skip_serializing_if = "Option::is_none")]
-            reveal: Option<String>,
             on_change: ActionDescriptor,
         },
         /// 🔢️ Unbounded numeric entry — the measure-overlay sibling of `UiNumberStepperNode`.

@@ -1,0 +1,50 @@
+{
+  "$comment": "🪟️ An action declared by a window body belongs to THAT window instance. The shell resolves `ActionAddress::window_instance_id` from the action's own `windowId` argument first, and only then falls back to the focused window — so an action that carries no `windowId` is addressed to whatever happens to be focused, and the guest refuses it when that window's KIND does not own the action. Measured on 6118: pressing the Generations window's `Add Generation` row produced `handle_action promise failed: window kind procedural-main does not own action addGeneration`. Context menus already scoped their actions this way; retained window bodies did not. One rule, one owner.",
+  "rule": {
+    "id": "scopeActionToWindow",
+    "statement": "Scoping replaces any existing `windowId` argument with the owning window instance id, preserves every other argument in order, and creates the argument object when the action carried none.",
+    "rust": "🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs::scope_action_to_window",
+    "callers": ["scope_context_menu_items", "ShellState::route_retained_pointer_press"],
+    "resolutionOrder": ["args.windowId", "session.viewState.windowId", "shell.activeWindowId", "app.windowKinds[0].id"],
+    "ticket": "26/09/09/PROCEDURAL-3D-END-TO-END"
+  },
+  "cases": [
+    {
+      "name": "an-action-with-no-arguments-gains-the-window",
+      "why": "The live defect: the retained `Add Generation` row's action carries no arguments at all, so it resolved to the focused window `procedural-main`.",
+      "windowId": "generation3d-generations",
+      "args": null,
+      "expectedArgs": [["windowId", "generation3d-generations"]],
+      "resolvesTo": "generation3d-generations",
+      "baselineResolvesTo": "procedural-main"
+    },
+    {
+      "name": "existing-arguments-are-preserved-in-order",
+      "why": "Scoping must not disturb the payload the body authored.",
+      "windowId": "generation3d-generations",
+      "args": [["generationId", "g-7"], ["mode", "duplicate"]],
+      "expectedArgs": [["generationId", "g-7"], ["mode", "duplicate"], ["windowId", "generation3d-generations"]],
+      "resolvesTo": "generation3d-generations",
+      "baselineResolvesTo": "procedural-main"
+    },
+    {
+      "name": "a-stale-window-id-is-replaced-not-duplicated",
+      "why": "A body re-scoped for another window must not leave two `windowId` entries for the address resolver to pick between.",
+      "windowId": "generation3d-generate-form",
+      "args": [["windowId", "procedural-main"], ["value", "3"]],
+      "expectedArgs": [["value", "3"], ["windowId", "generation3d-generate-form"]],
+      "resolvesTo": "generation3d-generate-form",
+      "baselineResolvesTo": "procedural-main"
+    },
+    {
+      "name": "an-action-already-scoped-to-its-own-window-is-unchanged-in-meaning",
+      "why": "Idempotence — scoping twice addresses the same instance.",
+      "windowId": "generation3d-generations",
+      "args": [["windowId", "generation3d-generations"]],
+      "expectedArgs": [["windowId", "generation3d-generations"]],
+      "resolvesTo": "generation3d-generations",
+      "baselineResolvesTo": "generation3d-generations"
+    }
+  ],
+  "focusedWindowId": "procedural-main"
+}

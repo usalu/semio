@@ -534,16 +534,16 @@ impl DagDrawLod {
         matches!(self, Self::Detail | Self::Micro)
     }
 
-    pub fn uses_input_row_connection_hitbox(self) -> bool {
-        self == Self::Normal
-    }
-
     pub fn uses_channel_row_pick(self) -> bool {
         matches!(self, Self::Detail | Self::Micro)
     }
 
+    /// 🔌️ Every tier that draws a node draws its port rows, and the host publishes each row's screen
+    /// rect through `entity_screen_json("handle", …)` at every zoom — so a press on one wires at every
+    /// zoom too. Only [`Self::Minimap`] is excluded: that tier is a whole-graph silhouette whose
+    /// nodes are a few pixels wide, and it owns the bounded selection-AABB drag instead.
     pub fn allows_connection_hit_picking(self) -> bool {
-        self.uses_input_row_connection_hitbox() || self.shows_handles()
+        self != Self::Minimap
     }
 
     pub fn shows_controls(self) -> bool {

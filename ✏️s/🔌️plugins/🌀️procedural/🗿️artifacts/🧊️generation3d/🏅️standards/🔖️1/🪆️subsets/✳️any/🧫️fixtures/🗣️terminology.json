@@ -1,0 +1,226 @@
+{
+  "note": "🗣️ The language-neutral roster of every user-visible generation3d label, one row per `app_labels!` field. The `app_labels!` macro already makes a MISSING locale a compile error; this fixture is what catches a locale that is PRESENT but wrong — English pasted into the German slot, or an empty string — and it pins the exact text both the Rust law (against `Generation3dLabels`' own consts) and the TypeScript twin (structural: every row bilingual, German distinct unless declared identical) answer. A label added without German fails both halves. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+  "identicalByDesignNote": "🟰️ Fields whose German is legitimately the SAME word as the English — a proper noun or an international term. Every other field must differ, or the German slot was never translated.",
+  "identicalByDesign": [
+    "catalog_neuron",
+    "schema_prefix"
+  ],
+  "labels": {
+    "widgets": {
+      "nativeEn": "Widgets",
+      "nativeDe": "Elemente",
+      "reuseEn": "Widgets",
+      "reuseDe": "Elemente"
+    },
+    "schema_prefix": {
+      "nativeEn": "Schema:",
+      "nativeDe": "Schema:",
+      "reuseEn": "Schema:",
+      "reuseDe": "Schema:"
+    },
+    "widgets_prefix": {
+      "nativeEn": "Widgets:",
+      "nativeDe": "Elemente:",
+      "reuseEn": "Widgets:",
+      "reuseDe": "Elemente:"
+    },
+    "no_selection": {
+      "nativeEn": "No selection",
+      "nativeDe": "Keine Auswahl",
+      "reuseEn": "No selection",
+      "reuseDe": "Keine Auswahl"
+    },
+    "id_field": {
+      "nativeEn": "Id",
+      "nativeDe": "ID",
+      "reuseEn": "Id",
+      "reuseDe": "ID"
+    },
+    "value_field": {
+      "nativeEn": "Value",
+      "nativeDe": "Wert",
+      "reuseEn": "Value",
+      "reuseDe": "Wert"
+    },
+    "range_field": {
+      "nativeEn": "Range",
+      "nativeDe": "Bereich",
+      "reuseEn": "Range",
+      "reuseDe": "Bereich"
+    },
+    "widget_group": {
+      "nativeEn": "Widget",
+      "nativeDe": "Element",
+      "reuseEn": "Widget",
+      "reuseDe": "Element"
+    },
+    "generate_hint": {
+      "nativeEn": "Add a generation to edit input values.",
+      "nativeDe": "Erstelle eine Generation, um Eingabewerte zu bearbeiten.",
+      "reuseEn": "Add a generation to edit input values.",
+      "reuseDe": "Erstelle eine Generation, um Eingabewerte zu bearbeiten."
+    },
+    "preview_hint": {
+      "nativeEn": "(evaluate a generation to preview output)",
+      "nativeDe": "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)",
+      "reuseEn": "(evaluate a generation to preview output)",
+      "reuseDe": "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)"
+    },
+    "catalog_neuron": {
+      "nativeEn": "Neuron",
+      "nativeDe": "Neuron",
+      "reuseEn": "Neuron",
+      "reuseDe": "Neuron"
+    },
+    "catalog_slider": {
+      "nativeEn": "Slider",
+      "nativeDe": "Schieberegler",
+      "reuseEn": "Slider",
+      "reuseDe": "Schieberegler"
+    },
+    "catalog_note": {
+      "nativeEn": "Note",
+      "nativeDe": "Notiz",
+      "reuseEn": "Note",
+      "reuseDe": "Notiz"
+    },
+    "catalog_preview": {
+      "nativeEn": "Preview",
+      "nativeDe": "Vorschau",
+      "reuseEn": "Preview",
+      "reuseDe": "Vorschau"
+    },
+    "window_flow": {
+      "nativeEn": "Flow",
+      "nativeDe": "Workflow",
+      "reuseEn": "Flow",
+      "reuseDe": "Workflow"
+    },
+    "window_preview": {
+      "nativeEn": "Preview",
+      "nativeDe": "Vorschau",
+      "reuseEn": "Preview",
+      "reuseDe": "Vorschau"
+    },
+    "window_generations": {
+      "nativeEn": "Generations",
+      "nativeDe": "Generationen",
+      "reuseEn": "Generations",
+      "reuseDe": "Generationen"
+    },
+    "window_generate_form": {
+      "nativeEn": "Form",
+      "nativeDe": "Formular",
+      "reuseEn": "Form",
+      "reuseDe": "Formular"
+    },
+    "window_generate_preview": {
+      "nativeEn": "Preview",
+      "nativeDe": "Vorschau",
+      "reuseEn": "Preview",
+      "reuseDe": "Vorschau"
+    },
+    "delete_selection": {
+      "nativeEn": "Delete selection",
+      "nativeDe": "Auswahl löschen",
+      "reuseEn": "Delete selection",
+      "reuseDe": "Auswahl löschen"
+    },
+    "graph_nodes": {
+      "nativeEn": "Nodes",
+      "nativeDe": "Knoten",
+      "reuseEn": "Nodes",
+      "reuseDe": "Knoten"
+    },
+    "graph_wires": {
+      "nativeEn": "Wires",
+      "nativeDe": "Leitungen",
+      "reuseEn": "Wires",
+      "reuseDe": "Leitungen"
+    },
+    "graph_input_port": {
+      "nativeEn": "Input",
+      "nativeDe": "Eingang",
+      "reuseEn": "Input",
+      "reuseDe": "Eingang"
+    },
+    "graph_output_port": {
+      "nativeEn": "Output",
+      "nativeDe": "Ausgang",
+      "reuseEn": "Output",
+      "reuseDe": "Ausgang"
+    },
+    "graph_empty": {
+      "nativeEn": "(no nodes)",
+      "nativeDe": "(keine Knoten)",
+      "reuseEn": "(no nodes)",
+      "reuseDe": "(keine Knoten)"
+    },
+    "graph_unwired": {
+      "nativeEn": "(no wires)",
+      "nativeDe": "(keine Leitungen)",
+      "reuseEn": "(no wires)",
+      "reuseDe": "(keine Leitungen)"
+    },
+    "status_ok": {
+      "nativeEn": "Evaluated",
+      "nativeDe": "Ausgewertet",
+      "reuseEn": "Evaluated",
+      "reuseDe": "Ausgewertet"
+    },
+    "status_stale": {
+      "nativeEn": "Stale",
+      "nativeDe": "Veraltet",
+      "reuseEn": "Stale",
+      "reuseDe": "Veraltet"
+    },
+    "status_queued": {
+      "nativeEn": "Queued",
+      "nativeDe": "In Warteschlange",
+      "reuseEn": "Queued",
+      "reuseDe": "In Warteschlange"
+    },
+    "status_computing": {
+      "nativeEn": "Computing",
+      "nativeDe": "Berechnet",
+      "reuseEn": "Computing",
+      "reuseDe": "Berechnet"
+    },
+    "status_error": {
+      "nativeEn": "Error",
+      "nativeDe": "Fehler",
+      "reuseEn": "Error",
+      "reuseDe": "Fehler"
+    },
+    "status_blocked": {
+      "nativeEn": "Blocked",
+      "nativeDe": "Blockiert",
+      "reuseEn": "Blocked",
+      "reuseDe": "Blockiert"
+    },
+    "graph_canvas": {
+      "nativeEn": "Node graph canvas",
+      "nativeDe": "Knotengraph-Leinwand",
+      "reuseEn": "Node graph canvas",
+      "reuseDe": "Knotengraph-Leinwand"
+    },
+    "graph_canvas_hint": {
+      "nativeEn": "Interactive node graph. The outline beside it lists every node, port and wire for keyboard and screen-reader use.",
+      "nativeDe": "Interaktiver Knotengraph. Die Gliederung daneben listet alle Knoten, Anschlüsse und Leitungen für Tastatur und Screenreader.",
+      "reuseEn": "Interactive node graph. The outline beside it lists every node, port and wire for keyboard and screen-reader use.",
+      "reuseDe": "Interaktiver Knotengraph. Die Gliederung daneben listet alle Knoten, Anschlüsse und Leitungen für Tastatur und Screenreader."
+    },
+    "preview_canvas": {
+      "nativeEn": "3D preview canvas",
+      "nativeDe": "3D-Vorschau-Leinwand",
+      "reuseEn": "3D preview canvas",
+      "reuseDe": "3D-Vorschau-Leinwand"
+    },
+    "preview_canvas_hint": {
+      "nativeEn": "Interactive 3D preview of the evaluated flow. Drag to orbit, click to select; the evaluation status is announced as it changes.",
+      "nativeDe": "Interaktive 3D-Vorschau des ausgewerteten Workflows. Ziehen zum Umkreisen, Klicken zum Auswählen; der Auswertungsstatus wird bei Änderung angesagt.",
+      "reuseEn": "Interactive 3D preview of the evaluated flow. Drag to orbit, click to select; the evaluation status is announced as it changes.",
+      "reuseDe": "Interaktive 3D-Vorschau des ausgewerteten Workflows. Ziehen zum Umkreisen, Klicken zum Auswählen; der Auswertungsstatus wird bei Änderung angesagt."
+    }
+  }
+}

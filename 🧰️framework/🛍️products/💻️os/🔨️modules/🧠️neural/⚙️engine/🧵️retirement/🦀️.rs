@@ -8,9 +8,24 @@ use std::sync::Arc;
 
 //#region 🧵️DomainRetirement
 enum Owner {
-    Map(Retirement<Value>), Value(Value), Shared(Arc<Value>), Bytes(Vec<u8>), Strings(Vec<String>),
+    Map(Retirement<Value>), Value(Value), Shared(Arc<Value>),
+    /// 🎟️ A byte buffer plus the payload bytes still to be drawn down before it is freed. A
+    /// `Vec<u8>` cannot be freed in pieces, so the grant is charged against `remaining_bytes` one
+    /// turn at a time and the whole buffer is released once the charge reaches zero — the
+    /// `min(grant, left)` drawdown the language-agnostic contract states
+    /// (`🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts`). An all-or-nothing release would answer
+    /// `Blocked` to every fixed-page driver in the tree and spin forever
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    Bytes { values: Vec<u8>, remaining_bytes: usize },
+    Strings(Vec<String>),
     Dictionaries(BTreeMap<String, Dictionary>), Snapshot(TreeSnapshot), Neurons(BTreeMap<String, NeuronSnapshot>), Seeds(BTreeMap<String, u64>),
     Operator(OperatorInfo), Channels(Vec<ChannelSpec>), Schema(Schema), Fields(Vec<FieldSpec>), Type(ValueType),
+}
+
+/// 🎟️ One byte-buffer owner whose drawdown charge starts at its live payload length.
+fn byte_owner(values: Vec<u8>) -> Owner {
+    let remaining_bytes = values.len();
+    Owner::Bytes { values, remaining_bytes }
 }
 /// 🎟️ Exact released payload bytes and one retained structural ownership operation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -26,7 +41,7 @@ impl ValueRetirement {
     pub fn push_value(&mut self, value: Value) { self.owners.push_back(Owner::Value(value)); }
     pub fn push_shared(&mut self, value: Arc<Value>) { self.owners.push_back(Owner::Shared(value)); }
     pub fn push_dictionary(&mut self, mut dictionary: Dictionary) { self.push_map(std::mem::take(&mut dictionary.pairs)); }
-    pub fn text(&mut self, text: String) { self.owners.push_back(Owner::Bytes(text.into_bytes())); }
+    pub fn text(&mut self, text: String) { self.owners.push_back(byte_owner(text.into_bytes())); }
     pub fn push_dictionaries(&mut self, values: BTreeMap<String, Dictionary>) { self.owners.push_back(Owner::Dictionaries(values)); }
     pub fn push_channels(&mut self, channels: EvalChannels) { self.push_dictionaries(channels.outputs); self.push_dictionaries(channels.inputs); }
     pub fn push_snapshot(&mut self, snapshot: TreeSnapshot) { self.owners.push_back(Owner::Snapshot(snapshot)); }
@@ -37,26 +52,29 @@ impl ValueRetirement {
     pub fn allocated_bytes(&self) -> usize {
         self.owners.iter().fold(0usize, |total, owner| total.saturating_add(match owner {
             Owner::Map(values) => values.allocated_bytes(),
-            Owner::Bytes(values) => values.capacity(),
+            Owner::Bytes { values, .. } => values.capacity(),
             Owner::Strings(values) => values.capacity().saturating_mul(size_of::<String>()),
             Owner::Channels(values) => values.capacity().saturating_mul(size_of::<ChannelSpec>()),
             Owner::Fields(values) => values.capacity().saturating_mul(size_of::<FieldSpec>()),
             _ => 0,
         }))
     }
+    /// 🎟️ One byte of credit per turn is all this frontier ever needs: every owner is either
+    /// structural or charged `min(grant, left)` against its live payload, so any positive grant
+    /// makes progress. Named rather than inlined because [`crate::retained::FlowRetirement`] asks
+    /// its nested owners for their close demand (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn next_close_byte_demand(&self) -> Result<usize, &'static str> {
-        let bytes = match self.owners.front() {
-            Some(Owner::Map(values)) => values.next_close_byte_demand()?,
-            Some(Owner::Bytes(values)) => values.capacity(),
-            Some(Owner::Strings(values)) if values.is_empty() => values.capacity().checked_mul(size_of::<String>()).ok_or("neural string-vector backing byte count overflow")?,
-            Some(Owner::Channels(values)) if values.is_empty() => values.capacity().checked_mul(size_of::<ChannelSpec>()).ok_or("neural channel-vector backing byte count overflow")?,
-            Some(Owner::Fields(values)) if values.is_empty() => values.capacity().checked_mul(size_of::<FieldSpec>()).ok_or("neural field-vector backing byte count overflow")?,
-            Some(_) => 1,
-            None => 0,
-        };
-        Ok(bytes.max(usize::from(!self.owners.is_empty())))
+        Ok(usize::from(!self.owners.is_empty()))
     }
     pub(crate) fn push_map(&mut self, map: OrderedMap<Value>) { let retirement = map.retire(); if !retirement.is_empty() { self.owners.push_back(Owner::Map(retirement)); } }
+
+
+    /// 🎟️ Releases one owner and at most `maximum_bytes` payload bytes. TOTAL under any positive
+    /// grant: `Blocked` means the caller offered no credit at all, never that an owner is too big
+    /// for this page. Every driver in the tree hands a fixed page (1, 64, 4096) and only ever
+    /// closes, so an owner that could refuse a positive grant is an unbreakable spin — see the
+    /// drawdown law in `🧪️tests/🧪️source-contract/🟦️.ts`
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> ValueRetirementStep {
         if self.owners.is_empty() { return ValueRetirementStep::Complete; }
         if maximum_items == 0 || maximum_bytes == 0 { return ValueRetirementStep::Blocked; }
@@ -75,18 +93,13 @@ impl ValueRetirement {
             }
             Owner::Shared(value) => if let Some(value) = Arc::into_inner(value) { self.owners.push_front(Owner::Value(value)); },
             Owner::Value(Value::Dictionary(dictionary)) => self.push_dictionary(dictionary),
-            Owner::Value(Value::Atom(Atom::String(text))) => self.owners.push_front(Owner::Bytes(text.into_bytes())),
+            Owner::Value(Value::Atom(Atom::String(text))) => self.owners.push_front(byte_owner(text.into_bytes())),
             Owner::Value(Value::Atom(_)) => {}
             Owner::Strings(mut values) if !values.is_empty() => {
                 if let Some(value) = values.pop() { self.text(value); }
                 self.owners.push_front(Owner::Strings(values));
             }
-            Owner::Strings(values) => {
-                let bytes = values.capacity().checked_mul(size_of::<String>()).expect("admitted neural string-vector backing remains addressable");
-                if bytes > maximum_bytes { self.owners.push_front(Owner::Strings(values)); return ValueRetirementStep::Blocked; }
-                released_bytes = bytes;
-                drop(values);
-            }
+            Owner::Strings(values) => drop(values),
             Owner::Dictionaries(mut values) => {
                 if let Some((key, value)) = values.pop_first() { self.text(key); self.push_dictionary(value); }
                 if !values.is_empty() { self.owners.push_front(Owner::Dictionaries(values)); }
@@ -115,12 +128,7 @@ impl ValueRetirement {
                 }
                 self.owners.push_front(Owner::Channels(values));
             }
-            Owner::Channels(values) => {
-                let bytes = values.capacity().checked_mul(size_of::<ChannelSpec>()).expect("admitted neural channel-vector backing remains addressable");
-                if bytes > maximum_bytes { self.owners.push_front(Owner::Channels(values)); return ValueRetirementStep::Blocked; }
-                released_bytes = bytes;
-                drop(values);
-            }
+            Owner::Channels(values) => drop(values),
             Owner::Schema(value) => {
                 self.text(value.id); self.text(value.module); self.text(value.name); self.text(value.icon); self.text(value.summary);
                 self.owners.push_back(Owner::Fields(value.fields));
@@ -134,19 +142,18 @@ impl ValueRetirement {
                 }
                 self.owners.push_front(Owner::Fields(values));
             }
-            Owner::Fields(values) => {
-                let bytes = values.capacity().checked_mul(size_of::<FieldSpec>()).expect("admitted neural field-vector backing remains addressable");
-                if bytes > maximum_bytes { self.owners.push_front(Owner::Fields(values)); return ValueRetirementStep::Blocked; }
-                released_bytes = bytes;
-                drop(values);
-            }
+            Owner::Fields(values) => drop(values),
             Owner::Type(ValueType::Schema(id)) => self.text(id),
             Owner::Type(ValueType::List(inner)) => self.owners.push_front(Owner::Type(*inner)),
             Owner::Type(_) => {}
-            Owner::Bytes(bytes) => {
-                released_bytes = bytes.capacity();
-                if released_bytes > maximum_bytes { self.owners.push_front(Owner::Bytes(bytes)); return ValueRetirementStep::Blocked; }
-                drop(bytes);
+            Owner::Bytes { values, remaining_bytes } => {
+                released_bytes = maximum_bytes.min(remaining_bytes);
+                let remaining_bytes = remaining_bytes - released_bytes;
+                if remaining_bytes != 0 {
+                    self.owners.push_front(Owner::Bytes { values, remaining_bytes });
+                    return ValueRetirementStep::Pending { released_items: 1, released_bytes };
+                }
+                drop(values);
             }
         }
         ValueRetirementStep::Pending { released_items: 1, released_bytes }

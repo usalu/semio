@@ -8,17 +8,28 @@
       "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌳️wgpu-document-reconcile/🟦️.ts"
     }
   },
-
   "identityRule": {
     "keyedBy": "uiNodeId",
     "why": "The producer mints one UiNodeId per (parent, key) and reuses it while that identity survives (🖱️ui/🧠️runtime's SurfaceReconcileStage::AllocateIdentities), so a node that only moved or changed props must keep its arena slot — and with it its widget state, focused edit buffer, scroll offset and interaction flags.",
     "reactTwin": "uiChildReactKeys in 📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx"
   },
-
-  "phases": ["adopt", "plan", "unlink", "mount", "retire", "publish"],
+  "phases": [
+    "adopt",
+    "plan",
+    "unlink",
+    "mount",
+    "retire",
+    "publish"
+  ],
   "unitsPerStep": 1,
-  "framePhaseOrder": ["ingress", "reconcile", "viewport", "layout", "paint", "complete"],
-
+  "framePhaseOrder": [
+    "ingress",
+    "reconcile",
+    "viewport",
+    "layout",
+    "paint",
+    "complete"
+  ],
   "consumesSubtree": {
     "surface": {
       "rule": "A surface's children are NOT rendered chrome — a renderer draws props and nothing else; its children are the out-of-doc payload lane carriers, folded back into the scene.",
@@ -30,7 +41,6 @@
     },
     "everyOtherComponent": false
   },
-
   "componentProjection": {
     "container.plain": "stack",
     "container.form": "stack",
@@ -56,7 +66,6 @@
     "surface": "componentScene",
     "extension": "externalSlot"
   },
-
   "surfaceIdentity": {
     "surfaceId": "the owning document's surface",
     "controllerId": "the owning app's controller",
@@ -64,9 +73,15 @@
     "bindingId": null,
     "reactTwin": "surfaceHostIdentityV1"
   },
-
-  "spaceTokens": { "none": "none", "xs": "tight", "sm": "tight", "md": null, "lg": "loose", "xl": "loose", "xxl": "loose" },
-
+  "spaceTokens": {
+    "none": "none",
+    "xs": "tight",
+    "sm": "tight",
+    "md": null,
+    "lg": "loose",
+    "xl": "loose",
+    "xxl": "loose"
+  },
   "document": {
     "generation": 7,
     "surface": "procedural-main",
@@ -78,28 +93,68 @@
       {
         "id": 0,
         "key": "procedural-play-main.body",
-        "component": { "type": "container", "role": "plain" },
-        "layout": { "kind": "stack", "axis": "horizontal", "gap": "md", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": true, "wrap": false },
+        "component": {
+          "type": "container",
+          "role": "plain"
+        },
+        "layout": {
+          "kind": "stack",
+          "axis": "horizontal",
+          "gap": "md",
+          "padding": {
+            "all": "none"
+          },
+          "align": "stretch",
+          "justify": "start",
+          "grow": true,
+          "wrap": false
+        },
         "style": {},
         "activity": "idle",
         "accessibility": {},
-        "children": [1, 3]
+        "children": [
+          1,
+          3
+        ]
       },
       {
         "id": 1,
         "key": "procedural-play-main.outline",
-        "component": { "type": "container", "role": "plain" },
-        "layout": { "kind": "stack", "axis": "vertical", "gap": "sm", "padding": { "all": "sm" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false },
+        "component": {
+          "type": "container",
+          "role": "plain"
+        },
+        "layout": {
+          "kind": "stack",
+          "axis": "vertical",
+          "gap": "sm",
+          "padding": {
+            "all": "sm"
+          },
+          "align": "stretch",
+          "justify": "start",
+          "grow": false,
+          "wrap": false
+        },
         "style": {},
         "activity": "idle",
         "accessibility": {},
-        "children": [2]
+        "children": [
+          2
+        ]
       },
       {
         "id": 2,
         "key": "procedural-play-main.outline.title",
-        "component": { "type": "text", "value": "Graph nodes" },
-        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "component": {
+          "type": "text",
+          "value": "Graph nodes"
+        },
+        "layout": {
+          "kind": "leaf",
+          "width": "hug",
+          "height": "hug"
+        },
         "style": {},
         "activity": "idle",
         "accessibility": {},
@@ -108,38 +163,83 @@
       {
         "id": 3,
         "key": "procedural-play-main.canvas",
-        "component": { "type": "container", "role": "plain" },
-        "layout": { "kind": "stack", "axis": "vertical", "gap": "md", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": true, "wrap": false },
+        "component": {
+          "type": "container",
+          "role": "plain"
+        },
+        "layout": {
+          "kind": "stack",
+          "axis": "vertical",
+          "gap": "md",
+          "padding": {
+            "all": "none"
+          },
+          "align": "stretch",
+          "justify": "start",
+          "grow": true,
+          "wrap": false
+        },
         "style": {},
         "activity": "idle",
         "accessibility": {},
-        "children": [4]
+        "children": [
+          4
+        ]
       },
       {
         "id": 4,
         "key": "procedural-play-main",
-        "component": { "type": "surface", "kind": "node-graph", "docSchema": "node-graph@1", "doc": { "bytes": [] } },
-        "layout": { "kind": "leaf", "width": "fill", "height": "fill" },
+        "component": {
+          "type": "surface",
+          "kind": "node-graph",
+          "docSchema": "node-graph@1",
+          "doc": {
+            "bytes": []
+          }
+        },
+        "layout": {
+          "kind": "leaf",
+          "width": "fill",
+          "height": "fill"
+        },
         "style": {},
         "activity": "idle",
         "accessibility": {},
-        "children": [5]
+        "children": [
+          5
+        ]
       },
       {
         "id": 5,
         "key": "framework.scene.nodeGraph.fixture",
-        "component": { "type": "container", "role": "plain" },
-        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "component": {
+          "type": "container",
+          "role": "plain"
+        },
+        "layout": {
+          "kind": "leaf",
+          "width": "hug",
+          "height": "hug"
+        },
         "style": {},
         "activity": "idle",
         "accessibility": {},
-        "children": [6]
+        "children": [
+          6
+        ]
       },
       {
         "id": 6,
         "key": "framework.scene.nodeGraph.fixture.p0",
-        "component": { "type": "text", "value": "{\"nodes\":[]}" },
-        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "component": {
+          "type": "text",
+          "value": "{\"nodes\":[]}"
+        },
+        "layout": {
+          "kind": "leaf",
+          "width": "hug",
+          "height": "hug"
+        },
         "style": {},
         "activity": "idle",
         "accessibility": {},
@@ -147,27 +247,62 @@
       }
     ]
   },
-
   "expected": {
     "arenaNodeCount": 5,
     "rootKey": "procedural-play-main.body",
-    "mountedKeysInTreeOrder": ["procedural-play-main.body", "procedural-play-main.outline", "procedural-play-main.outline.title", "procedural-play-main.canvas", "procedural-play-main"],
-    "mountedIdsInTreeOrder": [0, 1, 2, 3, 4],
-    "skippedIds": [5, 6],
-    "childrenOfRootInOrder": [1, 3],
-    "surfaceNode": { "id": 4, "kind": "node-graph", "surfaceId": "procedural-main", "paneId": "procedural-play-main", "controllerId": "generation3d" },
-    "paint": { "drawCallsAtLeast": 1, "uiInstancesAtLeast": 1, "glyphInstancesAtLeast": 1 }
+    "mountedKeysInTreeOrder": [
+      "procedural-play-main.body",
+      "procedural-play-main.outline",
+      "procedural-play-main.outline.title",
+      "procedural-play-main.canvas",
+      "procedural-play-main"
+    ],
+    "mountedIdsInTreeOrder": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "skippedIds": [
+      5,
+      6
+    ],
+    "childrenOfRootInOrder": [
+      1,
+      3
+    ],
+    "surfaceNode": {
+      "id": 4,
+      "kind": "node-graph",
+      "surfaceId": "procedural-main",
+      "paneId": "procedural-play-main",
+      "controllerId": "generation3d"
+    },
+    "paint": {
+      "drawCallsAtLeast": 1,
+      "uiInstancesAtLeast": 1,
+      "glyphInstancesAtLeast": 1
+    }
   },
-
   "secondGeneration": {
     "generation": 8,
     "revision": 4,
-    "removedIds": [2],
+    "removedIds": [
+      2
+    ],
     "addedNode": {
       "id": 7,
       "key": "procedural-play-main.outline.count",
-      "component": { "type": "text", "value": "3 nodes" },
-      "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+      "component": {
+        "type": "text",
+        "value": "3 nodes"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
       "style": {},
       "activity": "idle",
       "accessibility": {},
@@ -175,9 +310,78 @@
     },
     "expected": {
       "arenaNodeCount": 5,
-      "preservedIds": [0, 1, 3, 4],
-      "retiredIds": [2],
-      "mountedIdsInTreeOrder": [0, 1, 7, 3, 4]
+      "preservedIds": [
+        0,
+        1,
+        3,
+        4
+      ],
+      "retiredIds": [
+        2
+      ],
+      "mountedIdsInTreeOrder": [
+        0,
+        1,
+        7,
+        3,
+        4
+      ]
+    }
+  },
+  "ingressGeneration": {
+    "rule": "A surface's document is admitted by its ingress generation alone: `document_status` answers Published while it equals the published one, and `begin_document` refuses StaleGeneration unless it is strictly greater. A producer therefore mints one counter per surface, held still while that surface's own revision holds still.",
+    "cases": [
+      {
+        "label": "first document of a surface",
+        "minted": null,
+        "revision": 1,
+        "generation": 1
+      },
+      {
+        "label": "the same surface republished unchanged",
+        "minted": [
+          1,
+          1
+        ],
+        "revision": 1,
+        "generation": 1
+      },
+      {
+        "label": "the surface's revision moved",
+        "minted": [
+          1,
+          1
+        ],
+        "revision": 2,
+        "generation": 2
+      },
+      {
+        "label": "the revision moved again",
+        "minted": [
+          2,
+          2
+        ],
+        "revision": 7,
+        "generation": 3
+      },
+      {
+        "label": "a reopened surface whose revision restarted",
+        "minted": [
+          7,
+          3
+        ],
+        "revision": 1,
+        "generation": 4
+      }
+    ],
+    "constantProducerIsRefused": {
+      "why": "Minting one constant for every surface and every republish — the plugin instance id — makes every document after a surface's first answer Published, so the arena keeps the first tree for the life of the session.",
+      "generations": [
+        1,
+        1,
+        1
+      ],
+      "admittedIngresses": 1
     }
   }
 }

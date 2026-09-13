@@ -1,0 +1,90 @@
+{
+  "schema": "semio.framework.kernel.spawned-job-drive.v1",
+  "owner": "🧰️framework/🔨️modules/🎠️kernel - Effect::SpawnJob → Event::JobCompleted",
+  "note": "The law every host on every renderer answers to: a `spawn-job` effect obliges its host to START the job, STEP it until a terminal `job-step`, and answer the guest with `Event::JobCompleted` carrying that step's bytes. A host that admits the effect and never pumps it is silent breakage — on the wgpu target every `interactionSelect`/`interactionHover` published the right wire message and was never applied, because the bridge dropped the effect outright (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md` §7).",
+  "budget": {
+    "note": "One host admission's static budget. `stepCeiling` is the host's patience, not the job's expected cost: a framework reserved tool job reaches `done` in two steps (`🔌️plugin/🦀️.rs`'s `drive_framework_reserved_spawn_like_host` asserts exactly that).",
+    "stepCeiling": 32,
+    "fuel": "50000000",
+    "deadlineMs": 100
+  },
+  "placements": {
+    "note": "The WIT `enum job-placement` vocabulary. jco lowers a WIT `enum` to a BARE string, not a `{tag}` record — measured on 6118: `placement: \"isolated\"` on every reserved tool job. An unknown spelling is refused, never defaulted: guessing `inline` would run a pooled job inside the spawning instance's own turn budget.",
+    "wire": ["inline", "isolated", "exclusive"],
+    "refusals": ["", "Isolated", "isolated ", "pooled", "tag"]
+  },
+  "transcripts": [
+    {
+      "id": "reserved-tool-job-done-on-the-second-step",
+      "note": "The measured shape of `interactionSelect`/`interactionHover` on generation3d: one `running`, then `done` with the reserved job's output bytes.",
+      "steps": [{ "status": "running" }, { "status": "done", "value": [1, 0, 0, 0] }],
+      "completion": { "steps": 2, "outcome": { "ok": [1, 0, 0, 0] } }
+    },
+    {
+      "id": "done-on-the-first-step",
+      "note": "A job whose whole body fits one slice needs no `running` at all.",
+      "steps": [{ "status": "done", "value": [] }],
+      "completion": { "steps": 1, "outcome": { "ok": [] } }
+    },
+    {
+      "id": "failed-is-a-completion-not-a-drive-error",
+      "note": "A guest that refuses its own job still owes its actor an event — the parked request resolves `Err`, and the actor sees the refusal instead of hanging forever.",
+      "steps": [{ "status": "running" }, { "status": "failed", "value": [102, 97, 117, 108, 116] }],
+      "completion": { "steps": 2, "outcome": { "fault": [102, 97, 117, 108, 116] } }
+    },
+    {
+      "id": "observations-after-the-terminal-step-are-ignored",
+      "note": "A driver that stops the instant it sees `done` and one that read a batch must hand over the SAME completion.",
+      "steps": [{ "status": "done", "value": [7] }, { "status": "running" }, { "status": "failed", "value": [9] }],
+      "completion": { "steps": 1, "outcome": { "ok": [7] } }
+    },
+    {
+      "id": "terminal-on-the-very-last-admitted-step",
+      "note": "The ceiling is inclusive: 32 observations whose last one is terminal is a completion, not a stall.",
+      "runningPrefix": 31,
+      "steps": [{ "status": "done", "value": [42] }],
+      "completion": { "steps": 32, "outcome": { "ok": [42] } }
+    }
+  ],
+  "refusals": [
+    {
+      "id": "stalled-empty-transcript",
+      "note": "A host that admitted the effect and never stepped it — literally the wgpu defect, expressed as a transcript.",
+      "steps": [],
+      "error": { "kind": "stalled", "steps": 0 }
+    },
+    {
+      "id": "stalled-at-the-ceiling",
+      "runningPrefix": 32,
+      "steps": [],
+      "error": { "kind": "stalled", "steps": 32 }
+    },
+    {
+      "id": "overrun-past-the-ceiling",
+      "note": "More observations than one admission grants is a DRIVER bug and must not be laundered into a completion.",
+      "runningPrefix": 32,
+      "steps": [{ "status": "done", "value": [1] }],
+      "error": { "kind": "overrun", "steps": 33 }
+    }
+  ],
+  "completedEvent": {
+    "note": "What the host sends back. The guest correlates on `job` alone — the `job` id IS the parked request id (`⚛️reactor/🔄️turn/🦀️.rs`), so no host-side request table exists. `kind` is the actor-boundary event envelope's tag; `payload` is the WIT `job-completed-event` record, and `outcome` is its `completion-result` variant.",
+    "kind": "job-completed",
+    "cases": [
+      {
+        "id": "ok",
+        "job": "916",
+        "completion": { "steps": 2, "outcome": { "ok": [1, 0, 0, 0] } },
+        "payload": { "job": "916", "outcome": { "tag": "ok", "val": [1, 0, 0, 0] } },
+        "rustEventJson": { "jobCompleted": { "job": 916, "result": { "ok": [1, 0, 0, 0] } } }
+      },
+      {
+        "id": "fault",
+        "job": "909",
+        "completion": { "steps": 2, "outcome": { "fault": [102, 97, 117, 108, 116] } },
+        "payload": { "job": "909", "outcome": { "tag": "fault", "val": [102, 97, 117, 108, 116] } },
+        "rustEventJson": { "jobCompleted": { "job": 909, "result": { "err": [102, 97, 117, 108, 116] } } }
+      }
+    ]
+  }
+}

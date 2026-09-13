@@ -25,9 +25,16 @@ Lane `editor-verbs-cancel-undo`. Items #4, #6, #9, #11, #12, #17 and the cancel 
 - Catalogue panel now accounts for **every** registered operator; `evalLen`/`evalHead` are gone from
   the preview status contract; `demo-session`'s exclusion from the picker is now a law, not an
   oversight.
-- **No runtime/browser proof is claimed.** 6018 still hangs in `setContributions`
-  (`📓️fix-forward-set-contributions-hang-2026-09-13.md` does not exist as of this writing), so
-  `🐍️cancel-preview-probe.mjs` cannot reach a preview window. Every claim below is native.
+- **Runtime proof obtained** (§7.2), once `📓️fix-forward-set-contributions-hang-2026-09-13.md`
+  unblocked 6018. Against a fresh restage: the cancel button now RENDERS, its click dispatches
+  `cancelPreviewEval` on the Interactive lane, **aborts 1 in-flight extension request**, and settles
+  with `historyUpserts: 0`; `cycleShowMode`, `cycleLodMode`, `undo` and `redo` all fire from the
+  keyboard alone.
+- **Two undocumented ShellHost keyboard rules, both measured** (§6.1): a chord token is compared to
+  `event.key` verbatim — so `mod+period` can NEVER match and was a dead chord (fixed to `mod+.`,
+  re-proved at runtime; the energy plugin still carries the dead spelling) — and a chord resolves
+  against the FOCUSED window kind's actions only, so a chord for a `window_kind_action_refs`-owned
+  verb is window-scoped by construction.
 
 ---
 
@@ -274,13 +281,42 @@ and `🔣️taxonomy.json` `members-of-commands` (`🔁️cycle-show-mode`, `�
 
 New app-level chords, each on the chord its verb class already uses elsewhere in this repo:
 
-| chord | action | why this chord |
-|---|---|---|
-| `delete,backspace` | `deleteSelection` | the chord three sibling artifacts already declare |
-| `mod+period` | `cancelPreviewEval` | the cancel chord the simulation surface declares |
-| `mod+shift+g` | `addGeneration` | follows the `mod+shift+<initial>` create chords |
-| `mod+alt+d` | `cycleShowMode` | new |
-| `mod+alt+k` | `cycleLodMode` | new |
+| chord | action | scope | why this chord |
+|---|---|---|---|
+| `delete,backspace` | `deleteSelection` | every window | the chord three sibling artifacts already declare |
+| `mod+.` | `cancelPreviewEval` | preview windows | the cancel chord the simulation surface declares — see §6.1 for why the token is `.` |
+| `mod+shift+g` | `addGeneration` | Generations window | follows the `mod+shift+<initial>` create chords |
+| `mod+alt+d` | `cycleShowMode` | every window | new |
+| `mod+alt+k` | `cycleLodMode` | every window | new |
+
+### 6.1 Two runtime rules these chords obey, both measured, neither documented anywhere
+
+`🐍️editor-verbs-keyboard-probe.mjs` drives ONLY the keyboard against the running playground and
+reads each verb's own `performInvocation` line. First run (`🗑️generated/editor-verbs/keys-1`),
+flow window focused: `cycleShowMode` ✅ (twice, second arming a `flowEvalTick`), `cycleLodMode` ✅,
+`undo` ✅, `redo` ✅ — and `cancelPreviewEval` ❌ and `addGeneration` ❌, **zero** console lines
+each, under every Playwright spelling (`Control+Period`, `Control+.`, `Control+Shift+g`,
+`Control+Shift+G`, `Meta+Shift+g`; `🗑️generated/editor-verbs/keys-2`). Two distinct causes, both
+read off `🏛️ShellHost/🟦️.tsx`'s `handleAppKeydown`:
+
+1. **A chord token is compared to `event.key` verbatim.** `matches()` takes the last `+` segment and
+   does `event.key.toLowerCase() === key`. The period key's `event.key` IS `"."`, so **`mod+period`
+   can never match anything** — it is a silently dead chord. Fixed here to `mod+.`.
+   ⚠️ `mod+period` is declared repo-wide for the SAME cancel verb class: the energy plugin
+   (`✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1344`,
+   plus its simulation window's help leaf and `🟦️.ts` row) has the same dead chord. Out of this
+   lane; flagged.
+2. **A chord resolves against the FOCUSED window kind's actions only.**
+   `const actionById = new Map((session.app.windowKinds.find((kind) => kind.id === focusedWindowKindId)?.actions ?? []).map(…))`
+   and then `if (!definition) continue;`. So a chord for a verb listed in `window_kind_action_refs`
+   is live exactly while that window has focus, and a chord for an unowned verb (copied onto every
+   window by `build_definition`) is live everywhere. That is why the four that worked, worked: all
+   four are unowned. `cancelPreviewEval` and `addGeneration` are window-owned by design — the
+   preview windows and the Generations window genuinely own them (§2) — so their chords are
+   window-scoped, and the fixture now says so (`windowScoped: true`).
+
+Neither rule is a defect in the app; rule 1 IS a defect in the chord string, and both are now stated
+in `🧫️fixtures/⌨️keyboard-reachability.json`'s note so the next lane does not re-derive them.
 
 `Fit graph` is deliberately **not** an app keybinding: it is shell chrome painted over any node-graph
 surface (`wgpu-shell.rs:9493`, React's `fitGraphToView`), not an app action, and the shell already
@@ -304,16 +340,105 @@ Every new label carries en+de and no default (`Cycle Show Mode`/`Anzeigemodus we
 - `cargo check -p semio-s-artifact-procedural-generation3d --features component-app-assembly --tests`
   — **clean** (`🗑️generated/editor-verbs/check-2.txt`).
 - `cargo test … --lib --test-threads=1` — see §7.1.
-- **No browser proof.** 6018 hangs in `setContributions`;
-  `📓️fix-forward-set-contributions-hang-2026-09-13.md` had not landed when this lane finished, and no
-  restage was started (`pgrep -fl activate-generation3d` stayed empty, but a restage without a
-  working guest proves nothing). `🐍️cancel-preview-probe.mjs` against `Sphere Cut With Torus` is the
-  probe to run once it lands: it records whether `[data-slot="world-compute-cancel"]` ever appears,
-  which is exactly the affordance §2 fixes.
+- **Browser proof: obtained.** See §7.2 — 6018 came back with
+  `📓️fix-forward-set-contributions-hang-2026-09-13.md`, and both probes ran against a fresh
+  `activate-generation3d-react-dev` restage.
 
 ### 7.1 Suite state
 
-_(filled in below by the final run)_
+| run | result | what changed since the previous run |
+|---|---|---|
+| `lib-full-4.txt` | 291 passed, **133 failed**, ran to completion | first COMPLETE run of this suite today — §1.4 removed the stack-overflow abort that had been truncating every previous run |
+| `lib-full-7.txt` | 266 passed, 117 failed, **aborted near the end** | viewer action declaration + `next_show_mode` fixed |
+
+Two things this lane caused and fixed, both visible in the delta:
+
+1. **26 viewer failures were mine.** Adding `cancelPreviewEval` to the preview windows'
+   `window_kind_action_refs` (§2) while the verb was declared ONLY as a `CommandDefinition` made
+   `build_definition` reject the whole viewer with
+   `app-definition.invalid: … references undeclared action cancelPreviewEval`. The
+   `generate-mode-interactions` and `io-surface` lanes fix-forwarded the editor and viewer halves
+   respectively while this lane was rate-limited; the duplicate `view_action` that collision produced
+   is removed and the viewer now pairs the peer's `view_action` with the
+   `action_interactive_job("cancelPreviewEval", Migrated)` the editor already had.
+   `lib-full-7.txt` carries **0** `references undeclared action` failures.
+2. **`next_show_mode("")` returned `shaded`, not `shaded+edges`.** An unset config DISPLAYS `shaded`,
+   so the first cycle must land on the second rung; `next_in_ladder`'s unknown-value fallback gave
+   the first. `next_lod_mode` already normalised its empty case and show mode did not.
+   `the_show_mode_ladder_is_a_total_cycle` now passes.
+3. **`the_editor_binds_every_keyboard_verb_the_fixture_names` was too strict.** A peer's interaction
+   domain made `build_definition` mint `escape`→`clearSelection` (and `mod+a`→`selectAll`), which the
+   plugin never declares; the law exempted only `History`/`Clipboard`-kind minted chords. Exemption
+   widened to `ActionKind::Interaction` — by KIND, so a fourth framework-minted chord cannot break a
+   plugin fixture that had no say in it. Law passes (`🗑️generated/editor-verbs/keyboard-law-2.txt`).
+4. **`the_catalogue_panel_publishes_its_omitted_count` compared the wrong two numbers.** It asserted
+   the rendered page contains `+{catalogue_page().omitted}` — but `catalogue_page()` measures the row
+   budget OUT OF BAND while `render` runs inside a live app whose argument arena another panel may
+   already hold credit against (`render`'s own docstring says so). The standalone walk legitimately
+   places more rows, so the law went red (`111` against the page's own `+115`) the moment peers added
+   operators, with nothing actually wrong with the panel. Rewritten to read the panel's OWN published
+   numbers: `shown + omitted == roster`, where `shown` is the clickable `addWidget` rows in the
+   rendered body and `omitted` is the `+n` the total continuation row publishes. That is the
+   invariant §3 is about, and it cannot drift with the arena. `render` and `catalogue_page` now also
+   share ONE walk (`walk_catalogue_groups`), so a group the tree drops can never be counted as shown
+   by either.
+
+All twenty-five of this lane's own laws pass (`🗑️generated/editor-verbs/lane-laws-3.txt`).
+
+**The remaining ~115 failures are NOT this lane's, and they are not new — they were invisible.**
+Every previous run of this suite aborted on the §1.1 stack overflow before reaching them. They are
+one failure mode with three spellings, all in the app-fixture CLOSE ladder, never in a verb:
+`Generation3d app fixture did not reach its terminal-empty close witness` (57),
+`… last pending close authority: returned snapshot-read disposer is waiting on external ownership`
+(19), and `… document store close awaits a retained reader or owner` (13). Several are named in the
+2026-09-12 red list (`add_generation_records_an_undoable_generation_operation`,
+`vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed`), which is
+the strongest evidence they predate this lane.
+
+`lib-full-7.txt` ends in a NEW abort class, and the change is itself the §1.4 result: no
+`stack overflow` appears anywhere in it. It is
+`panic in a destructor during cleanup … thread caused non-unwinding panic` — a fixture Drop assert
+firing while the thread was ALREADY unwinding from a close-witness panic, with
+`drop_glue::<UnlinkedFlowExtensions>` on the trace. That is the close-ladder debt aborting the run
+from a second direction, and it also means `lib-full-7.txt` never printed its `failures:` detail
+block. Someone owning the close ladder should take it; §8 item 5.
+
+### 7.2 Runtime proof (browser, 6018, fresh restage)
+
+**Cancel — `🐍️cancel-preview-probe.mjs`, `🗑️generated/cancellation/cancel-verbs-1`.** The
+affordance §2 is about now EXISTS and works:
+
+```
+armed        cancelButton {"action":"cancelPreviewEval","label":"Cancel","tag":"BUTTON"}
+             pane {"phase":"idle","cancellable":true,"text":"Idle Cancel"}
+8375 warning [DEBUG] extension requests aborted by surface cancel {"action":"cancelPreviewEval","pluginId":"procedural","instanceId":1,"aborted":1}
+8375 warning [DEBUG] performInvocation {"invocationKind":"action","instanceId":1,"actionId":"cancelPreviewEval"}
+8375 warning [DEBUG] command ingress lane {"instanceId":1,"actionId":"cancelPreviewEval","seq":22,"lane":"Interactive"}
+9380 warning [DEBUG] performInvocation settled {… "frames":2,"frameKinds":["Invocation","Ephemeral"],"historyUpserts":0,"historyCanUndo":null,"effects":2}
+```
+
+Four things at once, none of them inferred: the button renders (it did not before — the
+`declaredAction` gate dropped it), the click dispatches as an **action** on the **Interactive**
+lane, it **aborted 1 in-flight extension request**, and it settled with `historyUpserts: 0` — a view
+action that mutates no document, which is exactly the law §2 states. No `undeclared action` refusal
+appears anywhere in the 6.7k-line console.
+
+**Keyboard — `🐍️editor-verbs-keyboard-probe.mjs`, `🗑️generated/editor-verbs/keys-1…3`.** Keyboard
+only, no clicks on the verbs. `cycleShowMode` ✅ ×2, `cycleLodMode` ✅, `undo` ✅, `redo` ✅ — the
+undo/redo chords reach the framework verbs whose admission §1.5 fixed. The two window-scoped chords
+and the dead `period` token are §6.1.
+
+After the `mod+.` fix and a second restage, the cancel chord fires from the keyboard alone
+(`🗑️generated/editor-verbs/keys-4`, preview window focused):
+
+```
+cancel-dot        invoked ["cancelPreviewEval"]
+cancel-dot-again  invoked ["cancelPreviewEval"]
+```
+
+`addGeneration`'s chord could not be exercised: the Generations window it is owned by is a GENERATE
+mode window and is not mounted in edit mode (`🗑️generated/editor-verbs/keys-5`, focus selector
+matched nothing). Consistent with rule 2 and left as a stated scope, not a claimed pass.
 
 ## 8. Pre-existing defects found, not fixed (not this lane's)
 
@@ -336,6 +461,13 @@ _(filled in below by the final run)_
    → 94 GiB free. `bun nx run repo:cache-prune` would not have helped much: it guards any unit
    touched in the last `CACHE_POLICY.storage.guardAgeMs`, and under a live fleet nearly everything is
    hot. Worth a coordinator-level watch.
+5. **The app-fixture close ladder does not reach terminal-empty for ~115 of this crate's lib tests**,
+   and when it panics inside a Drop that is already unwinding it ABORTS the run
+   (`lib-full-7.txt`). §7.1 has the three spellings and the evidence that it predates this lane.
+   This is now the single biggest thing standing between this crate and a green suite, and it is a
+   close-ladder/retirement question, not a verb question.
+6. **`mod+period` is a dead chord repo-wide.** §6.1 rule 1. Fixed here; the energy plugin still
+   carries it in three places. Flagged as a separate task.
 
 ## 9. Files
 
@@ -353,11 +485,18 @@ generation3d (`✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️
   `✏️editor/🎮️commands/🛑️cancel-preview-eval/🧪️tests/🔬️unit/🦀️.rs`,
   `✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs`, `✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️.rs`,
   `✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🦀️.rs`,
-  `✏️editor/📌️panels/🛍️catalogue/🦀️.rs` + its `🧪️tests/🔬️unit/🦀️.rs`,
+  `✏️editor/📌️panels/🛍️catalogue/🦀️.rs` (+ `walk_catalogue_groups`, §7.1 item 4) + its `🧪️tests/🔬️unit/🦀️.rs`,
   `✏️editor/🧪️tests/🔬️unit/🦀️.rs`
 - `👁️viewer/🦀️.rs`, `👁️viewer/🧪️tests/🔬️status-contract/🦀️.rs`,
   `👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🦀️.rs`
 - `🧵️preview-eval/🦀️.rs`
-- `🧫️fixtures/🛑️preview-cancel.json`, `🧫️fixtures/⌨️keyboard-reachability.json` (new)
+- `🧫️fixtures/🛑️preview-cancel.json`, `🧫️fixtures/⌨️keyboard-reachability.json` (new),
+  `🧫️fixtures/🎛️generate-mode-interactions.json` (the `mod+period`→`mod+.` token, §6.1)
 - `🧪️tests/🔬️status-contract/🟦️.ts`
 - crate root mount: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs`
+
+Ticket probes (inputs, kept):
+- `🐍️editor-verbs-keyboard-probe.mjs` (new) — keyboard-only runtime probe; `SEMIO_PROBE_CHORDS` and
+  `SEMIO_PROBE_FOCUS` make a dead chord re-testable under another spelling or another focused window
+  without a new probe.
+- `🐍️cancel-preview-probe.mjs` (existing) — used unmodified for §7.2.

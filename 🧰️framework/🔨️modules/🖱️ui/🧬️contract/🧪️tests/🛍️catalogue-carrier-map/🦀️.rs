@@ -79,7 +79,7 @@ fn a_javascript_ordered_ui_map_preserves_text_values() {
     for key in &fixture.ascending_keys {
         let (_, value) = map.iter().find(|(entry_key, _)| entry_key.as_str() == key).expect("sorted map carries every key");
         let expected = parsed[key].as_str().expect("fixture entry");
-        assert_eq!(value, &UiValue::Text(UiText::try_from_str(expected).expect("bounded fixture text")));
+        assert_eq!(value, UiValue::Text(UiText::try_from_str(expected).expect("bounded fixture text")));
     }
     println!("[DEBUG] catalogue-carrier-map ui-map value-check keys={}", fixture.ascending_keys.len());
 }

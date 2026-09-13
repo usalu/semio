@@ -268,36 +268,42 @@ fn long_key_comparison_transfers_workers_and_retirement_counts_exact_key_bytes()
 //#endregion 🧹️CancellationAndOwnership
 
 //#region 📤️SharedOwnership
+/// 🎟️ A retained key buffer is charged `min(grant, left)` per turn against its LIVE payload and the
+/// whole allocation — reserved capacity included — is freed once the charge reaches zero. The one
+/// grant that blocks is a zero one; anything positive makes progress, which is what lets a
+/// fixed-page close ladder finish (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
-fn ordered_physical_retirement_uses_inline_frontier_and_releases_exact_key_capacity() {
+fn ordered_physical_retirement_uses_inline_frontier_and_charges_the_key_payload_down() {
     let mut key = String::with_capacity(8193);
     key.push_str("retained-key");
     let key_capacity = key.capacity();
+    let key_payload = key.len();
     let mut map = OrderedMap::new();
     map.insert(key, ());
     let mut retirement = map.retire();
     assert_eq!(retirement.allocated_bytes(), 0);
     let mut released = 0usize;
     let mut saw_key = false;
-    for _ in 0..MAX_AVL_HEIGHT + 16 {
-        let demand = retirement.next_close_byte_demand().unwrap();
-        if demand == key_capacity {
+    for _ in 0..MAX_AVL_HEIGHT + 16 + key_payload {
+        if retirement.allocated_bytes() == key_capacity {
             saw_key = true;
-            assert_eq!(retirement.allocated_bytes(), key_capacity);
+            assert_eq!(retirement.next_close_byte_demand().unwrap(), 1);
             assert!(matches!(retirement.advance(Grant { maximum_items: 0, maximum_bytes: key_capacity }), RetirementStep::Blocked));
             assert!(matches!(retirement.advance(Grant { maximum_items: 1, maximum_bytes: 0 }), RetirementStep::Blocked));
-            assert!(matches!(retirement.advance(Grant { maximum_items: 1, maximum_bytes: key_capacity - 1 }), RetirementStep::Blocked));
             assert_eq!(retirement.allocated_bytes(), key_capacity);
         }
-        match retirement.advance(Grant { maximum_items: 1, maximum_bytes: demand.max(1) }) {
-            RetirementStep::Progress { released_bytes, .. } => released += released_bytes,
+        match retirement.advance(Grant { maximum_items: 1, maximum_bytes: 1 }) {
+            RetirementStep::Progress { released_items, released_bytes } => {
+                assert!(released_items <= 1 && released_bytes <= 1);
+                released += released_bytes;
+            }
             RetirementStep::OwnedValue(()) => {}
             RetirementStep::Complete => break,
-            RetirementStep::Blocked => panic!("exact ordered retirement demand blocked"),
+            RetirementStep::Blocked => panic!("positive ordered retirement grant blocked"),
         }
     }
     assert!(saw_key);
-    assert_eq!(released, key_capacity);
+    assert_eq!(released, key_payload);
     assert_eq!(retirement.allocated_bytes(), 0);
     assert!(retirement.terminal_is_empty());
 }

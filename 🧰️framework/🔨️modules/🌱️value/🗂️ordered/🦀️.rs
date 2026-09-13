@@ -380,7 +380,15 @@ impl<V> Drop for LookupCursor<V> {
 //#endregion 🔎️LookupCursor
 
 //#region 🧹️Retirement
-enum Owner<V> { Node(Arc<Node<V>>), Entry(Arc<Entry<V>>), Key(Arc<String>), Value(Arc<V>), Bytes(Vec<u8>) }
+enum Owner<V> {
+    Node(Arc<Node<V>>), Entry(Arc<Entry<V>>), Key(Arc<String>), Value(Arc<V>),
+    /// 🎟️ A key buffer plus the payload bytes still to be drawn down before it is freed. A
+    /// `Vec<u8>` cannot be freed in pieces, so the grant is charged against `remaining_bytes` one
+    /// turn at a time and the whole buffer is released once the charge reaches zero. An
+    /// all-or-nothing release answers `Blocked` to any grant below the key's capacity, which stalls
+    /// every fixed-page driver forever (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    Bytes { values: Vec<u8>, remaining_bytes: usize },
+}
 /// 📤️ OwnedValue transfers final payload ownership to the caller's domain retirement cursor.
 pub enum RetirementStep<V> { Blocked, Progress { released_items: usize, released_bytes: usize }, OwnedValue(V), Complete }
 #[must_use = "retirement owners must be drained before drop"]
@@ -415,13 +423,12 @@ impl<V> Retirement<V> {
     pub fn terminal_is_empty(&self) -> bool { self.length == 0 }
     pub fn allocated_bytes(&self) -> usize {
         self.owners[..self.length].iter().fold(0usize, |total, owner| match owner {
-            Some(Owner::Bytes(bytes)) => total.saturating_add(bytes.capacity()),
+            Some(Owner::Bytes { values, .. }) => total.saturating_add(values.capacity()),
             _ => total,
         })
     }
     pub fn next_close_byte_demand(&self) -> Result<usize, &'static str> {
         Ok(match self.length.checked_sub(1).and_then(|index| self.owners[index].as_ref()) {
-            Some(Owner::Bytes(bytes)) => bytes.capacity().max(1),
             Some(_) => 1,
             None => 0,
         })
@@ -437,15 +444,16 @@ impl<V> Retirement<V> {
                 self.push(Owner::Entry(node.entry));
             },
             Owner::Entry(entry) => if let Some(entry) = Arc::into_inner(entry) { self.push(Owner::Key(entry.key)); self.push(Owner::Value(entry.value)); },
-            Owner::Key(key) => if let Some(key) = Arc::into_inner(key) { self.push(Owner::Bytes(key.into_bytes())); },
+            Owner::Key(key) => if let Some(key) = Arc::into_inner(key) { let values = key.into_bytes(); let remaining_bytes = values.len(); self.push(Owner::Bytes { values, remaining_bytes }); },
             Owner::Value(value) => if let Some(value) = Arc::into_inner(value) { return RetirementStep::OwnedValue(value); },
-            Owner::Bytes(value) => {
-                bytes = value.capacity();
-                if bytes > grant.maximum_bytes {
-                    self.push(Owner::Bytes(value));
-                    return RetirementStep::Blocked;
+            Owner::Bytes { values, remaining_bytes } => {
+                bytes = grant.maximum_bytes.min(remaining_bytes);
+                let remaining_bytes = remaining_bytes - bytes;
+                if remaining_bytes != 0 {
+                    self.push(Owner::Bytes { values, remaining_bytes });
+                    return RetirementStep::Progress { released_items: 1, released_bytes: bytes };
                 }
-                drop(value);
+                drop(values);
             }
         }
         RetirementStep::Progress { released_items: 1, released_bytes: bytes }

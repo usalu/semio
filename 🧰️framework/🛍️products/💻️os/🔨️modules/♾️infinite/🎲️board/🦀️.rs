@@ -1242,6 +1242,11 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                             (hit_hid, anchor_handle)
                         };
                         self.try_connect_handles(source_hid, target_handle, reconnecting);
+                    } else if let Some(edge_id) = reconnecting {
+                        // 🔌️ Dragging a wired endpoint off its port and releasing over nothing is the
+                        // reconnect gesture's other outcome: the wire is CUT. Leaving it attached made
+                        // wire deletion unreachable from the pointer altogether.
+                        self.remove_edge(edge_id);
                     }
                 }
             }

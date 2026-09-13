@@ -715,6 +715,123 @@ pub enum JobPlacement {
     Exclusive,
 }
 
+//#region 🧵️SpawnedJobDrive
+impl JobPlacement {
+    /// 🚦 The WIT `job-placement` case name this placement crosses the actor boundary as
+    /// (`🔌️plugin/🧬️schema/📜️.wit`'s `enum job-placement`). jco hands a bare string for a WIT `enum`,
+    /// not a `{tag}` record, so a renderer door reads THIS vocabulary and nothing else.
+    pub fn wire_name(self) -> &'static str {
+        match self {
+            Self::Inline => "inline",
+            Self::Isolated => "isolated",
+            Self::Exclusive => "exclusive",
+        }
+    }
+
+    /// 🚦 The inverse of [`Self::wire_name`]. An unknown spelling is `None` rather than a silent
+    /// default: a host that guessed `Inline` for an unrecognised placement would run a job meant for
+    /// its own pooled actor inside the spawning instance's turn budget.
+    pub fn from_wire_name(name: &str) -> Option<Self> {
+        match name {
+            "inline" => Some(Self::Inline),
+            "isolated" => Some(Self::Isolated),
+            "exclusive" => Some(Self::Exclusive),
+            _ => None,
+        }
+    }
+
+    /// 🚦 The whole vocabulary, in WIT declaration order — what a language-agnostic law enumerates.
+    pub const ALL: [Self; 3] = [Self::Inline, Self::Isolated, Self::Exclusive];
+}
+
+/// 🧵 How many `step-job` observations ONE host admission of a spawned job may take before it gives
+/// up. A framework reserved tool job (`interactionSelect`/`interactionHover`/`clearSelection`) reaches
+/// `Done` in two; the ceiling is the host's patience, not the job's expected cost.
+pub const SPAWNED_JOB_STEP_CEILING: u32 = 32;
+
+/// 🧵 The fuel one `step-job` is granted. Deliberately the host's STATIC budget rather than a lane
+/// grant: a reserved tool job is an interaction the user is waiting on, and a budget that varied per
+/// call would make "did the selection apply?" depend on scheduler weather.
+pub const SPAWNED_JOB_FUEL: u64 = 50_000_000;
+
+/// 🧵 The wall deadline one `step-job` is granted, in milliseconds.
+pub const SPAWNED_JOB_DEADLINE_MS: u32 = 100;
+
+/// 🧵 One observation of the guest's `jobs::step-job` export, in the WIT `job-step` vocabulary.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "status")]
+pub enum SpawnedJobStep {
+    Running,
+    Done { value: Vec<u8> },
+    Failed { value: Vec<u8> },
+}
+
+/// 🧵 What the host owes the guest once a spawned job reached a terminal step: the `Event::JobCompleted`
+/// payload, plus how many steps it took to get there (the number a budget law reads).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SpawnedJobCompletion {
+    pub steps: u32,
+    pub outcome: RequestOutcome,
+}
+
+/// 🧵 Why a spawned job produced no completion. Both are loud: a host that silently stopped pumping
+/// is exactly the defect this contract closes — every `interactionSelect`/`interactionHover` on the
+/// wgpu target admitted its reserved tool job and then never ran it, so hover and selection were
+/// published perfectly and applied never (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-world3d-interaction-2026-09-13.md` §7).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SpawnedJobDriveError {
+    /// ⏳️ [`SPAWNED_JOB_STEP_CEILING`] observations passed with no terminal step.
+    Stalled { steps: u32 },
+    /// 📏️ More observations than the ceiling admits — a driver bug, never a guest one.
+    Overrun { steps: u32 },
+}
+
+impl std::fmt::Display for SpawnedJobDriveError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Stalled { steps } => write!(formatter, "spawned job did not reach a terminal step within {steps} host steps"),
+            Self::Overrun { steps } => write!(formatter, "spawned job drive took {steps} steps, past the {SPAWNED_JOB_STEP_CEILING}-step ceiling"),
+        }
+    }
+}
+
+impl std::error::Error for SpawnedJobDriveError {}
+
+/// 🧵 The ONE rule that turns a transcript of `step-job` observations into the `Event::JobCompleted`
+/// the host owes the guest. Every host on every renderer answers through this, and its TypeScript
+/// twin `spawnedJobCompletion` in `🎠️kernel/🟦️.ts` answers identically; both drive
+/// `🧫️fixtures/🧵️spawned-job-drive/🔣️.json`.
+///
+/// Observations AFTER the first terminal step are ignored rather than refused: a driver that stops
+/// stepping the instant it sees `Done` and one that read a batch both hand over the same completion.
+pub fn spawned_job_completion(steps: &[SpawnedJobStep]) -> Result<SpawnedJobCompletion, SpawnedJobDriveError> {
+    if steps.len() as u32 > SPAWNED_JOB_STEP_CEILING {
+        return Err(SpawnedJobDriveError::Overrun { steps: steps.len() as u32 });
+    }
+    for (index, step) in steps.iter().enumerate() {
+        let outcome = match step {
+            SpawnedJobStep::Running => continue,
+            SpawnedJobStep::Done { value } => RequestOutcome::Ok(value.clone()),
+            SpawnedJobStep::Failed { value } => RequestOutcome::Err(value.clone()),
+        };
+        return Ok(SpawnedJobCompletion { steps: index as u32 + 1, outcome });
+    }
+    Err(SpawnedJobDriveError::Stalled { steps: steps.len() as u32 })
+}
+
+/// 🧵 The event a completed spawned job owes its actor — the same correlation the guest's own reactor
+/// reads (`⚛️reactor/🔄️turn/🦀️.rs`: the `job` id IS the parked request id, so no host-side table
+/// exists or is needed).
+pub fn spawned_job_completed_event(job: u64, completion: &SpawnedJobCompletion) -> Event {
+    Event::JobCompleted { job, result: completion.outcome.clone() }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🧵️spawned-job-drive/🦀️.rs"]
+mod spawned_job_drive_tests;
+//#endregion 🧵️SpawnedJobDrive
+
 /// @emoji 🖼️ One icon-render export request: the destination filename plus the opaque icon-scene
 /// render request forwarded to the shell's `iconRenderPort`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -724,6 +841,60 @@ pub struct IconRenderExportItem {
     pub filename: String,
     pub request: DslValue,
 }
+
+//#region ⬇️MediaExportEncoding
+/// ⬇️ The only `Effect::DownloadMediaExport::encoding` value that means "`data` is not text".
+/// Declared here, beside the effect it qualifies, so no shell can invent a second spelling.
+pub const MEDIA_EXPORT_BASE64_ENCODING: &str = "base64";
+
+/// ⬇️ The textual encoding a producer may state EXPLICITLY — `puzzle3d`'s `exportFixture` does
+/// (`✏️s/🔌️plugins/🧩️puzzle/…/📤️export-fixture/🦀️.rs`). It means exactly what an absent `encoding`
+/// means: `data` IS the file. Named rather than left to fall through an "anything that is not
+/// base64 is text" branch, which is how a genuinely unknown encoding used to be saved as text.
+pub const MEDIA_EXPORT_UTF8_ENCODING: &str = "utf-8";
+
+/// ⬇️ Why a `DownloadMediaExport` envelope could not become bytes. Both are loud on purpose: a shell
+/// that quietly saved the envelope's `data` as text is exactly the defect this contract closes —
+/// every binary export in the repo reached disk as base64 TEXT under a binary file name
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️io-surface-2026-09-13.md` §7.3).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum MediaExportEncodingError {
+    /// 🗣️ An encoding no shell knows how to read. `None` and [`MEDIA_EXPORT_BASE64_ENCODING`] are the
+    /// whole vocabulary; a segmented-download handle is consumed by the segmented lane before it
+    /// ever reaches here.
+    Unsupported { encoding: String },
+    /// 🔤️ `encoding` said base64 and `data` is not canonical RFC 4648 standard base64.
+    Malformed { detail: String },
+}
+
+impl std::fmt::Display for MediaExportEncodingError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Unsupported { encoding } => write!(formatter, "unsupported media-export encoding {encoding:?}"),
+            Self::Malformed { detail } => write!(formatter, "malformed base64 media export ({detail})"),
+        }
+    }
+}
+
+impl std::error::Error for MediaExportEncodingError {}
+
+/// ⬇️ The ONE rule that turns a [`Effect::DownloadMediaExport`] envelope into the bytes the user
+/// saves — no `encoding` (or [`MEDIA_EXPORT_UTF8_ENCODING`]) means `data` IS the file, and
+/// [`MEDIA_EXPORT_BASE64_ENCODING`] means `data` carries the bytes. Every shell on every renderer answers through this, and its
+/// TypeScript twin `mediaExportBytes` in `🎠️kernel/🟦️.ts` answers identically; both drive
+/// `🧫️fixtures/⬇️media-export-encoding/🔣️.json`.
+pub fn media_export_bytes(data: &str, encoding: Option<&str>) -> Result<Vec<u8>, MediaExportEncodingError> {
+    match encoding {
+        None | Some(MEDIA_EXPORT_UTF8_ENCODING) => Ok(data.as_bytes().to_vec()),
+        Some(MEDIA_EXPORT_BASE64_ENCODING) => semio_framework_io_base64::base64_standard_decode(data).map_err(|error| MediaExportEncodingError::Malformed { detail: error.to_string() }),
+        Some(other) => Err(MediaExportEncodingError::Unsupported { encoding: other.to_string() }),
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/⬇️media-export-encoding/🦀️.rs"]
+mod media_export_encoding_tests;
+//#endregion ⬇️MediaExportEncoding
 //#endregion 🔖️Effect
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -1038,7 +1209,7 @@ pub enum MessageEndpoint {
 /// ✅️ The shared `result<pack, fault-bytes>` shape from `📜️wit/📜️types.wit`, carried by
 /// `Event::Completed`/`Event::JobCompleted` and `Effect::Respond`. `Err` bytes are an encoded
 /// fault the SDK decodes by originating request kind — the host never interprets it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum RequestOutcome {

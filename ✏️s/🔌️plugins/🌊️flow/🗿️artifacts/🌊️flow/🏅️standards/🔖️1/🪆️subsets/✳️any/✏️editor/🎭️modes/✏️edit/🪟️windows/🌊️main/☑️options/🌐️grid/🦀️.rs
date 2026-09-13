@@ -40,7 +40,6 @@ pub fn measure(config: &FlowMainWindowConfig, labels: &FlowPlayLabels) -> Window
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: grid_action("setGridFactor"),
             },
         ],

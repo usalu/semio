@@ -13,7 +13,13 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Imports
-import type { Effect } from "../../🎠️kernel/🟦️.ts";
+import type { Effect, SpawnedJobCompletion, SpawnedJobStep } from "../../🎠️kernel/🟦️.ts";
+// 🧵️ The spawned-job drive RULE is the kernel's (Rust `kernel::spawned_job_completion` and this
+// twin), not this module's: the wire layer recovers a `spawn-job` off the boundary and pumps it, the
+// kernel alone decides what a transcript of `step-job` observations means. A value import, unlike
+// `decodePackValue`'s injected codec, because nothing in `🎠️kernel/🟦️.ts`'s own import graph reaches
+// back here — verified, not assumed.
+import { jobPlacementFromWireName, spawnedJobCompletion, SPAWNED_JOB_DEADLINE_MS, SPAWNED_JOB_FUEL, SPAWNED_JOB_STEP_CEILING } from "../../🎠️kernel/🟦️.ts";
 import { parseWitColdPairIngressStatus, type ColdPairIngressStatus } from "../📥️cold-pair/🟦️.ts";
 // #endregion 🔌️Imports
 
@@ -392,6 +398,84 @@ export function wireRespondAnswer(effect: WireVariant): Extract<Effect, { readon
   return { respond: { req, result: outcome.tag === "ok" ? { ok: bytes } : { fault: bytes } } };
 }
 
+/** 🎁️ Unwraps ONE WIT `option<T>` as it really reaches a renderer door. jco's direct binding hands
+ * over the bare value (`T | undefined`); the actor boundary hands over the variant record
+ * (`{tag: "some", val}` / `{tag: "none"}`). Both shapes are real on the same field, so a decoder that
+ * reads only one of them silently loses it — which is exactly what happened to
+ * `download-media-export.encoding` and turned every binary export in the repo into base64 TEXT under
+ * a binary file name (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️io-surface-2026-09-13.md` §7.3). */
+export function wireOptionValue(raw: unknown): unknown {
+  if (raw === null || typeof raw !== "object" || !("tag" in (raw as Record<string, unknown>))) return raw;
+  const option = raw as { readonly tag?: unknown; readonly val?: unknown };
+  if (option.tag === "some") return option.val;
+  if (option.tag === "none") return undefined;
+  return raw;
+}
+
+/** 🎁️ {@link wireOptionValue} narrowed to `option<string>` — anything that is not a string is absent. */
+export function wireOptionText(raw: unknown): string | undefined {
+  const value = wireOptionValue(raw);
+  return typeof value === "string" ? value : undefined;
+}
+
+/** ⬇️ The one reader of `download-media-export.encoding`, shared by the React `PluginRuntime` door and
+ * the wgpu `plugin-bridge` one. What the string MEANS is the kernel's contract
+ * (`kernel::mediaExportBytes` / `kernel::media_export_bytes`); this only recovers it from the wire. */
+export const wireMediaExportEncoding = wireOptionText;
+
+/** ⬇️ Decodes `download-media-export-effect` (`🔌️plugin/🧬️schema/📜️.wit`). One decoder for both
+ * renderers, for the same reason {@link wireRespondAnswer} is one: the React door used to carry its
+ * own copy that read `encoding` flat, and the wgpu door carried no case at all — so the same guest
+ * export produced a corrupt file on one target and nothing at all on the other. */
+export function wireDownloadMediaExport(effect: WireVariant): Extract<Effect, { readonly downloadMediaExport: unknown }> {
+  const value = (effect.val ?? {}) as Record<string, unknown>;
+  return {
+    downloadMediaExport: {
+      filename: String(value.filename ?? ""),
+      mimeType: String(value.mimeType ?? value["mime-type"] ?? ""),
+      data: String(value.data ?? ""),
+      encoding: wireMediaExportEncoding(value.encoding),
+    },
+  };
+}
+
+/** 🧵️ Decodes `spawn-job-effect` (`🔌️plugin/🧬️schema/📜️.wit`) without narrowing its u64 identity.
+ * `job` IS the guest's parked request id, so a `number` here would mis-resolve a long-lived actor's
+ * futures and the `start-job`/`step-job` door rejects one outright. `placement` crosses as a BARE
+ * string (jco lowers a WIT `enum` that way, measured on 6118: `placement: "isolated"`), and an
+ * unknown spelling is refused rather than defaulted.
+ *
+ * This is the effect EVERY framework reserved tool verb is delivered as — `interactionSelect`,
+ * `interactionHover`, `clearSelection` — so a renderer door without this case publishes every
+ * interaction perfectly and applies none (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️wgpu-world3d-interaction-2026-09-13.md` §7). */
+export function wireSpawnJob(effect: WireVariant): Extract<Effect, { readonly spawnJob: unknown }> {
+  const value = (effect.val ?? {}) as Record<string, unknown>;
+  const job = wireJobIdentity(value.job, "spawn-job");
+  const kind = wireOptionValue(value.kind);
+  if (typeof kind !== "string" || !kind) throw new Error("spawn-job.kind-invalid");
+  const placement = jobPlacementFromWireName(wireOptionValue(value.placement));
+  if (placement === undefined) throw new Error(`spawn-job.placement-invalid ${JSON.stringify(value.placement)?.slice(0, 60)}`);
+  return { spawnJob: { job, kind, input: coerceWireBytes(wireOptionValue(value.input) ?? []), placement } };
+}
+
+/** 🧵️ Decodes `cancel-job-effect` — the same u64 identity, nothing else. */
+export function wireCancelJob(effect: WireVariant): Extract<Effect, { readonly cancelJob: unknown }> {
+  const value = (effect.val ?? {}) as Record<string, unknown>;
+  return { cancelJob: { job: wireJobIdentity(value.job, "cancel-job") } };
+}
+
+/** 🪪️ One `u64` job identity off the wire. jco hands a `bigint`; a decimal string is the shape a
+ * fixture (and `structuredClone`-free transport) can carry, and both must mean the same id. */
+export function wireJobIdentity(raw: unknown, effectTag: string): bigint {
+  const value = wireOptionValue(raw);
+  const job = typeof value === "bigint" ? value : typeof value === "string" && /^\d+$/.test(value) ? BigInt(value) : typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? BigInt(value) : null;
+  // 🪪️ `job` IS a request id minted by the guest's own `RequestRegistry`, which never issues 0 —
+  // the same bound `wireExtensionInvocation`/`wireRespondAnswer` put on `req`, for the same reason.
+  if (job === null || job <= 0n || job > 0xffffffffffffffffn) throw new Error(`${effectTag}.job-identity-invalid`);
+  return job;
+}
+
 /** 🚥️ Normalizes `TurnResult.status` to its kebab-case tag — jco hands a variant `{tag}`, a plain
  * string, or a camelCase spelling depending on the boundary it crossed. `"more-work"` is the ONE tag
  * a drain loop branches on: the guest is telling the host it has work left this activation. */
@@ -477,6 +561,88 @@ export async function driveInboundRequest(drive: InboundRequestDrive): Promise<I
 }
 //#endregion 📥️InboundRequest
 
+//#region 🧵️SpawnedJob
+/** 🧵️ The two guest-job doors a host must own to honour a `spawn-job` effect — `jobs::start-job` and
+ * `jobs::step-job` on the instance the job was placed on (`🔌️plugin/🧬️schema/📜️.wit`'s `interface
+ * jobs`). Injected rather than imported so this module keeps no dependency on a particular transport:
+ * the wgpu bridge hands over its `ShardClient` bound to one actor, and any other host its own. */
+export type SpawnedJobPort = {
+  readonly startJob: (job: bigint, kind: string, input: Uint8Array) => Promise<void>;
+  readonly stepJob: (job: bigint, budget: { readonly fuel: bigint; readonly deadlineMs: number }) => Promise<unknown>;
+};
+
+/** 🧵️ One spawned job, as this side of the ABI states it. `stepCeiling` exists for a law that wants
+ * to drive the stall arm without 32 real round trips; production leaves it alone. */
+export type SpawnedJobDrive = {
+  readonly job: bigint;
+  readonly kind: string;
+  readonly input: Uint8Array;
+  readonly port: SpawnedJobPort;
+  readonly stepCeiling?: number;
+  readonly signal?: AbortSignal;
+  readonly onStep?: (step: { readonly job: bigint; readonly index: number; readonly status: SpawnedJobStep["status"] }) => void;
+};
+
+/** 🧵️ Normalizes one `jobs::job-step` observation. jco hands the WIT variant as `{tag, val}`; the
+ * shard worker already normalizes it to `{status, value}` for `ShardClient.stepJob`, and a
+ * `running` carries an OPTIONAL progress pack. Both shapes are real on the same door, so reading only
+ * one of them turns a finished job into a stall — the same class of defect that lost
+ * `download-media-export.encoding` (this module's `wireOptionValue`). */
+export function wireJobStep(raw: unknown): SpawnedJobStep {
+  const record = (raw ?? {}) as { readonly tag?: unknown; readonly val?: unknown; readonly status?: unknown; readonly value?: unknown; readonly progress?: unknown };
+  const status = typeof record.status === "string" ? record.status : typeof record.tag === "string" ? record.tag : "";
+  const payload = record.value !== undefined ? record.value : record.val;
+  if (status === "running") return { status: "running" };
+  if (status === "done" || status === "failed") return { status, value: coerceWireBytes(wireOptionValue(payload) ?? []) };
+  throw new Error(`job-step.status-invalid ${JSON.stringify(status).slice(0, 60)}`);
+}
+
+/**
+ * @emoji 🧵️ Drives ONE `Effect::SpawnJob` to a terminal `job-step` — the host half of the ABI's job
+ * seam, shared verbatim by every renderer door so the two targets can never drift into two
+ * protocols (this module's own header: the "third divergent copy" hazard).
+ *
+ * The job is started once, then stepped with the kernel's STATIC admission budget until it reports a
+ * terminal step or the ceiling is reached. The transcript — never this loop — decides what happened:
+ * `kernel::spawnedJobCompletion` owns that rule and its Rust twin answers identically.
+ *
+ * A host that skips this pump is not merely slow, it is silently broken: every framework reserved
+ * tool verb (`interactionSelect`/`interactionHover`/`clearSelection`) is delivered as this effect and
+ * nothing else, so the actor publishes a perfect interaction message and never applies it — measured
+ * on 6118, 18 dropped `spawn-job` effects per run
+ * (`📓️wgpu-world3d-interaction-2026-09-13.md` §7).
+ */
+export async function driveSpawnedJob(drive: SpawnedJobDrive): Promise<SpawnedJobCompletion> {
+  const ceiling = Math.max(1, Math.min(drive.stepCeiling ?? SPAWNED_JOB_STEP_CEILING, SPAWNED_JOB_STEP_CEILING));
+  const budget = { fuel: SPAWNED_JOB_FUEL, deadlineMs: SPAWNED_JOB_DEADLINE_MS } as const;
+  await drive.port.startJob(drive.job, drive.kind, drive.input);
+  const steps: SpawnedJobStep[] = [];
+  for (let index = 0; index < ceiling; index += 1) {
+    if (drive.signal?.aborted === true) break;
+    const step = wireJobStep(await drive.port.stepJob(drive.job, budget));
+    steps.push(step);
+    drive.onStep?.({ job: drive.job, index, status: step.status });
+    if (step.status !== "running") break;
+  }
+  return spawnedJobCompletion(steps);
+}
+
+/** 🧵️ The actor-boundary event a completed spawned job owes its guest — the WIT `job-completed-event`
+ * (`{job: u64, outcome: completion-result}`) in the same `{kind, payload}` envelope every other
+ * host-submitted event uses. The guest correlates on `job` ALONE: the job id IS the parked request id
+ * (`⚛️reactor/🔄️turn/🦀️.rs`), so no host-side request table exists or is needed. */
+export function spawnedJobCompletedEvent(job: bigint, completion: SpawnedJobCompletion): { readonly kind: "job-completed"; readonly payload: { readonly job: bigint; readonly outcome: { readonly tag: "ok" | "fault"; readonly val: readonly number[] } } } {
+  const bytes = "ok" in completion.outcome ? completion.outcome.ok : completion.outcome.fault;
+  return { kind: "job-completed", payload: { job, outcome: { tag: "ok" in completion.outcome ? "ok" : "fault", val: Array.from(bytes) } } };
+}
+
+/** 🧵️ Every `spawn-job` a turn handed back, decoded once. Kept here rather than at each door so a
+ * renderer never re-implements "which of these effects is a job". */
+export function wireSpawnedJobs(effects: readonly WireVariant[]): readonly Extract<Effect, { readonly spawnJob: unknown }>["spawnJob"][] {
+  return effects.filter((effect) => effect.tag === "spawn-job").map((effect) => wireSpawnJob(effect).spawnJob);
+}
+//#endregion 🧵️SpawnedJob
+
 /** 🚧️ Best-effort conversion of a raw WIT `effect` variant into the friendly `Effect` union
  * `🎠️kernel/🟦️.ts` already declares — Rust `kernel::Effect`'s externally-tagged serde shape,
  * which every downstream consumer already expects. Covers the effect kinds a renderer commonly
@@ -495,13 +661,7 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
   const params = (val.params ?? {}) as Record<string, unknown>;
   // 🎁️ A WIT `option<T>` crosses as `{tag: "some"|"none", val?}`; unwrap it before anything reads the
   // payload, or a `some` wrapper reaches `coerceWireBytes` as the pack itself.
-  const some = (value: unknown): unknown => {
-    if (value === null || typeof value !== "object" || !("tag" in (value as Record<string, unknown>))) return value;
-    const option = value as { readonly tag?: unknown; readonly val?: unknown };
-    if (option.tag === "some") return option.val;
-    if (option.tag === "none") return undefined;
-    return value;
-  };
+  const some = wireOptionValue;
   const pstr = (key: string): string => String(some(params[key]) ?? "");
   const pnum = (key: string): number => Number(some(params[key]) ?? 0);
   const poptstr = (key: string): string | undefined => {
@@ -525,6 +685,12 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
       return { navigate: { uri: str("uri") } };
     case "open-external-url":
       return { openExternalUrl: { url: str("url") } };
+    case "download-media-export":
+      return wireDownloadMediaExport(effect);
+    case "spawn-job":
+      return wireSpawnJob(effect);
+    case "cancel-job":
+      return wireCancelJob(effect);
     case "set-panel":
       return { setPanel: { panelJson: str("panelJson") } };
     case "set-active-utility":

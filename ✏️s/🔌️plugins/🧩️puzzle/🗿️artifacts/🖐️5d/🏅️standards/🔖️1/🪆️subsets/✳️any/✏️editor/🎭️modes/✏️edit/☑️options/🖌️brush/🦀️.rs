@@ -32,7 +32,6 @@ fn kind_weight_measures(prefix: &str, action: &str, ids: &[String], weights: &Ha
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: puzzle5d_action(action, Some(json!({ "kindId": kind_id.as_str() }))),
             }
         })
@@ -92,7 +91,6 @@ pub fn measure(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession,
             loading: None,
             waiting: None,
             disabled: None,
-            reveal: None,
             on_change: puzzle5d_action("setSuggestionOffset", None),
         },
         WindowMeasure::Slider {
@@ -106,7 +104,6 @@ pub fn measure(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession,
             loading: None,
             waiting: None,
             disabled: None,
-            reveal: None,
             on_change: puzzle5d_action("setBrushPlacementOverlapBudget", None),
         },
         WindowMeasure::Group {

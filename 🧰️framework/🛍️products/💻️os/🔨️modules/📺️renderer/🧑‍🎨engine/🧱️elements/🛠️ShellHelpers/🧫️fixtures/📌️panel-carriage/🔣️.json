@@ -1,7 +1,8 @@
 {
   "capacityChars": 65536,
   "windowInstanceCapacity": 64,
-  "programsAreEmpty": true,
+  "activePanelTab": "s-play-catalogue",
+  "carriedFields": ["activePanelTab", "spawnedApps", "activeSpawnedId"],
   "spawned": {
     "idChars": 48,
     "pluginIdChars": 32,

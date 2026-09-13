@@ -41,7 +41,6 @@ pub fn measure(cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> WindowMeasure
             ready: None,
             loading: None,
             disabled: None,
-            reveal: None,
             on_change: gis2d_window_action("setLayerStrokeScale", Some(json!({ "layerId": layer_id }))),
             waiting: None,
         })

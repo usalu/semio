@@ -148,7 +148,7 @@ fn paint_scene(scene: &UiComponentSceneNode, bounds: Rect, states: crate::scenes
     let mut world_resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
     {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None);
-        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources };
+        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: "law-window" };
         let mut cursor = ui_wgpu::wgpu::ScenePaintCursor::default();
         for _ in 0..4096 {
             match crate::scenes::render_component_scene_step(scene, bounds, &mut ctx, &mut cursor, &mut hosts) {

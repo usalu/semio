@@ -24,8 +24,15 @@ export async function runArtifactRustTests(cargoName: string, repoRoot: string, 
   finally { stopProgress(); }
 }
 
+/**
+ * 🔬️ One artifact's TypeScript twin: the second, independent implementation of a law whose fixture
+ * the Rust suite also answers. Returns how many assertions it carried, so a twin that silently
+ * stopped asserting is visible as a collapsing count rather than a passing run.
+ */
+export type ArtifactTwinSelfTest = { readonly name: string; readonly run: () => number };
+
 /** 📦️ Runs an independently owned Rust artifact package through the shared Nx-native contract. */
-export async function runArtifactRustPackageMain(packageRoot: string, cargoName: string, options: { readonly testFeatures?: readonly string[] } = {}): Promise<void> {
+export async function runArtifactRustPackageMain(packageRoot: string, cargoName: string, options: { readonly testFeatures?: readonly string[]; readonly twins?: readonly ArtifactTwinSelfTest[] } = {}): Promise<void> {
   class BuildScript extends BundleScript {
     async run(segments: string[]): Promise<void> {
       const { cargoArgs } = artifactRustCargoArguments("build", segments);
@@ -40,6 +47,7 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
   }
   class TestScript extends BundleScript {
     async run(segments: string[]): Promise<void> {
+      for (const twin of options.twins ?? []) console.log(`[DEBUG] ${twin.name}-twin checks=${twin.run()}`);
       await runArtifactRustTests(cargoName, this.repoRoot, segments, options.testFeatures);
     }
   }

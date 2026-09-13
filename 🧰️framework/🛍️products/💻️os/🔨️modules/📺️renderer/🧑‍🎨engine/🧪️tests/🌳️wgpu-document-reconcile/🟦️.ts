@@ -40,9 +40,24 @@ const fixture = JSON.parse(readFileSync(resolve(suiteRoot, laws.fixture), "utf8"
     readonly paint: { readonly drawCallsAtLeast: number };
   };
   readonly secondGeneration: { readonly removedIds: readonly number[]; readonly expected: { readonly arenaNodeCount: number; readonly preservedIds: readonly number[]; readonly mountedIdsInTreeOrder: readonly number[] } };
+  readonly ingressGeneration: {
+    readonly rule: string;
+    readonly cases: readonly { readonly label: string; readonly minted: readonly [number, number] | null; readonly revision: number; readonly generation: number }[];
+    readonly constantProducerIsRefused: { readonly why: string; readonly generations: readonly number[]; readonly admittedIngresses: number };
+  };
 };
 
-const source = (key: "reconcileSource" | "treeSource" | "engineSource" | "paintSource" | "interpreterSource" | "shellSource" | "reactInterpreterSource") => readFileSync(resolve(engineRoot, laws[key]), "utf8");
+/** 🪪️ The ingress-generation rule, re-implemented from its STATEMENT rather than imported from the
+ * Rust that implements it — the point of a twin is that two independent readings of one rule agree.
+ * Held still while a surface's own revision holds still, counted forward whenever it moves, and never
+ * moved backward even when the revision restarts. */
+const ingressGeneration = (minted: readonly [number, number] | null, revision: number): number => {
+  if (minted === null) return 1;
+  const [publishedRevision, generation] = minted;
+  return publishedRevision === revision ? generation : generation + 1;
+};
+
+const source = (key: "reconcileSource" | "treeSource" | "engineSource" | "paintSource" | "interpreterSource" | "shellSource" | "reactInterpreterSource" | "programBridgeSource") => readFileSync(resolve(engineRoot, laws[key]), "utf8");
 const record = (id: number) => fixture.document.nodes.find((node) => node.id === id);
 
 describe("wgpu retained document reconcile", () => {
@@ -140,6 +155,29 @@ describe("wgpu retained document reconcile", () => {
     expect(interpreter, "the frame-stats probe reads the census").toContain("paint_census(");
     expect(interpreter, "…and the structure probe reads the layout the paint walk consumes").toContain(`${laws.mountedLayoutAccessor}(`);
     expect(fixture.expected.paint.drawCallsAtLeast).toBeGreaterThan(0);
+  });
+
+  it("mints one ingress generation per surface, held still while that surface is", () => {
+    let previous = 0;
+    for (const entry of fixture.ingressGeneration.cases) {
+      const generation = ingressGeneration(entry.minted, entry.revision);
+      expect(generation, entry.label).toBe(entry.generation);
+      expect(generation, "a zero generation is refused by the document header outright").toBeGreaterThan(0);
+      expect(generation, "the rule never moves a surface's generation backward").toBeGreaterThanOrEqual(previous);
+      previous = generation;
+    }
+    const constant = fixture.ingressGeneration.constantProducerIsRefused;
+    expect(new Set(constant.generations).size, constant.why).toBe(1);
+    expect(constant.admittedIngresses, "a constant producer gets exactly ONE document per surface in, ever").toBe(1);
+  });
+
+  it("states the ingress-generation rule once, beside the two admission checks, and the browser producer reads it", () => {
+    const engine = source("engineSource");
+    expect(engine, "the rule lives with the engine that admits by it").toContain(`pub fn ${laws.ingressGenerationRule}(`);
+    for (const entry of laws.ingressAdmissionEntries) expect(engine, `…beside ${entry}, which admits by that number`).toContain(`pub fn ${entry}(`);
+    const bridge = source("programBridgeSource");
+    expect(bridge, "the browser producer mints through the engine's own rule").toContain(`${laws.ingressGenerationRule}(`);
+    expect(bridge, "…and never mints the session-constant instance id it used to").not.toContain("generation: u64::from(instance_id)");
   });
 
   it("hands the reconcile the owning app's controller, since the contract moved it off the node", () => {

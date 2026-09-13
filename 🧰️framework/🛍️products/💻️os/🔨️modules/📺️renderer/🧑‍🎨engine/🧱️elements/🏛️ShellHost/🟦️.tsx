@@ -8349,18 +8349,6 @@ function FrameworkOsShellInner({
         if (target.isContentEditable) return true;
         return target.closest("[contenteditable='true'], [role='textbox']") != null;
       };
-      const matches = (event: globalThis.KeyboardEvent, binding: string) => {
-        const parts = binding.split("+").map((part) => part.trim());
-        const key = parts[parts.length - 1] ?? "";
-        const needsCtrl = parts.includes("ctrl") || parts.includes("meta") || parts.includes("mod");
-        const needsShift = parts.includes("shift");
-        const needsAlt = parts.includes("alt");
-        const hasCtrl = event.ctrlKey || event.metaKey;
-        if (needsCtrl !== hasCtrl) return false;
-        if (needsShift !== event.shiftKey) return false;
-        if (needsAlt !== event.altKey) return false;
-        return event.key.toLowerCase() === key;
-      };
       const focusedWindowId = activeWindowIdRef.current ?? session.viewState.windowId ?? session.viewState.activeWindowKindId;
       const focusedWindowKindId = sessionWindowInstances(session.app, extraWindowInstancesRef.current).find((instance) => instance.id === focusedWindowId)?.windowKindId ?? focusedWindowId;
       const actionById = new Map((session.app.windowKinds.find((kind) => kind.id === focusedWindowKindId)?.actions ?? []).map((action) => [action.id, action]));
@@ -8382,7 +8370,7 @@ function FrameworkOsShellInner({
       }
       for (const binding of session.app.keybindings) {
         for (const chord of parseKeys(binding.keys)) {
-          if (!matches(event, chord)) continue;
+          if (!keyboardEventMatchesChord(event, chord)) continue;
           const definition = actionById.get(binding.action.action);
           if (!definition) continue;
           event.preventDefault();

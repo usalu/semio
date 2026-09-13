@@ -812,8 +812,8 @@ impl FlowRetainedVcs {
             if update.terminal_is_empty() { operation.layout_update = None; }
             return Ok(false);
         }
-        if !operation.retirement.is_empty() {
-            operation.retirement.close_step(1, grant.bytes).map_err(|_| FlowVcsFault::ClosePending)?;
+        if !operation.retirement.terminal_is_empty() {
+            operation.retirement.close_page(1, grant.bytes).map_err(|_| FlowVcsFault::ClosePending)?;
             return Ok(false);
         }
         if operation.cursor.phase == FlowVcsCursorPhase::Rollback {
@@ -921,8 +921,8 @@ impl FlowRetainedVcs {
         if self.credits.operations > 0 {
             return Err(FlowVcsFault::ClosePending);
         }
-        if !self.retirement.is_empty() {
-            self.retirement.close_step(1, grant.bytes).map_err(|_| FlowVcsFault::ClosePending)?;
+        if !self.retirement.terminal_is_empty() {
+            self.retirement.close_page(1, grant.bytes).map_err(|_| FlowVcsFault::ClosePending)?;
             return Ok(false);
         }
         if let Some(surface) = self.retired_surfaces.last_mut() {
@@ -964,7 +964,7 @@ impl FlowRetainedVcs {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.closing && self.document.is_none() && self.credits.operations == 0 && self.credits == FlowVcsCredits::default() && self.undo.is_empty() && self.redo.is_empty() && self.retired_actions.is_empty() && self.retired_surfaces.is_empty() && self.retirement.is_empty()
+        self.closing && self.document.is_none() && self.credits.operations == 0 && self.credits == FlowVcsCredits::default() && self.undo.is_empty() && self.redo.is_empty() && self.retired_actions.is_empty() && self.retired_surfaces.is_empty() && self.retirement.terminal_is_empty()
     }
 
     fn preflight(&self, census: FlowVcsCensus) -> Result<(), FlowVcsFault> {

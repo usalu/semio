@@ -17,5 +17,15 @@
   "paintCensus": "UiFramePaintCensus",
   "mountedLayoutAccessor": "mounted_layout",
   "reactIdentityHelper": "surfaceHostIdentityV1",
-  "treeRowSyncPhases": ["TreeApplyPrepare", "TreeApplyScan", "TreeApplyWrite"]
+  "treeRowSyncPhases": [
+    "TreeApplyPrepare",
+    "TreeApplyScan",
+    "TreeApplyWrite"
+  ],
+  "programBridgeSource": "🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs",
+  "ingressGenerationRule": "ui_document_ingress_generation",
+  "ingressAdmissionEntries": [
+    "document_status",
+    "begin_document"
+  ]
 }

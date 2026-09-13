@@ -107,3 +107,38 @@ async fn generation_row_affordances_are_localized_in_german() {
     }
     assert!(!body.contains("Add Generation"), "no English fallback may survive in the German tree: {body}");
 }
+
+/// ⚖️ LAW: `addGeneration` is RENDERER-NEUTRAL. The Generations tree authors the row with no args at
+/// all, but each renderer wraps that binding its own way — React's `uiIntentPayload` drops an empty
+/// payload entirely, the wgpu `row_action`/`record_action` projection carries whatever
+/// `ui_value_to_dsl` produces, and a host may add its own `surfaceId`/`windowId` envelope. The command
+/// must land one generation under every one of those shapes, because a renderer-shaped argument is
+/// never part of a command's contract.
+///
+/// 🐛️ Written for the wgpu report's §7.4(a) finding — the retained `Add Generation` row on 6118
+/// settles `terminal=true` and creates NO generation while React's identical row creates one in 5 s
+/// (`📓️wgpu-retained-controls-wires-2026-09-13.md`). This law fixes the guest half of that question in
+/// place: if it passes, the divergence is NOT the args the row carries and the defect lives in the
+/// wgpu host's retained-publication settle, not in this command.
+#[semio_framework_async_macros::async_test]
+async fn add_generation_lands_a_row_under_every_renderer_argument_shape() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app().await;
+    let shapes: Vec<(&str, Option<dsl::DslValue>)> = vec![
+        ("react-none", None),
+        ("empty-object", Some(serde_json::json!({}).into())),
+        ("host-envelope", Some(serde_json::json!({ "surfaceId": "window:generation3d-generations", "windowId": "generation3d-generations" }).into())),
+    ];
+    let mut expected = 0usize;
+    for (label, args) in shapes {
+        let meta = semio_framework_plugin::artifact_app_laws::meta("local");
+        semio_framework_plugin::PluginApp::handle_action(&mut *app, "addGeneration", args.as_ref(), &meta).await.unwrap_or_else(|error| panic!("{label}: addGeneration must be admitted: {error:?}"));
+        crate::editor::generation3d::unit_tests::context::settle(&mut app).await;
+        expected += 1;
+        let landed = snapshot(&app).generation.generations.len();
+        assert_eq!(landed, expected, "{label}: addGeneration must land exactly one generation whatever envelope the renderer attaches");
+        eprintln!("[DEBUG] addGeneration shape={label} roster={landed}");
+    }
+    let body = render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS).await;
+    assert_eq!(body.matches("procedural3d-play-generate.generation.").count() >= 3, true, "all three rows must render: {body}");
+}

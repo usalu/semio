@@ -1,0 +1,7 @@
+{
+  "schema": "s.procedural.generation3d.example-budget-calibration/v1",
+  "rounds": 3584,
+  "checksum": "0x24d974393bfa7c15",
+  "referenceMicros": 101180,
+  "maximumLoadFactor": 16.0
+}

@@ -12,9 +12,10 @@ export interface Generation3dViewConfig {
   previewCamera: Generation3dViewCamera;
   /** @state config */
   sunJson: string;
-  /** 🎨️ The bundled example this surface is looking at (`""` = the opened document itself).
+  /** 🎨️ What this surface is looking at: absent = the opened document, `""` = the picker's
+   * `No example` row, anything else = that bundled example.
    * @state config */
-  activeExampleId: string;
+  activeExampleId?: string;
 }
 
 export type Generation3dViewCamera = {
@@ -68,7 +69,7 @@ export function parseGeneration3dViewConfig(value: unknown, at = "$"): Generatio
     showMode: guardString(row["showMode"], `${at}.showMode`),
     previewCamera: parseGeneration3dViewCamera(row["previewCamera"], `${at}.previewCamera`),
     sunJson: guardString(row["sunJson"], `${at}.sunJson`),
-    activeExampleId: guardString(row["activeExampleId"], `${at}.activeExampleId`),
+    ...(row["activeExampleId"] === undefined ? {} : { activeExampleId: guardString(row["activeExampleId"], `${at}.activeExampleId`) }),
   };
 }
 //#endregion 🚪️Parsers

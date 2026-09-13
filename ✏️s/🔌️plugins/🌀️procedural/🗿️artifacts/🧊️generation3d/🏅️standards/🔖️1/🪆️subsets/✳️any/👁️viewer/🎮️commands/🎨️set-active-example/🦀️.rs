@@ -23,14 +23,22 @@ pub struct SetActiveExample {
     pub example_id: String,
 }
 
-/// 🎨️ Points the read-only surface at a bundled example — or, for the empty id, back at the
-/// document this session actually opened. An id that names no bundled example is refused rather
-/// than silently blanking the view, because the picker can only ever offer declared ids.
+/// 🎨️ Points the read-only surface at a bundled example — or, for the EMPTY id, at no example at
+/// all. An id that names no bundled example is refused rather than silently blanking the view,
+/// because the picker can only ever offer declared ids.
+///
+/// 🕳️ The empty id is the picker's own `No example` row (`NavbarExampleSelect` normalizes its
+/// `__none__` sentinel to `""` before dispatching), and a DISPATCH of it is always an explicit pick:
+/// the never-picked state is the ABSENCE of this command, which is why the config leaf it writes is
+/// an option and this handler always writes `Some`. Resolving the row to the opened document made it
+/// show the hexagonal mushroom column — itself a bundled example — so the row that promises no
+/// example loaded one, exactly the defect the sibling surface's own row was fixed for
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dViewConfig>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
     if !payload.example_id.is_empty() && !is_generation3d_example_id(&payload.example_id) {
         return Err(Fault::from("generation3d-view-active-example-unknown"));
     }
-    Ok(ViewEmit::config(vec![Generation3dViewConfigMutation::SetActiveExample(config::SetActiveExample { value: payload.example_id.clone() })]))
+    Ok(ViewEmit::config(vec![Generation3dViewConfigMutation::SetActiveExample(config::SetActiveExample { value: Some(payload.example_id.clone()) })]))
 }
 
 //#region 🧪️Tests

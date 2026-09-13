@@ -16,6 +16,17 @@ import { expect } from "bun:test";
 export const EXAMPLE_GEOMETRY_FIXTURE_SCHEMA = "s.procedural.generation3d.example-geometry/v1";
 
 /**
+ * 🗂️ Where every bundled example keeps its authored assets and its committed expected-geometry
+ * fixture, stated once relative to the example's own root. Authored assets and generated fixtures
+ * are separate trees (`🖼️assets/` vs `🧫️fixtures/`) — the test file's own directory holds neither —
+ * so both readers derive from the root rather than from wherever the caller happens to sit.
+ *
+ * @see 🦀️.rs — the Rust half reaches the same two locations with `include_str!`.
+ */
+export const EXAMPLE_ASSETS_DIR = "🖼️assets";
+export const EXAMPLE_FIXTURE_PATH = join("🧫️fixtures", "🧩️example", "🔣️.json");
+
+/**
  * 🚧️ The machine-readable kernel standings a fixture may declare, mirroring `🦀️.rs`'s
  * `KERNEL_STATUSES` exactly. Every `blocked-*` value names one SPECIFIC located kernel defect the
  * Rust lane's run reproduced — never a relaxed expectation: the committed numbers stay what the
@@ -93,10 +104,14 @@ export type ExampleDeliveryExpectation = {
  */
 export const EXAMPLE_DELIVERY_ROUND_TRIP_CEILING = 2;
 
-/** 📥️ Reads the example's DSL asset and its committed expected-stats fixture. */
+/**
+ * 📥️ Reads the example's DSL asset and its committed expected-stats fixture, both resolved from the
+ * example root that `here` (the caller's `🧪️tests/🧩️example/` directory) sits two levels below.
+ */
 export function loadExample(here: string, assetDirName: string, assetName: string): { dsl: string; fixture: ExampleGeometryFixture } {
-  const dsl = readFileSync(join(here, "../../🖼️assets", assetDirName, "🗣️.dsl.semio"), "utf8");
-  const fixture = JSON.parse(readFileSync(join(here, "🔣️.json"), "utf8")) as ExampleGeometryFixture;
+  const root = join(here, "..", "..");
+  const dsl = readFileSync(join(root, EXAMPLE_ASSETS_DIR, assetDirName, "🗣️.dsl.semio"), "utf8");
+  const fixture = JSON.parse(readFileSync(join(root, EXAMPLE_FIXTURE_PATH), "utf8")) as ExampleGeometryFixture;
   expect(assetName.length).toBeGreaterThan(0);
   return { dsl, fixture };
 }
@@ -135,6 +150,54 @@ export function assertBudgetContract(fixture: ExampleGeometryFixture): void {
   for (const micros of [budget.maxEvaluateMicros, budget.maxPreviewTessellateMicros]) expect(micros).toBeLessThanOrEqual(EXAMPLE_BUDGET_INTERACTIVE_CEILING_MICROS);
   expect(budget.maxTessellateMicros).toBeLessThanOrEqual(EXAMPLE_BUDGET_FIDELITY_CEILING_MICROS);
   expect(budget.maxPreviewTessellateMicros).toBeLessThanOrEqual(budget.maxTessellateMicros);
+  assertBudgetCalibrationContract(readBudgetCalibration());
+}
+
+/**
+ * ⏱️ Where the single, example-independent budget calibration row lives, relative to the examples
+ * root — the committed statement of how fast the machine that SET every ceiling in every `budget`
+ * row executes one fixed, kernel-independent workload.
+ *
+ * @see 🦀️.rs — the Rust half runs that workload and divides its own reading by this reference.
+ */
+export const EXAMPLE_BUDGET_CALIBRATION_PATH = join("🧫️fixtures", "⏱️budget-calibration", "🔣️.json");
+export const EXAMPLE_BUDGET_CALIBRATION_SCHEMA = "s.procedural.generation3d.example-budget-calibration/v1";
+
+/**
+ * ⚖️ The calibration row. Every ceiling in this lane is a wall-clock quantity measured on one
+ * machine under one load, so the same correct code reads several times over its ceiling on a busy
+ * build host and the law convicts the machine instead of the algorithm. The correction is a SCALE,
+ * not a looser ceiling: an algorithmic regression inflates the phase without inflating this
+ * workload, while contention inflates both and cancels.
+ */
+export type ExampleBudgetCalibration = {
+  schema: string;
+  rounds: number;
+  checksum: string;
+  referenceMicros: number;
+  maximumLoadFactor: number;
+};
+
+/** 📥️ Reads the calibration row from this file's own directory's examples root. */
+export function readBudgetCalibration(): ExampleBudgetCalibration {
+  return JSON.parse(readFileSync(join(import.meta.dir, "..", "..", EXAMPLE_BUDGET_CALIBRATION_PATH), "utf8")) as ExampleBudgetCalibration;
+}
+
+/**
+ * ✅️ Every invariant the calibration row states about ITSELF, derived independently of the Rust
+ * run: a reference of zero would scale every ceiling to infinity, a factor below one would NARROW a
+ * ceiling on a fast machine (the ceilings are regression guards with deliberate headroom, never
+ * targets), and a workload whose committed checksum is not a 64-bit literal cannot be proven to be
+ * the same workload the reference was measured on.
+ */
+export function assertBudgetCalibrationContract(calibration: ExampleBudgetCalibration): void {
+  expect(calibration.schema).toBe(EXAMPLE_BUDGET_CALIBRATION_SCHEMA);
+  expect(Number.isInteger(calibration.rounds)).toBe(true);
+  expect(calibration.rounds).toBeGreaterThan(0);
+  expect(Number.isInteger(calibration.referenceMicros)).toBe(true);
+  expect(calibration.referenceMicros).toBeGreaterThan(0);
+  expect(calibration.maximumLoadFactor).toBeGreaterThanOrEqual(1);
+  expect(calibration.checksum).toMatch(/^0x[0-9a-f]{16}$/);
 }
 
 /**

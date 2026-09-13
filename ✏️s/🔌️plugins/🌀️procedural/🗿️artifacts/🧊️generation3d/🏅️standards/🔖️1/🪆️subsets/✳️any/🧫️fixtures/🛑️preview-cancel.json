@@ -42,7 +42,10 @@
     "aLaterGestureResumes": "Only a gesture resumes a cancelled chain. The first tick that actually begins clears the cancelled banner.",
     "everyPreviewWindowPublishesTheContract": "The status object is a property of a World3d PREVIEW WINDOW, not of a surface: all three of them — the editor's edit-mode preview, the editor's generate-mode generation preview and the viewer's read-only preview — publish the identical schema from the identical projection. A window that renders meshes while publishing no phase/progress/cancellable is the defect this section exists to forbid: the user can watch nothing and stop nothing, and the shell has no cancelAction to declare.",
     "theCancelVerbIsLearnedFromTheStatus": "The shell never learns the cancel verb from code — it reads `cancelAction` off the published status and declares it for exactly as long as `cancellable` holds. A surface that publishes the contract must therefore also DECLARE that command in its manifest, or the gesture is dropped by the host's declaredAction gate before the app ever sees it.",
-    "aSessionlessWindowStillPublishes": "A preview window rendered without a retained evaluation session (a surface's marks-free render entry point) publishes the SAME schema with idle phase, zero progress and nothing to cancel. Publishing nothing is never an option."
+    "aSessionlessWindowStillPublishes": "A preview window rendered without a retained evaluation session (a surface's marks-free render entry point) publishes the SAME schema with idle phase, zero progress and nothing to cancel. Publishing nothing is never an option.",
+    "aTickThatParkedWorkIsUnfinished": "A tick is FINISHED only when the evaluation itself owes nothing more AND the tick parked no extension answer. Recording the evaluation's own `more` alone is the defect: `!more` is precisely the state that parks `tessellate`, so a window still owing mesh round trips recorded itself finished and could never be resumed by the refresh poll.",
+    "theLastAnswerArmsTheTerminalTickItself": "The LAST extension answer of a run arms the terminal tick from the chain itself — the tick that finds whatever handle is still untessellated, or finds nothing and settles the ledger to idle/ratio 1. Leaving that to the host refresh poll makes convergence a property of the SHELL's refresh cadence: on wgpu the poll's effects are what a blocked `apply_pending_step` never applies, and both boolean examples hung in the viewer at `inFlight: 1`, `ratio 0.5853658536585366`, `cancellable: true`, with no fault and no alert.",
+    "theTerminalArmIsLatched": "The terminal arm goes through the same per-window latch every other arming source uses, so a stale or foreign answer, or an answer on a window whose own tick reported itself finished, arms nothing at all. A self-arming chain that is not latched is a spin."
   },
   "rows": [
     {
@@ -546,5 +549,70 @@
         "fault": null
       }
     ]
+  },
+  "settlePath": {
+    "note": "The one settle path all three preview windows share. Language-agnostic: an implementation in any language replays these rows and answers the same `unfinished`, and replays the latch sequence and reaches the same terminal arm.",
+    "unfinishedRows": [
+      {
+        "id": "evaluation-owes-more",
+        "more": true,
+        "parkedInvocations": 0,
+        "unfinished": true
+      },
+      {
+        "id": "parked-tessellation",
+        "more": false,
+        "parkedInvocations": 1,
+        "unfinished": true
+      },
+      {
+        "id": "parked-and-owed",
+        "more": true,
+        "parkedInvocations": 2,
+        "unfinished": true
+      },
+      {
+        "id": "nothing-left",
+        "more": false,
+        "parkedInvocations": 0,
+        "unfinished": false
+      }
+    ],
+    "latchSequence": [
+      {
+        "step": "beginWindowTick",
+        "armed": false,
+        "inFlight": 0,
+        "tickOwed": false
+      },
+      {
+        "step": "noteTickOutcome",
+        "unfinished": true,
+        "armed": false,
+        "inFlight": 0,
+        "tickOwed": true
+      },
+      {
+        "step": "noteExtensionsInFlight",
+        "armed": false,
+        "inFlight": 1,
+        "tickOwed": false
+      },
+      {
+        "step": "settleLastAnswer",
+        "armed": true,
+        "inFlight": 0,
+        "tickOwed": false,
+        "emitsRearm": true
+      }
+    ],
+    "terminalTick": {
+      "emits": "flowEvalTick",
+      "addressedBy": [
+        "windowId",
+        "windowKindId"
+      ],
+      "settlesWith": "effects=0"
+    }
   }
 }

@@ -52,6 +52,30 @@
       "shellFramePayload": null
     },
     {
+      "id": "download-media-export-tagged-option-encoding",
+      "why": "The wgpu door had NO case for this effect at all, so a binary export vanished into the loud default drop; and where a door did map it, the WIT `option<string>` arrives as `{tag:\"some\"}` and a flat read lost it. Both halves are pinned here. The bytes this `data` must become are `🎠️kernel/🧫️fixtures/⬇️media-export-encoding/🔣️.json`'s law.",
+      "effect": { "tag": "download-media-export", "val": { "filename": "generation3d.dwg", "mimeType": "image/vnd.dwg", "data": "QUMxMDE4", "encoding": { "tag": "some", "val": "base64" } } },
+      "friendly": { "downloadMediaExport": { "filename": "generation3d.dwg", "mimeType": "image/vnd.dwg", "data": "QUMxMDE4", "encoding": "base64" } },
+      "warns": false,
+      "shellFramePayload": null
+    },
+    {
+      "id": "download-media-export-bare-option-encoding",
+      "why": "jco's direct binding hands the same field over bare — the other real shape of one `option<string>`.",
+      "effect": { "tag": "download-media-export", "val": { "filename": "generation3d.dwg", "mimeType": "image/vnd.dwg", "data": "QUMxMDE4", "encoding": "base64" } },
+      "friendly": { "downloadMediaExport": { "filename": "generation3d.dwg", "mimeType": "image/vnd.dwg", "data": "QUMxMDE4", "encoding": "base64" } },
+      "warns": false,
+      "shellFramePayload": null
+    },
+    {
+      "id": "download-media-export-textual-none-encoding",
+      "why": "A textual export declares no encoding; a `none` variant and an absent field mean the same thing and must not become the string \"none\".",
+      "effect": { "tag": "download-media-export", "val": { "filename": "generation3d.txt", "mimeType": "text/plain", "data": "semio v1", "encoding": { "tag": "none" } } },
+      "friendly": { "downloadMediaExport": { "filename": "generation3d.txt", "mimeType": "text/plain", "data": "semio v1" } },
+      "warns": false,
+      "shellFramePayload": null
+    },
+    {
       "id": "mapped-effect-still-maps",
       "why": "Control row — the new case must not shadow a real friendly projection.",
       "effect": { "tag": "notify", "val": { "message": "refused" } },

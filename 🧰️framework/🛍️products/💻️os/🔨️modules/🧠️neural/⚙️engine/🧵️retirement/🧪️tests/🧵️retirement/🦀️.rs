@@ -4,29 +4,55 @@ use super::*;
 use std::mem::size_of;
 
 //#region 🔣️FixtureLaws
-fn exact_backing(owner: Owner, expected_bytes: usize) {
-    assert!(expected_bytes > 4096);
+/// 🎟️ An emptied element-vector backing is accounted PHYSICALLY by `allocated_bytes` — the number a
+/// terminal-empty proof and a frontier reservation need — and freed in one turn under any positive
+/// grant, reporting ZERO payload bytes. `capacity * size_of::<T>()` is machine-width dependent
+/// (`size_of::<String>()` is 24 native and 12 on `wasm32`), so it can never be part of the released
+/// payload total the language-agnostic drawdown fixture pins
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn exact_backing(owner: Owner, allocated: usize) {
+    assert!(allocated > 4096);
     let mut retirement = ValueRetirement::default();
     retirement.owners.push_back(owner);
-    assert_eq!(retirement.allocated_bytes(), expected_bytes);
-    assert_eq!(retirement.next_close_byte_demand().unwrap(), expected_bytes);
-    assert_eq!(retirement.close_step(0, expected_bytes), ValueRetirementStep::Blocked);
+    assert_eq!(retirement.allocated_bytes(), allocated);
+    assert_eq!(retirement.next_close_byte_demand().unwrap(), 1);
+    assert_eq!(retirement.close_step(0, allocated), ValueRetirementStep::Blocked);
     assert_eq!(retirement.close_step(1, 0), ValueRetirementStep::Blocked);
-    assert_eq!(retirement.close_step(1, expected_bytes - 1), ValueRetirementStep::Blocked);
-    assert_eq!(retirement.allocated_bytes(), expected_bytes);
-    assert_eq!(retirement.close_step(1, expected_bytes), ValueRetirementStep::Pending { released_items: 1, released_bytes: expected_bytes });
+    assert_eq!(retirement.allocated_bytes(), allocated);
+    assert_eq!(retirement.close_step(1, 1), ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 });
     assert_eq!(retirement.allocated_bytes(), 0);
     assert_eq!(retirement.close_step(0, 0), ValueRetirementStep::Complete);
     assert!(retirement.terminal_is_empty());
 }
 
+/// 🎟️ A byte buffer is charged `min(grant, left)` per turn against its LIVE payload and the whole
+/// allocation is freed once the charge reaches zero — the `min(grant, left)` drawdown the
+/// language-agnostic contract states, and the reason a fixed-page driver never stalls on one.
+/// Reserved capacity beyond the payload is freed with the buffer and is never charged for, which is
+/// what `empty_reserved_text_does_not_require_capacity_sized_credit` pins on the session frontier
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
-fn neural_physical_retirement_direct_string_and_vector_backings_release_exact_capacity_once() {
-    let mut bytes = Vec::with_capacity(8193);
-    bytes.push(1);
-    let capacity = bytes.capacity();
-    exact_backing(Owner::Bytes(bytes), capacity);
+fn neural_physical_retirement_charges_byte_buffers_down_and_frees_the_whole_reservation() {
+    let mut values = Vec::with_capacity(8193);
+    values.extend(std::iter::repeat_n(1u8, 8000));
+    let capacity = values.capacity();
+    let payload = values.len();
+    let mut retirement = ValueRetirement::default();
+    retirement.owners.push_back(byte_owner(values));
+    assert_eq!(retirement.allocated_bytes(), capacity);
+    assert_eq!(retirement.next_close_byte_demand().unwrap(), 1);
+    assert_eq!(retirement.close_step(0, capacity), ValueRetirementStep::Blocked);
+    assert_eq!(retirement.close_step(1, 0), ValueRetirementStep::Blocked);
+    assert_eq!(close(retirement, 1), payload);
 
+    let mut reserved = ValueRetirement::default();
+    reserved.text(String::with_capacity(8193));
+    assert_eq!(reserved.next_close_byte_demand().unwrap(), 1);
+    assert_eq!(close(reserved, 1), 0);
+}
+
+#[test]
+fn neural_physical_retirement_direct_vector_backings_free_whole_under_any_positive_grant() {
     let strings = Vec::<String>::with_capacity(8193usize.div_ceil(size_of::<String>()));
     let capacity = strings.capacity() * size_of::<String>();
     exact_backing(Owner::Strings(strings), capacity);
@@ -38,26 +64,19 @@ fn neural_physical_retirement_direct_string_and_vector_backings_release_exact_ca
     exact_backing(Owner::Fields(fields), capacity);
 }
 
+/// 🎟️ A nested ordered-map key is charged down through the delegating frontier exactly like a direct
+/// buffer: its reserved capacity is freed with it and never charged for, and a one-byte grant is
+/// enough (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
-fn neural_physical_retirement_delegates_ordered_key_capacity_without_clamping() {
+fn neural_physical_retirement_charges_a_nested_ordered_key_down_under_a_one_byte_grant() {
     let mut key = String::with_capacity(8193);
     key.push_str("nested-key");
-    let expected = key.capacity();
+    let capacity = key.capacity();
+    let payload = key.len();
     let mut retirement = ValueRetirement::from_dictionary(Dictionary::new().insert(key, Value::null()));
-    let mut released = 0;
-    for _ in 0..300 {
-        let demand = retirement.next_close_byte_demand().unwrap();
-        if demand == expected {
-            assert_eq!(retirement.close_step(1, expected - 1), ValueRetirementStep::Blocked);
-        }
-        match retirement.close_step(1, demand.max(1)) {
-            ValueRetirementStep::Pending { released_bytes, .. } => released += released_bytes,
-            ValueRetirementStep::Complete => break,
-            ValueRetirementStep::Blocked => panic!("exact nested neural demand blocked"),
-        }
-    }
-    assert_eq!(released, expected);
-    assert!(retirement.terminal_is_empty());
+    assert!(retirement.allocated_bytes() < capacity);
+    assert_eq!(retirement.next_close_byte_demand().unwrap(), 1);
+    assert_eq!(close(retirement, 1), payload);
 }
 
 fn close(mut owner: ValueRetirement, maximum_bytes: usize) -> usize {

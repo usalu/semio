@@ -5,7 +5,8 @@
   "windowKinds": {
     "flow": "procedural-main",
     "preview": "procedural-preview",
-    "generatePreview": "generation3d-generate-preview"
+    "generatePreview": "generation3d-generate-preview",
+    "viewPreview": "procedural-view-preview"
   },
   "examples": {
     "hexagonal-mushroom-column": ["height", "radius", "sides", "profile", "extrusion-axis", "extrude", "column-preview"],
@@ -17,6 +18,15 @@
     "rectangle-wire-preview": ["width", "height", "rect"],
     "box-shell-preview": ["size", "thickness", "box", "shell"],
     "": []
+  },
+  "viewer": {
+    "note": "The read-only surface has NO flow window to republish, so a pick is measured by the graph its VIEWED document reports — `interaction_topology`, the very resolution the preview render and the `flowEvalTick` chain run. Three picker states, not two: an implementation that cannot tell `never picked` from `picked No example` cannot satisfy this table.",
+    "windowKind": "procedural-view-preview",
+    "states": [
+      { "id": "never-picked", "activeExampleId": null, "viewed": "opened", "why": "Nothing has been picked, so the surface shows the document this session opened. This is the ABSENCE of a `setActiveExample` dispatch, never an empty one." },
+      { "id": "no-example", "activeExampleId": "", "viewed": "empty", "why": "The picker's own `No example` row, whose `__none__` sentinel `NavbarExampleSelect` normalizes to the empty id. It CLEARS, exactly as the sibling surface's own row does. Collapsing it onto `never-picked` made it resolve to the opened document — which in the playground IS a bundled example — so the row painted the hexagonal mushroom column's three meshes (`meshesLen 3641`, measured on the served viewer 2026-09-13, `🗑️generated/viewer-status/parity-1/results.json`)." },
+      { "id": "a-bundled-example", "activeExampleId": "sphere-box-fuse", "viewed": "sphere-box-fuse", "why": "A named example projects over the opened document without mutating it: a viewer owns no write authority, so the pick lives on its own config lane." }
+    ]
   },
   "rows": [
     {

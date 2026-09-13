@@ -34,6 +34,7 @@ const law = JSON.parse(readFileSync(resolve(dagRoot, "🧫️fixtures/🔗️wir
   readonly rules: Record<string, string>;
   readonly graph: { readonly nodes: readonly { readonly id: string; readonly inputs: readonly string[]; readonly outputs: readonly string[] }[] };
   readonly cases: readonly FixtureCase[];
+  readonly grab: { readonly rule: string; readonly zooms: readonly { readonly zoom: number }[]; readonly cases: readonly { readonly name: string; readonly gesture: { readonly kind: string } }[] };
   readonly minimap: { readonly cases: readonly { readonly name: string; readonly expectedCameraMoves: boolean }[] };
 };
 
@@ -83,7 +84,65 @@ describe("node graph wire edit", () => {
     expect(replacing?.expectedEdges?.[0]?.source).toBe("alt@out");
   });
 
+  it("dispatches a released gesture's own wire edits, and falls back to the fixture commit only when it made none", () => {
+    // 🩸️ React committed EVERY released gesture as a whole-fixture `setFixture`, so a drawn wire
+    // reached the guest only as a state blob — a different vocabulary from the one wgpu dispatches and
+    // from the one the guest declares. `pointerUpScreen` now answers with what the gesture did.
+    const source = readFileSync(nodeGraphSource, "utf8");
+    const handler = source.slice(source.indexOf('observeFlowTask(session, "pointerUpScreen"'));
+    const body = handler.slice(0, handler.indexOf("renderFlow()"));
+    expect(body).toContain("graphEditOperations(value)");
+    expect(body).toContain("dispatch(nodeGraphActions.edit, { operations })");
+    expect(body).toContain("else commitFixture()");
+  });
+
+  it("holds the pointer for the whole gesture, so a drag that leaves the canvas still releases on it", () => {
+    // 🩸️ Measured on 6018: a press on a port entered `InteractionMode::DrawEdge` and the release,
+    // landing over the outline tree beside the canvas, never reached `pointer_up_screen` at all — the
+    // wire stayed in flight and the gesture made no edit. Cutting a wire means dragging it AWAY, so
+    // the gesture that most needs to leave the canvas was the one that could never finish.
+    const source = readFileSync(nodeGraphSource, "utf8");
+    const down = source.slice(source.indexOf('observeFlowTask(session, "pointerDownScreen"') - 1400, source.indexOf('observeFlowTask(session, "pointerDownScreen"'));
+    expect(down).toContain("setPointerCapture(event.pointerId)");
+    const up = source.slice(source.indexOf('observeFlowTask(session, "pointerUpScreen"') - 900, source.indexOf('observeFlowTask(session, "pointerUpScreen"'));
+    expect(up).toContain("releasePointerCapture(event.pointerId)");
+  });
+
+  it("spells a removal the way the guest reads it, in both renderers", () => {
+    // 🩸️ The wgpu renderer wrote `edgeId` — the engine's private numbering's name — while the guest's
+    // `disconnect` reads `synapseId`: a well-formed command silently dropped.
+    const guest = readFileSync(resolve(repoRoot, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs"), "utf8");
+    const guestDisconnect = guest.slice(guest.indexOf('"disconnect" =>'));
+    const guestField = /operation\.get\("(\w+)"\)/u.exec(guestDisconnect)?.[1];
+    expect(guestField).toBe("synapseId");
+    const wgpu = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
+    expect(wgpu).toContain(`builder.string(Some("${guestField}"), synapse_id)?`);
+    expect(law.rules.disconnectNamesTheSynapse).toContain(guestField!);
+  });
+
+  it("requires the grabbable geometry to be the published geometry, across the zoom bands", () => {
+    expect(law.grab.rule).toBe("publishedPortGeometryIsGrabbable");
+    expect(law.rules[law.grab.rule]).toBeTruthy();
+    expect(law.grab.zooms.map((band) => band.zoom)).toEqual([0.5, 1, 2]);
+    const grabbed = law.grab.cases.map((testCase) => testCase.gesture.kind);
+    expect(grabbed).toContain("grabCentre");
+    expect(grabbed).toContain("detach");
+  });
+
   it("separates a minimap click that navigates from one that grabs the viewport rectangle", () => {
     expect(law.minimap.cases.map((testCase) => testCase.expectedCameraMoves)).toEqual([true, false]);
+  });
+
+  it("asks the path discriminator on every phase, the way React drives pointer_*_screen on every phase", () => {
+    // 🩸️ The half no Rust law can reach: the wgpu renderer decides per PHASE which of the host's two
+    // pointer entries to use. Asking only on press let a plain hover across a port fall through to
+    // the bounded path, which faults — measured on 6118 as
+    // `wgpu-shell graph move fault surface=procedural-main fault=Structure`, after which the frame
+    // loop published nothing further.
+    const canvas = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
+    const asks = [...canvas.matchAll(/node_graph_gesture_is_screen_path\(surface_id, ([^)]*\))\)/gu)].map((match) => match[1]);
+    expect(asks).toHaveLength(3);
+    for (const argument of asks) expect(argument).toBe("Some((sx, sy)");
+    expect(law.rules.everyPhaseOverAnUnsupportedHit).toContain("EVERY phase");
   });
 });

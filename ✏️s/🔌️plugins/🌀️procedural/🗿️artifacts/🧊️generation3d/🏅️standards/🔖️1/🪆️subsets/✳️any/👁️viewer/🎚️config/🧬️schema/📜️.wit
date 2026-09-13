@@ -20,8 +20,9 @@ interface config {
         show-mode: string,
         preview-camera: view-camera,
         sun-json: string,
-        /// 🎨️ The bundled example this surface is looking at; the empty string is the opened document.
-        active-example-id: string,
+        /// 🎨️ What this surface is looking at: absent = the opened document, the empty string =
+        /// the picker’s `No example` row, anything else = that bundled example.
+        active-example-id: option<string>,
     }
 }
 

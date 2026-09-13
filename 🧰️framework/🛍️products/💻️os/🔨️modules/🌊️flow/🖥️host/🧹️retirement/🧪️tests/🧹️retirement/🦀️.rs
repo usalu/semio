@@ -225,3 +225,37 @@ fn session_close_vector_scene_retirement_retains_and_reuses_exact_slot() {
     }
 }
 //#endregion 🧪️SessionRetirement
+
+//#region 🖐️GestureHistoryRetirement
+/// 🖐️ LAW: a gesture that changed NOTHING — every plain click on the graph — must retire its history
+/// baseline instead of dropping it.
+///
+/// `begin_gesture` clones the whole `FlowFixture` as the undo baseline, and a `FlowFixture` owns the
+/// fail-closed `OrderedMap<WidgetLayout>` root. `commit_gesture_history` only consumed that clone on
+/// the `content_changed` branch, so a no-op gesture let it fall out of scope and the process aborted
+/// with `ordered-map root must be explicitly retired before drop`. A bare drop aborts rather than
+/// unwinds, so this law cannot be written with `catch_unwind`: it is the RUN that proves it, exactly
+/// as it was the run on 6118 that found it — the first click on the node graph killed the pool worker
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-node-graph-surface-retention-2026-09-13.md`).
+#[test]
+fn a_gesture_that_changed_nothing_retires_its_history_baseline() {
+    let json = r#"{
+  "schema": "flow.fixture",
+  "camera": { "x": 0, "y": 0, "zoom": 1 },
+  "widgets": [{ "id": "rect", "kind": "neuron", "neuronKind": "rectangle" }],
+  "synapses": [],
+  "layout": { "rect": { "x": 40, "y": 40 } }
+}
+"#;
+    let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
+    let mut host = FlowHost::from_fixture(fixture);
+    host.set_viewport(1280, 800, 1.0);
+    host.rebuild_dag();
+    for _ in 0..3 {
+        host.pointer_down_screen(4.0, 4.0, 0, false, false, false, false);
+        host.pointer_up_screen(4.0, 4.0, false, false, false);
+    }
+    assert!(!host.widget_drag_active(), "a bare press and release leaves no gesture in flight");
+    host.retire_cold();
+}
+//#endregion 🖐️GestureHistoryRetirement

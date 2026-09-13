@@ -1213,6 +1213,11 @@ pub(crate) fn passive_scene_pointer_move(scene: &UiComponentSceneNode, bounds: R
 pub struct SceneEngineHosts<'a> {
     pub world3d_states: &'a mut AdmittedSurfaceMap<infinite_world::world::World3dState>,
     pub world_resources: &'a mut infinite_world::world::World3dBuildContext,
+    /// 🪟️ The window instance whose body this walk is painting — the retention authority every
+    /// attached engine surface is recorded against, so the shell can keep a surface alive through
+    /// frames its window did not repaint. See
+    /// `🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`.
+    pub window_id: &'a str,
 }
 
 pub fn render_component_scene_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor, hosts: &mut SceneEngineHosts<'_>) -> ui_wgpu::wgpu::ScenePaintStep {
@@ -1268,7 +1273,7 @@ pub fn render_component_scene_step(scene: &UiComponentSceneNode, bounds: Rect, c
             if scene.component_kind == SurfaceKind::World3d {
                 return render_world3d_surface_step(scene, bounds, ctx, cursor, hosts);
             }
-            if !engine_canvas::sync_engine_scene(scene, bounds, ctx.theme) {
+            if !engine_canvas::sync_engine_scene(scene, hosts.window_id, bounds, ctx.theme) {
                 return cursor.finish();
             }
             if cursor.advance_phase().is_err() {
@@ -1341,7 +1346,7 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
         return ui_wgpu::wgpu::ScenePaintStep::Fault;
     };
     infinite_world::world::render_world_3d(scene, bounds, ctx, state, hosts.world_resources);
-    engine_canvas::register_engine_surface(scene, bounds, engine_canvas::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created);
+    engine_canvas::register_engine_surface(scene, hosts.window_id, bounds, engine_canvas::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created);
     world3d_surface_debug_log(scene, bounds, ctx, state);
     cursor.finish()
 }
@@ -1381,7 +1386,21 @@ fn world3d_surface_debug_log(scene: &UiComponentSceneNode, bounds: Rect, ctx: &F
         ),
         None => "pass=none".to_string(),
     };
-    debug_log(&format!("[DEBUG] world3d surface={} pane={:?} bounds={}x{} {geometry} {} {payload}", scene.surface_id, scene.pane_id, bounds.w.round(), bounds.h.round(), state.ingest_census()));
+    // 📐️ The ORIGIN belongs in this trace as much as the size: every pointer, wheel and pick the
+    // surface receives is admitted by `bounds.contains(x, y)` in PAGE space, so a rect reported only
+    // as `WxH` cannot be told apart from the same rect at the wrong origin — which is the shape a
+    // silently undispatched hover/select/orbit takes (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    // `📓️wgpu-input-hit-runtime-2026-09-13.md` §10.5).
+    debug_log(&format!(
+        "[DEBUG] world3d surface={} pane={:?} bounds={}x{}+{},{} {geometry} {} {payload}",
+        scene.surface_id,
+        scene.pane_id,
+        bounds.w.round(),
+        bounds.h.round(),
+        bounds.x.round(),
+        bounds.y.round(),
+        state.ingest_census()
+    ));
 }
 
 fn debug_log(line: &str) {
@@ -3784,6 +3803,9 @@ mod ink_canvas_tests;
 pub struct NodeGraphSurface {
     pub bounds: Rect,
     pub controller_id: String,
+    /// 🪟️ The window instance that owns this surface — the ONLY thing that retires it. See
+    /// [`NodeGraphSurface`]'s oracle, `🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`.
+    pub window_id: String,
 }
 
 //#endregion NodeGraph
@@ -3794,6 +3816,7 @@ pub struct TiledMapSurface {
     pub bounds: Rect,
     pub controller_id: String,
     pub selection_method: String,
+    pub window_id: String,
 }
 
 fn query_map_feature_hits(host: &framework_surface_tiled_map::tiled_map::MapHost, method: &str, points: &[(f32, f32)], crossing: bool) -> (Vec<String>, Vec<String>) {
@@ -4056,6 +4079,7 @@ pub struct Board2dSurface {
     pub bounds: Rect,
     pub controller_id: String,
     pub fixture_json: String,
+    pub window_id: String,
 }
 
 

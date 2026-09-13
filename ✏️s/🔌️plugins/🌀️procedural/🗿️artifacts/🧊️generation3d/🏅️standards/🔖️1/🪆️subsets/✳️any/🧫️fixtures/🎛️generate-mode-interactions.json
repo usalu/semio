@@ -60,7 +60,7 @@
   ],
   "commandTriggers": [
     { "command": "reorganize", "triggers": ["contextMenu", "keybinding", "commandPalette"], "keys": "mod+alt+l" },
-    { "command": "cancelPreviewEval", "triggers": ["statusChrome", "keybinding", "commandPalette"], "keys": "mod+period" },
+    { "command": "cancelPreviewEval", "triggers": ["statusChrome", "keybinding", "commandPalette"], "keys": "mod+." },
     { "command": "deleteSelection", "triggers": ["contextMenu", "keybinding", "commandPalette"], "keys": "delete,backspace" },
     { "command": "selectGeneration", "triggers": ["treeRow"], "keys": null },
     { "command": "renameGeneration", "triggers": ["treeRow", "contextMenu", "commandPalette"], "keys": null },

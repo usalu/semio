@@ -31,19 +31,18 @@ Ticket `26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS`, master plan §1 decisions 1
 `E/🦀️.rs`, `Puzzle3dPrecomputeCommandWork`:
 
 - stages `FillPrepare` / `FillPlan` / `FillApply` **deleted** (they minted a fresh
-  `Puzzle3dPrecomputeSession::new()` per dispatch and replanned synchronously);
-  replaced by `FillRequest` → `FillLock` (`E/🦀️.rs` ≈6980-7000).
+  `Puzzle3dPrecomputeSession::new()` per dispatch and replanned synchronously); replaced by the
+  single `FillLock` stage (`E/🦀️.rs` ≈6938). *(This started as `FillRequest` → `FillLock`; the
+  follow-up below folded `FillRequest` away — see §F2.)*
 - the `fill_precompute: Option<Puzzle3dPrecomputeSession>` field, its `close_step` drain and its
   `terminal_is_empty` clause are gone.
 - new `Puzzle3dPrecomputeCommandWork::runtime_for(&self, config) -> Result<Puzzle3dRuntime, Fault>`
-  (`E/🦀️.rs` ≈6850) — the composed window-owner runtime both fill stages need.
-- `FillRequest`: `with_puzzle3d_app_for(session, &runtime, |app| app.precompute.borrow_mut().set_fill_requested_count(self.requested_count))`
-  — the app's own retained session, checked out of the process-global session registry, exactly the
-  one `fillBuildTick` drives.
-- `FillLock`: `set_fill_count::take_locked_mutations(&mut app.precompute.borrow_mut())` per turn,
-  one bounded `FILL_LOCK_PLACEMENTS_PER_TICK` chunk, looping until it yields nothing. Lowering
-  therefore emits its `delete_object` tail immediately; raising yields nothing (the tick locks new
-  placements in as they arrive).
+  (`E/🦀️.rs` ≈6850) — the composed window-owner runtime the fill stage needs.
+- `FillLock` re-asserts the gesture's own target on the app's LIVE session (checked out of the
+  process-global session registry — exactly the one `fillBuildTick` drives) and then takes one bounded
+  `FILL_LOCK_PLACEMENTS_PER_TICK` chunk, looping until it yields nothing. Lowering therefore emits its
+  `delete_object` tail immediately; raising yields nothing (the tick locks new placements in as they
+  arrive).
 - `Publish` (`setFillCount` branch) unchanged in shape: accumulated `fill_mutations` +
   `Puzzle3dConfigMutation::SetFillCount { count }` when the value moved, `coalesce_key: "fill-count"`.
 
@@ -229,3 +228,86 @@ peer-owned compile errors outside this wave.
    gate on it — re-run it once the tree compiles.
 5. **`E/🎚️config/🧬️schema/{🔗️.graphql,🛰️.proto}`** carry no default notion, so only `🔣️.json` and the
    TS mirror express the 100. Flagged in case the schema-first gate wants a uniform expression.
+
+---
+
+# 🔁️ Follow-up — the config → live-session seam
+
+Coordinator follow-up after wave B1 landed the session API.
+
+## F1. The one place the count reaches the session
+
+`E/🦀️.rs` `sync_precompute_session` (≈1618-1634) now ends with
+
+```rust
+session.set_fill_requested_count(envelope.runtime.fill_count);
+```
+
+That is the ONLY place the app pushes the count in. `sync_precompute_session` is what `render_body`,
+`tool_measures`, `window_measures` and `drive_precompute` all call, so every render and every measure
+pass re-asserts it; B1's `set_fill_requested_count` short-circuits when the value is unchanged, so the
+re-assert costs a comparison.
+
+The removed `set_fill_applied_count(config.fill_count)` sites are NOT restored: the applied cursor is
+session-owned now (moved only by `take_fill_locked_chunk`), and requested/applied legitimately diverge.
+
+## F2. The interleaving race — closed by construction
+
+The race the coordinator asked about is real, and it bites BOTH directions: between a retained
+`setFillCount`'s first turn and the turn its `Puzzle3dConfigMutation::SetFillCount` actually lands, the
+config still reads the PRE-gesture count, and any render that interleaves would push that stale count
+back into the session. On a lowering run that would raise the target back under the command's own feet
+and make the very next locked chunk re-ADD objects instead of deleting them.
+
+Fix: the retained work re-asserts its own target inside every locked-chunk turn, in the same
+`with_puzzle3d_app_for` closure that takes the chunk, so nothing can interleave between the two:
+
+```rust
+Puzzle3dPrecomputeCommandStage::FillLock => {
+    …
+    let mutations = with_puzzle3d_app_for(session, &runtime, |app| {
+        let mut precompute = app.precompute.borrow_mut();
+        precompute.set_fill_requested_count(requested);
+        set_fill_count::take_locked_mutations(&mut precompute)
+    });
+```
+
+With the re-assert per chunk, the separate `FillRequest` stage became redundant and was folded away —
+`Puzzle3dPrecomputeCommandStage` is now `… Positions, Indices, FillLock, PrologueScene …`. An
+interleaved render may still flip the session's target for the duration of that render; it cannot
+survive into a chunk, and once the config mutation lands both agree. Config stays the single source of
+truth: nothing but `sync_precompute_session` (config) and the in-flight command's own target ever
+writes it.
+
+**Known gap (documented, not a regression):** `Puzzle3dActionPrologue::sync_step`'s `Push` stage uses
+`push_precompute_scene`, not `sync_precompute_session`, so a dispatch-only path does not itself assert
+the count. In practice the UI renders before it can dispatch a 120 ms `fillBuildTick`, and B1 chose
+`FILL_REQUESTED_COUNT_DEFAULT == 100 == Puzzle3dConfig::default().fill_count` precisely so an
+unasserted session still asks for the right number on a fresh document. Worth folding the prologue's
+push onto `sync_precompute_session` in a later pass.
+
+## F3. `apply_fill_count_chunk` is dead — B1 may delete it
+
+`grep -rn "apply_fill_count_chunk" --include="*.rs"` over the whole repo returns exactly one line, its
+own definition (`E/⏳️precompute/🦀️.rs:3401`). B2 removed its last caller when
+`set_fill_count::apply_chunk` was replaced by `take_locked_mutations`. Same for
+`set_fill_applied_count` as an *app-facing* entry point — the session still calls it internally from
+`take_fill_locked_chunk`, so that one must stay.
+
+## F4. New tests
+
+| test (`E/🧪️tests/🔬️unit/🦀️.rs`) | asserts |
+|---|---|
+| `scene_sync_holds_the_live_planner_to_the_config_fill_count` | a fresh runtime asks 100; the sync pushes 100 into the session; raising the config to 250 reaches the planner; re-syncing 250 is a no-op; lowering to 40 reaches it too |
+| `a_committed_fill_count_survives_the_renders_that_follow_it` | `setFillCount(250)` then three `render_composite` passes — the count entry still reads 250, i.e. no render downgraded it |
+
+## F5. Results
+
+`cargo check -p semio-s-artifact-puzzle-3d --features component-app-assembly -j 4 --message-format short` (lib):
+
+```
+warning: `semio-s-artifact-puzzle-3d` (lib) generated 96 warnings (run `cargo fix --lib -p semio-s-artifact-puzzle-3d` to apply 91 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 43.28s
+```
+
+→ **0 errors.**

@@ -91,7 +91,7 @@ mod tests {
                             }
                         }
                     }
-                    WindowMeasure::Toggle { id, .. } | WindowMeasure::Slider { id, .. } | WindowMeasure::Select { id, .. } => into.push(id.clone()),
+                    WindowMeasure::Toggle { id, .. } | WindowMeasure::Slider { id, .. } | WindowMeasure::Select { id, .. } | WindowMeasure::Number { id, .. } | WindowMeasure::Progress { id, .. } => into.push(id.clone()),
                 }
             }
             let mut into = Vec::new();

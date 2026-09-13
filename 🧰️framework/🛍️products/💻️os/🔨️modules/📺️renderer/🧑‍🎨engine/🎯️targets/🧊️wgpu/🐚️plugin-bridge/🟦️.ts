@@ -71,6 +71,7 @@ import {
   type PluginManifest,
   type PluginWasmHandle as KernelPluginWasmHandle,
   SemioFaultError,
+  type SpawnedJobCompletion,
   type TurnOutcome,
 } from "@semio-tech/framework";
 import { AppChannelClient, AppChannelRequestSequence, type WindowConfigPackEntry, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodeAppCommand, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
@@ -90,14 +91,18 @@ import {
   coerceWireBytes,
   decodeWirePatchOps,
   driveInboundRequest,
+  driveSpawnedJob,
   INBOUND_REQUEST_TURN_BUDGET,
   drainTypedOperationTurns,
   scanTypedOperationPages,
   shellFrameBytes,
+  spawnedJobCompletedEvent,
   typedOperationAcknowledgements,
   wireEffectToFriendly,
+  wireSpawnJob,
   wireTurnStatusTag,
   type RetainedSurface,
+  type SpawnedJobPort,
   type TypedOperationAckEvent,
   type WireTurnResult,
   type WireUiPatch,
@@ -649,6 +654,7 @@ function leftoverFriendlyEffects(instanceId: number, turns: readonly WireTurnRes
   const leftover: WireVariant[] = [];
   for (const turn of turns) {
     for (const effect of turn.effects) {
+      if (admitSpawnedJob(instanceId, effect)) continue;
       if (!shellFrameBytes(effect, instanceId)) leftover.push(effect);
     }
   }
@@ -674,12 +680,62 @@ function stashLeftoverHostEffects(instanceId: number, effects: readonly WireVari
   const leftover = pendingTurnEffects.get(instanceId) ?? [];
   const before = leftover.length;
   for (const effect of effects) {
+    if (admitSpawnedJob(instanceId, effect)) continue;
     if (!shellFrameBytes(effect, instanceId)) leftover.push(effect);
   }
   if (leftover.length === 0) return 0;
   pendingTurnEffects.set(instanceId, leftover);
   return leftover.length - before;
 }
+
+//#region 🧵️SpawnedJobs
+/** 🧵️ Jobs this instance's guest asked the host to run, in arrival order, one entry per `job` id.
+ *
+ * ⚖️ A `spawn-job` is neither a shell frame nor a leftover the shell acts on: it is WORK THIS HOST
+ * OWES THE GUEST. Before this lane the wgpu bridge had no case for it at all, so every framework
+ * reserved tool verb — `interactionSelect`, `interactionHover`, `clearSelection` — reached
+ * `wireEffectToFriendly`'s default arm and became a console warning: 18 per run on 6118, exactly two
+ * per gesture. The gesture published a perfect wire message and was applied never
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md` §7). */
+const pendingSpawnedJobs = new Map<number, Map<string, Extract<Effect, { readonly spawnJob: unknown }>["spawnJob"]>>();
+
+/** 🧵️ How many job→completion→job rounds one drain admits before it refuses to keep going. A reserved
+ * tool job completes in one round; the bound exists so a guest that re-spawns forever fails loudly
+ * instead of wedging the actor's serialization chain. */
+const WGPU_SPAWNED_JOB_ROUNDS = 16;
+
+/** 🐞️ `[DEBUG]` — how many real reserved-job payloads this page has printed verbatim, so the shared
+ * fixture's recorded rows are transcribed from the wire rather than invented. Temporary, ticket
+ * 26/09/09/PROCEDURAL-3D-END-TO-END. */
+let spawnJobPayloadsRecorded = 0;
+
+/** 🧵️ Takes one `spawn-job` out of the effect stream, deduplicated by job id — the SAME effect is
+ * observed twice per gesture (once as the command turn's host effect, once as the leftover drain's),
+ * and starting a job twice is a guest-side identity collision, not a retry. */
+function admitSpawnedJob(instanceId: number, effect: WireVariant): boolean {
+  if (effect.tag !== "spawn-job") return false;
+  const { spawnJob } = wireSpawnJob(effect);
+  const queue = pendingSpawnedJobs.get(instanceId) ?? new Map();
+  const key = String(spawnJob.job);
+  if (!queue.has(key)) {
+    queue.set(key, spawnJob);
+    pendingSpawnedJobs.set(instanceId, queue);
+  }
+  return true;
+}
+
+function takeSpawnedJobs(instanceId: number): readonly Extract<Effect, { readonly spawnJob: unknown }>["spawnJob"][] {
+  const queue = pendingSpawnedJobs.get(instanceId);
+  if (!queue || queue.size === 0) return [];
+  const jobs = [...queue.values()];
+  pendingSpawnedJobs.delete(instanceId);
+  return jobs;
+}
+
+function forgetSpawnedJobs(instanceId: number): void {
+  pendingSpawnedJobs.delete(instanceId);
+}
+//#endregion 🧵️SpawnedJobs
 
 function effectTags(effects: readonly Effect[]): string[] {
   return effects.map((effect) => (typeof effect === "string" ? effect : Object.keys(effect)[0] ?? "unknown"));
@@ -937,7 +993,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         if (uiRouteByInstance.get(instanceId) !== route) throw new Error("wgpu-ui.owner-replaced");
         const projected = await route.project(surfaceId);
         const effects = [...carried, ...leftoverFriendlyEffects(instanceId, turns)];
-        console.log(`[DEBUG] wgpu-bridge renderSurface surface=${surfaceId} turn=${opportunity} effects=${effects.length} carried=${carried.length} tags=${effectTags(effects).join(",") || "-"} intakeSteps=${route.intakeSteps}`);
+        console.log(`[DEBUG] wgpu-bridge renderSurface surface=${surfaceId} turn=${opportunity} effects=${effects.length} carried=${carried.length} tags=${effectTags(effects).join(",") || "-"} intakeSteps=${route.intakeSteps} patched=${turns.reduce((total, turn) => total + turn.uiPatches.length, 0)} nodes=${projected?.document.nodes.length ?? -1} rev=${projected?.document.revision ?? -1}`);
         if (projected) return { ...projected, effects };
         const status = typeof current.status === "string" ? current.status : current.status && typeof current.status === "object" && "tag" in current.status ? String((current.status as { readonly tag?: unknown }).tag ?? "") : "";
         if (status.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() !== "more-work") throw new Error(`wgpu-ui.surface-not-published:${surfaceId}`);
@@ -971,6 +1027,77 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
     }
+  };
+
+  /** 🧵️ Runs every job this instance's guest asked for, and answers each one with the
+   * `Event::JobCompleted` it is waiting on — the wgpu half of the shared `driveSpawnedJob` contract
+   * (`🖼️wire-turn/🟦️.ts`, rule owned by `kernel::spawnedJobCompletion`).
+   *
+   * MUST be called from inside a {@link serializeWgpuActorCall} body: it submits turns on `actorId`,
+   * so running it outside the actor's own chain would interleave with a command's continuations.
+   *
+   * A drive that refuses still answers — with the refusal bytes as a `fault` — because the guest has a
+   * parked future on this job id and a host that says nothing leaves the interaction hanging forever,
+   * which is the shape the dropped effect already had. */
+  const drainSpawnedJobs = async (instanceId: number, actorId: string): Promise<Uint8Array[]> => {
+    const frames: Uint8Array[] = [];
+    const client = getShardClient();
+    const port: SpawnedJobPort = {
+      startJob: (job, kind, input) => client.startJob(actorId, job, kind, input),
+      stepJob: (job, budget) => client.stepJob(actorId, job, budget),
+    };
+    for (let round = 0; round < WGPU_SPAWNED_JOB_ROUNDS; round += 1) {
+      const jobs = takeSpawnedJobs(instanceId);
+      if (jobs.length === 0) return frames;
+      for (const job of jobs) {
+        const started = performance.now();
+        if (spawnJobPayloadsRecorded < 3) {
+          spawnJobPayloadsRecorded += 1;
+          console.log(`[DEBUG] wgpu-bridge spawn-job payload job=${job.job} kind=${job.kind} placement=${job.placement} bytes=${job.input.byteLength} base64=${btoa(String.fromCharCode(...job.input))}`);
+        }
+        let completion: SpawnedJobCompletion;
+        try {
+          completion = await driveSpawnedJob({ job: job.job, kind: job.kind, input: job.input, port });
+          console.log(`[DEBUG] wgpu-bridge spawn-job done instance=${instanceId} job=${job.job} kind=${job.kind} placement=${job.placement} input=${job.input.byteLength}B steps=${completion.steps} outcome=${"ok" in completion.outcome ? "ok" : "fault"} bytes=${("ok" in completion.outcome ? completion.outcome.ok : completion.outcome.fault).byteLength} ms=${Math.round(performance.now() - started)}`);
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : String(error);
+          console.warn(`[DEBUG] wgpu-bridge spawn-job refused instance=${instanceId} job=${job.job} kind=${job.kind}: ${detail}`);
+          completion = { steps: 0, outcome: { fault: new TextEncoder().encode(detail) } };
+        }
+        const drive = new WgpuTypedOperationDrive(instanceId);
+        const route = requireUiRoute(instanceId);
+        const execute = executeFor(actorId);
+        const settled = [await submitTurn(actorId, [spawnedJobCompletedEvent(job.job, completion)])];
+        settled.push(...await route.accept(settled[0]!, execute));
+        drive.observe(settled);
+        for (let settle = 0; drive.owesASettle(settled.at(-1)) && settle < WGPU_TYPED_OPERATION_SETTLE_LIMIT; settle += 1) {
+          const next = await submitTurn(actorId, drive.takeAcknowledgements());
+          const more = [next, ...await route.accept(next, execute)];
+          settled.push(...more);
+          drive.observe(more);
+          if (!drive.progressed(more)) break;
+          await yieldWgpuUi();
+        }
+        const hostEffects = drive.hostEffects(settled);
+        for (const effect of hostEffects) {
+          const frame = shellFrameBytes(effect, instanceId);
+          if (frame) frames.push(frame);
+        }
+        stashLeftoverHostEffects(instanceId, hostEffects);
+        drive.report(`job=${job.job}`);
+        // 🔁️ A reserved tool job's completion turn is a turn like any other: if the guest still has
+        // work left, SOMETHING has to keep polling it. Nothing else will — the command's own
+        // `more-work` check reads the command turns, which ended before this job ever started — so an
+        // operation the completion re-armed would sit forever and the shell's deferred action would
+        // never resolve, wedging the interaction state it holds checked out.
+        const status = wireTurnStatusTag(settled.at(-1)?.status);
+        console.log(`[DEBUG] wgpu-bridge spawn-job settled instance=${instanceId} job=${job.job} turns=${settled.length} status=${status || "-"} frames=${frames.length}`);
+        if (status === "more-work") void drainTypedOperations(instanceId);
+      }
+    }
+    console.warn(`[DEBUG] wgpu-bridge spawn-job drain for instance ${instanceId} exhausted its ${WGPU_SPAWNED_JOB_ROUNDS}-round authority`);
+    forgetSpawnedJobs(instanceId);
+    return frames;
   };
 
   const runQueuedTurnSerialized = async (instanceId: number, actorId: string, events: readonly Uint8Array[]): Promise<void> => {
@@ -1023,6 +1150,10 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         if (frame) outFrames.push(frame);
       }
       stashLeftoverHostEffects(instanceId, drive.hostEffects(results));
+      // 🧵️ Before the command's own reply is published: a reserved tool job's completion IS the rest
+      // of this action (`interactionSelect` answers with nothing but the job), so its frames belong on
+      // the same outcome the shell is already waiting on, after the admitted reply and in order.
+      outFrames.push(...await drainSpawnedJobs(instanceId, actorId));
       const leftover = pendingTurnEffects.get(instanceId) ?? [];
       const leftoverFriendly = leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
       if (leftoverFriendly.length) console.log(`[DEBUG] wgpu-bridge effects leftover ${leftoverFriendly.length} tags=${effectTags(leftoverFriendly).join(",")}`);
@@ -1061,12 +1192,16 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           const frames: Uint8Array[] = [];
           const leftover = pendingTurnEffects.get(instanceId) ?? [];
           for (const effect of drive.hostEffects(accepted)) {
+            if (admitSpawnedJob(instanceId, effect)) continue;
             const frame = shellFrameBytes(effect, instanceId);
             if (frame) frames.push(frame);
             else leftover.push(effect);
           }
           if (leftover.length > WGPU_TYPED_OPERATION_EFFECT_CAPACITY) throw new Error(`[DEBUG] wgpu-bridge typed-operation host effects for instance ${instanceId} exceeded their ${WGPU_TYPED_OPERATION_EFFECT_CAPACITY}-entry authority`);
           pendingTurnEffects.set(instanceId, leftover);
+          // 🧵️ A poll can uncover a reserved tool job just as a command can — an `interactionHover`
+          // the guest armed between two host calls arrives here and nowhere else.
+          frames.push(...await drainSpawnedJobs(instanceId, actorId));
           if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
           return { status: accepted.at(-1)?.status, nextWake: accepted.at(-1)?.nextWake ?? null };
         }),
@@ -1127,6 +1262,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const carried = (pendingTurnEffects.get(instanceId) ?? []).map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
       pendingTurnEffects.delete(instanceId);
       const drive = new WgpuTypedOperationDrive(instanceId);
+      const frames: Uint8Array[] = [];
+      const leftoverWire: WireVariant[] = [];
       const settled = await serializeWgpuActorCall(actorId, async () => {
         const route = requireUiRoute(instanceId);
         const execute = executeFor(actorId);
@@ -1141,16 +1278,18 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           if (!drive.progressed(more)) break;
           await yieldWgpuUi();
         }
+        for (const effect of drive.hostEffects(accepted)) {
+          if (admitSpawnedJob(instanceId, effect)) continue;
+          const frame = shellFrameBytes(effect, instanceId);
+          if (frame) frames.push(frame);
+          else leftoverWire.push(effect);
+        }
+        // 🧵️ An extension answer resumes a guest operation that may itself admit a reserved tool job;
+        // the pump belongs inside this serialized body, never in a second one behind it.
+        frames.push(...await drainSpawnedJobs(instanceId, actorId));
         return accepted;
       });
       drive.report(`completion req=${req}`);
-      const frames: Uint8Array[] = [];
-      const leftoverWire: WireVariant[] = [];
-      for (const effect of drive.hostEffects(settled)) {
-        const frame = shellFrameBytes(effect, instanceId);
-        if (frame) frames.push(frame);
-        else leftoverWire.push(effect);
-      }
       if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
       if (wireTurnStatusTag(settled.at(-1)?.status) === "more-work") void drainTypedOperations(instanceId);
       return emptyInvocation([...carried, ...leftoverWire.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null)]);

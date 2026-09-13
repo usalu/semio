@@ -12,11 +12,15 @@
   "rules": {
     "portGrammar": "A wire endpoint is named '<nodeId>@<portId>' — the same pick/hover channel grammar the graph already reports hover targets in, so a journalled edit is a lookup on what the host already knows, not a second derivation.",
     "connectIsFourIds": "A created wire dispatches ONE narrow operation carrying four ids: {operation: 'connect', sourceNodeId, sourcePortId, targetNodeId, targetPortId}. Re-publishing the whole fixture instead (React's own `commitFixture`) cannot fit a bounded action and is not required — the guest already declares this operation.",
-    "targetPortHoldsOne": "An input port holds at most one incoming wire: connecting a second one removes the first, and BOTH halves are journalled — the removal as {operation: 'disconnect', edgeId} naming the synapse id the guest knows, the creation as its own connect.",
+    "targetPortHoldsOne": "An input port holds at most one incoming wire: connecting a second one removes the first, and BOTH halves are journalled — the removal as {operation: 'disconnect', synapseId} naming the synapse id the guest knows, the creation as its own connect.",
+    "disconnectNamesTheSynapse": "A removal is named `synapseId`, the id the guest's own `disconnect` sub-operation reads (✏️s/🔌️plugins/🌀️procedural/…/🎮️commands/✏️node-graph-edit/🦀️.rs). A renderer that spells it `edgeId` — the engine's private numbering's name — dispatches a well-formed command the guest silently drops.",
     "unknownEdgeIsSilent": "A removed edge the guest never learned about (one this very gesture created) carries no synapse id and is not journalled — there is nothing for the guest to remove.",
+    "publishedPortGeometryIsGrabbable": "The host publishes exactly ONE screen geometry per port — `entity_screen_json('handle', '<nodeId>@<portId>')`, the port's CONNECTOR rect (the outer share of its row) — and that is the geometry a press grabs. A press anywhere inside the published rect, its CENTRE included, begins a wire, at every zoom band the graph draws nodes at. A hit zone that differs from the published rect is a second authority: the host tells a caller (an assistive tool, a demonstration, a user aiming at what is painted) that the port is at a place a press on it does nothing. The rest of the row is deliberately NOT published and stays node body — a computation node has no header row, so it would otherwise have nothing left to be dragged by.",
+    "detachCutsTheWire": "Dragging a connected input port onto empty canvas and releasing REMOVES that wire — the reconnect gesture's other outcome — and journals it as {operation: 'disconnect', synapseId}. A drag from an unconnected port released over empty canvas leaves the graph exactly as it was.",
     "drainedOnce": "The journal is drained by the renderer after each gesture; a second drain of the same gesture yields nothing, so one wire is never dispatched twice.",
-    "minimapClickNavigates": "A press inside the minimap panel but outside its viewport rectangle re-centres the camera on the world point under the pointer. A press inside the viewport rectangle instead begins a drag of that rectangle, leaving the camera where it was until the pointer moves.",
-    "screenPathOwnsTheGesture": "While any of these interactions is in flight the bounded plan path must not claim the follow-up move/up — the host answers `screenPointerGestureActive` for exactly that window."
+    "minimapClickNavigates": "A press inside the minimap panel but outside its viewport rectangle re-centres the camera on the world point under the pointer. A press inside the viewport rectangle instead begins a drag of that rectangle, leaving the camera where it was until the pointer moves. Both rectangles are reported as CORNERS (x0, y0, x1, y1), and which part of the panel lies outside the viewport rectangle depends on the camera — so a law looks for the relation, never for a fixed corner.",
+    "screenPathOwnsTheGesture": "While any of these interactions is in flight the bounded plan path must not claim the follow-up move/up — the host answers `screenPointerGestureActive` for exactly that window.",
+    "everyPhaseOverAnUnsupportedHit": "The path discriminator answers for a point, not for a press: wherever the bounded plan path answers `Unsupported`, EVERY phase over that point — hover and release included — belongs to the screen path. A renderer that asked only on press let a plain hover across a port reach `derivePointerPlan`, which faults, and a faulted dispatch takes the whole frame with it."
   },
   "graph": {
     "why": "Two computation nodes far enough apart that no proximity connection fires on its own, so every wire in this oracle is one the gesture actually drew.",
@@ -57,17 +61,66 @@
       "expectedScreenPath": true
     },
     {
+      "name": "a-hover-over-a-port-belongs-to-the-screen-path",
+      "why": "Measured on 6118 after the surface became reachable at all: a MOVE across a port fell through to the bounded path and answered `BoundedActionFault::Structure`, and the frame loop published nothing afterwards. The discriminator and the fault set must be the same set, for every phase.",
+      "gesture": { "kind": "probePhases", "at": "src@out" },
+      "expectedScreenPath": true,
+      "expectedBoundedFault": "Unsupported"
+    },
+    {
+      "name": "a-hover-over-empty-canvas-stays-on-the-bounded-path",
+      "why": "The other half: an ordinary hover must keep its bounded, atomically-admitted plan and must not be answered with a fault either.",
+      "gesture": { "kind": "probePhases", "x": 8.0, "y": 8.0 },
+      "expectedScreenPath": false,
+      "expectedBoundedFault": null
+    },
+    {
       "name": "a-press-on-empty-canvas-stays-on-the-bounded-path",
       "why": "The other half — marquee selection and node dragging must keep their atomically-admitted plan/commit path.",
       "gesture": { "kind": "probeScreenPoint", "x": 8.0, "y": 8.0 },
       "expectedScreenPath": false
     }
   ],
+  "grab": {
+    "why": "The gesture measured dead on React (📓️generate-mode-interactions-2026-09-13.md §4): twelve grab points across both ports' published rects, zoomed in and out, never started a wire. The cases above press the ANCHOR the engine paints a handle cap at, which a user never knows; these press what the host itself says the port is.",
+    "rule": "publishedPortGeometryIsGrabbable",
+    "zooms": [
+      { "zoom": 0.5, "why": "Below the Normal band — the tier a fitted graph of a few operators lands in. Port hit-picking was switched off entirely here, so no press anywhere could wire." },
+      { "zoom": 1.0, "why": "The Normal band: the port row is painted with its channel abbreviation, and only a disc of `handleRadius + 1.5` WORLD units at the row's outer edge grabbed — while the host published the whole 20-unit row, whose centre sits 10 units in." },
+      { "zoom": 2.0, "why": "The Detail band: handle caps are painted, and the row-pick narrowing applied here too, so the published rect grew with zoom while the grabbable disc stayed 6.5 world units wide — the published centre moved further out of reach the more the user zoomed in." }
+    ],
+    "cases": [
+      {
+        "name": "a-press-at-the-published-port-rect-centre-begins-a-wire",
+        "gesture": { "kind": "grabCentre", "at": "src@out" },
+        "expectedDrawEdge": true
+      },
+      {
+        "name": "a-drag-between-two-published-port-rect-centres-wires-them",
+        "gesture": { "kind": "wireCentres", "from": "src@out", "to": "tgt@in" },
+        "expectedEdits": [{ "operation": "connect", "sourceNodeId": "src", "sourcePortId": "out", "targetNodeId": "tgt", "targetPortId": "in" }],
+        "expectedEdges": [{ "source": "src@out", "target": "tgt@in" }]
+      },
+      {
+        "name": "dragging-a-wired-input-onto-empty-canvas-cuts-it",
+        "setup": [{ "kind": "wireCentres", "from": "src@out", "to": "tgt@in" }],
+        "gesture": { "kind": "detach", "at": "tgt@in" },
+        "expectedEditOperations": ["disconnect"],
+        "expectedEdges": []
+      },
+      {
+        "name": "dragging-an-unwired-port-onto-empty-canvas-changes-nothing",
+        "gesture": { "kind": "detach", "at": "tgt@in" },
+        "expectedEdits": [],
+        "expectedEdges": []
+      }
+    ]
+  },
   "minimap": {
     "why": "`minimap_widget_pointer_hit` is reached only from `pointer_down_screen`/`pointer_move_screen`, so it inherited the wire gap rather than being a separate one.",
     "camera": { "x": 0.0, "y": 0.0, "zoom": 3.0 },
     "cases": [
-      { "name": "click-outside-the-viewport-rect-recentres", "at": "panelTopLeftQuarter", "expectedCameraMoves": true },
+      { "name": "click-outside-the-viewport-rect-recentres", "at": "panelOutsideViewport", "expectedCameraMoves": true },
       { "name": "press-on-the-viewport-rect-grabs-instead", "at": "viewportCentre", "expectedCameraMoves": false }
     ]
   }

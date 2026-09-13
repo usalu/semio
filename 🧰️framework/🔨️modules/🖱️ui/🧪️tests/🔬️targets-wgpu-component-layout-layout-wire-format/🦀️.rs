@@ -70,7 +70,6 @@ mod layout_wire_format_tests {
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "measureSlider".into(), args: None },
             },
             WindowMeasure::Toggle { id: "m3".into(), icon_id: IconName::LayoutGrid, label: None, pressed: true, text: None, on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "measureToggle".into(), args: None } },
@@ -231,7 +230,6 @@ mod layout_wire_format_tests {
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: ActionDescriptor { controller_id: "c".into(), action: "z".into(), args: None },
             },
         ];

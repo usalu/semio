@@ -103,7 +103,7 @@ import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSu
 import type { RetainedUiNodeRecord } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
 import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
 import { hostContinuations } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
-import { drainTypedOperationTurns as driveTypedOperationDrain, driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, isRoutedWireSendMessage, shellFrameBytes as wireShellFrameBytes, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, TYPED_OPERATION_PAGE_MAGIC, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireExtensionInvocation, wireRespondAnswer, wireSendMessageTargetTag, wireTurnStatusTag } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { drainTypedOperationTurns as driveTypedOperationDrain, driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, isRoutedWireSendMessage, shellFrameBytes as wireShellFrameBytes, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, TYPED_OPERATION_PAGE_MAGIC, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireDownloadMediaExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireSendMessageTargetTag, wireTurnStatusTag } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { type PluginManifest, type ViewModel } from "../🐚️Shell/🟦️.tsx";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../📤️SegmentedDownload/🟦️.ts";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, decodeBackboneMessage } from "@semio-tech/framework-os";
@@ -959,14 +959,8 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
   const params = (val.params && typeof val.params === "object" ? val.params : {}) as Record<string, unknown>;
   const str = (key: string): string => String(val[key] ?? "");
   const num = (key: string): number => Number(val[key] ?? 0);
-  const optionValue = (raw: unknown): unknown => {
-    if (raw && typeof raw === "object" && "tag" in raw) {
-      const variant = raw as { readonly tag?: unknown; readonly val?: unknown };
-      if (variant.tag === "none") return undefined;
-      if (variant.tag === "some") return variant.val;
-    }
-    return raw;
-  };
+  // 🎁️ ONE WIT `option<T>` reader, shared with `🖼️wire-turn.ts` rather than restated here.
+  const optionValue = wireOptionValue;
   const packField = (key: string): unknown => {
     const raw = optionValue(val[key]);
     return raw !== undefined ? decodeWirePack(raw, `wire.${key}`) : undefined;
@@ -983,8 +977,11 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
       return "requestSync";
     case "load-document":
       return { loadDocument: { pack: Array.from(coerceWireBytes(val.pack)), spr: Array.from(coerceWireBytes(val.spr)) } };
+    // ⬇️ ONE decoder for both renderers (`🖼️wire-turn.ts`) — this door used to read `encoding` flat,
+    // and a WIT `option<string>` reaches it as `{tag:"some", val}`, so `typeof … === "string"` was
+    // always false and every binary export was saved as base64 TEXT under a binary file name.
     case "download-media-export":
-      return { downloadMediaExport: { filename: str("filename"), mimeType: str("mimeType"), data: str("data"), encoding: typeof val.encoding === "string" ? val.encoding : undefined } };
+      return wireDownloadMediaExport(effect);
     case "notify":
       return { notify: { message: str("message") } };
     case "navigate":

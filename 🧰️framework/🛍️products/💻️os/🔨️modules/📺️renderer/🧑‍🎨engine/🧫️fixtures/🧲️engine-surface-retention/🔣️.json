@@ -1,0 +1,126 @@
+{
+  "provenance": {
+    "what": "The language-neutral oracle for engine-surface RETENTION: which window's pointer-dispatchable engine surfaces survive a frame, given what that frame repainted and which window instances the layout still names.",
+    "why": "The wgpu shell mirrored its bespoke pointer-state maps (`node_graph_states`/`tiled_map_states`/`board2d_states`) from the per-frame PAINT drain and evicted every surface absent from it. Retained painting means a window whose document did not change does not repaint, so the node-graph surface fell out of the map in nearly every frame — and while it is absent no pointer, wheel, context menu, catalogue drop or `Fit graph` chrome control can reach it (`node_graph_pointer_down_into` is only ever called for a surface that is in the map). `world3d_states` was never evicted that way and its input worked, which is the asymmetry this oracle closes. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 📓️wgpu-retained-controls-wires-2026-09-13.md §7.3(b).",
+    "rule": "An engine surface's pointer state is owned by its WINDOW INSTANCE, not by a painted frame. Absence from a frame's paint drain means 'this window did not repaint', never 'this surface died'.",
+    "implementations": {
+      "rust": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧲️engine-surface-retention/🦀️.rs",
+      "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧲️engine-surface-retention/🟦️.ts"
+    },
+    "reference": "React already holds this rule structurally: `🕸️NodeGraph/🟦️.tsx`'s host effect is keyed on `[surfaceId]` alone and its cleanup is documented as 'A retained surface host unmounts exactly once, when its window closes' — never on a render or a paint."
+  },
+  "rules": {
+    "ownerIsTheWindowInstance": "Every retained engine surface names the window instance whose body it is painted into. That window's presence in the frame's layout — the dock window plan plus the open panels — is the ONLY thing that keeps the surface alive.",
+    "aFrameWithoutARepaintKeepsTheSurface": "A frame whose paint drain does not mention a surface leaves that surface exactly as it was: same bounds, same controller, still resolvable by a pointer inside its bounds.",
+    "aRepaintRefreshesTheProjection": "A drain that does mention the surface overwrites its bounds and controller with what was just painted, so a moved or resized pane dispatches against its new rectangle.",
+    "aClosedWindowDropsItsSurface": "The frame in which a surface's owning window leaves the layout is the frame its pointer state is dropped. Nothing under the old rectangle is dispatchable afterwards.",
+    "creationIsAnnouncedOnce": "A drain reports the surfaces whose engine host was constructed on it, and only those — the app-static catalogue is installed on exactly those and never re-pushed per frame.",
+    "everyCompositedKindIsRetainedAlike": "NodeGraph, TiledMap and Board2d follow one rule, and it is the rule World3d already followed: one owner of engine-surface state per window instance, independent of repaint."
+  },
+  "windows": {
+    "why": "One mode's dock: the Flow canvas that carries the node graph, a preview pane, and a panel-hosted board. `procedural-main` is the window id the wgpu dock plan really names for the Flow canvas on 6118.",
+    "live": ["procedural-main", "procedural-preview", "framework.section.artifact"]
+  },
+  "cases": [
+    {
+      "name": "a-painted-surface-becomes-pointer-dispatchable",
+      "why": "The baseline: the frame that paints the graph is the frame its pointer state appears.",
+      "frames": [
+        {
+          "drain": [{ "surfaceId": "procedural-main-graph", "windowId": "procedural-main", "kind": "nodeGraph", "controllerId": "procedural", "bounds": [3, 54, 975, 814], "created": true }],
+          "liveWindows": ["procedural-main", "procedural-preview", "framework.section.artifact"]
+        }
+      ],
+      "expectedCreated": ["procedural-main-graph"],
+      "expectedResolve": [{ "at": [400, 300], "surfaceId": "procedural-main-graph", "controllerId": "procedural" }]
+    },
+    {
+      "name": "a-frame-without-a-repaint-keeps-the-surface",
+      "why": "THE defect. A retained document that did not change does not repaint, so its surface is absent from the drain — and the graph stopped being reachable by any pointer at all.",
+      "frames": [
+        {
+          "drain": [{ "surfaceId": "procedural-main-graph", "windowId": "procedural-main", "kind": "nodeGraph", "controllerId": "procedural", "bounds": [3, 54, 975, 814], "created": true }],
+          "liveWindows": ["procedural-main", "procedural-preview", "framework.section.artifact"]
+        },
+        { "drain": [], "liveWindows": ["procedural-main", "procedural-preview", "framework.section.artifact"] },
+        { "drain": [], "liveWindows": ["procedural-main", "procedural-preview", "framework.section.artifact"] }
+      ],
+      "expectedCreated": [],
+      "expectedResolve": [
+        { "at": [400, 300], "surfaceId": "procedural-main-graph", "controllerId": "procedural" },
+        { "at": [3, 54], "surfaceId": "procedural-main-graph", "controllerId": "procedural" },
+        { "at": [2, 53], "surfaceId": null }
+      ]
+    },
+    {
+      "name": "a-repaint-refreshes-the-projection",
+      "why": "Retention must not freeze a stale rectangle: the drain that does paint the surface is authoritative for where it is and who answers for it.",
+      "frames": [
+        {
+          "drain": [{ "surfaceId": "procedural-main-graph", "windowId": "procedural-main", "kind": "nodeGraph", "controllerId": "procedural", "bounds": [3, 54, 975, 814], "created": true }],
+          "liveWindows": ["procedural-main"]
+        },
+        { "drain": [], "liveWindows": ["procedural-main"] },
+        {
+          "drain": [{ "surfaceId": "procedural-main-graph", "windowId": "procedural-main", "kind": "nodeGraph", "controllerId": "procedural-2", "bounds": [500, 54, 475, 814], "created": false }],
+          "liveWindows": ["procedural-main"]
+        }
+      ],
+      "expectedCreated": [],
+      "expectedResolve": [
+        { "at": [400, 300], "surfaceId": null },
+        { "at": [600, 300], "surfaceId": "procedural-main-graph", "controllerId": "procedural-2" }
+      ]
+    },
+    {
+      "name": "a-closed-window-drops-its-surface",
+      "why": "The other half of the rule: retention is not immortality. A mode switch that removes the Flow window must take its hit rectangle with it, or a click on whatever replaces it dispatches into a graph nobody can see.",
+      "frames": [
+        {
+          "drain": [{ "surfaceId": "procedural-main-graph", "windowId": "procedural-main", "kind": "nodeGraph", "controllerId": "procedural", "bounds": [3, 54, 975, 814], "created": true }],
+          "liveWindows": ["procedural-main", "procedural-preview"]
+        },
+        { "drain": [], "liveWindows": ["procedural-preview"] }
+      ],
+      "expectedCreated": [],
+      "expectedResolve": [{ "at": [400, 300], "surfaceId": null }]
+    },
+    {
+      "name": "every-composited-kind-is-retained-alike",
+      "why": "The tiled map and the 2-D board were evicted by the very same drain rule and inherit the very same fix — one rule, three kinds, no per-kind exception.",
+      "frames": [
+        {
+          "drain": [
+            { "surfaceId": "procedural-main-graph", "windowId": "procedural-main", "kind": "nodeGraph", "controllerId": "procedural", "bounds": [3, 54, 975, 814], "created": true },
+            { "surfaceId": "atlas-map", "windowId": "procedural-preview", "kind": "tiledMap", "controllerId": "procedural", "bounds": [990, 54, 440, 400], "created": true, "selectionMethod": "lasso" },
+            { "surfaceId": "puzzle-board", "windowId": "framework.section.artifact", "kind": "board2d", "controllerId": "puzzle", "bounds": [990, 470, 440, 398], "created": true, "fixtureJson": "{\"schema\":\"board.fixture\"}" }
+          ],
+          "liveWindows": ["procedural-main", "procedural-preview", "framework.section.artifact"]
+        },
+        { "drain": [], "liveWindows": ["procedural-main", "procedural-preview", "framework.section.artifact"] }
+      ],
+      "expectedCreated": [],
+      "expectedResolve": [
+        { "at": [400, 300], "surfaceId": "procedural-main-graph", "controllerId": "procedural" },
+        { "at": [1100, 200], "surfaceId": "atlas-map", "controllerId": "procedural" },
+        { "at": [1100, 600], "surfaceId": "puzzle-board", "controllerId": "puzzle" }
+      ]
+    },
+    {
+      "name": "creation-is-announced-once",
+      "why": "The catalogue install rides on this list. Announcing a surface twice re-pushes ~100 kB per frame; announcing it never leaves the graph without its operator palette.",
+      "frames": [
+        {
+          "drain": [{ "surfaceId": "procedural-main-graph", "windowId": "procedural-main", "kind": "nodeGraph", "controllerId": "procedural", "bounds": [3, 54, 975, 814], "created": true }],
+          "liveWindows": ["procedural-main"]
+        },
+        {
+          "drain": [{ "surfaceId": "procedural-main-graph", "windowId": "procedural-main", "kind": "nodeGraph", "controllerId": "procedural", "bounds": [3, 54, 975, 814], "created": false }],
+          "liveWindows": ["procedural-main"]
+        }
+      ],
+      "expectedCreatedPerFrame": [["procedural-main-graph"], []],
+      "expectedResolve": [{ "at": [400, 300], "surfaceId": "procedural-main-graph", "controllerId": "procedural" }]
+    }
+  ]
+}

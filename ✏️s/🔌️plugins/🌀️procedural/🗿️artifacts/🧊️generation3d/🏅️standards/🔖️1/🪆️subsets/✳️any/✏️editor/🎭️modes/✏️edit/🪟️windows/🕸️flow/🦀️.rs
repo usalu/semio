@@ -276,7 +276,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
     let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let hover = marks.hovered_graph_target().map(|(node_id, port_id)| NodeGraphHover { node_id: Some(node_id), port_id });
     let outline = graph_outline(&nodes, &edges, flow_extras.status_json.as_ref(), labels)?;
-    let surface = crate::scene_surface(
+    let surface = crate::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_MAIN,
         semio_framework_ui_contract::SurfaceKind::NodeGraph,
         &NodeGraphScene {
@@ -293,6 +293,9 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
             hover,
             ..NodeGraphScene::base(nodes, edges, viewport)
         },
+        labels.graph_canvas.as_str(),
+        labels.graph_canvas_hint.as_str(),
+        semio_framework_ui_contract::Liveness::Off,
     )?;
     let canvas = semio_framework_ui_contract::column()
         .grow(true)

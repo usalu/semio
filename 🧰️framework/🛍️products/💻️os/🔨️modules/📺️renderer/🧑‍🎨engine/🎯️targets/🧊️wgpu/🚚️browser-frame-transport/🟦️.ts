@@ -4,6 +4,7 @@
 import { BrowserInteractiveJobPort, type InteractiveJobUiMessage, type InteractiveJobWorkerMessage } from "../🔌️browser-interactive-job-port/🟦️.ts";
 import { TurnClock, TurnLedger, UI_TURN_BUDGET_MS, type TurnLedgerSnapshot, type TurnOutcome, type TurnVerdict } from "../⏱️turn-budget/🟦️.ts";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, describeBrowserBootSilence, evaluateBrowserBootLiveness, type BrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
+import { stampShardWorkerDiagnostics } from "../../../../../../../../🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts";
 
 export const FRAME_WORKER_LOSSLESS_ITEM_CAPACITY = 64;
 export const FRAME_WORKER_BYTE_CAPACITY = 256 * 1024;
@@ -618,7 +619,7 @@ export class BrowserFrameTransport {
    * is forwarded as a `shard-worker-error` frame so `ShardClient`'s own failure ladder still runs. */
   private spawnShardWorker(shardIndex: number, url: string): void {
     this.terminateShardWorker(shardIndex);
-    const worker = new Worker(url, { type: "module" });
+    const worker = new Worker(stampShardWorkerDiagnostics(url), { type: "module" });
     const channel = new MessageChannel();
     worker.onmessage = (event: MessageEvent) => channel.port1.postMessage(event.data);
     worker.onerror = (event: ErrorEvent) => channel.port1.postMessage({ kind: "shard-worker-error", message: event.message ?? "", filename: event.filename ?? "", lineno: event.lineno ?? 0 });

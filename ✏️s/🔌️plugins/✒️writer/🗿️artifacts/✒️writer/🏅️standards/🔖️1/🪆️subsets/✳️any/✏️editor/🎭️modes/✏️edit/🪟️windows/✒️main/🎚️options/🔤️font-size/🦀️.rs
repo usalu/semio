@@ -20,7 +20,6 @@ pub fn measure(config: &WriterMainWindowConfig, labels: &WriterPlayLabels) -> Wi
         loading: None,
         waiting: None,
         disabled: None,
-        reveal: None,
         on_change: writer_action("setEditorSetting", Some(dsl::DslValue::object([("field".into(), dsl::DslValue::String("fontPx".into()))]))),
     }
 }

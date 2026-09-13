@@ -524,6 +524,27 @@ enum Generation3dReplayDisplaced {
     Json(dsl::DslValue),
 }
 
+/// 🎟️ One bounded unit of the Flow frontier's RESERVE-then-CLOSE protocol.
+///
+/// [`semio_framework_artifact_flow_flow::retained::FlowRetirement`] keeps its continuation owners in
+/// a `PagedList` whose pages must be ADMITTED before they can hold anything, so its `close_step`
+/// answers `Blocked` — never an error — for as long as `next_allocation_bytes` still names a page the
+/// current owner's decomposition needs. A driver that only ever closes therefore makes no progress
+/// and raises no fault, forever. The erased [`store::ErasedSnapshotRetirement`] contract every
+/// framework close ladder drives this codec through carries one item and one page and has NO demand
+/// channel at all, so paying that reservation is this codec's own business.
+///
+/// See `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🦀️.rs`
+/// (`FlowRetirement::retire_cold` is the same protocol, cold) and the same fix at the flow host's
+/// own ladder in `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs`
+/// (`FlowHostRetirement::close_page`), ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
+fn generation3d_close_flow_frontier(flow: &mut semio_framework_artifact_flow_flow::retained::FlowRetirement, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    if maximum_items == 0 || maximum_bytes == 0 {
+        return Ok(store::SnapshotRetirementStep::Blocked);
+    }
+    flow.close_page(maximum_items, maximum_bytes)
+}
+
 struct Generation3dReplayRetirement {
     value: std::mem::ManuallyDrop<Option<Generation3dReplayDisplaced>>,
     domain: semio_framework_artifact_flow_flow::retained::FlowRetirement,
@@ -531,8 +552,8 @@ struct Generation3dReplayRetirement {
 
 impl ErasedSnapshotRetirement for Generation3dReplayRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.domain.is_empty() {
-            return self.domain.close_step(maximum_items, maximum_bytes);
+        if !self.domain.terminal_is_empty() {
+            return generation3d_close_flow_frontier(&mut self.domain, maximum_items, maximum_bytes);
         }
         if maximum_items == 0 || maximum_bytes < GENERATION3D_OWNER_BYTES {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -553,7 +574,7 @@ impl ErasedSnapshotRetirement for Generation3dReplayRetirement {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.value.is_none() && self.domain.is_empty()
+        self.value.is_none() && self.domain.terminal_is_empty()
     }
 }
 
@@ -694,8 +715,8 @@ impl ErasedSnapshotRetirement for Generation3dRetainedSnapshotRetirement {
                 },
             });
         }
-        if !self.flow.is_empty() {
-            return self.flow.close_step(maximum_items, maximum_bytes);
+        if !self.flow.terminal_is_empty() {
+            return generation3d_close_flow_frontier(&mut self.flow, maximum_items, maximum_bytes);
         }
         if let Some(value) = self.value.take() {
             self.flow.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Fixture(value.fixture));
@@ -706,7 +727,7 @@ impl ErasedSnapshotRetirement for Generation3dRetainedSnapshotRetirement {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.value.is_none() && self.flow.is_empty() && self.generation.is_none()
+        self.value.is_none() && self.flow.terminal_is_empty() && self.generation.is_none()
     }
 }
 

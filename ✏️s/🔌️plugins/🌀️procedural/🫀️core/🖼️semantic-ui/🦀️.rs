@@ -52,6 +52,33 @@ pub(crate) fn scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(id: impl Into
     semio_framework_plugin::scene_surface(&id, kind, scene)
 }
 
+/// ♿️ [`scene_surface`] plus the accessible name, description and liveness a canvas owes a reader.
+///
+/// A scene surface paints into a texture with no accessible children, so the `AccessibilitySpec` on
+/// its own record is the ONLY thing an assistive technology ever learns about it — without this the
+/// canvas is an anonymous `application` region that nothing can name, reach or hear. `live` makes the
+/// surface a live region so an evaluation advancing `Computing → Evaluated` is announced without the
+/// reader having to go find it.
+///
+/// The description is [`UiText::clipped`] display copy: a description that failed admission would
+/// fail the whole refresh, and its full text is always reachable in the window's own outline.
+///
+/// @see ../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🦀️.rs
+pub(crate) fn accessible_scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(
+    id: impl Into<String>,
+    kind: SurfaceKind,
+    scene: &T,
+    label: &str,
+    description: &str,
+    live: semio_framework_ui_contract::Liveness,
+) -> UiAssemblyResult<BuiltNode> {
+    let mut node = scene_surface(id, kind, scene)?;
+    node.accessibility.label = semio_framework_ui_contract::UiText::try_from_str(label).map(semio_framework_ui_contract::Label);
+    node.accessibility.description = Some(semio_framework_ui_contract::Label(semio_framework_ui_contract::UiText::clipped(description)));
+    node.accessibility.live = live;
+    Ok(node)
+}
+
 /// 🖊️ The SELECTED generation's inline name editor: a text `input` seeded with the current name
 /// whose `Trigger::Commit` (Enter / blur — `InputProps::commit == "blur"`) dispatches
 /// `renameGeneration{id}`, the typed text arriving as the framework's scalar `value` argument

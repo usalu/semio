@@ -1,0 +1,129 @@
+{
+  "schema": "semio.framework.kernel.media-export-encoding.v1",
+  "owner": "🧰️framework/🔨️modules/🎠️kernel - Effect::DownloadMediaExport",
+  "baseEncoding": "base64",
+  "textEncoding": "utf-8",
+  "note": "The law both renderers answer to: a DownloadMediaExport envelope's (data, encoding) pair becomes exactly `bytes`. `encoding: null` means `data` is the file as UTF-8 text; \"base64\" means `data` carries the bytes. Anything else is a refusal, never a silent text save.",
+  "cases": [
+    {
+      "id": "text-utf8-ascii",
+      "note": "a textual format declares no encoding and `data` IS the file",
+      "filename": "generation3d.txt",
+      "mimeType": "text/plain",
+      "encoding": null,
+      "data": "semio procedural.generation3d.dsl v1\n",
+      "bytes": [115, 101, 109, 105, 111, 32, 112, 114, 111, 99, 101, 100, 117, 114, 97, 108, 46, 103, 101, 110, 101, 114, 97, 116, 105, 111, 110, 51, 100, 46, 100, 115, 108, 32, 118, 49, 10]
+    },
+    {
+      "id": "text-utf8-multibyte",
+      "note": "a textual export is UTF-8 bytes, not UTF-16 code units",
+      "filename": "saeule.txt",
+      "mimeType": "text/plain",
+      "encoding": null,
+      "data": "Säule — Höhe 3 m\n",
+      "bytes": [83, 195, 164, 117, 108, 101, 32, 226, 128, 148, 32, 72, 195, 182, 104, 101, 32, 51, 32, 109, 10]
+    },
+    {
+      "id": "text-utf8-declared-encoding",
+      "note": "puzzle3d's `exportFixture` states `utf-8` EXPLICITLY; it must mean what an absent encoding means, and must not fall through an \"anything that is not base64 is text\" branch that would also swallow a genuinely unknown encoding",
+      "filename": "puzzle-3d.json",
+      "mimeType": "application/json",
+      "encoding": "utf-8",
+      "data": "{\n  \"id\": \"cube\"\n}\n",
+      "bytes": [123, 10, 32, 32, 34, 105, 100, 34, 58, 32, 34, 99, 117, 98, 101, 34, 10, 125, 10]
+    },
+    {
+      "id": "binary-dwg-base64",
+      "note": "the export roster's binary row: the DWG version header must survive as bytes",
+      "filename": "generation3d.dwg",
+      "mimeType": "image/vnd.dwg",
+      "encoding": "base64",
+      "data": "QUMxMDE4AAAAAAAPAAA=",
+      "bytes": [65, 67, 49, 48, 49, 56, 0, 0, 0, 0, 0, 15, 0, 0]
+    },
+    {
+      "id": "binary-png-base64",
+      "note": "PNG signature + IHDR - one byte of drift and no viewer opens it",
+      "filename": "generation3d.png",
+      "mimeType": "image/png",
+      "encoding": "base64",
+      "data": "iVBORw0KGgoAAAANSUhEUg==",
+      "bytes": [137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82]
+    },
+    {
+      "id": "binary-glb-base64",
+      "note": "process3d's own binary export magic",
+      "filename": "generation3d.glb",
+      "mimeType": "model/gltf-binary",
+      "encoding": "base64",
+      "data": "Z2xURgIAAAAgAAAA",
+      "bytes": [103, 108, 84, 70, 2, 0, 0, 0, 32, 0, 0, 0]
+    },
+    {
+      "id": "binary-empty-base64",
+      "note": "an empty binary export is empty bytes, never the empty string as text",
+      "filename": "empty.bin",
+      "mimeType": "application/octet-stream",
+      "encoding": "base64",
+      "data": "",
+      "bytes": []
+    },
+    {
+      "id": "binary-every-remainder-base64",
+      "note": "every byte value and every 3-byte chunk remainder",
+      "filename": "bytes.bin",
+      "mimeType": "application/octet-stream",
+      "encoding": "base64",
+      "data": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/wABAgME",
+      "bytes": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 0, 1, 2, 3, 4]
+    }
+  ],
+  "refusals": [
+    {
+      "id": "unsupported-encoding",
+      "encoding": "hex",
+      "data": "4143313031 38",
+      "error": "unsupported",
+      "note": "an encoding no shell reads is loud, never saved as text"
+    },
+    {
+      "id": "unpadded-base64",
+      "encoding": "base64",
+      "data": "QQ",
+      "error": "malformed",
+      "note": "`atob` accepts this; RFC 4648 section 4 does not, and neither half of this contract does"
+    },
+    {
+      "id": "non-canonical-trailing-bits",
+      "encoding": "base64",
+      "data": "Zh==",
+      "error": "malformed",
+      "note": "unused bits must be zero"
+    },
+    {
+      "id": "whitespace-in-base64",
+      "encoding": "base64",
+      "data": "QU Mx",
+      "error": "malformed",
+      "note": "whitespace is not in the standard alphabet"
+    },
+    {
+      "id": "misplaced-padding",
+      "encoding": "base64",
+      "data": "Zm=v",
+      "error": "malformed",
+      "note": "padding may only close the final group"
+    }
+  ],
+  "wireOptionShapes": {
+    "note": "A WIT `option<string>` reaches a renderer decoder in either shape: the actor boundary hands over the tagged variant record, jco's direct binding hands over the bare value. A decoder that reads only one of them drops every binary export (measured on 6018: `typeof val.encoding === \"string\"` was false for {tag:\"some\",val:\"base64\"}).",
+    "tagged": {
+      "tag": "some",
+      "val": "base64"
+    },
+    "taggedNone": {
+      "tag": "none"
+    },
+    "bare": "base64"
+  }
+}

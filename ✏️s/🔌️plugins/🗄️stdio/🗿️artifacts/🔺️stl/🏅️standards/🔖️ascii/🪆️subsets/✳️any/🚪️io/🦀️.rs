@@ -149,8 +149,14 @@ pub fn decode_stl_auto(bytes: &[u8]) -> Result<StlSnapshot, String> {
         // matches the file length before trusting the ASCII path.
         if bytes.len() >= 84 {
             let count = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
-            let expected_binary_len = 84 + count * 50;
-            if expected_binary_len == bytes.len() {
+            // 🧨️ CHECKED, and it has to be: `count` is four arbitrary bytes of an ASCII file read as
+            // if they were a binary triangle count, so on `wasm32` — where `usize` is 32 bits —
+            // `count * 50` overflows and PANICS the guest on a perfectly ordinary `.stl`. Measured
+            // live: dropping a 209-byte ASCII STL on the generation3d editor trapped the actor with
+            // `attempt to multiply with overflow`, and the whole plugin instance died with it
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, io-surface lane). An overflow simply means
+            // the framing cannot describe this file, which is the ASCII answer.
+            if count.checked_mul(50).and_then(|body| body.checked_add(84)) == Some(bytes.len()) {
                 return decode_stl_binary(bytes);
             }
         }

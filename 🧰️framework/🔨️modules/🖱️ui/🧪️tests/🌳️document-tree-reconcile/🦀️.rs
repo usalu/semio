@@ -12,10 +12,10 @@
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🌳️wgpu-document-reconcile/🟦️.ts`).
 
 use super::*;
-use crate::wgpu::engine::{Ui, UiLayoutStep};
+use crate::wgpu::engine::{ui_document_ingress_generation, Ui, UiDocumentIngressFault, UiDocumentIngressStatus, UiLayoutStep};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::tree::UiTree;
-use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiRevision};
+use ui_contract::{SurfaceId, UiDocumentAssembly, UiDocumentAssemblyIdentity, UiDocumentLease, UiDocumentLeaseHeader, UiRevision};
 
 fn law() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/🌳️document-tree-reconcile/🔣️.json")).expect("document tree reconcile fixture")
@@ -240,3 +240,198 @@ fn retiring_a_document_frees_every_node_it_mounted_one_step_at_a_time() {
     assert_eq!(steps, mounted);
     assert!(tree.root.is_none(), "a fully retired document leaves no paintable root behind");
 }
+
+//#region 🪪️IngressGeneration
+/// 📃️ Builds one real [`UiDocumentLease`] the way the BROWSER producer does — stepped
+/// `open_into`/`place_one`/`finish_into` — so the laws below can drive the engine's own page ingress
+/// instead of the testkit's `Ui::publish_document` shortcut. That shortcut is exactly why the defect
+/// these laws pin survived every earlier reconcile law: it writes the tree directly and never
+/// consults `document_status`/`begin_document`, the two rules a producer's generation has to satisfy.
+fn lease_from(law: &serde_json::Value, ids: &[u64], generation: u64, revision: u64, extra: Option<&serde_json::Value>) -> UiDocumentLease {
+    let mut present: Vec<u64> = ids.to_vec();
+    if let Some(extra) = extra {
+        present.push(extra["id"].as_u64().expect("fixture addition id"));
+    }
+    let mut records: Vec<UiNodeRecord> = Vec::new();
+    for node in law["document"]["nodes"].as_array().expect("fixture nodes") {
+        let id = node["id"].as_u64().expect("fixture node id");
+        if !present.contains(&id) {
+            continue;
+        }
+        let mut node = node.clone();
+        if let Some(children) = node["children"].as_array().cloned() {
+            let mut kept: Vec<serde_json::Value> = children.into_iter().filter(|child| present.contains(&child.as_u64().unwrap_or(u64::MAX))).collect();
+            if let Some(extra) = extra.filter(|_| id == 1) {
+                kept.push(serde_json::Value::from(extra["id"].as_u64().expect("fixture addition id")));
+            }
+            node["children"] = serde_json::Value::Array(kept);
+        }
+        records.push(record(&node));
+    }
+    if let Some(extra) = extra {
+        records.push(record(extra));
+    }
+    let mut owner = UiDocumentAssembly::default();
+    let mut surface = Some(SurfaceId::try_from(law["document"]["surface"].as_str().expect("fixture surface")).expect("fixture surface id"));
+    let identity = UiDocumentAssemblyIdentity { generation, revision: UiRevision(revision), root: Some(UiNodeId(law["document"]["root"].as_u64().expect("fixture root"))), layout_epoch: law["document"]["layoutEpoch"].as_u64().expect("fixture layout epoch") };
+    for _ in 0..4096 {
+        if owner.open_into(&mut surface, identity, 1, 32768).expect("assembly open admits").progressed && surface.is_none() {
+            break;
+        }
+    }
+    assert!(surface.is_none(), "the assembly claimed the exact surface identity");
+    for source in records {
+        let mut source = Some(source);
+        for _ in 0..4096 {
+            owner.place_one(&mut source, 1, 32768).expect("record placement admits");
+            if source.is_none() {
+                break;
+            }
+        }
+        assert!(source.is_none(), "every fixture record is placed within its own budget");
+    }
+    let mut lease = None;
+    for _ in 0..4096 {
+        if owner.finish_into(&mut lease, UiRevision(revision), 1, 32768).expect("assembly finish admits").complete {
+            break;
+        }
+    }
+    lease.expect("the assembly published a lease")
+}
+
+/// 📥️ The shell's own ingress ladder in one call — `document_status` → `begin_document` →
+/// `read_node_page`/`apply_document_page` → `finish_document` → `step_document_reconcile`, the exact
+/// order `render_ui_document_step` walks. Answers whether the document was ADMITTED at all.
+fn ingest(ui: &mut Ui, window_id: &str, lease: &UiDocumentLease) -> bool {
+    let header = lease.header().expect("the lease publishes its header");
+    let generation = header.generation;
+    let mut admitted = false;
+    for _ in 0..65_536 {
+        let mut sequence = 0;
+        let mut cx = semio_framework_job::StepContext::new(
+            semio_framework_job::OperationId(generation),
+            semio_framework_job::Generation(generation),
+            semio_framework_job::StepBudget::new(4096, u64::MAX),
+            semio_framework_job::CancelToken::root_now(),
+            test_clock,
+            &mut sequence,
+        );
+        match ui.document_status(window_id, generation) {
+            UiDocumentIngressStatus::Vacant => {
+                if ui.begin_document(window_id, header.clone(), &mut cx).is_err() {
+                    return admitted;
+                }
+                admitted = true;
+            }
+            // 🚦️ `ValidationPending` is the stepped validator asking for another opportunity, never a
+            // refusal — `render_ui_document_step` retries on exactly this set.
+            UiDocumentIngressStatus::Pending { next_page, node_count } if next_page == node_count => match ui.finish_document(window_id, generation, &mut cx) {
+                Ok(()) | Err(UiDocumentIngressFault::ValidationPending | UiDocumentIngressFault::InterruptedClose | UiDocumentIngressFault::Cancelled | UiDocumentIngressFault::Deadline) => {}
+                Err(fault) => panic!("a fully paged document finishes: {fault:?}"),
+            },
+            UiDocumentIngressStatus::Pending { next_page, .. } => {
+                let page = lease.read_node_page(next_page).expect("the lease reads its own page").expect("the page exists");
+                ui.apply_document_page(window_id, page, &mut cx).expect("a fixture page applies");
+            }
+            UiDocumentIngressStatus::Published => {
+                if matches!(ui.step_document_reconcile(window_id, "generation3d", &mut cx), UiDocumentReconcileStep::Complete) {
+                    return admitted;
+                }
+            }
+        }
+    }
+    panic!("the ingress ladder did not terminate inside its own budget");
+}
+
+/// 🗝️ Every key the engine's arena currently paints for `window_id`.
+fn arena_keys(ui: &Ui, window_id: &str) -> Vec<String> {
+    ui.tree(window_id).map(tree_order).unwrap_or_default()
+}
+
+/// ♻️ Returns one lease's arena slot. `UI_DOCUMENT_LEASE_SLOTS` is a FIXED process-wide table shared
+/// by every law in this binary, so a law that holds two leases at once is answered `ArenaFull` rather
+/// than measuring anything — each document is ingested and then given straight back.
+fn retire_lease(mut lease: UiDocumentLease) {
+    for _ in 0..100_000 {
+        if lease.close_read_step_with_grant(1, 32768).expect("exact retirement authority").complete {
+            return;
+        }
+    }
+    panic!("document lease did not retire");
+}
+
+/// 📥️ Assembles one document, drives it through the engine's ingress ladder and returns the slot —
+/// the whole "one refresh publishes one document" cycle a shell frame performs.
+fn ingest_once(ui: &mut Ui, window_id: &str, law: &serde_json::Value, ids: &[u64], generation: u64, revision: u64, extra: Option<&serde_json::Value>) -> bool {
+    let lease = lease_from(law, ids, generation, revision, extra);
+    let admitted = ingest(ui, window_id, &lease);
+    retire_lease(lease);
+    admitted
+}
+
+/// ⚖️ LAW: a surface's SECOND document reaches the arena, and a producer that mints ONE CONSTANT
+/// generation for every document never gets a second one in at all.
+///
+/// 🩸️ This is the defect behind "`Add Generation` on 6118 settles and nothing appears". The browser
+/// producer minted `u64::from(instance_id)` — the plugin instance id, a session constant identical
+/// for every surface — so the first document each surface ingested published at generation 1, and
+/// from then on `document_status` answered `Published` for every later document of that surface: the
+/// ingress phase short-circuited to the reconcile, which re-reconciled the SAME tree, forever. The
+/// guest re-rendered correctly and the bridge projected the new tree correctly (measured on 6118: the
+/// generations body moved from 5 nodes/rev 1 to 6 nodes/rev 2), and not one of those nodes could
+/// reach the screen (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-generation-publication-2026-09-13.md`).
+#[test]
+fn a_surfaces_second_document_reaches_the_arena_and_a_constant_generation_never_does() {
+    let law = law();
+    let ids: Vec<u64> = law["document"]["nodes"].as_array().expect("fixture nodes").iter().map(|node| node["id"].as_u64().expect("fixture id")).collect();
+    let first_revision = law["document"]["revision"].as_u64().expect("fixture revision");
+    let second_revision = law["secondGeneration"]["revision"].as_u64().expect("fixture second revision");
+    let addition = law["secondGeneration"]["addedNode"].clone();
+    let added_key = addition["key"].as_str().expect("fixture addition key").to_string();
+    let removed: Vec<u64> = law["secondGeneration"]["removedIds"].as_array().expect("removed ids").iter().map(|id| id.as_u64().expect("removed id")).collect();
+    let survivors: Vec<u64> = ids.iter().copied().filter(|id| !removed.contains(id)).collect();
+
+    let minted_first = ui_document_ingress_generation(None, first_revision);
+    let minted_second = ui_document_ingress_generation(Some((first_revision, minted_first)), second_revision);
+    assert!(minted_second > minted_first, "a republished surface must mint a STRICTLY greater ingress generation");
+
+    let mut ui = Ui::new();
+    assert!(ingest_once(&mut ui, "second-document", &law, &ids, minted_first, first_revision, None), "the first document is admitted");
+    assert!(!arena_keys(&ui, "second-document").contains(&added_key), "the first document does not carry the addition");
+
+    assert!(ingest_once(&mut ui, "second-document", &law, &survivors, minted_second, second_revision, Some(&addition)), "the second document is admitted");
+    assert!(arena_keys(&ui, "second-document").contains(&added_key), "the SECOND document's new node must reach the paintable arena: {:?}", arena_keys(&ui, "second-document"));
+    assert_eq!(arena_keys(&ui, "second-document").len(), law["secondGeneration"]["expected"]["arenaNodeCount"].as_u64().expect("count") as usize);
+
+    // 🩸️ …and the producer the browser actually shipped: the same constant for both documents.
+    let constant = law["ingressGeneration"]["constantProducerIsRefused"]["generations"].as_array().expect("constant generations").iter().map(|value| value.as_u64().expect("generation")).collect::<Vec<_>>();
+    assert!(constant.windows(2).all(|pair| pair[0] == pair[1]), "the shipped producer's generations were all equal — that is the defect");
+    let mut refused = Ui::new();
+    assert!(ingest_once(&mut refused, "constant", &law, &ids, constant[0], first_revision, None), "its first document is admitted");
+    assert!(!ingest_once(&mut refused, "constant", &law, &survivors, constant[1], second_revision, Some(&addition)), "a repeat generation is never ADMITTED — `document_status` answers Published and the ingress is skipped");
+    assert!(!arena_keys(&refused, "constant").contains(&added_key), "…so the arena keeps the first tree, which is exactly what 6118 painted");
+    eprintln!("[DEBUG] ingress generations minted={minted_first}/{minted_second} constant={constant:?}");
+}
+
+/// ⚖️ LAW: the ingress-generation rule itself — held still while a surface's own revision holds
+/// still (so an unchanged surface pays no ingress), moved forward whenever that revision moves, and
+/// never moved BACKWARD even when the revision does (a retired surface reopened under a fresh owner
+/// restarts at revision 1 and must still be admitted). Shared fixture with the TypeScript twin.
+#[test]
+fn the_ingress_generation_holds_still_while_a_surface_does_and_never_moves_backward() {
+    let law = law();
+    let mut previous: Option<u64> = None;
+    for case in law["ingressGeneration"]["cases"].as_array().expect("ingress generation cases") {
+        let minted = case["minted"].as_array().map(|pair| (pair[0].as_u64().expect("minted revision"), pair[1].as_u64().expect("minted generation")));
+        let revision = case["revision"].as_u64().expect("case revision");
+        let generation = ui_document_ingress_generation(minted, revision);
+        assert_eq!(generation, case["generation"].as_u64().expect("case generation"), "case {}", case["label"].as_str().unwrap_or_default());
+        assert!(generation > 0, "a zero generation is refused by `UiDocumentTree::new` outright");
+        if let Some(previous) = previous {
+            assert!(generation >= previous, "the rule never moves a surface's generation backward");
+        }
+        previous = Some(generation);
+    }
+}
+//#endregion 🪪️IngressGeneration

@@ -322,13 +322,29 @@ fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenuItemSpec, c
     }
 }
 
+/// 🪟️ Binds one action to the window INSTANCE whose body declared it, through the `windowId`
+/// argument `dispatch_action` resolves `ActionAddress::window_instance_id` from.
+///
+/// Without it the address falls back to the focused window, and the guest refuses an action that
+/// window's kind does not own — measured on 6118 as
+/// `handle_action promise failed: window kind procedural-main does not own action addGeneration`
+/// for a press on the Generations window's own `Add Generation` row
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-input-hit-runtime-2026-09-13.md` §10.3).
+/// Context menus and retained window bodies share this one rule.
+fn scope_action_to_window(action: &mut ActionDescriptor, window_id: &str) {
+    let mut args = match action.args.take() {
+        Some(DslValue::Object(entries)) => entries,
+        _ => Vec::new(),
+    };
+    args.retain(|(key, _)| key != "windowId");
+    args.push(("windowId".into(), DslValue::String(window_id.into())));
+    action.args = Some(DslValue::Object(args));
+}
+
 fn scope_context_menu_items(items: &mut [ContextMenuItem], window_id: &str) {
     for item in items {
         if let Some(action) = item.action.as_mut() {
-            let mut args = match action.args.take() { Some(DslValue::Object(entries)) => entries, _ => Vec::new() };
-            args.retain(|(key, _)| key != "windowId");
-            args.push(("windowId".into(), DslValue::String(window_id.into())));
-            action.args = Some(DslValue::Object(args));
+            scope_action_to_window(action, window_id);
         }
         scope_context_menu_items(&mut item.children, window_id);
     }
@@ -2630,6 +2646,10 @@ pub struct ShellState {
     /// windows are one map: both paint a retained document, and only their rect differs
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub retained_hit_windows: HashMap<String, (String, Rect)>,
+    /// 👋️ The retained body a pointer move was last routed into, so the move that LEAVES it is
+    /// routed there too. `events::EventRouter` is edge-triggered on the moves it receives, so a body
+    /// that stops receiving them keeps `NodeFlags::HOVERED` on whatever it last resolved.
+    pub retained_hover_window: Option<String>,
     /// 🪟️ Last-rendered dock-stack silhouette per active window id (tabs + gap cutout + controls + body).
     pub window_silhouettes: HashMap<String, WindowSilhouette>,
     /// 🎬️ Active tutorial playback/recording runtime, if any — see `//#region 🎬️Tutorial` (below
@@ -2842,6 +2862,10 @@ fn claim_app_catalogue_fetch(recorded: &mut Option<u32>, instance_id: u32) -> bo
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../🧪️tests/🛍️app-catalogue-attempt/🦀️.rs"]
 mod app_catalogue_attempt_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🪟️action-window-scope/🦀️.rs"]
+mod action_window_scope_tests;
 
 impl ShellState {
     #[cfg(not(target_arch = "wasm32"))]
@@ -3121,6 +3145,7 @@ impl ShellState {
             contributor_instances: HashMap::new(),
             window_content_rects: HashMap::new(),
             retained_hit_windows: HashMap::new(),
+            retained_hover_window: None,
             window_silhouettes: HashMap::new(),
             tutorial: None,
             tutorial_pending_document_ops: Vec::new(),
@@ -3994,67 +4019,138 @@ impl ShellState {
         }
     }
 
-    /// 🕸️ Mirrors the node-graph surfaces this frame's chrome walk attached into `node_graph_states`,
-    /// the map the OS event loop hit-tests pointer/wheel events against
-    /// (`node_graph_pointer_down_into` and siblings). The engine host itself is owned by the worker's
-    /// `ENGINE_SURFACES` registry; this side carries only the surface's screen bounds and the
-    /// controller its observations are addressed to. A surface that stopped painting drops out in the
-    /// same frame, so a hidden window is never pointer-dispatchable.
+    /// 🪟️ Every window instance this frame's layout names: the dock plan's bodies plus the open
+    /// panels' tabs. This is the retention authority for engine surfaces — it is recomputed by
+    /// `plan_dock_windows` on every chrome walk and does not depend on which bodies repainted.
+    fn live_window_ids(&self) -> Vec<String> {
+        self.dock_window_plan.iter().map(|(window_id, _)| window_id.clone()).chain(self.panel_documents.keys().cloned()).collect()
+    }
+
+    /// 🕸️ Mirrors the engine surfaces a paint pass attached into `node_graph_states` /
+    /// `tiled_map_states` / `board2d_states`, the maps the OS event loop hit-tests pointer/wheel
+    /// events against (`node_graph_pointer_down_into` and siblings). The engine host itself is owned
+    /// by the worker's `ENGINE_SURFACES` registry; this side carries only the surface's screen bounds
+    /// and the controller its observations are addressed to.
     ///
     /// A host constructed this frame is also the moment the app-static catalogue must land on it —
     /// `refresh_app_catalogue` runs on the UI refresh, which for a freshly attached surface has
     /// already happened.
     pub fn sync_engine_surface_states(&mut self) {
         let registrations = crate::engine_canvas::take_engine_surface_registrations();
-        let painted = |kind: fn(&crate::engine_canvas::EngineSurfaceKindDetail) -> bool, id: &String| registrations.iter().any(|entry| &entry.surface_id == id && kind(&entry.detail));
-        let stale_graphs: Vec<String> = self.node_graph_states.keys().filter(|id| !painted(|detail| matches!(detail, crate::engine_canvas::EngineSurfaceKindDetail::NodeGraph), id)).cloned().collect();
-        for id in stale_graphs {
-            self.node_graph_states.remove(&id);
+        let live_windows = self.live_window_ids();
+        let live_windows: Vec<&str> = live_windows.iter().map(String::as_str).collect();
+        Self::trace_engine_surface_sync(&self.node_graph_states, &registrations, &live_windows);
+        let created = Self::mirror_engine_surface_states(&mut self.node_graph_states, &mut self.tiled_map_states, &mut self.board2d_states, &mut self.world3d_status, registrations, &live_windows);
+        if !self.app_catalogue_json.is_empty() {
+            for surface_id in created {
+                crate::engine_canvas::node_graph_set_catalogue_json(&surface_id, &self.app_catalogue_json);
+            }
         }
-        let stale_maps: Vec<String> = self.tiled_map_states.keys().filter(|id| !painted(|detail| matches!(detail, crate::engine_canvas::EngineSurfaceKindDetail::TiledMap { .. }), id)).cloned().collect();
-        for id in stale_maps {
-            self.tiled_map_states.remove(&id);
+        let live_worlds: Vec<String> = self.world3d_states.keys().cloned().collect();
+        self.world3d_status.retain(|surface_id, _| live_worlds.contains(surface_id));
+    }
+
+    /// 🩺️ One line per chrome-walk sync, naming the surfaces a DRAIN-eviction rule would have retired
+    /// here — the ones that are live, whose window is live, and that this drain does not mention. A
+    /// non-empty `old-rule-would-evict` followed by a press that still reaches the graph is the
+    /// runtime witness that engine-surface state is owned by the window instance and not by a painted
+    /// frame (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`). One line per completed chrome walk —
+    /// tens per minute, not per frame.
+    fn trace_engine_surface_sync(states: &AdmittedSurfaceMap<NodeGraphSurface>, registrations: &[crate::engine_canvas::EngineSurfaceRegistration], live_window_ids: &[&str]) {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static SYNCS: AtomicU64 = AtomicU64::new(0);
+        static DRAINS_WITH_GRAPH: AtomicU64 = AtomicU64::new(0);
+        let painted = registrations.iter().any(|entry| matches!(entry.detail, crate::engine_canvas::EngineSurfaceKindDetail::NodeGraph));
+        let syncs = SYNCS.fetch_add(1, Ordering::Relaxed) + 1;
+        let with_graph = if painted { DRAINS_WITH_GRAPH.fetch_add(1, Ordering::Relaxed) + 1 } else { DRAINS_WITH_GRAPH.load(Ordering::Relaxed) };
+        let would_evict: Vec<&str> = states.iter().filter(|(id, _)| !registrations.iter().any(|entry| &entry.surface_id == *id)).map(|(id, _)| id.as_str()).collect();
+        let live: Vec<String> = states.iter().map(|(id, surface)| format!("{id}@{}x{}+{},{}", surface.bounds.w.round(), surface.bounds.h.round(), surface.bounds.x.round(), surface.bounds.y.round())).collect();
+        Self::debug_log(&format!("[DEBUG] wgpu-shell engine surfaces syncs={syncs} drains-with-graph={with_graph} drain={} live={live:?} old-rule-would-evict={would_evict:?} windows={live_window_ids:?}", registrations.len()));
+    }
+
+    /// 🧲️ The retention rule itself, stated once for all three vello-composited kinds: an engine
+    /// surface's pointer state belongs to its WINDOW INSTANCE, never to a painted frame. A drain
+    /// REFRESHES what it mentions and retires only the surfaces whose owning window has left
+    /// `live_window_ids`. Answers the surfaces whose engine host was constructed on this drain — the
+    /// ones the app-static catalogue must be installed on, and only those.
+    ///
+    /// 🩸️ This used to evict every surface absent from the drain. Retained painting means an
+    /// unchanged document does not repaint, so the node graph fell out of `node_graph_states` in
+    /// nearly every frame — and a graph that is not in that map cannot be reached by a press, a
+    /// wheel, a context menu, a catalogue drop or the `Fit graph` control, because every one of those
+    /// paths starts by hit-testing this map. `world3d_states` was never a drain projection and its
+    /// input worked throughout, which is the asymmetry this closes (ticket
+    /// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-retained-controls-wires-2026-09-13.md` §7.3(b)).
+    ///
+    /// `Self`-less so its law can drive the real body without a `ShellState` fixture —
+    /// `🐚️Shell/🧪️tests/🧲️engine-surface-retention/🦀️.rs` over
+    /// `🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`.
+    pub(crate) fn mirror_engine_surface_states(
+        node_graph_states: &mut AdmittedSurfaceMap<NodeGraphSurface>,
+        tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>,
+        board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>,
+        world3d_status: &mut HashMap<String, String>,
+        registrations: Vec<crate::engine_canvas::EngineSurfaceRegistration>,
+        live_window_ids: &[&str],
+    ) -> Vec<String> {
+        let retired: Vec<String> = node_graph_states.iter().filter(|(_, surface)| !live_window_ids.contains(&surface.window_id.as_str())).map(|(id, _)| id.clone()).collect();
+        for id in retired {
+            node_graph_states.remove(&id);
         }
-        let stale_boards: Vec<String> = self.board2d_states.keys().filter(|id| !painted(|detail| matches!(detail, crate::engine_canvas::EngineSurfaceKindDetail::Board2d { .. }), id)).cloned().collect();
-        for id in stale_boards {
-            self.board2d_states.remove(&id);
+        let retired: Vec<String> = tiled_map_states.iter().filter(|(_, surface)| !live_window_ids.contains(&surface.window_id.as_str())).map(|(id, _)| id.clone()).collect();
+        for id in retired {
+            tiled_map_states.remove(&id);
         }
+        let retired: Vec<String> = board2d_states.iter().filter(|(_, surface)| !live_window_ids.contains(&surface.window_id.as_str())).map(|(id, _)| id.clone()).collect();
+        for id in retired {
+            board2d_states.remove(&id);
+        }
+        let mut constructed = Vec::new();
         for registration in registrations {
-            let crate::engine_canvas::EngineSurfaceRegistration { surface_id, bounds, controller_id, detail, created } = registration;
+            let crate::engine_canvas::EngineSurfaceRegistration { surface_id, window_id, bounds, controller_id, detail, created } = registration;
             match detail {
                 crate::engine_canvas::EngineSurfaceKindDetail::NodeGraph => {
-                    if let Some(surface) = self.node_graph_states.get_or_insert_with(surface_id.clone(), || NodeGraphSurface { bounds, controller_id: controller_id.clone() }) {
+                    if let Some(surface) = node_graph_states.get_or_insert_with(surface_id.clone(), || NodeGraphSurface { bounds, controller_id: controller_id.clone(), window_id: window_id.clone() }) {
                         surface.bounds = bounds;
                         surface.controller_id = controller_id;
+                        surface.window_id = window_id;
                     }
-                    if created && !self.app_catalogue_json.is_empty() {
-                        crate::engine_canvas::node_graph_set_catalogue_json(&surface_id, &self.app_catalogue_json);
+                    if created {
+                        constructed.push(surface_id);
                     }
                 }
                 crate::engine_canvas::EngineSurfaceKindDetail::TiledMap { selection_method } => {
-                    if let Some(surface) = self.tiled_map_states.get_or_insert_with(surface_id, || TiledMapSurface { bounds, controller_id: controller_id.clone(), selection_method: selection_method.clone() }) {
+                    if let Some(surface) = tiled_map_states.get_or_insert_with(surface_id.clone(), || TiledMapSurface { bounds, controller_id: controller_id.clone(), selection_method: selection_method.clone(), window_id: window_id.clone() }) {
                         surface.bounds = bounds;
                         surface.controller_id = controller_id;
                         surface.selection_method = selection_method;
+                        surface.window_id = window_id;
+                    }
+                    if created {
+                        constructed.push(surface_id);
                     }
                 }
                 crate::engine_canvas::EngineSurfaceKindDetail::Board2d { fixture_json } => {
-                    if let Some(surface) = self.board2d_states.get_or_insert_with(surface_id, || Board2dSurface { bounds, controller_id: controller_id.clone(), fixture_json: fixture_json.clone() }) {
+                    if let Some(surface) = board2d_states.get_or_insert_with(surface_id.clone(), || Board2dSurface { bounds, controller_id: controller_id.clone(), fixture_json: fixture_json.clone(), window_id: window_id.clone() }) {
                         surface.bounds = bounds;
                         surface.controller_id = controller_id;
                         surface.fixture_json = fixture_json;
+                        surface.window_id = window_id;
+                    }
+                    if created {
+                        constructed.push(surface_id);
                     }
                 }
                 crate::engine_canvas::EngineSurfaceKindDetail::World3d { status_json } => {
                     match status_json {
-                        Some(status_json) => self.world3d_status.insert(surface_id, status_json),
-                        None => self.world3d_status.remove(&surface_id),
+                        Some(status_json) => world3d_status.insert(surface_id, status_json),
+                        None => world3d_status.remove(&surface_id),
                     };
                 }
             }
         }
-        let live: Vec<String> = self.world3d_states.keys().cloned().collect();
-        self.world3d_status.retain(|surface_id, _| live.contains(surface_id));
+        constructed
     }
 
     /// 🛍️ Installs the cached catalogue on every node-graph surface whose engine host does not
@@ -4235,6 +4331,13 @@ impl ShellState {
                     {
                         let _ = (req, extension_id, capability, request_json);
                     }
+                }
+                // ⬇️ Every plugin's export door. This arm did not exist: a `DownloadMediaExport` fell
+                // into the loud drop below, so no plugin could export ANYTHING on this renderer while
+                // React's shell was saving the same export as corrupt base64 text (ticket
+                // 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️io-surface-2026-09-13.md` §7.3).
+                semio_framework::kernel::Effect::DownloadMediaExport { filename, mime_type, data, encoding } => {
+                    download_media_export(&filename, &mime_type, &data, encoding.as_deref());
                 }
                 other => {
                     Self::debug_log(&format!("[DEBUG] wgpu-shell effect dropped tag={other:?}"));
@@ -6406,6 +6509,7 @@ impl ShellChromeBuildState {
     fn note_content_focus_commands(&mut self, commands: &[ui_wgpu::wgpu::UiCommand]) {
         for command in commands {
             if let ui_wgpu::wgpu::UiCommand::FocusChanged { window_id, node } = command {
+                ShellState::debug_log(&format!("[DEBUG] wgpu-shell content focus window={window_id} node={node:?}"));
                 self.content_focus.insert(window_id.clone(), node.is_some());
             }
         }
@@ -6446,6 +6550,7 @@ fn ui_event_from_key_action(action: &ui_wgpu::wgpu::KeyAction, modifiers: &Point
 
 impl ShellState {
     pub async fn handle_pointer_button(&mut self, x: f32, y: f32, down: bool, button: i16, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> Result<(), String> {
+        Self::debug_log(&format!("[DEBUG] wgpu-shell pointer button x={x} y={y} down={down} button={button} targets={} hit={:?}", input.hit_targets.len(), input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone(), target.event.as_ref().map(|descriptor| descriptor.action.clone())))));
         input.pointer_x = x;
         input.pointer_y = y;
         input.pointer_down = down;
@@ -6831,7 +6936,25 @@ impl ShellState {
         // pointer with the element that captured it — otherwise a `Slider`/`Ring` drag froze the
         // instant the pointer left the control's own rect and the registry answered something else.
         let captured = crate::interpreter::retained_pointer_capture_window().and_then(|window_id| self.retained_window_body_rect(&window_id).map(|body| (window_id, body)));
-        let Some((window_id, body)) = captured.or_else(|| input.hit_at(x, y).cloned().and_then(|hit| self.retained_hit_window(&hit))) else { return };
+        let current = captured.or_else(|| input.hit_at(x, y).cloned().and_then(|hit| self.retained_hit_window(&hit)));
+        // 👋️ The body that last owned the hover must be told about the move that LEAVES it. Routing
+        // only the moves that land ON a retained target left `NodeFlags::HOVERED` set forever on the
+        // last row the pointer touched — the router is edge-triggered on the move it receives, so a
+        // move it never receives is a hover it never clears (measured on 6118: hovering
+        // `Add Generation` then moving 300 px away left all three nodes of its bubble chain hovered,
+        // `📓️wgpu-input-hit-runtime-2026-09-13.md` §10.2). The leave carries the pointer's REAL
+        // window-local coordinates, so `events::hit_test` resolves what is actually under it —
+        // nothing, or a plain container — and `update_hover` clears the chain by its own rule. No
+        // sentinel coordinate, and no second notion of "outside".
+        if let Some(previous) = self.retained_hover_window.clone() {
+            if current.as_ref().map(|(window_id, _)| window_id.as_str()) != Some(previous.as_str()) {
+                if let Some(body) = self.retained_window_body_rect(&previous) {
+                    let _ = crate::interpreter::dispatch_ui_event(&previous, ui_wgpu::wgpu::UiEvent::PointerMove { x: x - body.x, y: y - body.y }, input);
+                }
+            }
+        }
+        self.retained_hover_window = current.as_ref().map(|(window_id, _)| window_id.clone());
+        let Some((window_id, body)) = current else { return };
         let _ = crate::interpreter::dispatch_ui_event(&window_id, ui_wgpu::wgpu::UiEvent::PointerMove { x: x - body.x, y: y - body.y }, input);
     }
 
@@ -6847,6 +6970,19 @@ impl ShellState {
         // `IconSelect` press falling into the `action`-dispatch branch below with `action: None` —
         // i.e. dispatching nothing at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
         // `📓️audit-wgpu-parity-2026-09-13.md` gaps #1/#6).
+        Self::debug_log(&format!("[DEBUG] wgpu-shell retained press window={window_id} kind={kind:?} down={down} action={:?}", action.as_ref().map(|descriptor| descriptor.action.clone())));
+        // 🪟️ Pressing a window's BODY activates that window, on the press, exactly as pressing its
+        // chrome does. The keyboard follows `active_window_id`
+        // (`handle_keyboard_async`'s content-focus routing reads `content_has_focus(active)`), and a
+        // retained body press was the one way into a window that never set it: focus landed on the
+        // pressed `Input` — `content focus window=generation3d-generations node=Some(..)` — while
+        // every keystroke was still routed at `procedural-main`, the app's first window kind, whose
+        // content had no focus. So an inline rename editor could be opened and never typed into, on
+        // any window but the first (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+        // `📓️wgpu-generation-publication-2026-09-13.md`).
+        if down {
+            self.active_window_id = Some(window_id.to_string());
+        }
         if matches!(kind, HitKind::Input | HitKind::Select | HitKind::Toggle | HitKind::Slider | HitKind::NumberStepper | HitKind::Ring | HitKind::IconSelect) {
             let event = if down {
                 ui_wgpu::wgpu::UiEvent::PointerDown { x: x - body.x, y: y - body.y, button: Self::retained_pointer_button(button) }
@@ -6855,8 +6991,22 @@ impl ShellState {
             };
             let commands = crate::interpreter::dispatch_ui_event(window_id, event, input);
             self.chrome_build.note_content_focus_commands(&commands);
-        } else if down {
-            if let Some(action) = action {
+        } else if !down {
+            // 👆️ A click is press AND release, and the action fires on the RELEASE — the same rule
+            // `events::EventRouter` already applies to a `Button` (`PointerUp` inside the pressed
+            // node), and the same rule a browser applies.
+            //
+            // 🩸️ This used to fire on the press instead, and on 6118 that meant it never fired at
+            // all: `InputState`'s pointer registry is drained one entry per frame-build boundary
+            // step (`FrameBuildPhase::InputFrame`), so a `PointerDown` arriving inside that window
+            // resolves an EMPTY registry. Browser-measured, 2026-09-13: every `PointerDown` reported
+            // `targets=0 hit=None` while the matching `PointerUp` reported `targets=36` and the
+            // correct row — so `Add Generation` resolved perfectly and dispatched nothing
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-retained-controls-wires-2026-09-13.md` §7).
+            if let Some(mut action) = action {
+                // 🪟️ The row belongs to THIS window instance, so its dispatch must be addressed to it
+                // rather than to whatever window happens to be focused.
+                scope_action_to_window(&mut action, window_id);
                 self.dispatch_action(action).await?;
             }
         }
@@ -8320,6 +8470,7 @@ impl ShellState {
         // `cycle_active_window` Tab handling below still runs exactly as before.
         if idle {
             if let Some(window_id) = self.active_window_id.clone() {
+                Self::debug_log(&format!("[DEBUG] wgpu-shell key routing window={window_id} contentFocus={} action={action:?}", self.chrome_build.content_has_focus(&window_id)));
                 if self.chrome_build.content_has_focus(&window_id) {
                     if let Some(event) = ui_event_from_key_action(&action, modifiers) {
                         let commands = crate::interpreter::dispatch_ui_event(&window_id, event, input);
@@ -8445,6 +8596,10 @@ impl ShellState {
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️wgpu-shell-input/🦀️.rs"]
 mod shell_input_tests;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🧲️engine-surface-retention/🦀️.rs"]
+mod engine_surface_retention_tests;
 
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️wgpu-shell-boot-isolation/🦀️.rs"]
@@ -12092,7 +12247,7 @@ impl ShellState {
                     let collapsed_sections = &mut self.collapsed_sections;
                     let open_selects = &mut self.open_selects;
                     let widget_maps = &mut self.widget_maps;
-                    let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources };
+                    let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: window_id.as_str() };
                     let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
                     ctx.pick_clip = Some(window_rect);
                     render_ui_document_step(&mut cursor.document, &document, window_rect, &mut ctx, window_id.as_str(), controller.as_str(), &mut hosts)
@@ -12210,7 +12365,7 @@ impl ShellState {
                     let collapsed_sections = &mut self.collapsed_sections;
                     let open_selects = &mut self.open_selects;
                     let widget_maps = &mut self.widget_maps;
-                    let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources };
+                    let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: window.as_str() };
                     let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
                     ctx.pick_clip = Some(content);
                     render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window.as_str(), controller.as_str(), &mut hosts)
@@ -14635,8 +14790,12 @@ mod chrome_overlays_tour_tests;
 
 //#endregion ShellChrome
 
+/// ⬇️ Browser half of the wgpu shell's export door. `encoding` used to be ignored here, so a binary
+/// export reached the user as its own base64 TEXT under a binary file name — the same defect React's
+/// shell carried. The bytes come from `kernel::media_export_bytes`, the ONE contract both renderers
+/// answer to (`🎠️kernel/🧫️fixtures/⬇️media-export-encoding/🔣️.json`).
 #[cfg(target_arch = "wasm32")]
-fn download_media_export(filename: &str, mime_type: &str, data: &str, _encoding: Option<&str>) {
+fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
     use wasm_bindgen::JsCast;
     use web_sys::{Blob, HtmlAnchorElement, Url};
 
@@ -14648,9 +14807,16 @@ fn download_media_export(filename: &str, mime_type: &str, data: &str, _encoding:
         Some(document) => document,
         None => return,
     };
+    let bytes = match semio_framework::kernel::media_export_bytes(data, encoding) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!("[DEBUG] wgpu-shell download {filename} refused: {error}")));
+            return;
+        }
+    };
     let parts = js_sys::Array::new();
-    parts.push(&wasm_bindgen::JsValue::from_str(data));
-    let blob = Blob::new_with_str_sequence(&parts).unwrap();
+    parts.push(&js_sys::Uint8Array::from(bytes.as_slice()));
+    let blob = Blob::new_with_u8_array_sequence(&parts).unwrap();
     let url = Url::create_object_url_with_blob(&blob).unwrap();
     let anchor: HtmlAnchorElement = document.create_element("a").unwrap().dyn_into().unwrap();
     anchor.set_href(&url);
@@ -14672,10 +14838,15 @@ fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: 
 async fn download_media_export_worker(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
     let extension = mime_type.rsplit_once('/').map(|(_, ext)| ext).unwrap_or("dat");
     if let Some(path) = ui_host::select_native_paths(ui_host::NativeFileDialogRequest::save(filename, [extension])).await.into_iter().next() {
-        use base64::Engine;
         use std::fs as system_fs;
-        let bytes = if encoding == Some("base64") { base64::engine::general_purpose::STANDARD.decode(data).unwrap_or_else(|_| data.as_bytes().to_vec()) } else { data.as_bytes().to_vec() };
-        let _ = system_fs::write(path, bytes);
+        // ⬇️ The kernel's own contract, not a local base64 branch with a silent text fallback: a
+        // malformed binary export must refuse loudly rather than write the base64 text to disk.
+        match semio_framework::kernel::media_export_bytes(data, encoding) {
+            Ok(bytes) => {
+                let _ = system_fs::write(path, bytes);
+            }
+            Err(error) => eprintln!("[DEBUG] wgpu-shell download {filename} refused: {error}"),
+        }
     }
 }
 
@@ -14898,3 +15069,7 @@ mod media_frames_tests;
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️wgpu-context-menu-keyboard/🦀️.rs"]
 mod context_menu_keyboard_tests;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/⬇️wgpu-media-export-encoding/🦀️.rs"]
+mod media_export_encoding_tests;

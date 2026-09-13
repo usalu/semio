@@ -319,3 +319,208 @@ source and served binary agree.
 * **`?mode=generate` only.** The default mode was not separately characterised.
 * **The `📓️audit-regression-diff-2026-09-13.md` ranking was not verified.** §6.4 confirms the
   symptom that audit predicted; it does not confirm its `RetainedInflateHistory` root cause.
+
+---
+---
+
+# 🖱️ PART II — THE SIX DELIVERABLES, RUN (2026-09-13, after the boot unblock)
+
+The blocker §6.4 named was closed by two peer lanes — `📓️fix-forward-set-contributions-hang-2026-09-13.md`
+(`FlowHostRetirement::close_page`) and `📓️wgpu-catalogue-fixed-map-2026-09-13.md` (`UiFixedMap` decode
+made key-order independent, which closed §3.2's defect at its own layer). `boot_shell` now returns in
+**9.4–18.8 s** and the canvas binds its pointer listeners, so every hop of the brief became reachable.
+
+Everything below was measured on `http://127.0.0.1:6118/`, in `?mode=generate` and in the editor role
+booted straight onto an example with the `?example=` axis the example-chain lane added.
+
+## 9. Scoreboard
+
+| # | deliverable | verdict | witness |
+|---|---|---|---|
+| 1 | hover over the World3d preview → hover target on the mesh | ❌ **not reached** | §11.1 |
+| 2 | click the preview → selection | ❌ **not reached** | §11.1 |
+| 3 | wheel over the preview → orbit (`setCamera`) | ❌ **not reached** | §11.1 |
+| 4 | a chrome control dispatches its action | ✅ **proven** | §10.4 |
+| 5 | the retained `Add Generation` row dispatches `addGeneration` | ✅ **proven, after a fix** | §10.3 |
+| 6 | keyboard chords (mode / role) | ✅ **proven** | §10.4 |
+| — | hover over a RETAINED body (not in the brief, found broken) | ✅ **fixed and proven** | §10.2 |
+
+Counts from `🗑️generated/wgpu-input/deliverables-editor-2/`, one boot:
+`os_host handle_event` **151**, `pointer hit` **102**, `dispatch_normalized_event` **148**,
+`world3d surface` **138**, `render begin` **153**, `pointer failed` **0**, `surface fault` **0**,
+`panicked` **0**.
+
+## 10. What was broken, fixed and proven
+
+### 10.1 The rejection reason was thrown away
+
+`handle_action`'s promise arm was `map_err(|_| "handle_action promise failed")` — the JS rejection
+discarded. The file already carried `describe_js_rejection` (built for `create_app` by a peer for
+exactly this reason) and both `handle_action` arms now use it
+(`🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs:704–710`). That one change turned deliverable 5's failure
+from `pointer failed: handle_action promise failed` into its actual cause, quoted in §10.3.
+
+### 10.2 Hover on a retained body never cleared
+
+`route_retained_pointer_move` routed only the moves that LANDED on a retained target and returned
+early otherwise. `events::EventRouter` is edge-triggered on the moves it receives, so a body that
+stopped receiving them kept `NodeFlags::HOVERED` on whatever it last resolved. Measured
+(`deliverables-generate/results.json`): hovering `Add Generation`, then moving 300 px away, left all
+three nodes of its bubble chain hovered.
+
+```
+onRow : ["tree[0]", "tree[0]/…actions", "tree[0]/…actions/stack[0]#…add-generation"]
+away  : ["tree[0]", "tree[0]/…actions", "tree[0]/…actions/stack[0]#…add-generation"]   ← before
+away  : ["tree[0]"]                                                                    ← after
+```
+
+Fix: `ShellState::retained_hover_window` remembers the body a move was last routed into, and the move
+that leaves it is routed there too, carrying the pointer's REAL window-local coordinates — so
+`events::hit_test` resolves what is actually under it and `update_hover` clears the chain by its own
+rule. No sentinel coordinate and no second notion of "outside". `tree[0]` correctly stays hovered
+because the pointer is still inside the tree's own rect.
+
+### 10.3 A retained row's action was addressed to the wrong window — deliverable 5
+
+With §10.1 in place the cause named itself:
+
+```
+pointer failed: handle_action promise failed: window kind procedural-main does not own action addGeneration
+```
+
+`dispatch_action` resolves `ActionAddress::window_instance_id` from the action's own `windowId`
+argument and falls back to the focused window. A retained body's row action carries no `windowId`, so
+the Generations window's row was addressed to `procedural-main`, whose kind does not declare
+`addGeneration`. Context menus already solved this (`scope_context_menu_items`); retained bodies did
+not. The rule now has ONE owner, `scope_action_to_window`, used by both.
+
+Proven (`deliverables-generate-2`), same click, same point, same binary but for the fix:
+
+| | before | after |
+|---|---|---|
+| `os_host pointer hit` at (160.696, 138) | `Some((TreeItem, Some("tree.label.procedural3d-play-generate.add-generation")))` | identical |
+| `pointer failed` | **2** | **0** |
+| `render begin` delta after the click | **0** | **28** |
+| commands settled after the click | `[]` | `["flowEvalTick effects=0", "flowEvalTick effects=0"]` |
+
+The guest accepted the action and re-armed its eval chain — the hop the example-chain lane's §6.2
+handoff asked for.
+
+### 10.4 Chrome controls and chords — proven as they stood
+
+Both already worked; what was missing was a witness that could see them. A mode switch is a SHELL
+state transition, not a guest command, so `wgpu-shell command … settled` stays empty and the honest
+witness is the **dock replan**.
+
+The chrome band is at `y≈10–20`, not the `y=28` the first sweep assumed; the probe now discovers it.
+One sweep found `playground.navbar.fixture`, `playground.navbar.modes.generate`,
+`playground.navbar.roles.{editor,viewer}`, `ui.panelToggle.{settings,details,workbench,display}` and
+`ui.fullscreen.toggle`.
+
+```
+111166  os_host pointer hit x=584 y=10 targets=51 hit=Some((NavbarItem, Some("playground.navbar.modes.generate")))
+111181  wgpu-shell pointer button x=584 y=10 down=true … hit=Some((NavbarItem, Some("playground.navbar.modes.generate"), None))
+111193  wgpu-shell render begin surface=generation3d-generations      ← the generate-mode windows
+111414  wgpu-shell dock plan … windows=3 generation3d-generations@315x814+3,54 generation3d-generate-form@616x814+319,54 …
+```
+
+Chords, same run (`deliverables-editor/console.txt`):
+
+| chord | witness |
+|---|---|
+| `mod+alt+→` | dock replans 2 windows (`procedural-main`/`procedural-preview`) → 3 (`generation3d-*`) — the mode stepped |
+| `mod+alt+←` | dock replans back to 2 — it stepped the other way |
+| `mod+alt+v` | `shell session switch` `create`→`seal`→`retire`→`publish`→`refresh` to `s.procedural.generation3d@1/*#viewer` |
+| `mod+alt+e` | no-op, correctly: the session was already in the editor role |
+
+The chords are gated on `idle` (no focused control, no overlay, no drag), so the probe measures them
+both before any click and after; both runs agree.
+
+### 10.5 The world3d trace now carries its rect origin
+
+`bounds={w}x{h}` could not be told apart from the same rect at the wrong origin, and every pointer,
+wheel and pick that surface receives is admitted by `bounds.contains(x, y)` in page space. The trace
+is now `bounds={w}x{h}+{x},{y}` (`🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs:1384`). It is how §11.1's leading
+hypothesis was **disproven** rather than assumed.
+
+## 11. Deliverables 1–3, and exactly where they stop
+
+### 11.1 Not a hit-registry problem, and not a bounds problem
+
+Everything this lane owns is proven correct for the preview surface:
+
+```
+os_host pointer hit x=1207.5 y=461 targets=51 hit=Some((World3d, Some("procedural-preview")))
+world3d surface=procedural-preview … bounds=459x814+978,54     ← dock plan: procedural-preview@459x814+978,54
+```
+
+The hit resolves, the rect is page-space and matches the dock plan to the pixel, so
+`bounds.contains(1207.5, 461)` is true and `handle_pointer_move`/`handle_pointer_button`/the
+`WheelWorld3d` phase all enqueue their `WorldInteractionIntent`. `wheel_propagates_to_scene_surface`
+admits `HitKind::World3d` unconditionally. The scene is live: `sceneInstances: 1`, the mesh lane
+carries **19 138 bytes**.
+
+And yet, across two full editor-mode runs with a real mesh, **nothing downstream moves**:
+
+| | before | after hover / click / 5 wheel ticks / an 8-step right-button drag |
+|---|---|---|
+| `lanes.selection` | 172 | 172 |
+| `camera` | `{"fov":45.0,"position":[4.0,-4.0,3.0],"target":[0,0,0],"up":[0,0,1]}` | byte-identical |
+| commands settled | — | none |
+| `world3d retained interaction authority faulted` | — | **0** |
+
+So the intents are admitted and the authority does not fault — it simply produces no guest action.
+The remaining hop is inside `step_world3d_interaction` / `world3d_interaction_front_generation` (the
+world-interaction authority in `infinite_world::world`, pumped by
+`AppFrameTransactionPhase::World3dAuthority`, `🧊️renderer/🦀️.rs:11627`). That is the engine-surface
+layer, not this lane's, and it was not touched.
+
+### 11.2 Stated plainly
+
+Deliverables 1, 2 and 3 are **NOT claimed**. No hover target on the mesh, no `selectedIds`, no
+`setCamera` was observed. What IS claimed is that every hop up to and including the surface's own
+intent admission is browser-proven correct, and that the failure is one layer further in, with the
+leading alternative explanation (a wrong bounds origin) measured and ruled out.
+
+## 12. Files — Part II
+
+**Changed**
+
+| file | what |
+|---|---|
+| `…/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` | `scope_action_to_window` extracted as the ONE window-binding rule (`scope_context_menu_items` now calls it); `route_retained_pointer_press` scopes a retained row's action to its own window; `ShellState::retained_hover_window` + the leave half of `route_retained_pointer_move`; the second law mounted |
+| `…/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs` | both `handle_action` arms report the JS rejection through `describe_js_rejection` instead of discarding it |
+| `…/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs` | the `world3d surface=` trace carries its rect ORIGIN, not only its size |
+| `…/🎯️targets/🧊️wgpu/🧪️tests/🎚️config/🟦️.ts` | registers the second twin |
+
+**Added**
+
+| file | what |
+|---|---|
+| `…/🧑‍🎨engine/🧫️fixtures/🪟️action-window-scope/🔣️.json` | the neutral oracle — 4 cases, each with what the UNSCOPED action resolved to |
+| `…/🐚️Shell/🧪️tests/🪟️action-window-scope/🦀️.rs` | the Rust law over `scope_action_to_window` + the shell's own address resolution |
+| `…/🧑‍🎨engine/🧪️tests/🪟️action-window-scope/🟦️.ts` | the TypeScript twin |
+| `<ticket>/🐍️wgpu-input-deliverables-probe.mjs` | the six-deliverable probe — discovers the chrome band rather than assuming it, holds chords explicitly, and measures them both idle and post-click |
+
+## 13. Laws, run in the foreground
+
+| command | result |
+|---|---|
+| `cargo test -p semio-framework-os-renderer-wgpu --lib -- action_window_scope_tests:: app_catalogue_attempt_tests:: --test-threads=1 --nocapture` | **4 passed, 0 failed** (537 filtered out) |
+| `bunx vitest run --config "…/🎚️config/🟦️.ts" "🧪️tests/🪟️action-window-scope/🟦️.ts" "🧪️tests/🛍️app-catalogue-attempt/🟦️.ts"` | **26 passed, 0 failed** (2 files) |
+| `bunx nx run @semio-tech/framework-renderer-wgpu:wasm` | clean, 4× this session; `pgrep -fl framework-renderer-wgpu:wasm` checked before each |
+
+Both Rust suites carry a lane that re-derives the PRE-FIX rule from the same fixture and asserts it
+differs on at least three cases, so the fixtures are held to discriminating rather than merely agreeing.
+
+## 14. Peer notes — Part II
+
+* A `wgpu-controls` lane started a `framework-renderer-wgpu:wasm` build while one of mine was in
+  flight (my `pgrep` was clean when I started). Both completed; mine was verified by checking
+  `Successfully ran target`, the `dist/wasm-dev` mtime, and that the new trace string is present in
+  the shipped `.wasm` before probing.
+* Four peer `cargo test` lanes held the artifact-directory lock for ~6 min during my law run; waited,
+  nothing touched.
+* A peer's chord/controls work landed `HitKind::{NumberStepper, Ring, IconSelect}` and pointer capture
+  inside `route_retained_pointer_press`/`route_retained_pointer_move` while this lane was editing the
+  same two functions. Their changes were re-read and built ON, never reverted.

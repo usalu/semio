@@ -1353,6 +1353,10 @@ pub struct World3dState {
     #[cfg(test)]
     mesh_url_fallback: HashMap<String, String>,
     instance_positions: HashMap<String, [f64; 3]>,
+    /// 🎯️ Rendered instance id → the TOPOLOGY target it stands for, from the scene's own
+    /// `instances[].interactionId`. Only the entries that actually differ are kept, so a lookup miss
+    /// means "this instance is its own target" — see [`instance_interaction_id`].
+    instance_interaction_ids: HashMap<String, String>,
     mesh_pool: RefCountPool<String>,
     mesh_source_urls: HashMap<String, String>,
     resolved_lod_pick: Option<f64>,
@@ -1434,6 +1438,83 @@ impl World3dState {
         )
     }
 
+    /// 🕹️ What this surface's INTERACTION authority actually holds, for the one `[DEBUG] ` line the
+    /// browser Worker can emit.
+    ///
+    /// ⚖️ "hover, click and wheel changed nothing" is ambiguous between five different stops — no
+    /// intent ever arrived, the intent sat behind a generation the pump never asked for, the ray
+    /// found no triangle, the plan was built but never published, or the action was published and
+    /// the guest never took it. `ingest_census` separates the MESH half; this separates the INPUT
+    /// half (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn interaction_census(&self) -> String {
+        let Some(authority) = self.interaction_authority.as_ref() else {
+            return "authority=none".into();
+        };
+        let front = authority.queue.front().map_or_else(
+            || "front=none".to_string(),
+            |intent| {
+                format!(
+                    "front={:?}/g{} button={} down={} at={},{} d={},{} wheel={} mods={}{}{}{}",
+                    intent.phase,
+                    intent.generation,
+                    intent.button,
+                    intent.down,
+                    intent.x,
+                    intent.y,
+                    intent.dx,
+                    intent.dy,
+                    intent.delta,
+                    if intent.shift { "s" } else { "-" },
+                    if intent.ctrl { "c" } else { "-" },
+                    if intent.alt { "a" } else { "-" },
+                    if intent.meta { "m" } else { "-" },
+                )
+            },
+        );
+        let active = authority.active.as_ref().map_or_else(|| "none".to_string(), world_interaction_active_census);
+        // 🎥️ The surface's OWN camera, not the guest's `cameraJson`. A wheel or orbit turns the local
+        // rig first (`publish_world3d_plan_step`'s `publish_with`) and only then asks the guest for the
+        // same pose, so the local rig is the honest witness that the gesture was understood — the
+        // scene's `cameraJson` cannot move until the guest answers.
+        let eye = self.orbit.to_camera();
+        format!(
+            "camera=[{:.3},{:.3},{:.3}]->[{:.3},{:.3},{:.3}]/{:.1}deg {front} queued={} next-g={} active={active} blocked={} registry={} marquee={} gumball={} right-press={} faulted={} closing={} revision={} objects-revision={} objects={} draws={} utility={} granularity={} mode={} bounds={}x{}+{},{} pick={}x{}+{},{} hover={:?} selected={}",
+            eye.position.x,
+            eye.position.y,
+            eye.position.z,
+            eye.target.x,
+            eye.target.y,
+            eye.target.z,
+            eye.fov_y.to_degrees(),
+            authority.queue.len,
+            authority.next_generation,
+            authority.blocked.is_some(),
+            authority.registry.is_some(),
+            authority.marquee.is_some(),
+            authority.gumball.is_some(),
+            authority.right_press.is_some(),
+            authority.faulted,
+            authority.closing,
+            self.interaction_revision,
+            self.interaction_objects.revision,
+            self.interaction_objects.instance_len,
+            self.draws.len,
+            self.active_utility,
+            self.granularity,
+            self.interaction_mode,
+            self.bounds.w,
+            self.bounds.h,
+            self.bounds.x,
+            self.bounds.y,
+            self.pick_bounds.w,
+            self.pick_bounds.h,
+            self.pick_bounds.x,
+            self.pick_bounds.y,
+            self.local_hover_id,
+            self.selected_ids.len(),
+        )
+    }
+
     pub fn new(surface_id: String, controller_id: String) -> Self {
         Self {
             surface_id,
@@ -1506,6 +1587,7 @@ impl World3dState {
             #[cfg(test)]
             mesh_url_fallback: HashMap::new(),
             instance_positions: HashMap::new(),
+            instance_interaction_ids: HashMap::new(),
             mesh_pool: RefCountPool::new(),
             mesh_source_urls: HashMap::new(),
             resolved_lod_pick: None,
@@ -2590,6 +2672,25 @@ enum WorldInteractionActive {
     BrushCommit { job: WorldBrushCommitJob, retirement: Option<WorldInteractionAuthorityStep> },
 }
 
+/// 🔎️ The active transition named together with the one fact that decides whether it will produce a
+/// guest action — a pick's purpose and whether it found anything, a plan's pending action kind.
+/// Used by {@link World3dState::interaction_census}.
+fn world_interaction_active_census(active: &WorldInteractionActive) -> String {
+    match active {
+        WorldInteractionActive::Plan { plan, .. } => format!("Plan[{}/{} {:?}]", plan.cursor, plan.action_len, plan.actions.get(usize::from(plan.cursor)).copied().flatten().map(|action| action.kind)),
+        WorldInteractionActive::Pick { cursor, .. } => format!("Pick[{:?} hit={} done={}]", cursor.purpose, cursor.best.is_some(), cursor.complete),
+        WorldInteractionActive::ObjectPick { cursor, .. } => format!("ObjectPick[{:?} hit={} done={}]", cursor.purpose, cursor.best.is_some(), cursor.complete),
+        WorldInteractionActive::ComponentPick { cursor, .. } => format!("ComponentPick[{:?} hit={} done={}]", cursor.purpose, cursor.best.is_some(), cursor.complete),
+        WorldInteractionActive::ContextMenu { .. } => "ContextMenu".to_string(),
+        WorldInteractionActive::MarqueePick { .. } => "MarqueePick".to_string(),
+        WorldInteractionActive::MarqueePublish { job, .. } => format!("MarqueePublish[page={} stage={} targets={}b]", job.page, job.stage, job.targets_len),
+        WorldInteractionActive::ComponentMarqueePublish { .. } => "ComponentMarqueePublish".to_string(),
+        WorldInteractionActive::GumballPick { .. } => "GumballPick".to_string(),
+        WorldInteractionActive::GumballCommit { .. } => "GumballCommit".to_string(),
+        WorldInteractionActive::BrushCommit { .. } => "BrushCommit".to_string(),
+    }
+}
+
 struct WorldInteractionAuthority {
     queue: WorldInteractionIntentQueue,
     blocked: Option<WorldInteractionIntent>,
@@ -3184,27 +3285,86 @@ struct WorldMarqueePublishJob {
     merge: &'static str,
     prepared: Option<ui_wgpu::wgpu::PreparedClaimedActionBatch>,
     draft: Option<ui_wgpu::wgpu::BoundedClaimedActionDraft>,
+    /// 🎯️ The page's `targets` value BEING BUILT — one JSON-encoded string, assembled one target per
+    /// bounded step. See [`INTERACTION_TARGETS_OPEN`] for why the arg is text rather than an array.
+    targets: Box<[u8; ui_wgpu::wgpu::ACTION_STRING_BYTE_CAPACITY]>,
+    targets_len: u16,
     page: u8,
     stage: u16,
     published: bool,
 }
 
+/// 🔎️ First index of `needle` in `haystack`, or `None` — a fixed-window scan, no allocation, for
+/// [`WorldMarqueePublishJob::targets_contain`].
+fn world_find_bytes(haystack: &[u8], needle: &[u8]) -> Option<usize> {
+    if needle.is_empty() || needle.len() > haystack.len() {
+        return None;
+    }
+    (0..=haystack.len() - needle.len()).find(|start| &haystack[*start..*start + needle.len()] == needle)
+}
+
 impl WorldMarqueePublishJob {
     fn new(generation: u64, gesture: WorldMarqueeGesture, results: WorldMarqueeResultPages, shift: bool, ctrl: bool) -> Self {
-        let merge = if shift {
-            MergeMode::Additive.wire_label()
-        } else if ctrl {
-            MergeMode::Invertive.wire_label()
-        } else {
-            MergeMode::Replace.wire_label()
-        };
-        Self { generation, gesture, results, merge, prepared: None, draft: None, page: 0, stage: 0, published: false }
+        let merge = world_merge_mode(shift, ctrl).wire_label();
+        Self { generation, gesture, results, merge, prepared: None, draft: None, targets: Box::new([0; ui_wgpu::wgpu::ACTION_STRING_BYTE_CAPACITY]), targets_len: 0, page: 0, stage: 0, published: false }
+    }
+
+    fn push_targets(&mut self, parts: &[&str]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+        let mut len = usize::from(self.targets_len);
+        for part in parts {
+            let end = len.checked_add(part.len()).filter(|end| *end <= ui_wgpu::wgpu::ACTION_STRING_BYTE_CAPACITY).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+            self.targets[len..end].copy_from_slice(part.as_bytes());
+            len = end;
+        }
+        self.targets_len = len as u16;
+        Ok(())
+    }
+
+    fn targets_text(&self) -> Result<&str, ui_wgpu::wgpu::BoundedActionFault> {
+        core::str::from_utf8(&self.targets[..usize::from(self.targets_len)]).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)
+    }
+
+    /// 🎯️ Whether this page's `targets` already names `id`.
+    ///
+    /// ⚖️ A selection is a SET of topology ids: a surface renders one channel as several instances, so
+    /// a marquee that encloses both must publish that channel ONCE. React's
+    /// `interactionTargetsForInstances` dedups on the same rule, and
+    /// `🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json`'s `marquee-release-replaces` case pins it.
+    fn targets_contain(&self, id: &[&str]) -> bool {
+        const KEY: &[u8] = b"\"id\":\"";
+        let length: usize = id.iter().map(|part| part.len()).sum();
+        let text = &self.targets[..usize::from(self.targets_len)];
+        let mut cursor = 0usize;
+        while let Some(found) = world_find_bytes(&text[cursor..], KEY) {
+            let start = cursor + found + KEY.len();
+            cursor = start;
+            if start + length >= text.len() || text[start + length] != b'"' {
+                continue;
+            }
+            let mut offset = start;
+            if id.iter().all(|part| {
+                let matched = &text[offset..offset + part.len()] == part.as_bytes();
+                offset += part.len();
+                matched
+            }) {
+                return true;
+            }
+        }
+        false
     }
 
     fn page_credit(&self, state: &World3dState, page: usize) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
         let target_count = usize::from(self.results.lens[page]);
-        let target_keys = target_count.checked_mul("granularity".len() + "id".len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
-        let granularities = target_count.checked_mul(resolved_domain_granularity_id(state).len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+        // 🎯️ The `targets` VALUE is JSON text now, so its own punctuation is part of the reservation —
+        // including the two bytes of `[]` a page with NO targets still writes. Charging the array
+        // delimiters per target instead of once left an empty page two bytes short, and the shortfall
+        // surfaced on the LAST string of the action (`method`), faulting the whole publish
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`).
+        let target_keys = target_count
+            .checked_mul(INTERACTION_TARGETS_OPEN.len() + INTERACTION_TARGETS_MIDDLE.len() + INTERACTION_TARGETS_TAIL.len() + 1)
+            .and_then(|bytes| bytes.checked_add(INTERACTION_TARGETS_ARRAY_OPEN.len() + INTERACTION_TARGETS_ARRAY_CLOSE.len()))
+            .ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+        let granularities = target_count.checked_mul(WORLD_PICK_GRANULARITY_ID.len().max(resolved_domain_granularity_id(state).len())).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
         let id_prefix = if state.bound_domain_id.is_some() { 0 } else { target_count.checked_mul(state.surface_id.len() + WORLD_ITEM_PATH_DELIMITER.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)? };
         ui_wgpu::wgpu::checked_action_string_bytes(&[&state.controller_id, "interactionSelect", "domainId", resolved_domain_id(state), "targets", "merge", self.merge, "method", selection_method_wire_str(SelectionMethod::Rectangle)])?
             .checked_add(target_keys)
@@ -3257,9 +3417,14 @@ impl WorldMarqueePublishJob {
             return Ok(WorldInteractionStep::Pending);
         }
         let target_count = u16::from(self.results.lens[page]);
-        let target_stage_end = 3 + target_count * 4;
-        let target_index = (self.stage >= 3 && self.stage < target_stage_end).then_some(usize::from((self.stage - 3) / 4));
-        let target_field = (self.stage >= 3 && self.stage < target_stage_end).then_some((self.stage - 3) % 4);
+        let target_stage_end = 3 + target_count;
+        // 💥️ `then`, never `then_some`: `then_some`'s argument is evaluated EAGERLY, so `self.stage - 3`
+        // ran on stages 0, 1 and 2 as well and underflowed the `u16` — an arithmetic panic that aborted
+        // the wasm instance. Measured on 6118: every marquee release on the World3d preview killed the
+        // renderer outright, and because the Worker installed no panic hook the only visible symptom was
+        // the next `#[wasm_bindgen] &mut self` call failing with `recursive use of an object`
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`).
+        let target_index = (self.stage >= 3 && self.stage < target_stage_end).then(|| usize::from(self.stage - 3));
         let token = target_index
             .and_then(|index| self.results.pages[page][index])
             .map(|result| match result {
@@ -3268,26 +3433,48 @@ impl WorldMarqueePublishJob {
             })
             .transpose()?;
         let entry = token.map(|token| state.interaction_objects.resolve(token).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)).transpose()?;
+        // 🎯️ One TARGET per bounded step, appended to this page's `targets` text — the whole value is
+        // handed to the builder once, at `target_stage_end`. The id is the TOPOLOGY target the rendered
+        // instance stands for, deduplicated, exactly as a pick's is.
+        if self.stage >= 3 && self.stage < target_stage_end {
+            let entry = entry.expect("marquee token resolved");
+            let id = instance_interaction_id(state, entry.id.as_str());
+            // 🎯️ A marquee release is a PICK (`method: "rectangle"`), so it reports the pick
+            // granularity, exactly like a click — `🖱️pointer-gestures.json`'s
+            // `marquee-release-replaces` expects `"object"`, not the scene's hover granularity.
+            let granularity = WORLD_PICK_GRANULARITY_ID;
+            let separator: &str = if self.targets_len > 1 { "," } else { "" };
+            let target: [&str; 8] = if state.bound_domain_id.is_some() {
+                [separator, INTERACTION_TARGETS_OPEN, granularity, INTERACTION_TARGETS_MIDDLE, id, "", "", INTERACTION_TARGETS_TAIL]
+            } else {
+                [separator, INTERACTION_TARGETS_OPEN, granularity, INTERACTION_TARGETS_MIDDLE, &state.surface_id, WORLD_ITEM_PATH_DELIMITER, id, INTERACTION_TARGETS_TAIL]
+            };
+            if !self.targets_contain(&target[4..7]) {
+                self.push_targets(&target)?;
+            }
+            self.stage += 1;
+            context.consume_fuel(1);
+            return Ok(WorldInteractionStep::Pending);
+        }
+        if self.stage == 2 {
+            self.targets_len = 0;
+            self.push_targets(&["["])?;
+            self.stage += 1;
+            context.consume_fuel(1);
+            return Ok(WorldInteractionStep::Pending);
+        }
+        if self.stage == target_stage_end {
+            self.push_targets(&["]"])?;
+            let targets = core::str::from_utf8(&self.targets[..usize::from(self.targets_len)]).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+            self.draft.as_mut().expect("marquee page draft").builder().string(Some("targets"), targets)?;
+            self.stage += 1;
+            context.consume_fuel(1);
+            return Ok(WorldInteractionStep::Pending);
+        }
         let draft = self.draft.as_mut().expect("marquee page draft");
         match self.stage {
             0 => draft.builder().begin_object(None)?,
             1 => draft.builder().string(Some("domainId"), resolved_domain_id(state))?,
-            2 => draft.builder().begin_array(Some("targets"))?,
-            stage if stage < target_stage_end => match target_field.expect("target field") {
-                0 => draft.builder().begin_object(None)?,
-                1 => draft.builder().string(Some("granularity"), resolved_domain_granularity_id(state))?,
-                2 => {
-                    let id = entry.expect("marquee token resolved").id.as_str();
-                    if state.bound_domain_id.is_some() {
-                        draft.builder().string(Some("id"), id)?;
-                    } else {
-                        draft.builder().string_joined(Some("id"), &[&state.surface_id, WORLD_ITEM_PATH_DELIMITER, id])?;
-                    }
-                }
-                3 => draft.builder().end_container()?,
-                _ => unreachable!("four target fields"),
-            },
-            stage if stage == target_stage_end => draft.builder().end_container()?,
             stage if stage == target_stage_end + 1 => draft.builder().string(Some("merge"), self.merge)?,
             stage if stage == target_stage_end + 2 => draft.builder().string(Some("method"), selection_method_wire_str(SelectionMethod::Rectangle))?,
             stage if stage == target_stage_end + 3 => draft.builder().end_container()?,
@@ -3347,13 +3534,7 @@ struct WorldComponentMarqueePublishJob {
 
 impl WorldComponentMarqueePublishJob {
     fn new(generation: u64, gesture: WorldMarqueeGesture, results: WorldMarqueeResultPages, kind: WorldComponentKind, shift: bool, ctrl: bool) -> Self {
-        let merge = if shift {
-            MergeMode::Additive.wire_label()
-        } else if ctrl {
-            MergeMode::Invertive.wire_label()
-        } else {
-            MergeMode::Replace.wire_label()
-        };
+        let merge = world_merge_mode(shift, ctrl).wire_label();
         Self {
             generation,
             gesture,
@@ -3832,12 +4013,7 @@ impl WorldRayPickCursor {
                     let mut plan = WorldInteractionPlan::new(self.revision, generation);
                     let controller = plan.push_string(&state.controller_id).ok_or(WorldInteractionStep::Fault)?;
                     let domain = plan.push_string(resolved_domain_id(state)).ok_or(WorldInteractionStep::Fault)?;
-                    let merge = plan
-                        .push_string(match self.merge {
-                            1 => MergeMode::Additive.wire_label(),
-                            2 => MergeMode::Invertive.wire_label(),
-                            _ => MergeMode::Replace.wire_label(),
-                        })
+                    let merge = plan.push_string(world_merge_wire_label(self.merge))
                         .ok_or(WorldInteractionStep::Fault)?;
                     let method = plan.push_string(selection_method_wire_str(SelectionMethod::Pick)).ok_or(WorldInteractionStep::Fault)?;
                     let action = WorldFlatAction { kind: WorldFlatActionKind::Select, strings: [Some(controller), None, None, Some(domain), None, Some(merge), Some(method), None], numbers: [0.0; 10] };
@@ -3853,13 +4029,14 @@ impl WorldRayPickCursor {
         }
         let mesh = *state.meshes.get(&draw.mesh_key).ok_or(WorldInteractionStep::Fault)?;
         let instance = draw.instances.get(usize::from(hit.instance)).ok_or(WorldInteractionStep::Fault)?;
-        if self.purpose == WorldRayPickPurpose::Hover && state.local_hover_id.as_deref() == Some(instance.id.as_str()) {
+        let target_id = instance_interaction_id(state, instance.id.as_str());
+        if self.purpose == WorldRayPickPurpose::Hover && state.local_hover_id.as_deref() == Some(target_id) {
             return Ok(None);
         }
         let mut plan = WorldInteractionPlan::new(self.revision, generation);
         let controller = plan.push_string(&state.controller_id).ok_or(WorldInteractionStep::Fault)?;
         let surface = plan.push_string(&state.surface_id).ok_or(WorldInteractionStep::Fault)?;
-        let object = plan.push_string(&instance.id).ok_or(WorldInteractionStep::Fault)?;
+        let object = plan.push_string(target_id).ok_or(WorldInteractionStep::Fault)?;
         let action = match self.purpose {
             WorldRayPickPurpose::Paint => {
                 let (u, v) = interpolate_mesh_uv(mesh, hit.triangle as usize, hit.bary_u, hit.bary_v).ok_or(WorldInteractionStep::Fault)?;
@@ -3872,14 +4049,8 @@ impl WorldRayPickCursor {
             },
             WorldRayPickPurpose::Instance => {
                 let domain = plan.push_string(resolved_domain_id(state)).ok_or(WorldInteractionStep::Fault)?;
-                let granularity = plan.push_string(resolved_domain_granularity_id(state)).ok_or(WorldInteractionStep::Fault)?;
-                let merge = plan
-                    .push_string(match self.merge {
-                        1 => MergeMode::Additive.wire_label(),
-                        2 => MergeMode::Invertive.wire_label(),
-                        _ => MergeMode::Replace.wire_label(),
-                    })
-                    .ok_or(WorldInteractionStep::Fault)?;
+                let granularity = plan.push_string(WORLD_PICK_GRANULARITY_ID).ok_or(WorldInteractionStep::Fault)?;
+                let merge = plan.push_string(world_merge_wire_label(self.merge)).ok_or(WorldInteractionStep::Fault)?;
                 let method = plan.push_string(selection_method_wire_str(SelectionMethod::Pick)).ok_or(WorldInteractionStep::Fault)?;
                 WorldFlatAction {
                     kind: WorldFlatActionKind::Select,
@@ -4018,12 +4189,7 @@ impl WorldObjectPickCursor {
                     return Ok(None);
                 };
                 let hit = plan.push_string(entry.id.as_str()).ok_or(WorldInteractionStep::Fault)?;
-                let merge = plan
-                    .push_string(match self.merge {
-                        1 => MergeMode::Additive.wire_label(),
-                        2 => MergeMode::Invertive.wire_label(),
-                        _ => MergeMode::Replace.wire_label(),
-                    })
+                let merge = plan.push_string(world_merge_wire_label(self.merge))
                     .ok_or(WorldInteractionStep::Fault)?;
                 WorldFlatAction { kind: WorldFlatActionKind::VortexSelect, strings: [Some(controller), Some(surface), Some(hit), Some(merge), None, None, None, None], numbers: [0.0; 10] }
             }
@@ -4240,12 +4406,7 @@ impl WorldComponentPickCursor {
         let mode = plan.push_string(self.kind.as_str()).ok_or(WorldInteractionStep::Fault)?;
         let merge = if self.purpose == WorldComponentPickPurpose::Select {
             Some(
-                plan.push_string(match self.merge {
-                    1 => MergeMode::Additive.wire_label(),
-                    2 => MergeMode::Invertive.wire_label(),
-                    _ => MergeMode::Replace.wire_label(),
-                })
-                .ok_or(WorldInteractionStep::Fault)?,
+                plan.push_string(world_merge_wire_label(self.merge)).ok_or(WorldInteractionStep::Fault)?,
             )
         } else {
             None
@@ -5495,24 +5656,12 @@ impl WorldInteractionAuthority {
                     WorldRayPickCursor::new(state, generation, WorldRayPickPurpose::Surface, intent.x, intent.y).map(|cursor| WorldInteractionActive::Pick { cursor, retirement: None })
                 } else if intent.down && intent.button == 0 && (state.active_utility == "brush" || (state.active_utility == "select" && state.granularity == "vertex")) {
                     WorldObjectPickCursor::new(state, generation, WorldObjectPickPurpose::VortexSelect, intent.x, intent.y).map(|mut cursor| {
-                        cursor.merge = if intent.shift {
-                            1
-                        } else if intent.ctrl {
-                            2
-                        } else {
-                            0
-                        };
+                        cursor.merge = world_merge_code(intent.shift, intent.ctrl, intent.meta);
                         WorldInteractionActive::ObjectPick { cursor, retirement: None }
                     })
                 } else if !intent.down && intent.button == 0 && state.active_utility == "select" && component_mode_active(state) {
                     WorldComponentPickCursor::new(state, generation, WorldComponentPickPurpose::Select, intent.x, intent.y).map(|mut cursor| {
-                        cursor.merge = if intent.shift {
-                            1
-                        } else if intent.ctrl {
-                            2
-                        } else {
-                            0
-                        };
+                        cursor.merge = world_merge_code(intent.shift, intent.ctrl, intent.meta);
                         WorldInteractionActive::ComponentPick { cursor, retirement: None }
                     })
                 } else if intent.down && intent.button == 0 && state.active_utility == "select" && component_mode_active(state) {
@@ -5526,13 +5675,7 @@ impl WorldInteractionAuthority {
                         return WorldInteractionAuthorityStep::Complete;
                     }
                     WorldRayPickCursor::new(state, generation, WorldRayPickPurpose::Instance, intent.x, intent.y).map(|mut cursor| {
-                        cursor.merge = if intent.shift {
-                            1
-                        } else if intent.ctrl {
-                            2
-                        } else {
-                            0
-                        };
+                        cursor.merge = world_merge_code(intent.shift, intent.ctrl, intent.meta);
                         WorldInteractionActive::Pick { cursor, retirement: None }
                     })
                 } else {
@@ -6085,6 +6228,44 @@ pub fn plan_world3d_paint_stroke(state: &World3dState, generation: u64, down: bo
     plan.push_action(action).then_some(plan)
 }
 
+/// 🎯️ `interactionSelect`/`interactionHover` carry `targets` as a JSON-encoded STRING, never as a
+/// structured array.
+///
+/// ⚖️ The framework's own decoder is `parse_interaction_targets`
+/// (`💻️os/🔨️modules/🔌️plugin/🦀️.rs`): it reads the arg with `DslValue::as_str` and hands the text to
+/// `serde_json`, and the manifest declares the arg as `ActionArgDef::text("targets")`. An ARRAY makes
+/// `as_str` answer `None`, so the guest faults the job with `missing required arg targets` — and
+/// because a reserved tool job's fault never reaches the dispatch promise, the shell saw a clean
+/// dispatch and the selection simply never moved. Measured on 6118 across hover, click, shift-click,
+/// empty-click and marquee (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-world3d-interaction-2026-09-13.md`). React encodes the same way —
+/// `world3dSelectionActionArgs`/`world3dHoverActionArgs` both `JSON.stringify(targets)`.
+///
+/// The three spans are written through `string_joined`, so the JSON text costs no allocation and
+/// stays inside the action's own byte credits.
+const INTERACTION_TARGETS_ARRAY_OPEN: &str = "[";
+const INTERACTION_TARGETS_ARRAY_CLOSE: &str = "]";
+const INTERACTION_TARGETS_OPEN: &str = "{\"granularity\":\"";
+const INTERACTION_TARGETS_MIDDLE: &str = "\",\"id\":\"";
+const INTERACTION_TARGETS_TAIL: &str = "\"}";
+const INTERACTION_TARGETS_EMPTY: &str = "[]";
+
+/// 🎯️ Writes the `targets` arg of one `interactionSelect`/`interactionHover` — see
+/// [`INTERACTION_TARGETS_OPEN`]. `bare_id` is true when a real app domain is bound, in which case the
+/// target id is the topology id alone; the shared `world` domain is `PathDelimited` and prefixes the
+/// surface. A miss on any of the three spans is an EMPTY target list — the clear, which the fixture's
+/// `background-click-clears` case requires to be a dispatch rather than a silence.
+fn push_interaction_targets(builder: &mut ui_wgpu::wgpu::BoundedActionBuilder, surface: Option<&str>, object: Option<&str>, granularity: Option<&str>, bare_id: bool) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let (Some(surface), Some(object), Some(granularity)) = (surface, object, granularity) else {
+        return builder.string(Some("targets"), INTERACTION_TARGETS_EMPTY);
+    };
+    if bare_id {
+        builder.string_joined(Some("targets"), &[INTERACTION_TARGETS_ARRAY_OPEN, INTERACTION_TARGETS_OPEN, granularity, INTERACTION_TARGETS_MIDDLE, object, INTERACTION_TARGETS_TAIL, INTERACTION_TARGETS_ARRAY_CLOSE])
+    } else {
+        builder.string_joined(Some("targets"), &[INTERACTION_TARGETS_ARRAY_OPEN, INTERACTION_TARGETS_OPEN, granularity, INTERACTION_TARGETS_MIDDLE, surface, WORLD_ITEM_PATH_DELIMITER, object, INTERACTION_TARGETS_TAIL, INTERACTION_TARGETS_ARRAY_CLOSE])
+    }
+}
+
 pub fn publish_world3d_plan_step(
     state: &mut World3dState,
     plan: &mut WorldInteractionPlan,
@@ -6111,11 +6292,21 @@ pub fn publish_world3d_plan_step(
             let controller = plan.string(action.strings[0].expect("camera controller span"));
             let surface = plan.string(action.strings[1].expect("camera surface span"));
             let action_id = "setCamera";
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "camera", "position", "target", "fov"])?;
+            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "windowId", surface, "camera", "position", "target", "fov"])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
-            builder.string(Some("surfaceId"), surface)?;
+            // 🪟️ `windowId`, not `surfaceId`. `setCamera` is a WINDOW-OWNED action: the app declares
+            // it on its preview window kinds only, and the shell resolves
+            // `ActionAddress::window_instance_id` from this very argument
+            // (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `dispatch_action`). Without it the address fell back
+            // to the focused window and the guest refused, measured verbatim on 6118 as
+            // `handle_action promise failed: window kind procedural-main does not own action
+            // setCamera` — the same defect class as the retained row's `addGeneration`
+            // (`📓️wgpu-input-hit-runtime-2026-09-13.md` §10.3). A World3d surface IS keyed by its
+            // window instance id (`ShellState::world3d_states`), so its own id is that address, and
+            // React's `worldCameraSetCameraDispatchArgs` sends exactly `{windowId, camera}`.
+            builder.string(Some("windowId"), surface)?;
             builder.begin_object(Some("camera"))?;
             builder.begin_array(Some("position"))?;
             for value in &action.numbers[..3] {
@@ -6209,29 +6400,31 @@ pub fn publish_world3d_plan_step(
             let merge = plan.string(action.strings[5].expect("selection merge span"));
             let method = plan.string(action.strings[6].expect("selection method span"));
             let action_id = "interactionSelect";
-            let bytes = match (surface, object, granularity) {
-                (Some(surface), Some(object), Some(granularity)) if action.numbers[0] == 0.0 => {
-                    ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "domainId", domain, "targets", "granularity", granularity, "id", surface, WORLD_ITEM_PATH_DELIMITER, object, "merge", merge, "method", method])?
-                }
-                (Some(_), Some(object), Some(granularity)) => ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "domainId", domain, "targets", "granularity", granularity, "id", object, "merge", merge, "method", method])?,
-                _ => ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "domainId", domain, "targets", "merge", merge, "method", method])?,
-            };
+            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[
+                controller,
+                action_id,
+                "domainId",
+                domain,
+                "targets",
+                INTERACTION_TARGETS_ARRAY_OPEN,
+                INTERACTION_TARGETS_OPEN,
+                granularity.unwrap_or_default(),
+                INTERACTION_TARGETS_MIDDLE,
+                surface.unwrap_or_default(),
+                WORLD_ITEM_PATH_DELIMITER,
+                object.unwrap_or_default(),
+                INTERACTION_TARGETS_TAIL,
+                INTERACTION_TARGETS_ARRAY_CLOSE,
+                "merge",
+                merge,
+                "method",
+                method,
+            ])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
             builder.string(Some("domainId"), domain)?;
-            builder.begin_array(Some("targets"))?;
-            if let (Some(surface), Some(object), Some(granularity)) = (surface, object, granularity) {
-                builder.begin_object(None)?;
-                builder.string(Some("granularity"), granularity)?;
-                if action.numbers[0] != 0.0 {
-                    builder.string(Some("id"), object)?;
-                } else {
-                    builder.string_joined(Some("id"), &[surface, WORLD_ITEM_PATH_DELIMITER, object])?;
-                }
-                builder.end_container()?;
-            }
-            builder.end_container()?;
+            push_interaction_targets(builder, surface, object, granularity, action.numbers[0] != 0.0)?;
             builder.string(Some("merge"), merge)?;
             builder.string(Some("method"), method)?;
             builder.end_container()?;
@@ -6244,30 +6437,30 @@ pub fn publish_world3d_plan_step(
             let surface = action.strings[1].map(|span| plan.string(span));
             let granularity = action.strings[4].map(|span| plan.string(span));
             let action_id = "interactionHover";
-            let bytes = match (surface, object, granularity) {
-                (Some(surface), Some(object), Some(granularity)) if action.numbers[0] == 0.0 => {
-                    ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "domainId", domain, "channel", "pointer", "targets", "granularity", granularity, "id", surface, WORLD_ITEM_PATH_DELIMITER, object])?
-                }
-                (Some(_), Some(object), Some(granularity)) => ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "domainId", domain, "channel", "pointer", "targets", "granularity", granularity, "id", object])?,
-                _ => ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "domainId", domain, "channel", "pointer", "targets"])?,
-            };
+            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[
+                controller,
+                action_id,
+                "domainId",
+                domain,
+                "channel",
+                "pointer",
+                "targets",
+                INTERACTION_TARGETS_ARRAY_OPEN,
+                INTERACTION_TARGETS_OPEN,
+                granularity.unwrap_or_default(),
+                INTERACTION_TARGETS_MIDDLE,
+                surface.unwrap_or_default(),
+                WORLD_ITEM_PATH_DELIMITER,
+                object.unwrap_or_default(),
+                INTERACTION_TARGETS_TAIL,
+                INTERACTION_TARGETS_ARRAY_CLOSE,
+            ])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
             builder.string(Some("domainId"), domain)?;
             builder.string(Some("channel"), "pointer")?;
-            builder.begin_array(Some("targets"))?;
-            if let (Some(surface), Some(object), Some(granularity)) = (surface, object, granularity) {
-                builder.begin_object(None)?;
-                builder.string(Some("granularity"), granularity)?;
-                if action.numbers[0] != 0.0 {
-                    builder.string(Some("id"), object)?;
-                } else {
-                    builder.string_joined(Some("id"), &[surface, WORLD_ITEM_PATH_DELIMITER, object])?;
-                }
-                builder.end_container()?;
-            }
-            builder.end_container()?;
+            push_interaction_targets(builder, surface, object, granularity, action.numbers[0] != 0.0)?;
             builder.end_container()?;
             reservation.publish_with(|| {
                 state.local_hover_id = object.map(str::to_owned);
@@ -6545,7 +6738,7 @@ fn append_lod_grid_lines(line_vertices: &mut Vec<LineVertex3d>, lod: f64, grid_f
 }
 
 fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, gpu: &mut World3dBuildContext) {
-    const PINNED: &[&str] = &["vortex-marker", "cylinder", "cone", "reference-plane", "vertex-marker"];
+    const PINNED: &[&str] = &["vortex-marker", "cylinder", "cone", "reference-plane", "vertex-marker", GUMBALL_PLANE_MESH];
     for key in needed_mesh_keys {
         if !state.mesh_pool.contains(key) {
             state.mesh_pool.acquire(key.clone());
@@ -7877,6 +8070,12 @@ fn push_line_segment(lines: &mut Vec<LineVertex3d>, from: Vec3, to: Vec3, color:
 }
 
 const VERTEX_MARKER_MESH: &str = "vertex-marker";
+
+/// 🔘️ The shell-owned placeholder plane the gumball's three drag quads are drawn with. Named here
+/// beside the other shell placeholders because it must appear in THREE places that used to disagree:
+/// the placeholder build, `sync_mesh_pool`'s `PINNED` list (it belongs to no document draw, so the
+/// pool would otherwise evict it as stale every frame) and the GPU `ensure_mesh` the draw needs.
+const GUMBALL_PLANE_MESH: &str = "gumball-plane";
 const VERTEX_BASE_SCALE: f32 = 0.05;
 const VERTEX_HOVER_SCALE: f32 = 0.09;
 const VERTEX_SELECT_SCALE: f32 = 0.09;
@@ -8610,6 +8809,7 @@ fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) ->
 fn append_gumball_geometry(
     lines: &mut Vec<LineVertex3d>,
     translucent: &mut Vec<SceneDraw3d>,
+    gpu: &mut World3dBuildContext,
     state: &World3dState,
     camera: &Camera3d,
     meshes: &WorldDynamicRegistry<Mesh3dLease, WORLD_DYNAMIC_MESH_CAPACITY>,
@@ -8640,8 +8840,15 @@ fn append_gumball_geometry(
             lines.push(LineVertex3d { position: p1.to_array(), color });
         }
     }
-    if meshes.contains_key("gumball-plane") {
-        let mesh_version = *mesh_versions.get("gumball-plane").unwrap_or(&0);
+    if let Some(plane) = meshes.get(GUMBALL_PLANE_MESH) {
+        let mesh_version = *mesh_versions.get(GUMBALL_PLANE_MESH).unwrap_or(&0);
+        // 🚨️ The draw this function pushes is answered on the GPU by `mesh_store.get_versioned`, and a
+        // miss there is a FATAL `present_step` fault, not a skipped draw. Every other world draw site
+        // pairs its `SceneDraw3d` with exactly this `ensure_mesh`; the gumball did not, so the first
+        // frame after a selection died with `prepared frame submit step: prepared world mesh was
+        // missing` and took the whole frame loop with it. Unreachable until the wgpu host actually ran
+        // the reserved tool job that applies a selection (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        gpu.ensure_mesh(GUMBALL_PLANE_MESH, mesh_version, *plane);
         let half = extent * 0.35;
         let plane_specs = [(Vec3::new(0.0, 0.0, 1.0), [half, half, 1.0]), (Vec3::new(1.0, 0.0, 0.0), [1.0, half, half]), (Vec3::new(0.0, 1.0, 0.0), [half, 1.0, half])];
         for (normal, scale) in plane_specs {
@@ -8656,9 +8863,9 @@ fn append_gumball_geometry(
             let tangent = bitangent.cross(normal).normalize();
             let rotation = quat_from_basis(tangent, bitangent, normal);
             translucent.push(SceneDraw3d {
-                mesh_key: "gumball-plane".into(),
+                mesh_key: GUMBALL_PLANE_MESH.into(),
                 mesh_version,
-                instances: vec![Instance3d { id: "gumball-plane".into(), model: Instance3d::model_from_trs(pivot.to_array(), rotation, scale), color: [0.75, 0.8, 0.9, 0.22], selected: false, hovered: false }],
+                instances: vec![Instance3d { id: GUMBALL_PLANE_MESH.into(), model: Instance3d::model_from_trs(pivot.to_array(), rotation, scale), color: [0.75, 0.8, 0.9, 0.22], selected: false, hovered: false }],
             });
         }
     }
@@ -9311,6 +9518,12 @@ struct World3dSceneMeshEntry {
 struct World3dSceneInstanceEntry {
     id: String,
     mesh_id: String,
+    /// 🎯️ The TOPOLOGY target this rendered instance stands for — several instances of one channel
+    /// share it. Absent means "the render id is its own target", exactly React's
+    /// `instances.find(e => e.id === id)?.interactionId ?? id`
+    /// (`🌐️World3dHost/🟦️.tsx`, `interactionTargetsForInstances`).
+    #[serde(default)]
+    interaction_id: Option<String>,
     #[serde(default)]
     position: Option<[f64; 3]>,
     #[serde(default)]
@@ -9637,6 +9850,10 @@ fn step_world_placeholder_mesh_batch(state: &mut World3dState, budget: u32) {
 /// and validated BEFORE the store is touched, so admission can only fail on a bug.
 fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &World3dSceneBridgeCursor) -> Result<World3dSnapshotLease, World3dSnapshotFault> {
     let neutral = scene_bridge_neutral_color(state);
+    state.instance_interaction_ids.clear();
+    for instance in cursor.instances.iter().filter(|instance| instance.interaction_id.as_deref().is_some_and(|target| target != instance.id)) {
+        state.instance_interaction_ids.insert(instance.id.clone(), instance.interaction_id.clone().expect("instance interaction id filtered above"));
+    }
     let mut draws: Vec<(&World3dSceneMeshEntry, Vec<&World3dSceneInstanceEntry>)> = Vec::new();
     for mesh in &cursor.meshes {
         if !state.meshes.contains_key(&mesh.id) {
@@ -9833,6 +10050,14 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
     let local_hover_id = state.local_hover_id.clone();
     let hovered_component_object_id = state.hovered_component_object_id.clone();
     let selected_ids: HashSet<String> = state.selected_ids.iter().cloned().collect();
+    // 🎯️ A published id may name the rendered INSTANCE or the TOPOLOGY target it stands for, and both
+    // reach this state: the guest's `selectionJson.ids` carries render ids (pinned by
+    // `🧫️fixtures/🌉️scene-bridge/🔣️.json`'s `selectedIds`), while this surface's OWN optimistic
+    // `local_hover_id` is the topology id it just dispatched in `interactionHover`. Matching only one
+    // of the two leaves half the highlights dark. React resolves the same pair
+    // (`useWorldInstanceChrome(instance.id)` over a selection the host maps back through
+    // `interactionId`). See [`instance_interaction_id`].
+    let interaction_ids = state.instance_interaction_ids.clone();
     let mut object_index_map = HashMap::new();
     let mut index = 0u32;
     for draw in &state.draws {
@@ -9845,8 +10070,10 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
     for draw in &mut state.draws {
         for instance in &mut draw.instances {
             let mesh_selected = granularity == "mesh" && object_index_map.get(&instance.id).is_some_and(|object_index| component_ids.contains(&object_index.to_string()));
-            let local_hovered = if component_mode { false } else { local_hover_id.as_deref() == Some(instance.id.as_str()) || hovered_component_object_id.as_deref() == Some(instance.id.as_str()) };
-            let local_selected = selected_ids.contains(&instance.id) || mesh_selected;
+            let target_id = interaction_ids.get(&instance.id).map_or(instance.id.as_str(), String::as_str);
+            let local_hovered =
+                if component_mode { false } else { local_hover_id.as_deref() == Some(instance.id.as_str()) || local_hover_id.as_deref() == Some(target_id) || hovered_component_object_id.as_deref() == Some(instance.id.as_str()) };
+            let local_selected = selected_ids.contains(&instance.id) || selected_ids.contains(target_id) || mesh_selected;
             // 🎨️ Selection/hover flags must follow the live selection snapshot — OR-ing with the
             // instancesJson bits left deselected meshes painted selected until a later hover rebuild.
             instance.hovered = local_hovered;
@@ -10034,11 +10261,11 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     if !textured_instances.is_empty() {
         textured_draws.push(TexturedDraw3d { instances: textured_instances });
     }
-    if !state.meshes.contains_key("gumball-plane") {
-        begin_world_placeholder_mesh(state, "gumball-plane", WorldPlaceholderKind::Plane);
+    if !state.meshes.contains_key(GUMBALL_PLANE_MESH) {
+        begin_world_placeholder_mesh(state, GUMBALL_PLANE_MESH, WorldPlaceholderKind::Plane);
     }
     if !state.selected_ids.is_empty() && state.active_utility == "select" {
-        append_gumball_geometry(&mut line_vertices, &mut translucent_draws, state, &camera, &state.meshes, &state.mesh_versions);
+        append_gumball_geometry(&mut line_vertices, &mut translucent_draws, gpu, state, &camera, &state.meshes, &state.mesh_versions);
     }
     culled_draws.extend(extra_draws);
     culled_draws.extend(terrain_draws);
@@ -10187,13 +10414,7 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
             }
             if state.active_utility == "brush" || (state.active_utility == "select" && state.granularity == "vertex") {
                 if let Some(full_id) = pick_vortex_at(state, x, y, inner) {
-                    let merge = if shift {
-                        MergeMode::Additive.wire_label()
-                    } else if ctrl {
-                        MergeMode::Invertive.wire_label()
-                    } else {
-                        MergeMode::Replace.wire_label()
-                    };
+                    let merge = world_merge_mode(shift, ctrl).wire_label();
                     return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldVortexSelect".into(), args: action_args(json!({ "surfaceId": state.surface_id, "fullId": full_id, "merge": merge })) });
                 }
             } else if state.active_utility == "select" {
@@ -10491,10 +10712,34 @@ fn resolved_domain_id(state: &World3dState) -> &str {
     state.bound_domain_id.as_deref().unwrap_or(WORLD_INTERACTION_DOMAIN_ID)
 }
 
-/// 🎯️ The granularity id to stamp on a plain pick/hover target — the app-declared granularity when a
-/// domain is bound, else the `world` domain's own `"item"` granularity.
+/// 🎯️ The granularity id to stamp on a plain HOVER target — the app-declared granularity when a
+/// domain is bound, else the `world` domain's own `"item"` granularity. A PICK reports
+/// [`WORLD_PICK_GRANULARITY_ID`] instead; see its doc.
 fn resolved_domain_granularity_id(state: &World3dState) -> &str {
     state.bound_domain_granularity_id.as_deref().unwrap_or(WORLD_ITEM_GRANULARITY_ID)
+}
+
+/// 🎯️ The granularity a whole-instance PICK reports, on every surface and in both implementations.
+///
+/// ⚖️ Hover and selection deliberately differ: hover reports the scene's own `domainGranularityId`
+/// (what the pointer is *over* in the app's vocabulary), while a pick selects the whole object and
+/// says so. `🖱️pointer-gestures.json`'s `instance-pick-*` cases expect `"object"` and its
+/// `instance-hover` case expects the scene granularity — the two are not interchangeable, and the
+/// wgpu authority used to stamp the scene granularity on both.
+const WORLD_PICK_GRANULARITY_ID: &str = "object";
+
+/// 🎯️ The TOPOLOGY target a rendered instance stands for.
+///
+/// ⚖️ A surface renders one channel as many instances (`extrude@solid#0`, `extrude@solid#1`), and the
+/// guest's selection/hover is over the CHANNEL (`extrude@solid`). Publishing the render id makes the
+/// guest silently drop the target: it is not in its topology. Measured on 6118 —
+/// `interactionSelect targets=[{"id":"extrude@solid#0"}]` left `selectedIds` empty across hover,
+/// click and marquee (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-world3d-interaction-2026-09-13.md`). React resolves the same way
+/// (`interactionTargetsForInstances`), and the fixture
+/// `🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json` is the shared oracle.
+fn instance_interaction_id<'a>(state: &'a World3dState, render_id: &'a str) -> &'a str {
+    state.instance_interaction_ids.get(render_id).map_or(render_id, String::as_str)
 }
 
 #[cfg(test)]
@@ -10528,6 +10773,44 @@ fn parse_resolved_item_id<'a>(state: &World3dState, target_id: &'a str) -> Optio
         Some(target_id)
     } else {
         world_item_id_for_surface(state, target_id)
+    }
+}
+
+/// 🕹️ The ONE modifier → merge rule this surface has, in the ONE vocabulary of
+/// `🕹️interaction/🧬️schema/🔣️.json`, put on the wire verbatim.
+///
+/// ⚖️ `shift+ctrl` = invertive, `shift` = additive, `ctrl` (and its platform twin `meta`) =
+/// subtractive, nothing = replace — identical to React's `resolveWorldMergeMode`
+/// (`🌐️World3dHost/🟦️.tsx`) and pinned by `🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json`. Six
+/// call sites in this file each open-coded `shift → additive, ctrl → INVERTIVE, else replace`, which
+/// has no `subtractive` at all and spells ctrl's mode wrong; they now all read this.
+fn world_merge_mode(shift: bool, ctrl_or_meta: bool) -> MergeMode {
+    match (shift, ctrl_or_meta) {
+        (true, true) => MergeMode::Invertive,
+        (true, false) => MergeMode::Additive,
+        (false, true) => MergeMode::Subtractive,
+        (false, false) => MergeMode::Replace,
+    }
+}
+
+/// 🕹️ [`world_merge_mode`] as the fixed `u8` the bounded pick cursors carry through a retained
+/// gesture — the cursors hold no `String`, so the mode travels as its ordinal and is spelled once,
+/// at publication, by [`world_merge_wire_label`].
+fn world_merge_code(shift: bool, ctrl: bool, meta: bool) -> u8 {
+    match world_merge_mode(shift, ctrl || meta) {
+        MergeMode::Additive => 1,
+        MergeMode::Subtractive => 2,
+        MergeMode::Invertive => 3,
+        _ => 0,
+    }
+}
+
+fn world_merge_wire_label(code: u8) -> &'static str {
+    match code {
+        1 => MergeMode::Additive.wire_label(),
+        2 => MergeMode::Subtractive.wire_label(),
+        3 => MergeMode::Invertive.wire_label(),
+        _ => MergeMode::Replace.wire_label(),
     }
 }
 
@@ -10701,13 +10984,7 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
     // 🕹️ Canonical `MergeMode` wire labels (see `MergeMode::wire_label`) — `worldPick` (unconverted,
     // component-level picking) and the `interactionSelect` emission below now speak the SAME five
     // words, so this one computation feeds both branches unchanged.
-    let merge = if shift {
-        MergeMode::Additive.wire_label()
-    } else if ctrl {
-        MergeMode::Invertive.wire_label()
-    } else {
-        MergeMode::Replace.wire_label()
-    };
+    let merge = world_merge_mode(shift, ctrl).wire_label();
     if state.interaction_mode == "paint" {
         return None;
     }
@@ -11976,3 +12253,9 @@ pub fn apply_reference_image_bytes(state: &mut World3dState, url: &str, bytes: &
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+/// 🖱️ The gesture→action law this surface shares with the React `World3dHost`, read from
+/// `🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json`.
+#[cfg(test)]
+#[path = "🧪️tests/🖱️pointer-gestures/🦀️.rs"]
+mod pointer_gesture_tests;

@@ -1834,14 +1834,7 @@ waiting?: boolean,
 /**
  * 🚫️ When true, the slider is inert — used when a parent weight is zero so joint percentages cannot change anything.
  */
-disabled?: boolean,
-/**
- * 🪣️ When set, this is a reveal-group id: the host must NOT dispatch `onChange` on every drag
- * value — only on gesture commit (pointer-up) — and while dragging must locally cut off
- * instances tagged with this reveal group's id instead. See `WorldInstancesLayer`'s reveal
- * cutoff store and `revealCutoffs` in `World3dScene.interaction_json`.
- */
-reveal?: string, onChange: ActionDescriptor, } | { "kind": "number", id: string, label?: string, value: number,
+disabled?: boolean, onChange: ActionDescriptor, } | { "kind": "number", id: string, label?: string, value: number,
 /**
  * ⬇️ Inclusive floor; `None` leaves the value unbounded below.
  */

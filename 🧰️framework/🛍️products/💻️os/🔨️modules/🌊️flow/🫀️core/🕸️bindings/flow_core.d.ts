@@ -104,6 +104,12 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
+    readonly flow_bridge_allocate: (a: number) => number;
+    readonly flow_bridge_begin_close: () => void;
+    readonly flow_bridge_poll: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
+    readonly flow_bridge_release: (a: number, b: number) => void;
+    readonly flow_bridge_send: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
+    readonly flow_bridge_terminal_is_empty: () => number;
     readonly brep_invoke: (a: number, b: number, c: number, d: number) => [number, number];
     readonly dispose: (a: number, b: number) => void;
     readonly tessellate: (a: number, b: number, c: number) => [number, number];
@@ -111,12 +117,6 @@ export interface InitOutput {
     readonly flowDetachSurfaceCanvas: (a: number) => void;
     readonly flowResizeSurfaceCanvas: (a: number, b: number, c: number, d: number) => void;
     readonly flowSurfaceCanvasPresentsOnGpu: (a: number) => number;
-    readonly flow_bridge_allocate: (a: number) => number;
-    readonly flow_bridge_begin_close: () => void;
-    readonly flow_bridge_poll: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
-    readonly flow_bridge_release: (a: number, b: number) => void;
-    readonly flow_bridge_send: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
-    readonly flow_bridge_terminal_is_empty: () => number;
     readonly __wbg_dagsnapshotvcs_free: (a: number, b: number) => void;
     readonly dagsnapshotvcs_create: () => any;
     readonly dagsnapshotvcs_dispatchBinary: (a: number, b: number, c: number) => any;

@@ -67,6 +67,41 @@ async fn auto_detect_dispatches_ascii_vs_binary() {
     assert_eq!(decode_stl_auto(&binary_bytes).expect("binary").triangles.len(), 4);
 }
 
+/// ⚖️ LAW: an ASCII STL whose bytes 80..84 happen to read as an enormous binary triangle count is
+/// decoded as ASCII — never a panic.
+///
+/// 🧨️ `decode_stl_auto` disambiguates a `solid`-prefixed file by testing the BINARY framing
+/// `84 + count * 50` against the file length, with `count` read straight out of four arbitrary bytes
+/// of the ASCII text. `usize` is 32 bits on `wasm32`, so that multiply overflows for most such
+/// counts and the arithmetic panic takes the whole guest actor down. Measured live: a 209-byte
+/// hand-written ASCII triangle dropped on the generation3d editor trapped the plugin with `attempt
+/// to multiply with overflow` and killed the instance mid-import
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, io-surface lane). The count here is `0xFFFFFFFF`,
+/// which overflows a 32-bit `usize` and is merely wrong on a 64-bit one — so this law is meaningful
+/// on BOTH targets: natively it proves the framing is rejected, on wasm that it does not abort.
+#[semio_framework_async_macros::async_test]
+async fn ascii_text_that_reads_as_a_huge_binary_triangle_count_decodes_as_ascii() {
+    let mut text = String::from("solid ");
+    // 🔤️ Pad so bytes 80..84 land inside the header comment, then write 0xFFFFFFFF there as text.
+    while text.len() < 80 {
+        text.push('x');
+    }
+    text.push_str("\u{ffff}\u{ffff}");
+    text.push_str("\n  facet normal 0 0 1\n    outer loop\n      vertex 0 0 0\n      vertex 1 0 0\n      vertex 0 1 0\n    endloop\n  endfacet\nendsolid x\n");
+    let decoded = decode_stl_auto(text.as_bytes()).expect("a long ASCII header must decode as ASCII, never panic");
+    assert_eq!(decoded.triangles.len(), 1, "the one authored facet survives");
+
+    // 🧨️ The exact overflowing shape, built byte-wise so the count is unambiguously `0xFFFFFFFF` —
+    // the multiply that used to abort the guest. Those four bytes are not valid UTF-8, so the honest
+    // answer is a TYPED error naming that, and the law is that this is an error rather than a trap.
+    let mut bytes = b"solid ".to_vec();
+    bytes.resize(80, b'x');
+    bytes.extend_from_slice(&u32::MAX.to_le_bytes());
+    bytes.extend_from_slice(b"\n  facet normal 0 0 1\n    outer loop\n      vertex 0 0 0\n      vertex 1 0 0\n      vertex 0 1 0\n    endloop\n  endfacet\nendsolid x\n");
+    let error = decode_stl_auto(&bytes).expect_err("bytes 80..84 of 0xFFFFFFFF cannot frame this file, and are not UTF-8 either");
+    assert!(error.contains("utf-8") || error.contains("utf8"), "the refusal names why, got {error}");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn ascii_facet_normal_is_persisted_not_recomputed() {
     // A real-world "lazy writer" pattern: degenerate 0 0 0 facet normals that a naive

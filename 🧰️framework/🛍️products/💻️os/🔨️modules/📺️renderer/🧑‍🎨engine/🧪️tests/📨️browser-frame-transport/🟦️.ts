@@ -335,7 +335,7 @@ describe("browser frame worker transport", () => {
     expect(bootSource).toContain("host.semioWgpuIntrospection = { dumpStructure:");
     expect(bootSource).not.toContain("wasmBindings =");
     expect(bootSource.indexOf("detachIntrospection = attachIntrospectionBindings(transport)")).toBeGreaterThan(bootSource.indexOf("onReady: () => {"));
-    expect(workerSource).toContain('message.probe === "structure" ? bindings.dumpStructure : bindings.dumpFrameStats');
+    for (const mapping of ['message.probe === "structure" ? bindings.dumpStructure', 'message.probe === "accessibility" ? bindings.dumpAccessibility', "bindings.dumpFrameStats"]) expect(workerSource).toContain(mapping);
     expect(workerSource).toContain("INTROSPECTION_STEP_BUDGET_MS");
   });
 

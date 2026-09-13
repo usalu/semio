@@ -9601,6 +9601,7 @@ impl RuntimeApply {
                 }
                 FrameDeferredWork::Action(action) => {
                     if let Err(error) = interaction.shell.dispatch_action(action).await {
+                        log_debug(&format!("[DEBUG] frame deferred action failed: {error}"));
                         interaction.shell.error = Some(error);
                     }
                 }
@@ -11431,6 +11432,7 @@ impl FrameTransaction {
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     };
+                    log_debug(&format!("[DEBUG] frame input action controller={} action={} args={}", action.controller_id, action.action, action.args.as_ref().map_or_else(|| "none".into(), |args| dsl::os_pack::json::to_json_string(args))));
                     if let Err(_action) = partial.deferred_actions.try_push(action) {
                         runtime.record_frame_fault("frame input action credits exceeded");
                         self.phase = AppFrameTransactionPhase::Terminal;
@@ -11648,7 +11650,10 @@ impl FrameTransaction {
                     self.world3d_authority_cursor += 1;
                     return AppFrameTransactionStep::Pending;
                 };
-                match step_world3d_interaction(state, generation, input, context) {
+                world3d_interaction_trace(&surface_id, state, generation, None);
+                let interaction_step = step_world3d_interaction(state, generation, input, context);
+                world3d_interaction_trace(&surface_id, state, generation, Some(interaction_step));
+                match interaction_step {
                     WorldInteractionAuthorityStep::Idle | WorldInteractionAuthorityStep::Complete | WorldInteractionAuthorityStep::Stale => {
                         self.world3d_authority_cursor += 1;
                         self.phase = AppFrameTransactionPhase::InputEvents;
@@ -13708,7 +13713,10 @@ impl AppInteractionState {
                 if !surface.bounds.contains(x, y) {
                     continue;
                 }
-                if let Err(fault) = engine_canvas::node_graph_pointer_up_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input) {
+                // 🩺️ The release half of a press on a retained graph.
+                let outcome = engine_canvas::node_graph_pointer_up_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input);
+                log_debug(&format!("[DEBUG] wgpu-shell graph button surface={surface_id} down=false x={x} y={y} outcome={outcome:?}"));
+                if let Err(fault) = outcome {
                     self.input.record_action_fault(fault);
                     return;
                 }
@@ -13733,16 +13741,17 @@ impl AppInteractionState {
             if !surface.bounds.contains(x, y) {
                 continue;
             }
-            if down {
-                if let Err(fault) = engine_canvas::node_graph_pointer_down_into(surface_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, self.space_pressed, &mut self.input) {
-                    self.input.record_action_fault(fault);
-                    return;
-                }
+            // 🩺️ One line per real press on a retained engine surface — the witness that a graph
+            // whose window did not repaint this frame is still pointer-dispatchable.
+            let outcome = if down {
+                engine_canvas::node_graph_pointer_down_into(surface_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, self.space_pressed, &mut self.input)
             } else {
-                if let Err(fault) = engine_canvas::node_graph_pointer_up_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input) {
-                    self.input.record_action_fault(fault);
-                    return;
-                }
+                engine_canvas::node_graph_pointer_up_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input)
+            };
+            log_debug(&format!("[DEBUG] wgpu-shell graph button surface={surface_id} down={down} x={x} y={y} outcome={outcome:?}"));
+            if let Err(fault) = outcome {
+                self.input.record_action_fault(fault);
+                return;
             }
         }
         let mut map_pointer_on_surface = false;
@@ -13804,6 +13813,11 @@ impl AppInteractionState {
         for (surface_id, surface) in &self.shell.node_graph_states {
             if surface.bounds.contains(x, y) {
                 if let Err(fault) = engine_canvas::node_graph_pointer_move_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input) {
+                    // 🩺️ A bounded fault here is not recoverable in practice: the session stops
+                    // publishing afterwards, and without a line it looks like the pointer simply
+                    // stopped working. Measured on 6118 under a fast sweep as `ItemCredits`
+                    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+                    log_debug(&format!("[DEBUG] wgpu-shell graph move fault surface={surface_id} fault={fault:?}"));
                     self.input.record_action_fault(fault);
                     return;
                 }
@@ -13872,6 +13886,50 @@ fn world3d_ingest_trace(surface_id: &str, state: &infinite_world::world::World3d
         return;
     }
     log_debug(&format!("world3d ingest surface={surface_id} stage={stage} steps={seen} {}", state.ingest_census()));
+}
+
+/// 🕹️ One `[DEBUG] ` line per INTENT, not per authority step.
+///
+/// ⚖️ The authority answers `Pending` for as many turns as a ray-cast needs triangles, so a
+/// per-step trace drowns the console while a per-frame one misses the single turn that decides the
+/// outcome. The ENTER line is emitted once per queue generation and the LEAVE line only on a
+/// terminal step, which is exactly one pair per pointer, wheel or button intent
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn world3d_interaction_trace(surface_id: &str, state: &infinite_world::world::World3dState, generation: u64, outcome: Option<WorldInteractionAuthorityStep>) {
+    const WORLD3D_INTERACTION_STUCK_STRIDE: u64 = 4096;
+    static ENTERED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(u64::MAX);
+    static PENDING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    static CENSUS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    match outcome {
+        None => {
+            if ENTERED.swap(generation, std::sync::atomic::Ordering::Relaxed) == generation {
+                return;
+            }
+            PENDING.store(0, std::sync::atomic::Ordering::Relaxed);
+            log_debug(&format!("[DEBUG] world3d interaction surface={surface_id} enter g={generation} {}", state.interaction_census()));
+        }
+        // 🐌️ An intent that never terminates is the one failure this trace exists for: the authority
+        // answers `Pending` and the frame transaction re-enters the same phase forever, so without a
+        // stride line the console shows an `enter` with no `leave` and nothing about WHERE it stopped.
+        // 🔀️ A Pending step is logged only when the authority's own census CHANGED — that is exactly
+        // its transition ladder (`Pick[Hover …]` → `Plan[0/1 Camera]` → …), which is what a step that
+        // faults or never terminates has to be read off. A stride line on top catches a spin whose
+        // census is constant.
+        Some(WorldInteractionAuthorityStep::Pending) => {
+            let pending = PENDING.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+            let census = state.interaction_census();
+            let digest = {
+                use std::hash::{Hash, Hasher};
+                let mut hasher = std::collections::hash_map::DefaultHasher::new();
+                census.hash(&mut hasher);
+                hasher.finish()
+            };
+            if CENSUS.swap(digest, std::sync::atomic::Ordering::Relaxed) != digest || pending % WORLD3D_INTERACTION_STUCK_STRIDE == 0 {
+                log_debug(&format!("[DEBUG] world3d interaction surface={surface_id} step g={generation} pending={pending} {census}"));
+            }
+        }
+        Some(step) => log_debug(&format!("[DEBUG] world3d interaction surface={surface_id} leave g={generation} step={step:?} {}", state.interaction_census())),
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]

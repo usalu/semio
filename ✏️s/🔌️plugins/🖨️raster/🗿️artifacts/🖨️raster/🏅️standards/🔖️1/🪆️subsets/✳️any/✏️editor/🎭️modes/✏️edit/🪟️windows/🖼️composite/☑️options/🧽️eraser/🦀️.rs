@@ -33,7 +33,6 @@ pub fn measure(config: &RasterConfig) -> WindowMeasure {
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: raster_measure_action("setBrushSize"),
             },
             WindowMeasure::Slider {
@@ -47,7 +46,6 @@ pub fn measure(config: &RasterConfig) -> WindowMeasure {
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: raster_measure_action("setBrushOpacity"),
             },
         ],

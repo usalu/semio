@@ -7,16 +7,17 @@ pub(crate) mod context {
     
     use super::super::*;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
-    use std::sync::{Mutex, MutexGuard};
-    
+
     /// 🧵️ `tessellate_geometry` and the flow-eval neuron kernel cache behind it are process-wide, so
     /// every viewer test that evaluates a flow fixture or tessellates BRep geometry — directly, or
-    /// indirectly through the Preview window's `render()` — acquires this lock first.
-    static TEST_SERIAL: Mutex<()> = Mutex::new(());
-    
-    pub fn lock() -> MutexGuard<'static, ()> {
-        crate::flow_operators::installed();
-        TEST_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+    /// indirectly through the Preview window's `render()` — acquires the crate's ONE serial lock
+    /// first ([`crate::test_serial`], not an editor module, so viewer purity is untouched).
+    ///
+    /// 🐛️ This door used to own a SECOND mutex over that same process-global state, so a viewer law
+    /// and an editor law ran at the same time over one kernel cache and one registry
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub(crate) fn lock() -> crate::test_serial::TestSerialGuard {
+        crate::test_serial::lock()
     }
     
     use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
@@ -48,15 +49,8 @@ pub(crate) mod context {
     
     impl Drop for Generation3dViewerFixture {
         fn drop(&mut self) {
-            for _ in 0..1_000_000 {
-                if self.0.close_terminal_is_empty() {
-                    return;
-                }
-                if self.0.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).is_err() {
-                    break;
-                }
-            }
-            assert!(std::thread::panicking() || self.0.close_terminal_is_empty(), "Generation3d viewer fixture did not reach its terminal-empty close witness");
+            let witness = crate::editor::generation3d::unit_tests::context::close_ladder_witness(&mut self.0);
+            assert!(std::thread::panicking() || self.0.close_terminal_is_empty(), "Generation3d viewer fixture did not reach its terminal-empty close witness{witness}");
         }
     }
     

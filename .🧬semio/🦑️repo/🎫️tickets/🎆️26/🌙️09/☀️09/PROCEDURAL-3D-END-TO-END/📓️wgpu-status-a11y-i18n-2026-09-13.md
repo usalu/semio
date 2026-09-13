@@ -334,3 +334,9 @@ shared cargo build-dir at **359 GB** (`build/debug` alone 188 GB). `bun nx run r
 reclaimed only 14 MiB — it correctly refuses to evict anything touched in the last 48 h, which under a
 four-lane fleet is everything. Disk recovered on its own to ~92 GB free when a peer's build finished,
 but the guard means the prune tool cannot help a fleet that is continuously warm.
+
+At the close of this lane the machine's cargo work was **globally stalled**: seven
+`cargo test -p semio-framework-ui-contract` invocations (six of them peers') sat at 0 % CPU with **zero
+`rustc` processes anywhere**, i.e. queued on the shared `fine-grain-locking` build-dir rather than
+compiling. Every suite in §1-§3 had already been run green before that; the duplicate confirmation
+re-run was killed rather than left contending for the queue.

@@ -633,11 +633,11 @@ impl FlowFixtureRetirement {
 
 impl ErasedSnapshotRetirement for FlowFixtureRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
-        self.retirement.close_step(maximum_items, maximum_bytes)
+        self.retirement.close_page(maximum_items, maximum_bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.retirement.is_empty()
+        self.retirement.terminal_is_empty()
     }
 }
 

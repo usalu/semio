@@ -35,7 +35,6 @@ fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMa
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: puzzle2d_action("setBrushKindWeights", Some(json!({ "kindId": kind_id, "catalogSlice": catalog_slice }))),
             }
         })
@@ -60,7 +59,6 @@ pub fn measure(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasu
             loading: None,
             waiting: None,
             disabled: None,
-            reveal: None,
             on_change: puzzle2d_action("setSuggestionOffset", None),
         },
         WindowMeasure::Group {

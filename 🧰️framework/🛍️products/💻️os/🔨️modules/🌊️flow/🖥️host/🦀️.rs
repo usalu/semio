@@ -1077,6 +1077,32 @@ impl FlowHost {
         self.commit_gesture_history();
     }
 
+    /// 🔗️ Drains the wire edits the last gesture performed, in the GUEST's own sub-operation
+    /// vocabulary: `{"operations":[{"operation":"connect",…}|{"operation":"disconnect","synapseId":…}]}`.
+    /// The renderer dispatches exactly this as a `nodeGraphEdit`, instead of re-publishing the whole
+    /// fixture — a narrow intent the guest replays, not a state blob it adopts. Empty when the gesture
+    /// touched no wire, which is the renderer's signal to fall back to its fixture commit.
+    pub fn take_graph_edits_json(&mut self) -> String {
+        let operations: Vec<crate::os_pack::json::Value> = self
+            .dag
+            .take_graph_edits()
+            .into_iter()
+            .map(|edit| match edit {
+                dag::DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => crate::os_pack::json::object([
+                    ("operation".to_string(), crate::os_pack::json::Value::String("connect".to_string())),
+                    ("sourceNodeId".to_string(), crate::os_pack::json::Value::String(source_node_id)),
+                    ("sourcePortId".to_string(), crate::os_pack::json::Value::String(source_port_id)),
+                    ("targetNodeId".to_string(), crate::os_pack::json::Value::String(target_node_id)),
+                    ("targetPortId".to_string(), crate::os_pack::json::Value::String(target_port_id)),
+                ]),
+                dag::DagGraphEdit::Disconnect { synapse_id } => {
+                    crate::os_pack::json::object([("operation".to_string(), crate::os_pack::json::Value::String("disconnect".to_string())), ("synapseId".to_string(), crate::os_pack::json::Value::String(synapse_id))])
+                }
+            })
+            .collect();
+        crate::os_pack::json::to_string(&crate::os_pack::json::object([("operations".to_string(), crate::os_pack::json::array(operations))]))
+    }
+
     pub fn set_selection_options(&mut self, method: &str, mode: &str) {
         self.dag.set_selection_options(method, mode, true, true, true);
     }
@@ -2179,15 +2205,28 @@ impl FlowHost {
         self.gesture_active = true;
     }
 
+    /// 🧾️ Closes a coalescing gesture, recording ONE invertible edit when the gesture actually
+    /// changed content.
+    ///
+    /// 🩸️ A gesture that changed nothing — every plain CLICK on the graph — still holds a
+    /// `FlowFixture` baseline, and a `FlowFixture` owns the fail-closed `OrderedMap<WidgetLayout>`
+    /// root: letting it fall out of scope aborted the whole pool worker with `ordered-map root must
+    /// be explicitly retired before drop` on the FIRST click. It was unreachable from wgpu only
+    /// because no pointer ever reached the graph; the retention fix reaches it on press one (ticket
+    /// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-node-graph-surface-retention-2026-09-13.md`).
+    /// A no-op baseline is therefore RETIRED, exactly as `history_store_from_baseline` retires the
+    /// surplus clone it does not need.
     fn commit_gesture_history(&mut self) {
         if self.gesture_active {
             self.gesture_active = false;
             let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.fixture.clone());
-            if Self::content_changed(&baseline, &self.fixture) {
-                let fixture = self.fixture.clone();
-                if let Some(store) = self.history_store_from_baseline(baseline) {
-                    let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowFixture(ReplaceFlowFixture { fixture })], description: None }));
-                }
+            if !Self::content_changed(&baseline, &self.fixture) {
+                baseline.retire_cold();
+                return;
+            }
+            let fixture = self.fixture.clone();
+            if let Some(store) = self.history_store_from_baseline(baseline) {
+                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowFixture(ReplaceFlowFixture { fixture })], description: None }));
             }
         }
     }
@@ -2358,11 +2397,12 @@ impl FlowHostRetirement {
 
     /// 📏️ Advances one host owner with caller byte credit for its byte-backed retirement cursors.
     ///
-    /// ⚠️ [`crate::retained::FlowRetirement`] is a RESERVE-then-CLOSE frontier: its `close_step`
-    /// answers `Blocked` — never an error — while `next_allocation_bytes` still names a page the
-    /// decomposition of the current owner needs, so a driver that only ever closes spins forever on
-    /// any fixture whose widgets claim continuation slots. This ladder therefore pays the
-    /// reservation first, exactly as [`crate::retained::FlowRetirement::retire_cold`] does.
+    /// ⚠️ The Flow domain frontier is driven through [`crate::retained::FlowRetirement::close_page`],
+    /// which pays both of that frontier's own demands. A bare `close_step` answers `Blocked` — never
+    /// an error — while a page reservation is outstanding AND on any owner whose physical backing is
+    /// larger than the grant (`last_eval_json` and `host_catalogue_json` are routinely over 4 KiB).
+    /// Either one made [`FlowHost::retire_cold`] spin forever
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn close_page(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<bool, FlowHostRetirementFault> {
         use crate::os_store::ErasedSnapshotRetirement;
         use crate::retained::FlowOwner;
@@ -2385,18 +2425,8 @@ impl FlowHostRetirement {
                 }
             }
         } else if !state.domain.is_empty() {
-            match state.domain.next_allocation_bytes() {
-                Ok(Some(demand)) => {
-                    if state.domain.reserve_allocation(demand).is_err() {
-                        state.faulted = true;
-                    }
-                }
-                Ok(None) => {
-                    if state.domain.close_step(1, maximum_bytes).is_err() {
-                        state.faulted = true;
-                    }
-                }
-                Err(_) => state.faulted = true,
+            if state.domain.close_page(1, maximum_bytes).is_err() {
+                state.faulted = true;
             }
         } else if !state.neural.terminal_is_empty() {
             state.neural.close_step(1, maximum_bytes);
@@ -3465,6 +3495,13 @@ impl FlowEvalSession {
     }
 
     /// 📄 Releases at most one retained owner under the caller's close-page grant.
+    ///
+    /// ⚠️ Both nested frontiers are driven through their PAID entry point
+    /// ([`neural::ValueRetirement::close_page`]): a session's `eval_json`, its status JSON and every
+    /// mesh pack are routinely larger than the framework's 4 KiB close page, and an unpaid
+    /// `close_step` answers `Blocked` — never an error — on any owner the grant cannot cover, so the
+    /// app close ladder would yield and ask again with the same grant forever
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         use semio_framework_job::InteractiveJobCloseStep as Step;
         let state = &mut *self.state;

@@ -1780,14 +1780,22 @@ pub enum EngineSurfaceKindDetail {
     World3d { status_json: Option<String> },
 }
 
-/// 🧩️ One live engine surface this frame's chrome walk attached, projected for the shell's own
+/// 🧩️ One live engine surface a paint pass attached, projected for the shell's own
 /// `node_graph_states`/`tiled_map_states`/`board2d_states` — the bounds its pointer/wheel dispatch
-/// hit-tests against and the controller every observation is addressed to. Ephemeral: rebuilt by the
-/// paint pass every frame and drained by the shell, so a window that stops painting its surface stops
-/// being pointer-dispatchable the same frame.
+/// hit-tests against and the controller every observation is addressed to.
+///
+/// 🧲️ This is a REFRESH, never a lease. Retained painting means a window whose document did not
+/// change does not repaint, so absence from a drain says only "this window did not repaint" — the
+/// shell keeps the surface alive against [`Self::window_id`] instead, exactly as long as that window
+/// instance is in the layout. Evicting on absence is what made the node graph unreachable by any
+/// pointer in nearly every frame (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`).
 #[derive(Clone, Debug)]
 pub struct EngineSurfaceRegistration {
     pub surface_id: String,
+    /// 🪟️ The window instance whose body this surface is painted into — the shell's one retention
+    /// authority for it.
+    pub window_id: String,
     pub bounds: Rect,
     pub controller_id: String,
     pub detail: EngineSurfaceKindDetail,
@@ -1811,6 +1819,7 @@ impl Default for AttachedSurfaceRegistry {
 impl AttachedSurfaceRegistry {
     fn upsert(&mut self, registration: EngineSurfaceRegistration) {
         if let Some(slot) = self.slots[..self.len].iter_mut().flatten().find(|slot| slot.surface_id == registration.surface_id) {
+            slot.window_id = registration.window_id;
             slot.bounds = registration.bounds;
             slot.controller_id = registration.controller_id;
             slot.detail = registration.detail;
@@ -1835,8 +1844,9 @@ impl AttachedSurfaceRegistry {
 static ATTACHED_SURFACES: WorkerCell<AttachedSurfaceRegistry> = WorkerCell::new();
 
 /// 🧩️ Drains the surfaces attached since the last drain, for the shell to mirror into its bespoke
-/// pointer state maps. Taking rather than reading keeps the projection exactly one frame old: a
-/// window that stopped painting its surface stops being pointer-dispatchable in the same frame.
+/// pointer state maps. Taking rather than reading keeps the drain a record of what this frame
+/// actually painted; what SURVIVES a frame is the shell's own question, answered against each
+/// entry's `window_id` — see [`EngineSurfaceRegistration`].
 pub fn take_engine_surface_registrations() -> Vec<EngineSurfaceRegistration> {
     ATTACHED_SURFACES.with(|cell| cell.borrow_mut().take())
 }
@@ -2054,7 +2064,7 @@ fn sync_node_graph_evaluation(engine: &mut NodeGraphEngine, cache: &mut NodeGrap
 /// Called from the retained scene paint (`scenes::render_component_scene_step`), so a window's first
 /// painted frame after `SurfaceVisible` is the frame the host is constructed on, and every later frame
 /// re-feeds only the scene fields that moved. Returns whether a live host now backs the surface.
-pub fn sync_node_graph_scene(scene: &UiComponentSceneNode, bounds: Rect, panel: Rgba) -> bool {
+pub fn sync_node_graph_scene(scene: &UiComponentSceneNode, window_id: &str, bounds: Rect, panel: Rgba) -> bool {
     let dark = 0.2126 * panel.r + 0.7152 * panel.g + 0.0722 * panel.b < 0.5;
     let Some(graph) = scene.node_graph.as_ref() else {
         return false;
@@ -2094,15 +2104,15 @@ pub fn sync_node_graph_scene(scene: &UiComponentSceneNode, bounds: Rect, panel: 
     let Some(created) = created else {
         return false;
     };
-    register_engine_surface(scene, bounds, EngineSurfaceKindDetail::NodeGraph, created);
+    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::NodeGraph, created);
     true
 }
 
 /// 🧩️ Records one attached surface for the shell's per-frame mirror. Every kind goes through it —
 /// including `World3d`, whose host lives in the shell's own `world3d_states` — so the shell has ONE
 /// drained witness of what the chrome walk actually painted this frame.
-pub(crate) fn register_engine_surface(scene: &UiComponentSceneNode, bounds: Rect, detail: EngineSurfaceKindDetail, created: bool) {
-    ATTACHED_SURFACES.with(|cell| cell.borrow_mut().upsert(EngineSurfaceRegistration { surface_id: scene.surface_id.clone(), bounds, controller_id: scene.controller_id.clone(), detail, created }));
+pub(crate) fn register_engine_surface(scene: &UiComponentSceneNode, window_id: &str, bounds: Rect, detail: EngineSurfaceKindDetail, created: bool) {
+    ATTACHED_SURFACES.with(|cell| cell.borrow_mut().upsert(EngineSurfaceRegistration { surface_id: scene.surface_id.clone(), window_id: window_id.to_string(), bounds, controller_id: scene.controller_id.clone(), detail, created }));
 }
 
 /// 🎥️ A `{x, y, zoom}` camera document — the shape React's `parseCameraJson`/`parseBoardCamera` read
@@ -2224,7 +2234,7 @@ fn sync_map_engine(host: &mut MapHost, cache: &mut MapSyncCache, map: &ui_wgpu::
 
 /// 🗺️ Attaches — and drives — the `MapHost` behind one `SurfaceKind::TiledMap` scene, on the same
 /// production seam `sync_node_graph_scene` uses.
-pub fn sync_tiled_map_scene(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme) -> bool {
+pub fn sync_tiled_map_scene(scene: &UiComponentSceneNode, window_id: &str, bounds: Rect, theme: &Theme) -> bool {
     let Some(map) = scene.tiled_map.as_ref() else {
         return false;
     };
@@ -2249,7 +2259,7 @@ pub fn sync_tiled_map_scene(scene: &UiComponentSceneNode, bounds: Rect, theme: &
     let Some(created) = created else {
         return false;
     };
-    register_engine_surface(scene, bounds, EngineSurfaceKindDetail::TiledMap { selection_method: map.selection_method.clone() }, created);
+    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::TiledMap { selection_method: map.selection_method.clone() }, created);
     true
 }
 
@@ -2345,7 +2355,7 @@ fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyn
 }
 
 /// 🎲️ Attaches — and drives — the `BoardHost` behind one `SurfaceKind::Board2d` scene.
-pub fn sync_board2d_scene(scene: &UiComponentSceneNode, bounds: Rect) -> bool {
+pub fn sync_board2d_scene(scene: &UiComponentSceneNode, window_id: &str, bounds: Rect) -> bool {
     let Some(board) = scene.board2d.as_ref() else {
         return false;
     };
@@ -2370,7 +2380,7 @@ pub fn sync_board2d_scene(scene: &UiComponentSceneNode, bounds: Rect) -> bool {
     let Some(created) = created else {
         return false;
     };
-    register_engine_surface(scene, bounds, EngineSurfaceKindDetail::Board2d { fixture_json: board.fixture_json.clone() }, created);
+    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::Board2d { fixture_json: board.fixture_json.clone() }, created);
     true
 }
 
@@ -2382,11 +2392,11 @@ pub fn sync_board2d_scene(scene: &UiComponentSceneNode, bounds: Rect) -> bool {
 /// `world3d_states` (the pick/asset/authority ladders address it there) and paints a real 3-D pass
 /// into the window draw list instead of a vello raster — `scenes` attaches it against that map and
 /// records it through [`register_engine_surface`] like every other kind.
-pub fn sync_engine_scene(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme) -> bool {
+pub fn sync_engine_scene(scene: &UiComponentSceneNode, window_id: &str, bounds: Rect, theme: &Theme) -> bool {
     match scene.component_kind {
-        SurfaceKind::NodeGraph => sync_node_graph_scene(scene, bounds, theme.panel),
-        SurfaceKind::TiledMap => sync_tiled_map_scene(scene, bounds, theme),
-        SurfaceKind::Board2d => sync_board2d_scene(scene, bounds),
+        SurfaceKind::NodeGraph => sync_node_graph_scene(scene, window_id, bounds, theme.panel),
+        SurfaceKind::TiledMap => sync_tiled_map_scene(scene, window_id, bounds, theme),
+        SurfaceKind::Board2d => sync_board2d_scene(scene, window_id, bounds),
         _ => false,
     }
 }
@@ -2722,7 +2732,7 @@ pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect,
             let Some(engine) = map.get_mut(surface_id).and_then(|entry| entry.node_graph.as_mut()) else {
                 return false;
             };
-            match (engine, plan) {
+            let committed = match (engine, plan) {
                 (NodeGraphEngine::Flow(host), NodeGraphWheelPlan::Flow(plan)) => {
                     if !host.commit_wheel(plan) {
                         return false;
@@ -2738,7 +2748,11 @@ pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect,
                     true
                 }
                 _ => false,
+            };
+            if committed {
+                mark_engine_scene_repaint(&mut map, surface_id);
             }
+            committed
         })
     })?;
     Ok(true)
@@ -2778,7 +2792,7 @@ pub fn node_graph_pointer_move_into(surface_id: &str, controller_id: &str, inner
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     let intent = flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Move, x: sx, y: sy, button: 0, shift, ctrl_or_meta: ctrl, alt, pan: false };
-    if node_graph_gesture_is_screen_path(surface_id, None) {
+    if node_graph_gesture_is_screen_path(surface_id, Some((sx, sy))) {
         return node_graph_screen_pointer_into(surface_id, controller_id, intent, input);
     }
     let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
@@ -2795,7 +2809,7 @@ pub fn node_graph_pointer_up_into(surface_id: &str, controller_id: &str, inner: 
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     let intent = flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Up, x: sx, y: sy, button: 0, shift, ctrl_or_meta: ctrl, alt, pan: false };
-    if node_graph_gesture_is_screen_path(surface_id, None) {
+    if node_graph_gesture_is_screen_path(surface_id, Some((sx, sy))) {
         return node_graph_screen_pointer_into(surface_id, controller_id, intent, input);
     }
     let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
@@ -2912,9 +2926,17 @@ fn engine_canvas_debug_log(line: &str) {
     eprintln!("{line}");
 }
 
-/// 🖱️ Whether this surface's gesture belongs to the screen pointer path: one is already in flight,
-/// or a press at `down_at` would begin one.
-fn node_graph_gesture_is_screen_path(surface_id: &str, down_at: Option<(f64, f64)>) -> bool {
+/// 🖱️ Whether this surface's gesture belongs to the screen pointer path: one is already in flight, or
+/// the point itself is one only `pointer_*_screen` can describe.
+///
+/// 🩸️ `at` is asked on EVERY phase, not just a press. A hover over a port, a wire handle, a port
+/// insertion target or the minimap is exactly what `bounded_node_hit_index` answers `Unsupported`
+/// for; routing only presses meant a plain MOVE across a port fell through to `plan_pointer`, which
+/// faulted with `BoundedActionFault::Structure` and aborted the whole dispatch — measured on 6118 as
+/// `wgpu-shell graph move fault surface=procedural-main fault=Structure`, after which the frame loop
+/// published nothing further for the rest of the session (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-node-graph-surface-retention-2026-09-13.md`).
+fn node_graph_gesture_is_screen_path(surface_id: &str, at: Option<(f64, f64)>) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(engine) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { return false };
@@ -2922,7 +2944,7 @@ fn node_graph_gesture_is_screen_path(surface_id: &str, down_at: Option<(f64, f64
             NodeGraphEngine::Flow(host) => &host.dag,
             NodeGraphEngine::Dag(host) => &host.dag,
         };
-        dag.screen_pointer_gesture_active() || down_at.is_some_and(|(sx, sy)| dag.screen_pointer_gesture_begins_at(sx, sy))
+        dag.screen_pointer_gesture_active() || at.is_some_and(|(sx, sy)| dag.screen_pointer_gesture_begins_at(sx, sy))
     })
 }
 
@@ -2975,6 +2997,7 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
                 (edits, host.dag.selected_node_ids(), host.dag.hovered_node_id_ref().map(str::to_owned), [camera.x, camera.y, camera.zoom])
             }
         };
+        mark_engine_scene_repaint(&mut map, surface_id);
         Ok(Some(GraphScreenPointerOutcome { edits, snapshot: graph_projection_snapshot(node_ids, hovered_id, hovered_handle, camera)? }))
     })
 }
@@ -2987,11 +3010,11 @@ fn write_graph_edit_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservat
         return Ok(());
     }
     let edit_action = "nodeGraphEdit";
-    let mut parts: Vec<&str> = vec![controller_id, edit_action, "operations", "operation", "connect", "disconnect", "sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId", "edgeId"];
+    let mut parts: Vec<&str> = vec![controller_id, edit_action, "operations", "operation", "connect", "disconnect", "sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId", "synapseId"];
     for edit in edits {
         match edit {
             flow::dag::DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => parts.extend([source_node_id.as_str(), source_port_id.as_str(), target_node_id.as_str(), target_port_id.as_str()]),
-            flow::dag::DagGraphEdit::Disconnect { edge_id } => parts.push(edge_id.as_str()),
+            flow::dag::DagGraphEdit::Disconnect { synapse_id } => parts.push(synapse_id.as_str()),
         }
     }
     let edit_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&parts)?;
@@ -3008,9 +3031,9 @@ fn write_graph_edit_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservat
                     builder.string(Some("targetNodeId"), target_node_id)?;
                     builder.string(Some("targetPortId"), target_port_id)?;
                 }
-                flow::dag::DagGraphEdit::Disconnect { edge_id } => {
+                flow::dag::DagGraphEdit::Disconnect { synapse_id } => {
                     builder.string(Some("operation"), "disconnect")?;
-                    builder.string(Some("edgeId"), edge_id)?;
+                    builder.string(Some("synapseId"), synapse_id)?;
                 }
             }
             builder.end_container()?;
@@ -3059,17 +3082,35 @@ fn plan_node_graph_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent
     })
 }
 
+/// 🔄️ Marks one engine surface's painted content stale because a gesture mutated its host directly
+/// rather than through a scene field.
+///
+/// 🩸️ `scene_revision` is the staged raster's whole freshness witness: `EngineGpuCandidate::matches`
+/// compares it against the packet it already uploaded, so a host the pointer changed under a
+/// revision that did not move composites the PREVIOUS picture. A wire the user just drew, a node
+/// they just dragged and a camera a minimap click just moved were all invisible until some unrelated
+/// scene field happened to change (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn mark_engine_scene_repaint(registry: &mut EngineSurfaceRegistry, surface_id: &str) {
+    if let Some(entry) = registry.get_mut(surface_id) {
+        entry.scene_revision = entry.scene_revision.wrapping_add(1);
+    }
+}
+
 fn commit_node_graph_pointer(surface_id: &str, plan: NodeGraphPointerPlan) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(engine) = map.get_mut(surface_id).and_then(|entry| entry.node_graph.as_mut()) else {
             return false;
         };
-        match (engine, plan) {
+        let committed = match (engine, plan) {
             (NodeGraphEngine::Flow(host), NodeGraphPointerPlan::Flow(plan)) => host.commit_pointer(plan),
             (NodeGraphEngine::Dag(host), NodeGraphPointerPlan::Dag(plan)) => host.commit_pointer(plan),
             _ => false,
+        };
+        if committed {
+            mark_engine_scene_repaint(&mut map, surface_id);
         }
+        committed
     })
 }
 

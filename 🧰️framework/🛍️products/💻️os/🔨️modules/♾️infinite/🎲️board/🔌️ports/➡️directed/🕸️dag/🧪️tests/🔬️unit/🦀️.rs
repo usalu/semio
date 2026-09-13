@@ -1142,30 +1142,32 @@ fn dag_host_proximity_zero_disables_node_drag_connect() {
     assert!(host.fixture.edges.is_empty());
 }
 
+/// 🔌️ Only the whole-graph SILHOUETTE withholds ports: every tier that draws a node draws its port
+/// rows and publishes their connector rects, so a press on one wires there. The minimap tier owns the
+/// bounded selection-AABB drag instead.
 #[test]
-fn hidden_lod_connection_hit_picking_disabled() {
+fn only_the_silhouette_lod_withholds_port_hit_picking() {
     let mut host = DagHost::default_demo();
     host.set_viewport(1280, 800, 1.0);
     host.set_automatic_lod(false);
-    let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine");
-    let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
-    let (x0, y0, x1, y1) = input_port_row_hit_bounds(combine, port_idx).expect("row bounds");
-    let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
     let handle = handle_world(&host, "combine@b");
-    for lod in ["minimap", "overview", "compact"] {
+    let (hsx, hsy) = world_to_screen_px(&host, handle);
+    host.set_forced_draw_lod_label("minimap");
+    assert!(!host.draw_lod_for_frame().allows_connection_hit_picking(), "minimap");
+    host.pointer_down(hsx, hsy, false);
+    assert!(!matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }), "minimap must not start an edge draw");
+    host.pointer_up(hsx, hsy);
+    for lod in ["overview", "compact", "normal", "detail", "micro"] {
         host.set_forced_draw_lod_label(lod);
-        assert!(!host.draw_lod_for_frame().allows_connection_hit_picking(), "{lod}");
-        let (sx, sy) = world_to_screen_px(&host, row_center);
-        host.pointer_down(sx, sy, false);
-        assert!(!matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }), "{lod} input row should not start edge draw");
-        host.pointer_up(sx, sy);
-        let (hsx, hsy) = world_to_screen_px(&host, handle);
+        assert!(host.draw_lod_for_frame().allows_connection_hit_picking(), "{lod}");
         host.pointer_down(hsx, hsy, false);
-        assert!(!matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }), "{lod} handle anchor should not start edge draw");
+        assert!(matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }), "{lod} must wire from a port");
         host.pointer_up(hsx, hsy);
     }
 }
 
+/// 🔌️ The row splits in two: its outer CONNECTOR share wires, its interior drags the node. Both the
+/// anchor the cap is painted at and the rect the host publishes fall in the connector share.
 #[test]
 fn normal_lod_input_row_drags_node_handle_anchor_starts_edge_draw() {
     let mut host = DagHost::default_demo();
@@ -1635,14 +1637,15 @@ fn dag_draw_lod_progressive_disclosure_gates() {
     assert!(!DagDrawLod::Compact.shows_computation_layout());
     assert!(!DagDrawLod::Normal.shows_handles());
     assert!(DagDrawLod::Detail.shows_handles());
-    assert!(DagDrawLod::Normal.uses_input_row_connection_hitbox());
-    assert!(!DagDrawLod::Detail.uses_input_row_connection_hitbox());
     assert!(DagDrawLod::Detail.uses_channel_row_pick());
     assert!(DagDrawLod::Micro.uses_channel_row_pick());
     assert!(!DagDrawLod::Normal.uses_channel_row_pick());
+    // 🔌️ Ports are grabbable wherever a node is drawn — the host publishes every port's screen rect
+    // at every zoom (`entity_screen_json("handle", …)`), so every tier but the silhouette must accept
+    // a press on one.
     assert!(!DagDrawLod::Minimap.allows_connection_hit_picking());
-    assert!(!DagDrawLod::Overview.allows_connection_hit_picking());
-    assert!(!DagDrawLod::Compact.allows_connection_hit_picking());
+    assert!(DagDrawLod::Overview.allows_connection_hit_picking());
+    assert!(DagDrawLod::Compact.allows_connection_hit_picking());
     assert!(DagDrawLod::Normal.allows_connection_hit_picking());
     assert!(DagDrawLod::Detail.allows_connection_hit_picking());
     assert!(DagDrawLod::Micro.allows_connection_hit_picking());

@@ -159,6 +159,10 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 
 //#region 🧪️Tests
 #[cfg(test)]
+#[path = "🧪️tests/🔬️serial/🦀️.rs"]
+pub(crate) mod test_serial;
+
+#[cfg(test)]
 #[path = "🧪️tests/🔬️flow-operators/🦀️.rs"]
 pub(crate) mod flow_operators;
 

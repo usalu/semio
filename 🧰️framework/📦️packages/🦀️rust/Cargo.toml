@@ -22,6 +22,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-hash = { path = "../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+# ⬇️ `kernel::media_export_bytes` — the first-party RFC 4648 codec that turns a
+# `Effect::DownloadMediaExport` envelope into the bytes a shell saves. No runtime `base64` crate.
+semio-framework-io-base64 = { path = "../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 semio-framework-mesh-engine = { path = "../../🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
 # 🎯️ OS kernel owns spr/dsl types — aliases avoid dual trees / cycle with old implementations.
 semio-framework-os-kernel = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -32,6 +35,8 @@ semio-framework-schema = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+# 🔬️ Third-party oracle for `kernel::media_export_bytes`'s base64 lane — dev-only, never a runtime dep.
+base64 = "0.22.1"
 
 [features]
 # 🧬️ Generates the TypeScript mirror for boundary/protocol types (see `<owner>/🤖️generated/🪪️manifest/🟦️.ts`);

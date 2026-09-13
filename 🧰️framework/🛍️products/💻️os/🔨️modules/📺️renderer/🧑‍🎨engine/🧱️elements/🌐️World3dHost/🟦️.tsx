@@ -2472,6 +2472,19 @@ export function applyGumballLivePreviewDeltaToPose(base: WorldGumballLivePose, d
   };
 }
 
+/**
+ * @emoji 🧿️ Whether the `<group>` ref the reconciler handed back is a real three.js instance root that
+ * owns a transform to write. The host mounts under hosts other than the three.js reconciler — jsdom
+ * gesture mounts and `renderToStaticMarkup` — where the very same ref yields a DOM node instead, so
+ * the imperative gumball preview registry admits only what it can actually pose. `isObject3D` is
+ * three's own brand, which survives the realm boundary a bundled `instanceof` does not.
+ *
+ * @see https://threejs.org/docs/#api/en/core/Object3D.isObject3D
+ */
+export function isWorldInstanceRootObject3D(candidate: unknown): candidate is Group {
+  return typeof candidate === "object" && candidate !== null && (candidate as { isObject3D?: unknown }).isObject3D === true;
+}
+
 /** @emoji ⚡️ Writes a live gumball preview pose onto a Three.js instance root. */
 export function applyGumballLivePreviewPoseToObject3D(target: Object3D, pose: WorldGumballLivePose): void {
   target.position.set(pose.position[0], pose.position[1], pose.position[2]);
@@ -3133,7 +3146,7 @@ function WorldInstancesLayer({
   );
 
   const registerInstanceRoot = useCallback((id: string, group: Group | null) => {
-    if (group) instanceRootsRef.current.set(id, group);
+    if (isWorldInstanceRootObject3D(group)) instanceRootsRef.current.set(id, group);
     else instanceRootsRef.current.delete(id);
   }, []);
 
@@ -3838,10 +3851,19 @@ function WorldComputeStatusPane({
   readonly locale: string | undefined;
   readonly onCancel: () => void;
 }) {
-  if (!status.computing && !status.cancellable && status.phase !== "cancelled") return null;
+  const idle = !status.computing && !status.cancellable && status.phase !== "cancelled";
   const german = (locale ?? "en").toLowerCase().startsWith("de");
   const phaseText = status.phaseLabel ? (german ? status.phaseLabel.de : status.phaseLabel.en) : null;
   const percent = status.unitsTotal > 0 ? Math.round(status.ratio * 100) : null;
+  // 📢️ The live region STAYS MOUNTED while idle, rendering nothing.
+  //
+  // 🐛️ This used to `return null` at idle, which is the classic ARIA live-region trap: a reader only
+  // announces changes INSIDE a region it was already observing, so a `role="status"` element that
+  // first appears at the moment it has something to say is announced by nothing. An evaluation going
+  // idle → "Sampling edges" → "Evaluated" was therefore completely silent, which is the whole point
+  // of the region. Keeping an empty, zero-size region in the tree makes every later phase a
+  // mutation of an observed subtree, which IS announced.
+  if (idle) return <div className="sr-only" data-slot="world-compute-status" data-compute-phase={status.phase} role="status" aria-busy={undefined} />;
   return (
     <div
       className={cn("pointer-events-auto flex items-center gap-single rounded px-single py-half text-xs shadow-sm", glassClass)}

@@ -695,6 +695,26 @@ pub trait HasBase: Sized {
         self.base_mut().accessibility.description = Some(description);
         Ok(self)
     }
+
+    /// 📢️ Makes the node a live region: a reader announces its text whenever it changes, without the
+    /// reader ever having to reach the node. This is the ONLY way a background state change — an
+    /// evaluation going `Computing → Evaluated`, a progress phase advancing — is heard at all, so a
+    /// status surface that never calls this is silent by construction.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn live(mut self, live: crate::Liveness) -> Self {
+        self.base_mut().accessibility.live = live;
+        self
+    }
+
+    /// ⌨️ Declares the keyboard shortcut that reaches this node, announced by a reader and mirrored
+    /// into `aria-keyshortcuts`. Declaring it here never BINDS it — the binding stays with whoever
+    /// owns the keybinding — so the two can be checked against each other.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn try_shortcut(mut self, shortcut: impl AsRef<str>) -> Result<Self, Self> {
+        let Some(shortcut) = crate::UiText::try_from_str(shortcut.as_ref()) else { return Err(self) };
+        self.base_mut().accessibility.shortcut = Some(shortcut);
+        Ok(self)
+    }
 }
 
 /// 👶️ Adds `.child(..)`/`.children(..)` to a builder whose component genuinely nests others.

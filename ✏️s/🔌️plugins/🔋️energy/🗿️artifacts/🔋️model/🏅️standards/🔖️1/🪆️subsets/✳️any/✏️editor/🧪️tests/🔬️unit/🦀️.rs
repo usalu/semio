@@ -332,6 +332,22 @@ async fn renaming_the_model_dispatches_cleanly_through_the_real_action_route() {
 }
 //#endregion 🧵️DispatchLaw
 
+/// ⚖️ LAW: every declared chord uses canonical key tokens — `ShellHost` compares the last `+`
+/// segment to `event.key` verbatim, so `mod+period` is a dead chord (`event.key` is `"."`).
+#[semio_framework_async_macros::async_test]
+async fn every_keybinding_uses_canonical_punctuation_key_tokens() {
+    const FORBIDDEN: &[&str] = &["period", "comma", "slash", "minus", "equal", "semicolon", "quote", "backquote", "bracketleft", "bracketright", "backslash"];
+    let def = definition();
+    for binding in &def.keybindings {
+        for chord in binding.keys.split(',') {
+            let key = chord.trim().split('+').last().unwrap_or("").to_lowercase();
+            assert!(!FORBIDDEN.iter().any(|name| *name == key), "dead chord token `{key}` in `{binding}`", binding = binding.keys);
+        }
+    }
+    let cancel = def.keybindings.iter().find(|binding| binding.action.action == simulation::CANCEL_ACTION_ID).expect("cancel simulation chord");
+    assert_eq!(cancel.keys, "mod+.");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn a_command_round_trips_through_its_own_text_and_binary_codec() {
     use protocol::{OpBinary as _, OpText as _};

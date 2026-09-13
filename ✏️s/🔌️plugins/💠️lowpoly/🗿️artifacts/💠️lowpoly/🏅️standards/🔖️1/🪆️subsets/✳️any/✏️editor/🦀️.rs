@@ -181,7 +181,6 @@ pub fn utility_param_slider(id: &str, label: LabelText, key: &str, params: &serd
         ready: None,
         loading: None,
         disabled: None,
-        reveal: None,
         on_change: lowpoly_window_action("setUtilityParam", Some((&dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string()))])).into())),
         waiting: None,
     }
@@ -202,7 +201,6 @@ pub fn paint_utility_params_group(utility: &str, params: &serde_json::Value, lab
         ready: None,
         loading: None,
         disabled: None,
-        reveal: None,
         on_change: lowpoly_window_action("setUtilityParam", Some((&dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string()))])).into())),
         waiting: None,
     };

@@ -120,6 +120,8 @@ import { type UiPreferencesConfigMutation, setAppearance, setDriver, setLayout, 
 import type { DomainSelection, InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import { hostContinuations, type ContinuationCancel, type ContinuationScheduler } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
+import { mediaExportBytes } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { wireMediaExportEncoding } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import {
   decodeWorldProjectionTemplateId,
 } from "@semio-tech/infinite-world-r3f";
@@ -603,27 +605,20 @@ export function useUIHistory(initialUri = "/", syncBrowser = false) {
 
 export const DOWNLOAD_MEDIA_EXPORT_REVOKE_MS = 10_000;
 
-/** @emoji 📥️ Guest `encoding` is only a segmented-download marker when it is a string prefix. */
-export function mediaExportEncodingText(encoding: unknown): string | undefined {
-  return typeof encoding === "string" ? encoding : undefined;
-}
+/** @emoji 📥️ Recovers the guest's `encoding` from the wire, whatever shape the WIT `option<string>`
+ * arrived in — the SAME reader both renderer doors use (`🖼️wire-turn.ts`). Reading it flat here is
+ * what dropped it for every binary export (`📓️io-surface-2026-09-13.md` §7.3). What the string MEANS
+ * is `kernel::mediaExportBytes`; a `SEGMENTED_DOWNLOAD_MARKER_PREFIX` value is a handle, not an
+ * encoding, and is consumed by the segmented lane before either reaches the bytes. */
+export const mediaExportEncodingText = wireMediaExportEncoding;
 
-/** @emoji 📥️ Host download of guest `download-media-export` — the anchor must be in the document and the object URL must outlive the click or the browser drops the file. */
+/** @emoji 📥️ Host download of guest `download-media-export`. The bytes come from the kernel's own
+ * `(data, encoding)` contract — not a local `atob` branch — so text stays text, base64 becomes bytes,
+ * and an encoding no shell knows is a loud typed refusal rather than a corrupt file. The anchor must
+ * be in the document and the object URL must outlive the click or the browser drops the file. */
 export function downloadMediaExport(filename: string, mimeType: string, data: string, encoding?: string): void {
   if (typeof document === "undefined") return;
-  const payload = encoding === "base64" ? Uint8Array.from(atob(data), (char) => char.charCodeAt(0)) : data;
-  const blob = new Blob([payload], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.style.display = "none";
-  document.body.appendChild(anchor);
-  anchor.click();
-  window.setTimeout(() => {
-    anchor.remove();
-    URL.revokeObjectURL(url);
-  }, DOWNLOAD_MEDIA_EXPORT_REVOKE_MS);
+  downloadMediaExportBytes(filename, mimeType, mediaExportBytes(data, encoding));
 }
 
 /** @emoji 📥️ Host delivery of already-assembled bytes — the blob-and-anchor half of {@link downloadMediaExport}, reached by the segmented lane once its chunks are drained. */
@@ -3686,6 +3681,43 @@ export function isEditableEventTarget(target: EventTarget | null): boolean {
  * React `onKeyDown` handler). */
 export type KeyboardEventLike = { readonly key: string; readonly ctrlKey: boolean; readonly metaKey: boolean; readonly shiftKey: boolean; readonly altKey: boolean };
 
+/** ⌨️ Punctuation keys whose DOM `event.key` is a single character — chord declarations MUST use the character, never these names. */
+export const CHORD_KEY_NAME_ALIASES: Readonly<Record<string, string>> = {
+  period: ".",
+  comma: ",",
+  slash: "/",
+  minus: "-",
+  equal: "=",
+  semicolon: ";",
+  quote: "'",
+  backquote: "`",
+  bracketleft: "[",
+  bracketright: "]",
+  backslash: "\\",
+};
+
+/** ⌨️ The key token `ShellHost` compares against `event.key` for one chord's last `+` segment. */
+export function canonicalChordKeyToken(token: string): string {
+  const lower = token.toLowerCase();
+  return CHORD_KEY_NAME_ALIASES[lower] ?? token;
+}
+
+/** ⌨️ False when a chord's key segment spells punctuation as a name (`period`) instead of the character (`.`). */
+export function chordKeyTokenIsCanonical(token: string): boolean {
+  const lower = token.toLowerCase();
+  if (lower in CHORD_KEY_NAME_ALIASES && token !== CHORD_KEY_NAME_ALIASES[lower]) return false;
+  return true;
+}
+
+/** ⌨️ True when every non-modifier segment of a chord uses canonical key tokens (no `mod+period` dead strings). */
+export function chordUsesCanonicalKeyTokens(chord: string): boolean {
+  const modifierTokens = new Set(["mod", "ctrl", "meta", "shift", "alt"]);
+  const parts = chord.split("+").map((part) => part.trim()).filter(Boolean);
+  const key = parts[parts.length - 1] ?? "";
+  if (modifierTokens.has(key.toLowerCase())) return true;
+  return chordKeyTokenIsCanonical(key);
+}
+
 /** ⌨️ True when a keydown event matches one `+`-joined chord (e.g. `"mod+shift+z"`), where `mod` accepts either ctrl or meta. */
 export function keyboardEventMatchesChord(event: KeyboardEventLike, chord: string): boolean {
   const parts = chord.split("+").map((part) => part.trim());
@@ -3697,7 +3729,7 @@ export function keyboardEventMatchesChord(event: KeyboardEventLike, chord: strin
   if (needsCtrl !== hasCtrl) return false;
   if (needsShift !== event.shiftKey) return false;
   if (needsAlt !== event.altKey) return false;
-  return event.key.toLowerCase() === key;
+  return event.key.toLowerCase() === key.toLowerCase();
 }
 
 export type KeybindingIntent = { readonly kind: "fire" } | { readonly kind: "open"; readonly actionId: string } | { readonly kind: "execute"; readonly actionId: string; readonly args: Record<string, unknown> };

@@ -13,7 +13,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createContext, memo, Profiler, useCallback, useContext, useMemo, useState, useSyncExternalStore, type ComponentType, type CSSProperties, type ReactElement, type ReactNode } from "react";
+import { createContext, memo, Profiler, useCallback, useContext, useMemo, useRef, useState, useSyncExternalStore, type ComponentType, type CSSProperties, type ReactElement, type ReactNode, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { packedTextLeaf } from "../🔌️PluginRuntime/🧳️packed-text/🟦️.ts";
 import { leftoverTreeItemSelectedV1, leftoverWorldSelectionOverlayV1, subscribeLeftoverWorldSelectionV1 } from "../🌐️World3dHost/🟦️.tsx";
 import {
@@ -1088,12 +1088,44 @@ function ButtonView({ record, context }: { readonly record: UiNodeRecord; readon
   );
 }
 
+/** 🖊️ A commit-on-blur input's LOCAL draft: what the user has typed but not yet committed.
+ *
+ * 🐛️ `InputProps.commit === "blur"` used to render a CONTROLLED input (`value={component.value}`) with
+ * no `onChange` at all, which is React's read-only spelling: every keystroke was reverted on the next
+ * render, so the field could not be edited, and the `blur` handler then committed the value the field
+ * already had. Measured on 6018: typing "Balcony Study" into a generation's inline rename editor
+ * dispatched `renameGeneration` and settled it, with the history label reading
+ * `rename-generation id=generation-2 new-name="Generation 2"` — the OLD name
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `🗑️generated/generate-interactions/probe-2`). Every
+ * commit-on-blur input in the fleet was uneditable for the same reason.
+ *
+ * The draft follows the published value whenever the GUEST changes it (the render-phase adjustment
+ * React documents for derived state), so an outside edit still wins, while local typing is kept. */
+function useCommitDraft(published: string): [string, (next: string) => void] {
+  const [draft, setDraft] = useState(published);
+  const publishedRef = useRef(published);
+  if (publishedRef.current !== published) {
+    publishedRef.current = published;
+    if (draft !== published) setDraft(published);
+  }
+  return [draft, setDraft];
+}
+
 function InputView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "input" }>;
   const commitOnBlur = component.commit === "blur";
+  const [draft, setDraft] = useCommitDraft(component.value);
   const commitValue = (raw: string) => {
     const value: UiValue = component.kind === "number" ? toUiValue(Number(raw)) : toUiValue(raw);
     dispatchTrigger(context, record, commitOnBlur ? "commit" : "change", value);
+  };
+  /** ⌨️ Enter commits without waiting for focus to leave — the gesture a user expects from an inline
+   * editor, and the one a keyboard-only user has. */
+  const commitOnEnter = (event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (event.key !== "Enter" || event.shiftKey) return;
+    event.preventDefault();
+    commitValue((event.target as HTMLInputElement | HTMLTextAreaElement).value);
+    (event.target as HTMLInputElement | HTMLTextAreaElement).blur();
   };
   if (component.kind === "longText") {
     return (
@@ -1101,9 +1133,10 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
         id={nodeDomId(context.store, record)}
         data-ui-node-id={record.id} data-ui-node-key={record.key}
         className="min-h-[4.5rem] w-full min-w-0"
-        value={component.value}
+        value={commitOnBlur ? draft : component.value}
         placeholder={component.placeholder ?? undefined}
-        onChange={commitOnBlur ? undefined : (event) => commitValue(event.target.value)}
+        onChange={commitOnBlur ? (event) => setDraft(event.target.value) : (event) => commitValue(event.target.value)}
+        onKeyDown={commitOnBlur ? commitOnEnter : undefined}
         onBlur={commitOnBlur ? (event) => commitValue(event.target.value) : undefined}
       />
     );
@@ -1115,13 +1148,14 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
       data-ui-node-id={record.id} data-ui-node-key={record.key}
       type={inputType}
       className="h-medium w-full min-w-0"
-      value={component.kind === "file" ? undefined : component.value}
+      value={component.kind === "file" ? undefined : commitOnBlur ? draft : component.value}
       placeholder={component.placeholder ?? undefined}
       min={component.min ?? undefined}
       max={component.max ?? undefined}
       step={component.step ?? undefined}
       accept={component.kind === "file" ? (component.accept ?? undefined) : undefined}
-      onChange={commitOnBlur ? undefined : (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)}
+      onChange={commitOnBlur && component.kind !== "file" ? (event) => setDraft(event.target.value) : (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)}
+      onKeyDown={commitOnBlur ? commitOnEnter : undefined}
       onBlur={commitOnBlur ? (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : undefined}
     />
   );
@@ -1463,10 +1497,64 @@ function PagedSurfaceView({ record, component, context }: { readonly record: UiN
   return <>{renderComponentSceneHost(record, component, context.onAction, store.getState().surface, context.requestContextMenu, assemble)}</>;
 }
 
+/**
+ * @emoji ♿️ The accessible door to a canvas.
+ *
+ * Every other component view reaches its ARIA for free, because it renders a real HTML element that
+ * already carries the role and takes focus. A surface renders a scene host that paints into a
+ * `<canvas>` — an opaque texture with no accessible children at all — so without this wrapper the
+ * node-graph and World3d surfaces were unnamed, unfocusable and silent: the `AccessibilitySpec` the
+ * contract carries on the record was simply dropped on the floor (`renderComponentSceneHost` never
+ * received it), which an accessibility-tree probe on 6018 confirmed — three canvases, no `role`, no
+ * `aria-label`, no `tabindex`.
+ *
+ * `role="application"` is the ARIA contract for "this widget handles its own arrow/Enter keys", which
+ * is exactly what a scene host does, and it is the role `accessibility_role` already implies for
+ * `Component::Surface` on every renderer. `tabIndex` puts the canvas in the Tab order, matching the
+ * contract's own `accessibility_is_focusable`, so React and the wgpu `EventRouter` agree about who is
+ * reachable. The layout classes mirror what every scene host's own root already sets
+ * (`relative h-full min-h-0 w-full`), so inserting this element changes no geometry.
+ *
+ * @see ../../../../../../🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🦀️.rs
+ */
+function SurfaceAccessibilityShell({ record, context, children }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext; readonly children: ReactNode }) {
+  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
+  const activateBinding = (record.bindings ?? []).find((binding) => binding.trigger === "activate");
+  return (
+    <div
+      data-ui-node-id={record.id}
+      data-ui-node-key={record.key}
+      data-ui-surface-shell=""
+      role="application"
+      tabIndex={record.disabled ? -1 : 0}
+      aria-disabled={record.disabled || undefined}
+      aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}
+      className="focus-visible:ring-primary relative h-full min-h-0 w-full min-w-0 outline-none focus-visible:ring-2"
+      onKeyDown={
+        activateBinding && !record.disabled
+          ? (event) => {
+              if (event.key !== "Enter" && event.key !== " ") return;
+              event.preventDefault();
+              dispatchTrigger(context, record, "activate");
+            }
+          : undefined
+      }
+      {...aria}
+    >
+      {describedBy}
+      {children}
+    </div>
+  );
+}
+
 function SurfaceView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "surface" }>;
-  if (component.kind === "world-3d") return <PagedSurfaceView record={record} component={component} context={context} />;
-  return <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
+  const body = component.kind === "world-3d" ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
+  return (
+    <SurfaceAccessibilityShell record={record} context={context}>
+      {body}
+    </SurfaceAccessibilityShell>
+  );
 }
 
 function ExtensionView({ record }: { readonly record: UiNodeRecord }) {

@@ -40,7 +40,6 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: crate::editor::note::note_action("setGridSpacing", None),
             },
             WindowMeasure::Slider {
@@ -54,7 +53,6 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: crate::editor::note::note_action("setGridSubdivisions", None),
             },
             WindowMeasure::Slider {
@@ -68,7 +66,6 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: crate::editor::note::note_action("setGridOpacity", None),
             },
         ],

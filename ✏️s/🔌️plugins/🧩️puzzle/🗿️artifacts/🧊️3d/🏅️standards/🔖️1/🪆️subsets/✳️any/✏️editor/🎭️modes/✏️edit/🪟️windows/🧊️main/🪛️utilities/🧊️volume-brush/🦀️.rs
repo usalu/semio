@@ -29,7 +29,6 @@ pub fn voxel_dim_measures(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) ->
         loading: None,
         waiting: None,
         disabled: None,
-        reveal: None,
         on_change: puzzle3d_action("setVoxelDims", Some(json!({ "axis": axis }))),
     };
     vec![axis_slider("w", labels.width, w), axis_slider("d", labels.depth, d), axis_slider("h", labels.height, h)]

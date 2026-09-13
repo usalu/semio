@@ -66,6 +66,41 @@
       }
     },
     {
+      "id": "num-rational-brep-exact-predicates",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "num-rational",
+      "version": "0.4",
+      "source": {
+        "repository": "https://github.com/rust-num/num-rational",
+        "license": "MIT OR Apache-2.0"
+      },
+      "engine": {
+        "family": "num-rational",
+        "implementation": "arbitrary-precision BigRational over num-bigint",
+        "version": "0.4"
+      },
+      "capabilities": [
+        "brep.predicate.exact-sign"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/num-rational",
+      "rationale": "🎯️ The third-party half of this subset's EXACT GEOMETRIC PREDICATES. `🧬️schema/📸️snapshot/➡️vector/⚖️predicates/🦀️.rs` decides `orient2d`, `orient3d`, `in_circle2d` and `sign_of_dot` with a cheap `f64` interval filter that escalates, whenever the sign could have been flipped by roundoff, to nonoverlapping floating-point EXPANSION arithmetic (Shewchuk error-free transformations: `two_sum`/`two_diff`/Dekker-split `two_product`, `fast_expansion_sum_zeroelim`, `scale_expansion_zeroelim`). That escalation path is the one that must never return a wrong sign, and it is arithmetic this repository wrote.\n\n`num-rational`'s `BigRational` recomputes the same determinants in a COMPLETELY DIFFERENT representation (arbitrary-precision rationals over `num-bigint`) by a COMPLETELY DIFFERENT algorithm, written outside this repository, reading the same `f64` inputs losslessly (`BigRational::from_float` is exact for every finite `f64`). The oracle cannot round, so a disagreement convicts the expansion code and nothing else. The lane is `⚖️predicates/🧪️tests/🔬️unit/🦀️.rs`'s `oracle` module: 2000 orient2d triples (half of them forced near-collinear), 600 orient3d quadruples (half forced near-coplanar), 300 in_circle2d configurations, 2000 dot-sign pairs (half forced exactly perpendicular), and every configuration one ULP either side of exact collinearity at five magnitudes from 1e-7 to 1e7.\n\nThis registration exists because ticket 26/09/09/PROCEDURAL-3D-END-TO-END replaced the previous exact path, which used this repository's own `semio_framework_number::Rational`: a `sample(1)` profile put 99.3% of `🍩️sphere-cut-with-torus`'s evaluate inside that bignum arithmetic's `gcd`/`normalize` and the allocator serving its limb vectors, because a dense curve discretisation makes exactly-collinear triples the COMMON case and the filter can never certify a zero. Both paths are exact, so the rewrite is a pure performance change — and this oracle is what makes that claim checkable rather than asserted.\n\n⚠️ WHAT IT CANNOT ESTABLISH, stated so the evidence is not overstated: it says nothing about the FILTER. Whether the cheap `f64` path ever ANSWERS where it should have escalated is a different question, held by the same file's pre-existing `quick` module (11 000 randomized and near-degenerate configurations comparing filtered against exact). The two are deliberately separate and are both kept: `quick` says the filter never answers where it must escalate, this says the escalation is exact. NETWORK: none; the library is vendored through the workspace lock like every other test-lane dependency, and is declared only in `[dev-dependencies]`, never production-reachable."
+    },
+    {
       "id": "semio-brep-python-independent",
       "ecosystem": "python",
       "package": "",

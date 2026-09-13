@@ -40,7 +40,6 @@ pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, labels: &Bl
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: crate::editor::block3d::block3d_window_action("setBrushRadius", None),
             },
             WindowMeasure::Toggle {

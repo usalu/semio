@@ -102,7 +102,7 @@ export function testGeneration3dGenerateModeInteractionContract(): void {
   const listed = new Set(fixture.commandTriggers.map((row) => row.command));
   for (const row of fixture.commandTriggers) {
     assert.ok(row.triggers.length > 0, `${row.command} is listed with no trigger at all`);
-    if (row.keys !== null) assert.match(row.keys, /^[a-z+]+(,[a-z+]+)*$/, `${row.command}'s chord must be one or more plain lowercase chords, got ${row.keys}`);
+    if (row.keys !== null) assert.match(row.keys, /^[a-z0-9+.]+(,[a-z0-9+.]+)*$/, `${row.command}'s chord must be one or more plain lowercase chords, got ${row.keys}`);
   }
   assert.ok(fixture.commandTriggers.find((row) => row.command === "reorganize")!.triggers.includes("keybinding"), "reorganize must be keyboard-reachable");
   for (const removed of fixture.removedCommands) {

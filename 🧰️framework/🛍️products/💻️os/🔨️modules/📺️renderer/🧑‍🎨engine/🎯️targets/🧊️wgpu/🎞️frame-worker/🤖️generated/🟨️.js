@@ -18027,6 +18027,35 @@ class SemioFaultError extends Error {
     this.fault = fault;
   }
 }
+var JOB_PLACEMENTS = Object.freeze(["inline", "isolated", "exclusive"]);
+function jobPlacementFromWireName(name) {
+  return typeof name === "string" && JOB_PLACEMENTS.includes(name) ? name : undefined;
+}
+var SPAWNED_JOB_STEP_CEILING = 32;
+var SPAWNED_JOB_FUEL = 50000000n;
+var SPAWNED_JOB_DEADLINE_MS = 100;
+
+class SpawnedJobDriveError extends Error {
+  reason;
+  steps;
+  constructor(reason, steps) {
+    super(reason === "stalled" ? `spawned job did not reach a terminal step within ${steps} host steps` : `spawned job drive took ${steps} steps, past the ${SPAWNED_JOB_STEP_CEILING}-step ceiling`);
+    this.name = "SpawnedJobDriveError";
+    this.reason = reason;
+    this.steps = steps;
+  }
+}
+function spawnedJobCompletion(steps) {
+  if (steps.length > SPAWNED_JOB_STEP_CEILING)
+    throw new SpawnedJobDriveError("overrun", steps.length);
+  for (let index = 0;index < steps.length; index += 1) {
+    const step12 = steps[index];
+    if (step12.status === "running")
+      continue;
+    return { steps: index + 1, outcome: step12.status === "done" ? { ok: step12.value } : { fault: step12.value } };
+  }
+  throw new SpawnedJobDriveError("stalled", steps.length);
+}
 var MERGE_POLICY_ORDER = ["LaissezFaire", "Normal", "Vigilant"];
 function mergePolicyAsU8(policy) {
   return MERGE_POLICY_ORDER.indexOf(policy);
@@ -23961,8 +23990,7 @@ class AppChannelClient {
 if (undefined) {}
 if (undefined) {}
 if (undefined) {}
-/* owned-wgpu:🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts */
-var SHARD_WORKER_URL = "/\uD83D\uDD0C️plugin-modules/\uD83E\uDDF5️shard/\uD83D\uDFE8️shard-worker.js";
+/* owned-wgpu:🧰️framework/🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts */
 var SHARD_RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
 var SHARD_WORKER_DIAGNOSTICS_PARAM = "diagnostics";
 function shardRuntimeDiagnosticsArmed() {
@@ -23973,8 +24001,16 @@ function shardRuntimeDiagnosticsArmed() {
     return false;
   }
 }
+function stampShardWorkerDiagnostics(url) {
+  if (!shardRuntimeDiagnosticsArmed() || url.includes(`${SHARD_WORKER_DIAGNOSTICS_PARAM}=1`))
+    return url;
+  return `${url}${url.includes("?") ? "&" : "?"}${SHARD_WORKER_DIAGNOSTICS_PARAM}=1`;
+}
+
+/* owned-wgpu:🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts */
+var SHARD_WORKER_URL = "/\uD83D\uDD0C️plugin-modules/\uD83E\uDDF5️shard/\uD83D\uDFE8️shard-worker.js";
 function shardWorkerUrl() {
-  return shardRuntimeDiagnosticsArmed() ? `${SHARD_WORKER_URL}?${SHARD_WORKER_DIAGNOSTICS_PARAM}=1` : SHARD_WORKER_URL;
+  return stampShardWorkerDiagnostics(SHARD_WORKER_URL);
 }
 var DEFAULT_SHARD_BUDGET = { fuel: 50000000, wallMs: 100, memoryBytes: 256 * 1024 * 1024, uiNodes: 20000, mailboxLen: 64, maxEffects: 64, maxPatchBytes: 1 << 20 };
 function poolConcurrency() {
@@ -24515,6 +24551,54 @@ function wireRespondAnswer(effect) {
   const bytes = coerceWireBytes(outcome.val);
   return { respond: { req, result: outcome.tag === "ok" ? { ok: bytes } : { fault: bytes } } };
 }
+function wireOptionValue(raw) {
+  if (raw === null || typeof raw !== "object" || !("tag" in raw))
+    return raw;
+  const option = raw;
+  if (option.tag === "some")
+    return option.val;
+  if (option.tag === "none")
+    return;
+  return raw;
+}
+function wireOptionText(raw) {
+  const value = wireOptionValue(raw);
+  return typeof value === "string" ? value : undefined;
+}
+var wireMediaExportEncoding = wireOptionText;
+function wireDownloadMediaExport(effect) {
+  const value = effect.val ?? {};
+  return {
+    downloadMediaExport: {
+      filename: String(value.filename ?? ""),
+      mimeType: String(value.mimeType ?? value["mime-type"] ?? ""),
+      data: String(value.data ?? ""),
+      encoding: wireMediaExportEncoding(value.encoding)
+    }
+  };
+}
+function wireSpawnJob(effect) {
+  const value = effect.val ?? {};
+  const job = wireJobIdentity(value.job, "spawn-job");
+  const kind = wireOptionValue(value.kind);
+  if (typeof kind !== "string" || !kind)
+    throw new Error("spawn-job.kind-invalid");
+  const placement = jobPlacementFromWireName(wireOptionValue(value.placement));
+  if (placement === undefined)
+    throw new Error(`spawn-job.placement-invalid ${JSON.stringify(value.placement)?.slice(0, 60)}`);
+  return { spawnJob: { job, kind, input: coerceWireBytes(wireOptionValue(value.input) ?? []), placement } };
+}
+function wireCancelJob(effect) {
+  const value = effect.val ?? {};
+  return { cancelJob: { job: wireJobIdentity(value.job, "cancel-job") } };
+}
+function wireJobIdentity(raw, effectTag) {
+  const value = wireOptionValue(raw);
+  const job = typeof value === "bigint" ? value : typeof value === "string" && /^\d+$/.test(value) ? BigInt(value) : typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? BigInt(value) : null;
+  if (job === null || job <= 0n || job > 0xffffffffffffffffn)
+    throw new Error(`${effectTag}.job-identity-invalid`);
+  return job;
+}
 function wireTurnStatusTag(status) {
   const raw = typeof status === "string" ? status : status && typeof status === "object" && ("tag" in status) ? String(status.tag ?? "") : "";
   return raw.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
@@ -24548,22 +24632,43 @@ async function driveInboundRequest(drive) {
   }
   return { status: "unanswered", turns: budget };
 }
+function wireJobStep(raw) {
+  const record = raw ?? {};
+  const status = typeof record.status === "string" ? record.status : typeof record.tag === "string" ? record.tag : "";
+  const payload = record.value !== undefined ? record.value : record.val;
+  if (status === "running")
+    return { status: "running" };
+  if (status === "done" || status === "failed")
+    return { status, value: coerceWireBytes(wireOptionValue(payload) ?? []) };
+  throw new Error(`job-step.status-invalid ${JSON.stringify(status).slice(0, 60)}`);
+}
+async function driveSpawnedJob(drive) {
+  const ceiling = Math.max(1, Math.min(drive.stepCeiling ?? SPAWNED_JOB_STEP_CEILING, SPAWNED_JOB_STEP_CEILING));
+  const budget = { fuel: SPAWNED_JOB_FUEL, deadlineMs: SPAWNED_JOB_DEADLINE_MS };
+  await drive.port.startJob(drive.job, drive.kind, drive.input);
+  const steps = [];
+  for (let index = 0;index < ceiling; index += 1) {
+    if (drive.signal?.aborted === true)
+      break;
+    const step13 = wireJobStep(await drive.port.stepJob(drive.job, budget));
+    steps.push(step13);
+    drive.onStep?.({ job: drive.job, index, status: step13.status });
+    if (step13.status !== "running")
+      break;
+  }
+  return spawnedJobCompletion(steps);
+}
+function spawnedJobCompletedEvent(job, completion) {
+  const bytes = "ok" in completion.outcome ? completion.outcome.ok : completion.outcome.fault;
+  return { kind: "job-completed", payload: { job, outcome: { tag: "ok" in completion.outcome ? "ok" : "fault", val: Array.from(bytes) } } };
+}
 function wireEffectToFriendly(effect, decodePackValue2) {
   const val = effect.val ?? {};
   const str = (key) => String(val[key] ?? "");
   const num = (key) => Number(val[key] ?? 0);
   const packField = (key) => val[key] !== undefined ? decodePackValue2(coerceWireBytes(val[key])) : undefined;
   const params = val.params ?? {};
-  const some = (value) => {
-    if (value === null || typeof value !== "object" || !("tag" in value))
-      return value;
-    const option = value;
-    if (option.tag === "some")
-      return option.val;
-    if (option.tag === "none")
-      return;
-    return value;
-  };
+  const some = wireOptionValue;
   const pstr = (key) => String(some(params[key]) ?? "");
   const pnum = (key) => Number(some(params[key]) ?? 0);
   const poptstr = (key) => {
@@ -24587,6 +24692,12 @@ function wireEffectToFriendly(effect, decodePackValue2) {
       return { navigate: { uri: str("uri") } };
     case "open-external-url":
       return { openExternalUrl: { url: str("url") } };
+    case "download-media-export":
+      return wireDownloadMediaExport(effect);
+    case "spawn-job":
+      return wireSpawnJob(effect);
+    case "cancel-job":
+      return wireCancelJob(effect);
     case "set-panel":
       return { setPanel: { panelJson: str("panelJson") } };
     case "set-active-utility":
@@ -25080,6 +25191,8 @@ function leftoverFriendlyEffects(instanceId, turns) {
   const leftover = [];
   for (const turn of turns) {
     for (const effect of turn.effects) {
+      if (admitSpawnedJob(instanceId, effect))
+        continue;
       if (!shellFrameBytes(effect, instanceId))
         leftover.push(effect);
     }
@@ -25093,6 +25206,8 @@ function stashLeftoverHostEffects(instanceId, effects) {
   const leftover = pendingTurnEffects.get(instanceId) ?? [];
   const before = leftover.length;
   for (const effect of effects) {
+    if (admitSpawnedJob(instanceId, effect))
+      continue;
     if (!shellFrameBytes(effect, instanceId))
       leftover.push(effect);
   }
@@ -25100,6 +25215,32 @@ function stashLeftoverHostEffects(instanceId, effects) {
     return 0;
   pendingTurnEffects.set(instanceId, leftover);
   return leftover.length - before;
+}
+var pendingSpawnedJobs = new Map;
+var WGPU_SPAWNED_JOB_ROUNDS = 16;
+var spawnJobPayloadsRecorded = 0;
+function admitSpawnedJob(instanceId, effect) {
+  if (effect.tag !== "spawn-job")
+    return false;
+  const { spawnJob } = wireSpawnJob(effect);
+  const queue = pendingSpawnedJobs.get(instanceId) ?? new Map;
+  const key = String(spawnJob.job);
+  if (!queue.has(key)) {
+    queue.set(key, spawnJob);
+    pendingSpawnedJobs.set(instanceId, queue);
+  }
+  return true;
+}
+function takeSpawnedJobs(instanceId) {
+  const queue = pendingSpawnedJobs.get(instanceId);
+  if (!queue || queue.size === 0)
+    return [];
+  const jobs = [...queue.values()];
+  pendingSpawnedJobs.delete(instanceId);
+  return jobs;
+}
+function forgetSpawnedJobs(instanceId) {
+  pendingSpawnedJobs.delete(instanceId);
 }
 function effectTags(effects) {
   return effects.map((effect) => typeof effect === "string" ? effect : Object.keys(effect)[0] ?? "unknown");
@@ -25252,7 +25393,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
           throw new Error("wgpu-ui.owner-replaced");
         const projected = await route.project(surfaceId);
         const effects = [...carried, ...leftoverFriendlyEffects(instanceId, turns)];
-        console.log(`[DEBUG] wgpu-bridge renderSurface surface=${surfaceId} turn=${opportunity} effects=${effects.length} carried=${carried.length} tags=${effectTags(effects).join(",") || "-"} intakeSteps=${route.intakeSteps}`);
+        console.log(`[DEBUG] wgpu-bridge renderSurface surface=${surfaceId} turn=${opportunity} effects=${effects.length} carried=${carried.length} tags=${effectTags(effects).join(",") || "-"} intakeSteps=${route.intakeSteps} patched=${turns.reduce((total, turn) => total + turn.uiPatches.length, 0)} nodes=${projected?.document.nodes.length ?? -1} rev=${projected?.document.revision ?? -1}`);
         if (projected)
           return { ...projected, effects };
         const status = typeof current.status === "string" ? current.status : current.status && typeof current.status === "object" && ("tag" in current.status) ? String(current.status.tag ?? "") : "";
@@ -25274,6 +25415,65 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
     }
+  };
+  const drainSpawnedJobs = async (instanceId, actorId) => {
+    const frames = [];
+    const client = getShardClient();
+    const port = {
+      startJob: (job, kind, input) => client.startJob(actorId, job, kind, input),
+      stepJob: (job, budget) => client.stepJob(actorId, job, budget)
+    };
+    for (let round = 0;round < WGPU_SPAWNED_JOB_ROUNDS; round += 1) {
+      const jobs = takeSpawnedJobs(instanceId);
+      if (jobs.length === 0)
+        return frames;
+      for (const job of jobs) {
+        const started = performance.now();
+        if (spawnJobPayloadsRecorded < 3) {
+          spawnJobPayloadsRecorded += 1;
+          console.log(`[DEBUG] wgpu-bridge spawn-job payload job=${job.job} kind=${job.kind} placement=${job.placement} bytes=${job.input.byteLength} base64=${btoa(String.fromCharCode(...job.input))}`);
+        }
+        let completion;
+        try {
+          completion = await driveSpawnedJob({ job: job.job, kind: job.kind, input: job.input, port });
+          console.log(`[DEBUG] wgpu-bridge spawn-job done instance=${instanceId} job=${job.job} kind=${job.kind} placement=${job.placement} input=${job.input.byteLength}B steps=${completion.steps} outcome=${"ok" in completion.outcome ? "ok" : "fault"} bytes=${("ok" in completion.outcome ? completion.outcome.ok : completion.outcome.fault).byteLength} ms=${Math.round(performance.now() - started)}`);
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : String(error);
+          console.warn(`[DEBUG] wgpu-bridge spawn-job refused instance=${instanceId} job=${job.job} kind=${job.kind}: ${detail}`);
+          completion = { steps: 0, outcome: { fault: new TextEncoder().encode(detail) } };
+        }
+        const drive = new WgpuTypedOperationDrive(instanceId);
+        const route = requireUiRoute(instanceId);
+        const execute = executeFor(actorId);
+        const settled = [await submitTurn(actorId, [spawnedJobCompletedEvent(job.job, completion)])];
+        settled.push(...await route.accept(settled[0], execute));
+        drive.observe(settled);
+        for (let settle = 0;drive.owesASettle(settled.at(-1)) && settle < WGPU_TYPED_OPERATION_SETTLE_LIMIT; settle += 1) {
+          const next = await submitTurn(actorId, drive.takeAcknowledgements());
+          const more = [next, ...await route.accept(next, execute)];
+          settled.push(...more);
+          drive.observe(more);
+          if (!drive.progressed(more))
+            break;
+          await yieldWgpuUi();
+        }
+        const hostEffects = drive.hostEffects(settled);
+        for (const effect of hostEffects) {
+          const frame = shellFrameBytes(effect, instanceId);
+          if (frame)
+            frames.push(frame);
+        }
+        stashLeftoverHostEffects(instanceId, hostEffects);
+        drive.report(`job=${job.job}`);
+        const status = wireTurnStatusTag(settled.at(-1)?.status);
+        console.log(`[DEBUG] wgpu-bridge spawn-job settled instance=${instanceId} job=${job.job} turns=${settled.length} status=${status || "-"} frames=${frames.length}`);
+        if (status === "more-work")
+          drainTypedOperations(instanceId);
+      }
+    }
+    console.warn(`[DEBUG] wgpu-bridge spawn-job drain for instance ${instanceId} exhausted its ${WGPU_SPAWNED_JOB_ROUNDS}-round authority`);
+    forgetSpawnedJobs(instanceId);
+    return frames;
   };
   const runQueuedTurnSerialized = async (instanceId, actorId, events) => {
     try {
@@ -25330,6 +25530,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
           outFrames.push(frame);
       }
       stashLeftoverHostEffects(instanceId, drive.hostEffects(results));
+      outFrames.push(...await drainSpawnedJobs(instanceId, actorId));
       const leftover = pendingTurnEffects.get(instanceId) ?? [];
       const leftoverFriendly = leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect) => effect !== null);
       if (leftoverFriendly.length)
@@ -25360,6 +25561,8 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
         const frames = [];
         const leftover = pendingTurnEffects.get(instanceId) ?? [];
         for (const effect of drive.hostEffects(accepted)) {
+          if (admitSpawnedJob(instanceId, effect))
+            continue;
           const frame = shellFrameBytes(effect, instanceId);
           if (frame)
             frames.push(frame);
@@ -25369,6 +25572,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
         if (leftover.length > WGPU_TYPED_OPERATION_EFFECT_CAPACITY)
           throw new Error(`[DEBUG] wgpu-bridge typed-operation host effects for instance ${instanceId} exceeded their ${WGPU_TYPED_OPERATION_EFFECT_CAPACITY}-entry authority`);
         pendingTurnEffects.set(instanceId, leftover);
+        frames.push(...await drainSpawnedJobs(instanceId, actorId));
         if (frames.length > 0)
           turnOutcomes.push({ instanceId, frames });
         return { status: accepted.at(-1)?.status, nextWake: accepted.at(-1)?.nextWake ?? null };
@@ -25429,6 +25633,8 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
       const carried = (pendingTurnEffects.get(instanceId) ?? []).map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect) => effect !== null);
       pendingTurnEffects.delete(instanceId);
       const drive = new WgpuTypedOperationDrive(instanceId);
+      const frames = [];
+      const leftoverWire = [];
       const settled = await serializeWgpuActorCall(actorId, async () => {
         const route = requireUiRoute(instanceId);
         const execute = executeFor(actorId);
@@ -25444,18 +25650,19 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
             break;
           await yieldWgpuUi();
         }
+        for (const effect of drive.hostEffects(accepted)) {
+          if (admitSpawnedJob(instanceId, effect))
+            continue;
+          const frame = shellFrameBytes(effect, instanceId);
+          if (frame)
+            frames.push(frame);
+          else
+            leftoverWire.push(effect);
+        }
+        frames.push(...await drainSpawnedJobs(instanceId, actorId));
         return accepted;
       });
       drive.report(`completion req=${req}`);
-      const frames = [];
-      const leftoverWire = [];
-      for (const effect of drive.hostEffects(settled)) {
-        const frame = shellFrameBytes(effect, instanceId);
-        if (frame)
-          frames.push(frame);
-        else
-          leftoverWire.push(effect);
-      }
       if (frames.length > 0)
         turnOutcomes.push({ instanceId, frames });
       if (wireTurnStatusTag(settled.at(-1)?.status) === "more-work")

@@ -38,7 +38,7 @@ impl FlowMutationRetirementFrontier {
     }
 
     pub(super) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
-        self.close_step_with(maximum_items, maximum_bytes, |frontier, items, bytes| frontier.close_step(items, bytes))
+        self.close_step_with(maximum_items, maximum_bytes, |frontier, items, bytes| frontier.close_page(items, bytes))
     }
 
     #[cfg(test)]
@@ -67,7 +67,7 @@ impl FlowMutationRetirementFrontier {
     }
 
     pub(super) fn terminal_is_empty(&self) -> bool {
-        self.mutation.is_none() && self.frontier.is_empty()
+        self.mutation.is_none() && self.frontier.terminal_is_empty()
     }
 }
 

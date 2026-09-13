@@ -303,10 +303,31 @@ pub mod document_io {
         Ok(Generation3dDocumentExport { filename, data, mime_type, encoding: None })
     }
 
-    /// 📤️ The whole export, from a document to a download.
-    pub fn export_document(snapshot: &Generation3dSnapshot, format: &str) -> Result<Generation3dDocumentExport, store::TextError> {
+    /// 📤️ The whole export, from a document to a download, with the caller's ALREADY-EVALUATED
+    /// preview mesh.
+    ///
+    /// 🐛️ Every live surface takes this path, and `preview` is never `None` there: a surface holds a
+    /// retained `FlowEvalSession` whose meshes the preview chain already delivered, while
+    /// `preview_semio_mesh`'s fallback builds a fresh `FlowHost` and evaluates it SYNCHRONOUSLY —
+    /// which resolves nothing in a guest, because the brep/math operators are contributed by the
+    /// host and reached only through the asynchronous extension chain. Exporting a fully painted
+    /// 3-mesh preview through that fallback faulted with `no preview geometry (no positions)`
+    /// (measured live on 6018, ticket 26/09/09/PROCEDURAL-3D-END-TO-END io-surface lane). The
+    /// fallback stays for the native lanes, which really can evaluate in-process.
+    pub fn export_document_with_preview(snapshot: &Generation3dSnapshot, format: &str, preview: Option<&SemioMeshSnapshot>) -> Result<Generation3dDocumentExport, store::TextError> {
         let row = row_of(&EXPORT_FORMATS, format)?;
-        document_export_envelope(row, export_document_bytes(snapshot, row.id)?)
+        let bytes = match preview {
+            _ if row.id == "txt" => export_leaves::txt::v_utf_8::any::serialize_bytes(snapshot)?,
+            Some(mesh) => export_mesh_bytes(mesh, row.id)?,
+            None => export_document_bytes(snapshot, row.id)?,
+        };
+        document_export_envelope(row, bytes)
+    }
+
+    /// 📤️ The whole export from a document alone — the native lanes' entry point, and the honest
+    /// answer wherever no preview has been evaluated yet.
+    pub fn export_document(snapshot: &Generation3dSnapshot, format: &str) -> Result<Generation3dDocumentExport, store::TextError> {
+        export_document_with_preview(snapshot, format, None)
     }
 
     /// 📦️ Decodes what `Effect::RequestFileOpen { read_as: Some("dataUrl") }` hands back. A shell

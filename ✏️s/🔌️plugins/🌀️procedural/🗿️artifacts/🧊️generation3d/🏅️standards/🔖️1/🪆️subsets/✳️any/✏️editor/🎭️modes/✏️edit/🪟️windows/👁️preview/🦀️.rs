@@ -1,6 +1,7 @@
 //! 👁️ Generation3d play app — the 3D preview window (edit mode): the tessellated evaluated geometry.
 
 use crate::editor::generation3d::config::Generation3dConfig;
+use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_selection_json, preview_status_json, preview_window_status_json, PreviewInteractionMarks, PreviewStatusDebug, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
 use crate::Generation3dSnapshot;
@@ -75,7 +76,7 @@ pub fn preview_window_measures(config: &Generation3dConfig, procedural_action: i
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, preview_eval_text: Option<&str>, session: &FlowEvalSession, active_utility: &str, marks: &PreviewInteractionMarks) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, preview_eval_text: Option<&str>, session: &FlowEvalSession, active_utility: &str, marks: &PreviewInteractionMarks, labels: &Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = preview_eval_text.unwrap_or_default().to_string();
     let payload = preview_payload(&eval_json, &document.fixture, config, Some(session), marks);
     let selection_json = preview_selection_json(config, active_utility, &payload);
@@ -84,7 +85,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
     let sun = config.sun();
     let status_json = preview_window_status_json(Some(session), preview_status, &PreviewStatusDebug { meshes_json: &meshes_json, instances_json: &instances_json }, None);
     let _ = GENERATION_3D_PLAY_APP_ID;
-    crate::scene_surface(
+    crate::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
         &semio_framework_ui::wgpu::World3dScene {
@@ -93,6 +94,9 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
             domain_granularity_id: Some(GENERATION_3D_INTERACTION_GRANULARITY.into()),
             ..world3d_scene(preview_camera_json(config), meshes_json, instances_json, selection_json, &sun)
         },
+        labels.preview_canvas.as_str(),
+        labels.preview_canvas_hint.as_str(),
+        semio_framework_ui_contract::Liveness::Polite,
     )
 }
 //#endregion 🔖️Render

@@ -1089,9 +1089,10 @@ impl UiValueArena {
         }
         let Some(collection_items) = collection.items.checked_add(1) else { return Err((key, value)) };
         let Some(collection_bytes) = collection.bytes.checked_add(bytes) else { return Err((key, value)) };
+        let collection_head = collection.head;
         self.free_page_count = free_page_count;
         let next = if prev == UI_VALUE_NONE {
-            collection.head
+            collection_head
         } else {
             self.pages.get(prev).map(|slot| slot.next).unwrap_or(UI_VALUE_NONE)
         };
@@ -1509,13 +1510,12 @@ impl Drop for UiMapCursor {
 pub struct UiMapBuilder {
     handle: Option<UiCollectionHandle>,
     len: usize,
-    last_key: Option<UiText>,
 }
 
 impl UiMapBuilder {
     pub fn try_new() -> Option<Self> {
         let handle = with_ui_value_arena(|arena| arena.reserve_collection(UiCollectionKind::Map))?;
-        Some(Self { handle: Some(handle), len: 0, last_key: None })
+        Some(Self { handle: Some(handle), len: 0 })
     }
 
     /// 🔎️ Whether a key is already admitted, so a decoder can tell duplication from capacity.
@@ -1547,7 +1547,6 @@ impl UiMapBuilder {
         if let Err(pair) = insert {
             return Err(pair);
         }
-        self.last_key = None;
         self.len = next_len;
         Ok(())
     }
@@ -1563,22 +1562,7 @@ impl UiMapBuilder {
 
     #[expect(clippy::result_large_err, reason = "Map admission preserves the original key allocation and value owner for retry when ordering or credits reject them.")]
     pub fn push(&mut self, key: String, value: UiValue) -> Result<(), (String, UiValue)> {
-        let Some(handle) = self.handle else { return Err((key, value)) };
-        let Some(fixed_key) = UiText::try_from_str(&key) else { return Err((key, value)) };
-        let Some(next_len) = self.len.checked_add(1).filter(|len| *len <= UI_VALUE_MAX_ITEMS) else { return Err((key, value)) };
-        if self.last_key.as_ref().is_some_and(|last| last >= &fixed_key) {
-            return Err((key, value));
-        }
-        let retained_key = fixed_key.clone();
-        if let Err(page) = with_ui_value_arena(|arena| arena.try_push_page(handle, UiPageValue::Map(fixed_key, value))) {
-            let value = match page {
-                UiPageValue::Map(_, value) | UiPageValue::List(value) => value,
-            };
-            return Err((key, value));
-        }
-        self.last_key = Some(retained_key);
-        self.len = next_len;
-        Ok(())
+        self.try_insert(key, value)
     }
 
     pub fn finish(mut self) -> UiMap {
@@ -1628,7 +1612,7 @@ impl<'de> Deserialize<'de> for UiMap {
             fn visit_map<A: MapAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
                 let Some(mut builder) = UiMapBuilder::try_new() else { return Err(serde::de::Error::custom("UiMap admission failed")) };
                 while let Some((key, value)) = access.next_entry::<String, UiValue>()? {
-                    let fixed_key = UiText::try_from_str(&key).ok();
+                    let fixed_key = UiText::try_from_str(&key);
                     if fixed_key.as_ref().is_some_and(|fixed_key| builder.contains(fixed_key)) {
                         return Err(serde::de::Error::custom(format!("UiMap keys must be unique; '{key}' arrived twice")));
                     }

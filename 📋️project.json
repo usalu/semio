@@ -274,6 +274,34 @@
         "command": "bun ./📜️script.ts verify cad-document-contract native"
       }
     },
+    "media-export-encoding": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify media-export-encoding"
+      }
+    },
+    "media-export-encoding-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify media-export-encoding native"
+      }
+    },
+    "spawned-job-drive": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify spawned-job-drive"
+      }
+    },
+    "spawned-job-drive-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify spawned-job-drive native"
+      }
+    },
     "generation3d-document-io": {
       "executor": "nx:run-commands",
       "cache": false,

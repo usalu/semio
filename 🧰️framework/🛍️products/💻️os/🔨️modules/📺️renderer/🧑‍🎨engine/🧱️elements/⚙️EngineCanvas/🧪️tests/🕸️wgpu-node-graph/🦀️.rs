@@ -84,7 +84,7 @@ fn paint_scene_into_draw_list(scene: &UiComponentSceneNode, bounds: Rect) -> Dra
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None);
-        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources };
+        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: "law-window" };
         let mut cursor = ui_wgpu::wgpu::ScenePaintCursor::default();
         for _ in 0..4096 {
             match crate::scenes::render_component_scene_step(scene, bounds, &mut ctx, &mut cursor, &mut hosts) {
@@ -189,7 +189,7 @@ fn pointer_down_on_a_node_emits_the_graph_domain_selection_react_dispatches() {
     drop_engine_surface(surface_id);
     let scene = flow_window_scene(surface_id);
     let bounds = Rect { x: 0.0, y: 0.0, w: 966.0, h: 836.0 };
-    assert!(sync_node_graph_scene(&scene, bounds, Theme::default().panel), "attach");
+    assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel), "attach");
 
     let (x, y) = node_center_screen(surface_id, "extrude", bounds);
     let actions = node_graph_pointer_down(surface_id, &scene.controller_id, bounds, x, y, 0, false, false, false, false);
@@ -238,7 +238,7 @@ fn wheel_zoom_emits_the_node_graph_viewport_action_with_the_moved_camera() {
     drop_engine_surface(surface_id);
     let scene = flow_window_scene(surface_id);
     let bounds = Rect { x: 0.0, y: 0.0, w: 966.0, h: 836.0 };
-    assert!(sync_node_graph_scene(&scene, bounds, Theme::default().panel), "attach");
+    assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel), "attach");
 
     let actions = node_graph_wheel(surface_id, &scene.controller_id, bounds, 480.0, 400.0, -120.0, false);
     let viewport = actions.iter().find(|action| action.action == "nodeGraphViewport").expect("wheel publishes nodeGraphViewport");

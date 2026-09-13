@@ -37,6 +37,10 @@ semio_framework_plugin::app_labels! {
         status_computing: native_en "Computing", native_de "Berechnet", reuse_en "Computing", reuse_de "Berechnet";
         status_error: native_en "Error", native_de "Fehler", reuse_en "Error", reuse_de "Fehler";
         status_blocked: native_en "Blocked", native_de "Blockiert", reuse_en "Blocked", reuse_de "Blockiert";
+        graph_canvas: native_en "Node graph canvas", native_de "Knotengraph-Leinwand", reuse_en "Node graph canvas", reuse_de "Knotengraph-Leinwand";
+        graph_canvas_hint: native_en "Interactive node graph. The outline beside it lists every node, port and wire for keyboard and screen-reader use.", native_de "Interaktiver Knotengraph. Die Gliederung daneben listet alle Knoten, Anschlüsse und Leitungen für Tastatur und Screenreader.", reuse_en "Interactive node graph. The outline beside it lists every node, port and wire for keyboard and screen-reader use.", reuse_de "Interaktiver Knotengraph. Die Gliederung daneben listet alle Knoten, Anschlüsse und Leitungen für Tastatur und Screenreader.";
+        preview_canvas: native_en "3D preview canvas", native_de "3D-Vorschau-Leinwand", reuse_en "3D preview canvas", reuse_de "3D-Vorschau-Leinwand";
+        preview_canvas_hint: native_en "Interactive 3D preview of the evaluated flow. Drag to orbit, click to select; the evaluation status is announced as it changes.", native_de "Interaktive 3D-Vorschau des ausgewerteten Workflows. Ziehen zum Umkreisen, Klicken zum Auswählen; der Auswertungsstatus wird bei Änderung angesagt.", reuse_en "Interactive 3D preview of the evaluated flow. Drag to orbit, click to select; the evaluation status is announced as it changes.", reuse_de "Interaktive 3D-Vorschau des ausgewerteten Workflows. Ziehen zum Umkreisen, Klicken zum Auswählen; der Auswertungsstatus wird bei Änderung angesagt.";
     }
 }
 

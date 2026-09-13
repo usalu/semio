@@ -71,30 +71,27 @@ pub struct CataloguePage {
 }
 
 /// 🧮️ [`render`]'s own accounting, without building any UI — the law reads this rather than
-/// re-deriving the page's arithmetic from a rendered tree it would have to parse.
+/// re-deriving the page's arithmetic from a rendered tree it would have to parse. It is the SAME
+/// walk `render` performs ([`walk_catalogue_groups`]), not a second reading of it: a page that
+/// counted rows the tree then dropped would publish a `+n` smaller than the one the reader sees.
 pub fn catalogue_page() -> CataloguePage {
     let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
-    let budget = &mut PanelRowBudget::new(panel_page_rows());
-    let mut shown = 0;
-    let total = sections.len();
-    for (index, section) in sections.iter().enumerate() {
-        let before = budget.remaining();
-        let _ = budget.nested(total.saturating_sub(index + 1), |share| paged_panel_section(&group_id(section), &section.items, CATALOGUE_GROUP_ROWS, share, |item, _| catalogue_row(item)));
-        shown += before.saturating_sub(budget.remaining());
-    }
     let roster = sections.iter().map(|section| section.items.len()).sum::<usize>();
+    let shown = walk_catalogue_groups(&sections, |_, _| Ok(())).map(|shown| shown).unwrap_or(0);
     CataloguePage { shown, omitted: roster.saturating_sub(shown) }
 }
 
-fn group_id(section: &semio_framework_os_flow::CatalogueSection) -> String {
-    format!("procedural-play-catalogue.{}", section.id)
-}
-
-pub fn render(labels: &Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
-    let roster = sections.iter().map(|section| section.items.len()).sum::<usize>();
+/// 🚶️ The ONE catalogue walk: pages every section under the shared row budget and hands each built
+/// group to `place`, accumulating only the rows whose group `place` actually accepted. `render`
+/// passes a closure that pushes into the tree's fixed list and reports its overflow; `catalogue_page`
+/// passes one that accepts everything and therefore measures the same tree. A group that pages to
+/// nothing is skipped by both, and the first group `place` refuses ends the walk for both — which is
+/// exactly why `shown + omitted` is the registered roster rather than an optimistic count.
+fn walk_catalogue_groups(
+    sections: &[semio_framework_os_flow::CatalogueSection],
+    mut place: impl FnMut(&str, semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>) -> Result<(), ()>,
+) -> semio_framework_plugin::UiAssemblyResult<usize> {
     let budget = &mut PanelRowBudget::new(panel_page_rows());
-    let mut groups = UiFixedList::default();
     let total = sections.len();
     let mut shown = 0;
     for (index, section) in sections.iter().enumerate() {
@@ -105,12 +102,40 @@ pub fn render(labels: &Generation3dLabels) -> semio_framework_plugin::UiAssembly
         if items.is_empty() {
             continue;
         }
-        let group = tree_group(&group_id, section.title.clone(), index == 0, items)?;
-        if groups.try_push(group).is_err() {
+        if place(&group_id, items).is_err() {
             break;
         }
         shown += placed;
     }
+    Ok(shown)
+}
+
+fn group_id(section: &semio_framework_os_flow::CatalogueSection) -> String {
+    format!("procedural-play-catalogue.{}", section.id)
+}
+
+/// 🏷️ The section title behind a group id, so [`walk_catalogue_groups`]'s placement closure can stay
+/// a function of the id alone and both callers walk identically.
+fn section_title(sections: &[semio_framework_os_flow::CatalogueSection], id: &str) -> String {
+    sections.iter().find(|section| group_id(section) == id).map(|section| section.title.clone()).unwrap_or_default()
+}
+
+pub fn render(labels: &Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+    let roster = sections.iter().map(|section| section.items.len()).sum::<usize>();
+    let mut groups = UiFixedList::default();
+    let mut assembly: semio_framework_plugin::UiAssemblyResult<()> = Ok(());
+    let shown = walk_catalogue_groups(&sections, |group_id, items| {
+        let index = groups.len();
+        match tree_group(group_id, section_title(&sections, group_id), index == 0, items) {
+            Ok(group) => groups.try_push(group).map_err(|_| ()),
+            Err(error) => {
+                assembly = Err(error);
+                Err(())
+            }
+        }
+    })?;
+    assembly?;
     // 🛟️ The page ALWAYS states what it left out, whether the arena trimmed a group's tail or dropped
     // whole sections (or the whole listing — another panel in this process may already hold the
     // argument arena's credit, which `ui_value_headroom`'s own docstring calls a correct page). A

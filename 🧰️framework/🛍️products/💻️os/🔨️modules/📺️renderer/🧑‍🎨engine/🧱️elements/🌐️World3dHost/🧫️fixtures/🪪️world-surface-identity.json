@@ -37,7 +37,7 @@
       "hoveredKindId": null,
       "gumballActive": true,
       "gumballTarget": null,
-      "transformMode": "move",
+      "transformMode": "transform",
       "activeUtility": "brush"
     },
     "guestPublished": {

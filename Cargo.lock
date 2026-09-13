@@ -5040,9 +5040,11 @@ dependencies = [
 name = "semio-framework"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "semio-framework-actor",
  "semio-framework-async-macros",
  "semio-framework-hash",
+ "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",

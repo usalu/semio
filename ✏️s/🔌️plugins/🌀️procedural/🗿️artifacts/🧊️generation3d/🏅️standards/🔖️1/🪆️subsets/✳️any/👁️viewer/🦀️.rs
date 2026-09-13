@@ -59,17 +59,30 @@ fn generation3d_view_preview_windows(view: Option<&semio_framework_plugin::ViewM
 /// render, the `flowEvalTick` chain and the interaction topology — resolves it here, exactly once,
 /// through the surface-neutral `🧬️schema::example_snapshot`.
 ///
-/// 🧹️ `Example` owns a real `Generation3dSnapshot` whose neural `Dictionary` roots abort the process
-/// on a bare drop, so every caller MUST finish with [`Self::retire`] (ticket
+/// 🕳️ Three states, not two — the picker's own. `None` on the config is "nothing picked", which is
+/// the document this session OPENED; `Some("")` is the picker's `No example` row, which is the EMPTY
+/// document; `Some(id)` is that bundled example. Collapsing the first two onto one empty string made
+/// `No example` show the opened document, and the opened document in the playground IS a bundled
+/// example — so the row that promises no example painted the hexagonal mushroom column's three
+/// meshes (measured on the served viewer 2026-09-13, `meshesLen 3641`). The sibling surface clears
+/// on the same row (`✏️editor/🎮️commands/🎨️set-active-example`); both surfaces now agree.
+///
+/// 🧹️ `Example` and `Empty` own a real `Generation3dSnapshot` whose neural `Dictionary` roots abort
+/// the process on a bare drop, so every caller MUST finish with [`Self::retire`] (ticket
 /// 26/09/09/PROCEDURAL-3D-END-TO-END).
 enum Generation3dViewedDocument<'a> {
     Opened(&'a Generation3dSnapshot),
     Example(Generation3dSnapshot),
+    Empty(Generation3dSnapshot),
 }
 
 impl<'a> Generation3dViewedDocument<'a> {
     fn resolve(snapshot: &'a Generation3dSnapshot, config: &Generation3dViewConfig) -> Self {
-        match crate::standards::v1::subsets::any::schema::example_snapshot(&config.active_example_id) {
+        let Some(example_id) = config.active_example_id.as_deref() else { return Self::Opened(snapshot) };
+        if example_id.is_empty() {
+            return Self::Empty(crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot());
+        }
+        match crate::standards::v1::subsets::any::schema::example_snapshot(example_id) {
             Some(example) => Self::Example(example),
             None => Self::Opened(snapshot),
         }
@@ -78,13 +91,14 @@ impl<'a> Generation3dViewedDocument<'a> {
     fn snapshot(&self) -> &Generation3dSnapshot {
         match self {
             Self::Opened(snapshot) => snapshot,
-            Self::Example(example) => example,
+            Self::Example(example) | Self::Empty(example) => example,
         }
     }
 
     fn retire(self) {
-        if let Self::Example(example) = self {
-            example.retire_cold();
+        match self {
+            Self::Opened(_) => {}
+            Self::Example(example) | Self::Empty(example) => example.retire_cold(),
         }
     }
 }
@@ -917,6 +931,7 @@ fn generation3d_view_document_io_contract() -> ToolExecutionContract {
 /// camera and show mode as ephemeral presence after every command, and an export changes neither —
 /// publishing presence for it would tell every co-viewer something moved when nothing did.
 struct Generation3dViewDocumentIoWork {
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     consumed: bool,
 }
 
@@ -945,7 +960,8 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewDocu
         };
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: None };
-        let view_emit = export_document::handle(payload, &doc, &cfg)?;
+        let preview = self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| export_document::retained_preview(&doc, &cfg, session)))?;
+        let view_emit = export_document::emit(payload, &doc, preview.as_ref())?;
         Ok(ArtifactCommandWorkStep::Complete(Emit { effects: view_emit.effects, ui_scope: view_emit.ui_dirty, ..Default::default() }))
     }
 }
@@ -1155,9 +1171,20 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// `FlowEvalSession::arm_owed_window_tick`, never of a throwaway one — a scratch session's latch
     /// is always clear, so a poll that used one armed a second chain on top of the running one at
     /// every host refresh (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework_plugin::Effect> {
+    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework_plugin::Effect> {
         let windows = generation3d_view_preview_windows(view);
-        if windows.is_empty() || !preview_eval::may_rearm(&doc.snapshot.fixture) {
+        if windows.is_empty() {
+            return Vec::new();
+        }
+        // 📚️ The gate has to be asked of the graph the chain will actually TICK — the VIEWED
+        // document — not of the one this session happens to have open. They are different documents
+        // the moment the navbar names an example, and asking the wrong one either strands a
+        // perfectly serviceable example behind the opened document's uncontributed kinds or re-arms
+        // an example the registry cannot serve, forever (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
+        let may_rearm = preview_eval::may_rearm(&viewed.snapshot().fixture);
+        viewed.retire();
+        if !may_rearm {
             return Vec::new();
         }
         owner
@@ -1187,7 +1214,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
         let example = GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.contains(&tool_id);
         let flow_eval = GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.contains(&tool_id);
         let work: Box<dyn ArtifactCommandWork<ViewerApp<Generation3dViewer>>> = if GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS.contains(&tool_id) {
-            Box::new(Generation3dViewDocumentIoWork { consumed: false })
+            Box::new(Generation3dViewDocumentIoWork { instance_owner: request.instance_operation_owner, consumed: false })
         } else if contributions {
             Box::new(Generation3dViewContributionsWork { instance_owner: request.instance_operation_owner, consumed: false })
         } else if tool_id == "flowEvalTick" {
@@ -1382,9 +1409,9 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
 
     /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
     /// interaction) — every live window goes through `render_with_request_context` instead.
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let tree = generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, None, None, &preview::Generation3dViewMarks::default());
+        let tree = generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, None, None, &preview::Generation3dViewMarks::default(), crate::editor::generation3d::terminology::generation3d_labels(view_state));
         viewed.retire();
         tree
     }
@@ -1402,7 +1429,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -1411,8 +1438,9 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             .and_then(|state| state.preview_eval_text.as_deref())
             .or(transient.snapshot.preview_eval_text.as_deref());
         let marks = preview::Generation3dViewMarks::from_interaction(interaction);
+        let labels = crate::editor::generation3d::terminology::generation3d_labels(view_state);
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let tree = owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, preview_eval_text, Some(session), &marks)));
+        let tree = owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, preview_eval_text, Some(session), &marks, labels)));
         viewed.retire();
         tree.map_err(|error| semio_framework_plugin::PluginAssemblyError::new("generation3d-view.eval-session-owner", error.message))?
     }
@@ -1433,9 +1461,10 @@ fn generation3d_view_render_body(
     eval_json: Option<&str>,
     session: Option<&FlowEvalSession>,
     marks: &preview::Generation3dViewMarks,
+    labels: &crate::editor::generation3d::terminology::Generation3dLabels,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let node = match body_key {
-        preview::BODY_KEY => preview::render(document, config, eval_json, session, marks),
+        preview::BODY_KEY => preview::render(document, config, eval_json, session, marks, labels),
         _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     }?;
     Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -1520,6 +1549,9 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
         .action_args("exportDocument", vec![semio_framework_plugin::ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), crate::standards::v1::subsets::any::io::document_io::export_format_options()).required().default_value(&"stl")])
         .keybinding("mod+shift+e", "exportDocument")
+        // 🛑️ The cancel verb's classification, alongside the `view_action` the fix-forward above
+        // declares — the sibling editor pairs the two the same way.
+        .action_interactive_job("cancelPreviewEval", InteractiveJobClassification::Migrated)
         // 🧩️ Not a view action: a hidden host COMMAND, because the host pushes it and no user ever
         // invokes it. It publishes nothing at all, not even the config lane the seven above write.
         .command({

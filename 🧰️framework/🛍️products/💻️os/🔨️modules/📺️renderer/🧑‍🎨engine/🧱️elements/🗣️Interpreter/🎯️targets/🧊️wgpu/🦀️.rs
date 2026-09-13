@@ -1073,6 +1073,9 @@ struct FrameworkSceneHost<'ctx> {
     /// `SurfaceKind::World3d` slot needs and a `Ui`-owned `Box<dyn SceneHost>` could never hold.
     world3d_states: &'ctx mut crate::scenes::AdmittedSurfaceMap<infinite_world::world::World3dState>,
     world_resources: &'ctx mut infinite_world::world::World3dBuildContext,
+    /// 🪟️ The window instance this paint belongs to — carried so every engine surface the walk
+    /// attaches names its retention owner (`🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`).
+    window_id: &'ctx str,
 }
 
 impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
@@ -1096,7 +1099,7 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
             Err(_) => return ui_wgpu::wgpu::ScenePaintStep::Fault,
         }
         let mut ctx = framework_widget_context(draw, None, atlas, icons, self.input, self.theme, self.scroll_offsets, self.collapsed_sections, self.open_selects, None);
-        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut *self.world3d_states, world_resources: &mut *self.world_resources };
+        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut *self.world3d_states, world_resources: &mut *self.world_resources, window_id: self.window_id };
         match &slot.content {
             ui_wgpu::wgpu::SlotContent::Scene(scene) => render_component_scene_step(scene, slot.rect, &mut ctx, cursor, &mut hosts),
             ui_wgpu::wgpu::SlotContent::Image(image) => render_ui_image_step(image, slot.rect, &mut ctx, cursor),
@@ -1221,9 +1224,21 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
             // `📓️wgpu-blank-paint-2026-09-12.md`). The budget is checked HERE instead, so an
             // opportunity that cannot pay is simply not spent and the next one resumes the same page.
             UiDocumentFramePhase::Ingress if step.is_cancelled() || step.should_yield() => {}
-            UiDocumentFramePhase::Ingress => match engine.document_status(window_id, generation) {
+            // 🩺️ One line per ADMITTED ingress — never per page, never per frame. A surface that
+            // republishes an unchanged document answers `Published` and stays silent, so this line is
+            // exactly "surface X started ingesting a new document", the fact whose ABSENCE was the
+            // whole defect: every document after a surface's first was answered `Published` and never
+            // reached the arena (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+            UiDocumentFramePhase::Ingress => match {
+                let status = engine.document_status(window_id, generation);
+                if status == ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant {
+                    document_debug_log(&format!("[DEBUG] ui-doc ingress window={window_id} generation={generation} nodes={}", header.node_count));
+                }
+                status
+            } {
                 ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant => {
                     if let Err((_fault, _header)) = engine.begin_document(window_id, header, &mut step) {
+                        document_debug_log(&format!("[DEBUG] ui-doc begin refused window={window_id} generation={generation} nodes={} fault={_fault:?}", _header.node_count));
                         if !matches!(
                             _fault,
                             ui_wgpu::wgpu::engine::UiDocumentIngressFault::Cancelled
@@ -1304,6 +1319,7 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
                     scroll_offsets: ctx.scroll_offsets,
                     collapsed_sections: ctx.collapsed_sections,
                     open_selects: ctx.open_selects,
+                    window_id,
                     world3d_states: &mut *hosts.world3d_states,
                     world_resources: &mut *hosts.world_resources,
                 };

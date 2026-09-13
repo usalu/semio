@@ -44,13 +44,15 @@ fn backing_bytes<T>(values: &Vec<T>) -> Result<usize, &'static str> {
     values.capacity().checked_mul(size_of::<T>()).ok_or("Flow backing capacity byte count overflow")
 }
 
-fn release_backing<T>(values: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<usize>, &'static str> {
-    let bytes = backing_bytes(values)?;
-    if bytes > maximum_bytes {
-        return Ok(None);
+/// 🎟️ The live payload a backing still owes before its allocation is freed. An element vector that
+/// has already been drained owes nothing — its remaining `capacity` is an allocation, not payload,
+/// and `capacity * size_of::<T>()` is machine-width dependent, so it can never be charged against a
+/// caller's byte grant (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn owner_backing_payload(owner: &FlowOwner) -> usize {
+    match owner {
+        FlowOwner::Bytes(values) => values.len(),
+        _ => 0,
     }
-    drop(std::mem::take(values));
-    Ok(Some(bytes))
 }
 
 fn owner_backing_bytes(owner: &FlowOwner) -> Result<usize, &'static str> {
@@ -73,14 +75,6 @@ fn owner_backing_bytes(owner: &FlowOwner) -> Result<usize, &'static str> {
 
 fn owner_release_demand(owner: &FlowOwner) -> Result<usize, &'static str> {
     match owner {
-        FlowOwner::Bytes(values) => backing_bytes(values),
-        FlowOwner::Strings(values) if values.is_empty() => backing_bytes(values),
-        FlowOwner::Widgets(values) if values.is_empty() => backing_bytes(values),
-        FlowOwner::Specs(values) if values.is_empty() => backing_bytes(values),
-        FlowOwner::Neurons(values) if values.is_empty() => backing_bytes(values),
-        FlowOwner::Synapses(values) if values.is_empty() => backing_bytes(values),
-        FlowOwner::Previews(values) if values.is_empty() => backing_bytes(values),
-        FlowOwner::Layout(values) if values.is_empty() => backing_bytes(values),
         FlowOwner::SetCursor(values) => values.next_close_byte_demand(),
         FlowOwner::LayoutCursor(values) => values.next_close_byte_demand(),
         FlowOwner::NodeCursor(values) => values.next_close_byte_demand(),
@@ -134,23 +128,29 @@ fn owner_continuation_slots(owner: &FlowOwner) -> usize {
 pub struct FlowRetirement {
     root: ManuallyDrop<Option<FlowOwner>>,
     frontier: ManuallyDrop<PagedList<FlowOwner, FLOW_RETIREMENT_FRONTIER_OWNERS>>,
+    /// 🎟️ Payload bytes already charged against the CURRENT root's backing. A `Vec` cannot be freed
+    /// in pieces, so the caller's grant is drawn down `min(grant, left)` per turn and the allocation
+    /// is released once the charge is settled — never `Blocked`, which is what made every fixed-page
+    /// driver spin (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    root_backing_credit: usize,
     fault: Option<&'static str>,
 }
 
 impl Default for FlowRetirement {
     fn default() -> Self {
-        Self { root: ManuallyDrop::new(None), frontier: ManuallyDrop::new(PagedList::empty()), fault: None }
+        Self { root: ManuallyDrop::new(None), frontier: ManuallyDrop::new(PagedList::empty()), root_backing_credit: 0, fault: None }
     }
 }
 
 impl FlowRetirement {
     pub fn from_owner(owner: FlowOwner) -> Self {
-        Self { root: ManuallyDrop::new(Some(owner)), frontier: ManuallyDrop::new(PagedList::empty()), fault: None }
+        Self { root: ManuallyDrop::new(Some(owner)), frontier: ManuallyDrop::new(PagedList::empty()), root_backing_credit: 0, fault: None }
     }
 
     pub fn push(&mut self, owner: FlowOwner) {
         if self.root.is_none() {
             *self.root = Some(owner);
+            self.root_backing_credit = 0;
             return;
         }
         while !self.frontier.has_reserved_slot() {
@@ -162,6 +162,7 @@ impl FlowRetirement {
             }
         }
         let previous = self.root.replace(owner).expect("checked Flow root");
+        self.root_backing_credit = 0;
         if let Err(previous) = self.frontier.push_reserved(previous) {
             std::mem::forget(previous);
             panic!("reserved Flow frontier rejected an owner");
@@ -209,20 +210,41 @@ impl FlowRetirement {
         }
     }
 
+    /// 🎟️ One byte of credit per turn is all a close needs. Payload is drawn down `min(grant, left)`
+    /// and every ALLOCATION this frontier owns — a reserved page, an emptied element vector — is
+    /// paid out of the frontier's own reservation currency (`allocated_bytes`), never out of the
+    /// caller's payload grant, because `capacity * size_of::<T>()` is machine-width dependent
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn next_close_byte_demand(&self) -> Result<usize, &'static str> {
         if let Some(owner) = self.root.as_ref() {
             return owner_release_demand(owner);
         }
-        if !self.frontier.is_empty() {
-            return Ok(1);
-        }
-        if !self.frontier.terminal_is_empty() {
-            return self.frontier.next_release_allocation_bytes().map(|bytes| bytes.max(1));
-        }
-        Ok(0)
+        Ok(usize::from(!self.terminal_is_empty()))
     }
 
-    /// 🧊️ Explicit cold-only teardown; retained callers use demand, reserve, and close_step.
+    /// 📄️ Pays this frontier's OWN demands under the caller's page grant, then closes one owner —
+    /// the single entry point every retained driver should use.
+    ///
+    /// ⚠️ `FlowRetirement` is a RESERVE-then-CLOSE frontier: a bare
+    /// [`ErasedSnapshotRetirement::close_step`] answers `Blocked` — never an error — for as long as
+    /// `next_allocation_bytes` still names a page the current owner's decomposition needs, so a
+    /// driver that only ever closes spins silently forever
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn close_page(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if self.terminal_is_empty() {
+            return Ok(SnapshotRetirementStep::Complete);
+        }
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(SnapshotRetirementStep::Blocked);
+        }
+        if let Some(demand) = self.next_allocation_bytes().map_err(str::to_owned)? {
+            self.reserve_allocation(demand).map_err(|error| error.reason.to_owned())?;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        <Self as ErasedSnapshotRetirement>::close_step(self, maximum_items, maximum_bytes)
+    }
+
+    /// 🧊️ Explicit cold-only teardown; retained callers use [`FlowRetirement::close_page`].
     pub fn retire_cold(mut self) {
         loop {
             while let Some(bytes) = self.next_allocation_bytes().expect("finite cold Flow allocation demand") {
@@ -237,6 +259,7 @@ impl FlowRetirement {
 
     fn install<const N: usize>(&mut self, owners: [Option<FlowOwner>; N]) {
         for owner in owners.into_iter().flatten() {
+            self.root_backing_credit = 0;
             if let Some(previous) = self.root.replace(owner) {
                 if let Err(previous) = self.frontier.push_reserved(previous) {
                     std::mem::forget(previous);
@@ -501,21 +524,23 @@ impl FlowRetirement {
         Some(0)
     }
 
-    fn release_root_backing(&mut self, maximum_bytes: usize) -> Result<Option<usize>, &'static str> {
-        let Some(owner) = self.root.as_mut() else {
-            return Ok(None);
-        };
-        match owner {
-            FlowOwner::Bytes(values) => release_backing(values, maximum_bytes),
-            FlowOwner::Strings(values) if values.is_empty() => release_backing(values, maximum_bytes),
-            FlowOwner::Widgets(values) if values.is_empty() => release_backing(values, maximum_bytes),
-            FlowOwner::Specs(values) if values.is_empty() => release_backing(values, maximum_bytes),
-            FlowOwner::Neurons(values) if values.is_empty() => release_backing(values, maximum_bytes),
-            FlowOwner::Synapses(values) if values.is_empty() => release_backing(values, maximum_bytes),
-            FlowOwner::Previews(values) if values.is_empty() => release_backing(values, maximum_bytes),
-            FlowOwner::Layout(values) if values.is_empty() => release_backing(values, maximum_bytes),
-            _ => Ok(None),
+    /// 🎟️ Draws the current root's backing payload down by at most `maximum_bytes` and frees the
+    /// whole allocation once the charge is settled. `Some((released_items, charged))` is one turn of
+    /// progress; `released_items` is 1 only on the turn that actually frees.
+    fn release_root_backing(&mut self, maximum_bytes: usize) -> Option<(usize, usize)> {
+        let owner = self.root.as_ref()?;
+        if !owner_waits_for_backing_release(owner) {
+            return None;
         }
+        let payload = owner_backing_payload(owner);
+        let charged = maximum_bytes.min(payload.saturating_sub(self.root_backing_credit));
+        self.root_backing_credit = self.root_backing_credit.saturating_add(charged);
+        if self.root_backing_credit < payload {
+            return Some((0, charged));
+        }
+        self.root_backing_credit = 0;
+        *self.root = None;
+        Some((1, charged))
     }
 }
 
@@ -545,23 +570,21 @@ impl ErasedSnapshotRetirement for FlowRetirement {
         if self.next_allocation_bytes().map_err(str::to_owned)?.is_some() {
             return Ok(Step::Blocked);
         }
-        if let Some(released_bytes) = self.release_root_backing(maximum_bytes).map_err(str::to_owned)? {
-            *self.root = None;
-            return Ok(Step::Pending { released_items: 1, released_bytes });
-        }
-        if self.root.as_ref().is_some_and(owner_waits_for_backing_release) {
-            return Ok(Step::Blocked);
+        if let Some((released_items, released_bytes)) = self.release_root_backing(maximum_bytes) {
+            return Ok(Step::Pending { released_items, released_bytes });
         }
         if self.root.is_none() {
             if let Some(owner) = self.frontier.pop() {
                 *self.root = Some(owner);
+                self.root_backing_credit = 0;
                 return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
             }
-            let release = self.frontier.release_empty_page(maximum_bytes).map_err(str::to_owned)?;
+            let demand = self.frontier.next_release_allocation_bytes().map_err(str::to_owned)?;
+            let release = self.frontier.release_empty_page(maximum_bytes.max(demand)).map_err(str::to_owned)?;
             if !release.progressed {
                 return Ok(Step::Blocked);
             }
-            return Ok(Step::Pending { released_items: 1, released_bytes: release.released_allocation_bytes });
+            return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
         }
         let owner = self.root.take().expect("nonempty Flow retirement");
         let Some(released_bytes) = self.retire_owner(owner, maximum_bytes) else {

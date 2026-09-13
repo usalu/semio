@@ -499,6 +499,20 @@ pub struct FlowEvalTickOutcome {
     pub publication: FlowEvalPublication,
 }
 
+/// 🏁️ Whether the tick that just ran leaves its window UNFINISHED — the one rule every preview
+/// window's settle path turns on, named so a law can state it without a contributed registry.
+///
+/// A window owes more work when the evaluation itself said so (`more`) **or** when the tick parked
+/// extension answers it is still waiting for. Recording only `more` was the whole defect: `!more` is
+/// exactly the branch that emits the `tessellate` invocations, so a window still owing mesh round
+/// trips recorded itself FINISHED, [`FlowEvalSession::window_tick_owed`] went false for good, and the
+/// terminal tick could only ever come from one tessellate answer arming the next — so the first
+/// answer that came back `Ready` while another handle was untessellated stranded the surface at
+/// `inFlight: 1` forever (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bool {
+    more || parked_extension_invocations > 0
+}
+
 /// 🧮️ ONE evaluation tick of the shared chain, for ANY surface.
 ///
 /// ⏱️ The tick's own wall cost is recorded into `semio_framework_os_flow`'s evaluation-step ledger
@@ -547,12 +561,20 @@ pub fn evaluate_tick(
     } else if !more {
         extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, fixture, tolerance));
     }
-    // ⏳️ A tick that parked extension work owes NO re-arm: the answers own the continuation, and a
-    // second tick on the same window would recompute the identical pending request and park a
-    // duplicate. A tick that parked nothing re-arms itself only while the live registry can still
-    // serve this graph ([`may_rearm`]) AND the latch admits one — an uncontributed graph publishes
-    // what it could compute and stops (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    session.note_window_tick_outcome(window_id, more);
+    // ⏳️ A tick that parked extension work owes NO re-arm right now — the answers own the
+    // continuation — but it is emphatically NOT FINISHED, and the latch has to say so.
+    //
+    // 🐛️ It used to record the EVALUATION's own `more`, which is false in exactly the state that
+    // parks tessellation (`!more` is the branch above that emits the `tessellate` invocations). So a
+    // window still owing mesh round trips recorded itself finished, `window_tick_owed` went false
+    // forever, and the terminal tick could only ever come from one tessellate answer arming the
+    // next. The moment an answer came back `Ready` while another handle was still untessellated the
+    // window was stranded: `inFlight: 1`, `ratio < 1` and `cancellable: true` for good, with no
+    // fault, no cancel and no alert — measured in the VIEWER on 6118 for both boolean examples
+    // (`sphere-box-fuse` 24/41 `ratio 0.5853658536585366`, `sphere-cut-with-torus` 0/0, deterministic
+    // across four runs — `📓️wgpu-example-chain-2026-09-13.md` §6.1). The window is finished when it
+    // owes neither more evaluation NOR an outstanding answer.
+    session.note_window_tick_outcome(window_id, tick_is_unfinished(more, extension_invocations.len()));
     let effects = if !extension_invocations.is_empty() {
         session.note_window_extensions_in_flight(window_id, extension_invocations.len());
         Vec::new()
@@ -688,10 +710,20 @@ pub fn resolve_tessellate_cancel(payload: &FlowTessellateCancelResolve, session:
 /// ✅️ Folds one budgeted `tessellate` round trip into the retained session. A step that neither
 /// finished the mesh nor received its last body chunk re-arms the tick chain, which is what turns a
 /// one-shot synchronous tessellation into a resumable job the user can watch and stop.
+///
+/// 🏁️ The LAST answer of a run arms the TERMINAL tick — the one that finds whatever handle is still
+/// untessellated, or finds nothing and settles the ledger to `idle`/`ratio 1`. It asks the session
+/// the same question the host refresh poll asks ([`FlowEvalSession::window_tick_owed`]), so the
+/// settle path is the chain's own and identical for all three preview windows rather than a debt
+/// handed to a refresh that a shell may narrow, coalesce, block or lose. On wgpu the refresh poll's
+/// effects are exactly what a blocked `apply_pending_step` never applies, which is why the viewer's
+/// two boolean examples hung there while React's poll-rich cadence hid the same hole
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn resolve_tessellate(payload: &FlowTessellateResolve, session: &mut FlowEvalSession) -> Vec<Effect> {
     let outcome = session.resolve_preview_tessellate(payload.node_hash, &payload.output_json);
     let discharged = session.settle_window_extension(&payload.window_id);
-    let armed = outcome.needs_another_round_trip() && session.arm_window_tick(&payload.window_id);
+    let owes_more = outcome.needs_another_round_trip() || session.window_tick_owed(&payload.window_id);
+    let armed = owes_more && session.arm_window_tick(&payload.window_id);
     if discharged || armed {
         vec![rearm(&payload.window_id, &payload.window_kind_id, 107)]
     } else {

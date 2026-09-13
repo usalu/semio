@@ -2102,7 +2102,6 @@ pub fn puzzle3d_joint_vortex_measures(object_kind_id: &str, object_weight: f64, 
                 loading: None,
                 waiting: None,
                 disabled: if object_kind_zero { Some(true) } else { None },
-                reveal: None,
                 on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_kind_id.as_str(), "objectKindId": object_kind_id }))),
             }
         })

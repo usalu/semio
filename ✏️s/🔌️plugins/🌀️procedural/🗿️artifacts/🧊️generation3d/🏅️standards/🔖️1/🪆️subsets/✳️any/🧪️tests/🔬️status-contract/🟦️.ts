@@ -50,6 +50,28 @@ interface StatusState {
   fault: { code: string; extensionId: string; capability?: string } | null;
 }
 
+interface UnfinishedRow {
+  id: string;
+  more: boolean;
+  parkedInvocations: number;
+  unfinished: boolean;
+}
+
+interface LatchStep {
+  step: string;
+  unfinished?: boolean;
+  armed: boolean;
+  inFlight: number;
+  tickOwed: boolean;
+  emitsRearm?: boolean;
+}
+
+interface SettlePath {
+  unfinishedRows: UnfinishedRow[];
+  latchSequence: LatchStep[];
+  terminalTick: { emits: string; addressedBy: string[]; settlesWith: string };
+}
+
 interface StatusContract {
   objectKeys: string[];
   progressKeys: string[];
@@ -61,6 +83,63 @@ interface StatusContract {
 }
 
 const CANCELLABLE_PHASES = new Set(["samplingEdges", "meshingFaces", "packingEdges", "transferring"]);
+
+/** 🏁️ The independent model of the SETTLE PATH — the per-window arming latch every preview window
+ * shares, rebuilt from the fixture's own prose rather than from the guest's code. A window is
+ * finished only when its evaluation owes nothing AND the tick parked no answer; the last answer of a
+ * run arms the terminal tick itself, through the same latch, so nothing depends on a host refresh
+ * poll's cadence (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+class SettleLatch {
+  armed = false;
+  inFlight = 0;
+  owed = false;
+  unfinished = false;
+
+  static tickIsUnfinished(more: boolean, parkedInvocations: number): boolean {
+    return more || parkedInvocations > 0;
+  }
+
+  beginWindowTick(): void {
+    this.armed = false;
+  }
+
+  noteTickOutcome(unfinished: boolean): void {
+    this.unfinished = unfinished;
+  }
+
+  noteExtensionsInFlight(count: number): void {
+    this.inFlight += count;
+  }
+
+  tickOwed(): boolean {
+    return this.unfinished && !this.armed && this.inFlight === 0;
+  }
+
+  armWindowTick(): boolean {
+    if (this.armed) return false;
+    if (this.inFlight > 0) {
+      this.owed = true;
+      return false;
+    }
+    this.armed = true;
+    this.owed = false;
+    return true;
+  }
+
+  /** ✅️ One answer folded: the settle, then the terminal arm the chain owes itself. Returns how many
+   * re-arm effects the hop emits. */
+  settleAnswer(needsAnotherRoundTrip: boolean): number {
+    this.inFlight = Math.max(0, this.inFlight - 1);
+    let discharged = false;
+    if (this.inFlight === 0 && this.owed && !this.armed) {
+      this.armed = true;
+      this.owed = false;
+      discharged = true;
+    }
+    const armed = (needsAnotherRoundTrip || this.tickOwed()) && this.armWindowTick();
+    return discharged || armed ? 1 : 0;
+  }
+}
 
 /** 📈️ The independent model: a pending table, a per-handle progress ledger, the cancelled banner and
  * the retained evaluate fault — the four facts the projection is written over. */
@@ -145,6 +224,7 @@ export function testGeneration3dPreviewStatusContract(): void {
     cancelAction: string;
     phaseLabels: Record<string, { en: string; de: string }>;
     statusContract: StatusContract;
+    settlePath: SettlePath;
   };
   assert.equal(fixture.format, "semio.generation3d.preview-cancel");
   assert.equal(fixture.version, 1);
@@ -231,6 +311,45 @@ export function testGeneration3dPreviewStatusContract(): void {
   for (const key of ["evalLen", "evalHead"]) {
     assert.ok(!contract.debugKeys.includes(key), `debug must not carry the retired ${key}`);
   }
+
+  // 🏁️ The settle path, replayed against the independent latch model.
+  const settle = fixture.settlePath;
+  for (const row of settle.unfinishedRows) {
+    assert.equal(SettleLatch.tickIsUnfinished(row.more, row.parkedInvocations), row.unfinished, `settle-path row ${row.id}`);
+  }
+  const latch = new SettleLatch();
+  let rearms = 0;
+  for (const step of settle.latchSequence) {
+    switch (step.step) {
+      case "beginWindowTick":
+        latch.beginWindowTick();
+        break;
+      case "noteTickOutcome":
+        latch.noteTickOutcome(SettleLatch.tickIsUnfinished(false, 1));
+        break;
+      case "noteExtensionsInFlight":
+        latch.noteExtensionsInFlight(step.inFlight);
+        break;
+      case "settleLastAnswer":
+        rearms = latch.settleAnswer(false);
+        assert.equal(rearms === 1, step.emitsRearm === true, "the run's last answer arms the terminal tick from the chain itself");
+        break;
+      default:
+        throw new Error(`unknown settle step ${step.step}`);
+    }
+    assert.equal(latch.armed, step.armed, `${step.step}: armed`);
+    assert.equal(latch.inFlight, step.inFlight, `${step.step}: inFlight`);
+    assert.equal(latch.tickOwed(), step.tickOwed, `${step.step}: tickOwed`);
+  }
+  assert.equal(rearms, 1, "exactly one terminal tick is owed");
+  assert.equal(settle.terminalTick.emits, "flowEvalTick");
+  assert.deepEqual(settle.terminalTick.addressedBy, ["windowId", "windowKindId"], "the terminal tick names the window it settles");
+  // 🔒️ A finished window's answer arms NOTHING — the terminal arm is latched, never unconditional.
+  const finished = new SettleLatch();
+  finished.beginWindowTick();
+  finished.noteTickOutcome(SettleLatch.tickIsUnfinished(false, 0));
+  finished.noteExtensionsInFlight(1);
+  assert.equal(finished.settleAnswer(false), 0, "a stale answer on a finished window may never spin the chain back up");
 
   // 🛑️ A declared `cancellable` with no action to dispatch is a dead button — worse than none.
   assert.equal(world3dComputeStatusV1('{"cancellable":true}').cancellable, false);

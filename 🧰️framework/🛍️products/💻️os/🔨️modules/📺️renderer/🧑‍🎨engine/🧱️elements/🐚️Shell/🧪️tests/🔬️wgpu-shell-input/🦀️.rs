@@ -165,3 +165,46 @@ fn context_menu_point_resolves_the_exact_concrete_window_instance() {
     assert_eq!(shell.context_window_instance_id(250.0, 25.0), None);
     println!("[DEBUG] native context menu resolved its exact concrete window and preserved panel scope outside dock bodies");
 }
+
+/// ⚖️ LAW: pressing a window's retained BODY activates that window, so the keyboard follows the
+/// window the user actually clicked into rather than whichever one the session opened with.
+///
+/// 🩸️ `handle_keyboard_async` routes real keys into retained content on exactly one predicate —
+/// `content_has_focus(active_window_id)` — and a retained body press was the one way into a window
+/// that never set `active_window_id`. Measured on 6118: pressing the Generations window's inline
+/// rename editor logged `content focus window=generation3d-generations node=Some(..)` and then every
+/// keystroke logged `key routing window=procedural-main contentFocus=false`, so the editor opened,
+/// took focus, and could not be typed into (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-generation-publication-2026-09-13.md`).
+#[test]
+fn a_retained_body_press_activates_its_own_window_so_the_keyboard_follows_it() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    let opened_with = "procedural-main";
+    let pressed = "generation3d-generations";
+    shell.active_window_id = Some(opened_with.into());
+    let mut arena: ui_wgpu::wgpu::Arena<()> = ui_wgpu::wgpu::Arena::new();
+    let node_id = arena.insert(());
+    shell.chrome_build.note_content_focus_commands(&[ui_wgpu::wgpu::UiCommand::FocusChanged { window_id: pressed.to_string(), node: Some(node_id) }]);
+    assert!(!shell.chrome_build.content_has_focus(opened_with), "sanity: the window the keyboard used to follow never had content focus");
+
+    let mut input = InputState::<ActionDescriptor>::default();
+    let body = Rect::new(3.0, 54.0, 315.0, 814.0);
+    semio_framework_async::block_on(shell.route_retained_pointer_press(pressed, body, 255.0, 90.0, true, 0, HitKind::Input, None, &mut input)).expect("a retained body press routes");
+
+    assert_eq!(shell.active_window_id.as_deref(), Some(pressed), "the pressed window is the active one");
+    assert!(shell.chrome_build.content_has_focus(shell.active_window_id.as_deref().expect("an active window")), "…so the keyboard's own predicate now answers for the window whose content holds focus");
+    println!("[DEBUG] retained body press moved the active window {opened_with} -> {pressed}");
+}
+
+/// ⚖️ LAW: the RELEASE half of the same click changes nothing about activation — a click activates on
+/// the press, the way every window manager and every browser does, and the action fires on release
+/// (`route_retained_pointer_press`'s own `else if !down` arm).
+#[test]
+fn only_the_press_half_of_a_body_click_moves_the_active_window() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.active_window_id = Some("procedural-main".into());
+    let mut input = InputState::<ActionDescriptor>::default();
+    let body = Rect::new(3.0, 54.0, 315.0, 814.0);
+    semio_framework_async::block_on(shell.route_retained_pointer_press("generation3d-generations", body, 255.0, 90.0, false, 0, HitKind::Input, None, &mut input)).expect("a retained body release routes");
+    assert_eq!(shell.active_window_id.as_deref(), Some("procedural-main"), "a release alone never activates — the press already did, or nothing did");
+}

@@ -316,3 +316,73 @@ fn deterministic_all_field_ledger_includes_the_3d_only_variant() {
         mutation.retire_cold();
     }
 }
+
+//#region 🧹️FlowFrontierOwnership
+/// 🚪️ The EXACT driver every framework close ladder is: one item, one 4 KiB page, and NO channel to
+/// ask the owner for a bigger grant. `SnapshotReadReturnPump::drive`
+/// (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`) turns a `Blocked` answer into
+/// `PluginCloseStep::Blocked { reason: "returned snapshot-read disposer is waiting on external
+/// ownership" }`, and `close_registered_fixture_app` then yields and asks again with the same grant
+/// until its deadline — so for a retirement this app owns, `Blocked` is not backpressure, it is a
+/// permanent stall (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn drive_under_the_frameworks_fixed_page_grant(retirement: &mut dyn ErasedSnapshotRetirement, owner: &str) -> usize {
+    let mut released = 0usize;
+    for _ in 0..GENERATION3D_MAXIMUM_DOMAIN_ITEMS {
+        match retirement.close_step(1, GENERATION3D_OWNER_BYTES).unwrap_or_else(|reason| panic!("{owner} retirement faulted: {reason}")) {
+            store::SnapshotRetirementStep::Complete => {
+                assert!(retirement.terminal_is_empty(), "{owner} reported Complete without its exact terminal-empty witness");
+                return released;
+            }
+            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1, "{owner} released {released_items} items under a one-item grant");
+                assert!(released_bytes <= GENERATION3D_OWNER_BYTES, "{owner} released {released_bytes} bytes under a {GENERATION3D_OWNER_BYTES}-byte grant");
+                released += released_bytes;
+            }
+            store::SnapshotRetirementStep::Blocked => panic!(
+                "{owner} answered Blocked under the framework's exact one-page close grant — nothing external owns this value, so paying the Flow frontier's own reserve-then-close demand is this retirement's business and the app close ladder spins here forever"
+            ),
+        }
+    }
+    panic!("{owner} did not reach its terminal-empty close witness")
+}
+
+/// 🧊️ Every widget, synapse, layout row and generation this app's document owns is retired through
+/// a `semio_framework_artifact_flow_flow::retained::FlowRetirement`, which is a RESERVE-then-CLOSE
+/// frontier: `close_step` answers `Blocked` — never an error — while `next_allocation_bytes` still
+/// names a page the current owner's decomposition needs. Both of this codec's retirements therefore
+/// have to pay that reservation themselves, because the erased `ErasedSnapshotRetirement` contract
+/// they are driven through has no demand channel at all.
+///
+/// The oracle is the framework's OWN generic route to the same value — the `Arc` retirement
+/// `store::SnapshotRetirementFactory` hands the document store — which must release byte-for-byte
+/// what the owned route releases.
+#[test]
+fn every_document_retirement_pays_its_own_flow_frontier_under_the_fixed_page_grant() {
+    let mut owned = generation3d_retire_owned_snapshot(Generation3dSnapshot::default());
+    let owned_bytes = drive_under_the_frameworks_fixed_page_grant(owned.as_mut(), "owned document snapshot");
+    let mut aliased = store::SnapshotRetirementFactory::retire(&Generation3dRetainedSnapshotRetirementFactory, std::sync::Arc::new(Generation3dSnapshot::default()));
+    let aliased_bytes = drive_under_the_frameworks_fixed_page_grant(aliased.as_mut(), "aliased document snapshot");
+    assert_eq!(owned_bytes, aliased_bytes, "the owned and Arc retirement routes must release the same exact document backing");
+    assert!(owned_bytes > 0, "a populated document fixture owns real backing");
+}
+
+/// 🔁️ The same law for the replay displacement route: every `generation3d_apply_initialization_mutation`
+/// that displaces a widget, a synapse or a string hands the store a `Generation3dReplayRetirement`,
+/// which the store's displaced-retirement ladder drives under the identical fixed page grant.
+#[test]
+fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_the_fixed_page_grant() {
+    let mut snapshot = Generation3dSnapshot::default();
+    let mutations = generation3d_all_retained_mutation_fixtures_for_test();
+    let mut displaced = 0usize;
+    for mutation in &mutations {
+        let Ok(Some(mut retirement)) = generation3d_apply_initialization_mutation(&mut snapshot, mutation) else { continue };
+        drive_under_the_frameworks_fixed_page_grant(retirement.as_mut(), "displaced replay owner");
+        displaced += 1;
+    }
+    for mutation in mutations {
+        mutation.retire_cold();
+    }
+    assert!(displaced > 0, "the retained mutation fixtures must displace at least one owner");
+    drive_under_the_frameworks_fixed_page_grant(generation3d_retire_owned_snapshot(snapshot).as_mut(), "replayed document snapshot");
+}
+//#endregion 🧹️FlowFrontierOwnership

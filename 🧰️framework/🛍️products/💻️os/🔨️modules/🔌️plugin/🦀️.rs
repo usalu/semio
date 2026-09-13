@@ -6210,6 +6210,22 @@ pub mod app {
             $vis const NATIVE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nde) ),+ };
             $vis const REUSE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($ren) ),+ };
             $vis const REUSE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($rde) ),+ };
+
+            /// 🗣️ Every label field's own name, in declaration order.
+            ///
+            /// The macro already makes a MISSING locale a compile error — all four spellings are
+            /// required to name a field at all. What it cannot see is a locale that is PRESENT but
+            /// wrong: English pasted into `native_de`, or an empty string. Naming the fields here is
+            /// what lets an app write that as a law over its whole label set instead of one
+            /// hand-written assertion per field, which is the only version that still holds when the
+            /// next label is added. Paired with [`Self::for_each_label`].
+            $vis const FIELD_NAMES: &'static [&'static str] = &[ $( stringify!($field) ),+ ];
+
+            /// 🗣️ Visits every label of THIS resolved set in [`Self::FIELD_NAMES`] order, allocation-free
+            /// so a guest can run the same walk a native test does.
+            $vis fn for_each_label(&self, mut visit: impl FnMut(&'static str, &$crate::LabelText)) {
+                $( visit(stringify!($field), &self.$field); )+
+            }
         }
 
         impl $crate::AppLabels for $Name {
@@ -36480,7 +36496,6 @@ pub mod world3d_host {
                     loading: None,
                     waiting: None,
                     disabled: None,
-                    reveal: None,
                     on_change: action("setSunAzimuth", None),
                 },
                 WindowMeasure::Slider {
@@ -36494,7 +36509,6 @@ pub mod world3d_host {
                     loading: None,
                     waiting: None,
                     disabled: None,
-                    reveal: None,
                     on_change: action("setSunElevation", None),
                 },
                 WindowMeasure::Slider {
@@ -36508,7 +36522,6 @@ pub mod world3d_host {
                     loading: None,
                     waiting: None,
                     disabled: None,
-                    reveal: None,
                     on_change: action("setSunIntensity", None),
                 },
             ],
@@ -36717,7 +36730,6 @@ pub mod world3d_host {
             loading: None,
             waiting: None,
             disabled: None,
-            reveal: None,
             on_change: action("setProjectionParam", Some(json!({ "param": param }))),
         };
 

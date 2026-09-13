@@ -7,7 +7,7 @@
  * proven: a port-to-port drag. It aims through `window.__semioFlowGraphProbe[surfaceId].entity("handle", …)`
  * — the graph canvas paints itself, so there is no per-port DOM to click — and asserts a NEW synapse in
  * the fixture the host republishes, then cuts it again (ticket 26/09/09/PROCEDURAL-3D-END-TO-END gap #3).
- * Usage: cd <ticket> && SEMIO_PROBE_MODE=default|webgpu|resize|wire SEMIO_PROBE_OUT=<dir> bun 🐍️flow-window-probe.mjs
+ * Usage: cd <ticket> && SEMIO_PROBE_MODE=default|webgpu|resize|wire|reorganize SEMIO_PROBE_OUT=<dir> bun 🐍️flow-window-probe.mjs
  * (launch pattern copied from 🐍️journey-probe.mjs / 🐍️console-dump-probe.mjs in this same folder — read-only audit, no edits to those files)
  */
 import { chromium } from "playwright";
@@ -84,72 +84,131 @@ if (mode === "wire") {
   const surface = "window:procedural-main";
   const fixture = async () => page.evaluate((id) => {
     const probe = window.__semioFlowGraphProbe?.[id];
-    const text = probe?.fixtureJson?.() ?? document.querySelector(`[data-surface-id="${id}"]`)?.getAttribute("data-fixture-json") ?? null;
+    const text = probe?.fixtureJson?.() ?? null;
     try { return text ? JSON.parse(text) : null; } catch { return null; }
   }, surface);
+  const wires = (value) => (value?.synapses ?? []).map((s) => `${s.from}@${s.fromPort ?? s.from_port} -> ${s.to}@${s.toPort ?? s.to_port}`);
 
-  /** 🔌️ Screen position of one port handle, polled because the resolver warms asynchronously. */
-  const handleAt = async (portId) => {
-    for (let attempt = 0; attempt < 20; attempt++) {
-      const point = await page.evaluate(([id, port]) => {
+  /** 🔌️ The rect the HOST publishes for a port, read FRESH. `dagIntroductionResolver` answers from a
+   * cache and starts the real read in the background, so the first answer after any camera change is
+   * the pre-change rect — the trap the 2026-09-13 run fell into when it zoomed and then aimed. Two
+   * consecutive equal reads, a beat apart, is the geometry the host holds now. */
+  const publishedPort = async (portId) => {
+    let previous = null;
+    for (let attempt = 0; attempt < 24; attempt++) {
+      const geometry = await page.evaluate(([id, port]) => {
         const probe = window.__semioFlowGraphProbe?.[id];
-        const geometry = probe?.entity?.("handle", port) ?? null;
-        return geometry?.visible ? geometry.point : null;
+        const resolved = probe?.entity?.("handle", port) ?? null;
+        return resolved?.visible ? { point: resolved.point, rect: resolved.rect ?? null } : null;
       }, [surface, portId]);
-      if (point) return point;
-      await page.waitForTimeout(500);
+      const key = geometry ? JSON.stringify(geometry) : null;
+      if (key && key === previous) return geometry;
+      previous = key;
+      await page.waitForTimeout(400);
     }
     return null;
   };
+  /** 🎯️ The centre of the published rect — the ONE point a caller that trusts the host can derive. */
+  const centreOf = (geometry) => (geometry?.rect ? { x: geometry.rect.x + geometry.rect.width / 2, y: geometry.rect.y + geometry.rect.height / 2 } : geometry?.point ?? null);
+
+  const previewState = async () => page.evaluate(() => {
+    const host = document.querySelector("[data-meshes-json]");
+    return { status: document.querySelector("[data-status-json]")?.getAttribute("data-status-json")?.slice(0, 240) ?? null, meshes: host?.getAttribute("data-meshes-json")?.length ?? 0 };
+  });
+
+  const drag = async (from, to) => {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move((from.x + to.x) / 2, (from.y + to.y) / 2, { steps: 8 });
+    await page.mouse.move(to.x, to.y, { steps: 8 });
+    await page.mouse.up();
+    await page.waitForTimeout(3000);
+  };
 
   const before = await fixture();
-  const wires = (value) => (value?.synapses ?? []).map((s) => `${s.from}@${s.fromPort ?? s.from_port} -> ${s.to}@${s.toPort ?? s.to_port}`);
   console.log("[DEBUG] wires before", JSON.stringify(wires(before)));
-
-  // 🎯️ A source output port and a target input port on a different widget that no wire already occupies.
-  const occupied = new Set((before?.synapses ?? []).map((s) => `${s.to}@${s.toPort ?? s.to_port}`));
-  const ports = await page.evaluate((id) => {
-    const probe = window.__semioFlowGraphProbe?.[id];
-    const text = probe?.fixtureJson?.() ?? null;
-    if (!text) return null;
-    try { return JSON.parse(text); } catch { return null; }
-  }, surface);
-  const candidates = [];
-  for (const synapse of before?.synapses ?? []) candidates.push({ from: `${synapse.from}@${synapse.fromPort ?? synapse.from_port}`, to: `${synapse.to}@${synapse.toPort ?? synapse.to_port}`, id: synapse.id });
-  const target = candidates[0] ?? null;
-  writeFileSync(join(outDir, "wire-candidates.json"), JSON.stringify({ wires: wires(before), candidates, ports: ports ? Object.keys(ports) : null }, null, 2));
+  const synapses = before?.synapses ?? [];
+  const target = synapses[0] ?? null;
+  writeFileSync(join(outDir, "wire-candidates.json"), JSON.stringify({ wires: wires(before), synapses }, null, 2));
 
   if (!target) {
-    console.log("[DEBUG] wire: no synapse to work from — cannot aim a port drag");
+    console.log("[DEBUG] wire: the graph has no synapse to work from — cannot name a port pair");
   } else {
-    // 1. Cut the existing wire by dragging its TARGET endpoint away, then 2. redraw it port-to-port.
-    const source = await handleAt(target.from);
-    const sink = await handleAt(target.to);
-    console.log("[DEBUG] wire endpoints", JSON.stringify({ target, source, sink }));
-    if (source && sink) {
-      const empty = { x: Math.min(source.x, sink.x) - 140, y: Math.max(source.y, sink.y) + 140 };
-      await page.mouse.move(sink.x, sink.y);
-      await page.mouse.down();
-      await page.mouse.move(empty.x, empty.y, { steps: 12 });
-      await page.mouse.up();
-      await page.waitForTimeout(4000);
+    const fromPort = `${target.from}@${target.fromPort ?? target.from_port}`;
+    const toPort = `${target.to}@${target.toPort ?? target.to_port}`;
+    const source = await publishedPort(fromPort);
+    const sink = await publishedPort(toPort);
+    console.log("[DEBUG] published port geometry", JSON.stringify({ fromPort, toPort, source, sink }));
+    const steps = [];
+
+    if (!source || !sink) {
+      console.log("[DEBUG] wire: the host published no rect for one of the ports");
+    } else {
+      // 1️⃣ CUT: drag the wired input off its port onto empty canvas.
+      const previewBefore = await previewState();
+      // 🗑️ An empty spot INSIDE the graph canvas — where a user drops a wire to cut it. (Dropping it
+      // outside is now delivered too, thanks to the canvas's pointer capture, but the gesture under
+      // test is the one a user performs.)
+      const host = await page.evaluate((id) => { const el = document.querySelector(`[data-surface-id="${id}"]`) ?? document.querySelector(".semio-node-graph-host"); const r = el?.getBoundingClientRect(); return r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null; }, surface);
+      const empty = host ? { x: host.x + host.width * 0.5, y: host.y + host.height - 60 } : { x: sink.point.x, y: sink.point.y + 200 };
+      await drag(centreOf(sink), empty);
       const cut = await fixture();
+      steps.push({ phase: "cut", at: centreOf(sink), wires: wires(cut) });
       console.log("[DEBUG] wires after cut", JSON.stringify(wires(cut)));
       await page.screenshot({ path: join(outDir, "5-wire-cut.png") });
 
-      await page.mouse.move(source.x, source.y);
-      await page.mouse.down();
-      await page.mouse.move(sink.x, sink.y, { steps: 12 });
-      await page.mouse.up();
-      await page.waitForTimeout(4000);
+      // 2️⃣ CONNECT: redraw it from the output's published centre to the input's.
+      const sourceAgain = await publishedPort(fromPort);
+      const sinkAgain = await publishedPort(toPort);
+      await drag(centreOf(sourceAgain ?? source), centreOf(sinkAgain ?? sink));
       const redrawn = await fixture();
+      steps.push({ phase: "connect", from: centreOf(sourceAgain ?? source), to: centreOf(sinkAgain ?? sink), wires: wires(redrawn) });
       console.log("[DEBUG] wires after redraw", JSON.stringify(wires(redrawn)));
       await page.screenshot({ path: join(outDir, "6-wire-redrawn.png") });
-      writeFileSync(join(outDir, "wire-result.json"), JSON.stringify({ before: wires(before), afterCut: wires(cut), afterRedraw: wires(redrawn), endpoints: { source, sink } }, null, 2));
-    } else console.log("[DEBUG] wire: the handle resolver never reported a visible port — see wire-candidates.json");
+      await page.waitForTimeout(6000);
+      const previewAfter = await previewState();
+
+      const dispatched = lines.filter((line) => line.includes("node graph wire edit dispatch"));
+      const result = {
+        before: wires(before),
+        afterCut: wires(cut),
+        afterRedraw: wires(redrawn),
+        cutRemovedTheWire: wires(cut).length === wires(before).length - 1,
+        redrawRestoredTheWire: wires(redrawn).sort().join("|") === wires(before).sort().join("|"),
+        dispatched,
+        preview: { before: previewBefore, after: previewAfter },
+        published: { source, sink },
+        steps,
+      };
+      writeFileSync(join(outDir, "wire-result.json"), JSON.stringify(result, null, 2));
+      console.log("[DEBUG] wire result", JSON.stringify({ cut: result.cutRemovedTheWire, redraw: result.redrawRestoredTheWire, dispatched: dispatched.length, preview: result.preview }));
+    }
   }
 }
 //#endregion 🔌️WireEditing
+
+//#region 🗺️ReorganizeKeybinding
+if (mode === "reorganize") {
+  const surface = "window:procedural-main";
+  const layout = () => page.evaluate((id) => {
+    const probe = window.__semioFlowGraphProbe?.[id];
+    const text = probe?.fixtureJson?.() ?? document.querySelector(`[data-surface-id="${id}"]`)?.getAttribute("data-fixture-json") ?? null;
+    try { const parsed = text ? JSON.parse(text) : null; return parsed?.layout ?? null; } catch { return null; }
+  }, surface);
+  const canvas = page.locator(`[data-surface-id="${surface}"] canvas`).first();
+  const box = (await canvas.count()) ? await canvas.boundingBox() : null;
+  if (box) await page.mouse.click(box.x + 20, box.y + 20);
+  await page.waitForTimeout(800);
+  const before = await layout();
+  await page.keyboard.press("Meta+Alt+KeyL");
+  await page.waitForTimeout(5000);
+  const after = await layout();
+  const moved = before && after ? Object.keys(after).filter((id) => before[id] && (before[id].x !== after[id].x || before[id].y !== after[id].y)) : [];
+  console.log("[DEBUG] reorganize movedWidgets", JSON.stringify({ moved, count: moved.length, before, after }).slice(0, 1200));
+  writeFileSync(join(outDir, "reorganize-result.json"), JSON.stringify({ moved, before, after }, null, 2));
+  await page.screenshot({ path: join(outDir, "7-reorganized.png") });
+}
+//#endregion 🗺️ReorganizeKeybinding
 
 // zoom crop around the reported black rectangle / stray-label region for a closer look
 await page.screenshot({ path: join(outDir, "4-zoom-graph-region.png"), clip: { x: 340, y: 40, width: 640, height: 400 } }).catch(() => {});

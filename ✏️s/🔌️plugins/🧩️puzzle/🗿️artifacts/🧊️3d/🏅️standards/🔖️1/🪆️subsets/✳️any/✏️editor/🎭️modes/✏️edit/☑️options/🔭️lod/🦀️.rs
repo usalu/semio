@@ -53,7 +53,6 @@ pub fn measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeas
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: puzzle3d_action("setLodManual", None),
             },
         ],

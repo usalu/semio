@@ -701,8 +701,14 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
         "actor": "local",
     })
     .to_string();
-    let result = action.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(action_json), &JsValue::from_str(&context_json)).map_err(|_| "handle_action failed")?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|_| "handle_action promise failed")? } else { result };
+    let result = action
+        .call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(action_json), &JsValue::from_str(&context_json))
+        .map_err(|error| format!("handle_action failed: {}", describe_js_rejection(&error)))?;
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
+        JsFuture::from(promise.clone()).await.map_err(|error| format!("handle_action promise failed: {}", describe_js_rejection(&error)))?
+    } else {
+        result
+    };
     let text = resolved.as_string().ok_or_else(|| "handle_action result not string".to_string())?;
     dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handle_action result parse failed: {error}"))
 }
@@ -850,7 +856,7 @@ async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface
         return Err(format!("plugin published an empty retained document for surface '{surface_id}'"));
     }
     let mut assembly = ui_contract::UiDocumentAssembly::default();
-    let outcome = assemble_browser_document(&mut assembly, surface_id, instance_id, root, &published);
+    let outcome = assemble_browser_document(&mut assembly, surface_id, root, &published);
     if outcome.is_err() {
         retire_browser_assembly(&mut assembly);
     }
@@ -928,10 +934,28 @@ fn resident_refusal(body_key: &str, items: usize, bytes: usize, fault: ui_contra
     format!("retained document permit failed: {fault:?} ({}) — surface '{body_key}' asked items {items} bytes {bytes}; {census}", fault.reason())
 }
 
+/// 🪪️ The INGRESS identity of one surface's document, through the engine's OWN rule
+/// (`ui_wgpu::wgpu::engine::ui_document_ingress_generation` — see it for why a constant here freezes
+/// the arena at the surface's first tree). This function is only the per-surface ledger that rule
+/// reads and writes; the rule itself lives beside the two admission checks it has to satisfy, so the
+/// producer and the engine can never drift into two answers.
 #[cfg(target_arch = "wasm32")]
-fn assemble_browser_document(assembly: &mut ui_contract::UiDocumentAssembly, body_key: &str, instance_id: u32, root: u64, published: &BrowserRetainedDocument) -> Result<UiDocumentLease, String> {
+fn browser_document_generation(surface_id: &str, revision: u64) -> u64 {
+    thread_local! {
+        static MINTED: std::cell::RefCell<HashMap<String, (u64, u64)>> = std::cell::RefCell::new(HashMap::new());
+    }
+    MINTED.with(|cell| {
+        let mut minted = cell.borrow_mut();
+        let generation = ui_wgpu::wgpu::engine::ui_document_ingress_generation(minted.get(surface_id).copied(), revision);
+        minted.insert(surface_id.to_string(), (revision, generation));
+        generation
+    })
+}
+
+#[cfg(target_arch = "wasm32")]
+fn assemble_browser_document(assembly: &mut ui_contract::UiDocumentAssembly, body_key: &str, root: u64, published: &BrowserRetainedDocument) -> Result<UiDocumentLease, String> {
     let identity = ui_contract::UiDocumentAssemblyIdentity {
-        generation: u64::from(instance_id),
+        generation: browser_document_generation(body_key, published.revision),
         revision: ui_contract::UiRevision(published.revision),
         root: Some(ui_contract::UiNodeId(root)),
         layout_epoch: published.layout_epoch,

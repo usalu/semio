@@ -234,7 +234,7 @@ fn keyboard_node(german: bool) -> TreeNodeView {
         label: say(german, "Keyboard", "Tastatur").into(),
         children: vec![
             leaf("energy-keyboard-start", format!("mod+enter — {}", say(german, "start the simulation", "Simulation starten"))),
-            leaf("energy-keyboard-cancel", format!("mod+period — {}", say(german, "cancel the running simulation", "laufende Simulation abbrechen"))),
+            leaf("energy-keyboard-cancel", format!("mod+. — {}", say(german, "cancel the running simulation", "laufende Simulation abbrechen"))),
             leaf("energy-keyboard-adopt", format!("mod+shift+enter — {}", say(german, "adopt the final result", "Endergebnis übernehmen"))),
         ],
     }

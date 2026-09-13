@@ -2248,6 +2248,22 @@ export function FlowGraphCanvasHost({
     });
   }, [dispatch]);
 
+  /** 🔗️ The wire edits a released gesture performed, read out of `pointerUpScreen`'s own result —
+   * the gesture answers with what it did, so there is no second round trip and no window in which a
+   * later read could drain the journal first. Shape: `{operations:[…]}` in the guest's own
+   * `nodeGraphEdit` sub-operation vocabulary (`connect` with four ids, `disconnect` with a synapse
+   * id), the identical payload the wgpu renderer writes (`⚙️EngineCanvas/🎯️targets/🧊️wgpu`'s
+   * `write_graph_edit_action`). */
+  const graphEditOperations = useCallback((value: unknown): readonly Record<string, unknown>[] => {
+    try {
+      const parsed = JSON.parse(flowJsonText(value)) as { readonly operations?: unknown } | null;
+      const operations = parsed?.operations;
+      return Array.isArray(operations) ? (operations as readonly Record<string, unknown>[]) : [];
+    } catch {
+      return [];
+    }
+  }, []);
+
   const isGestureActiveRef = useRef(false);
 
   const handleGesturePointerDown = useCallback(() => {
@@ -3010,6 +3026,17 @@ export function FlowGraphCanvasHost({
           if (!session) return;
           const rect = event.currentTarget.getBoundingClientRect();
           const client = { x: event.clientX, y: event.clientY };
+          // 🖱️ The gesture belongs to this canvas until the button comes back up. Without capture, a
+          // drag that leaves the canvas — dragging a wire out to cut it, or past the edge on the way
+          // to a far port — releases over whatever is underneath (the outline tree, another window),
+          // and the host never sees `pointer_up_screen`: the wire stays in flight forever and the
+          // gesture makes no edit at all. Measured on 6018: the press entered `InteractionMode::DrawEdge`
+          // and no release ever arrived.
+          try {
+            event.currentTarget.setPointerCapture(event.pointerId);
+          } catch {
+            /* capture is unavailable for this pointer — the gesture still works inside the canvas */
+          }
           pickInteraction.onCanvasPointerDown(client);
           observeFlowTask(session, "pointerDownScreen", session.pointerDownScreen(event.clientX - rect.left, event.clientY - rect.top, event.button, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey, event.button === 1 || event.buttons === 4));
           renderFlow();
@@ -3031,10 +3058,22 @@ export function FlowGraphCanvasHost({
           if (!session) return;
           const rect = event.currentTarget.getBoundingClientRect();
           const client = { x: event.clientX, y: event.clientY };
+          try {
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+          } catch {
+            /* nothing was captured */
+          }
           pickInteraction.onCanvasPointerUp(client, { shift: event.shiftKey, ctrlOrMeta: event.metaKey || event.ctrlKey, alt: event.altKey });
-          observeFlowTask(session, "pointerUpScreen", session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey));
+          observeFlowTask(session, "pointerUpScreen", session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey), (value) => {
+            // 🔗️ A gesture that wired or cut dispatches THAT — four ids, or one synapse id — and never
+            // the whole fixture on top of it: the guest replays the narrow intent and re-publishes the
+            // graph itself, so a second `setFixture` would only race its own result.
+            const operations = graphEditOperations(value);
+            if (operations.length > 0) console.log("[DEBUG] node graph wire edit dispatch", JSON.stringify(operations));
+            if (operations.length > 0) dispatch(nodeGraphActions.edit, { operations });
+            else commitFixture();
+          });
           renderFlow();
-          commitFixture();
           emitInteractionState();
         }}
         onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}

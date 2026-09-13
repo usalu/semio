@@ -8,8 +8,7 @@
     "lodMode",
     "showMode",
     "previewCamera",
-    "sunJson",
-    "activeExampleId"
+    "sunJson"
   ],
   "properties": {
     "lodMode": {

@@ -98,7 +98,13 @@ export function uiAccessibilityRoleV1(component: Component, activatable: boolean
 }
 
 /** ⌨️ Whether a component takes keyboard focus of its own — the same closed set the Rust
- * `accessibility_is_focusable` names, so a projection and a Tab traversal can never disagree. */
+ * `accessibility_is_focusable` names, so a projection and a Tab traversal can never disagree.
+ *
+ * A `surface` is in the set because it is the app's ONLY door to a scene it paints itself: the
+ * node-graph and World3d canvases carry their whole interaction surface inside a texture no
+ * assistive technology can walk, so a canvas nobody can Tab into is a canvas nobody can drive
+ * without a mouse. Its `application` role is exactly the ARIA promise that the widget handles its
+ * own arrow/Enter keys. */
 export function uiAccessibilityIsFocusableV1(component: Component, activatable: boolean): boolean {
   switch (component.type) {
     case "button":
@@ -110,6 +116,7 @@ export function uiAccessibilityIsFocusableV1(component: Component, activatable: 
     case "ring":
     case "iconSelect":
     case "treeItem":
+    case "surface":
       return true;
     case "container":
       return activatable;

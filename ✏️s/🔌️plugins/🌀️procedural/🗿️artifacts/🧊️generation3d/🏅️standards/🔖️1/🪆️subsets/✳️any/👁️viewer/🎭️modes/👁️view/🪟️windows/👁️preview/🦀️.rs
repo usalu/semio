@@ -357,7 +357,7 @@ pub fn preview_selection_json(config: &Generation3dViewConfig, payload: &ViewPre
 /// 👁️ Pure `(Generation3dSnapshot, Generation3dViewConfig, marks) -> BuiltNode` read: the camera,
 /// shading mode, LOD and sun all come from the viewer's own config, hover/selection from the
 /// framework-owned `graph` domain, geometry from the ephemeral evaluation when one exists.
-pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_framework_os_flow::FlowEvalSession>, marks: &Generation3dViewMarks) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_framework_os_flow::FlowEvalSession>, marks: &Generation3dViewMarks, labels: &crate::editor::generation3d::terminology::Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = eval_json.unwrap_or_default();
     let payload = preview_payload(eval_json, &document.fixture, config, session, marks);
     let selection_json = preview_selection_json(config, &payload);
@@ -372,7 +372,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
         None,
     );
     let sun = config.sun();
-    crate::scene_surface(
+    crate::accessible_scene_surface(
         SURFACE_ID,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
         &semio_framework_ui::wgpu::World3dScene {
@@ -387,6 +387,9 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
                 &sun,
             )
         },
+        labels.preview_canvas.as_str(),
+        labels.preview_canvas_hint.as_str(),
+        semio_framework_ui_contract::Liveness::Polite,
     )
 }
 //#endregion 🔖️Render

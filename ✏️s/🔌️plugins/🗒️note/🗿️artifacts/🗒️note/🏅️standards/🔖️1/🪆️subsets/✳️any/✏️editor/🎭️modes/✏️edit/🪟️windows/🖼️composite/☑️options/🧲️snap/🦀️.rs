@@ -40,7 +40,6 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
                 loading: None,
                 waiting: None,
                 disabled: None,
-                reveal: None,
                 on_change: crate::editor::note::note_action("setSnapGridSpacing", None),
             },
         ],

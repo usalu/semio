@@ -960,13 +960,14 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           menu: null,
           children: [],
         };
+        const surfaceId = retainedSurfaceId(1, "window");
         retainedWindowByActor.delete(actorId);
         try {
           retainTurnUiPatches(actorId, {
-            uiPatches: [{ revision: 1n, baseRevision: 0n, ops: [{ tag: "upsert", val: { node: Array.from(encodePackValue(root)) } }, { tag: "set-root", val: 0n }] }],
+            uiPatches: [{ surface: pluginSurfaceRef(1, "window"), revision: 1n, baseRevision: 0n, ops: [{ tag: "upsert", val: { node: Array.from(encodePackValue(root)) } }, { tag: "set-root", val: 0n }] }],
           });
-          const retained = retainedWindowByActor.get(actorId)?.get("window");
-          expect(retained).toMatchObject({ surface: "window", revision: 1, root: 0 });
+          const retained = retainedWindowByActor.get(actorId)?.get(surfaceId);
+          expect(retained).toMatchObject({ surface: surfaceId, revision: 1, root: 0 });
           expect(() => retainedSurfaceHash(retainedSurfaceToSnapshot(retained!))).not.toThrow();
           expect(retainedSurfaceToBuiltNode(retained!)).toMatchObject({ key: "root", component: { type: "text", value: "ready" }, children: [] });
         } finally {

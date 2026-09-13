@@ -10,6 +10,9 @@ use crate::viewer::generation3d::Generation3dViewCommand;
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::ArtifactViewer;
 
+/// 📜️ The language-agnostic picker table both surfaces answer — the viewer's own half is `viewer`.
+const EXAMPLE_SWITCH_FIXTURE_JSON: &str = include_str!("../../../../../🧫️fixtures/🎨️example-switch.json");
+
 /// 📚️ Every example the dialect publishes, in the order the manifest registers them.
 const EVERY_BUNDLED_EXAMPLE: &[&str] = &[
     PROCEDURAL_EXAMPLE_HEX_COLUMN,
@@ -25,16 +28,52 @@ const EVERY_BUNDLED_EXAMPLE: &[&str] = &[
 /// 🕸️ The `graph` node ids the read-only surface reports for one config — the cheapest honest probe
 /// of WHICH document the surface is looking at, since `interaction_topology` runs the very same
 /// `Generation3dViewedDocument::resolve` the preview render and the `flowEvalTick` chain do.
-fn viewed_node_ids(example_id: &str) -> Vec<String> {
+///
+/// 🕳️ `None` is "nothing picked", `Some("")` the picker's own `No example` row — two different
+/// states, and the whole point of the option on the config leaf.
+fn viewed_node_ids(example_id: Option<&str>) -> Vec<String> {
     let snapshot = crate::standards::v1::subsets::any::schema::default_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = semio_framework_plugin::ArtifactView::new(&snapshot, &history);
-    let config = Generation3dViewConfig { active_example_id: example_id.into(), ..Generation3dViewConfig::default() };
+    let config = Generation3dViewConfig { active_example_id: example_id.map(str::to_string), ..Generation3dViewConfig::default() };
     let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
     let topology = <crate::viewer::generation3d::Generation3dViewer as ArtifactViewer>::interaction_topology(&doc, &cfg);
     let ids = topology.domains.get("graph").expect("graph domain").ordered.iter().filter(|node| node.granularity == "node" && node.parent.is_none()).map(|node| node.id.clone()).collect();
     snapshot.retire_cold();
     ids
+}
+
+/// 🕳️ The picker's `No example` row shows NO example — on the read-only surface exactly as on the
+/// sibling one. It used to resolve to the document this session opened, which in the playground IS a
+/// bundled example (the hexagonal mushroom column), so the row that promises no example painted its
+/// three meshes (`meshesLen 3641`, measured on the served viewer 2026-09-13). Never picking anything
+/// is a DIFFERENT state and still shows the opened document
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[test]
+fn the_no_example_row_clears_the_viewed_document_and_never_picking_does_not() {
+    let _serial = context::lock();
+    let fixture = dsl::json::parse(EXAMPLE_SWITCH_FIXTURE_JSON).expect("the example-switch fixture parses");
+    let viewer = fixture.get("viewer").cloned().expect("the fixture declares the viewer's picker states");
+    assert_eq!(viewer.get("windowKind").and_then(dsl::json::Value::as_str), Some(preview::WINDOW_KIND_ID));
+    let states = viewer.get("states").cloned().expect("states");
+    let states = states.as_array().expect("states is a table");
+    assert_eq!(states.len(), 3, "the picker has three states, not two");
+    let opened = viewed_node_ids(None);
+    for state in states {
+        let id = state.get("id").and_then(dsl::json::Value::as_str).expect("state id");
+        let picked = state.get("activeExampleId").and_then(dsl::json::Value::as_str);
+        let nodes = viewed_node_ids(picked);
+        println!("[STATS] viewer picker state {id} activeExampleId={picked:?} nodes={nodes:?}");
+        match state.get("viewed").and_then(dsl::json::Value::as_str).expect("viewed") {
+            "opened" => assert_eq!(nodes, opened, "{id}: never picking anything keeps showing the opened document"),
+            "empty" => assert!(nodes.is_empty(), "{id}: the `No example` row must clear the viewed document, not load one"),
+            example_id => {
+                assert_eq!(nodes, viewed_node_ids(Some(example_id)), "{id}: a named example is looked at as itself");
+                assert!(!nodes.is_empty(), "{id}: a named example reports its own graph");
+            }
+        }
+    }
+    assert_ne!(viewed_node_ids(Some("")), viewed_node_ids(Some(PROCEDURAL_EXAMPLE_HEX_COLUMN)), "`No example` must not resolve to the default document");
 }
 
 /// 🎨️ All eight bundled examples really switch what the read-only surface is looking at. The
@@ -43,11 +82,11 @@ fn viewed_node_ids(example_id: &str) -> Vec<String> {
 #[test]
 fn every_bundled_example_switches_the_viewed_document() {
     let _serial = context::lock();
-    let opened = viewed_node_ids("");
+    let opened = viewed_node_ids(None);
     assert!(!opened.is_empty(), "the opened document must report its own graph nodes");
     let mut seen: Vec<(&str, Vec<String>)> = Vec::new();
     for example_id in EVERY_BUNDLED_EXAMPLE {
-        let nodes = viewed_node_ids(example_id);
+        let nodes = viewed_node_ids(Some(example_id));
         assert!(!nodes.is_empty(), "{example_id} must report the example's own graph nodes");
         seen.push((example_id, nodes));
     }

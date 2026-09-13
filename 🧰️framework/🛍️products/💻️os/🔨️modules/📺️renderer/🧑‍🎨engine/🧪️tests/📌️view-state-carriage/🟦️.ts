@@ -15,7 +15,7 @@
 
 import { describe, expect, it } from "vitest";
 import { parseResolvedPluginViewState, VIEW_CONTEXT_LONG_STRING_CHARS } from "@semio-tech/framework";
-import { buildSpacePanelState, panelJsonFromState, parsePanelState } from "../../🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { buildSpacePanelState, isSpacePanelState, panelJsonFromState, parsePanelState } from "../../🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts";
 import fixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/📌️panel-carriage/🔣️.json";
 
 const spawnedRoster = (count: number) =>
@@ -45,13 +45,14 @@ describe("view-state carriage", () => {
 
   it("never puts a program roster in the panel carriage, and stays inside the bound at window capacity", () => {
     // 🪐️ The shell's app roster crosses as its own `setAppRegistrations` hint-push, never as panel
-    // state, so `programs` is empty in every panel the shell builds — the roster grows with the
-    // plugin closure and would be exactly the payload that broke this bound.
-    const empty = buildSpacePanelState([], []);
-    expect(empty.programs).toEqual([]);
-    expect(fixture.programsAreEmpty).toBe(true);
+    // state: the carriage declares exactly the fields the fixture names and `isSpacePanelState`
+    // refuses every other key, so a roster — which grows with the plugin closure and is exactly the
+    // payload that broke this bound — has nowhere to ride.
+    const empty = buildSpacePanelState([], fixture.activePanelTab);
+    expect(Object.keys(empty).sort()).toEqual([...fixture.carriedFields].sort());
+    expect(isSpacePanelState({ ...empty, programs: [] })).toBe(false);
 
-    const panel = buildSpacePanelState([], spawnedRoster(fixture.windowInstanceCapacity));
+    const panel = buildSpacePanelState(spawnedRoster(fixture.windowInstanceCapacity), fixture.activePanelTab);
     const json = panelJsonFromState(panel);
     expect(parsePanelState({ panelJson: json })?.spawnedApps.length).toBe(fixture.windowInstanceCapacity);
     expect(json.length).toBeLessThanOrEqual(fixture.capacityChars);

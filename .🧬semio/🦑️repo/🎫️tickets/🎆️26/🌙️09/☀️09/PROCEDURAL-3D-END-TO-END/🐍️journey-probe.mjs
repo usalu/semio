@@ -27,7 +27,7 @@ const snap = () => page.evaluate(() => {
     // probe call a stale flow window converged (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     const fx = parse(el.getAttribute("data-fixture-json"));
     const widgetIds = fx && Array.isArray(fx.widgets) ? fx.widgets.map((w) => { const inner = w && typeof w === "object" ? Object.values(w)[0] : null; return (w && w.id) ?? (inner && inner.id) ?? null; }).filter(Boolean) : undefined;
-    return { surfaceId: el.getAttribute("data-surface-id"), meshes, instances, phase: st?.phase, ratio: st?.progress?.ratio, meshesLen: st?.debug?.meshesLen, fault: st?.fault?.code ?? null, nodeStatuses, widgetIds, w: el.offsetWidth, h: el.offsetHeight };
+    return { surfaceId: el.getAttribute("data-surface-id"), meshes, instances, phase: st?.phase, ratio: st?.progress?.ratio, computing: st?.computing ?? null, cancellable: st?.cancellable ?? null, cancelAction: st?.cancelAction ?? null, statusKeys: st && typeof st === "object" && st.phase ? Object.keys(st) : undefined, meshesLen: st?.debug?.meshesLen, fault: st?.fault?.code ?? null, nodeStatuses, widgetIds, w: el.offsetWidth, h: el.offsetHeight };
   });
   const sel = document.querySelector("select");
   const combo = document.querySelector('[role="combobox"]');
@@ -54,25 +54,44 @@ const EXPECTED_WIDGETS = {
   "Box Shell Preview": ["size", "thickness", "box", "shell"],
   "No example": [],
 };
-/** ⚖️ A step has converged only when the flow window publishes the graph of the example the picker
- * NAMES. Comparing against the eval status map alone declared a stale window converged in 3 s and
- * screenshotted the previous example for the whole journey. */
-const converged = (s, expectWidgets) => {
+/** 📈️ THE settled predicate, read off the published `World3dComputeStatusV1` and nothing else, so it
+ * means the same thing on all THREE preview windows — edit's `procedural-preview`, generate's
+ * `generation3d-generate-preview` and the viewer's `procedural-view-preview`.
+ *
+ * 🪪️ An empty document settles here too: the ledger's ratio is 1 for a zero total with nothing in
+ * flight, which is `idle-empty`. The old predicate reached past the contract into the FLOW window's
+ * per-node status map, which the viewer and the generate preview do not have at all — so every
+ * `view:*` step and `generate-added` reported `converged=false` for the full 60 s budget while the
+ * surface had in fact been idle at `ratio 1` the whole time
+ * (`🗑️generated/s4-journey-1/results.json`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+const settled = (h) => Boolean(h) && h.phase === "idle" && h.ratio === 1 && h.computing !== true && !h.fault;
+/** ⚖️ A step has converged when EVERY attached preview window is settled, the picker names what was
+ * picked, and — only where a flow window exists, i.e. edit mode — that window publishes the graph of
+ * the example the picker NAMES. Comparing against the eval status map alone declared a stale window
+ * converged in 3 s and screenshotted the previous example for the whole journey, so the graph oracle
+ * stays; it is simply not asked of a surface that has no graph window. */
+const converged = (s, expectWidgets, expectLabel) => {
   const main = s.hosts.find((h) => h.surfaceId === "window:procedural-main");
-  const preview = s.hosts.find((h) => h.surfaceId && h.surfaceId.endsWith("-preview"));
-  const nodes = main?.nodeStatuses ?? [];
-  const nodesOk = nodes.length > 0 && nodes.every((st) => st === "ok" || st === "error");
-  const graphOk = expectWidgets === undefined ? (main?.widgetIds ?? []).length > 0 : JSON.stringify([...(main?.widgetIds ?? [])].sort()) === JSON.stringify([...expectWidgets].sort());
-  return Boolean(preview) && preview.phase === "idle" && preview.ratio === 1 && nodesOk && graphOk;
+  const previews = s.hosts.filter((h) => h.surfaceId && h.surfaceId.endsWith("-preview"));
+  if (previews.length === 0 || !previews.every(settled)) return false;
+  // 🕳️ `No example` is an EMPTY state everywhere: a row that promises no example must leave no mesh,
+  // no instance and no selection behind on any preview window.
+  if (expectWidgets !== undefined && expectWidgets.length === 0 && previews.some((h) => h.meshes > 0 || h.instances > 0)) return false;
+  if (expectLabel !== undefined && s.example !== expectLabel) return false;
+  if (!main) return true;
+  const nodes = main.nodeStatuses ?? [];
+  const nodesOk = nodes.every((st) => st === "ok" || st === "error") && (nodes.length > 0 || (expectWidgets !== undefined && expectWidgets.length === 0));
+  const graphOk = expectWidgets === undefined ? (main.widgetIds ?? []).length > 0 : JSON.stringify([...(main.widgetIds ?? [])].sort()) === JSON.stringify([...expectWidgets].sort());
+  return nodesOk && graphOk;
 };
-const waitMeshes = async (label, seconds, expectWidgets) => {
+const waitMeshes = async (label, seconds, expectWidgets, expectLabel) => {
   let last = null; let stable = 0; const start = Date.now();
   for (let i = 0; i < seconds; i++) {
     await page.waitForTimeout(1000); last = await snap();
-    if (converged(last, expectWidgets)) { stable += 1; if (stable >= 3) break; } else stable = 0;
+    if (converged(last, expectWidgets, expectLabel)) { stable += 1; if (stable >= 3) break; } else stable = 0;
   }
-  const row = { label, t: Date.now() - t0, seconds: (Date.now() - start) / 1000, converged: converged(last, expectWidgets), expectWidgets: expectWidgets ?? null, meshes: last.meshes, example: last.example, hosts: last.hosts, windows: last.windows, modes: last.modes, roles: last.roles, faults: last.faults };
-  results.push(row); console.log(`[DEBUG] ${label}: converged=${row.converged} in ${row.seconds.toFixed(0)}s meshes=${row.meshes} example=${JSON.stringify(row.example)} hosts=${JSON.stringify(row.hosts.map((h) => [h.surfaceId, h.meshes, h.phase, h.fault, h.widgetIds ?? h.nodeStatuses]))}`);
+  const row = { label, t: Date.now() - t0, seconds: (Date.now() - start) / 1000, converged: converged(last, expectWidgets, expectLabel), expectWidgets: expectWidgets ?? null, expectLabel: expectLabel ?? null, meshes: last.meshes, example: last.example, hosts: last.hosts, windows: last.windows, modes: last.modes, roles: last.roles, faults: last.faults };
+  results.push(row); console.log(`[DEBUG] ${label}: converged=${row.converged} in ${row.seconds.toFixed(0)}s meshes=${row.meshes} example=${JSON.stringify(row.example)} hosts=${JSON.stringify(row.hosts.map((h) => [h.surfaceId, h.meshes, h.instances, h.phase, h.ratio, h.computing, h.fault, h.widgetIds ?? h.nodeStatuses]))}`);
   await page.screenshot({ path: join(outDir, `${results.length}-${label.replace(/[^a-z0-9]+/gi, "-")}.png`) });
   return last;
 };
@@ -96,7 +115,7 @@ const options = await listOptions();
 console.log("[DEBUG] options", JSON.stringify(options));
 for (const text of options) {
   await pick(text);
-  await waitMeshes(`edit:${text}`, meshWait, EXPECTED_WIDGETS[text]);
+  await waitMeshes(`edit:${text}`, meshWait, EXPECTED_WIDGETS[text], text);
 }
 await page.keyboard.press("Meta+Alt+ArrowRight");
 await waitMeshes("generate-mode", 10);
@@ -112,7 +131,7 @@ await page.keyboard.press("Meta+Alt+V");
 s = await waitMeshes("viewer-role", meshWait);
 for (const text of await listOptions()) {
   await pick(text);
-  await waitMeshes(`view:${text}`, meshWait, EXPECTED_WIDGETS[text]);
+  await waitMeshes(`view:${text}`, meshWait, EXPECTED_WIDGETS[text], text);
 }
 writeFileSync(join(outDir, "results.json"), JSON.stringify(results, null, 2));
 writeFileSync(join(outDir, "console.txt"), lines.join("\n"));

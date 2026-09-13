@@ -401,6 +401,35 @@ pub enum UiDocumentIngressStatus {
     Published,
 }
 
+/// 🪪️ The ingress generation one surface's next document must carry, given what this producer last
+/// minted for that surface (`(published_revision, generation)`) and the revision the producer is
+/// publishing now.
+///
+/// ⚖️ Declared HERE, beside the two admission rules it has to satisfy, because a producer that gets it
+/// wrong is refused silently: [`Ui::document_status`] answers `Published` while the window's published
+/// document carries the same generation — so a repeat generation makes the whole ingress phase a
+/// no-op — and [`Ui::begin_document`] refuses `StaleGeneration` unless the incoming generation is
+/// strictly GREATER than the published one. The generation is therefore "which ingress is this", never
+/// "who produced it".
+///
+/// 🩸️ The browser producer minted the plugin INSTANCE id, a constant for the session and identical for
+/// every surface: each surface ingested exactly one document ever, and every later document — a
+/// correctly re-rendered one — was answered `Published` and dropped on the floor, so the arena
+/// repainted the first tree forever (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-generation-publication-2026-09-13.md`).
+///
+/// 🧮️ Keyed on the producer's own revision so an UNCHANGED surface keeps its generation and pays no
+/// ingress at all, and COUNTED rather than mirrored from that revision so a surface whose revision
+/// restarts (a retired surface reopened under a fresh owner) still moves forward instead of being
+/// refused as stale for the rest of the session.
+pub fn ui_document_ingress_generation(minted: Option<(u64, u64)>, revision: u64) -> u64 {
+    match minted {
+        Some((published_revision, generation)) if published_revision == revision => generation,
+        Some((_, generation)) => generation.saturating_add(1),
+        None => 1,
+    }
+}
+
 struct UiDocumentIngress {
     document: UiDocumentTree,
     next_page: usize,
