@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "artifact": "s.stdio.html",
+  "standard": "5",
+  "subset": "any",
+  "manifestPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+  "moves": [
+    {
+      "fixture": "set-doctype-applied",
+      "role": "expected-before-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/📜set-doctype-applied/⬅️before.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/📜️set-doctype-applied/📸️snapshot/⬅️before/🌐️.html",
+      "manifestPath": "../🧫️fixtures/📜️set-doctype-applied/📸️snapshot/⬅️before/🌐️.html"
+    },
+    {
+      "fixture": "set-doctype-applied",
+      "role": "expected-after-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/📜set-doctype-applied/➡️after.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/📜️set-doctype-applied/📸️snapshot/➡️after/🌐️.html",
+      "manifestPath": "../🧫️fixtures/📜️set-doctype-applied/📸️snapshot/➡️after/🌐️.html"
+    },
+    {
+      "fixture": "insert-node-applied",
+      "role": "expected-before-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➕insert-node-applied/⬅️before.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➕️insert-node-applied/📸️snapshot/⬅️before/🌐️.html",
+      "manifestPath": "../🧫️fixtures/➕️insert-node-applied/📸️snapshot/⬅️before/🌐️.html"
+    },
+    {
+      "fixture": "insert-node-applied",
+      "role": "expected-after-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➕insert-node-applied/➡️after.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➕️insert-node-applied/📸️snapshot/➡️after/🌐️.html",
+      "manifestPath": "../🧫️fixtures/➕️insert-node-applied/📸️snapshot/➡️after/🌐️.html"
+    },
+    {
+      "fixture": "remove-node-applied",
+      "role": "expected-before-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➖remove-node-applied/⬅️before.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➖️remove-node-applied/📸️snapshot/⬅️before/🌐️.html",
+      "manifestPath": "../🧫️fixtures/➖️remove-node-applied/📸️snapshot/⬅️before/🌐️.html"
+    },
+    {
+      "fixture": "remove-node-applied",
+      "role": "expected-after-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➖remove-node-applied/➡️after.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➖️remove-node-applied/📸️snapshot/➡️after/🌐️.html",
+      "manifestPath": "../🧫️fixtures/➖️remove-node-applied/📸️snapshot/➡️after/🌐️.html"
+    },
+    {
+      "fixture": "set-element-name-applied",
+      "role": "expected-before-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🏷️set-element-name-applied/⬅️before.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🏷️set-element-name-applied/📸️snapshot/⬅️before/🌐️.html",
+      "manifestPath": "../🧫️fixtures/🏷️set-element-name-applied/📸️snapshot/⬅️before/🌐️.html"
+    },
+    {
+      "fixture": "set-element-name-applied",
+      "role": "expected-after-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🏷️set-element-name-applied/➡️after.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🏷️set-element-name-applied/📸️snapshot/➡️after/🌐️.html",
+      "manifestPath": "../🧫️fixtures/🏷️set-element-name-applied/📸️snapshot/➡️after/🌐️.html"
+    },
+    {
+      "fixture": "set-attribute-applied",
+      "role": "expected-before-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🔖set-attribute-applied/⬅️before.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/⬅️before/🌐️.html",
+      "manifestPath": "../🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/⬅️before/🌐️.html"
+    },
+    {
+      "fixture": "set-attribute-applied",
+      "role": "expected-after-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🔖set-attribute-applied/➡️after.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/➡️after/🌐️.html",
+      "manifestPath": "../🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/➡️after/🌐️.html"
+    },
+    {
+      "fixture": "set-text-applied",
+      "role": "expected-before-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/✍️set-text-applied/⬅️before.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/✍️set-text-applied/📸️snapshot/⬅️before/🌐️.html",
+      "manifestPath": "../🧫️fixtures/✍️set-text-applied/📸️snapshot/⬅️before/🌐️.html"
+    },
+    {
+      "fixture": "set-text-applied",
+      "role": "expected-after-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/✍️set-text-applied/➡️after.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/✍️set-text-applied/📸️snapshot/➡️after/🌐️.html",
+      "manifestPath": "../🧫️fixtures/✍️set-text-applied/📸️snapshot/➡️after/🌐️.html"
+    },
+    {
+      "fixture": "set-comment-applied",
+      "role": "expected-before-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/💬set-comment-applied/⬅️before.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/💬️set-comment-applied/📸️snapshot/⬅️before/🌐️.html",
+      "manifestPath": "../🧫️fixtures/💬️set-comment-applied/📸️snapshot/⬅️before/🌐️.html"
+    },
+    {
+      "fixture": "set-comment-applied",
+      "role": "expected-after-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/💬set-comment-applied/➡️after.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/💬️set-comment-applied/📸️snapshot/➡️after/🌐️.html",
+      "manifestPath": "../🧫️fixtures/💬️set-comment-applied/📸️snapshot/➡️after/🌐️.html"
+    },
+    {
+      "fixture": "set-raw-text-applied",
+      "role": "expected-before-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/⌨️set-raw-text-applied/⬅️before.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/⌨️set-raw-text-applied/📸️snapshot/⬅️before/🌐️.html",
+      "manifestPath": "../🧫️fixtures/⌨️set-raw-text-applied/📸️snapshot/⬅️before/🌐️.html"
+    },
+    {
+      "fixture": "set-raw-text-applied",
+      "role": "expected-after-html",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/⌨️set-raw-text-applied/➡️after.html",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/⌨️set-raw-text-applied/📸️snapshot/➡️after/🌐️.html",
+      "manifestPath": "../🧫️fixtures/⌨️set-raw-text-applied/📸️snapshot/➡️after/🌐️.html"
+    }
+  ]
+}

@@ -740,7 +740,7 @@ export type TutorialDefinition = Omit<GeneratedTutorialDefinition, "durationMs" 
 //#endregion 🎬️Tutorial
 
 //#region 🏷️ShellBrand
-// 🌐️ ShellLocale/ShellTerminology are generated from ui_wgpu's 🔣️ui-axes.json (the same source of
+// 🌐️ ShellLocale/ShellTerminology are generated from 🖱️ui/🎚️axes/🔣️.json (the same source of
 // truth Rust's Locale/Terminology enums derive from), imported/re-exported above — so a locale
 // added there and here can never drift. The single source `UiLocale` (`framework/ui/js/react`),
 // `ShellBrandLocks.locale`, and `resolveShellLocks` all derive from this.

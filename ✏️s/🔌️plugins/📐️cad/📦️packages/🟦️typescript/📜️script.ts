@@ -20,7 +20,7 @@ const variant = (value: string): string => value.split("-").map((part) => `${par
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "vitest.config.ts");
+    runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -28,7 +28,7 @@ class FixtureScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
     process.env.CAD_GENERATE_STEP_FIXTURES = "1";
-    runVitest(this.root, rest, "vitest.config.ts");
+    runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

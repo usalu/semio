@@ -14,7 +14,8 @@ import { basename, dirname, isAbsolute, join, normalize, relative, resolve, sep 
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { preparedBinaryen } from "./⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
-import { cargoTargetDirectory } from "./⚡️caching/🦀️cargo/🟦️.ts";
+import { cargoTargetDirectory, wasmBindgenVersion } from "./⚡️caching/🦀️cargo/🟦️.ts";
+export { wasmBindgenVersion };
 import { isGeneratedPath, repoCacheDirectory } from "./⚡️caching/🟦️.ts";
 import { canonicalFilenameForKind, fixedContractFilename, loadCatalogTaxonomy, loadTaxonomy, taxonomyRelativePathIsExcluded } from "./🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
@@ -852,7 +853,7 @@ export type LintScriptModule = {
 /** 🔎️True when `script.ts` exports a repo policy lint callback. */
 export function scriptExportsPolicy(scriptPath: string): boolean {
   const text = readFileSync(scriptPath, "utf8");
-  return /\bexport\s+(const|function)\s+policy\b/.test(text);
+  return /\bexport\s+(?:(?:const|function)\s+policy\b|\{\s*policy\s*\}\s+from\b)/.test(text);
 }
 
 function parsePolicyFileExport(scriptPath: string): string | undefined {
@@ -2678,7 +2679,7 @@ export function vitestRunArguments(bundleRoot: string, segments: string[], confi
   return [vitestBin, "run", "--config", config, ...vitestLevelArgs(), ...coverageArgs, ...segments];
 }
 
-export async function runVitest(bundleRoot: string, segments: string[], config = "vitest.config.ts"): Promise<void> {
+export async function runVitest(bundleRoot: string, segments: string[], config: string): Promise<void> {
   const collectingCoverage = coverageEnabled();
   const runtime = collectingCoverage ? "node" : process.execPath;
   await runTestBudgeted(runtime, vitestRunArguments(bundleRoot, segments, config, collectingCoverage), { cwd: bundleRoot, env: devToolingEnv() });
@@ -2868,19 +2869,12 @@ export function resolveDevPort(host: string, preferredPort: number, maxAttempts 
   process.exit(1);
 }
 
-/** ⚙️ Resolves the Vite config filename present in `bundleRoot` (compound-emoji layout first). */
-function resolveViteConfigFileName(bundleRoot: string): string {
-  for (const name of ["⚙️vite.config.ts", "vite.config.ts"] as const) {
-    if (existsSync(join(bundleRoot, name))) return name;
-  }
-  return "⚙️vite.config.ts";
-}
-
-/** ▶️Vite dev via `bunx` with the package's Vite config (`⚙️vite.config.ts` / `vite.config.ts`). */
+/** ▶️Vite dev via `bunx` with an explicitly owned configuration source. */
 export function runViteBunxDev(
   bundleRoot: string,
   segments: string[],
   opts: {
+    config: string;
     portEnv?: string;
     defaultPort?: string;
     clearViteCache?: boolean;
@@ -2891,7 +2885,7 @@ export function runViteBunxDev(
     env?: NodeJS.ProcessEnv;
     /** When set with `fixedPort`, only reuse an existing listener serving this play entry. */
     expectedPlayEntry?: string;
-  } = {},
+  },
 ): Promise<void> {
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
   const preferredPort = Number(process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173");
@@ -2928,7 +2922,7 @@ export function runViteBunxDev(
     if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });
   }
   const wantStrictPort = opts.strictPort ?? true;
-  const viteArgs = ["vite", "--config", resolveViteConfigFileName(bundleRoot), "--host", host, "--port", String(port)];
+  const viteArgs = ["vite", "--config", opts.config, "--host", host, "--port", String(port)];
   if (wantStrictPort && !segments.includes("--strictPort") && !segments.includes("--no-strictPort")) {
     viteArgs.push("--strictPort");
   }
@@ -2955,13 +2949,6 @@ export type WasmPackWebPkg = {
   types: string;
   sideEffects?: string[];
 };
-
-/** 🔒️ The binding generator must have the same identity as the locked Rust crate. */
-export function wasmBindgenVersion(lock: string): string {
-  const versions = [...lock.matchAll(/^name = "wasm-bindgen"\r?\nversion = "([^"]+)"$/gm)].map((match) => match[1]!);
-  if (versions.length !== 1) throw new Error("Cargo.lock must resolve exactly one wasm-bindgen version");
-  return versions[0]!;
-}
 
 /** 📦️ Resolves an explicitly provisioned binding generator on every supported host. */
 export function resolveWasmBindgenBin(repoRoot = getWorkspaceRoot(), env: NodeJS.ProcessEnv = process.env): string {

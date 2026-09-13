@@ -1142,20 +1142,22 @@ describe("🧩️ open/closed", () => {
 
   test("a Rust host build resolves Cargo's executable before the finite scenario budget starts", async () => {
     const ts = await import("typescript");
-    const script = readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"), "utf8");
-    const source = ts.createSourceFile("script.ts", script, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    const parser = source.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "rustHostExecutableFromCargo");
-    const execute = source.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "executeOne");
+    const hostPath = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🏗️materialization/🟦️.ts");
+    const executionPath = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏃️execution/🎬️scenario/🟦️.ts");
+    const hostSource = ts.createSourceFile(hostPath, readFileSync(hostPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const executionSource = ts.createSourceFile(executionPath, readFileSync(executionPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const parser = hostSource.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "rustHostExecutableFromCargo");
+    const execute = executionSource.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "executeOne");
     expect(parser).toBeDefined();
     expect(execute).toBeDefined();
-    const compiled = ts.transpileModule(parser!.getText(source), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
+    const compiled = ts.transpileModule(parser!.getText(hostSource).replace(/^export\s+/u, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
     const resolveExecutable = new Function(`${compiled}\nreturn rustHostExecutableFromCargo;`)() as (stdout: string) => string | null;
     const cargoOutput = [
       JSON.stringify({ reason: "compiler-artifact", target: { name: "dependency", kind: ["lib"] }, executable: null }),
       JSON.stringify({ reason: "compiler-artifact", target: { name: "host", kind: ["bin"] }, executable: "/tmp/target/aarch64/debug/host" }),
     ].join("\n");
     expect(resolveExecutable(cargoOutput)).toBe("/tmp/target/aarch64/debug/host");
-    const executeText = execute!.getText(source);
+    const executeText = execute!.getText(executionSource);
     expect(executeText).toContain("budgetMs: buildBudgetMs()");
     expect(executeText).toContain("budgetMs: testLevelBudgetMs(level)");
     expect(executeText.indexOf("budgetMs: buildBudgetMs()")).toBeLessThan(executeText.indexOf("budgetMs: testLevelBudgetMs(level)"));

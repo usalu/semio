@@ -218,6 +218,10 @@ mod tests;
 #[path = "🧪️tests/🪪️pack-identity/🦀️.rs"]
 mod pack_identity_tests;
 
+#[cfg(test)]
+#[path = "🧪️tests/📥️retained-pack-load/🦀️.rs"]
+mod retained_pack_load_tests;
+
 /// 📬️ One typed config mutation addressed to one exact concrete window instance.
 pub struct WindowConfigMutation {
     window_id: String,

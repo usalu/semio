@@ -697,7 +697,7 @@ struct RetainedVarint {
 impl RetainedVarint {
     fn admit(&mut self, byte: u8, offset: u64) -> Result<Option<u64>, PackError> {
         if self.bytes >= 10 || (self.bytes == 9 && ((byte & 0x80) != 0 || byte & 0x7f > 1)) {
-            return Err(PackError::Malformed { what: "retained-varint", offset: offset - self.bytes as u64, detail: "overlong varint".into() });
+            return Err(PackError::RetainedMalformed { what: "retained-varint", offset: offset - self.bytes as u64, detail: "overlong varint" });
         }
         let payload = (byte & 0x7f) as u64;
         self.value |= payload << (self.bytes as u32 * 7);
@@ -709,6 +709,11 @@ impl RetainedVarint {
             return Err(PackError::NonCanonical("non-minimal retained varint"));
         }
         Ok(Some(self.value))
+    }
+
+    fn preview(self, byte: u8, offset: u64) -> Result<Option<u64>, PackError> {
+        let mut cursor = self;
+        cursor.admit(byte, offset)
     }
 }
 
@@ -727,12 +732,12 @@ impl RetainedUtf8 {
                 0xc2..=0xdf => (self.value, self.minimum, self.remaining) = ((byte & 0x1f) as u32, 0x80, 1),
                 0xe0..=0xef => (self.value, self.minimum, self.remaining) = ((byte & 0x0f) as u32, 0x800, 2),
                 0xf0..=0xf4 => (self.value, self.minimum, self.remaining) = ((byte & 7) as u32, 0x10000, 3),
-                _ => return Err(PackError::Malformed { what: "retained-utf8", offset, detail: "invalid leading byte".into() }),
+                _ => return Err(PackError::RetainedMalformed { what: "retained-utf8", offset, detail: "invalid leading byte" }),
             }
             return Ok(None);
         }
         if byte & 0xc0 != 0x80 {
-            return Err(PackError::Malformed { what: "retained-utf8", offset, detail: "invalid continuation".into() });
+            return Err(PackError::RetainedMalformed { what: "retained-utf8", offset, detail: "invalid continuation" });
         }
         self.value = (self.value << 6) | (byte & 0x3f) as u32;
         self.remaining -= 1;
@@ -740,9 +745,14 @@ impl RetainedUtf8 {
             return Ok(None);
         }
         if self.value < self.minimum || (0xd800..=0xdfff).contains(&self.value) || self.value > 0x10ffff {
-            return Err(PackError::Malformed { what: "retained-utf8", offset, detail: "invalid scalar".into() });
+            return Err(PackError::RetainedMalformed { what: "retained-utf8", offset, detail: "invalid scalar" });
         }
-        char::from_u32(self.value).map(Some).ok_or(PackError::Malformed { what: "retained-utf8", offset, detail: "invalid scalar".into() })
+        char::from_u32(self.value).map(Some).ok_or_else(|| PackError::RetainedMalformed { what: "retained-utf8", offset, detail: "invalid scalar" })
+    }
+
+    fn preview(self, byte: u8, offset: u64) -> Result<Option<char>, PackError> {
+        let mut cursor = self;
+        cursor.admit(byte, offset)
     }
 }
 
@@ -790,28 +800,125 @@ enum Expect {
 
 pub struct RetainedValueCursor {
     limits: PackLimits,
-    stack: Vec<Expect>,
+    stack: std::mem::ManuallyDrop<Vec<Expect>>,
+    maximum_frames: usize,
+    maximum_allocation_bytes: usize,
+    initialized_roots: u8,
     pending: Option<(u64, u8)>,
     offset: u64,
     sealed: bool,
+    closing: bool,
+    fault: Option<PackError>,
     closed: bool,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct RetainedValueAllocationStep {
+    pub progressed: bool,
+    pub allocated_bytes: usize,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct RetainedValueAllocationError {
+    pub allocated_bytes: usize,
+    pub fault: PackError,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct RetainedValueProgress {
+    pub frames: usize,
+    pub frame_capacity: usize,
+    pub allocated_bytes: usize,
+    pub initialized_roots: u8,
+    pub pending_input: bool,
+    pub closed: bool,
+}
+
 impl RetainedValueCursor {
-    pub fn try_new(limits: PackLimits) -> Result<Self, PackError> {
+    pub fn try_new(limits: PackLimits, maximum_allocation_bytes: usize) -> Result<Self, PackError> {
         if limits.max_depth == 0 || limits.max_items == 0 {
             return Err(PackError::LimitExceeded("retained value credits"));
         }
-        let capacity = usize::from(limits.max_depth).checked_mul(8).ok_or(PackError::LimitExceeded("retained value stack"))?;
-        let mut stack = Vec::new();
-        stack.try_reserve_exact(capacity).map_err(|_| PackError::LimitExceeded("retained value stack reservation"))?;
-        stack.push(Expect::Finish);
-        stack.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Record(0)));
-        Ok(Self { limits, stack, pending: None, offset: 0, sealed: false, closed: false })
+        let maximum_frames = usize::from(limits.max_depth).checked_mul(8).ok_or(PackError::LimitExceeded("retained value stack"))?;
+        let requested = maximum_frames.checked_mul(size_of::<Expect>()).ok_or(PackError::LimitExceeded("retained value stack allocation"))?;
+        if maximum_allocation_bytes == 0 || maximum_allocation_bytes > isize::MAX as usize || requested > maximum_allocation_bytes {
+            return Err(PackError::LimitExceeded("retained value stack allocation credits"));
+        }
+        Ok(Self {
+            limits,
+            stack: std::mem::ManuallyDrop::new(Vec::new()),
+            maximum_frames,
+            maximum_allocation_bytes,
+            initialized_roots: 0,
+            pending: None,
+            offset: 0,
+            sealed: false,
+            closing: false,
+            fault: None,
+            closed: false,
+        })
+    }
+
+    fn stack_allocation_bytes(&self) -> usize {
+        self.stack.capacity().saturating_mul(size_of::<Expect>())
+    }
+
+    pub fn allocated_bytes(&self) -> usize {
+        self.stack_allocation_bytes()
+    }
+
+    pub fn next_allocation_bytes(&mut self) -> Result<Option<usize>, PackError> {
+        if let Some(fault) = self.fault.clone() {
+            return Err(fault);
+        }
+        if self.closed || self.closing {
+            return Err(PackError::RetainedMalformed { what: "retained-value", offset: self.offset, detail: "allocation after close" });
+        }
+        if self.stack.capacity() >= self.maximum_frames {
+            return Ok(None);
+        }
+        self.maximum_frames
+            .checked_mul(size_of::<Expect>())
+            .filter(|requested| *requested <= self.maximum_allocation_bytes)
+            .map(Some)
+            .ok_or(PackError::LimitExceeded("retained value stack allocation credits"))
+    }
+
+    pub fn reserve_allocation(&mut self, maximum_bytes: usize) -> Result<RetainedValueAllocationStep, RetainedValueAllocationError> {
+        let requested = self.next_allocation_bytes().map_err(|fault| RetainedValueAllocationError { allocated_bytes: 0, fault })?;
+        let Some(requested) = requested else { return Ok(RetainedValueAllocationStep::default()) };
+        if maximum_bytes < requested {
+            return Ok(RetainedValueAllocationStep::default());
+        }
+        if self.stack.try_reserve_exact(self.maximum_frames).is_err() {
+            let fault = PackError::LimitExceeded("retained value stack allocation");
+            let first = self.fault.get_or_insert_with(|| fault.clone()).clone();
+            return Err(RetainedValueAllocationError { allocated_bytes: 0, fault: first });
+        }
+        let allocated_bytes = self.stack_allocation_bytes();
+        if allocated_bytes > maximum_bytes || allocated_bytes > self.maximum_allocation_bytes {
+            let fault = PackError::LimitExceeded("retained value stack allocation overgrant");
+            self.fault.get_or_insert_with(|| fault.clone());
+            return Err(RetainedValueAllocationError { allocated_bytes, fault });
+        }
+        Ok(RetainedValueAllocationStep { progressed: true, allocated_bytes })
+    }
+
+    fn initialize_root(&mut self) -> Result<bool, PackError> {
+        if self.initialized_roots == 2 {
+            return Ok(false);
+        }
+        if self.stack.capacity() < self.maximum_frames {
+            return Ok(false);
+        }
+        let frame = if self.initialized_roots == 0 { Expect::Finish } else { Expect::Varint(RetainedVarint::default(), AfterVarint::Record(0)) };
+        self.stack.push(frame);
+        self.initialized_roots += 1;
+        Ok(true)
     }
 
     pub fn admit_byte(&mut self, offset: u64, byte: u8) -> Result<(), (u64, u8)> {
-        if self.closed || self.sealed || self.stack.is_empty() || self.pending.is_some() || offset != self.offset {
+        if self.closed || self.closing || self.fault.is_some() || self.sealed || self.initialized_roots != 2 || self.stack.is_empty() || self.pending.is_some() || offset != self.offset {
             return Err((offset, byte));
         }
         self.pending = Some((offset, byte));
@@ -819,15 +926,15 @@ impl RetainedValueCursor {
     }
 
     pub fn seal(&mut self, bytes: u64) -> Result<(), PackError> {
-        if self.closed || self.pending.is_some() || bytes != self.offset {
-            return Err(PackError::Malformed { what: "retained-value", offset: self.offset, detail: "seal position mismatch".into() });
+        if self.closed || self.closing || self.fault.is_some() || self.initialized_roots != 2 || self.pending.is_some() || bytes != self.offset {
+            return Err(PackError::RetainedMalformed { what: "retained-value", offset: self.offset, detail: "seal position mismatch" });
         }
         self.sealed = true;
         Ok(())
     }
 
     fn push(&mut self, value: Expect) -> Result<(), PackError> {
-        if self.stack.len() == self.stack.capacity() {
+        if self.stack.len() == self.stack.capacity() || self.stack.len() == self.maximum_frames {
             return Err(PackError::LimitExceeded("retained value owner stack"));
         }
         self.stack.push(value);
@@ -913,7 +1020,7 @@ impl RetainedValueCursor {
             }
             AfterVarint::Field => {
                 if value > u16::MAX as u64 {
-                    return Err(PackError::Malformed { what: "field-id", offset: self.offset, detail: "exceeds u16".into() });
+                    return Err(PackError::RetainedMalformed { what: "field-id", offset: self.offset, detail: "exceeds u16" });
                 }
                 Ok(RetainedValueToken::Unsigned { role: RetainedValueRole::FieldId, value })
             }
@@ -975,7 +1082,7 @@ impl RetainedValueCursor {
             }
             AfterVarint::TableField(rows, columns, depth) => {
                 if value > u16::MAX as u64 {
-                    return Err(PackError::Malformed { what: "table-field", offset: self.offset, detail: "exceeds u16".into() });
+                    return Err(PackError::RetainedMalformed { what: "table-field", offset: self.offset, detail: "exceeds u16" });
                 }
                 self.push(Expect::TablePresence(columns, rows, depth))?;
                 Ok(RetainedValueToken::Unsigned { role: RetainedValueRole::TableField, value })
@@ -998,10 +1105,10 @@ impl RetainedValueCursor {
             return Err(PackError::LimitExceeded("retained value depth"));
         }
         if context == RetainedContext::Dsl && !matches!(tag, TAG_FALSE | TAG_TRUE | TAG_INT | TAG_UINT | TAG_F64 | TAG_STR | TAG_STR_INLINE | TAG_LIST | TAG_MAP | TAG_NULL) {
-            return Err(PackError::Malformed { what: "dsl-value", offset, detail: "field-only tag".into() });
+            return Err(PackError::RetainedMalformed { what: "dsl-value", offset, detail: "field-only tag" });
         }
         if context == RetainedContext::Field && tag == TAG_NULL {
-            return Err(PackError::Malformed { what: "field-value", offset, detail: "DSL-only null".into() });
+            return Err(PackError::RetainedMalformed { what: "field-value", offset, detail: "DSL-only null" });
         }
         match tag {
             TAG_ABSENT | TAG_FALSE | TAG_TRUE | TAG_NULL => {}
@@ -1026,7 +1133,7 @@ impl RetainedValueCursor {
             TAG_TABLE_SOA => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::TableRows(depth)))?,
             TAG_PACKED_F64 | TAG_PACKED_VARINT => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Packed(if tag == TAG_PACKED_F64 { RetainedValueContainer::PackedF64 } else { RetainedValueContainer::PackedVarint })))?,
             TAG_EXPR => self.string()?,
-            _ => return Err(PackError::Malformed { what: "retained-tag", offset, detail: "unknown tag".into() }),
+            _ => return Err(PackError::RetainedMalformed { what: "retained-tag", offset, detail: "unknown tag" }),
         }
         if tag == TAG_WIRE {
             Ok(RetainedValueToken::Begin { kind: RetainedValueContainer::Wire, count: 1 })
@@ -1035,7 +1142,7 @@ impl RetainedValueCursor {
         }
     }
 
-    pub fn grant(&mut self) -> Result<Option<RetainedValueToken>, PackError> {
+    fn grant_inner(&mut self) -> Result<Option<RetainedValueToken>, PackError> {
         let Some(expectation) = self.stack.pop() else { return Ok(None) };
         let control = matches!(
             expectation,
@@ -1071,7 +1178,7 @@ impl RetainedValueCursor {
                     self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::String))?;
                     Ok(Some(RetainedValueToken::Tag { offset, value: byte }))
                 }
-                _ => Err(PackError::Malformed { what: "retained-string", offset, detail: "expected string tag".into() }),
+                _ => Err(PackError::RetainedMalformed { what: "retained-string", offset, detail: "expected string tag" }),
             },
             Expect::Varint(mut cursor, after) => match cursor.admit(byte, offset)? {
                 Some(value) => self.after(value, after).map(Some),
@@ -1094,7 +1201,7 @@ impl RetainedValueCursor {
                 if remaining > 1 {
                     self.push(Expect::Utf8(remaining - 1, cursor))?;
                 } else if cursor.remaining != 0 {
-                    return Err(PackError::Malformed { what: "retained-utf8", offset, detail: "truncated scalar".into() });
+                    return Err(PackError::RetainedMalformed { what: "retained-utf8", offset, detail: "truncated scalar" });
                 }
                 Ok(token)
             }
@@ -1106,7 +1213,7 @@ impl RetainedValueCursor {
             }
             Expect::Wire(depth) => {
                 if byte & !7 != 0 || (byte & 2 != 0 && byte & 1 == 0) {
-                    return Err(PackError::Malformed { what: "wire-presence", offset, detail: "invalid bits".into() });
+                    return Err(PackError::RetainedMalformed { what: "wire-presence", offset, detail: "invalid bits" });
                 }
                 self.push(Expect::Value(depth + 1, RetainedContext::Dsl))?;
                 if byte & 4 != 0 {
@@ -1120,7 +1227,7 @@ impl RetainedValueCursor {
             }
             Expect::WireNode => {
                 if byte & !3 != 0 {
-                    return Err(PackError::Malformed { what: "wire-node", offset, detail: "invalid bits".into() });
+                    return Err(PackError::RetainedMalformed { what: "wire-node", offset, detail: "invalid bits" });
                 }
                 if byte & 2 != 0 {
                     self.string()?;
@@ -1133,7 +1240,7 @@ impl RetainedValueCursor {
             }
             Expect::WireLabel => {
                 if byte & !3 != 0 {
-                    return Err(PackError::Malformed { what: "wire-label", offset, detail: "invalid bits".into() });
+                    return Err(PackError::RetainedMalformed { what: "wire-label", offset, detail: "invalid bits" });
                 }
                 if byte & 2 != 0 {
                     self.string()?;
@@ -1147,7 +1254,7 @@ impl RetainedValueCursor {
                 match byte {
                     0 => self.push(Expect::TableElem(rows, rows, columns, depth))?,
                     1 => self.push(Expect::TableBitmap(rows.div_ceil(8), 0, rows, 0, columns, depth))?,
-                    _ => return Err(PackError::Malformed { what: "table-presence", offset, detail: "expected 0 or 1".into() }),
+                    _ => return Err(PackError::RetainedMalformed { what: "table-presence", offset, detail: "expected 0 or 1" }),
                 }
                 Ok(Some(RetainedValueToken::TablePresence { rows, value: byte }))
             }
@@ -1175,7 +1282,7 @@ impl RetainedValueCursor {
                     ELEM_F64 => Expect::F64s(present),
                     ELEM_STR => Expect::Varints(present, RetainedValueRole::Symbol),
                     ELEM_ENUM => Expect::Varints(present, RetainedValueRole::Enum),
-                    _ => return Err(PackError::Malformed { what: "table-element", offset, detail: "unknown tag".into() }),
+                    _ => return Err(PackError::RetainedMalformed { what: "table-element", offset, detail: "unknown tag" }),
                 })?;
                 Ok(Some(RetainedValueToken::Tag { offset, value: byte }))
             }
@@ -1183,16 +1290,74 @@ impl RetainedValueCursor {
         }
     }
 
-    pub fn close_step(&mut self, maximum_items: usize) -> crate::os_pack::format::RetainedPackCloseStep {
-        self.pending = None;
-        if maximum_items == 0 {
-            return crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    pub fn grant(&mut self) -> Result<Option<RetainedValueToken>, PackError> {
+        if let Some(fault) = self.fault.clone() {
+            return Err(fault);
         }
-        if self.stack.pop().is_some() {
-            return crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        if self.closed || self.closing {
+            return Err(PackError::RetainedMalformed { what: "retained-value", offset: self.offset, detail: "grant after close" });
+        }
+        match self.initialize_root() {
+            Ok(true) => return Ok(None),
+            Ok(false) => {}
+            Err(fault) => {
+                self.fault.get_or_insert_with(|| fault.clone());
+                return Err(self.fault.clone().expect("retained value first fault"));
+            }
+        }
+        if self.initialized_roots != 2 {
+            return Ok(None);
+        }
+        match self.grant_inner() {
+            Ok(value) => Ok(value),
+            Err(fault) => {
+                self.fault.get_or_insert_with(|| fault.clone());
+                Err(self.fault.clone().expect("retained value first fault"))
+            }
+        }
+    }
+
+    pub fn next_release_allocation_bytes(&self) -> Option<usize> {
+        if self.pending.is_some() || !self.stack.is_empty() {
+            return None;
+        }
+        let allocated = self.stack_allocation_bytes();
+        (allocated != 0).then_some(allocated)
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<crate::os_pack::format::RetainedPackCloseStep, &'static str> {
+        if !self.closed && maximum_items == 0 && maximum_bytes == 0 {
+            return Ok(crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if maximum_items == 0 && (self.pending.is_some() || !self.stack.is_empty()) {
+            return Ok(crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        self.closing = true;
+        if maximum_items != 0 {
+            if self.pending.take().is_some() {
+                return Ok(crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if self.stack.pop().is_some() {
+                if self.stack.is_empty() {
+                    self.initialized_roots = 0;
+                }
+                return Ok(crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+        }
+        if self.pending.is_some() || !self.stack.is_empty() {
+            return Ok(crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        self.initialized_roots = 0;
+        let allocated_bytes = self.stack_allocation_bytes();
+        if allocated_bytes != 0 {
+            if maximum_bytes < allocated_bytes {
+                return Ok(crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            *self.stack = Vec::new();
+            return Ok(crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: allocated_bytes });
         }
         self.closed = true;
-        crate::os_pack::format::RetainedPackCloseStep::Complete
+        Ok(crate::os_pack::format::RetainedPackCloseStep::Complete)
     }
 
     /// 🚦️ Whether [`Self::admit_byte`] would accept another byte right now. One admitted byte can
@@ -1201,11 +1366,22 @@ impl RetainedValueCursor {
     /// pending slot — so a producer that admits on a fixed cadence rather than on this predicate
     /// hands back a byte the cursor is still holding.
     pub fn ingress_ready(&self) -> bool {
-        !self.closed && !self.sealed && !self.stack.is_empty() && self.pending.is_none()
+        !self.closed && !self.closing && self.fault.is_none() && !self.sealed && self.initialized_roots == 2 && !self.stack.is_empty() && self.pending.is_none()
+    }
+
+    pub fn progress(&self) -> RetainedValueProgress {
+        RetainedValueProgress {
+            frames: self.stack.len(),
+            frame_capacity: self.stack.capacity(),
+            allocated_bytes: self.stack_allocation_bytes(),
+            initialized_roots: self.initialized_roots,
+            pending_input: self.pending.is_some(),
+            closed: self.closed,
+        }
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.closed && self.stack.is_empty() && self.pending.is_none()
+        self.closed && self.stack.is_empty() && self.stack.capacity() == 0 && self.stack_allocation_bytes() == 0 && self.initialized_roots == 0 && self.pending.is_none()
     }
 }
 
@@ -1227,10 +1403,18 @@ pub enum RetainedRecordBodyToken {
 enum RetainedRecordBodyPhase {
     SymbolCount(RetainedVarint),
     SymbolLength { symbol: u64, cursor: RetainedVarint },
-    SymbolText { symbol: u64, remaining: u64, cursor: RetainedUtf8 },
+    SymbolText { symbol: u64, scalar_start: usize, utf8_len: usize, remaining: u64, cursor: RetainedUtf8 },
     Value,
     Closing,
     Closed,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RetainedRecordBodyClosePhase {
+    ValueLogical,
+    SymbolsLogical,
+    ValuePhysical,
+    SymbolsPhysical,
 }
 
 /// 🧵️ Retained cursor for the canonical container-less record-body wire used by mutations.
@@ -1239,37 +1423,92 @@ enum RetainedRecordBodyPhase {
 pub struct RetainedRecordBodyCursor {
     limits: PackLimits,
     phase: RetainedRecordBodyPhase,
-    symbols: Vec<String>,
+    symbols: std::mem::ManuallyDrop<crate::os_pack::format::RetainedPackSymbolTable>,
+    maximum_allocation_bytes: usize,
     expected_symbols: u64,
+    symbol_utf8_bytes: usize,
     offset: u64,
     value_offset: u64,
     pending: Option<(u64, u8)>,
+    catalog_complete_pending: bool,
     sealed: bool,
     value_sealed: bool,
     value: std::mem::ManuallyDrop<Option<RetainedValueCursor>>,
+    fault: Option<PackError>,
+    closing: bool,
+    close_phase: RetainedRecordBodyClosePhase,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct RetainedRecordBodyAllocationStep {
+    pub progressed: bool,
+    pub allocated_bytes: usize,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct RetainedRecordBodyAllocationError {
+    pub allocated_bytes: usize,
+    pub fault: PackError,
+}
+
+#[derive(Clone, Copy)]
+enum RetainedRecordBodyAllocationOwner {
+    SymbolSpans { target: usize, offset: u64 },
+    SymbolScalars { target: usize, offset: u64 },
+    Value,
 }
 
 impl RetainedRecordBodyCursor {
-    pub fn try_new(limits: PackLimits) -> Result<Self, PackError> {
+    pub fn try_new(
+        limits: PackLimits,
+        maximum_symbols: usize,
+        maximum_symbol_utf8_bytes: usize,
+        maximum_symbol_scalars: usize,
+        maximum_allocation_bytes: usize,
+    ) -> Result<Self, PackError> {
         if limits.max_symbols == 0 || limits.max_items == 0 || limits.max_depth == 0 {
             return Err(PackError::LimitExceeded("retained record-body credits"));
+        }
+        if maximum_symbols > limits.max_symbols as usize
+            || maximum_symbol_utf8_bytes as u64 > limits.max_file_len
+            || maximum_symbol_scalars > maximum_symbol_utf8_bytes
+            || maximum_allocation_bytes == 0
+            || maximum_allocation_bytes > isize::MAX as usize
+        {
+            return Err(PackError::LimitExceeded("retained record-body physical credits"));
         }
         Ok(Self {
             limits,
             phase: RetainedRecordBodyPhase::SymbolCount(RetainedVarint::default()),
-            symbols: Vec::new(),
+            symbols: std::mem::ManuallyDrop::new(
+                crate::os_pack::format::RetainedPackSymbolTable::try_new(maximum_symbols, maximum_symbol_utf8_bytes, maximum_symbol_scalars, maximum_allocation_bytes)
+                    .map_err(|_| PackError::LimitExceeded("retained record-body symbol credits"))?,
+            ),
+            maximum_allocation_bytes,
             expected_symbols: 0,
+            symbol_utf8_bytes: 0,
             offset: 0,
             value_offset: 0,
             pending: None,
+            catalog_complete_pending: false,
             sealed: false,
             value_sealed: false,
             value: std::mem::ManuallyDrop::new(None),
+            fault: None,
+            closing: false,
+            close_phase: RetainedRecordBodyClosePhase::ValueLogical,
         })
     }
 
     pub fn admit_byte(&mut self, offset: u64, value: u8) -> Result<(), (u64, u8)> {
-        if self.sealed || self.pending.is_some() || offset != self.offset || matches!(self.phase, RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed) {
+        if self.sealed
+            || self.closing
+            || self.fault.is_some()
+            || self.pending.is_some()
+            || self.catalog_complete_pending
+            || offset != self.offset
+            || matches!(self.phase, RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed)
+        {
             return Err((offset, value));
         }
         self.pending = Some((offset, value));
@@ -1277,39 +1516,189 @@ impl RetainedRecordBodyCursor {
     }
 
     pub fn seal(&mut self, bytes: u64) -> Result<(), PackError> {
-        if self.pending.is_some() || bytes != self.offset {
-            return Err(PackError::Malformed { what: "retained-record-body", offset: self.offset, detail: "seal position mismatch".into() });
+        if self.closing || self.fault.is_some() || self.pending.is_some() || bytes != self.offset {
+            return Err(PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "seal position mismatch" });
         }
         self.sealed = true;
         Ok(())
     }
 
+    fn allocated_bytes_checked(&self) -> Option<usize> {
+        self.symbols.allocated_bytes().checked_add(self.value.as_ref().map_or(0, RetainedValueCursor::allocated_bytes))
+    }
+
+    pub fn allocated_bytes(&self) -> usize {
+        self.allocated_bytes_checked().unwrap_or(usize::MAX)
+    }
+
+    fn allocation_need(&mut self) -> Result<Option<(RetainedRecordBodyAllocationOwner, usize)>, PackError> {
+        if let Some(fault) = self.fault.clone() {
+            return Err(fault);
+        }
+        if self.closing || matches!(self.phase, RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed) {
+            return Err(PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "allocation after close" });
+        }
+        if self.phase == RetainedRecordBodyPhase::Value {
+            let value = self.value.as_mut().ok_or_else(|| PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "value owner missing" })?;
+            return value.next_allocation_bytes().map(|need| need.map(|bytes| (RetainedRecordBodyAllocationOwner::Value, bytes)));
+        }
+        let Some((offset, byte)) = self.pending else { return Ok(None) };
+        let need = match self.phase {
+            RetainedRecordBodyPhase::SymbolCount(cursor) => match cursor.preview(byte, offset)? {
+                None => None,
+                Some(count) => {
+                    let target = usize::try_from(count)
+                        .ok()
+                        .filter(|target| *target <= self.symbols.maximum_symbols())
+                        .ok_or(PackError::LimitExceeded("retained record-body symbol count"))?;
+                    self.symbols
+                        .next_symbol_allocation_bytes(target, offset)
+                        .map_err(|fault| PackError::RetainedMalformed { what: "retained-record-body-symbol-allocation", offset: fault.offset, detail: fault.code })?
+                        .map(|bytes| (RetainedRecordBodyAllocationOwner::SymbolSpans { target, offset }, bytes))
+                }
+            },
+            RetainedRecordBodyPhase::SymbolLength { cursor, .. } => {
+                if let Some(length) = cursor.preview(byte, offset)? {
+                    let length = usize::try_from(length).map_err(|_| PackError::LimitExceeded("retained record-body symbol bytes"))?;
+                    self.symbol_utf8_bytes
+                        .checked_add(length)
+                        .filter(|total| *total <= self.symbols.maximum_utf8_bytes())
+                        .ok_or(PackError::LimitExceeded("retained record-body cumulative symbol bytes"))?;
+                }
+                None
+            }
+            RetainedRecordBodyPhase::SymbolText { cursor, .. } => match cursor.preview(byte, offset)? {
+                None => None,
+                Some(_) => {
+                    let target = self.symbols.scalar_len().checked_add(1).filter(|target| *target <= self.symbols.maximum_scalars()).ok_or(PackError::LimitExceeded("retained record-body symbol scalars"))?;
+                    self.symbols
+                        .next_scalar_allocation_bytes(target, offset)
+                        .map_err(|fault| PackError::RetainedMalformed { what: "retained-record-body-symbol-allocation", offset: fault.offset, detail: fault.code })?
+                        .map(|bytes| (RetainedRecordBodyAllocationOwner::SymbolScalars { target, offset }, bytes))
+                }
+            },
+            RetainedRecordBodyPhase::Value | RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed => None,
+        };
+        Ok(need)
+    }
+
+    pub fn next_allocation_bytes(&mut self) -> Result<Option<usize>, PackError> {
+        let need = match self.allocation_need() {
+            Ok(need) => need,
+            Err(fault) => {
+                self.fault.get_or_insert_with(|| fault.clone());
+                return Err(self.fault.clone().expect("record body first fault"));
+            }
+        };
+        let Some((_, requested)) = need else { return Ok(None) };
+        let result = self
+            .allocated_bytes_checked()
+            .and_then(|allocated| allocated.checked_add(requested))
+            .filter(|total| *total <= self.maximum_allocation_bytes)
+            .map(|_| Some(requested))
+            .ok_or(PackError::LimitExceeded("retained record-body allocation credits"));
+        if let Err(fault) = &result {
+            self.fault.get_or_insert_with(|| fault.clone());
+        }
+        result
+    }
+
+    pub fn reserve_allocation(&mut self, maximum_bytes: usize) -> Result<RetainedRecordBodyAllocationStep, RetainedRecordBodyAllocationError> {
+        let need = match self.allocation_need() {
+            Ok(need) => need,
+            Err(fault) => {
+                let first = self.fault.get_or_insert_with(|| fault.clone()).clone();
+                return Err(RetainedRecordBodyAllocationError { allocated_bytes: 0, fault: first });
+            }
+        };
+        let Some((owner, requested)) = need else { return Ok(RetainedRecordBodyAllocationStep::default()) };
+        if maximum_bytes < requested {
+            return Ok(RetainedRecordBodyAllocationStep::default());
+        }
+        let remaining = self.maximum_allocation_bytes.saturating_sub(self.allocated_bytes());
+        let step = match owner {
+            RetainedRecordBodyAllocationOwner::SymbolSpans { target, offset } => self
+                .symbols
+                .reserve_symbol_capacity(target, maximum_bytes.min(remaining), offset)
+                .map(|step| RetainedRecordBodyAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
+                .map_err(|error| RetainedRecordBodyAllocationError {
+                    allocated_bytes: error.allocated_bytes,
+                    fault: PackError::RetainedMalformed { what: "retained-record-body-symbol-allocation", offset: error.fault.offset, detail: error.fault.code },
+                }),
+            RetainedRecordBodyAllocationOwner::SymbolScalars { target, offset } => self
+                .symbols
+                .reserve_scalar_capacity(target, maximum_bytes.min(remaining), offset)
+                .map(|step| RetainedRecordBodyAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
+                .map_err(|error| RetainedRecordBodyAllocationError {
+                    allocated_bytes: error.allocated_bytes,
+                    fault: PackError::RetainedMalformed { what: "retained-record-body-symbol-allocation", offset: error.fault.offset, detail: error.fault.code },
+                }),
+            RetainedRecordBodyAllocationOwner::Value => self
+                .value
+                .as_mut()
+                .ok_or_else(|| RetainedRecordBodyAllocationError {
+                    allocated_bytes: 0,
+                    fault: PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "value owner missing" },
+                })?
+                .reserve_allocation(maximum_bytes.min(remaining))
+                .map(|step| RetainedRecordBodyAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
+                .map_err(|error| RetainedRecordBodyAllocationError { allocated_bytes: error.allocated_bytes, fault: error.fault }),
+        };
+        match step {
+            Ok(step) if self.allocated_bytes() <= self.maximum_allocation_bytes => Ok(step),
+            Ok(step) => {
+                let fault = PackError::LimitExceeded("retained record-body allocation overgrant");
+                self.fault.get_or_insert_with(|| fault.clone());
+                Err(RetainedRecordBodyAllocationError { allocated_bytes: step.allocated_bytes, fault })
+            }
+            Err(error) => {
+                let first = self.fault.get_or_insert_with(|| error.fault.clone()).clone();
+                Err(RetainedRecordBodyAllocationError { allocated_bytes: error.allocated_bytes, fault: first })
+            }
+        }
+    }
+
     pub fn symbol_chars(&self, symbol: u64) -> Result<usize, PackError> {
-        self.symbols.get(symbol as usize).map(|value| value.chars().count()).ok_or_else(|| PackError::Malformed { what: "retained-record-body-symbol", offset: self.offset, detail: "symbol is outside admitted registry".into() })
+        self.symbols.symbol_chars(symbol).map_err(|_| PackError::RetainedMalformed { what: "retained-record-body-symbol", offset: self.offset, detail: "symbol is outside admitted registry" })
     }
 
     pub fn symbol_char(&self, symbol: u64, index: usize) -> Result<Option<char>, PackError> {
-        self.symbols.get(symbol as usize).map(|value| value.chars().nth(index)).ok_or_else(|| PackError::Malformed { what: "retained-record-body-symbol", offset: self.offset, detail: "symbol is outside admitted registry".into() })
+        self.symbols.symbol_char(symbol, index).map_err(|_| PackError::RetainedMalformed { what: "retained-record-body-symbol", offset: self.offset, detail: "symbol is outside admitted registry" })
     }
 
-    pub fn grant(&mut self) -> Result<Option<RetainedRecordBodyToken>, PackError> {
+    fn begin_value(&mut self) -> Result<(), PackError> {
+        *self.value = Some(RetainedValueCursor::try_new(self.limits.clone(), self.maximum_allocation_bytes)?);
+        self.phase = RetainedRecordBodyPhase::Value;
+        Ok(())
+    }
+
+    fn grant_inner(&mut self) -> Result<Option<RetainedRecordBodyToken>, PackError> {
         if matches!(self.phase, RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed) {
-            return Err(PackError::Malformed { what: "retained-record-body", offset: self.offset, detail: "grant after close".into() });
+            return Err(PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "grant after close" });
+        }
+        if self.catalog_complete_pending {
+            self.catalog_complete_pending = false;
+            return Ok(Some(RetainedRecordBodyToken::CatalogComplete));
         }
         if self.phase == RetainedRecordBodyPhase::Value {
             if let Some((offset, byte)) = self.pending.take() {
-                self.value.as_mut().ok_or(PackError::Malformed { what: "retained-record-body", offset, detail: "value owner missing".into() })?.admit_byte(self.value_offset, byte).map_err(|_| PackError::Malformed {
+                let value = self.value.as_mut().ok_or_else(|| PackError::RetainedMalformed { what: "retained-record-body", offset, detail: "value owner missing" })?;
+                if !value.ingress_ready() {
+                    self.pending = Some((offset, byte));
+                    return Ok(None);
+                }
+                value.admit_byte(self.value_offset, byte).map_err(|_| PackError::RetainedMalformed {
                     what: "retained-record-body",
                     offset,
-                    detail: "value producer handback".into(),
+                    detail: "value producer handback",
                 })?;
                 self.offset += 1;
                 self.value_offset += 1;
             } else if self.sealed && !self.value_sealed {
-                self.value.as_mut().ok_or(PackError::Malformed { what: "retained-record-body", offset: self.offset, detail: "value owner missing".into() })?.seal(self.value_offset)?;
+                self.value.as_mut().ok_or_else(|| PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "value owner missing" })?.seal(self.value_offset)?;
                 self.value_sealed = true;
             }
-            return self.value.as_mut().ok_or(PackError::Malformed { what: "retained-record-body", offset: self.offset, detail: "value owner missing".into() })?.grant().map(|token| token.map(RetainedRecordBodyToken::Value));
+            return self.value.as_mut().ok_or_else(|| PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "value owner missing" })?.grant().map(|token| token.map(RetainedRecordBodyToken::Value));
         }
         let Some((offset, byte)) = self.pending.take() else {
             return if self.sealed { Err(PackError::Truncated(self.offset)) } else { Ok(None) };
@@ -1319,14 +1708,12 @@ impl RetainedRecordBodyCursor {
             RetainedRecordBodyPhase::SymbolCount(mut cursor) => match cursor.admit(byte, offset)? {
                 None => self.phase = RetainedRecordBodyPhase::SymbolCount(cursor),
                 Some(symbols) => {
-                    if symbols > u64::from(self.limits.max_symbols) {
+                    if symbols > self.symbols.maximum_symbols() as u64 {
                         return Err(PackError::LimitExceeded("retained record-body symbol count"));
                     }
-                    self.symbols.try_reserve_exact(symbols as usize).map_err(|_| PackError::LimitExceeded("retained record-body symbol registry"))?;
                     self.expected_symbols = symbols;
                     if symbols == 0 {
-                        *self.value = Some(RetainedValueCursor::try_new(self.limits.clone())?);
-                        self.phase = RetainedRecordBodyPhase::Value;
+                        self.begin_value()?;
                         return Ok(Some(RetainedRecordBodyToken::CatalogComplete));
                     }
                     self.phase = RetainedRecordBodyPhase::SymbolLength { symbol: 0, cursor: RetainedVarint::default() };
@@ -1336,42 +1723,69 @@ impl RetainedRecordBodyCursor {
             RetainedRecordBodyPhase::SymbolLength { symbol, mut cursor } => match cursor.admit(byte, offset)? {
                 None => self.phase = RetainedRecordBodyPhase::SymbolLength { symbol, cursor },
                 Some(length) => {
-                    if length > self.limits.max_segment_len {
+                    if length > self.limits.max_segment_len || length > usize::MAX as u64 {
                         return Err(PackError::LimitExceeded("retained record-body symbol length"));
                     }
-                    let mut value = String::new();
-                    value.try_reserve_exact(length as usize).map_err(|_| PackError::LimitExceeded("retained record-body symbol"))?;
-                    self.symbols.push(value);
+                    let length = length as usize;
+                    self.symbol_utf8_bytes = self
+                        .symbol_utf8_bytes
+                        .checked_add(length)
+                        .filter(|total| *total <= self.symbols.maximum_utf8_bytes())
+                        .ok_or(PackError::LimitExceeded("retained record-body cumulative symbol bytes"))?;
                     if length == 0 {
+                        let scalar_start = self.symbols.scalar_len() as u64;
+                        self.symbols
+                            .push_symbol_reserved(crate::os_pack::format::RetainedPackSymbolSpan { scalar_start, scalar_len: 0, utf8_len: 0 }, offset)
+                            .map_err(|fault| PackError::RetainedMalformed { what: "retained-record-body-symbol", offset: fault.offset, detail: fault.code })?;
                         if symbol + 1 == self.expected_symbols {
-                            *self.value = Some(RetainedValueCursor::try_new(self.limits.clone())?);
-                            self.phase = RetainedRecordBodyPhase::Value;
+                            self.begin_value()?;
                             return Ok(Some(RetainedRecordBodyToken::CatalogComplete));
                         }
                         self.phase = RetainedRecordBodyPhase::SymbolLength { symbol: symbol + 1, cursor: RetainedVarint::default() };
                     } else {
-                        self.phase = RetainedRecordBodyPhase::SymbolText { symbol, remaining: length, cursor: RetainedUtf8::default() };
+                        self.phase = RetainedRecordBodyPhase::SymbolText {
+                            symbol,
+                            scalar_start: self.symbols.scalar_len(),
+                            utf8_len: length,
+                            remaining: length as u64,
+                            cursor: RetainedUtf8::default(),
+                        };
                     }
                 }
             },
-            RetainedRecordBodyPhase::SymbolText { symbol, remaining, mut cursor } => {
+            RetainedRecordBodyPhase::SymbolText { symbol, scalar_start, utf8_len, remaining, mut cursor } => {
                 let character = cursor.admit(byte, offset)?;
                 let next = remaining - 1;
+                if let Some(character) = character {
+                    self.symbols
+                        .push_scalar_reserved(character, offset)
+                        .map_err(|fault| PackError::RetainedMalformed { what: "retained-record-body-symbol", offset: fault.offset, detail: fault.code })?;
+                }
                 if next == 0 {
                     if cursor.remaining != 0 {
-                        return Err(PackError::Malformed { what: "retained-record-body-symbol", offset, detail: "truncated UTF-8 scalar".into() });
+                        return Err(PackError::RetainedMalformed { what: "retained-record-body-symbol", offset, detail: "truncated UTF-8 scalar" });
                     }
+                    let scalar_len = self
+                        .symbols
+                        .scalar_len()
+                        .checked_sub(scalar_start)
+                        .ok_or_else(|| PackError::RetainedMalformed { what: "retained-record-body-symbol", offset, detail: "scalar span underflow" })?;
+                    self.symbols
+                        .push_symbol_reserved(
+                            crate::os_pack::format::RetainedPackSymbolSpan { scalar_start: scalar_start as u64, scalar_len: scalar_len as u64, utf8_len: utf8_len as u64 },
+                            offset,
+                        )
+                        .map_err(|fault| PackError::RetainedMalformed { what: "retained-record-body-symbol", offset: fault.offset, detail: fault.code })?;
                     if symbol + 1 == self.expected_symbols {
-                        *self.value = Some(RetainedValueCursor::try_new(self.limits.clone())?);
-                        self.phase = RetainedRecordBodyPhase::Value;
+                        self.begin_value()?;
+                        self.catalog_complete_pending = character.is_some();
                     } else {
                         self.phase = RetainedRecordBodyPhase::SymbolLength { symbol: symbol + 1, cursor: RetainedVarint::default() };
                     }
                 } else {
-                    self.phase = RetainedRecordBodyPhase::SymbolText { symbol, remaining: next, cursor };
+                    self.phase = RetainedRecordBodyPhase::SymbolText { symbol, scalar_start, utf8_len, remaining: next, cursor };
                 }
                 if let Some(character) = character {
-                    self.symbols[symbol as usize].push(character);
                     return Ok(Some(RetainedRecordBodyToken::SymbolChar { symbol, character }));
                 }
                 if self.phase == RetainedRecordBodyPhase::Value {
@@ -1383,24 +1797,125 @@ impl RetainedRecordBodyCursor {
         Ok(None)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize) -> crate::os_pack::format::RetainedPackCloseStep {
-        self.phase = RetainedRecordBodyPhase::Closing;
-        self.pending = None;
-        if maximum_items == 0 {
-            return crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    pub fn grant(&mut self) -> Result<Option<RetainedRecordBodyToken>, PackError> {
+        if let Some(fault) = self.fault.clone() {
+            return Err(fault);
         }
-        if let Some(value) = self.value.as_mut() {
-            if value.close_step(1) != crate::os_pack::format::RetainedPackCloseStep::Complete {
-                return crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        match self.next_allocation_bytes() {
+            Ok(Some(_)) => return Ok(None),
+            Ok(None) => {}
+            Err(fault) => return Err(fault),
+        }
+        match self.grant_inner() {
+            Ok(value) => Ok(value),
+            Err(fault) => {
+                self.fault.get_or_insert_with(|| fault.clone());
+                Err(self.fault.clone().expect("record body first fault"))
             }
-            drop(self.value.take());
-            return crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
-        if self.symbols.pop().is_some() {
-            return crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
+    }
+
+    pub fn next_release_allocation_bytes(&self) -> Result<Option<usize>, &'static str> {
+        if self.pending.is_some() || !self.closing {
+            return Ok(None);
         }
-        self.phase = RetainedRecordBodyPhase::Closed;
-        crate::os_pack::format::RetainedPackCloseStep::Complete
+        match self.close_phase {
+            RetainedRecordBodyClosePhase::ValuePhysical => {
+                Ok(self.value.as_ref().and_then(RetainedValueCursor::next_release_allocation_bytes))
+            }
+            RetainedRecordBodyClosePhase::SymbolsPhysical => self.symbols.next_release_allocation_bytes(),
+            RetainedRecordBodyClosePhase::ValueLogical | RetainedRecordBodyClosePhase::SymbolsLogical => Ok(None),
+        }
+    }
+
+    pub fn close_step(
+        &mut self,
+        maximum_items: usize,
+        maximum_bytes: usize,
+    ) -> Result<crate::os_pack::format::RetainedPackCloseStep, &'static str> {
+        use crate::os_pack::format::RetainedPackCloseStep;
+        if self.phase == RetainedRecordBodyPhase::Closed {
+            return Ok(RetainedPackCloseStep::Complete);
+        }
+        if maximum_items == 0 && maximum_bytes == 0 {
+            return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        self.closing = true;
+        if maximum_items != 0 && self.pending.take().is_some() {
+            return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if maximum_items != 0 && self.catalog_complete_pending {
+            self.catalog_complete_pending = false;
+            return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        loop {
+            match self.close_phase {
+                RetainedRecordBodyClosePhase::ValueLogical => {
+                    if let Some(value) = self.value.as_mut() {
+                        match value.close_step(maximum_items, 0)? {
+                            RetainedPackCloseStep::Pending { released_items, released_bytes } if released_items != 0 || released_bytes != 0 => {
+                                return Ok(RetainedPackCloseStep::Pending { released_items, released_bytes });
+                            }
+                            RetainedPackCloseStep::Pending { .. } if value.next_release_allocation_bytes().is_none() && !value.terminal_is_empty() => {
+                                return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                            }
+                            RetainedPackCloseStep::Pending { .. } | RetainedPackCloseStep::Complete => {}
+                        }
+                    }
+                    if maximum_items == 0 {
+                        return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    self.phase = RetainedRecordBodyPhase::Closing;
+                    self.expected_symbols = 0;
+                    self.symbol_utf8_bytes = 0;
+                    self.close_phase = RetainedRecordBodyClosePhase::SymbolsLogical;
+                    return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                RetainedRecordBodyClosePhase::SymbolsLogical => match self.symbols.close_step(maximum_items, 0)? {
+                    RetainedPackCloseStep::Pending { released_items, released_bytes } if released_items != 0 || released_bytes != 0 => {
+                        return Ok(RetainedPackCloseStep::Pending { released_items, released_bytes });
+                    }
+                    RetainedPackCloseStep::Pending { .. } if self.symbols.next_release_allocation_bytes()?.is_none() && !self.symbols.terminal_is_empty() => {
+                        return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    RetainedPackCloseStep::Pending { .. } | RetainedPackCloseStep::Complete => {
+                        if maximum_items == 0 {
+                            return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                        }
+                        self.close_phase = RetainedRecordBodyClosePhase::ValuePhysical;
+                        return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                },
+                RetainedRecordBodyClosePhase::ValuePhysical => {
+                    if let Some(value) = self.value.as_mut() {
+                        let owner_items = if value.next_release_allocation_bytes().is_none() { maximum_items } else { 0 };
+                        match value.close_step(owner_items, maximum_bytes)? {
+                            RetainedPackCloseStep::Pending { released_items, released_bytes } => {
+                                return Ok(RetainedPackCloseStep::Pending { released_items, released_bytes });
+                            }
+                            RetainedPackCloseStep::Complete => {
+                                if maximum_items == 0 {
+                                    return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                                }
+                                drop(self.value.take());
+                                self.close_phase = RetainedRecordBodyClosePhase::SymbolsPhysical;
+                                return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                            }
+                        }
+                    }
+                    self.close_phase = RetainedRecordBodyClosePhase::SymbolsPhysical;
+                }
+                RetainedRecordBodyClosePhase::SymbolsPhysical => match self.symbols.close_step(maximum_items, maximum_bytes)? {
+                    RetainedPackCloseStep::Pending { released_items, released_bytes } => {
+                        return Ok(RetainedPackCloseStep::Pending { released_items, released_bytes });
+                    }
+                    RetainedPackCloseStep::Complete => {
+                        self.phase = RetainedRecordBodyPhase::Closed;
+                        return Ok(RetainedPackCloseStep::Complete);
+                    }
+                },
+            }
+        }
     }
 
     /// 🚦️ Whether [`Self::admit_byte`] would accept another byte AND be able to forward it on the
@@ -1409,13 +1924,21 @@ impl RetainedRecordBodyCursor {
     /// the previous byte rejects the handoff as `retained-record-body/value producer handback`.
     pub fn ingress_ready(&self) -> bool {
         !self.sealed
+            && !self.closing
+            && self.fault.is_none()
             && self.pending.is_none()
+            && !self.catalog_complete_pending
             && !matches!(self.phase, RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed)
             && self.value.as_ref().is_none_or(RetainedValueCursor::ingress_ready)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.phase == RetainedRecordBodyPhase::Closed && self.value.is_none() && self.symbols.is_empty() && self.pending.is_none()
+        self.phase == RetainedRecordBodyPhase::Closed
+            && self.value.is_none()
+            && self.symbols.terminal_is_empty()
+            && self.symbols.allocated_bytes() == 0
+            && self.pending.is_none()
+            && !self.catalog_complete_pending
     }
 }
 

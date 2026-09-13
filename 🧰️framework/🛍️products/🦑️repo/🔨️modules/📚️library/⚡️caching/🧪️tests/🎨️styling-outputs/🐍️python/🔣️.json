@@ -1,0 +1,11 @@
+{
+  "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling",
+  "project": "@semio-tech/ui-styling-py",
+  "package": "📦️packages/🐍️python",
+  "source": "🔤️tokens/🐍️.py",
+  "output": "dist/build",
+  "backend": "hatchling==1.27.0",
+  "module": "🎨️styling.🐍️",
+  "wheel": "semio_framework_ui_styling-0.1.0-py3-none-any.whl",
+  "values": ["#ff344f", "#123456"]
+}

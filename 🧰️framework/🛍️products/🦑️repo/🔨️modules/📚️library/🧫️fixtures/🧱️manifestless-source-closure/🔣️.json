@@ -117,7 +117,7 @@
       ],
       "consumers": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌐️browser/🟦️.ts",
-        "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts"
+        "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts"
       ]
     },
     {

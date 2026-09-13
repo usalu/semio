@@ -1,6 +1,9 @@
 {
   "name": "@semio-tech/infinite-canvas-react-renderer",
   "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/🧪️tests/🎚️config/🟦️.ts"]
+  },
   "targets": {
     "test": {
       "executor": "nx:run-commands",

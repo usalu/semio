@@ -3,6 +3,7 @@
   "projectRoot": "🌎️hub/📦️packages/🦀️rust",
   "prerequisite": "os-hub-admin:build",
   "prerequisiteRoot": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
+  "prerequisiteConfig": "🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts",
   "output": "{projectRoot}/dist/build",
   "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
   "browserProbe": "if (import.meta.vitest) await import('node:fs'); export const value = 42;",

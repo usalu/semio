@@ -352,7 +352,7 @@ class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
     retainedUiNativeStripOnly();
-    runVitest(this.root, rest);
+    runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

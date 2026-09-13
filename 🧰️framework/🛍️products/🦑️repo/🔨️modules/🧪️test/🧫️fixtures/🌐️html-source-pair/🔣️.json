@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "manifestPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+  "fixtureKind": "stdio-html-mutation-fixture",
+  "descendantContract": "stdio-html-source-pair-v1",
+  "pairs": [
+    {
+      "id": "set-doctype-applied",
+      "directoryName": "📜️set-doctype-applied"
+    },
+    {
+      "id": "insert-node-applied",
+      "directoryName": "➕️insert-node-applied"
+    },
+    {
+      "id": "remove-node-applied",
+      "directoryName": "➖️remove-node-applied"
+    },
+    {
+      "id": "set-element-name-applied",
+      "directoryName": "🏷️set-element-name-applied"
+    },
+    {
+      "id": "set-attribute-applied",
+      "directoryName": "🔖️set-attribute-applied"
+    },
+    {
+      "id": "set-text-applied",
+      "directoryName": "✍️set-text-applied"
+    },
+    {
+      "id": "set-comment-applied",
+      "directoryName": "💬️set-comment-applied"
+    },
+    {
+      "id": "set-raw-text-applied",
+      "directoryName": "⌨️set-raw-text-applied"
+    }
+  ],
+  "nodes": [
+    {
+      "path": "",
+      "type": "directory",
+      "kind": "stdio-html-mutation-fixture"
+    },
+    {
+      "path": "📸️snapshot",
+      "type": "directory",
+      "kind": "snapshot"
+    },
+    {
+      "path": "📸️snapshot/⬅️before",
+      "type": "directory",
+      "kind": "comparison-before"
+    },
+    {
+      "path": "📸️snapshot/⬅️before/🌐️.html",
+      "type": "file",
+      "kind": "html"
+    },
+    {
+      "path": "📸️snapshot/➡️after",
+      "type": "directory",
+      "kind": "comparison-after"
+    },
+    {
+      "path": "📸️snapshot/➡️after/🌐️.html",
+      "type": "file",
+      "kind": "html"
+    }
+  ],
+  "nxConsumers": [
+    {
+      "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+      "inputSet": "htmlSourcePairs",
+      "targets": [
+        "test",
+        "test-quick",
+        "test-long",
+        "test-exhaustive"
+      ],
+      "sourceInputs": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      ]
+    },
+    {
+      "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+      "inputSet": "htmlSourcePairs",
+      "targets": [
+        "test-fixture-verify"
+      ],
+      "sourceInputs": []
+    }
+  ]
+}

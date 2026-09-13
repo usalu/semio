@@ -612,7 +612,7 @@ async fn entity_kind_catalog_data_validates_through_the_owned_validator_and_matc
     register_framework_schema_exports().expect("framework.schema exports");
     let validator = structural_validator_for(FRAMEWORK_SCHEMA_SCOPE, "EntityKindCatalog").expect("EntityKindCatalog validator");
     if let Err(error) = validator.validate_json(ENTITY_KIND_CATALOG_JSON) {
-        panic!("🔣️entity-kinds.json must satisfy framework.schema#/$defs/EntityKindCatalog: {error}");
+        panic!("🏷️entity-kinds/🔣️.json must satisfy framework.schema#/$defs/EntityKindCatalog: {error}");
     }
 
     let document = parse_json(ENTITY_KIND_CATALOG_JSON).expect("catalog parses");

@@ -1,0 +1,62 @@
+{
+  "capacities": {
+    "panelJsonChars": 65536,
+    "identifierChars": 256,
+    "spawnedApps": 64
+  },
+  "base": {
+    "activePanelTab": "s-play-catalogue",
+    "spawnedApps": [
+      {
+        "id": "spawned-model",
+        "pluginId": "model",
+        "instanceId": 41,
+        "appId": "model@1/any#editor",
+        "label": "Model",
+        "breadcrumb": ["Workspace", "Model"]
+      },
+      {
+        "id": "spawned-note",
+        "pluginId": "note",
+        "instanceId": 42,
+        "appId": "note@1/any#editor",
+        "label": "Note",
+        "breadcrumb": ["Workspace", "Note"]
+      }
+    ],
+    "activeSpawnedId": "spawned-model"
+  },
+  "selectionPatch": [
+    {
+      "op": "replace",
+      "path": "/activePanelTab",
+    "value": "s-play-inspector"
+    }
+  ],
+  "expected": {
+    "activePanelTab": "s-play-inspector",
+    "spawnedApps": [
+      {
+        "id": "spawned-model",
+        "pluginId": "model",
+        "instanceId": 41,
+        "appId": "model@1/any#editor",
+        "label": "Model",
+        "breadcrumb": ["Workspace", "Model"]
+      },
+      {
+        "id": "spawned-note",
+        "pluginId": "note",
+        "instanceId": 42,
+        "appId": "note@1/any#editor",
+        "label": "Note",
+        "breadcrumb": ["Workspace", "Note"]
+      }
+    ],
+    "activeSpawnedId": "spawned-model"
+  },
+  "configuredPanelLeaves": {
+    "valid": ["s-play-catalogue", "s-play-inspector"],
+    "invalid": [""]
+  }
+}

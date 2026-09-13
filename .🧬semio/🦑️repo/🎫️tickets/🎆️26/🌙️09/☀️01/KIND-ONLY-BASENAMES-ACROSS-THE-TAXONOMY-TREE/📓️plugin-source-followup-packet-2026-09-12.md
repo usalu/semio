@@ -1,5 +1,7 @@
 # Remaining Plugin Source And HTML Fixture Owners
 
+Current status: the16HTMLsource leaves are accepted in 📓️coordinator-html-fixture-ownership-2026-09-13.md; Energy Python is accepted in the app extraction report. Do not repeat those moves. The remaining authored plugin sources and Stdio command composition below remain queued.
+
 Wave three reports 23 implementation-basename findings under ✏️s after generator moves. This is a bounded Sol Extra High execution packet for the remaining authored plugin sources and precise HTML fixture data ownership. It does not own the completed generator/oracle crate move map. Re-read all active paths, metadata, producers and consumers before editing; concurrent semantic/test-taxonomy workers may already be changing adjacent owners.
 
 The current non-HTML findings are:
@@ -32,3 +34,10 @@ Root executed the actual exported `stdioArtifactPackageContract(repoRoot)` and t
 The independent Rust audit ran `semio-s-plugin-stdio-test-oracle:test`: 32 of 33 pass. The only failure is `artifacts::dwg::standards::v_ac1024::subsets::any::component::tests::kinds_match_both_catalogs_and_the_vocabulary`, which reads committed catalog JSON and reports missing `no-mutation`. Current DWG source implements and lists that kind. The audit causally separates this semantic catalog mismatch from the taxonomy relocation: all 46 manifests resolve, and the failing assertion reads the existing semantic catalogs. Complete evidence is in 📓️terra-rust-generator-audit-2026-09-12.md.
 
 This observation is a validation limit, not authorization to add mutation kinds or change another logical feature in this source-ownership lane. Preserve the source vocabulary and committed catalogs while making taxonomy changes. Fix only a demonstrated coordinate/ownership defect introduced or exposed by the source move; the auditor found none in this DWG assertion. Do not weaken the test or call it a historical baseline. The affected owners are `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/{🔟ac1024,4️⃣ac1018}/🪆️subsets/✳️any/🔮️oracles/🔣️.json`, with source and native unit test below the ac1024 oracle owner. The earlier proposal to reconcile these semantic catalogs in this lane is superseded by this scope decision.
+
+
+Puzzle metabolism source ownership is accepted in `📓️coordinator-puzzle-metabolism-source-ownership-2026-09-13.md`: anonymous semantic catalogue, exact parent mount, 35/35 before/after/public-parent native outputs agreeing with installed lodash and identical SVG bytes, 29 asset inputs and exact 32-source Nx collector. Four negative contexts reject misplaced catalogue membership. Three current product identities and one removed predecessor are attributed; no full Puzzle/browser/WGPU execution is claimed.
+Norm Python oracle ownership is now the root coordinator execution lane; read the final Terra Norm preaudit first.
+
+
+Norm oracle ownership is accepted in `📓️coordinator-norm-oracle-source-ownership-2026-09-13.md`: one semantic Python engine,15rebound adapters,799unchanged distinct registrations, exact17input closure, direct6/137 and actual isolated Nx6/137/16.3s, including65real EN1991 CLI scenario passes. Exact27current+1removed product identities are retained. The stale vector URI stem is repaired. Generic host changes belong to Sol’s composition lane; DIN16798 duplicate identity remains a separate contract finding. No full15-standard parity claim.

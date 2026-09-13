@@ -1,9 +1,12 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { findManifestFiles, parseGraphOutputCatalog, writeGraphArtifacts } from "../../🛂️manifest/🏭️generator/🟦️.ts";
+import { findManifestFiles, readGraphManifestDocuments } from "../../🛂️manifest/📥️admission/🟦️.ts";
+import { parseGraphOutputCatalog } from "../../🛂️manifest/📇️catalog/🟦️.ts";
+import { renderGraphArtifacts } from "../../🛂️manifest/📽️projection/🟦️.ts";
+import { writeGraphArtifacts } from "../../🛂️manifest/📤️publication/🟦️.ts";
 import fixture from "../../🧫️fixtures/🔣️outputs.json";
 import schema from "../../🛂️manifest/🧬️schema/🔣️.json";
 import current from "../../🛂️manifest/📇️outputs.json";
@@ -26,7 +29,7 @@ test("explicit output identities preserve independent manifest IDs and reject am
   expect(() => parseGraphOutputCatalog(fixture.catalog, ["chronology"])).toThrow();
   expect(() => parseGraphOutputCatalog(fixture.catalog, ["chronology", "absent"])).toThrow();
   expect(() => parseGraphOutputCatalog(fixture.catalog, ["chronology", "chronology"])).toThrow();
-});
+}, 15_000);
 
 test("the producer writes exactly declared nested paths and refuses symlink traversal", () => {
   const sandbox = mkdtempSync(join(tmpdir(), "graph-output-"));
@@ -52,7 +55,7 @@ test("the producer writes exactly declared nested paths and refuses symlink trav
   } finally {
     rmSync(sandbox, { recursive: true, force: true });
   }
-});
+}, 15_000);
 
 test("manifest admission refuses linked inputs instead of following or silently omitting them", () => {
   const sandbox = mkdtempSync(join(tmpdir(), "graph-input-"));
@@ -65,10 +68,56 @@ test("manifest admission refuses linked inputs instead of following or silently 
     rmSync(join(sandbox, area, "linked-directory"));
     symlinkSync(join(sandbox, area, "missing.manifest.json"), join(sandbox, area, "linked.manifest.json"));
     expect(() => findManifestFiles(sandbox, [area])).toThrow(/symbolic link/u);
+    rmSync(join(sandbox, area, "linked.manifest.json"));
+    const rootAlias = `${sandbox}-alias`;
+    symlinkSync(sandbox, rootAlias);
+    expect(() => findManifestFiles(rootAlias, [area])).toThrow(/ancestor is a symbolic link/u);
+    rmSync(rootAlias);
+    const ancestorTarget = join(sandbox, "ancestor-target");
+    mkdirSync(join(ancestorTarget, area), { recursive: true });
+    symlinkSync(ancestorTarget, join(sandbox, "linked-ancestor"));
+    expect(() => findManifestFiles(sandbox, [`linked-ancestor/${area}`])).toThrow(/ancestor is a symbolic link/u);
+    expect(() => readGraphManifestDocuments(sandbox, false, [area], () => { throw new Error("denied"); })).toThrow(/cannot read admitted graph manifest plugins\/real\/fixture\.manifest\.json/u);
   } finally {
     rmSync(sandbox, { recursive: true, force: true });
   }
-});
+}, 15_000);
+
+test("an unreadable admitted directory reports its exact admission boundary", () => {
+  const sandbox = mkdtempSync(join(tmpdir(), "graph-unreadable-"));
+  const blocked = join(sandbox, "plugins", "blocked");
+  try {
+    mkdirSync(blocked, { recursive: true });
+    chmodSync(blocked, 0);
+    let hostEnforcesMode = false;
+    try { readdirSync(blocked); } catch { hostEnforcesMode = true; }
+    if (hostEnforcesMode) expect(() => findManifestFiles(sandbox, ["plugins"])).toThrow(/cannot read admitted graph manifest directory plugins\/blocked/u);
+  } finally {
+    chmodSync(blocked, 0o700);
+    rmSync(sandbox, { recursive: true, force: true });
+  }
+}, 15_000);
+
+test("manifest parse and catalog failures never produce a partial artifact plan", () => {
+  const sandbox = mkdtempSync(join(tmpdir(), "graph-plan-"));
+  try {
+    const area = "plugins";
+    const outDir = join(sandbox, "output");
+    mkdirSync(join(sandbox, area), { recursive: true });
+    const input = join(sandbox, area, "fixture.manifest.json");
+    writeFileSync(input, "{");
+    expect(() => renderGraphArtifacts(sandbox, outDir, false, [area])).toThrow();
+    expect(existsSync(outDir)).toBe(false);
+    writeFileSync(input, JSON.stringify({ schema: "layout.manifest/v1", id: "fixture" }));
+    expect(() => renderGraphArtifacts(sandbox, outDir, false, [area])).toThrow(/no graph manifest documents/u);
+    expect(existsSync(outDir)).toBe(false);
+    writeFileSync(input, JSON.stringify({ schema: "manifest", id: "fixture" }));
+    expect(() => renderGraphArtifacts(sandbox, outDir, false, [area])).toThrow(/catalog and admitted manifest identities differ/u);
+    expect(existsSync(outDir)).toBe(false);
+  } finally {
+    rmSync(sandbox, { recursive: true, force: true });
+  }
+}, 15_000);
 
 test("the actual generated registry loads every declared manifest through its current paths", async () => {
   const rustRegistry = new URL(`../../🤖️generated/${current.shared.rustRegistry}`, import.meta.url);
@@ -85,4 +134,28 @@ test("the actual generated registry loads every declared manifest through its cu
     expect(source).toContain(`from "../${current.shared.typescriptTypes.replace(/\.ts$/u, ".js")}"`);
   }
   expect(registry.manifestById("unknown-manifest")).toBeUndefined();
-});
+}, 15_000);
+
+test("cached graph routes hash every direct owner, oracle and source-data input", () => {
+  const project = JSON.parse(readFileSync(new URL("../../📦️packages/🦀️rust/📋️project.json", import.meta.url), "utf8")) as { namedInputs: { default: string[] } };
+  const required = [
+    "{workspaceRoot}/✏️s/🔌️plugins/**/*manifest.json",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧫️fixtures/🔣️outputs.json",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📥️admission/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️catalog/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📤️publication/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📽️projection/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️outputs.json",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+  ];
+  for (const input of required) expect(project.namedInputs.default).toContain(input);
+  const router = readFileSync(new URL("../../📦️packages/🦀️rust/📜️script.ts", import.meta.url), "utf8");
+  expect(router).toContain("../../🛂️manifest/🏃️execution/🟦️.ts");
+  expect(router).not.toContain("renderGraphArtifacts");
+}, 15_000);

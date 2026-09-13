@@ -4,9 +4,9 @@ import { Script, ScriptRouter } from "../../../🏃️process/🧭️routing/�
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 
 /** 🏃️ Runs one tool with progress, bounded optional output and cancellation of its process tree. */
-export async function runTool(command: string, args: string[], cwd: string, signal: AbortSignal, capture = false): Promise<string> {
+export async function runTool(command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean | "ignore" = false, environment: NodeJS.ProcessEnv = process.env): Promise<string> {
     signal.throwIfAborted();
-    const child = spawn(command, args, { cwd, env: process.env, detached: process.platform !== "win32", stdio: ["ignore", capture ? "pipe" : "inherit", "inherit"], windowsHide: true });
+    const child = spawn(command, args, { cwd, env: environment, detached: process.platform !== "win32", stdio: ["ignore", capture === "ignore" ? "ignore" : capture ? "pipe" : "inherit", "inherit"], windowsHide: true });
     let output = "", overflow = false;
     let force: ReturnType<typeof setTimeout> | undefined;
     const kill = (signal: NodeJS.Signals): void => {

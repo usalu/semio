@@ -1,0 +1,2710 @@
+{
+  "kinds": [
+    {
+      "id": "default-window",
+      "schema": "test.window.default",
+      "policy": "framework-default",
+      "defaultValue": "framework-default-camera"
+    },
+    {
+      "id": "authored-window",
+      "schema": "test.window.authored",
+      "policy": "document-camera",
+      "defaultValue": "unused-default-camera"
+    }
+  ],
+  "initialDocument": {
+    "revision": 1,
+    "camera": "authored-camera-a"
+  },
+  "scenarios": [
+    {
+      "id": "restored-owner-wins-before-window-open",
+      "events": [
+        {
+          "kind": "instance-opened"
+        },
+        {
+          "kind": "restore-pack",
+          "pack": {
+            "windowId": "restored-main",
+            "windowKindId": "authored-window",
+            "innerPartitionId": "window-config:authored-window:restored-main",
+            "schema": "test.window.authored",
+            "component": "Pack",
+            "version": 1,
+            "value": "restored-camera"
+          }
+        },
+        {
+          "kind": "restore-complete"
+        },
+        {
+          "kind": "restore-complete"
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "restored-main",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "render",
+          "window": {
+            "windowId": "restored-main",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "restored-body",
+          "window": {
+            "windowId": "restored-main",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "restored-main",
+            "windowKindId": "authored-window"
+          }
+        }
+      ],
+      "expected": {
+        "instanceOpen": true,
+        "restorationComplete": true,
+        "document": {
+          "revision": 1,
+          "camera": "authored-camera-a"
+        },
+        "openWindows": [
+          {
+            "windowId": "restored-main",
+            "windowKindId": "authored-window"
+          }
+        ],
+        "partitions": [
+          {
+            "windowId": "restored-main",
+            "windowKindId": "authored-window",
+            "value": "restored-camera",
+            "source": "restored"
+          }
+        ],
+        "savedHostPacks": [],
+        "candidates": [],
+        "captures": [
+          {
+            "windowId": "restored-main",
+            "windowKindId": "authored-window",
+            "path": "render",
+            "outcome": "existing"
+          }
+        ],
+        "renderedSurfaces": [
+          "restored-body"
+        ],
+        "rejectedCodes": [],
+        "metrics": {
+          "captures": 1,
+          "readMaterializations": 0,
+          "defaultSeeds": 0,
+          "documentSeeds": 0,
+          "hostSaves": 0,
+          "restores": 1,
+          "publications": 0,
+          "cancellations": 0,
+          "staleCandidates": 0,
+          "duplicateOpens": 1
+        }
+      },
+      "oraclePatch": [
+        {
+          "op": "replace",
+          "path": "/instanceOpen",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/restorationComplete",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/document",
+          "value": {
+            "revision": 1,
+            "camera": "authored-camera-a"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/openWindows",
+          "value": [
+            {
+              "windowId": "restored-main",
+              "windowKindId": "authored-window"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/partitions",
+          "value": [
+            {
+              "windowId": "restored-main",
+              "windowKindId": "authored-window",
+              "value": "restored-camera",
+              "source": "restored"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/savedHostPacks",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/candidates",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/captures",
+          "value": [
+            {
+              "windowId": "restored-main",
+              "windowKindId": "authored-window",
+              "path": "render",
+              "outcome": "existing"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/renderedSurfaces",
+          "value": [
+            "restored-body"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/rejectedCodes",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/metrics",
+          "value": {
+            "captures": 1,
+            "readMaterializations": 0,
+            "defaultSeeds": 0,
+            "documentSeeds": 0,
+            "hostSaves": 0,
+            "restores": 1,
+            "publications": 0,
+            "cancellations": 0,
+            "staleCandidates": 0,
+            "duplicateOpens": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "explicit-empty-restore-provisions-both-policies",
+      "events": [
+        {
+          "kind": "instance-opened"
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "generation",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "restore-complete"
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "authored-a",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "default-body",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "default-body",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "default-alias",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "authored-body",
+          "window": {
+            "windowId": "authored-a",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-a",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-a",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-a",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "immediate-dispatch",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "retained-command",
+          "window": {
+            "windowId": "authored-a",
+            "windowKindId": "authored-window"
+          }
+        }
+      ],
+      "expected": {
+        "instanceOpen": true,
+        "restorationComplete": true,
+        "document": {
+          "revision": 1,
+          "camera": "authored-camera-a"
+        },
+        "openWindows": [
+          {
+            "windowId": "authored-a",
+            "windowKindId": "authored-window"
+          },
+          {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        ],
+        "partitions": [
+          {
+            "windowId": "authored-a",
+            "windowKindId": "authored-window",
+            "value": "authored-camera-a",
+            "source": "document-camera"
+          },
+          {
+            "windowId": "default-a",
+            "windowKindId": "default-window",
+            "value": "framework-default-camera",
+            "source": "framework-default"
+          }
+        ],
+        "savedHostPacks": [],
+        "candidates": [],
+        "captures": [
+          {
+            "windowId": "default-a",
+            "windowKindId": "default-window",
+            "path": "generation",
+            "outcome": "pending"
+          },
+          {
+            "windowId": "default-a",
+            "windowKindId": "default-window",
+            "path": "immediate-dispatch",
+            "outcome": "existing"
+          },
+          {
+            "windowId": "authored-a",
+            "windowKindId": "authored-window",
+            "path": "retained-command",
+            "outcome": "existing"
+          }
+        ],
+        "renderedSurfaces": [
+          "authored-body",
+          "default-alias",
+          "default-body"
+        ],
+        "rejectedCodes": [],
+        "metrics": {
+          "captures": 3,
+          "readMaterializations": 0,
+          "defaultSeeds": 1,
+          "documentSeeds": 1,
+          "hostSaves": 0,
+          "restores": 0,
+          "publications": 2,
+          "cancellations": 0,
+          "staleCandidates": 0,
+          "duplicateOpens": 0
+        }
+      },
+      "oraclePatch": [
+        {
+          "op": "replace",
+          "path": "/instanceOpen",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/restorationComplete",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/document",
+          "value": {
+            "revision": 1,
+            "camera": "authored-camera-a"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/openWindows",
+          "value": [
+            {
+              "windowId": "authored-a",
+              "windowKindId": "authored-window"
+            },
+            {
+              "windowId": "default-a",
+              "windowKindId": "default-window"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/partitions",
+          "value": [
+            {
+              "windowId": "authored-a",
+              "windowKindId": "authored-window",
+              "value": "authored-camera-a",
+              "source": "document-camera"
+            },
+            {
+              "windowId": "default-a",
+              "windowKindId": "default-window",
+              "value": "framework-default-camera",
+              "source": "framework-default"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/savedHostPacks",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/candidates",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/captures",
+          "value": [
+            {
+              "windowId": "default-a",
+              "windowKindId": "default-window",
+              "path": "generation",
+              "outcome": "pending"
+            },
+            {
+              "windowId": "default-a",
+              "windowKindId": "default-window",
+              "path": "immediate-dispatch",
+              "outcome": "existing"
+            },
+            {
+              "windowId": "authored-a",
+              "windowKindId": "authored-window",
+              "path": "retained-command",
+              "outcome": "existing"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/renderedSurfaces",
+          "value": [
+            "authored-body",
+            "default-alias",
+            "default-body"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/rejectedCodes",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/metrics",
+          "value": {
+            "captures": 3,
+            "readMaterializations": 0,
+            "defaultSeeds": 1,
+            "documentSeeds": 1,
+            "hostSaves": 0,
+            "restores": 0,
+            "publications": 2,
+            "cancellations": 0,
+            "staleCandidates": 0,
+            "duplicateOpens": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "stale-document-seed-closes-and-reschedules",
+      "events": [
+        {
+          "kind": "instance-opened"
+        },
+        {
+          "kind": "restore-complete"
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "stale-body",
+          "window": {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "document-advanced",
+          "document": {
+            "revision": 2,
+            "camera": "authored-camera-b"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "retained-command",
+          "window": {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window"
+          }
+        }
+      ],
+      "expected": {
+        "instanceOpen": true,
+        "restorationComplete": true,
+        "document": {
+          "revision": 2,
+          "camera": "authored-camera-b"
+        },
+        "openWindows": [
+          {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window"
+          }
+        ],
+        "partitions": [
+          {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window",
+            "value": "authored-camera-b",
+            "source": "document-camera"
+          }
+        ],
+        "savedHostPacks": [],
+        "candidates": [],
+        "captures": [
+          {
+            "windowId": "authored-stale",
+            "windowKindId": "authored-window",
+            "path": "retained-command",
+            "outcome": "pending"
+          }
+        ],
+        "renderedSurfaces": [
+          "stale-body"
+        ],
+        "rejectedCodes": [],
+        "metrics": {
+          "captures": 1,
+          "readMaterializations": 0,
+          "defaultSeeds": 0,
+          "documentSeeds": 2,
+          "hostSaves": 0,
+          "restores": 0,
+          "publications": 1,
+          "cancellations": 1,
+          "staleCandidates": 1,
+          "duplicateOpens": 0
+        }
+      },
+      "oraclePatch": [
+        {
+          "op": "replace",
+          "path": "/instanceOpen",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/restorationComplete",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/document",
+          "value": {
+            "revision": 2,
+            "camera": "authored-camera-b"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/openWindows",
+          "value": [
+            {
+              "windowId": "authored-stale",
+              "windowKindId": "authored-window"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/partitions",
+          "value": [
+            {
+              "windowId": "authored-stale",
+              "windowKindId": "authored-window",
+              "value": "authored-camera-b",
+              "source": "document-camera"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/savedHostPacks",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/candidates",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/captures",
+          "value": [
+            {
+              "windowId": "authored-stale",
+              "windowKindId": "authored-window",
+              "path": "retained-command",
+              "outcome": "pending"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/renderedSurfaces",
+          "value": [
+            "stale-body"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/rejectedCodes",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/metrics",
+          "value": {
+            "captures": 1,
+            "readMaterializations": 0,
+            "defaultSeeds": 0,
+            "documentSeeds": 2,
+            "hostSaves": 0,
+            "restores": 0,
+            "publications": 1,
+            "cancellations": 1,
+            "staleCandidates": 1,
+            "duplicateOpens": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "restored-pack-races-publishing-candidate",
+      "events": [
+        {
+          "kind": "instance-opened"
+        },
+        {
+          "kind": "restore-complete"
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "authored-race",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "race-body",
+          "window": {
+            "windowId": "authored-race",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-race",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-race",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "restore-pack",
+          "pack": {
+            "windowId": "authored-race",
+            "windowKindId": "authored-window",
+            "innerPartitionId": "window-config:authored-window:authored-race",
+            "schema": "test.window.authored",
+            "component": "Pack",
+            "version": 1,
+            "value": "late-restored-camera"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "retained-command",
+          "window": {
+            "windowId": "authored-race",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-race",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "authored-race",
+            "windowKindId": "authored-window"
+          }
+        }
+      ],
+      "expected": {
+        "instanceOpen": true,
+        "restorationComplete": true,
+        "document": {
+          "revision": 1,
+          "camera": "authored-camera-a"
+        },
+        "openWindows": [
+          {
+            "windowId": "authored-race",
+            "windowKindId": "authored-window"
+          }
+        ],
+        "partitions": [
+          {
+            "windowId": "authored-race",
+            "windowKindId": "authored-window",
+            "value": "late-restored-camera",
+            "source": "restored"
+          }
+        ],
+        "savedHostPacks": [],
+        "candidates": [],
+        "captures": [
+          {
+            "windowId": "authored-race",
+            "windowKindId": "authored-window",
+            "path": "retained-command",
+            "outcome": "pending"
+          }
+        ],
+        "renderedSurfaces": [
+          "race-body"
+        ],
+        "rejectedCodes": [],
+        "metrics": {
+          "captures": 1,
+          "readMaterializations": 0,
+          "defaultSeeds": 0,
+          "documentSeeds": 1,
+          "hostSaves": 0,
+          "restores": 1,
+          "publications": 0,
+          "cancellations": 1,
+          "staleCandidates": 0,
+          "duplicateOpens": 0
+        }
+      },
+      "oraclePatch": [
+        {
+          "op": "replace",
+          "path": "/instanceOpen",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/restorationComplete",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/document",
+          "value": {
+            "revision": 1,
+            "camera": "authored-camera-a"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/openWindows",
+          "value": [
+            {
+              "windowId": "authored-race",
+              "windowKindId": "authored-window"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/partitions",
+          "value": [
+            {
+              "windowId": "authored-race",
+              "windowKindId": "authored-window",
+              "value": "late-restored-camera",
+              "source": "restored"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/savedHostPacks",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/candidates",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/captures",
+          "value": [
+            {
+              "windowId": "authored-race",
+              "windowKindId": "authored-window",
+              "path": "retained-command",
+              "outcome": "pending"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/renderedSurfaces",
+          "value": [
+            "race-body"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/rejectedCodes",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/metrics",
+          "value": {
+            "captures": 1,
+            "readMaterializations": 0,
+            "defaultSeeds": 0,
+            "documentSeeds": 1,
+            "hostSaves": 0,
+            "restores": 1,
+            "publications": 0,
+            "cancellations": 1,
+            "staleCandidates": 0,
+            "duplicateOpens": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "window-close-retains-candidate-until-bounded-close",
+      "events": [
+        {
+          "kind": "instance-opened"
+        },
+        {
+          "kind": "restore-complete"
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "default-close",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "close-body",
+          "window": {
+            "windowId": "default-close",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-close",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "window-closed",
+          "window": {
+            "windowId": "default-close",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-close",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-close",
+            "windowKindId": "default-window"
+          }
+        }
+      ],
+      "expected": {
+        "instanceOpen": true,
+        "restorationComplete": true,
+        "document": {
+          "revision": 1,
+          "camera": "authored-camera-a"
+        },
+        "openWindows": [],
+        "partitions": [],
+        "savedHostPacks": [],
+        "candidates": [],
+        "captures": [],
+        "renderedSurfaces": [],
+        "rejectedCodes": [],
+        "metrics": {
+          "captures": 0,
+          "readMaterializations": 0,
+          "defaultSeeds": 1,
+          "documentSeeds": 0,
+          "hostSaves": 0,
+          "restores": 0,
+          "publications": 0,
+          "cancellations": 1,
+          "staleCandidates": 0,
+          "duplicateOpens": 0
+        }
+      },
+      "oraclePatch": [
+        {
+          "op": "replace",
+          "path": "/instanceOpen",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/restorationComplete",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/document",
+          "value": {
+            "revision": 1,
+            "camera": "authored-camera-a"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/openWindows",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/partitions",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/savedHostPacks",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/candidates",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/captures",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/renderedSurfaces",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/rejectedCodes",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/metrics",
+          "value": {
+            "captures": 0,
+            "readMaterializations": 0,
+            "defaultSeeds": 1,
+            "documentSeeds": 0,
+            "hostSaves": 0,
+            "restores": 0,
+            "publications": 0,
+            "cancellations": 1,
+            "staleCandidates": 0,
+            "duplicateOpens": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "every-capture-path-is-nonmaterializing",
+      "events": [
+        {
+          "kind": "instance-opened"
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "premature-body",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "generation",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "restore-complete"
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "render",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "panel-render",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "engagements",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "measures",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "tool-measures",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "context-menu",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "immediate-dispatch",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "retained-command",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        }
+      ],
+      "expected": {
+        "instanceOpen": true,
+        "restorationComplete": true,
+        "document": {
+          "revision": 1,
+          "camera": "authored-camera-a"
+        },
+        "openWindows": [
+          {
+            "windowId": "capture-all",
+            "windowKindId": "default-window"
+          }
+        ],
+        "partitions": [
+          {
+            "windowId": "capture-all",
+            "windowKindId": "default-window",
+            "value": "framework-default-camera",
+            "source": "framework-default"
+          }
+        ],
+        "savedHostPacks": [],
+        "candidates": [],
+        "captures": [
+          {
+            "windowId": "capture-all",
+            "windowKindId": "default-window",
+            "path": "generation",
+            "outcome": "absent"
+          },
+          {
+            "windowId": "capture-all",
+            "windowKindId": "default-window",
+            "path": "render",
+            "outcome": "pending"
+          },
+          {
+            "windowId": "capture-all",
+            "windowKindId": "default-window",
+            "path": "panel-render",
+            "outcome": "pending"
+          },
+          {
+            "windowId": "capture-all",
+            "windowKindId": "default-window",
+            "path": "engagements",
+            "outcome": "pending"
+          },
+          {
+            "windowId": "capture-all",
+            "windowKindId": "default-window",
+            "path": "measures",
+            "outcome": "pending"
+          },
+          {
+            "windowId": "capture-all",
+            "windowKindId": "default-window",
+            "path": "tool-measures",
+            "outcome": "pending"
+          },
+          {
+            "windowId": "capture-all",
+            "windowKindId": "default-window",
+            "path": "context-menu",
+            "outcome": "pending"
+          },
+          {
+            "windowId": "capture-all",
+            "windowKindId": "default-window",
+            "path": "immediate-dispatch",
+            "outcome": "pending"
+          },
+          {
+            "windowId": "capture-all",
+            "windowKindId": "default-window",
+            "path": "retained-command",
+            "outcome": "pending"
+          }
+        ],
+        "renderedSurfaces": [],
+        "rejectedCodes": [
+          "window-not-open"
+        ],
+        "metrics": {
+          "captures": 9,
+          "readMaterializations": 0,
+          "defaultSeeds": 1,
+          "documentSeeds": 0,
+          "hostSaves": 0,
+          "restores": 0,
+          "publications": 1,
+          "cancellations": 0,
+          "staleCandidates": 0,
+          "duplicateOpens": 0
+        }
+      },
+      "oraclePatch": [
+        {
+          "op": "replace",
+          "path": "/instanceOpen",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/restorationComplete",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/document",
+          "value": {
+            "revision": 1,
+            "camera": "authored-camera-a"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/openWindows",
+          "value": [
+            {
+              "windowId": "capture-all",
+              "windowKindId": "default-window"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/partitions",
+          "value": [
+            {
+              "windowId": "capture-all",
+              "windowKindId": "default-window",
+              "value": "framework-default-camera",
+              "source": "framework-default"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/savedHostPacks",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/candidates",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/captures",
+          "value": [
+            {
+              "windowId": "capture-all",
+              "windowKindId": "default-window",
+              "path": "generation",
+              "outcome": "absent"
+            },
+            {
+              "windowId": "capture-all",
+              "windowKindId": "default-window",
+              "path": "render",
+              "outcome": "pending"
+            },
+            {
+              "windowId": "capture-all",
+              "windowKindId": "default-window",
+              "path": "panel-render",
+              "outcome": "pending"
+            },
+            {
+              "windowId": "capture-all",
+              "windowKindId": "default-window",
+              "path": "engagements",
+              "outcome": "pending"
+            },
+            {
+              "windowId": "capture-all",
+              "windowKindId": "default-window",
+              "path": "measures",
+              "outcome": "pending"
+            },
+            {
+              "windowId": "capture-all",
+              "windowKindId": "default-window",
+              "path": "tool-measures",
+              "outcome": "pending"
+            },
+            {
+              "windowId": "capture-all",
+              "windowKindId": "default-window",
+              "path": "context-menu",
+              "outcome": "pending"
+            },
+            {
+              "windowId": "capture-all",
+              "windowKindId": "default-window",
+              "path": "immediate-dispatch",
+              "outcome": "pending"
+            },
+            {
+              "windowId": "capture-all",
+              "windowKindId": "default-window",
+              "path": "retained-command",
+              "outcome": "pending"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/renderedSurfaces",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/rejectedCodes",
+          "value": [
+            "window-not-open"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/metrics",
+          "value": {
+            "captures": 9,
+            "readMaterializations": 0,
+            "defaultSeeds": 1,
+            "documentSeeds": 0,
+            "hostSaves": 0,
+            "restores": 0,
+            "publications": 1,
+            "cancellations": 0,
+            "staleCandidates": 0,
+            "duplicateOpens": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-same-kind-instances-and-cross-kind-isolation",
+      "events": [
+        {
+          "kind": "instance-opened"
+        },
+        {
+          "kind": "restore-pack",
+          "pack": {
+            "windowId": "default-left",
+            "windowKindId": "default-window",
+            "innerPartitionId": "window-config:default-window:default-left",
+            "schema": "test.window.default",
+            "component": "Pack",
+            "version": 1,
+            "value": "restored-left"
+          }
+        },
+        {
+          "kind": "restore-pack",
+          "pack": {
+            "windowId": "authored-left",
+            "windowKindId": "authored-window",
+            "innerPartitionId": "window-config:authored-window:authored-left",
+            "schema": "test.window.authored",
+            "component": "Pack",
+            "version": 1,
+            "value": "restored-authored-left"
+          }
+        },
+        {
+          "kind": "restore-complete"
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "default-left",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "default-right",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "authored-left",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "authored-right",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "default-left-body",
+          "window": {
+            "windowId": "default-left",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "default-right-body",
+          "window": {
+            "windowId": "default-right",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "authored-left-body",
+          "window": {
+            "windowId": "authored-left",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "authored-right-body",
+          "window": {
+            "windowId": "authored-right",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "render",
+          "window": {
+            "windowId": "default-left",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "render",
+          "window": {
+            "windowId": "default-right",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "render",
+          "window": {
+            "windowId": "authored-left",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "render",
+          "window": {
+            "windowId": "authored-right",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "engagements",
+          "window": {
+            "windowId": "authored-left",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "engagements",
+          "window": {
+            "windowId": "authored-right",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "context-menu",
+          "window": {
+            "windowId": "default-left",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-right",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-right",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-right",
+            "windowKindId": "default-window"
+          }
+        }
+      ],
+      "expected": {
+        "instanceOpen": true,
+        "restorationComplete": true,
+        "document": {
+          "revision": 1,
+          "camera": "authored-camera-a"
+        },
+        "openWindows": [
+          {
+            "windowId": "authored-left",
+            "windowKindId": "authored-window"
+          },
+          {
+            "windowId": "authored-right",
+            "windowKindId": "authored-window"
+          },
+          {
+            "windowId": "default-left",
+            "windowKindId": "default-window"
+          },
+          {
+            "windowId": "default-right",
+            "windowKindId": "default-window"
+          }
+        ],
+        "partitions": [
+          {
+            "windowId": "authored-left",
+            "windowKindId": "authored-window",
+            "value": "restored-authored-left",
+            "source": "restored"
+          },
+          {
+            "windowId": "default-left",
+            "windowKindId": "default-window",
+            "value": "restored-left",
+            "source": "restored"
+          },
+          {
+            "windowId": "default-right",
+            "windowKindId": "default-window",
+            "value": "framework-default-camera",
+            "source": "framework-default"
+          }
+        ],
+        "savedHostPacks": [],
+        "candidates": [
+          {
+            "windowId": "authored-right",
+            "windowKindId": "authored-window",
+            "phase": "reserved",
+            "seed": "authored-camera-a",
+            "documentRevision": 1,
+            "waiters": [
+              "authored-right-body"
+            ],
+            "pendingRestore": null
+          }
+        ],
+        "captures": [
+          {
+            "windowId": "default-left",
+            "windowKindId": "default-window",
+            "path": "render",
+            "outcome": "existing"
+          },
+          {
+            "windowId": "default-right",
+            "windowKindId": "default-window",
+            "path": "render",
+            "outcome": "pending"
+          },
+          {
+            "windowId": "authored-left",
+            "windowKindId": "authored-window",
+            "path": "render",
+            "outcome": "existing"
+          },
+          {
+            "windowId": "authored-right",
+            "windowKindId": "authored-window",
+            "path": "render",
+            "outcome": "pending"
+          },
+          {
+            "windowId": "authored-left",
+            "windowKindId": "authored-window",
+            "path": "engagements",
+            "outcome": "existing"
+          },
+          {
+            "windowId": "authored-right",
+            "windowKindId": "authored-window",
+            "path": "engagements",
+            "outcome": "pending"
+          },
+          {
+            "windowId": "default-left",
+            "windowKindId": "authored-window",
+            "path": "context-menu",
+            "outcome": "wrong-kind"
+          }
+        ],
+        "renderedSurfaces": [
+          "authored-left-body",
+          "default-left-body",
+          "default-right-body"
+        ],
+        "rejectedCodes": [],
+        "metrics": {
+          "captures": 7,
+          "readMaterializations": 0,
+          "defaultSeeds": 1,
+          "documentSeeds": 1,
+          "hostSaves": 0,
+          "restores": 2,
+          "publications": 1,
+          "cancellations": 0,
+          "staleCandidates": 0,
+          "duplicateOpens": 0
+        }
+      },
+      "oraclePatch": [
+        {
+          "op": "replace",
+          "path": "/instanceOpen",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/restorationComplete",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/document",
+          "value": {
+            "revision": 1,
+            "camera": "authored-camera-a"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/openWindows",
+          "value": [
+            {
+              "windowId": "authored-left",
+              "windowKindId": "authored-window"
+            },
+            {
+              "windowId": "authored-right",
+              "windowKindId": "authored-window"
+            },
+            {
+              "windowId": "default-left",
+              "windowKindId": "default-window"
+            },
+            {
+              "windowId": "default-right",
+              "windowKindId": "default-window"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/partitions",
+          "value": [
+            {
+              "windowId": "authored-left",
+              "windowKindId": "authored-window",
+              "value": "restored-authored-left",
+              "source": "restored"
+            },
+            {
+              "windowId": "default-left",
+              "windowKindId": "default-window",
+              "value": "restored-left",
+              "source": "restored"
+            },
+            {
+              "windowId": "default-right",
+              "windowKindId": "default-window",
+              "value": "framework-default-camera",
+              "source": "framework-default"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/savedHostPacks",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/candidates",
+          "value": [
+            {
+              "windowId": "authored-right",
+              "windowKindId": "authored-window",
+              "phase": "reserved",
+              "seed": "authored-camera-a",
+              "documentRevision": 1,
+              "waiters": [
+                "authored-right-body"
+              ],
+              "pendingRestore": null
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/captures",
+          "value": [
+            {
+              "windowId": "default-left",
+              "windowKindId": "default-window",
+              "path": "render",
+              "outcome": "existing"
+            },
+            {
+              "windowId": "default-right",
+              "windowKindId": "default-window",
+              "path": "render",
+              "outcome": "pending"
+            },
+            {
+              "windowId": "authored-left",
+              "windowKindId": "authored-window",
+              "path": "render",
+              "outcome": "existing"
+            },
+            {
+              "windowId": "authored-right",
+              "windowKindId": "authored-window",
+              "path": "render",
+              "outcome": "pending"
+            },
+            {
+              "windowId": "authored-left",
+              "windowKindId": "authored-window",
+              "path": "engagements",
+              "outcome": "existing"
+            },
+            {
+              "windowId": "authored-right",
+              "windowKindId": "authored-window",
+              "path": "engagements",
+              "outcome": "pending"
+            },
+            {
+              "windowId": "default-left",
+              "windowKindId": "authored-window",
+              "path": "context-menu",
+              "outcome": "wrong-kind"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/renderedSurfaces",
+          "value": [
+            "authored-left-body",
+            "default-left-body",
+            "default-right-body"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/rejectedCodes",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/metrics",
+          "value": {
+            "captures": 7,
+            "readMaterializations": 0,
+            "defaultSeeds": 1,
+            "documentSeeds": 1,
+            "hostSaves": 0,
+            "restores": 2,
+            "publications": 1,
+            "cancellations": 0,
+            "staleCandidates": 0,
+            "duplicateOpens": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "foreign-inner-partition-ids-and-envelopes-are-rejected",
+      "events": [
+        {
+          "kind": "instance-opened"
+        },
+        {
+          "kind": "restore-pack",
+          "pack": {
+            "windowId": "target",
+            "windowKindId": "authored-window",
+            "innerPartitionId": "window-config:authored-window:source",
+            "schema": "test.window.authored",
+            "component": "Pack",
+            "version": 1,
+            "value": "foreign-source"
+          }
+        },
+        {
+          "kind": "restore-pack",
+          "pack": {
+            "windowId": "scene:two",
+            "windowKindId": "authored-window",
+            "innerPartitionId": "window-config:authored-window:scene:one",
+            "schema": "test.window.authored",
+            "component": "Pack",
+            "version": 1,
+            "value": "foreign-colon-source"
+          }
+        },
+        {
+          "kind": "restore-pack",
+          "pack": {
+            "windowId": "wrong-schema",
+            "windowKindId": "authored-window",
+            "innerPartitionId": "window-config:authored-window:wrong-schema",
+            "schema": "test.window.foreign",
+            "component": "Pack",
+            "version": 1,
+            "value": "bad"
+          }
+        },
+        {
+          "kind": "restore-pack",
+          "pack": {
+            "windowId": "wrong-component",
+            "windowKindId": "authored-window",
+            "innerPartitionId": "window-config:authored-window:wrong-component",
+            "schema": "test.window.authored",
+            "component": "Dsl",
+            "version": 1,
+            "value": "bad"
+          }
+        },
+        {
+          "kind": "restore-pack",
+          "pack": {
+            "windowId": "wrong-version",
+            "windowKindId": "authored-window",
+            "innerPartitionId": "window-config:authored-window:wrong-version",
+            "schema": "test.window.authored",
+            "component": "Pack",
+            "version": 2,
+            "value": "bad"
+          }
+        },
+        {
+          "kind": "restore-complete"
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "target",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "scene:two",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "render",
+          "window": {
+            "windowId": "target",
+            "windowKindId": "authored-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "render",
+          "window": {
+            "windowId": "scene:two",
+            "windowKindId": "authored-window"
+          }
+        }
+      ],
+      "expected": {
+        "instanceOpen": true,
+        "restorationComplete": true,
+        "document": {
+          "revision": 1,
+          "camera": "authored-camera-a"
+        },
+        "openWindows": [
+          {
+            "windowId": "scene:two",
+            "windowKindId": "authored-window"
+          },
+          {
+            "windowId": "target",
+            "windowKindId": "authored-window"
+          }
+        ],
+        "partitions": [],
+        "savedHostPacks": [],
+        "candidates": [
+          {
+            "windowId": "scene:two",
+            "windowKindId": "authored-window",
+            "phase": "reserved",
+            "seed": "authored-camera-a",
+            "documentRevision": 1,
+            "waiters": [],
+            "pendingRestore": null
+          },
+          {
+            "windowId": "target",
+            "windowKindId": "authored-window",
+            "phase": "reserved",
+            "seed": "authored-camera-a",
+            "documentRevision": 1,
+            "waiters": [],
+            "pendingRestore": null
+          }
+        ],
+        "captures": [
+          {
+            "windowId": "target",
+            "windowKindId": "authored-window",
+            "path": "render",
+            "outcome": "pending"
+          },
+          {
+            "windowId": "scene:two",
+            "windowKindId": "authored-window",
+            "path": "render",
+            "outcome": "pending"
+          }
+        ],
+        "renderedSurfaces": [],
+        "rejectedCodes": [
+          "window-config.partition-id",
+          "window-config.partition-id",
+          "window-config.schema",
+          "window-config.component",
+          "window-config.version"
+        ],
+        "metrics": {
+          "captures": 2,
+          "readMaterializations": 0,
+          "defaultSeeds": 0,
+          "documentSeeds": 2,
+          "hostSaves": 0,
+          "restores": 0,
+          "publications": 0,
+          "cancellations": 0,
+          "staleCandidates": 0,
+          "duplicateOpens": 0
+        }
+      },
+      "oraclePatch": [
+        {
+          "op": "replace",
+          "path": "/instanceOpen",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/restorationComplete",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/document",
+          "value": {
+            "revision": 1,
+            "camera": "authored-camera-a"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/openWindows",
+          "value": [
+            {
+              "windowId": "scene:two",
+              "windowKindId": "authored-window"
+            },
+            {
+              "windowId": "target",
+              "windowKindId": "authored-window"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/partitions",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/savedHostPacks",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/candidates",
+          "value": [
+            {
+              "windowId": "scene:two",
+              "windowKindId": "authored-window",
+              "phase": "reserved",
+              "seed": "authored-camera-a",
+              "documentRevision": 1,
+              "waiters": [],
+              "pendingRestore": null
+            },
+            {
+              "windowId": "target",
+              "windowKindId": "authored-window",
+              "phase": "reserved",
+              "seed": "authored-camera-a",
+              "documentRevision": 1,
+              "waiters": [],
+              "pendingRestore": null
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/captures",
+          "value": [
+            {
+              "windowId": "target",
+              "windowKindId": "authored-window",
+              "path": "render",
+              "outcome": "pending"
+            },
+            {
+              "windowId": "scene:two",
+              "windowKindId": "authored-window",
+              "path": "render",
+              "outcome": "pending"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/renderedSurfaces",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/rejectedCodes",
+          "value": [
+            "window-config.partition-id",
+            "window-config.partition-id",
+            "window-config.schema",
+            "window-config.component",
+            "window-config.version"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/metrics",
+          "value": {
+            "captures": 2,
+            "readMaterializations": 0,
+            "defaultSeeds": 0,
+            "documentSeeds": 2,
+            "hostSaves": 0,
+            "restores": 0,
+            "publications": 0,
+            "cancellations": 0,
+            "staleCandidates": 0,
+            "duplicateOpens": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "surface-rebind-and-instance-close-retain-cleanup",
+      "events": [
+        {
+          "kind": "instance-opened"
+        },
+        {
+          "kind": "restore-complete"
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "default-b",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "shared-body",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "surface-hidden",
+          "surfaceId": "shared-body"
+        },
+        {
+          "kind": "capture",
+          "path": "retained-command",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "shared-body",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "shared-body",
+          "window": {
+            "windowId": "default-b",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-b",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "instance-closed"
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-b",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-a",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "default-b",
+            "windowKindId": "default-window"
+          }
+        }
+      ],
+      "expected": {
+        "instanceOpen": false,
+        "restorationComplete": false,
+        "document": {
+          "revision": 1,
+          "camera": "authored-camera-a"
+        },
+        "openWindows": [],
+        "partitions": [],
+        "savedHostPacks": [],
+        "candidates": [],
+        "captures": [
+          {
+            "windowId": "default-a",
+            "windowKindId": "default-window",
+            "path": "retained-command",
+            "outcome": "pending"
+          }
+        ],
+        "renderedSurfaces": [],
+        "rejectedCodes": [],
+        "metrics": {
+          "captures": 1,
+          "readMaterializations": 0,
+          "defaultSeeds": 2,
+          "documentSeeds": 0,
+          "hostSaves": 0,
+          "restores": 0,
+          "publications": 0,
+          "cancellations": 2,
+          "staleCandidates": 0,
+          "duplicateOpens": 0
+        }
+      },
+      "oraclePatch": [
+        {
+          "op": "replace",
+          "path": "/instanceOpen",
+          "value": false
+        },
+        {
+          "op": "replace",
+          "path": "/restorationComplete",
+          "value": false
+        },
+        {
+          "op": "replace",
+          "path": "/document",
+          "value": {
+            "revision": 1,
+            "camera": "authored-camera-a"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/openWindows",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/partitions",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/savedHostPacks",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/candidates",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/captures",
+          "value": [
+            {
+              "windowId": "default-a",
+              "windowKindId": "default-window",
+              "path": "retained-command",
+              "outcome": "pending"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/renderedSurfaces",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/rejectedCodes",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/metrics",
+          "value": {
+            "captures": 1,
+            "readMaterializations": 0,
+            "defaultSeeds": 2,
+            "documentSeeds": 0,
+            "hostSaves": 0,
+            "restores": 0,
+            "publications": 0,
+            "cancellations": 2,
+            "staleCandidates": 0,
+            "duplicateOpens": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "saved-host-pack-restores-reused-id-in-new-app-lifetime",
+      "events": [
+        {
+          "kind": "instance-opened"
+        },
+        {
+          "kind": "restore-complete"
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "reused",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "reused",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "reused",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "advance",
+          "window": {
+            "windowId": "reused",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "host-save-pack",
+          "window": {
+            "windowId": "reused",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "instance-closed"
+        },
+        {
+          "kind": "instance-opened"
+        },
+        {
+          "kind": "host-restore-pack",
+          "window": {
+            "windowId": "reused",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "restore-complete"
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "reused",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "surface-visible",
+          "surfaceId": "reused-body",
+          "window": {
+            "windowId": "reused",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "capture",
+          "path": "retained-command",
+          "window": {
+            "windowId": "reused",
+            "windowKindId": "default-window"
+          }
+        },
+        {
+          "kind": "window-opened",
+          "window": {
+            "windowId": "reused",
+            "windowKindId": "default-window"
+          }
+        }
+      ],
+      "expected": {
+        "instanceOpen": true,
+        "restorationComplete": true,
+        "document": {
+          "revision": 1,
+          "camera": "authored-camera-a"
+        },
+        "openWindows": [
+          {
+            "windowId": "reused",
+            "windowKindId": "default-window"
+          }
+        ],
+        "partitions": [
+          {
+            "windowId": "reused",
+            "windowKindId": "default-window",
+            "value": "framework-default-camera",
+            "source": "restored"
+          }
+        ],
+        "savedHostPacks": [
+          {
+            "windowId": "reused",
+            "windowKindId": "default-window",
+            "innerPartitionId": "window-config:default-window:reused",
+            "schema": "test.window.default",
+            "component": "Pack",
+            "version": 1,
+            "value": "framework-default-camera"
+          }
+        ],
+        "candidates": [],
+        "captures": [
+          {
+            "windowId": "reused",
+            "windowKindId": "default-window",
+            "path": "retained-command",
+            "outcome": "existing"
+          }
+        ],
+        "renderedSurfaces": [
+          "reused-body"
+        ],
+        "rejectedCodes": [],
+        "metrics": {
+          "captures": 1,
+          "readMaterializations": 0,
+          "defaultSeeds": 1,
+          "documentSeeds": 0,
+          "hostSaves": 1,
+          "restores": 1,
+          "publications": 1,
+          "cancellations": 0,
+          "staleCandidates": 0,
+          "duplicateOpens": 1
+        }
+      },
+      "oraclePatch": [
+        {
+          "op": "replace",
+          "path": "/instanceOpen",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/restorationComplete",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/document",
+          "value": {
+            "revision": 1,
+            "camera": "authored-camera-a"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/openWindows",
+          "value": [
+            {
+              "windowId": "reused",
+              "windowKindId": "default-window"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/partitions",
+          "value": [
+            {
+              "windowId": "reused",
+              "windowKindId": "default-window",
+              "value": "framework-default-camera",
+              "source": "restored"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/savedHostPacks",
+          "value": [
+            {
+              "windowId": "reused",
+              "windowKindId": "default-window",
+              "innerPartitionId": "window-config:default-window:reused",
+              "schema": "test.window.default",
+              "component": "Pack",
+              "version": 1,
+              "value": "framework-default-camera"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/candidates",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/captures",
+          "value": [
+            {
+              "windowId": "reused",
+              "windowKindId": "default-window",
+              "path": "retained-command",
+              "outcome": "existing"
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/renderedSurfaces",
+          "value": [
+            "reused-body"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/rejectedCodes",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/metrics",
+          "value": {
+            "captures": 1,
+            "readMaterializations": 0,
+            "defaultSeeds": 1,
+            "documentSeeds": 0,
+            "hostSaves": 1,
+            "restores": 1,
+            "publications": 1,
+            "cancellations": 0,
+            "staleCandidates": 0,
+            "duplicateOpens": 1
+          }
+        }
+      ]
+    }
+  ]
+}

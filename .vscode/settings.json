@@ -11,6 +11,9 @@
   },
   "eslint.useFlatConfig": true,
   "eslint.packageManager": "bun",
+  "eslint.options": {
+    "overrideConfigFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs"
+  },
   "terminal.integrated.env.windows": {
     "NX_VERBOSE_LOGGING": "false",
     "NX_PERF_LOGGING": "false",
@@ -108,7 +111,8 @@
   "rust-analyzer.linkedProjects": ["Cargo.toml"],
   "rust-analyzer.testExplorer": true,
   "vitest.enable": true,
-  "vitest.configSearchPattern": "**/vitest.config.ts",
+  "vitest.configSearchPatternInclude": "**/🧪️tests/🎚️config/🟦️.ts",
+  "tailwindCSS.experimental.configFile": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🟦️.ts",
   "terminal.integrated.defaultProfile.linux": "bash",
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {

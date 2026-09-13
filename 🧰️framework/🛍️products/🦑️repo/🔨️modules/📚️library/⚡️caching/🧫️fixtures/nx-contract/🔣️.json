@@ -309,7 +309,7 @@
   "bootstrap": {
     "dotnetProject": "@semio-tech/repo-test-dotnet",
     "dotnetPath": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83e\uddea\ufe0ftest/\ud83d\udce6\ufe0fpackages/\ud83d\udd37\ufe0fdotnet",
-    "compile": "\ud83d\udd37\ufe0f.cs",
+    "compile": "../../🖥️host/🔷️.cs",
     "pythonMembers": [],
     "stylingProject": "@semio-tech/ui-styling-py",
     "stylingGenerator": "@semio-tech/ui-styling-tokens:generate",
@@ -471,7 +471,8 @@
     "cancellation": {
       "shutdownMilliseconds": 4500,
       "maximumDiagnosticCharacters": 70000
-    }
+    },
+    "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts"
   },
   "playgroundSessions": {
     "project": "@semio-tech/plugin-registry",

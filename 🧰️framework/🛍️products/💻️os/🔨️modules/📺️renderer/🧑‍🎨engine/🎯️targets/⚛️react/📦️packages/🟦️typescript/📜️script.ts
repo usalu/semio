@@ -28,7 +28,7 @@ function ownedExport(repoRoot: string, scope: keyof typeof MODULE_SCHEMAS, expor
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "vitest.config.ts");
+    runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -37,7 +37,7 @@ class DocumentOpeningScopeCheckScript extends BundleScript {
   run(segments: string[]): void {
     if (segments.length !== 0) throw new Error("document-opening-scope-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/🚪️opening/🟦️.ts", "--silent=false", "--reporter=verbose"], "vitest.config.ts");
+    runVitest(this.root, ["../../../../🧪️tests/🚪️opening/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -47,7 +47,7 @@ class AgentBridgeCheckScript extends BundleScript {
     if (segments.length !== 0) throw new Error("agent-bridge-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
     process.env.SEMIO_INCLUDE_AGENT_BRIDGE = "1";
-    await runVitest(this.root, ["--run", "--silent=false"], "vitest.config.ts");
+    await runVitest(this.root, ["--run", "--silent=false"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -70,7 +70,7 @@ class TutorialInteractionCheckScript extends BundleScript {
         "--reporter=verbose",
         "--testNamePattern=interaction recording|decodes the bounded actor interaction capture|captures the observed typed interaction|plays full and sparse typed selections|projects tutorial selection playback|records comma-bearing selection|APPLY_TUTORIAL_UI_SNAPSHOT restores",
       ],
-      "vitest.config.ts",
+      "../../🧪️tests/🎚️config/🟦️.ts",
     );
   }
 }
@@ -88,7 +88,7 @@ class FlowBrowserRuntimeCheckScript extends BundleScript {
         "--reporter=verbose",
         "--testNamePattern=retains one shared Flow browser runtime|retires a graph host unmounted before its open reply",
       ],
-      "vitest.config.ts",
+      "../../🧪️tests/🎚️config/🟦️.ts",
     );
   }
 }
@@ -101,13 +101,13 @@ class ArtifactCreationProgressCheckScript extends BundleScript {
     runVitest(
       this.root,
       ["../../../../🧪️tests/🔬️artifact-creation-ready-opening/🟦️.ts", "--silent=false", "--reporter=verbose"],
-      "vitest.config.ts",
+      "../../🧪️tests/🎚️config/🟦️.ts",
     );
     process.env.SEMIO_INCLUDE_BACKBONE_WORKER = "1";
     runVitest(
       this.root,
       [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "--silent=false", "--reporter=verbose", "--testNamePattern=space artifact creation owner"],
-      "vitest.config.ts",
+      "../../🧪️tests/🎚️config/🟦️.ts",
     );
   }
 }
@@ -176,8 +176,8 @@ class DirectoryHomeBootstrapCheckScript extends BundleScript {
     if (segments.length !== 0) throw new Error("directory-home-bootstrap-check accepts no arguments");
     console.log(`directory-home-bootstrap-oracle: checks=${directoryHomeBootstrapOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/📇️directory-home-bootstrap/🟦️.tsx"], "vitest.config.ts");
-    runVitest(this.root, ["../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx", "--testNamePattern=validates fixed result page authority and preserves document and download effects"], "vitest.config.ts");
+    runVitest(this.root, ["../../../../🧪️tests/📇️directory-home-bootstrap/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
+    runVitest(this.root, ["../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx", "--testNamePattern=validates fixed result page authority and preserves document and download effects"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -232,9 +232,9 @@ class DirectoryInviteCapabilityCheckScript extends BundleScript {
     if (segments.length !== 0) throw new Error("directory-invite-capability-check accepts no arguments");
     console.log(`directory-invite-capability-oracle: checks=${directoryInviteCapabilityOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/🏛️space-administration/🟦️.tsx"], "vitest.config.ts");
+    runVitest(this.root, ["../../../../🧪️tests/🏛️space-administration/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
     process.env.SEMIO_INCLUDE_BACKBONE_WORKER = "1";
-    runVitest(this.root, [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "--testNamePattern=backbone-worker space administration"], "vitest.config.ts");
+    runVitest(this.root, [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "--testNamePattern=backbone-worker space administration"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -304,9 +304,9 @@ class ScopedPresenceCheckScript extends BundleScript {
     if (segments.length !== 0) throw new Error("scoped-presence-check accepts no arguments");
     console.log(`scoped-presence-oracle: checks=${scopedPresenceOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/👥️scoped-presence/🟦️.tsx"], "vitest.config.ts");
+    runVitest(this.root, ["../../../../🧪️tests/👥️scoped-presence/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
     process.env.SEMIO_INCLUDE_BACKBONE_WORKER = "1";
-    runVitest(this.root, [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "--testNamePattern=backbone-worker scope-safe presence"], "vitest.config.ts");
+    runVitest(this.root, [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "--testNamePattern=backbone-worker scope-safe presence"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -609,7 +609,7 @@ class SurfaceSwitchCheckScript extends BundleScript {
   run(segments: string[]): void {
     if (segments.length !== 0) throw new Error("surface-switch-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/🔀️surface-switch/🟦️.ts", "--silent=false", "--reporter=verbose"], "vitest.config.ts");
+    runVitest(this.root, ["../../../../🧪️tests/🔀️surface-switch/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -619,7 +619,7 @@ class ViewStateCarriageCheckScript extends BundleScript {
   run(segments: string[]): void {
     if (segments.length !== 0) throw new Error("view-state-carriage-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/📌️view-state-carriage/🟦️.ts", "--silent=false", "--reporter=verbose"], "vitest.config.ts");
+    runVitest(this.root, ["../../../../🧪️tests/📌️view-state-carriage/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -630,7 +630,7 @@ class World3dInteractionCheckScript extends BundleScript {
     console.log(`interaction-selection-set-oracle: checks=${interactionSelectionSetOracle(this.repoRoot)} clean`);
     console.log(`selection-merge-vocabulary-oracle: checks=${selectionMergeVocabularyOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/🖱️world3d-interaction/🟦️.tsx", "--silent=false", "--reporter=verbose"], "vitest.config.ts");
+    runVitest(this.root, ["../../../../🧪️tests/🖱️world3d-interaction/🟦️.tsx", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -818,7 +818,7 @@ class SurfaceRetentionCheckScript extends BundleScript {
     if (segments.length !== 0) throw new Error("surface-retention-check accepts no arguments");
     console.log(`surface-host-retention-oracle: checks=${surfaceHostRetentionOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧱️elements/🗣️Interpreter/🟦️.tsx", "../../../../🧪️tests/🔬️engine-contract/🟦️.ts", "--silent=false", "--reporter=verbose", "-t", "retained surface host|sibling reconciliation keys"], "vitest.config.ts");
+    runVitest(this.root, ["../../../../🧱️elements/🗣️Interpreter/🟦️.tsx", "../../../../🧪️tests/🔬️engine-contract/🟦️.ts", "--silent=false", "--reporter=verbose", "-t", "retained surface host|sibling reconciliation keys"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

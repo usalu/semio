@@ -26,8 +26,6 @@ import {
   getRepoMetaDir,
   isDevPortInUse,
   loadFrameworkOsPlaygroundCatalog,
-  probeWgpuDevPort,
-  stopTrunkDevPort,
   wgpuDevPlayUrl,
   runBundleScriptMain,
   runCmd,
@@ -1406,7 +1404,6 @@ class PreparationScript extends BundleScript {
     }
     for (const path of [join(PREVIEW2_VENDOR_RELATIVE, ".nx-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) if (!existsSync(join(moduleRoot, path))) throw new Error(`Missing browser support ${path}`);
     const fonts = validateFontAsset(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET)));
-    if (renderer === "wgpu") publishWgpuRuntimePrerequisites(session.plugins, moduleRoot);
     console.log(`Prepared ${variant} ${renderer} ${profile}: ${session.plugins.length} components, session, browser support and ${fonts} fonts`);
   }
 }
@@ -1449,19 +1446,18 @@ async function publishActivatedExtension(target: PluginRegistryEntry, source: st
 
 class ActivationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    await new PreparationScript(this.root).run(args);
     const [variant, renderer, selectedProfile] = args, profile = selectedProfile as "dev" | "release";
-    // 🧊️ The wgpu native runner reads `pluginModulesRoot(profile)` directly (the one staging root every
-    // producer wrote before `PreparationScript` accepted it) instead of an activation receipt served over
-    // HTTP — there is no Vite runtime root to publish extensions into, so activation IS preparation for
-    // this renderer, and this branch is a trivial, cacheable confirmation.
+    if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["dev", "release"].includes(profile) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("activate <variant> react|wgpu <dev|release>");
+    const moduleRoot = pluginModulesRoot(profile);
+    const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session", "🟦️.ts");
+    const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
+    if (session.variant !== variant) throw new Error("Activation session identity mismatch");
     if (renderer === "wgpu") {
+      publishWgpuRuntimePrerequisites(session.plugins, moduleRoot);
       console.log(`Activated ${variant} wgpu ${profile}`);
       return;
     }
-    const runtime = developmentRuntimeRoot(this.root, variant, profile), receiptRoot = join(runtime, "activation"), moduleRoot = pluginModulesRoot(profile);
-    const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session", "🟦️.ts");
-    const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
+    const runtime = developmentRuntimeRoot(this.root, variant, profile), receiptRoot = join(runtime, "activation");
     const catalog = new Map(readGeneratedCatalogProjection().entries.map((entry) => [entry.pluginId, entry]));
     const controller = new AbortController(), cancel = (): void => controller.abort();
     for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, cancel);
@@ -1559,7 +1555,7 @@ class ServeScript extends BundleScript {
     if (receipt.variant !== variant || receipt.profile !== profile) throw new Error("Server activation identity mismatch");
     reportServeStagedModuleFreshness(variant, "react", profile, runtime, receipt);
     const resolved = resolvePlaygroundFilter(variant);
-    await runViteBunxDev(this.root, serverArgs, { portEnv: "S_OS_PORT", defaultPort: String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, variant, renderer)), fixedPort: true, env: { SEMIO_PLUGIN: variant, SEMIO_RENDERER: renderer, SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev", SEMIO_BRAND: resolved.brand ?? "", VITE_SEMIO_PLUGIN: variant, VITE_SEMIO_RENDERER: renderer, VITE_SEMIO_APP_ID: resolved.appId ?? "", ...frameworkOsLockedPrefsEnv() } });
+    await runViteBunxDev(this.root, serverArgs, { config: "../../🏗️builder/🌐️vite/🟦️.ts", portEnv: "S_OS_PORT", defaultPort: String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, variant, renderer)), fixedPort: true, env: { SEMIO_PLUGIN: variant, SEMIO_RENDERER: renderer, SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev", SEMIO_BRAND: resolved.brand ?? "", VITE_SEMIO_PLUGIN: variant, VITE_SEMIO_RENDERER: renderer, VITE_SEMIO_APP_ID: resolved.appId ?? "", ...frameworkOsLockedPrefsEnv() } });
   }
 }
 
@@ -1575,104 +1571,6 @@ async function activatePlaygroundRuntime(variant: string, profile: "dev" | "rele
   const target = `@semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`;
   console.log(`[dev] activating ${variant} ${renderer} ${profile} via ${target}`);
   if (runCmdStatus("bun", ["nx", "run", target], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`Playground activation failed: ${target}`);
-}
-
-class DevScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const served = segments.includes("served");
-    const selectors = segments.filter((segment) => segment !== "served");
-    const variantSegment = selectors[0] && !selectors[0].startsWith("-") ? selectors[0] : undefined;
-    const serverArgs = variantSegment ? selectors.slice(1) : selectors;
-    const plugin = variantSegment === "multi" ? DEFAULT_HOST_VARIANT : variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
-    const renderer = variantSegment === "multi" ? "react" : process.env.SEMIO_RENDERER ?? "react";
-    const profile = semioBuildMode() === "ship" ? "release" : "dev";
-    if (renderer === "react") {
-      if (!served) await activatePlaygroundRuntime(plugin, profile);
-      await new ServeScript(this.root).run([plugin, renderer, profile, ...serverArgs]);
-      return;
-    }
-    if (renderer !== "wgpu") throw new Error(`Unknown development renderer: ${renderer}`);
-    ensureAppleDeveloperDir();
-    // 🚀️ Consumes the Nx-cached `materialize-<profile>` outputs (`activate-<variant>-wgpu-<profile>`,
-    // generated by `playgroundPreparationTargets`) instead of a raw serial `cargo`+jco catalog build —
-    // see `PreparationScript`/`publishWgpuRuntimePrerequisites` above for how those already-built modules
-    // become readable at `pluginModulesRoot(profile)`, the one path the native runner reads.
-    if (!served) await activatePlaygroundRuntime(plugin, profile, "wgpu");
-    // 🔎️ The trunk bundle `copy-dir`s the one staging root, so the same staleness that would poison a
-    // react serve poisons this one — said out loud here, before trunk spends three minutes copying it.
-    reportServeStagedModuleFreshness(plugin, "wgpu", profile, developmentRuntimeRoot(this.root, plugin, profile));
-    const defaultPort = String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, plugin, renderer));
-    const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-    const port = Number(process.env.S_OS_PORT ?? defaultPort);
-    const playUrl = wgpuDevPlayUrl(host, port, plugin);
-    if (isDevPortInUse(host, port)) {
-      const entry = probeWgpuDevPort(host, port);
-      if (entry?.entryPath === "/") {
-        console.log(`[dev] Port ${port} already serving wgpu trunk at ${playUrl}`);
-        return;
-      }
-      const occupant = describeDevPortOccupant(port);
-      if (occupant?.startsWith("trunk")) {
-        console.log(`[dev] Restarting stale trunk on port ${port} (${occupant})`);
-        stopTrunkDevPort(port);
-        // ⏳️ `stopTrunkDevPort` kills a process this function did not spawn (found via port
-        // occupancy, not a held child handle) — no exit event available, so a TCP-freed poll via
-        // 🔖️PollHelpers's `awaitTcpReady` is the legitimate signal per THE RULE. Same 40×250ms=10s
-        // budget as before; outcome intentionally unchecked — the caller proceeds either way, same
-        // as the original attempt-bounded loop did.
-        await awaitTcpReady(host, port, { deadlineMs: 10_000, intervalMs: 250, mode: "closed" });
-      } else if (entry) {
-        console.log(`[dev] Port ${port} already serving legacy wgpu trunk at ${wgpuDevPlayUrl(host, port, plugin, entry.entryPath)}`);
-        return;
-      } else {
-        console.error(`[dev] Port ${port} is already in use${occupant ? ` by ${occupant}` : ""}. Stop that process or set S_OS_PORT.`);
-        process.exit(1);
-      }
-    }
-    const serveStatus = runCmdStatus("bun", [WGPU_SCRIPT_PATH, "serve"], {
-      cwd: WGPU_PACKAGE_ROOT,
-      env: {
-        ...process.env,
-        SEMIO_PLUGIN: plugin,
-        SEMIO_RENDERER: renderer,
-        S_OS_PORT: String(port),
-      },
-      ...daemonBudgetOpts(),
-    });
-    if (serveStatus !== 0 && !probeWgpuDevPort(host, port)) {
-      throw new Error("wgpu trunk serve failed");
-    }
-    console.log(`[dev] wgpu trunk serving at ${playUrl}`);
-    return;
-  }
-}
-
-class BuildScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    process.env.SEMIO_BUILD_MODE = "ship";
-    const variantSegment = segments[0] && !segments[0].startsWith("-") ? segments[0] : undefined;
-    const viteSegments = variantSegment ? segments.slice(1) : segments;
-    const plugin = variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
-    await new PluginBuildScript(this.root).run([plugin]);
-    const renderer = process.env.SEMIO_RENDERER ?? "react";
-    if (renderer === "wgpu" && process.env.SKIP_WGPU_BUILD !== "1") {
-      if (runCmdStatus("bun", [WGPU_SCRIPT_PATH, "wasm", "--release"], { cwd: WGPU_PACKAGE_ROOT, budgetMs: buildBudgetMs() }) !== 0) throw new Error("wgpu trunk build failed");
-      return;
-    }
-    await buildEngineWasm(plugin, renderer);
-    const resolvedFilter = resolvePlaygroundFilter(plugin);
-    const viteStatus = runBunxStatus(["vite", "build", "--config", "⚙️vite.config.ts", ...viteSegments], this.root, {
-      ...semioShipEnv(),
-      SEMIO_PLUGIN: plugin,
-      SEMIO_RENDERER: renderer,
-      VITE_SEMIO_RENDERER: renderer,
-      VITE_SEMIO_PLUGIN: resolvedFilter.pluginId,
-      ...(resolvedFilter.appId ? { VITE_SEMIO_APP_ID: resolvedFilter.appId } : {}),
-      ...(resolvedFilter.brand && !process.env.SEMIO_BRAND ? { SEMIO_BRAND: resolvedFilter.brand } : {}),
-      ...frameworkOsLockedPrefsEnv(),
-    });
-    if (viteStatus !== 0) throw new Error("framework OS Vite build failed");
-  }
 }
 
 const PLUGIN_HOST_MODE_SYMBOLS = ["SEMIO_PLUGIN", "PLAYGROUND_APP_KIND", "hostMode", "pluginFilter"] as const;
@@ -1703,7 +1601,7 @@ function walkRustSources(dir: string, out: string[]): void {
  * `renderer-modules` in particular is a build-output directory that legitimately doesn't exist
  * until a wgpu build populates it. */
 async function checkPlaygroundAliasFreshness(): Promise<string[]> {
-  const viteConfigPath = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts");
+  const viteConfigPath = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts");
   const source = await Bun.file(viteConfigPath).text();
   const aliasPattern = /\{\s*find:\s*"([^"]+)",\s*replacement:\s*path\.resolve\(repoRoot,\s*"([^"]+)"\)\s*\}/g;
   const failures: string[] = [];
@@ -2147,7 +2045,7 @@ class HostHandleReachLintScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runVitest(this.root, rest, "vitest.config.ts");
+    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -4828,7 +4726,7 @@ async function renderDistributionBundle(workspace: string, artifactRoot: string)
   process.env.SEMIO_BRAND = "";
   let result: Awaited<ReturnType<typeof import("vite")["build"]>>;
   try {
-    const { build } = await import("vite"), { default: createConfig } = await import("./⚙️vite.config.ts");
+    const { build } = await import("vite"), { default: createConfig } = await import("../../🏗️builder/🌐️vite/🟦️.ts");
     const config = await createConfig({ command: "build", mode: "production", isSsrBuild: false, isPreview: false });
     distributionProgress("actual production configuration loaded");
     const workerPlugins = config.worker?.plugins;
@@ -5587,8 +5485,6 @@ const router = new ScriptRouter(import.meta.dir)
       await testClosedBrowserComponentFactory(this.repoRoot);
     }
   })
-  .register("dev", DevScript)
-  .register("build", BuildScript)
   .register("test", TestScript)
   .register("verify", VerifyScript)
   .register(

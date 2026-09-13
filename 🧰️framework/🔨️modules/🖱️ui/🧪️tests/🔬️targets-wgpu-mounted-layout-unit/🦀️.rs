@@ -268,7 +268,3 @@ fn mounted_layout_publication_rechecks_full_identity_and_repeat_ready_swaps_once
     assert!(job.terminal_is_empty());
 }
 
-#[test]
-fn debug_sizes() {
-    println!("[DEBUG] LayoutInputNode={} LayoutNodeKind={} MountedLayoutJob={} Theme={}", std::mem::size_of::<LayoutInputNode>(), std::mem::size_of::<LayoutNodeKind>(), std::mem::size_of::<MountedLayoutJob>(), std::mem::size_of::<Theme>());
-}

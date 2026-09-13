@@ -12,7 +12,7 @@ pub struct ArchitectReportWindowConfig {
 
 /// 🔁️ Changes the authored ReportRecord selected by one addressed Report window.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(tag = "kind", rename_all = "kebab-case")]
+#[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum ArchitectReportWindowConfigMutation {
     SelectReport { selected_report_id: Option<EntityId> },
 }

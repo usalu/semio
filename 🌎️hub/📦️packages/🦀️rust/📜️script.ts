@@ -2622,7 +2622,7 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
     process.env.SEMIO_RENDERER = "react";
     const { createServer: createViteServer } = await import("vite");
     viteServer = await createViteServer({
-      configFile: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts"),
+      configFile: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"),
       server: { host: "127.0.0.1", port: uiPort, strictPort: true },
       clearScreen: false,
     });
@@ -2937,7 +2937,7 @@ async function proveAdminRelayBoundary(repoRoot: string): Promise<void> {
     if (expired.status !== 401 || upstream.effects !== 0) throw new Error("expired admin relay cookie reached upstream");
 
     const sessionSource = readFileSync(join(repoRoot, "🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔑️AdminSession/🟦️.tsx"), "utf8");
-    const viteSource = readFileSync(join(repoRoot, "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/⚙️vite.config.ts"), "utf8");
+    const viteSource = readFileSync(join(repoRoot, "🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts"), "utf8");
     const launch = readFileSync(join(repoRoot, ".vscode/🧩️launch.seed.jsonc"), "utf8");
     if (sessionSource.includes("sessionStorage") || sessionSource.includes("headers.authorization") || sessionSource.includes("Bearer ${") || !sessionSource.includes("#semio-admin=") || !sessionSource.includes('credentials: "same-origin"'))
       throw new Error("admin SPA regained a browser-owned bearer carrier");
@@ -14351,7 +14351,7 @@ async function serveScopedPresenceBrowserRuntime(repoRoot: string): Promise<void
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Scoped presence browser shell</title><script type="module">import { injectIntoGlobalHook } from "/@react-refresh"; injectIntoGlobalHook(window); window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => (type) => type;</script><script type="module" src="/@vite/client"></script></head><body><div id="root"></div><script type="module">const root = document.querySelector("#root"); try { const module = await import(${JSON.stringify(`/@fs${componentPath}`)}); const response = await fetch("/__scoped-presence/config"); if (!response.ok) throw new Error(\`config status \${response.status}\`); module.mountScopedPresenceBrowserShellV1(root, await response.json()); } catch (error) { root.textContent = \`[DEBUG] scoped-presence mount failed: \${error instanceof Error ? error.message : String(error)}\`; console.error(root.textContent); }</script></body></html>`;
     const { createServer: createViteServer } = await import("vite");
     vite = await createViteServer({
-      configFile: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts"),
+      configFile: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"),
       server: { host: "127.0.0.1", port: uiPort, strictPort: true },
       clearScreen: false,
       plugins: [

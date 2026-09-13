@@ -568,10 +568,16 @@ test("Storybook discovers only the canonical story-kind leaf", () => {
 });
 
 test("graph manifest discovery uses its semantic filename without a package build watcher", () => {
-  const source = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts"), "utf8");
+  const source = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📥️admission/🟦️.ts"), "utf8");
   const cargo = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/Cargo.toml"), "utf8");
   expect(cargo).toMatch(/^build = false$/mu);
-  const expression = /else if \(([^\n]+)\) \{\n\s+out\.push\(path\)/u.exec(source)?.[1];
+  const syntax = ts.createSourceFile("graph-admission.ts", source, ts.ScriptTarget.Latest, true);
+  let expression: string | undefined;
+  function visit(node: ts.Node): void {
+    if (ts.isIfStatement(node) && node.expression.getText(syntax).includes('name.endsWith("manifest.json")') && node.thenStatement.getText(syntax).includes("out.push(path)")) expression = node.expression.getText(syntax);
+    ts.forEachChild(node, visit);
+  }
+  visit(syntax);
   expect(expression).toBeDefined();
   const accepts = new Function("name", `return ${expression};`);
   const oracle = picomatch("*manifest.json");

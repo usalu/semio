@@ -7,7 +7,7 @@
     "default": [
       "{projectRoot}/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/**/*"
-    ]
+    , "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
     "test": {

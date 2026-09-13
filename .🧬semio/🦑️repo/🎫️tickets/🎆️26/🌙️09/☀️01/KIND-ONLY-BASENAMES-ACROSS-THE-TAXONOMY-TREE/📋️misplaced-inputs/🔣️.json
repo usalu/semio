@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "source": "09/☀️02/PUZZLE-3D-END-TO-END/🗑️generated/b16-extract.py",
+      "destination": "📋️misplaced-inputs/🧊️puzzle-export-import/🐍️.py",
+      "role": "preserved-input",
+      "syntaxValid": false,
+      "relatedTicket": "26/09/02/PUZZLE-3D-END-TO-END"
+    }
+  ]
+}

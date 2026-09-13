@@ -1,6 +1,9 @@
 {
   "name": "@semio-tech/framework",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🧪️tests/🎚️config/🟦️.ts"]
+  },
   "targets": {
     "test": {
       "executor": "nx:run-commands",

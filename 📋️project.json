@@ -8,11 +8,54 @@
       "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
     }
   },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧪️tests/🎚️config/🟦️.ts", "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts"]
+  },
   "targets": {
+    "fem-numerical-page-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify fem-numerical-page-owners" }
+    },
+    "fem-numerical-page-owners-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify fem-numerical-page-owners native" }
+    },
+    "fem-mesh-preparation-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify fem-mesh-preparation-owners" }
+    },
+    "fem-mesh-preparation-owners-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify fem-mesh-preparation-owners native" }
+    },
     "fem-scalar-owners-native": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": { "command": "bun ./📜️script.ts verify fem-scalar-owners-native" }
+    },
+    "generation2d-window-camera-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify generation2d-window-camera-ownership oracle" }
+    },
+    "generation2d-window-camera-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify generation2d-window-camera-ownership native" }
+    },
+    "window-config-provisioning-lifecycle-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify window-config-provisioning-lifecycle" }
+    },
+    "window-config-retained-pack-load-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify window-config-retained-pack-load native" }
     },
     "architect-window-ownership-oracle": {
       "executor": "nx:run-commands",
@@ -26,6 +69,13 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts verify architect-window-ownership native"
+      }
+    },
+    "home-host-panel-owner-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify home-host-panel-owner oracle"
       }
     },
     "window-config-pack-identity": {
@@ -1607,7 +1657,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps python"
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync python"
       },
       "dependsOn": [
         "@semio-tech/ui-styling-py:deps",
@@ -1619,7 +1669,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps cargo"
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync cargo"
       },
       "parallelism": false
     },
@@ -1628,7 +1678,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps go"
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync go"
       }
     },
     "deps-dotnet": {
@@ -1636,7 +1686,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps dotnet"
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync dotnet"
       },
       "dependsOn": [
         "@semio-tech/repo-test-dotnet:deps"
@@ -1647,7 +1697,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps cpp"
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync cpp"
       },
       "dependsOn": [
         "cpp-setup"
@@ -1658,7 +1708,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps browsers"
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync browsers"
       },
       "dependsOn": []
     },
@@ -1667,7 +1717,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps wasm"
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync wasm"
       },
       "parallelism": false,
       "dependsOn": [
@@ -1681,7 +1731,7 @@
       "outputs": [],
       "parallelism": false,
       "options": {
-        "command": "bun ./📜️script.ts setup deps trunk"
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync trunk"
       }
     },
     "deps-wasm-opt": {
@@ -1697,7 +1747,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps tools"
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync tools"
       },
       "parallelism": false
     },
@@ -2142,6 +2192,20 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts verify framework-retained-pack-ownership catalog-native"
+      }
+    },
+    "framework-retained-pack-value": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership value"
+      }
+    },
+    "framework-retained-pack-value-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership value-native"
       }
     },
     "framework-paged-list-ownership": {

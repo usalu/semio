@@ -1,6 +1,9 @@
 {
   "name": "@semio-tech/s-3d-js",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/🧪️tests/🎚️config/🟦️.ts"]
+  },
   "targets": {
     "test": {
       "executor": "nx:run-commands",

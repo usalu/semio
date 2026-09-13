@@ -11,7 +11,7 @@ class BuildScript extends BundleScript {
     const cancel = (): void => { controller.abort(); process.exitCode = 130; };
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {
-      await buildViteArtifact({ root, workspace: this.repoRoot, config: join(root, "⚙️vite.config.ts"), output: join(root, "dist/site"), owner: "demonstrator:site", signal: controller.signal, environment: { SEMIO_BUILD_MODE: "ship", SEMIO_RENDERER: "react" }, ...(process.env.SEMIO_TICKET_DIR ? { temporaryRoot: join(process.env.SEMIO_TICKET_DIR, "🗑️generated") } : {}) });
+      await buildViteArtifact({ root, workspace: this.repoRoot, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), output: join(root, "dist/site"), owner: "demonstrator:site", signal: controller.signal, environment: { SEMIO_BUILD_MODE: "ship", SEMIO_RENDERER: "react" }, ...(process.env.SEMIO_TICKET_DIR ? { temporaryRoot: join(process.env.SEMIO_TICKET_DIR, "🗑️generated") } : {}) });
     } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
   }
 }

@@ -121,7 +121,7 @@ fn surface_output_admission_refuses_before_producer_when_only_one_handback_is_fr
         occupied.push(reserve_surface_reconcile_handback(910_001).unwrap());
     }
     let reservation = SurfaceReconcileReservation::try_new(910_002);
-    let accepted = reservation.is_some();
+    let accepted = reservation.is_ok();
     drop(reservation);
     for owner in occupied {
         release_surface_reconcile_handback(owner);

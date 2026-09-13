@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://semio/repo-cache-command-source/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "owners", "contexts", "consumers", "inventory", "route", "coordinates"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "owners": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "declarations"],
+        "properties": {
+          "path": { "type": "string", "pattern": "/🟦️\\.ts$" },
+          "declarations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "contexts": {
+      "type": "array",
+      "minItems": 22,
+      "maxItems": 22,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["directoryName", "parentKindId", "kindId"],
+        "properties": {
+          "directoryName": { "type": "string", "minLength": 1 },
+          "parentKindId": { "type": "string", "minLength": 1 },
+          "kindId": { "type": "string", "pattern": "^repo-cache-" }
+        }
+      }
+    },
+    "consumers": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "owners"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "owners": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projects", "sources", "files", "texts", "expected"],
+      "properties": {
+        "projects": { "type": "array", "minItems": 2 },
+        "sources": { "type": "object" },
+        "files": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "type": "string" } },
+        "texts": { "type": "object" },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["commands", "artifacts", "consumer", "violationRules"],
+          "properties": {
+            "commands": { "type": "integer", "minimum": 1 },
+            "artifacts": { "type": "integer", "minimum": 1 },
+            "consumer": { "type": "string" },
+            "violationRules": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "command", "namedInput", "launchName", "launchCommand"],
+      "properties": {
+        "target": { "const": "test-cache-command-source" },
+        "command": { "const": "bun ./📜️script.ts test cache-command-source" },
+        "namedInput": { "const": "cacheCommandSources" },
+        "launchName": { "const": "🧪️test⚡️cache-command-source" },
+        "launchCommand": { "const": "bun nx run repo:test-cache-command-source" }
+      }
+    },
+    "coordinates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "bootstrap", "rootPruneConsumer"],
+      "properties": {
+        "policy": { "const": "🔣️policy.json" },
+        "bootstrap": { "const": "🚀️bootstrap/📜️script.ts" },
+        "rootPruneConsumer": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

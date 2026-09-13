@@ -12,6 +12,20 @@ use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt;
 
+/// 🪶 Retires one exact string backing from a mounted element's borrowed identity owners.
+pub(crate) fn close_mounted_strings<'a>(owners: impl IntoIterator<Item = &'a mut String>) -> Option<usize> {
+    let owner = owners.into_iter().find(|owner| owner.capacity() != 0)?;
+    let bytes = owner.capacity();
+    *owner = String::new();
+    Some(bytes)
+}
+
+/// 🔭 Observes the next mounted identity allocation without changing its owner.
+pub(crate) fn mounted_string_bytes<'a>(owners: impl IntoIterator<Item = &'a String>) -> Option<usize> {
+    owners.into_iter().find(|owner| owner.capacity() != 0).map(String::capacity)
+}
+
+
 // #region 🔖️Dof
 /// 🧭️ Nodal degree of freedom kind, shared by 2D (Tx, Ty, Rz) and 3D (all six) models.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

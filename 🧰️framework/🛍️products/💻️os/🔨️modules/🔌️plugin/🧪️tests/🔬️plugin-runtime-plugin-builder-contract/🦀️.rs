@@ -5801,15 +5801,16 @@ mod plugin_builder_contract_tests {
         assert_eq!(InteractionVerb::of_action("undo"), None);
     }
 
-    /// 🧪 Wave B15 — empty-target `interactionSelect` leftover `selectedIds` must name the hovered object.
+    /// 🧪 Empty-target `interactionSelect` with `replace` clears the domain (background deselect) even when an object is hovered.
     #[semio_framework_async_macros::async_test]
-    async fn empty_target_interaction_select_leftover_selected_ids_name_the_hovered_object() {
+    async fn empty_target_interaction_select_clears_selection_while_hover_remains() {
         let mut app = interaction_app_under_test().await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
         reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
         let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_empty_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" })))).await;
         let view = settled.output.get("interactionView").expect("leftover InteractionView");
         let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
-        assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "empty-target interactionSelect leftover selectedIds must name the hovered object, got {ids:?}");
+        assert!(ids.is_empty(), "empty-target replace interactionSelect must clear selectedIds, got {ids:?}");
         let hover = view.get("hoverTarget").expect("hoverTarget");
         assert_eq!(hover.get("id").and_then(DslValue::as_str), Some("item-1"));
         close_reserved_app(&mut app);

@@ -3,6 +3,9 @@
   "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits",
   "projectType": "library",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🧪️tests/🎚️config/🟦️.ts"]
+  },
   "targets": {
     "test": {
       "executor": "nx:run-commands",

@@ -12,7 +12,7 @@ import { tomlBlocksAfterHeader } from "../🔎️discovery/🟦️.ts";
 export class RegistryTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runVitest(this.root, rest, "vitest.config.ts");
+    await runVitest(this.root, rest, "./🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

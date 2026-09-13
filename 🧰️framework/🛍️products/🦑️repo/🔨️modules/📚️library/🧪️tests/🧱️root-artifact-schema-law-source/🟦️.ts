@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
-import { dirname, relative, resolve } from "node:path";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import glob from "fast-glob";
 import ts from "typescript";
@@ -36,7 +36,7 @@ test("validates the portable artifact-schema law ownership contract", () => {
   expect(ts.parseJsonText("fixture.json", JSON.stringify(fixture)).parseDiagnostics).toEqual([]);
 });
 
-test("resolves every artifact-schema owner through its exact semantic context", () => {
+test("resolves every artifact-schema owner through its exact semantic context", { timeout: 30_000 }, () => {
   const taxonomy = loadTaxonomy();
   for (const context of fixture.contexts) expect(semanticDirectoryKindId(context.directoryName, taxonomy, { parentKindId: context.parentKindId }), JSON.stringify(context)).toBe(context.kindId);
   for (const owner of fixture.owners) {
@@ -112,7 +112,8 @@ test("distinguishes missing unreadable non-file and linked source without follow
   const { policySourceText } = await import("../../🔍️discovery/📖️source-access/🟦️.ts");
   for (const row of fixture.sourceStates) {
     const operations = {
-      lstat: () => {
+      lstat: (path: string) => {
+        if (relative("/repo", path) === "") return { isFile: false, isDirectory: true, isSymbolicLink: false };
         if (row.stat === "missing") throw Object.assign(new Error(row.name), { code: "ENOENT" });
         return { isFile: row.stat === "file", isDirectory: row.stat === "directory", isSymbolicLink: row.stat === "symlink" };
       },
@@ -124,9 +125,21 @@ test("distinguishes missing unreadable non-file and linked source without follow
     };
     expect(policySourceText("/repo", row.name, operations).state, row.name).toBe(row.expected);
   }
+  const linkedAncestorOperations = {
+    lstat: (path: string) => {
+      const rel = relative("/repo", path).replaceAll("\\", "/");
+      if (rel === "") return { isFile: false, isDirectory: true, isSymbolicLink: false };
+      if (rel === fixture.ancestorSymlink.ancestor) return { isFile: false, isDirectory: false, isSymbolicLink: true };
+      if (rel === fixture.ancestorSymlink.path) return { isFile: true, isDirectory: false, isSymbolicLink: false };
+      throw Object.assign(new Error(rel), { code: "ENOENT" });
+    },
+    readFile: () => "followed",
+    readdir: () => [],
+  };
+  expect(policySourceText("/repo", fixture.ancestorSymlink.path, linkedAncestorOperations).state).toBe("symlink");
 
   const { policyDiscoverArtifactSchemaOwners } = await import("../../🧬️schema/🗿️artifact/🔍️owner-discovery/🟦️.ts");
-  const directories = new Set<string>(["✏️s/🔌️plugins", "🧰️framework"]);
+  const directories = new Set<string>(["", "✏️s/🔌️plugins", "🧰️framework"]);
   for (const path of fixture.discovery.owner.split("/").map((_: string, index: number, parts: string[]) => parts.slice(0, index + 1).join("/"))) directories.add(path);
   const entries = (parent: string) =>
     [...directories]
@@ -143,13 +156,13 @@ test("distinguishes missing unreadable non-file and linked source without follow
     readFile: () => "",
     readdir: (path: string) => entries(relative("/repo", path).replaceAll("\\", "/")),
   };
-  expect(policyDiscoverArtifactSchemaOwners("/repo", operations)).toEqual([fixture.discovery.owner]);
+  expect(policyDiscoverArtifactSchemaOwners("/repo", operations)).toEqual({ owners: [fixture.discovery.owner], issues: [] });
 });
 
 test("reports unreadable schema evidence separately from absent leaves", async () => {
   const { policyArtifactSchemaFacetCompletenessBreaches } = await import("../../🧬️schema/🗿️artifact/⚖️laws/🧩️facet-completeness/🟦️.ts");
   const owner = fixture.discovery.owner,
-    facets = new Set([`${owner}/🧬️schema`, `${owner}/🧬️schema/📸️snapshot`, `${owner}/🧬️schema/🔺️diff`]),
+    facets = new Set(["", ...owner.split("/").map((_: string, index: number, parts: string[]) => parts.slice(0, index + 1).join("/")), `${owner}/🧬️schema`, `${owner}/🧬️schema/📸️snapshot`, `${owner}/🧬️schema/🔺️diff`]),
     unreadable = `${owner}/🧬️schema/🟦️.ts`;
   const operations = {
     lstat: (path: string) => {
@@ -168,13 +181,72 @@ test("reports unreadable schema evidence separately from absent leaves", async (
   expect(breaches.some((breach) => breach.kind === "artifact-schema/facet-completeness")).toBe(true);
 });
 
+test("surfaces discovery admission failures instead of certifying an empty owner set", async () => {
+  const { policyArtifactSchemaBreaches } = await import("../../🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts"),
+    directories = new Set(["", "✏️s", "🧰️framework"]),
+    operations = {
+      lstat: (path: string) => {
+        const rel = relative("/repo", path).replaceAll("\\", "/");
+        if (rel === "✏️s/🔌️plugins") throw Object.assign(new Error(rel), { code: "EACCES" });
+        if (directories.has(rel)) return { isFile: false, isDirectory: true, isSymbolicLink: false };
+        throw Object.assign(new Error(rel), { code: "ENOENT" });
+      },
+      readFile: () => "",
+      readdir: () => [],
+    };
+  expect(policyArtifactSchemaBreaches("/repo", operations)).toEqual([expect.objectContaining({ kind: "artifact-schema/source-unreadable", scope: "✏️s/🔌️plugins" })]);
+});
+
+test("surfaces native unreadable sources and refuses linked ancestors", async () => {
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  expect(artifactRoot).toBeTruthy();
+  if (!artifactRoot) return;
+  const { policyReadFileSafe, policyReaddirSafe, policySourceDirectory, policySourceText } = await import("../../🔍️discovery/📖️source-access/🟦️.ts"),
+    fixtureRoot = mkdtempSync(join(artifactRoot, "source-access-")),
+    target = join(fixtureRoot, "target"),
+    nested = join(target, "nested"),
+    source = join(nested, "leaf.txt"),
+    blockedDirectory = join(fixtureRoot, "blocked"),
+    blockedSource = join(fixtureRoot, "blocked.txt"),
+    linked = join(fixtureRoot, "linked-parent");
+  try {
+    mkdirSync(nested, { recursive: true });
+    mkdirSync(blockedDirectory);
+    writeFileSync(source, "marker");
+    writeFileSync(blockedSource, "marker");
+    symlinkSync(target, linked, process.platform === "win32" ? "junction" : "dir");
+    expect(policySourceText(fixtureRoot, "linked-parent/nested/leaf.txt").state).toBe("symlink");
+    expect(policySourceDirectory(fixtureRoot, "linked-parent/nested").state).toBe("symlink");
+    expect(() => policyReadFileSafe(fixtureRoot, "linked-parent", "nested", "leaf.txt")).toThrow("symlink");
+    expect(() => policyReaddirSafe(fixtureRoot, "linked-parent/nested")).toThrow("symlink");
+    expect(policyReadFileSafe(fixtureRoot, "absent.txt")).toBe("");
+    expect(policyReaddirSafe(fixtureRoot, "absent")).toEqual([]);
+    if (process.platform !== "win32") {
+      chmodSync(blockedSource, 0);
+      chmodSync(blockedDirectory, 0);
+      expect(policySourceText(fixtureRoot, "blocked.txt").state).toBe("unreadable");
+      expect(policySourceDirectory(fixtureRoot, "blocked").state).toBe("unreadable");
+      expect(() => policyReadFileSafe(fixtureRoot, "blocked.txt")).toThrow("unreadable");
+      expect(() => policyReaddirSafe(fixtureRoot, "blocked")).toThrow("unreadable");
+    }
+  } finally {
+    if (process.platform !== "win32") {
+      chmodSync(blockedSource, 0o600);
+      chmodSync(blockedDirectory, 0o700);
+    }
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
 test("retains real artifact law and field-oracle behavior without fixed diagnostic counts", { timeout: 30_000 }, async () => {
   const [{ policyDiscoverArtifactSchemaOwners }, { policyArtifactSchemaBreaches }, { policyArtifactOwnershipFieldParity }] = await Promise.all([
     import("../../🧬️schema/🗿️artifact/🔍️owner-discovery/🟦️.ts"),
     import("../../🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts"),
     import("../../🧬️schema/🗿️artifact/⚖️laws/🪪️ownership-field-parity/🟦️.ts"),
   ]);
-  const taxonomyOwners = policyDiscoverArtifactSchemaOwners(repoRoot);
+  const discovery = policyDiscoverArtifactSchemaOwners(repoRoot),
+    taxonomyOwners = discovery.owners;
+  expect(discovery.issues).toEqual([]);
   const independentOwners = glob.sync("{✏️s/🔌️plugins,🧰️framework}/**/🗿️artifacts/*/🏅️standards/*/🪆️subsets/*", { cwd: repoRoot, onlyDirectories: true, ignore: ["**/node_modules/**", "**/target/**", "**/🗑️generated/**"] }).sort();
   expect(taxonomyOwners).toEqual(independentOwners);
   const breaches = policyArtifactSchemaBreaches(repoRoot);
@@ -188,6 +260,7 @@ test("registers one Bun Nx and seed-derived launch route", () => {
   const project = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
   expect(project.targets[fixture.route.target]?.options.command).toBe(fixture.route.command);
+  for (const input of fixture.route.inputs) expect(project.targets[fixture.route.target]?.inputs).toContain(input);
   expect(packageJson.scripts[fixture.route.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.route.target}`);
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
     const source = readFileSync(resolve(repoRoot, path), "utf8");

@@ -1,0 +1,263 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:window-config-provisioning-lifecycle-fixtures",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kinds", "initialDocument", "scenarios"],
+  "properties": {
+    "kinds": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/kind" }
+    },
+    "initialDocument": { "$ref": "#/$defs/document" },
+    "scenarios": {
+      "type": "array",
+      "minItems": 8,
+      "items": { "$ref": "#/$defs/scenario" }
+    }
+  },
+  "$defs": {
+    "nonEmpty": { "type": "string", "minLength": 1 },
+    "kind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "schema", "policy", "defaultValue"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "schema": { "$ref": "#/$defs/nonEmpty" },
+        "policy": { "enum": ["framework-default", "document-camera"] },
+        "defaultValue": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "camera"],
+      "properties": {
+        "revision": { "type": "integer", "minimum": 1 },
+        "camera": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "windowKey": {
+      "type": "object",
+      "required": ["windowId", "windowKindId"],
+      "properties": {
+        "windowId": { "$ref": "#/$defs/nonEmpty" },
+        "windowKindId": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "exactWindowKey": {
+      "type": "object",
+      "allOf": [{ "$ref": "#/$defs/windowKey" }],
+      "unevaluatedProperties": false
+    },
+    "pack": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/windowKey" },
+        {
+          "type": "object",
+          "required": ["innerPartitionId", "schema", "component", "version", "value"],
+          "properties": {
+            "innerPartitionId": { "$ref": "#/$defs/nonEmpty" },
+            "schema": { "$ref": "#/$defs/nonEmpty" },
+            "component": { "enum": ["Pack", "Dsl"] },
+            "version": { "type": "integer", "minimum": 1 },
+            "value": { "$ref": "#/$defs/nonEmpty" }
+          }
+        }
+      ]
+    },
+    "capturePath": {
+      "enum": [
+        "generation",
+        "render",
+        "panel-render",
+        "engagements",
+        "measures",
+        "tool-measures",
+        "context-menu",
+        "immediate-dispatch",
+        "retained-command"
+      ]
+    },
+    "event": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "enum": ["instance-opened", "instance-closed"] } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "pack"],
+          "properties": { "kind": { "const": "restore-pack" }, "pack": { "$ref": "#/$defs/pack" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "window"],
+          "properties": { "kind": { "enum": ["host-save-pack", "host-restore-pack"] }, "window": { "$ref": "#/$defs/exactWindowKey" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "restore-complete" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "window"],
+          "properties": { "kind": { "enum": ["window-opened", "window-closed"] }, "window": { "$ref": "#/$defs/exactWindowKey" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "surfaceId", "window"],
+          "properties": {
+            "kind": { "const": "surface-visible" },
+            "surfaceId": { "$ref": "#/$defs/nonEmpty" },
+            "window": { "$ref": "#/$defs/exactWindowKey" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "surfaceId"],
+          "properties": { "kind": { "const": "surface-hidden" }, "surfaceId": { "$ref": "#/$defs/nonEmpty" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "path", "window"],
+          "properties": {
+            "kind": { "const": "capture" },
+            "path": { "$ref": "#/$defs/capturePath" },
+            "window": { "$ref": "#/$defs/exactWindowKey" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "window"],
+          "properties": { "kind": { "const": "advance" }, "window": { "$ref": "#/$defs/exactWindowKey" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "document"],
+          "properties": { "kind": { "const": "document-advanced" }, "document": { "$ref": "#/$defs/document" } }
+        }
+      ]
+    },
+    "partition": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/windowKey" },
+        {
+          "type": "object",
+          "required": ["value", "source"],
+          "properties": {
+            "value": { "$ref": "#/$defs/nonEmpty" },
+            "source": { "enum": ["restored", "framework-default", "document-camera"] }
+          }
+        }
+      ]
+    },
+    "candidate": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/windowKey" },
+        {
+          "type": "object",
+          "required": ["phase", "seed", "documentRevision", "waiters", "pendingRestore"],
+          "properties": {
+            "phase": { "enum": ["waiting-restore", "reserved", "preparing", "publishing", "cancelling", "closing"] },
+            "seed": { "anyOf": [{ "$ref": "#/$defs/nonEmpty" }, { "type": "null" }] },
+            "documentRevision": { "anyOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }] },
+            "waiters": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonEmpty" } },
+            "pendingRestore": { "anyOf": [{ "$ref": "#/$defs/nonEmpty" }, { "type": "null" }] }
+          }
+        }
+      ]
+    },
+    "capture": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/windowKey" },
+        {
+          "type": "object",
+          "required": ["path", "outcome"],
+          "properties": {
+            "path": { "$ref": "#/$defs/capturePath" },
+            "outcome": { "enum": ["absent", "pending", "existing", "wrong-kind"] }
+          }
+        }
+      ]
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["captures", "readMaterializations", "defaultSeeds", "documentSeeds", "hostSaves", "restores", "publications", "cancellations", "staleCandidates", "duplicateOpens"],
+      "properties": {
+        "captures": { "type": "integer", "minimum": 0 },
+        "readMaterializations": { "const": 0 },
+        "defaultSeeds": { "type": "integer", "minimum": 0 },
+        "documentSeeds": { "type": "integer", "minimum": 0 },
+        "hostSaves": { "type": "integer", "minimum": 0 },
+        "restores": { "type": "integer", "minimum": 0 },
+        "publications": { "type": "integer", "minimum": 0 },
+        "cancellations": { "type": "integer", "minimum": 0 },
+        "staleCandidates": { "type": "integer", "minimum": 0 },
+        "duplicateOpens": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instanceOpen", "restorationComplete", "document", "openWindows", "partitions", "savedHostPacks", "candidates", "captures", "renderedSurfaces", "rejectedCodes", "metrics"],
+      "properties": {
+        "instanceOpen": { "type": "boolean" },
+        "restorationComplete": { "type": "boolean" },
+        "document": { "$ref": "#/$defs/document" },
+        "openWindows": { "type": "array", "items": { "$ref": "#/$defs/exactWindowKey" } },
+        "partitions": { "type": "array", "items": { "$ref": "#/$defs/partition" } },
+        "savedHostPacks": { "type": "array", "items": { "$ref": "#/$defs/pack" } },
+        "candidates": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+        "captures": { "type": "array", "items": { "$ref": "#/$defs/capture" } },
+        "renderedSurfaces": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonEmpty" } },
+        "rejectedCodes": { "type": "array", "items": { "$ref": "#/$defs/nonEmpty" } },
+        "metrics": { "$ref": "#/$defs/metrics" }
+      }
+    },
+    "patch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["op", "path", "value"],
+      "properties": {
+        "op": { "const": "replace" },
+        "path": { "enum": ["/instanceOpen", "/restorationComplete", "/document", "/openWindows", "/partitions", "/savedHostPacks", "/candidates", "/captures", "/renderedSurfaces", "/rejectedCodes", "/metrics"] },
+        "value": {}
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "events", "expected", "oraclePatch"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "events": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/event" } },
+        "expected": { "$ref": "#/$defs/summary" },
+        "oraclePatch": { "type": "array", "minItems": 11, "maxItems": 11, "items": { "$ref": "#/$defs/patch" } }
+      }
+    }
+  }
+}

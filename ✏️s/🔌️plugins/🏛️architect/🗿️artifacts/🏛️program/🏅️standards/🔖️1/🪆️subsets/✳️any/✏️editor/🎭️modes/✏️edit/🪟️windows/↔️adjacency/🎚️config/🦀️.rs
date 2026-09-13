@@ -12,7 +12,7 @@ pub struct ArchitectAdjacencyWindowConfig {
 
 /// 🔁️ Changes the kind filter of one addressed Adjacency window.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(tag = "kind", rename_all = "kebab-case")]
+#[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum ArchitectAdjacencyWindowConfigMutation {
     SetAdjacencyKindFilter { adjacency_kind_filter: Option<AdjacencyKind> },
 }

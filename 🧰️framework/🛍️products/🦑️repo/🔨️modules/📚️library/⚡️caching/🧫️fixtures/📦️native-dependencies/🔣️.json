@@ -1,0 +1,164 @@
+{
+  "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+  "environments": [
+    {
+      "kind": "python",
+      "commands": [
+        [
+          "uv",
+          "sync",
+          "--locked",
+          "--all-packages",
+          "--all-groups"
+        ]
+      ]
+    },
+    {
+      "kind": "cargo",
+      "commands": [
+        [
+          "cargo",
+          "fetch",
+          "--locked",
+          "--manifest-path",
+          "Cargo.toml"
+        ]
+      ]
+    },
+    {
+      "kind": "go",
+      "commands": [
+        [
+          "go",
+          "mod",
+          "download"
+        ]
+      ],
+      "environment": {
+        "GOWORK": "{workspace}/go.work"
+      }
+    },
+    {
+      "kind": "dotnet",
+      "commands": []
+    },
+    {
+      "kind": "cpp",
+      "commands": []
+    },
+    {
+      "kind": "browsers",
+      "commands": [
+        [
+          "bun",
+          "{workspace}/node_modules/playwright/cli.js",
+          "install",
+          "chromium"
+        ]
+      ],
+      "environment": {
+        "PLAYWRIGHT_BROWSERS_PATH": "{workspace}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright"
+      }
+    },
+    {
+      "kind": "wasm",
+      "commands": [
+        [
+          "cargo",
+          "install",
+          "wasm-pack",
+          "--version",
+          "0.15.0",
+          "--locked"
+        ],
+        [
+          "cargo",
+          "install",
+          "wasm-bindgen-cli",
+          "--version",
+          "0.2.126",
+          "--locked"
+        ],
+        [
+          "rustup",
+          "target",
+          "add",
+          "wasm32-wasip2"
+        ]
+      ]
+    },
+    {
+      "kind": "trunk",
+      "commands": [
+        [
+          "cargo",
+          "install",
+          "trunk",
+          "--version",
+          "0.21.14",
+          "--locked"
+        ],
+        [
+          "cargo",
+          "install",
+          "wasm-bindgen-cli",
+          "--version",
+          "0.2.126",
+          "--locked"
+        ],
+        [
+          "rustup",
+          "target",
+          "add",
+          "wasm32-unknown-unknown"
+        ]
+      ]
+    },
+    {
+      "kind": "tools",
+      "commands": [
+        [
+          "cargo",
+          "install",
+          "cargo-nextest",
+          "--version",
+          "0.9.140",
+          "--locked"
+        ],
+        [
+          "cargo",
+          "install",
+          "cargo-llvm-cov",
+          "--version",
+          "0.8.7",
+          "--locked"
+        ]
+      ]
+    }
+  ],
+  "forbiddenImports": [
+    "/🔍️discovery/",
+    "/🎮️playground/"
+  ],
+  "cargo": {
+    "package": "native-dependency-fixture",
+    "files": {
+      "Cargo.toml": "[package]\nname=\"native-dependency-fixture\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n[workspace]\n",
+      "Cargo.lock": "version = 4\n\n[[package]]\nname = \"native-dependency-fixture\"\nversion = \"0.1.0\"\n",
+      "🦀️.rs": "pub fn answer() -> u32 { 42 }\n"
+    },
+    "invalidLock": "version = 4\n"
+  },
+  "bindgenLock": "[[package]]\nname = \"wasm-bindgen\"\nversion = \"0.2.126\"\n",
+  "rejected": [
+    [],
+    [
+      "cargo",
+      "--force"
+    ],
+    [
+      "unknown"
+    ]
+  ]
+}
+

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 📜️ `@semio-tech/framework-graph` task router. */
 import { ScriptRouter, runBundleScriptMain } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { CheckGeneratedScript, GenerateScript, LintScript, PreviewGeneratedScript, TestScript } from "../../🛂️manifest/🏭️generator/🟦️.ts";
+import { CheckGeneratedScript, GenerateScript, LintScript, PreviewGeneratedScript, TestScript } from "../../🛂️manifest/🏃️execution/🟦️.ts";
 
 const router = new ScriptRouter(import.meta.dir)
   .register("generate", GenerateScript)

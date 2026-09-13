@@ -1,0 +1,12 @@
+{
+  "project": "@semio-tech/framework-os-dev",
+  "variant": "fixture",
+  "profile": "dev",
+  "plugin": "sample",
+  "payload": "prepared component bytes",
+  "cycles": [
+    { "deleteLiveState": false, "preparations": 1, "activations": 1 },
+    { "deleteLiveState": false, "preparations": 1, "activations": 2 },
+    { "deleteLiveState": true, "preparations": 1, "activations": 3 }
+  ]
+}

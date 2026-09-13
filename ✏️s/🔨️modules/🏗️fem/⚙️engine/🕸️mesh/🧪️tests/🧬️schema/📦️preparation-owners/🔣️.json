@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumBackingBytes",
+    "ownerOrder",
+    "slotWidths",
+    "cases",
+    "fillCases"
+  ],
+  "properties": {
+    "maximumBackingBytes": {
+      "const": 4096
+    },
+    "ownerOrder": {
+      "const": [
+        "points",
+        "pointIndices",
+        "constraints"
+      ]
+    },
+    "slotWidths": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "fillCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "outer", "maximumPoints", "maximumTriangles", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "outer": { "type": "array", "minItems": 3, "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } } },
+          "maximumPoints": { "type": "integer", "minimum": 1 },
+          "maximumTriangles": { "type": "integer", "minimum": 1 },
+          "expected": {
+            "type": "object", "additionalProperties": false,
+            "required": ["points", "constraints", "pendingPoint", "pendingIndex"],
+            "properties": {
+              "points": { "type": "integer", "minimum": 0 },
+              "constraints": { "type": "integer", "minimum": 0 },
+              "pendingPoint": { "type": "boolean" },
+              "pendingIndex": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "maximumPoints",
+          "maximumTriangles",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maximumPoints": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "maximumTriangles": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reservations",
+              "fault",
+              "preservesIndexOnHandoff"
+            ],
+            "properties": {
+              "reservations": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 3,
+                "items": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "fault": {
+                "type": "boolean"
+              },
+              "preservesIndexOnHandoff": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

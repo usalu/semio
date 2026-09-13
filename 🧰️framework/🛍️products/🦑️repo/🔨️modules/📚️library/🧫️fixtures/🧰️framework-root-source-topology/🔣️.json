@@ -58,7 +58,7 @@
       "name": "@semio-tech/framework",
       "maximumEntryLines": 40,
       "testOwner": "🧰️framework/🧪️tests/🧪️docklayoutstore/🟦️.ts",
-      "vitestConfig": "🧰️framework/📦️packages/🟦️typescript/vitest.config.ts"
+      "vitestConfig": "🧰️framework/🧪️tests/🎚️config/🟦️.ts"
     }
   },
   "directoryContexts": [

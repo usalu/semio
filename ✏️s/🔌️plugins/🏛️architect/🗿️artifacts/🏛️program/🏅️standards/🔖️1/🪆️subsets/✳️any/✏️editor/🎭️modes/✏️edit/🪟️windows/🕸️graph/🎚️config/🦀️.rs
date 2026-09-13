@@ -12,7 +12,7 @@ pub struct ArchitectGraphWindowConfig {
 
 /// 🔁️ Changes the shared viewport of one addressed Graph window.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(tag = "kind", rename_all = "kebab-case")]
+#[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum ArchitectGraphWindowConfigMutation {
     SetViewport { viewport: Viewport2d },
 }

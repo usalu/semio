@@ -6,7 +6,7 @@
  * @vitest-environment node
  */
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -166,4 +166,47 @@ describe("dev server watch policy", () => {
       rmSync(sandbox, { recursive: true, force: true });
     }
   });
+
+  // 🛰️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B53: the EVENT is the contract, not only the path. macOS
+  // reports every write to an existing file — in place and atomic (temp + rename) alike — as `fs.watch`
+  // `eventType: "rename"`, and Vite invalidates a transformed module ONLY from its `change` handler
+  // (`moduleGraph.onFileChange`); its `add` handler never touches the module graph, and with
+  // `SEMIO_VITE_HMR=0` (`hmr: false`) no HMR pass invalidates either. A watcher that answers a modified
+  // file with `add` therefore serves the pre-edit transform for the life of the server, which is how a
+  // landed host fix measured as absent on `:6013` (`📓️2026-09-13-wave-B53-nakagin-export-full-run.md` §4.2).
+  it.each([
+    ["an in-place write", (target: string) => writeFileSync(target, `export const value = ${Date.now()};\n`)],
+    ["an atomic save", (target: string) => {
+      const temporary = `${target}.tmp`;
+      writeFileSync(temporary, `export const value = ${Date.now()};\n`);
+      renameSync(temporary, target);
+    }],
+  ])("replays %s over an existing source file as a change, the only event that invalidates Vite's module graph", async (_label, write) => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-watch-invalidate-"));
+    const events: string[] = [];
+    const server = { watcher: { emit: (event: string, path: string) => (events.push(`${event}:${relative(sandbox, path).replaceAll("\\", "/")}`), true) }, httpServer: null };
+    try {
+      mkdirSync(join(sandbox, "🧰️framework"), { recursive: true });
+      const target = join(sandbox, "🧰️framework/🟦️.ts");
+      const arming = join(sandbox, "🧰️framework/🔎️arm.ts");
+      writeFileSync(target, "export const value = 0;\n");
+      semioSourceWatchVitePlugin({ repoRoot: sandbox }).configureServer(server);
+      // ⏳️ `fs.watch` arms asynchronously, and macOS answers only the FIRST write to a path with `rename`
+      // — every later write to the same path in the same session may report `change` on its own. A retry
+      // loop over the target would therefore pass on its second write while a real editor's single save
+      // stays invisible, so the arming is proven on a SEPARATE file and the target is written exactly once.
+      const deadline = Date.now() + 20_000;
+      while (!events.some((event) => event.endsWith("🔎️arm.ts")) && Date.now() < deadline) {
+        writeFileSync(arming, `export const armed = ${Date.now()};\n`);
+        await new Promise((resolve$) => setTimeout(resolve$, 100));
+      }
+      expect(events.some((event) => event.endsWith("🔎️arm.ts")), "the watcher must arm before the measured write").toBe(true);
+      write(target);
+      const settle = Date.now() + 10_000;
+      while (!events.includes("change:🧰️framework/🟦️.ts") && Date.now() < settle) await new Promise((resolve$) => setTimeout(resolve$, 100));
+      expect(events, "one save of a modified module must reach Vite as a change").toContain("change:🧰️framework/🟦️.ts");
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  }, 30_000);
 });

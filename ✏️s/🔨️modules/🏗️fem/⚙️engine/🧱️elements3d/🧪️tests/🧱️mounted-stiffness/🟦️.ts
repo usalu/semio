@@ -10,6 +10,13 @@ export function testFem3dMountedStiffnessOracle(): void {
   assert(!validate({ ...structuredClone(fixture), foreignOwner: true }), "strict fixture must reject a foreign owner field");
   assert.equal(fixture.oracle.package, "numpy");
   for (const row of fixture.cases) {
+    let owners = [row.kind, ...row.nodeIds];
+    let closed = 0;
+    while (owners.length > 0) {
+      owners = applyPatch(owners, [{ op: "remove", path: "/0" }], true, false).newDocument;
+      closed++;
+    }
+    assert.equal(closed, fixture.closeStringCounts[row.kind as keyof typeof fixture.closeStringCounts]);
     const side = Math.sqrt(row.matrix.length);
     assert(Number.isInteger(side), `${row.kind} square matrix`);
     const patch = row.matrix.map((value, index) => ({ op: "replace", path: `/${index}`, value })) as Operation[];
@@ -30,7 +37,7 @@ export function testFem3dMountedStiffnessOracle(): void {
       }
     }
   }
-  console.log(`[DEBUG] FEM3D mounted node/cell fixture validates and reconstructs three NumPy ${fixture.oracle.version} reference matrices`);
+  console.log(`[DEBUG] FEM3D mounted node/cell fixture validates three NumPy ${fixture.oracle.version} matrices and JSONPatch retires exactly three, three and five string owners`);
 }
 
 if (import.meta.main) testFem3dMountedStiffnessOracle();

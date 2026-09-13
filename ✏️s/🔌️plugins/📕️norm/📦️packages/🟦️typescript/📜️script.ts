@@ -2,7 +2,7 @@
 /** 📕️ Norm TypeScript package. */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, orchestratorBudgetOpts, runBundleScriptMain, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 //#region 🔖️Types
 type RetainedRoute = { id: string; emittedLanes: string[]; publicationLanes: string[]; execution: string; admission: string; reducer: string };
@@ -108,5 +108,12 @@ class TestScript extends BundleScript {
 }
 //#endregion 🔖️Test
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+/** 🔮️ Runs the portable source-owner contract and installed Python host import proof. */
+class OracleSourceScript extends BundleScript {
+  run(): void {
+    runCmd(process.execPath, ["test", join(this.root, "../../🧪️tests/🔮️oracle-source-ownership/🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("oracle-source", OracleSourceScript);
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

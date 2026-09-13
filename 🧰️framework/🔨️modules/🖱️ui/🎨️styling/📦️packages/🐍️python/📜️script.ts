@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { ScriptRouter, runBundleScriptMain } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { StylingPythonBuildScript, StylingPythonDepsScript, StylingPythonGenerateScript, StylingPythonTestScript } from "../../🏗️builder/🟦️.ts";
+import { ScriptRouter } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
+import { StylingPythonGenerateScript, StylingPythonTestScript } from "../../🏗️builder/🟦️.ts";
 
-await runBundleScriptMain(new ScriptRouter(import.meta.dir).register("deps", StylingPythonDepsScript).register("generate", StylingPythonGenerateScript).register("build", StylingPythonBuildScript).register("test", StylingPythonTestScript), import.meta.url);
+if (import.meta.main) await new ScriptRouter(import.meta.dir).register("generate", StylingPythonGenerateScript).register("test", StylingPythonTestScript).run(process.argv.slice(2));

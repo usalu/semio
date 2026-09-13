@@ -1,0 +1,11 @@
+{
+  "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling",
+  "project": "@semio-tech/ui-styling-dotnet",
+  "package": "📦️packages/🔷️dotnet",
+  "source": "🎨️palette/🔷️.cs",
+  "output": "dist/build",
+  "assembly": "Semio.Framework.Ui.Styling.dll",
+  "type": "Semio.Framework.Ui.Styling.Palette",
+  "field": "Primary",
+  "values": ["#ff344f", "#123456"]
+}

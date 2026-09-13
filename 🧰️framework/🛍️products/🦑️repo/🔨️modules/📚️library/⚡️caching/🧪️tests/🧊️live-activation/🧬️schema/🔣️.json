@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["project", "variant", "profile", "plugin", "payload", "cycles"],
+  "properties": {
+    "project": { "type": "string", "minLength": 1 },
+    "variant": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "profile": { "enum": ["dev", "release"] },
+    "plugin": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "payload": { "type": "string", "minLength": 1 },
+    "cycles": { "type": "array", "minItems": 3, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["deleteLiveState", "preparations", "activations"],
+      "properties": { "deleteLiveState": { "type": "boolean" }, "preparations": { "type": "integer", "minimum": 1 }, "activations": { "type": "integer", "minimum": 1 } }
+    } }
+  }
+}

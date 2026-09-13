@@ -14,8 +14,9 @@
     {
       "implementation": "python",
       "package": "semio_norm_vocabulary",
-      "path": "✏️s/🔌️plugins/📕️norm/🔮️oracles/📦️packages/🐍️python",
-      "_comment": "📕️ The ONE independent Python implementation of the norm mutation vocabulary, put on the generated Python host's import path so all fifteen subset adapters IMPORT it instead of each holding a byte-identical copy. It is in-repo source (`path`), never a distribution, so nothing is provisioned and the dependency ratchet classifies it as neither production nor third-party. The fifteen subsets differ in exactly four things — kind list, specification vectors, example document, envelope token — and those four stay with the subset; the derivation rules the engine implements are one committed document for all fifteen, so implementing them fifteen times would have been fifteen copies of a single reading, not fifteen readings. Declared here rather than per subset for the same reason the Rust entry above is: an `oracleHostPackage` reaches a case through its owner's ANCESTORS, and a case owned by `🗿️artifacts/<artifact>` is not a descendant of the subset that declares the catalog."
+      "path": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution",
+      "_comment": "📕️ The ONE independent Python implementation of the norm mutation vocabulary, put on the generated Python host's import path so all fifteen subset adapters IMPORT it instead of each holding a byte-identical copy. It is in-repo source (`path`), never a distribution, so nothing is provisioned and the dependency ratchet classifies it as neither production nor third-party. The fifteen subsets differ in exactly four things — kind list, specification vectors, example document, envelope token — and those four stay with the subset; the derivation rules the engine implements are one committed document for all fifteen, so implementing them fifteen times would have been fifteen copies of a single reading, not fifteen readings. Declared here rather than per subset for the same reason the Rust entry above is: an `oracleHostPackage` reaches a case through its owner's ANCESTORS, and a case owned by `🗿️artifacts/<artifact>` is not a descendant of the subset that declares the catalog.",
+      "module": "🐍️"
     }
   ],
   "comparisonProfiles": [],

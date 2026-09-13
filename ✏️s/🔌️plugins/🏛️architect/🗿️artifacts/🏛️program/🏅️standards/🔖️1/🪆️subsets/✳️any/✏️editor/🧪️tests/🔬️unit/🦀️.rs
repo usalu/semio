@@ -80,7 +80,7 @@ use super::*;
 use crate::editor::architect::catalog::analysis_kind_from_str;
 use crate::registers::{AdjacencyKind, AnalysisKind};
 use crate::standards::v1::subsets::any::schema::inferences::export_registers_csv;
-use semio_framework_plugin::{artifact_app_laws, PluginApp};
+use semio_framework_plugin::PluginApp;
 use serde_json::json;
 
 //#region 🔖️CommandSurface

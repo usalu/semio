@@ -23,7 +23,6 @@
     ".": "./🟦️.ts",
     "./🖌️ui.css": "../../🖌️ui/🎨️.css",
     "./🎨️palette.css": "../../🎨️palette/🎨️.css",
-    "./tailwind.config": "./tailwind.config.ts",
     "./tokens.generated": "../../🤖️generated/🔤️tokens/🟦️.ts"
   },
   "dependencies": {

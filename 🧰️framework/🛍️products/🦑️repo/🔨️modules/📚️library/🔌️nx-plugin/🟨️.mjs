@@ -22,7 +22,7 @@ function readTextOrNull(absPath) {
 function scriptExportsPolicy(absScript) {
   const text = readTextOrNull(absScript);
   if (text === null) return false;
-  return /\bexport\s+(const|function)\s+policy\b/.test(text);
+  return /\bexport\s+(?:(?:const|function)\s+policy\b|\{\s*policy\s*\}\s+from\b)/.test(text);
 }
 
 /**

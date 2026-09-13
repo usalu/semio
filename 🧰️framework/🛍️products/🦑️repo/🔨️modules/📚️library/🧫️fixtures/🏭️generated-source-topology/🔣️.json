@@ -121,6 +121,14 @@
       "inclusion": "ignored"
     },
     {
+      "contractId": "schema-entity-catalog",
+      "previousPath": "🧰️framework/🔨️modules/🧬️schema/🤖️generated.rs",
+      "canonicalPath": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🦀️.rs",
+      "fileKindId": "rust-source",
+      "semanticOwnerKindId": "generated",
+      "inclusion": "ignored"
+    },
+    {
       "contractId": "async-typegen",
       "previousPath": "🧰️framework/🔨️modules/⏳️async/🤖️generated/🟦️async.ts",
       "canonicalPath": "🧰️framework/🔨️modules/⏳️async/🤖️generated/⏳️async/🟦️.ts",

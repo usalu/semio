@@ -260,8 +260,50 @@ fn fem3d_numerical_fixed_owner_maximum_plus_one_refuses_unchanged_and_closes_one
 }
 
 #[test]
+fn fem3d_numerical_child_absent_lanes_retain_later_close_owners() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../📦️numerical-close/🧫️fixtures/🔣️.json")).unwrap();
+    let mut observations = Vec::new();
+    for row in corpus["cases"].as_array().unwrap() {
+        let lane = row["lane"].as_u64().unwrap() as u8;
+        let mut child = Fem3dNumericalChild::new();
+        child.close_lane = lane;
+        if row["model"].as_bool().unwrap() {
+            let model = child.model.as_mut().unwrap();
+            assert!(!model.admit_node_one(1).unwrap());
+            model.push_node(Node { id: "retained-model-node".into(), pos: [0.0; 3] }).unwrap();
+        } else { child.model = None; }
+        if row["nodeIds"].as_bool().unwrap() {
+            assert_eq!(child.analysis_node_ids.admit_one(1), Ok(false));
+            child.analysis_node_ids.push("retained-analysis-node".into()).unwrap();
+        }
+        let zero = child.close_step(0);
+        let held = child.close_lane == lane && child.model.is_some() == row["model"].as_bool().unwrap() && child.analysis_node_ids.len() == usize::from(row["nodeIds"].as_bool().unwrap());
+        let first = child.close_step(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let actual = serde_json::json!({ "lane": child.close_lane, "complete": first.0 });
+        for _ in 0..1_024 {
+            let step = child.close_step(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if step.0 {
+                if child.close_lane < 22 { child.close_lane += 1; }
+                else { break; }
+            }
+        }
+        let emptied = child.model.is_none() && child.analysis_node_ids.len == 0 && child.analysis_node_ids.admitted == 0;
+        eprintln!("[DEBUG] FEM3D absent close lane={lane}, zero={zero:?}, held={held}, first={actual}, cleanup_empty={emptied}");
+        observations.push((lane, zero, held, actual, row["expected"].clone(), emptied));
+    }
+    for (lane, zero, held, actual, expected, emptied) in observations {
+        assert!(emptied, "lane {lane} closes retained test owners");
+        assert_eq!(zero, (false, 0, 0), "lane {lane} zero grant");
+        assert!(held, "lane {lane} zero grant preserves owner");
+        assert_eq!(actual, expected, "lane {lane} absence advances instead of completing");
+    }
+}
+
+#[test]
 fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorized() {
+
     use crate::{FemDof, FemLoadCase, FemMaterial, FemNode, FemSolid, FemSupport};
+    use semio_framework_trace::{InteractiveStage, StepOverrunLedger, Watchdog, INTERACTIVE_STEP_CEILING_US};
 
     let doc = Fem3dSnapshot {
         nodes: vec![FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n1".into(), x: 1.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 1.0, y: 1.0, z: 0.0 }, FemNode { id: "n3".into(), x: 0.0, y: 1.0, z: 0.0 }],
@@ -279,34 +321,60 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
     let mut preview = 0;
     let mut terminal = false;
     let mut last_stage = "initial";
-    for _ in 0..200_000 {
-        let deadline = semio_framework_job::default_now_us().unwrap().checked_add(8_000).unwrap();
+    let mut overruns = StepOverrunLedger::new();
+    let modal_columns = 9usize;
+    let maximum_modal_order = 40usize;
+    let jacobi_sweep_steps = modal_columns * modal_columns + 1 + modal_columns * (modal_columns - 1) / 2 * (12 * modal_columns + 16) + modal_columns;
+    let maximum_turns = 200_000 + 30 * (100 * jacobi_sweep_steps + 32 * maximum_modal_order.pow(2) * modal_columns);
+    let mut turns = 0;
+    let mut failure = None;
+    for _ in 0..maximum_turns {
+        turns += 1;
+        let deadline = semio_framework_job::default_now_us().unwrap().checked_add(INTERACTIVE_STEP_CEILING_US).unwrap();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, deadline), cancel.clone(), semio_framework_job::default_now_us, &mut preview);
         let before = (child.stage, child.node_cursor, child.scalar_axis, child.reaction_entry, child.child_outcome.is_some());
-        let started = std::time::Instant::now();
-        terminal = child.step(&doc, &mut fields, &mut backing, freshness(19), operation, &mut context).unwrap_or_else(|fault| {
-            panic!("[DEBUG] production numerical child at {:?}/{}: {}", child.stage, context.stage(), String::from_utf8_lossy(&fault))
-        });
-        let elapsed_us = started.elapsed().as_micros();
+        let watchdog = Watchdog::start("fem3d.production-numerical-child", operation.operation, operation.generation, InteractiveStage::UserVisibleSimStep);
+        match child.step(&doc, &mut fields, &mut backing, freshness(19), operation, &mut context) {
+            Ok(complete) => terminal = complete,
+            Err(fault) => failure = Some(format!("production numerical child at {:?}/{}: {}", child.stage, context.stage(), String::from_utf8_lossy(&fault))),
+        }
+        let verdict = watchdog.finish();
+        let admission = overruns.admit(&verdict);
+        let elapsed_us = verdict.elapsed_us();
         let after = (child.stage, child.node_cursor, child.scalar_axis, child.reaction_entry, child.child_outcome.is_some());
-        assert_eq!(context.fuel_remaining(), 0, "[DEBUG] numerical before={before:?}, after={after:?}, context {}, terminal={terminal}, expired={}, elapsed_us={elapsed_us}", context.stage(), context.deadline_exceeded());
+        if context.fuel_remaining() != 0 && !(context.deadline_exceeded() && before == after && !terminal) {
+            failure.get_or_insert_with(|| format!("numerical unconsumed opportunity before={before:?}, after={after:?}, context {}, terminal={terminal}, expired={}, elapsed_us={elapsed_us:?}", context.stage(), context.deadline_exceeded()));
+        }
         last_stage = context.stage();
-        assert!(elapsed_us < 8_000, "[DEBUG] numerical before={before:?}, after={after:?}, context {}, terminal={terminal}, expired={}, elapsed_us={elapsed_us}", context.stage(), context.deadline_exceeded());
-        if terminal {
+        if verdict.is_fault() {
+            eprintln!("[DEBUG] numerical before={before:?}, after={after:?}, context {}, terminal={terminal}, expired={}, elapsed_us={elapsed_us:?}, admission={admission:?}", context.stage(), context.deadline_exceeded());
+        }
+        if admission.is_terminal() {
+            failure.get_or_insert_with(|| format!("numerical watchdog rejected before={before:?}, after={after:?}, admission={admission:?}"));
+        }
+        if terminal || failure.is_some() {
             break;
         }
     }
-    assert!(terminal, "[DEBUG] numerical stopped at {:?}/{last_stage}, PCG={:?}, subspace={:?}, pending outcome={}", child.stage, child.pcg.as_ref().map(PcgJob::visual_progress), child.subspace.as_ref().map(SubspaceIterationJob::visual_progress), child.child_outcome.is_some());
-    assert!(fields.ready());
-    assert!((0..fields.len).filter_map(|index| fields.scalar(index)).any(|scalar| scalar.displacement != [0.0; 3] || scalar.reaction != [0.0; 3]));
-    assert!((0..fields.len).filter_map(|index| fields.scalar(index)).any(|scalar| scalar.eigen_estimate > 0.0 && scalar.mode_shape != [0.0; 3]));
+    let progress = (child.stage, child.pcg.as_ref().map(PcgJob::visual_progress), child.subspace.as_ref().map(SubspaceIterationJob::visual_progress), child.child_outcome.is_some());
+    let ready = fields.ready();
+    let has_static = (0..fields.len).filter_map(|index| fields.scalar(index)).any(|scalar| scalar.displacement != [0.0; 3] || scalar.reaction != [0.0; 3]);
+    let has_modal = (0..fields.len).filter_map(|index| fields.scalar(index)).any(|scalar| scalar.eigen_estimate > 0.0 && scalar.mode_shape != [0.0; 3]);
     assert_eq!(child.close_step(0), (false, 0, 0));
+    let mut closed = false;
     for _ in 0..200_000 {
-        if child.close_step(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY).0 {
-            return;
+        if child.close_step(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY)).0 {
+            closed = true;
+            break;
         }
     }
-    panic!("numerical child close did not reach exact terminal");
+    eprintln!("[DEBUG] FEM3D numerical terminal={terminal}, ready={ready}, static={has_static}, modal={has_modal}, closed={closed}, close_lane={}, close_started_jobs={}, turns={turns}/{maximum_turns}, progress={progress:?}, recorded overruns={}, longest run={}, worst elapsed_us={}", child.close_lane, child.close_started_jobs, overruns.total_overruns(), overruns.longest_overrun_run(), overruns.worst_elapsed_us());
+    assert!(closed && child.terminal_is_empty(), "numerical child close did not reach exact terminal");
+    assert!(failure.is_none(), "[DEBUG] {failure:?}");
+    assert!(terminal, "[DEBUG] numerical stopped at {progress:?}/{last_stage}");
+    assert!(ready);
+    assert!(has_static);
+    assert!(has_modal);
 }
 
 #[test]

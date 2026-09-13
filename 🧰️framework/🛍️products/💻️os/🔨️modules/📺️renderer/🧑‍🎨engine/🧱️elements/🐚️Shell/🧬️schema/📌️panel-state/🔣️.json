@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/framework/os/host-panel-state.json",
+  "title": "HostPanelState",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["activePanelTab", "spawnedApps"],
+  "properties": {
+    "activePanelTab": {
+      "$ref": "#/$defs/PanelSelection"
+    },
+    "spawnedApps": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/SpawnedAppEntry"
+      }
+    },
+    "activeSpawnedId": {
+      "$ref": "#/$defs/Identifier"
+    }
+  },
+  "$defs": {
+    "PanelSelection": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001F\\u007F]+$"
+    },
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001F\\u007F]+$"
+    },
+    "CarriedText": {
+      "type": "string",
+      "maxLength": 65536
+    },
+    "SpawnedAppEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "pluginId", "instanceId", "appId", "label", "breadcrumb"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "pluginId": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "instanceId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "appId": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "label": {
+          "$ref": "#/$defs/CarriedText"
+        },
+        "breadcrumb": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/CarriedText"
+          }
+        }
+      }
+    }
+  }
+}

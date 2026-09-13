@@ -1,6 +1,9 @@
 {
   "name": "@semio-tech/plugin-registry",
   "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🎚️config/🟦️.ts"]
+  },
   "targets": {
     "generate": {
       "executor": "nx:run-commands",

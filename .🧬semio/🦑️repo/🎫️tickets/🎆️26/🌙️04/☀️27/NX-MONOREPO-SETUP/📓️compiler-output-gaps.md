@@ -12,3 +12,15 @@ The refreshed native audit completed successfully in 22.0 seconds: 704 projects,
 The remaining three graph candidates are the print template completion target, report document completion target and workspace aggregate build. Their declared commands/dependencies describe completion or aggregation; they were not classified as compiler-output defects in this pass.
 
 No real OS Dev, styling compiler or Trunk bundle was executed during this census, and no shared build directory was deleted. The four confirmed writer/configuration mismatches remain open. The native renderer `native-build` and `native-build-release` directory mismatches were fixed separately and passed production-publisher/Cargo/Nx restoration tests; see `📓️native-renderer-outputs.md`.
+
+
+## 2026-09-13 Follow-Up
+
+The original census above is historical. The Python and .NET styling targets were subsequently set to cache:false by concurrent changes; their output ownership remained unfinished. The .NET target now declares an owned `dist/build` deliverable, uses a dedicated script and compiler-state lease, and is cacheable again. Its production publisher passes native MSBuild/Nx cold, warm, exact deleted-output restoration, executable consumer and generated-source invalidation checks (1m07s). Canonical source and native-state path maps also make independent compiler stores emit identical assembly bytes. See `📓️styling-outputs.md`. Actual repository invocation and the refreshed full suite are in progress. Python wheel, OS Dev generic build and finite WGPU Trunk ownership remain open.
+
+
+The current OS Dev generic target is cache:true/outputs:[] and depends only on assets. Its BuildScript explicitly calls plugin compilation, engine compilation and Vite, or the WGPU script. The existing inferred `build-s-react-release` target already has an exclusive distribution directory and 67 explicit prerequisites (session, browser support, fonts, component cores, selected plugin/extension materialization and assets). The next repair can make the generic build a completion target depending on that existing variant, replace its broad script call with a narrow distribution completion command, and remove the recursive BuildScript. Native task-graph/production restoration coverage must verify the resulting entry point. This inspection did not edit OS Dev.
+
+### Python Wheel Follow-Up
+
+Python styling now publishes one package-local dist/build wheel and a producer manifest. Its finite build is cacheable; uncached deps installs only the locked build tools. Native Nx restores deleted outputs without rerunning the compiler; source changes invalidate; direct uv byte comparison and Python execution pass. The real repository build/test passes and the next invocation reuses 3 of 4 tasks. The final failure-preservation/editor extension passed in 14.8 s. See 📓️styling-outputs.md. WGPU Trunk remains an unresolved finite-output and active-store dependency boundary.

@@ -57,7 +57,7 @@ pub enum Level {
 
 impl Level {
     /// 🔢️ Ordinal step `k` (0..=5) every formula-derived value (`Theme::surface`/`glass`)
-    /// is computed from — mirrors `ui/styling/rs/🤖️generated.rs`'s `levels::NAMES` ordering.
+    /// is computed from — mirrors `ui/styling generated Rust projection`'s `levels::NAMES` ordering.
     pub const fn index(self) -> usize {
         match self {
             Level::Base => 0,

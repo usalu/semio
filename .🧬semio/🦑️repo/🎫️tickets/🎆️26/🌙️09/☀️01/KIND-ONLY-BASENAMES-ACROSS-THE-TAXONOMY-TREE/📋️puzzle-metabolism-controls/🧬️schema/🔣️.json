@@ -1,0 +1,70 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "destination",
+    "parentModule",
+    "memberKind",
+    "entries",
+    "queries",
+    "nativeTestModule"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "destination": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parentModule": {
+      "type": "string",
+      "minLength": 1
+    },
+    "memberKind": {
+      "const": "metabolism-icon-catalog"
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 29,
+      "maxItems": 29,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "asset"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "asset": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "queries": {
+      "type": "array",
+      "minItems": 35,
+      "maxItems": 35,
+      "items": {
+        "type": "string"
+      }
+    },
+    "nativeTestModule": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

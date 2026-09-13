@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:window-config-retained-pack-load-fixtures",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "budgets", "owners", "candidateProtocol", "requiredScenarios"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["threadStackBytes", "typedMutationBytes", "storeDecodePageConstant", "jobPayloadPageConstant"],
+      "properties": {
+        "threadStackBytes": { "const": 2097152 },
+        "typedMutationBytes": { "const": 4096 },
+        "storeDecodePageConstant": { "const": "ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES" },
+        "jobPayloadPageConstant": { "const": "JOB_PAYLOAD_PAGE_BYTES" }
+      }
+    },
+    "owners": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "schema", "windowIds"],
+        "properties": {
+          "kind": { "type": "string", "minLength": 1 },
+          "schema": { "type": "string", "minLength": 1 },
+          "windowIds": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "candidateProtocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phases", "typedReplayInput", "diagnosticOwnership", "authorityBoundary", "identityChecks", "closeOrder"],
+      "properties": {
+        "phases": {
+          "const": [
+            "ingress",
+            "decoding",
+            "validating-identity",
+            "preparing-store",
+            "ready",
+            "cancelling",
+            "retiring-rejected-candidate",
+            "retiring-displaced-store",
+            "complete"
+          ]
+        },
+        "typedReplayInput": { "const": "retained-value-tokens" },
+        "diagnosticOwnership": { "const": "first-fault-owned-until-terminal-close" },
+        "authorityBoundary": { "const": "ready-current-generation-commit-only" },
+        "identityChecks": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "state-envelope",
+              "pack-component",
+              "version-one",
+              "owner-schema",
+              "spr-document-id",
+              "spr-document-schema",
+              "outer-inner-partition-id",
+              "current-lifetime-generation"
+            ]
+          }
+        },
+        "closeOrder": { "const": ["pending-event", "logical-owners", "allocation-demands", "terminal-empty"] }
+      }
+    },
+    "requiredScenarios": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "phase", "outcome"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "phase": {
+            "enum": ["identity", "decode", "ready", "commit-race", "reopen", "close"]
+          },
+          "outcome": {
+            "enum": ["rejected-before-authority-change", "retained-until-bounded-close", "one-current-generation-commits", "exact-packs-restored", "terminal-empty"]
+          }
+        }
+      }
+    }
+  }
+}

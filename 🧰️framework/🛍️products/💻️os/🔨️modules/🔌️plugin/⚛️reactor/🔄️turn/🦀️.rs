@@ -241,6 +241,27 @@ struct DirtyPollOwners {
 ///
 /// 🧯️ Bounded twice over: the deferred ring is fixed-capacity, and every entry handed back is one this
 /// same turn then renders or re-defers, so the loop cannot revisit an entry it has taken.
+/// 🪟️ Dirties every REAL surface one instance's background work must repaint — its mounted window
+/// instances, or its app-level panels when it owns no window.
+///
+/// 🐛️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56: a job's progress, its completion and a
+/// document-backbone message each minted `"<instance>:window"` and dirtied THAT. No pane reads that
+/// surface, so the host had to mount a synthetic alias for it
+/// (`windowHostContextBindings`, `🔌️PluginRuntime/🟦️.tsx`) carrying the last window's body — a fourteenth
+/// resident surface competing for the process-wide reconcile credit, whose reservation refusal left every
+/// real surface deferred and the reactor answering `more-work` for ever (wave B54 §6.4) while the real
+/// panes never received the update this dirty exists to deliver.
+async fn dirty_background_surfaces<PA: crate::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance: u32, dirty: &mut DirtyPollOwners) -> Result<(), semio_framework::Fault> {
+    for surface in crate::plugin_runtime::plugin_instance_background_surfaces(runtime, instance).await {
+        let surface = ui_contract::SurfaceId::try_from(surface)
+            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
+        dirty
+            .try_surface(instance, surface)
+            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
+    }
+    Ok(())
+}
+
 fn redirty_acknowledged_deferred_surfaces(patches: &patches::PatchTracker, dirty: &mut DirtyPollOwners) -> Result<usize, semio_framework::Fault> {
     let mut taken = 0usize;
     while let Some(surface) = patches.take_deferred_ready() {
@@ -639,12 +660,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             }
             Event::JobProgress { job, .. } => {
                 if let Some(binding) = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow().accepted(job)) {
-                    let surface = ui_contract::UiText::try_format(format_args!("{}:window", binding.instance))
-                        .map(ui_contract::SurfaceId)
-                        .ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
-                    dirty
-                        .try_surface(binding.instance, surface)
-                        .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
+                    dirty_background_surfaces(runtime, binding.instance, &mut dirty).await?;
                 }
             }
             Event::JobCompleted { job, result } => {
@@ -658,12 +674,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 // needed: the request id already IS the job id).
                 let instance = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow().accepted(job).map(|binding| binding.instance));
                 if let Some(binding) = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().complete(job)) {
-                    let surface = ui_contract::UiText::try_format(format_args!("{}:window", binding.instance))
-                        .map(ui_contract::SurfaceId)
-                        .ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
-                    dirty
-                        .try_surface(binding.instance, surface)
-                        .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
+                    dirty_background_surfaces(runtime, binding.instance, &mut dirty).await?;
                 }
                 let outcome = crate::host::outcome_to_result(result);
                 if let Some(instance) = instance {
@@ -701,10 +712,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             }
             Event::Message { source: MessageEndpoint::Backbone { uri }, payload } => {
                 let output = crate::plugin_runtime::plugin_receive_document_backbone(runtime, &uri, &payload).await?;
-                let surface = ui_contract::UiText::try_format(format_args!("{}:window", output.instance_id))
-                    .map(ui_contract::SurfaceId)
-                    .ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
-                dirty.try_surface(output.instance_id, surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
+                dirty_background_surfaces(runtime, output.instance_id, &mut dirty).await?;
                 for frame in output.frames {
                     route_app_frame(output.instance_id, &frame, &mut document_backbone_effects);
                 }

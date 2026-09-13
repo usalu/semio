@@ -8,7 +8,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧫️fixtures/**/*",
       "{projectRoot}/**/*"
-    ]
+    , "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
     "generate-wgpu": {

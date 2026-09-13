@@ -2,6 +2,9 @@
   "name": "@semio-tech/repo-coordinator",
   "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧪️tests/🎚️config/🟦️.ts"]
+  },
   "targets": {
     "dev": {
       "executor": "nx:run-commands",

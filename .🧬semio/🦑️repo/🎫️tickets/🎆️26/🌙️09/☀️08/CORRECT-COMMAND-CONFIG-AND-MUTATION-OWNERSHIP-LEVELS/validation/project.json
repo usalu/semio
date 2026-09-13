@@ -1,6 +1,26 @@
 {
   "name": "abstraction-ownership-validation",
   "targets": {
+    "fem-numerical-page-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts fem-numerical-page-owners" }
+    },
+    "fem-numerical-page-owners-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts fem-numerical-page-owners native" }
+    },
+    "fem-mesh-preparation-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts fem-mesh-preparation-owners" }
+    },
+    "fem-mesh-preparation-owners-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts fem-mesh-preparation-owners native" }
+    },
     "fem-scalar-owners-native": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -18,6 +38,13 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts window-config-pack-identity native"
+      }
+    },
+    "window-config-retained-pack-load-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts window-config-retained-pack-load native"
       }
     },
     "verify-abstraction-ownership": {
@@ -355,6 +382,21 @@
       "options": {
         "command": "bun ./📜️script.ts drawing-canvas-window-ownership oracle"
       }
+    },
+    "generation2d-window-camera-ownership-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts generation2d-window-camera-ownership oracle" }
+    },
+    "generation2d-window-camera-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts generation2d-window-camera-ownership native" }
+    },
+    "window-config-provisioning-lifecycle-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts window-config-provisioning-lifecycle" }
     },
     "drawing-canvas-window-ownership-native": {
       "executor": "nx:run-commands",
@@ -1047,6 +1089,20 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts framework-retained-pack-ownership catalog-native"
+      }
+    },
+    "framework-retained-pack-value": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-retained-pack-ownership value"
+      }
+    },
+    "framework-retained-pack-value-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-retained-pack-ownership value-native"
       }
     },
     "node-graph-viewport-ownership": {

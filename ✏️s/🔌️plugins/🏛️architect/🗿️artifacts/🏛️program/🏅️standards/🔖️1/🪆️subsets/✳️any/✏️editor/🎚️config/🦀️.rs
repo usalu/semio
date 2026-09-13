@@ -16,6 +16,7 @@ use protocol::MutationDiff;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[dsl(id = "architect.config")]
 #[dsl(extension = "architectcfg")]
 #[dsl(layout = "lines")]
 pub struct ArchitectConfig {

@@ -6118,7 +6118,7 @@ pub mod app {
     // non-exhaustive `match (terminology, is_de) { ..., (_, true) => ... }` terminology resolvers this
     // SDK never covered. `app_labels!` now declares all four cells per field and resolves them via an
     // exhaustive match on the generated `Locale`/`Terminology` enums — no catch-all arm is possible, so
-    // adding a locale or terminology to `🔣️ui-axes.json` breaks every invocation until it supplies that
+    // adding a locale or terminology to `🖱️ui/🎚️axes/🔣️.json` breaks every invocation until it supplies that
     // cell. See ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND.
 
     pub use ui_wgpu::wgpu::AppLabels;
@@ -13329,7 +13329,7 @@ pub mod app {
     pub const INTERACTIVE_TURN_WORKER_WALL_US: u64 = 4_000;
     /// 🏃️ Publication units one continuation unit may run before it hands its turn back, the exact twin of
     /// [`INTERACTIVE_TURN_WORKER_PUMPS`] for the publication ladder.
-    pub const TYPED_OPERATION_PUBLICATION_PUMPS: usize = 1;
+    pub const TYPED_OPERATION_PUBLICATION_PUMPS: usize = 256;
     const TYPED_OPERATION_HOST_OUTBOX_SLOTS: usize = 64;
     const TYPED_OPERATION_FAULT_BYTES: usize = 256;
 
@@ -23485,6 +23485,7 @@ pub mod app {
             self.refresh_cache().await?;
             let mut state = self.interaction_selection_snapshot();
             let verb = InteractionVerb::of_action(action).ok_or_else(|| plugin_sdk_fault(format!("{action} is not one of the six framework interaction verbs")))?;
+            let mut retire_leftover_domains: Vec<String> = Vec::new();
             match verb {
                 InteractionVerb::Select => {
                     let domain_id = interaction_domain_id_arg(args, action).await?;
@@ -23495,24 +23496,31 @@ pub mod app {
                     let current = state.selection.get(&domain_id).cloned().unwrap_or_default();
                     let known_ids = current.ids.iter().cloned().chain(targets.iter().map(|target| target.id.clone()));
                     let topology = self.resolve_domain_topology(&def, known_ids).await?;
-                    let selection_input = protocol::SelectionInput { targets: targets.clone(), merge, mode };
-                    let mut next = protocol::next_selection(&def.selection, &current, &topology, &selection_input).await;
-                    if next.ids.is_empty() && !targets.is_empty() {
-                        next.granularity = targets.last().map(|target| target.granularity.clone()).unwrap_or_else(|| if current.granularity.is_empty() { "object".to_string() } else { current.granularity.clone() });
-                        next.ids = targets.iter().map(|target| target.id.clone()).collect();
-                        next.anchor_id = targets.last().map(|target| target.id.clone());
-                    } else if next.ids.is_empty() {
-                        if let Some(hover) = self.interaction_hover.get(&domain_id) {
-                            if let Some(id) = hover.ids.first() {
-                                next.ids.push(id.clone());
-                                if next.granularity.is_empty() {
-                                    next.granularity = if current.granularity.is_empty() { "object".to_string() } else { current.granularity.clone() };
+                    if targets.is_empty() && merge == protocol::MergeMode::Replace {
+                        let cleared_ids: std::collections::HashSet<String> = state.selection.get(&domain_id).map(|selection| selection.ids.iter().cloned().collect()).unwrap_or_default();
+                        retire_leftover_domains.push(domain_id.clone());
+                        state.selection.remove(&domain_id);
+                        if domain_id != "vortex" {
+                            if let Some(vortex) = state.selection.get("vortex") {
+                                if !vortex.ids.is_empty() && vortex.ids.iter().all(|id| cleared_ids.contains(id)) {
+                                    retire_leftover_domains.push("vortex".to_string());
+                                    state.selection.remove("vortex");
                                 }
                             }
                         }
+                        self.interaction_leftover_ids.retain(|id| !cleared_ids.contains(id));
+                        state.active_mode.insert(domain_id, mode);
+                    } else {
+                        let selection_input = protocol::SelectionInput { targets: targets.clone(), merge, mode };
+                        let mut next = protocol::next_selection(&def.selection, &current, &topology, &selection_input).await;
+                        if next.ids.is_empty() && !targets.is_empty() {
+                            next.granularity = targets.last().map(|target| target.granularity.clone()).unwrap_or_else(|| if current.granularity.is_empty() { "object".to_string() } else { current.granularity.clone() });
+                            next.ids = targets.iter().map(|target| target.id.clone()).collect();
+                            next.anchor_id = targets.last().map(|target| target.id.clone());
+                        }
+                        state.selection.insert(domain_id.clone(), next);
+                        state.active_mode.insert(domain_id, mode);
                     }
-                    state.selection.insert(domain_id.clone(), next);
-                    state.active_mode.insert(domain_id, mode);
                 }
                 InteractionVerb::Hover => {
                     let domain_id = interaction_domain_id_arg(args, action).await?;
@@ -23531,8 +23539,9 @@ pub mod app {
                     }
                 }
                 InteractionVerb::ClearSelection => {
-                    for domain_id in self.registry.interactions().await.map(|def| def.id.clone()).collect::<Vec<_>>() {
-                        state.selection.remove(&domain_id);
+                    retire_leftover_domains = self.registry.interactions().await.map(|def| def.id.clone()).collect();
+                    for domain_id in &retire_leftover_domains {
+                        state.selection.remove(domain_id);
                     }
                 }
                 InteractionVerb::SelectAll => {
@@ -23575,6 +23584,11 @@ pub mod app {
                 _ => vec![interaction_domain_id_arg(args, action).await?],
             };
             state.hover = self.interaction_hover.clone();
+            if !retire_leftover_domains.is_empty() {
+                let (overlay, leftover_ids) = leftover_after_app_selection_write_v1(self.interaction_leftover_selection.as_ref(), &self.interaction_leftover_ids, &state, &retire_leftover_domains);
+                self.interaction_leftover_selection = overlay;
+                self.interaction_leftover_ids = leftover_ids;
+            }
             if verb == InteractionVerb::Hover {
                 let current_empty = state.selection.values().all(|selection| selection.ids.is_empty());
                 if current_empty {
@@ -23600,7 +23614,7 @@ pub mod app {
                 state.selection.insert("vortex".to_string(), protocol::DomainSelection { granularity: granularity.clone(), ids: self.interaction_leftover_ids.clone(), anchor_id: None });
                 state.active_granularity.entry("vortex".to_string()).or_insert(granularity);
             }
-            let leftover = Self::leftover_interaction_view_from(&state, &self.interaction_hover);
+            let leftover = Self::leftover_interaction_view_from(&state, &self.interaction_hover, meta.view_state.as_ref().and_then(|view| view.window_id.as_deref()));
             self.interaction_leftover_selection = Some(state.clone());
             self.validate_framework_reserved_commit(action, permit).await?;
             self.revalidate_and_persist_interaction_state(state, meta, InteractionRevalidateOrigin::Pick).await?;
@@ -23630,7 +23644,11 @@ pub mod app {
             }
         }
 
-        fn leftover_interaction_view_from(state: &protocol::InteractionState, hover: &InteractionHoverState) -> DslValue {
+        /// 🪟️ `window_id` is the window INSTANCE the action that produced this leftover addressed, and
+        /// it rides the encode so the host publishes the overlay under that pane rather than inferring one
+        /// (`publishLeftoverWorldSelectionV1`, `🏛️ShellHost/🟦️.tsx`). `None` is the document scope of a
+        /// windowless action — never a synthetic window (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
+        fn leftover_interaction_view_from(state: &protocol::InteractionState, hover: &InteractionHoverState, window_id: Option<&str>) -> DslValue {
             let selected_ids = leftover_selected_ids_of(state);
             let locked: Vec<(String, DslValue)> = selected_ids.iter().map(|id| (id.clone(), DslValue::Bool(false))).collect();
             let hover_target = hover.iter().find_map(|(domain, hover)| {
@@ -23651,6 +23669,7 @@ pub mod app {
                     ("locked".to_string(), DslValue::Object(locked)),
                     ("gumball".to_string(), gumball),
                     ("hoverTarget".to_string(), hover_target.unwrap_or(DslValue::Null)),
+                    ("windowId".to_string(), window_id.map(|id| DslValue::String(id.to_string())).unwrap_or(DslValue::Null)),
                 ]),
             )])
         }
@@ -33825,6 +33844,20 @@ pub mod plugin_runtime {
             Ok(())
         })
         .await
+    }
+
+    /// 🪟️ The surfaces background work for this instance must dirty — every mounted window
+    /// instance, or its app-level panels when it has no window (see
+    /// `SurfaceContexts::background_surfaces`). Answers empty for an instance with nothing mounted, so a
+    /// job that completes before the first refresh dirties nothing instead of minting a synthetic surface
+    /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
+    pub(crate) async fn plugin_instance_background_surfaces<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Vec<String> {
+        with_instances_mut(runtime, |list| {
+            let instance = find_instance(list, instance_id)?;
+            Ok(instance.surface_contexts.background_surfaces())
+        })
+        .await
+        .unwrap_or_default()
     }
 
     pub(crate) async fn plugin_render_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, surface: &str) -> Result<(ComponentTree, Vec<ui_contract::PresenceUpdate>), Fault> {

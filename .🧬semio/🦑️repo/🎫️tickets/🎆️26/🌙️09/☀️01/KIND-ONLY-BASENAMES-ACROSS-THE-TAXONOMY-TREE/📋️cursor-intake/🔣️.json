@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "source": ".cursor/add-playhost-deps.ts",
+      "destination": "📋️cursor-intake/📦️playhost-dependencies/🟦️.ts",
+      "role": "preserved-input"
+    },
+    {
+      "source": ".cursor/fix-playhost-extraction.ts",
+      "destination": "📋️cursor-intake/🧩️playhost-extraction/🟦️.ts",
+      "role": "preserved-input"
+    }
+  ]
+}

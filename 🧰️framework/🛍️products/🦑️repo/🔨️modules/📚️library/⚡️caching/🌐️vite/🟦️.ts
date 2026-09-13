@@ -48,6 +48,7 @@ export async function buildViteArtifact(options: ViteArtifactBuild): Promise<voi
 export type ViteService = {
   readonly root: string;
   readonly config: string;
+  readonly configLoader?: "bundle" | "runner" | "native";
   readonly host: string;
   readonly port: number;
   readonly signal: AbortSignal;
@@ -65,7 +66,7 @@ export async function serveVite(options: ViteService): Promise<void> {
   listener.on("connection", socket => { sockets.add(socket); socket.once("close", () => sockets.delete(socket)); });
   let server: Awaited<ReturnType<typeof createServer>> | undefined;
   try {
-    server = await createServer({ root: options.root, configFile: options.config, configLoader: "bundle", server: { host: options.host, port: options.port, strictPort: true, open: false, middlewareMode: { server: listener }, hmr: { server: listener } }, plugins: session ? [{
+    server = await createServer({ root: options.root, configFile: options.config, configLoader: options.configLoader ?? "bundle", server: { host: options.host, port: options.port, strictPort: true, open: false, middlewareMode: { server: listener }, hmr: { server: listener } }, plugins: session ? [{
     name: "semio-service-readiness",
     configureServer(server) {
       server.middlewares.use((request, response, next) => {

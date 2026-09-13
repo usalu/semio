@@ -237,7 +237,7 @@ export type ValidationDiagnostic = {
 //#endregion 🔖️SchemaExportResolution
 
 //#region 🔖️EntityKindCatalog
-/** 🏷️ One entity kind of the catalog — TS twin of Rust `EntityKind` (the generated `🤖️generated.rs`
+/** 🏷️ One entity kind of the catalog — TS twin of Rust `EntityKind` (the generated `🤖️generated/🏷️entity-kinds/🦀️.rs`
  * projection) and of `🔣️.json#/$defs/EntityKind`. */
 export type EntityKind = {
   readonly id: string;
@@ -248,7 +248,7 @@ export type EntityKind = {
 };
 
 /** 📚️ The ordered entity-kind catalog — TS twin of `🔣️.json#/$defs/EntityKindCatalog`, whose single
- * instance document is `🔣️entity-kinds.json`. Declaration order is contract: `emoji` is not unique and
+ * instance document is `🏷️entity-kinds/🔣️.json`. Declaration order is contract: `emoji` is not unique and
  * every projection's emoji index keeps the FIRST entry of a repeated emoji. */
 export type EntityKindCatalog = readonly EntityKind[];
 

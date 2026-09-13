@@ -4,6 +4,7 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🟦️.ts",
       "sharedGlobals"
     ]
   },

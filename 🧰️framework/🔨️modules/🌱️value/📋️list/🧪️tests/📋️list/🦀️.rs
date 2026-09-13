@@ -46,10 +46,16 @@ fn retained_paged_list_neutral_order_capacity_and_close() {
 fn retained_paged_list_capacity_admission_and_exact_release_grants() {
     let mut list = PagedList::<u64, 600>::default();
     while list.capacity() < 600 {
-        let step = list.reserve_capacity_one(600, 4096).unwrap();
+        let exact = list.next_capacity_allocation_bytes(600).unwrap().expect("target still needs backing");
+        assert!(exact > 0, "a target beyond current capacity must request its next real backing even while the current leaf has unused slots");
+        let before = (list.capacity(), list.allocated_bytes());
+        assert!(!list.reserve_capacity_one(600, exact - 1).unwrap().progressed);
+        assert_eq!((list.capacity(), list.allocated_bytes()), before);
+        let step = list.reserve_capacity_one(600, exact).unwrap();
         assert!(step.progressed);
-        assert!(step.allocated_bytes <= 4096);
+        assert_eq!(step.allocated_bytes, exact);
     }
+    assert_eq!(list.next_capacity_allocation_bytes(600), Ok(None));
     assert_eq!(list.len(), 0);
     assert_eq!(list.initialized_len(), 0);
     assert!(list.reserve_capacity_one(601, 4096).is_err());

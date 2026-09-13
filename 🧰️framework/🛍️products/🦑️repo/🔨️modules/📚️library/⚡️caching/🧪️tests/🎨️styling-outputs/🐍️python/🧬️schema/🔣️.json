@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["owner", "project", "package", "source", "output", "backend", "module", "wheel", "values"],
+  "properties": {
+    "owner": { "type": "string", "minLength": 1 },
+    "project": { "type": "string", "minLength": 1 },
+    "package": { "type": "string", "minLength": 1 },
+    "source": { "type": "string", "minLength": 1 },
+    "output": { "const": "dist/build" },
+    "backend": { "type": "string", "pattern": "^hatchling==[0-9.]+$" },
+    "module": { "type": "string", "minLength": 1 },
+    "wheel": { "type": "string", "pattern": "-py3-none-any\\.whl$" },
+    "values": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "type": "string", "pattern": "^#[0-9a-f]{6}$" } }
+  }
+}

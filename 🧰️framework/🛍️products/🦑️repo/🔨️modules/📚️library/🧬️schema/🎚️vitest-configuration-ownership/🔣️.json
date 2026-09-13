@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/vitest-configuration-ownership.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "owners",
+    "selector",
+    "directoryContexts",
+    "registration"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "owners": {
+      "type": "array",
+      "minItems": 43,
+      "maxItems": 43,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "configurationRoot",
+          "previousPath",
+          "ownerPath",
+          "expectedName",
+          "projectionSha256"
+        ],
+        "properties": {
+          "configurationRoot": {
+            "type": "string",
+            "minLength": 1
+          },
+          "previousPath": {
+            "type": "string",
+            "pattern": "(^|/)vitest\\.config\\.ts$"
+          },
+          "ownerPath": {
+            "type": "string",
+            "pattern": "(^|/)🧪️tests/🎚️config/🟦️\\.ts$"
+          },
+          "expectedName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "projectionSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "selector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "libraryDeclaration",
+        "relativeOwnerSuffix",
+        "editorSetting",
+        "editorPattern"
+      ],
+      "properties": {
+        "libraryDeclaration": {
+          "type": "string",
+          "minLength": 1
+        },
+        "relativeOwnerSuffix": {
+          "type": "string",
+          "minLength": 1
+        },
+        "editorSetting": {
+          "type": "string",
+          "minLength": 1
+        },
+        "editorPattern": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "directoryContexts": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "parentKind",
+          "kind"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parentKind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "registration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "command",
+        "target"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

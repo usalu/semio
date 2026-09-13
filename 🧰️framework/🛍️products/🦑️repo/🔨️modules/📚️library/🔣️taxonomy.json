@@ -4832,6 +4832,694 @@
         "discovery"
       ]
     },
+    "repo-discovery-file-walk": {
+      "emoji": "🚶️",
+      "slugPattern": "^file-walk$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "discovery"
+      ]
+    },
+    "repo-discovery-source-coordinate": {
+      "emoji": "📍️",
+      "slugPattern": "^source-coordinate$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "discovery"
+      ]
+    },
+    "repo-discovery-surface-roots": {
+      "emoji": "🗺️",
+      "slugPattern": "^surface$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "discovery"
+      ]
+    },
+    "repo-discovery-artifact": {
+      "emoji": "🗿️",
+      "slugPattern": "^artifact$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "discovery"
+      ]
+    },
+    "repo-discovery-artifact-roots": {
+      "emoji": "🏠️",
+      "slugPattern": "^roots$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-discovery-artifact"
+      ]
+    },
+    "repo-discovery-artifact-dialects": {
+      "emoji": "🗣️",
+      "slugPattern": "^dialects$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-discovery-artifact"
+      ]
+    },
+    "repo-schema-surface": {
+      "emoji": "🗺️",
+      "slugPattern": "^surface$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "repo-schema-surface-contract": {
+      "emoji": "🧱️",
+      "slugPattern": "^contract$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-surface"
+      ]
+    },
+    "repo-schema-surface-owner-discovery": {
+      "emoji": "🔍️",
+      "slugPattern": "^owner-discovery$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-surface"
+      ]
+    },
+    "repo-schema-surface-facet-leaves": {
+      "emoji": "📚️",
+      "slugPattern": "^facet-leaves$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-surface"
+      ]
+    },
+    "repo-schema-surface-laws": {
+      "emoji": "⚖️",
+      "slugPattern": "^laws$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-surface"
+      ]
+    },
+    "repo-schema-surface-facet-completeness-law": {
+      "emoji": "🧩️",
+      "slugPattern": "^facet-completeness$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-surface-laws"
+      ]
+    },
+    "repo-schema-surface-field-parity-law": {
+      "emoji": "📏️",
+      "slugPattern": "^field-parity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-surface-laws"
+      ]
+    },
+    "repo-schema-surface-config-fidelity-law": {
+      "emoji": "🪞️",
+      "slugPattern": "^config-fidelity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-surface-laws"
+      ]
+    },
+    "repo-schema-surface-state-purity-law": {
+      "emoji": "💧️",
+      "slugPattern": "^state-purity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-surface-laws"
+      ]
+    },
+    "repo-schema-surface-type-name-parity-law": {
+      "emoji": "🏷️",
+      "slugPattern": "^type-name-parity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-surface-laws"
+      ]
+    },
+    "repo-schema-surface-config-relocation-law": {
+      "emoji": "🚚️",
+      "slugPattern": "^config-relocation$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-surface-laws"
+      ]
+    },
+    "repo-schema-surface-law-aggregate": {
+      "emoji": "📋️",
+      "slugPattern": "^aggregate$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-surface-laws"
+      ]
+    },
+    "repo-ownership-abstraction": {
+      "emoji": "🏛️",
+      "slugPattern": "^abstraction$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "ownership"
+      ]
+    },
+    "repo-ownership-abstraction-contract": {
+      "emoji": "🧱️",
+      "slugPattern": "^contract$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-ownership-abstraction"
+      ]
+    },
+    "repo-ownership-abstraction-source-projection": {
+      "emoji": "🔍️",
+      "slugPattern": "^source-projection$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-ownership-abstraction"
+      ]
+    },
+    "repo-ownership-abstraction-verification": {
+      "emoji": "✅️",
+      "slugPattern": "^verification$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-ownership-abstraction"
+      ]
+    },
+    "repo-ownership-abstraction-law": {
+      "emoji": "⚖️",
+      "slugPattern": "^law$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-ownership-abstraction"
+      ]
+    },
+    "repo-cache-domain": {
+      "emoji": "⚡️",
+      "slugPattern": "^caching$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-server-library"
+      ]
+    },
+    "repo-cache-ticket-output": {
+      "emoji": "🎫️",
+      "slugPattern": "^output$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-domain"
+      ]
+    },
+    "repo-cache-discovery": {
+      "emoji": "🔍️",
+      "slugPattern": "^discovery$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-domain"
+      ]
+    },
+    "repo-cache-source-discovery": {
+      "emoji": "📂️",
+      "slugPattern": "^source$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-discovery"
+      ]
+    },
+    "repo-cache-inventory": {
+      "emoji": "📇️",
+      "slugPattern": "^inventory$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-domain"
+      ]
+    },
+    "repo-cache-inventory-composition": {
+      "emoji": "🧮️",
+      "slugPattern": "^composition$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-inventory"
+      ]
+    },
+    "repo-cache-inventory-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-inventory"
+      ]
+    },
+    "repo-cache-graph": {
+      "emoji": "🕸️",
+      "slugPattern": "^graph$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-domain"
+      ]
+    },
+    "repo-cache-graph-verification": {
+      "emoji": "✅️",
+      "slugPattern": "^verification$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-graph"
+      ]
+    },
+    "repo-cache-storage": {
+      "emoji": "💾️",
+      "slugPattern": "^storage$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-domain"
+      ]
+    },
+    "repo-cache-storage-report": {
+      "emoji": "📊️",
+      "slugPattern": "^report$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-storage"
+      ]
+    },
+    "repo-cache-environment": {
+      "emoji": "🩺️",
+      "slugPattern": "^environment$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-domain"
+      ]
+    },
+    "repo-cache-environment-inspection": {
+      "emoji": "📋️",
+      "slugPattern": "^inspection$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-environment"
+      ]
+    },
+    "repo-cache-verification": {
+      "emoji": "🔁️",
+      "slugPattern": "^verification$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-domain"
+      ]
+    },
+    "repo-cache-verification-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-verification"
+      ]
+    },
+    "repo-cache-pruning": {
+      "emoji": "🧹️",
+      "slugPattern": "^pruning$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-domain"
+      ]
+    },
+    "repo-cache-pruning-workspace": {
+      "emoji": "🌐️",
+      "slugPattern": "^workspace$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-pruning"
+      ]
+    },
+    "repo-cache-pruning-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-pruning"
+      ]
+    },
+    "repo-cache-artifacts": {
+      "emoji": "📦️",
+      "slugPattern": "^artifacts$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-domain"
+      ]
+    },
+    "repo-cache-artifact-package-inventory": {
+      "emoji": "🧭️",
+      "slugPattern": "^package-inventory$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-artifacts"
+      ]
+    },
+    "repo-cache-artifact-contract-capture": {
+      "emoji": "🏃️",
+      "slugPattern": "^contract-capture$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-artifacts"
+      ]
+    },
+    "repo-cache-artifact-package-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^package-orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-artifacts"
+      ]
+    },
+    "repo-test-command-contract": {
+      "emoji": "🧱️",
+      "slugPattern": "^contract$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-discovery": {
+      "emoji": "🔍️",
+      "slugPattern": "^discovery$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-selection": {
+      "emoji": "🎛️",
+      "slugPattern": "^selection$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-discovery"
+      ]
+    },
+    "repo-test-host": {
+      "emoji": "🖥️",
+      "slugPattern": "^host$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-host-materialization": {
+      "emoji": "🏗️",
+      "slugPattern": "^materialization$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-host"
+      ]
+    },
+    "repo-test-execution": {
+      "emoji": "🏃️",
+      "slugPattern": "^execution$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-scenario-execution": {
+      "emoji": "🎬️",
+      "slugPattern": "^scenario$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-execution"
+      ]
+    },
+    "repo-test-parity": {
+      "emoji": "⚖️",
+      "slugPattern": "^parity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-parity-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-parity"
+      ]
+    },
+    "repo-test-contracts": {
+      "emoji": "🧾️",
+      "slugPattern": "^contracts$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-contract-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-contracts"
+      ]
+    },
+    "repo-test-reporting": {
+      "emoji": "📊️",
+      "slugPattern": "^reporting$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-reporting-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-reporting"
+      ]
+    },
+    "repo-test-dependencies": {
+      "emoji": "🕸️",
+      "slugPattern": "^dependencies$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-dependency-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-dependencies"
+      ]
+    },
+    "repo-test-inventory": {
+      "emoji": "🏭️",
+      "slugPattern": "^inventory$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-inventory-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-inventory"
+      ]
+    },
+    "repo-test-provenance": {
+      "emoji": "🧾️",
+      "slugPattern": "^provenance$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-provenance-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-provenance"
+      ]
+    },
+    "repo-test-provenance-authoring": {
+      "emoji": "🏗️",
+      "slugPattern": "^authoring$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-provenance"
+      ]
+    },
+    "repo-test-coverage": {
+      "emoji": "📊️",
+      "slugPattern": "^coverage$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-coverage-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-coverage"
+      ]
+    },
+    "repo-test-retention": {
+      "emoji": "🧹️",
+      "slugPattern": "^retention$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-retention-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-retention"
+      ]
+    },
+    "repo-test-schema-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "repo-test-environment": {
+      "emoji": "🩺️",
+      "slugPattern": "^environment$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-environment-inspection": {
+      "emoji": "📋️",
+      "slugPattern": "^inspection$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-environment"
+      ]
+    },
+    "repo-test-policy": {
+      "emoji": "⚖️",
+      "slugPattern": "^policy$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "repo-test-domain-policy": {
+      "emoji": "🧹️",
+      "slugPattern": "^domain$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-policy"
+      ]
+    },
+    "repo-schema-inference": {
+      "emoji": "💡️",
+      "slugPattern": "^inference$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "repo-schema-inference-contract": {
+      "emoji": "🧱️",
+      "slugPattern": "^contract$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-inference"
+      ]
+    },
+    "repo-schema-inference-family-discovery": {
+      "emoji": "🔍️",
+      "slugPattern": "^family-discovery$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-inference"
+      ]
+    },
+    "repo-schema-inference-laws": {
+      "emoji": "⚖️",
+      "slugPattern": "^laws$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-inference"
+      ]
+    },
+    "repo-schema-inference-source-admission-law": {
+      "emoji": "🚧️",
+      "slugPattern": "^source-admission$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-inference-laws"
+      ]
+    },
+    "repo-schema-inference-family-root-completeness-law": {
+      "emoji": "🧩️",
+      "slugPattern": "^family-root-completeness$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-inference-laws"
+      ]
+    },
+    "repo-schema-inference-slug-leaf-presence-law": {
+      "emoji": "🍃️",
+      "slugPattern": "^slug-leaf-presence$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-inference-laws"
+      ]
+    },
+    "repo-schema-inference-derivation-presence-law": {
+      "emoji": "⚙️",
+      "slugPattern": "^derivation-presence$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-inference-laws"
+      ]
+    },
+    "repo-schema-inference-emoji-uniqueness-law": {
+      "emoji": "😀️",
+      "slugPattern": "^emoji-uniqueness$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-inference-laws"
+      ]
+    },
+    "repo-schema-inference-assembly-coverage-law": {
+      "emoji": "🧶️",
+      "slugPattern": "^assembly-coverage$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-inference-laws"
+      ]
+    },
+    "repo-schema-inference-state-separation-law": {
+      "emoji": "💾️",
+      "slugPattern": "^state-separation$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-inference-laws"
+      ]
+    },
+    "repo-schema-inference-law-aggregate": {
+      "emoji": "📋️",
+      "slugPattern": "^aggregate$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-schema-inference-laws"
+      ]
+    },
     "repo-schema-artifact": {
       "emoji": "🗿️",
       "slugPattern": "^artifact$",
@@ -8973,7 +9661,6 @@
         "🔚️terminal",
         "🔢️num",
         "🔢️sparse",
-        "🔣️icons",
         "🔤️text",
         "🔥️solar_thermal",
         "🕸️hvac_topo",
@@ -13773,6 +14460,28 @@
       ],
       "source": "registry"
     },
+    "vitest-configuration-ownership": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🎚️vitest-configuration-ownership"
+      ],
+      "source": "registry"
+    },
+    "tool-configuration-ownership": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🎚️tool-configuration-ownership"
+      ],
+      "source": "registry"
+    },
     "publication-authority-verification": {
       "ownerKindIds": [
         "tests"
@@ -13986,6 +14695,59 @@
       ],
       "memberNames": [
         "✅️trusted-stdio-catalog"
+      ],
+      "source": "registry"
+    },
+    "stdio-html-mutation-fixture": {
+      "ownerKindIds": [
+        "fixtures"
+      ],
+      "memberNames": [
+        "⌨️set-raw-text-applied",
+        "✍️set-text-applied",
+        "➕️insert-node-applied",
+        "➖️remove-node-applied",
+        "🏷️set-element-name-applied",
+        "💬️set-comment-applied",
+        "📜️set-doctype-applied",
+        "🔖️set-attribute-applied"
+      ],
+      "source": "registry"
+    },
+    "html-source-pair-control": {
+      "ownerKindIds": [
+        "fixtures"
+      ],
+      "memberNames": [
+        "🌐️html-source-pair"
+      ],
+      "source": "registry"
+    },
+    "engine-icons": {
+      "ownerKindIds": [
+        "engine"
+      ],
+      "memberNames": [
+        "🔣️icons"
+      ],
+      "source": "registry"
+    },
+    "metabolism-icon-catalog": {
+      "ownerKindIds": [
+        "engine-icons"
+      ],
+      "memberNames": [
+        "🌱️metabolism"
+      ],
+      "source": "registry"
+    },
+    "oracle-source-ownership": {
+      "ownerKindIds": [
+        "tests",
+        "fixtures"
+      ],
+      "memberNames": [
+        "🔮️oracle-source-ownership"
       ],
       "source": "registry"
     }
@@ -14522,6 +15284,88 @@
         }
       ],
       "realizedNodeCount": 12,
+      "pathBudgetReserve": {
+        "derivation": "longest-canonical-descendant-suffix",
+        "bytes": 42
+      }
+    },
+    "stdio-html-source-pair-v1": {
+      "rootDirectoryKindId": "stdio-html-mutation-fixture",
+      "requiredNodes": [
+        {
+          "pathSegments": [],
+          "nodeType": "directory",
+          "kindId": "stdio-html-mutation-fixture"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "snapshot",
+              "literal": "📸️snapshot"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "snapshot"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "snapshot",
+              "literal": "📸️snapshot"
+            },
+            {
+              "kindId": "comparison-before",
+              "literal": "⬅️before"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "comparison-before"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "snapshot",
+              "literal": "📸️snapshot"
+            },
+            {
+              "kindId": "comparison-before",
+              "literal": "⬅️before"
+            }
+          ],
+          "nodeType": "file",
+          "kindId": "html"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "snapshot",
+              "literal": "📸️snapshot"
+            },
+            {
+              "kindId": "comparison-after",
+              "literal": "➡️after"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "comparison-after"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "snapshot",
+              "literal": "📸️snapshot"
+            },
+            {
+              "kindId": "comparison-after",
+              "literal": "➡️after"
+            }
+          ],
+          "nodeType": "file",
+          "kindId": "html"
+        }
+      ],
+      "exclusiveAlternatives": [],
+      "realizedNodeCount": 6,
       "pathBudgetReserve": {
         "derivation": "longest-canonical-descendant-suffix",
         "bytes": 42
@@ -19792,17 +20636,6 @@
       "verification": "next build",
       "expires": null
     },
-    "vscode-test-cli-config": {
-      "pathPattern": "**/.vscode-test.mjs",
-      "authority": "@vscode/test-cli",
-      "reason": "The VS Code test CLI discovers its default module configuration under the literal .vscode-test.mjs basename",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "@vscode/test-cli configuration discovery",
-      "expires": null
-    },
     "reserved-readme": {
       "pathPattern": "**/README",
       "authority": "Repository documentation naming statute",
@@ -21843,30 +22676,6 @@
       "verification": "cargo build",
       "expires": null
     },
-    "vitest-config": {
-      "pathPattern": "**/vitest.config.ts",
-      "authority": "Vitest",
-      "reason": "Vitest configuration file discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "package-root",
-        "ecosystemId": "🟦️typescript"
-      },
-      "verification": "vitest --config",
-      "expires": null
-    },
-    "tailwind-config": {
-      "pathPattern": "**/tailwind.config.ts",
-      "authority": "Tailwind CSS",
-      "reason": "Tailwind CSS configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "package-root",
-        "ecosystemId": "🟦️typescript"
-      },
-      "verification": "tailwindcss --config",
-      "expires": null
-    },
     "postcss-config": {
       "pathPattern": "**/postcss.config.ts",
       "authority": "PostCSS",
@@ -21877,29 +22686,6 @@
         "ecosystemId": "🟦️typescript"
       },
       "verification": "postcss --config",
-      "expires": null
-    },
-    "eslint-config": {
-      "pathPattern": "**/eslint.config.ts",
-      "authority": "ESLint",
-      "reason": "ESLint flat configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "package-root",
-        "ecosystemId": "🟦️typescript"
-      },
-      "verification": "eslint --config",
-      "expires": null
-    },
-    "dependency-cruiser-config": {
-      "pathPattern": ".dependency-cruiser.cjs",
-      "authority": "dependency-cruiser",
-      "reason": "dependency-cruiser configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "depcruise --config",
       "expires": null
     },
     "root-mcp-config": {
@@ -22010,17 +22796,6 @@
         "kind": "repository-root"
       },
       "verification": "pytest",
-      "expires": null
-    },
-    "root-eslint-config": {
-      "pathPattern": "eslint.config.mjs",
-      "authority": "ESLint",
-      "reason": "Workspace lint configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "eslint",
       "expires": null
     },
     "root-rustfmt-config": {
@@ -23691,12 +24466,7 @@
         "root-script",
         "next-environment-declaration",
         "next-typescript-config",
-        "vitest-config",
-        "tailwind-config",
         "postcss-config",
-        "eslint-config",
-        "dependency-cruiser-config",
-        "vscode-test-cli-config",
         "next-app-page",
         "next-app-layout",
         "next-app-route"
@@ -25690,26 +26460,12 @@
       "authority": "Next.js TypeScript configuration discovery",
       "verification": "next build"
     },
-    "vscode-test-cli-config": {
-      "contractKind": "fixed",
-      "disposition": "tool-metadata",
-      "validator": "vscode-test-configuration",
-      "authority": "@vscode/test-cli default configuration discovery",
-      "verification": "vscode-test"
-    },
     "root-pytest-config": {
       "contractKind": "fixed",
       "disposition": "tool-metadata",
       "validator": "pytest-configuration",
       "authority": "pytest repository-root configuration discovery",
       "verification": "pytest"
-    },
-    "root-eslint-config": {
-      "contractKind": "fixed",
-      "disposition": "tool-metadata",
-      "validator": "eslint-configuration",
-      "authority": "ESLint repository-root configuration discovery",
-      "verification": "eslint"
     },
     "python-init": {
       "contractKind": "fixed",
@@ -25775,40 +26531,12 @@
       "authority": "Cargo build script discovery",
       "verification": "cargo build"
     },
-    "vitest-config": {
-      "contractKind": "fixed",
-      "disposition": "tool-metadata",
-      "validator": "tool-config-vitest",
-      "authority": "Vitest",
-      "verification": "vitest --config"
-    },
-    "tailwind-config": {
-      "contractKind": "fixed",
-      "disposition": "tool-metadata",
-      "validator": "tool-config-tailwind",
-      "authority": "Tailwind CSS",
-      "verification": "tailwindcss --config"
-    },
     "postcss-config": {
       "contractKind": "fixed",
       "disposition": "tool-metadata",
       "validator": "tool-config-postcss",
       "authority": "PostCSS",
       "verification": "postcss --config"
-    },
-    "eslint-config": {
-      "contractKind": "fixed",
-      "disposition": "tool-metadata",
-      "validator": "tool-config-eslint",
-      "authority": "ESLint",
-      "verification": "eslint --config"
-    },
-    "dependency-cruiser-config": {
-      "contractKind": "fixed",
-      "disposition": "tool-metadata",
-      "validator": "tool-config-dependency-cruiser",
-      "authority": "dependency-cruiser",
-      "verification": "depcruise --config"
     },
     "storybook-main": {
       "contractKind": "fixed",
@@ -25832,10 +26560,16 @@
       "target": "@semio-tech/framework-actor-rs:typegen",
       "previewTarget": "@semio-tech/framework-actor-rs:preview-generated",
       "inputPatterns": [
-        "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/**/*.rs",
+        "🧰️framework/🔨️modules/🎭️actor/**/*.rs",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
-        "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts"
+        "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts",
+        "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧬️typegen/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/🧬️typegen/🏃️execution/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📋️plan/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📤️publication/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
       ],
       "outputRoots": [
         {
@@ -25843,7 +26577,11 @@
           "inclusion": "ignored"
         }
       ],
-      "reason": "Nx outputs and the typegen script identify the actor TypeScript projection exactly"
+      "reason": "The actor typegen owner isolates native export, bounded preview, exact output planning and publish-before-prune behavior from its package router",
+      "previewLimits": {
+        "maxOutputBytes": 16777216,
+        "timeoutMs": 600000
+      }
     },
     "assets-build": {
       "ownership": "owned",
@@ -25936,7 +26674,7 @@
         "package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📇️layout.json",
@@ -26089,8 +26827,17 @@
         "✏️s/🔌️plugins/**/*manifest.json",
         "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️catalog/🟦️.ts",
         "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️outputs.json",
-        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️outputs.schema.json",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📤️publication/🟦️.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📥️admission/🟦️.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📽️projection/🟦️.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🧫️fixtures/🔣️outputs.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
       ],
@@ -26315,18 +27062,24 @@
         "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
       ],
       "inputPatterns": [
+        "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🏃️execution/🟦️.ts",
+        "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📋️plan/🟦️.ts",
+        "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts",
+        "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📽️projection/🟦️.ts",
+        "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🔣️.json",
         "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🔨️modules/🧬️schema/🔣️entity-kinds.json",
-        "🧰️framework/🔨️modules/🧬️schema/🟦️.ts"
+        "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
       ],
       "outputRoots": [
         {
-          "path": "🧰️framework/🔨️modules/🧬️schema/🤖️generated.rs",
+          "path": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🟦️.ts",
           "inclusion": "ignored"
         },
         {
-          "path": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🟦️.ts",
+          "path": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🦀️.rs",
           "inclusion": "ignored"
         },
         {
@@ -26467,9 +27220,17 @@
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust"
       ],
       "inputPatterns": [
+        "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🏃️execution/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📋️plan/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📤️publication/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📥️source/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📽️projection/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json",
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🔨️modules/🖱️ui/🔣️ui-axes.json"
+        "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️axes/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
       ],
       "outputRoots": [
         {
@@ -26481,7 +27242,7 @@
           "inclusion": "ignored"
         }
       ],
-      "reason": "The UI target and freshness check own exact Rust and TypeScript axis projections"
+      "reason": "The neutral UI-axis source, language projections, exact two-file plan, publication owner and package router preserve the locale×terminology authority"
     },
     "ui-contract": {
       "ownership": "owned",

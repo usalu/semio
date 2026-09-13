@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧱️contract/🟦️.ts",
+      "declarations": ["REPO_TEST_DOMAIN_REL", "REPO_TEST_RUST_PACKAGE_REL", "REPO_TEST_GO_PACKAGE_REL", "REPO_TEST_PYTHON_HOST_REL", "REPO_TEST_DOTNET_PACKAGE_REL", "HostPreparation", "MaterializedHost"]
+    },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔍️discovery/🎛️selection/🟦️.ts", "declarations": ["Selectors", "selectCases", "selectImplementations", "readSelectors", "matchesTarget", "matchesFixture", "matchesRow"] },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🏗️materialization/🟦️.ts",
+      "declarations": [
+        "rustHostExecutableFromCargo",
+        "hostDirFor",
+        "ownerShipsImplementation",
+        "contributedOraclePackages",
+        "materializeRustHost",
+        "materializeGoHost",
+        "oracleHostPython",
+        "provisionPythonInterpreter",
+        "pythonHostArguments",
+        "materializePythonHost",
+        "materializeTypescriptHost",
+        "resolvesFromRepoRoot",
+        "materializeDotnetHost",
+        "materializeHost"
+      ]
+    },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏃️execution/🎬️scenario/🟦️.ts", "declarations": ["PhaseOutcome", "executeOne"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️parity/📋️orchestration/🟦️.ts", "declarations": ["oracleDecision", "planModeOf", "runPhases", "OracleScript", "SubjectScript", "ParityScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧾️contracts/📋️orchestration/🟦️.ts", "declarations": ["DiscoverScript", "ContractScript", "RunScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📊️reporting/📋️orchestration/🟦️.ts", "declarations": ["reportsDir", "readImplementationCoverage", "ReportScript", "MetricsScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/📋️orchestration/🟦️.ts", "declarations": ["loadClassifiedBaseline", "DependencyScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/📋️orchestration/🟦️.ts", "declarations": ["MUTATION_BRIDGE_REL", "mutationBridgeFor", "InventoryScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧾️provenance/📋️orchestration/🟦️.ts", "declarations": ["FixtureScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📊️coverage/📋️orchestration/🟦️.ts", "declarations": ["ProbeScript", "MatrixScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧾️provenance/🏗️authoring/🟦️.ts", "declarations": ["payloadSchemaCommand", "scaffoldCommand", "GapScript", "ManifestScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧹️retention/📋️orchestration/🟦️.ts", "declarations": ["CleanScript", "GcScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/🟦️.ts", "declarations": ["SchemaScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🩺️environment/📋️inspection/🟦️.ts", "declarations": ["NxScript", "DoctorScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️policy/🧹️domain/🟦️.ts", "declarations": ["policy"] }
+  ],
+  "contexts": [
+    { "directoryName": "🧱️contract", "parentKindId": "members-of-modules", "kindId": "repo-test-command-contract" },
+    { "directoryName": "🔍️discovery", "parentKindId": "members-of-modules", "kindId": "repo-test-discovery" },
+    { "directoryName": "🎛️selection", "parentKindId": "repo-test-discovery", "kindId": "repo-test-selection" },
+    { "directoryName": "🖥️host", "parentKindId": "members-of-modules", "kindId": "repo-test-host" },
+    { "directoryName": "🏗️materialization", "parentKindId": "repo-test-host", "kindId": "repo-test-host-materialization" },
+    { "directoryName": "🏃️execution", "parentKindId": "members-of-modules", "kindId": "repo-test-execution" },
+    { "directoryName": "🎬️scenario", "parentKindId": "repo-test-execution", "kindId": "repo-test-scenario-execution" },
+    { "directoryName": "⚖️parity", "parentKindId": "members-of-modules", "kindId": "repo-test-parity" },
+    { "directoryName": "📋️orchestration", "parentKindId": "repo-test-parity", "kindId": "repo-test-parity-orchestration" },
+    { "directoryName": "🧾️contracts", "parentKindId": "members-of-modules", "kindId": "repo-test-contracts" },
+    { "directoryName": "📋️orchestration", "parentKindId": "repo-test-contracts", "kindId": "repo-test-contract-orchestration" },
+    { "directoryName": "📊️reporting", "parentKindId": "members-of-modules", "kindId": "repo-test-reporting" },
+    { "directoryName": "📋️orchestration", "parentKindId": "repo-test-reporting", "kindId": "repo-test-reporting-orchestration" },
+    { "directoryName": "🕸️dependencies", "parentKindId": "members-of-modules", "kindId": "repo-test-dependencies" },
+    { "directoryName": "📋️orchestration", "parentKindId": "repo-test-dependencies", "kindId": "repo-test-dependency-orchestration" },
+    { "directoryName": "🏭️inventory", "parentKindId": "members-of-modules", "kindId": "repo-test-inventory" },
+    { "directoryName": "📋️orchestration", "parentKindId": "repo-test-inventory", "kindId": "repo-test-inventory-orchestration" },
+    { "directoryName": "🧾️provenance", "parentKindId": "members-of-modules", "kindId": "repo-test-provenance" },
+    { "directoryName": "📋️orchestration", "parentKindId": "repo-test-provenance", "kindId": "repo-test-provenance-orchestration" },
+    { "directoryName": "🏗️authoring", "parentKindId": "repo-test-provenance", "kindId": "repo-test-provenance-authoring" },
+    { "directoryName": "📊️coverage", "parentKindId": "members-of-modules", "kindId": "repo-test-coverage" },
+    { "directoryName": "📋️orchestration", "parentKindId": "repo-test-coverage", "kindId": "repo-test-coverage-orchestration" },
+    { "directoryName": "🧹️retention", "parentKindId": "members-of-modules", "kindId": "repo-test-retention" },
+    { "directoryName": "📋️orchestration", "parentKindId": "repo-test-retention", "kindId": "repo-test-retention-orchestration" },
+    { "directoryName": "📋️orchestration", "parentKindId": "schema", "kindId": "repo-test-schema-orchestration" },
+    { "directoryName": "🩺️environment", "parentKindId": "members-of-modules", "kindId": "repo-test-environment" },
+    { "directoryName": "📋️inspection", "parentKindId": "repo-test-environment", "kindId": "repo-test-environment-inspection" },
+    { "directoryName": "⚖️policy", "parentKindId": "members-of-modules", "kindId": "repo-test-policy" },
+    { "directoryName": "🧹️domain", "parentKindId": "repo-test-policy", "kindId": "repo-test-domain-policy" }
+  ],
+  "consumers": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts",
+      "owners": [
+        "⚖️parity/📋️orchestration/🟦️.ts",
+        "🧾️contracts/📋️orchestration/🟦️.ts",
+        "📊️reporting/📋️orchestration/🟦️.ts",
+        "🕸️dependencies/📋️orchestration/🟦️.ts",
+        "🏭️inventory/📋️orchestration/🟦️.ts",
+        "🧾️provenance/📋️orchestration/🟦️.ts",
+        "📊️coverage/📋️orchestration/🟦️.ts",
+        "🧾️provenance/🏗️authoring/🟦️.ts",
+        "🧹️retention/📋️orchestration/🟦️.ts",
+        "🧬️schema/📋️orchestration/🟦️.ts",
+        "🩺️environment/📋️inspection/🟦️.ts",
+        "⚖️policy/🧹️domain/🟦️.ts"
+      ]
+    },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️test-platform/🟦️.ts", "owners": ["🖥️host/🏗️materialization/🟦️.ts", "🏃️execution/🎬️scenario/🟦️.ts"] }
+  ],
+  "nativePythonImport": {
+    "sourcePath": "🧫️fixtures/🧱️command-composition-source/🐍️.py",
+    "module": "🐍️",
+    "marker": "declared-local-source",
+    "argument": "--local-source"
+  },
+  "route": {
+    "target": "test-command-composition-source",
+    "command": "bun ./📜️script.ts test command-composition-source",
+    "namedInput": "commandCompositionSources",
+    "launchName": "🧪️test🧭️command-composition-source",
+    "launchCommand": "bun nx run @semio-tech/repo-test-domain:test-command-composition-source"
+  }
+}

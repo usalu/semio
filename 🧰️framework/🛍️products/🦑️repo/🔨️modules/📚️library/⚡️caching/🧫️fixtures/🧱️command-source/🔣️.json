@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🎫️output/🟦️.ts", "declarations": ["TicketOutputOperations", "ticketOutput"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔍️discovery/📂️source/🟦️.ts", "declarations": ["CACHE_POLICY", "CACHE_POLICY_PATH", "CacheSourceEntry", "CacheSourceOperations", "slash", "sourceFiles"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📇️inventory/🧮️composition/🟦️.ts", "declarations": ["CACHE_BOOTSTRAP_EXECUTABLE", "CacheInventory", "CacheInventoryFinding", "CacheInventoryOperations", "composeInventory", "inventory"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📇️inventory/📋️orchestration/🟦️.ts", "declarations": ["AuditScript", "PolicyScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/✅️verification/🟦️.ts", "declarations": ["GraphScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/📊️report/🟦️.ts", "declarations": ["DiskScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩺️environment/📋️inspection/🟦️.ts", "declarations": ["DoctorScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔁️verification/📋️orchestration/🟦️.ts", "declarations": ["CacheVerifyScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🌐️workspace/🟦️.ts", "declarations": ["CacheAreaScanOperations", "areaUnitRoot", "pruneTestEvidence", "scanCacheAreas"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📋️orchestration/🟦️.ts", "declarations": ["CachePruneScript", "CacheReportScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🧭️package-inventory/🟦️.ts", "declarations": ["ArtifactPackageRecord", "artifactPackageInventory"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏃️contract-capture/🟦️.ts", "declarations": ["captureArtifactContract"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️package-orchestration/🟦️.ts", "declarations": ["ArtifactPackageContractScript"] }
+  ],
+  "contexts": [
+    { "directoryName": "⚡️caching", "parentKindId": "repo-server-library", "kindId": "repo-cache-domain" },
+    { "directoryName": "🎫️output", "parentKindId": "repo-cache-domain", "kindId": "repo-cache-ticket-output" },
+    { "directoryName": "🔍️discovery", "parentKindId": "repo-cache-domain", "kindId": "repo-cache-discovery" },
+    { "directoryName": "📂️source", "parentKindId": "repo-cache-discovery", "kindId": "repo-cache-source-discovery" },
+    { "directoryName": "📇️inventory", "parentKindId": "repo-cache-domain", "kindId": "repo-cache-inventory" },
+    { "directoryName": "🧮️composition", "parentKindId": "repo-cache-inventory", "kindId": "repo-cache-inventory-composition" },
+    { "directoryName": "📋️orchestration", "parentKindId": "repo-cache-inventory", "kindId": "repo-cache-inventory-orchestration" },
+    { "directoryName": "🕸️graph", "parentKindId": "repo-cache-domain", "kindId": "repo-cache-graph" },
+    { "directoryName": "✅️verification", "parentKindId": "repo-cache-graph", "kindId": "repo-cache-graph-verification" },
+    { "directoryName": "💾️storage", "parentKindId": "repo-cache-domain", "kindId": "repo-cache-storage" },
+    { "directoryName": "📊️report", "parentKindId": "repo-cache-storage", "kindId": "repo-cache-storage-report" },
+    { "directoryName": "🩺️environment", "parentKindId": "repo-cache-domain", "kindId": "repo-cache-environment" },
+    { "directoryName": "📋️inspection", "parentKindId": "repo-cache-environment", "kindId": "repo-cache-environment-inspection" },
+    { "directoryName": "🔁️verification", "parentKindId": "repo-cache-domain", "kindId": "repo-cache-verification" },
+    { "directoryName": "📋️orchestration", "parentKindId": "repo-cache-verification", "kindId": "repo-cache-verification-orchestration" },
+    { "directoryName": "🧹️pruning", "parentKindId": "repo-cache-domain", "kindId": "repo-cache-pruning" },
+    { "directoryName": "🌐️workspace", "parentKindId": "repo-cache-pruning", "kindId": "repo-cache-pruning-workspace" },
+    { "directoryName": "📋️orchestration", "parentKindId": "repo-cache-pruning", "kindId": "repo-cache-pruning-orchestration" },
+    { "directoryName": "📦️artifacts", "parentKindId": "repo-cache-domain", "kindId": "repo-cache-artifacts" },
+    { "directoryName": "🧭️package-inventory", "parentKindId": "repo-cache-artifacts", "kindId": "repo-cache-artifact-package-inventory" },
+    { "directoryName": "🏃️contract-capture", "parentKindId": "repo-cache-artifacts", "kindId": "repo-cache-artifact-contract-capture" },
+    { "directoryName": "📋️package-orchestration", "parentKindId": "repo-cache-artifacts", "kindId": "repo-cache-artifact-package-orchestration" }
+  ],
+  "consumers": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+      "owners": ["📇️inventory/📋️orchestration/🟦️.ts", "🕸️graph/✅️verification/🟦️.ts", "💾️storage/📊️report/🟦️.ts", "🩺️environment/📋️inspection/🟦️.ts", "🔁️verification/📋️orchestration/🟦️.ts", "🧹️pruning/📋️orchestration/🟦️.ts", "📦️artifacts/📋️package-orchestration/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
+      "owners": ["🎫️output/🟦️.ts", "🔍️discovery/📂️source/🟦️.ts", "📇️inventory/🧮️composition/🟦️.ts"]
+    }
+  ],
+  "inventory": {
+    "projects": [
+      {
+        "name": "producer",
+        "root": "producer",
+        "targets": {
+          "build": { "executor": "nx:run-commands", "cache": true, "outputs": ["{projectRoot}/dist"], "options": { "command": "bun ./📜️script.ts build" } }
+        }
+      },
+      {
+        "name": "consumer",
+        "root": "consumer",
+        "targets": {
+          "package": { "executor": "nx:run-commands", "cache": true, "outputs": [], "dependsOn": [{ "target": "build", "projects": ["producer"] }], "options": { "command": "bun ./📜️script.ts package" } },
+          "broken": { "executor": "nx:run-commands", "cache": true, "options": { "command": "bun build.ts && bun second.ts" } }
+        }
+      }
+    ],
+    "sources": {
+      "producer": { "build": "producer/📋️project.json" },
+      "consumer": { "package": "consumer/📋️project.json", "broken": "consumer/📋️project.json" }
+    },
+    "files": ["package.json", "producer/package.json", "consumer/package.json"],
+    "texts": {
+      "package.json": "{\"scripts\":{\"nx\":\"bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx\"},\"nx\":{\"includedScripts\":[]}}",
+      "producer/package.json": "{\"scripts\":{},\"nx\":{\"includedScripts\":[]}}",
+      "consumer/package.json": "{\"scripts\":{},\"nx\":{\"includedScripts\":[]}}",
+      "producer/📋️project.json": "{\"targets\":{\"build\":{}}}",
+      "consumer/📋️project.json": "{\"targets\":{\"package\":{},\"broken\":{}}}"
+    },
+    "expected": {
+      "commands": 4,
+      "artifacts": 1,
+      "consumer": "consumer:package",
+      "violationRules": ["CACHE-06", "ORCH-01"]
+    }
+  },
+  "route": {
+    "target": "test-cache-command-source",
+    "command": "bun ./📜️script.ts test cache-command-source",
+    "namedInput": "cacheCommandSources",
+    "launchName": "🧪️test⚡️cache-command-source",
+    "launchCommand": "bun nx run repo:test-cache-command-source"
+  },
+  "coordinates": {
+    "policy": "🔣️policy.json",
+    "bootstrap": "🚀️bootstrap/📜️script.ts",
+    "rootPruneConsumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts"
+  }
+}

@@ -8,8 +8,18 @@ import { policyArtifactSchemaTypeNameParityBreaches } from "../🏷️type-name-
 
 /** ⚖️ Aggregates the separate artifact-schema discovery, completeness, parity and coverage laws. */
 export function policyArtifactSchemaBreaches(repoRoot: string, operations: PolicySourceOperations = POLICY_SOURCE_OPERATIONS) {
-  const owners = policyDiscoverArtifactSchemaOwners(repoRoot, operations);
+  const discovery = policyDiscoverArtifactSchemaOwners(repoRoot, operations),
+    owners = discovery.owners;
   return [
+    ...discovery.issues.map((issue) => ({
+      id: `artifact-schema-source-unreadable-${issue.path}`,
+      summary: `"${issue.path}" cannot be admitted for artifact-schema owner discovery: ${issue.state}`,
+      kind: "artifact-schema/source-unreadable",
+      scope: issue.path,
+      priority: "high" as const,
+      reason: "A source root or subtree that cannot be read without following links is unresolved evidence and cannot certify an empty owner set.",
+      solution: `Restore readable no-follow directory access to ${issue.path}/.`,
+    })),
     ...policyArtifactSchemaFacetCompletenessBreaches(repoRoot, owners, operations),
     ...policyArtifactSchemaFieldParityBreaches(repoRoot, owners, operations),
     ...policyArtifactSchemaStateParityBreaches(repoRoot, owners, operations),

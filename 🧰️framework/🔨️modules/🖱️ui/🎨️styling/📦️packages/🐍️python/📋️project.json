@@ -18,13 +18,33 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts build"
+        "command": "bun ../../🏗️builder/🐍️python/📜️script.ts build"
       },
-      "cache": false,
-      "outputs": [],
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ],
       "dependsOn": [
         "deps",
         "@semio-tech/ui-styling-tokens:generate"
+      ],
+      "parallelism": false,
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/uv.lock",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        },
+        {
+          "env": "SOURCE_DATE_EPOCH"
+        },
+        {
+          "runtime": "uv --version"
+        },
+        {
+          "runtime": "node -p \"process.platform.concat(process.arch)\""
+        }
       ]
     },
     "test": {
@@ -36,6 +56,13 @@
       "outputs": [],
       "dependsOn": [
         "build"
+      ],
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        }
       ]
     },
     "test-quick": {
@@ -47,6 +74,13 @@
       "outputs": [],
       "dependsOn": [
         "build"
+      ],
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        }
       ]
     },
     "test-long": {
@@ -58,6 +92,13 @@
       "outputs": [],
       "dependsOn": [
         "build"
+      ],
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        }
       ]
     },
     "test-exhaustive": {
@@ -69,13 +110,20 @@
       "outputs": [],
       "dependsOn": [
         "build"
+      ],
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        }
       ]
     },
     "deps": {
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts deps"
+        "command": "bun ../../🏗️builder/🐍️python/📜️script.ts deps"
       },
       "parallelism": false
     }

@@ -17,7 +17,7 @@
     },
     "cases": {
       "type": "array",
-      "minItems": 3,
+      "minItems": 5,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -25,6 +25,7 @@
           "id",
           "sourceWindowId",
           "targetWindowId",
+          "targetExists",
           "accepted"
         ],
         "properties": {
@@ -39,6 +40,9 @@
           "targetWindowId": {
             "type": "string",
             "minLength": 1
+          },
+          "targetExists": {
+            "type": "boolean"
           },
           "accepted": {
             "type": "boolean"

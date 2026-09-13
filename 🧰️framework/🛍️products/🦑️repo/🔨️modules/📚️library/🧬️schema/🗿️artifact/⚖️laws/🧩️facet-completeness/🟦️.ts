@@ -12,17 +12,19 @@ export function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string, 
       const facetAbs = `${artRel}/${facetRel}`,
         facet = policySourceDirectory(repoRoot, facetAbs, operations);
       if (facet.state !== "directory") {
+        const unavailable = facet.state !== "missing";
         breaches.push({
-          id: `${facet.state === "unreadable" ? "artifact-schema-source-unreadable" : "artifact-schema-facet-missing"}-${facetAbs}`,
-          summary: facet.state === "unreadable" ? `"${facetAbs}" cannot be read` : `"${artRel}" is missing required schema facet ${facetRel}/`,
-          kind: facet.state === "unreadable" ? "artifact-schema/source-unreadable" : "artifact-schema/facet-completeness",
+          id: `${unavailable ? "artifact-schema-source-unreadable" : "artifact-schema-facet-missing"}-${facetAbs}`,
+          summary: unavailable ? `"${facetAbs}" cannot be admitted: ${facet.state}` : `"${artRel}" is missing required schema facet ${facetRel}/`,
+          kind: unavailable ? "artifact-schema/source-unreadable" : "artifact-schema/facet-completeness",
           scope: artRel,
           priority: "high",
-          reason: facet.state === "unreadable" ? "An unreadable schema facet is unresolved evidence and cannot be certified as complete." : "Every artifact standard/subset must expose 🧬️schema, 🧬️schema/📸️snapshot, and 🧬️schema/🔺️diff facets.",
-          solution:
-            facet.state === "unreadable"
-              ? `Restore readable no-follow access to ${facetAbs}/.`
-              : `Create ${facetAbs}/ with every configured schema-format leaf and its normative ${canonicalPrimaryFilenameForKind(taxonomy.semanticManifestFileKindId)} schema.`,
+          reason: unavailable
+            ? "A schema facet that is unreadable, linked, or the wrong source kind is unresolved evidence and cannot be certified as complete."
+            : "Every artifact standard/subset must expose 🧬️schema, 🧬️schema/📸️snapshot, and 🧬️schema/🔺️diff facets.",
+          solution: unavailable
+            ? `Restore readable no-follow directory access to ${facetAbs}/.`
+            : `Create ${facetAbs}/ with every configured schema-format leaf and its normative ${canonicalPrimaryFilenameForKind(taxonomy.semanticManifestFileKindId)} schema.`,
         });
         continue;
       }
@@ -31,15 +33,17 @@ export function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string, 
           leafRel = `${facetAbs}/${leafFilename}`,
           source = policySourceText(repoRoot, leafRel, operations);
         if (source.state === "file") continue;
-        const unreadable = source.state === "unreadable";
+        const unavailable = source.state !== "missing";
         breaches.push({
-          id: `${unreadable ? "artifact-schema-source-unreadable" : "artifact-schema-leaf-missing"}-${leafRel}`,
-          summary: unreadable ? `"${leafRel}" cannot be read` : `"${facetAbs}" is missing schemaFormats leaf ${leafFilename} (${formatId})`,
-          kind: unreadable ? "artifact-schema/source-unreadable" : "artifact-schema/facet-completeness",
+          id: `${unavailable ? "artifact-schema-source-unreadable" : "artifact-schema-leaf-missing"}-${leafRel}`,
+          summary: unavailable ? `"${leafRel}" cannot be admitted: ${source.state}` : `"${facetAbs}" is missing schemaFormats leaf ${leafFilename} (${formatId})`,
+          kind: unavailable ? "artifact-schema/source-unreadable" : "artifact-schema/facet-completeness",
           scope: artRel,
           priority: "high",
-          reason: unreadable ? "An unreadable schema leaf is unresolved evidence and cannot be treated as an empty or conforming declaration." : "Each schema facet must carry every schemaFormats leaf for its facet kind from 🔣️taxonomy.json.",
-          solution: unreadable ? `Restore readable no-follow access to ${leafRel}.` : `Add handcrafted ${leafRel}.`,
+          reason: unavailable
+            ? "A schema leaf that is unreadable, linked, or the wrong source kind is unresolved evidence and cannot be treated as an empty or conforming declaration."
+            : "Each schema facet must carry every schemaFormats leaf for its facet kind from 🔣️taxonomy.json.",
+          solution: unavailable ? `Restore readable no-follow file access to ${leafRel}.` : `Add handcrafted ${leafRel}.`,
         });
       }
       const normativeFileKindId = normativeByFacet[facetRel];
@@ -47,7 +51,7 @@ export function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string, 
       const normative = canonicalPrimaryFilenameForKind(normativeFileKindId, taxonomy),
         normativeRel = `${facetAbs}/${normative}`,
         normativeSource = policySourceText(repoRoot, normativeRel, operations);
-      if (normativeSource.state === "file" || normativeSource.state === "unreadable") continue;
+      if (normativeSource.state !== "missing") continue;
       breaches.push({
         id: `artifact-schema-normative-missing-${normativeRel}`,
         summary: `"${facetAbs}" is missing normative artifactSchemaSpecFilenames leaf ${normative}`,

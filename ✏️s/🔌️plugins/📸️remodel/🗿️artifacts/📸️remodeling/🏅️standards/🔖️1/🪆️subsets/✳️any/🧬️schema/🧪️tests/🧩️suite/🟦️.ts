@@ -1,7 +1,7 @@
 /** 🧪️ Cross-language fixture oracle — every committed remodeling mutation vector, replayed by the
  *  TypeScript twin and compared against the bytes Rust committed.
  *
- *  Every fixture is discovered by globbing `🧬️mutations/<slug>/🧪️tests/<case>/` on disk; no case
+ *  Every fixture is discovered under `🧫️fixtures/🧬️mutations/<slug>/<case>/` on disk; no case
  *  directory name is transcribed, because those names carry a content hash that is re-minted
  *  whenever a vector changes.
  *
@@ -26,6 +26,7 @@ import { remodelingSnapshotFromDslText } from "../../../🚪️io/📥️import/
 const here = dirname(fileURLToPath(import.meta.url));
 const subset = join(here, "../../..");
 const mutationsRoot = join(subset, "🧬️schema/🧬️mutations");
+const vectorsRoot = join(subset, "🧫️fixtures/🧬️mutations");
 
 interface Outcome {
   status: "applied" | "rejected";
@@ -49,9 +50,8 @@ const readJson = (path: string): unknown => JSON.parse(readFileSync(path, "utf8"
 /** 🔎 Globs the committed vectors as they are on disk right now. */
 function discoverVectors(): Vector[] {
   const vectors: Vector[] = [];
-  for (const slug of readdirSync(mutationsRoot).sort()) {
-    const testsDir = join(mutationsRoot, slug, "🧪️tests");
-    if (!existsSync(testsDir)) continue;
+  for (const slug of readdirSync(vectorsRoot).sort()) {
+    const testsDir = join(vectorsRoot, slug);
     for (const caseName of readdirSync(testsDir).sort()) {
       const root = join(testsDir, caseName);
       if (!existsSync(join(root, "🦠️mutation/🔣️.json"))) continue;
@@ -73,11 +73,12 @@ function discoverVectors(): Vector[] {
 const VECTORS = discoverVectors();
 
 describe("remodeling fixture oracle", () => {
-  it("discovers at least one vector for every mutation directory that ships tests", () => {
+  it("binds every mutation fixture to its native case with unique identities", () => {
     const slugs = new Set(VECTORS.map((vector) => vector.slug));
-    expect(slugs.size).toBe(readdirSync(mutationsRoot).filter((slug) => existsSync(join(mutationsRoot, slug, "🧪️tests"))).length);
+    expect(slugs.size).toBe(REMODELING_MUTATION_TAGS.length);
     const identities = VECTORS.map((vector) => `${vector.slug}/${vector.caseName}`);
     expect(new Set(identities).size).toBe(identities.length);
+    for (const vector of VECTORS) expect(existsSync(join(mutationsRoot, vector.slug, "🧪️tests", vector.caseName, "🦀️.rs"))).toBe(true);
   });
 
   it("covers every wire tag, commitReconstruction now included", () => {
@@ -155,14 +156,14 @@ describe.each(VECTORS.map((vector) => [`${vector.slug}/${vector.caseName}`, vect
 
   it("re-emits the committed snapshot bytes exactly", () => {
     for (const side of ["⬅️before", "➡️after"] as const) {
-      const path = join(mutationsRoot, vector.slug, "🧪️tests", vector.caseName, "📸️snapshot", side, "🔣️.json");
+      const path = join(vectorsRoot, vector.slug, vector.caseName, "📸️snapshot", side, "🔣️.json");
       expect(remodelingSnapshotToJsonText(decodeRemodelingSnapshot(readJson(path)))).toBe(readFileSync(path, "utf8").trimEnd());
     }
   });
 
   it("re-emits the committed diff bytes exactly", () => {
     if (refused) return;
-    const path = join(mutationsRoot, vector.slug, "🧪️tests", vector.caseName, "🔺️diff", "🔣️.json");
+    const path = join(vectorsRoot, vector.slug, vector.caseName, "🔺️diff", "🔣️.json");
     expect(remodelingDiffToJsonText(remodelingMutationDiff(before(), mutation()).diff)).toBe(readFileSync(path, "utf8").trimEnd());
   });
 
@@ -197,7 +198,7 @@ describe("commit-reconstruction shared vector", () => {
 });
 
 describe("committed example assets", () => {
-  const dslAssets = [join(subset, "📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio")];
+  const dslAssets = [join(subset, "🖼️assets/🎬️demo/🗣️.dsl.semio")];
 
   it.each(dslAssets)("parses %s as a remodeling document", (path) => {
     const snapshot: RemodelingSnapshot = remodelingSnapshotFromDslText(readFileSync(path, "utf8"));

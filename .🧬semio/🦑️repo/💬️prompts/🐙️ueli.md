@@ -592,6 +592,14 @@ puzzle fill tool has a
 
 ---
 
+puzzle fill should become wave-based.
+Every tick one wave is tried.
+
+waves (optional) - amount of waves to complete
+max wave reiterations (optional) - amount of reiterations after a wave was passed
+
+---
+
 Get all the dependencies right and only compile what is needed.
 e.g. puzzle 3d shouldnt compile flow because puzzle 3d shouldnt depend on flow.
 e.g. all the react renderer dev shouldnt compile wasm etc

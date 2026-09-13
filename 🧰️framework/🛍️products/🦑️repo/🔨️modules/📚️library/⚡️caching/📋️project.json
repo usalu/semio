@@ -20,6 +20,17 @@
       },
       "outputs": []
     },
+    "test-cache-command-source": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "cacheCommandSources"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test cache-command-source"
+      }
+    },
     "policy-check": {
       "cache": true,
       "options": {
@@ -102,5 +113,44 @@
         "command": "bun ./🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts fingerprint"
       }
     }
+  },
+  "namedInputs": {
+    "cacheCommandSources": [
+      "{projectRoot}/📋️project.json",
+      "{projectRoot}/📜️script.ts",
+      "{projectRoot}/🔣️policy.json",
+      "{projectRoot}/🚀️bootstrap/📜️script.ts",
+      "{projectRoot}/🎫️output/🟦️.ts",
+      "{projectRoot}/🔍️discovery/📂️source/🟦️.ts",
+      "{projectRoot}/📇️inventory/🟦️.ts",
+      "{projectRoot}/📇️inventory/🧮️composition/🟦️.ts",
+      "{projectRoot}/📇️inventory/📋️orchestration/🟦️.ts",
+      "{projectRoot}/🕸️graph/✅️verification/🟦️.ts",
+      "{projectRoot}/💾️storage/📊️report/🟦️.ts",
+      "{projectRoot}/🩺️environment/📋️inspection/🟦️.ts",
+      "{projectRoot}/🔁️verification/📋️orchestration/🟦️.ts",
+      "{projectRoot}/🧹️pruning/🟦️.ts",
+      "{projectRoot}/🧹️pruning/🌐️workspace/🟦️.ts",
+      "{projectRoot}/🧹️pruning/📋️orchestration/🟦️.ts",
+      "{projectRoot}/📦️artifacts/🟦️.ts",
+      "{projectRoot}/📦️artifacts/📇️registry/🟦️.ts",
+      "{projectRoot}/📦️artifacts/🧭️package-inventory/🟦️.ts",
+      "{projectRoot}/📦️artifacts/🏃️contract-capture/🟦️.ts",
+      "{projectRoot}/📦️artifacts/📋️package-orchestration/🟦️.ts",
+      "{projectRoot}/🔒️leases/🟦️.ts",
+      "{projectRoot}/🟦️.ts",
+      "{projectRoot}/🦀️cargo/🟦️.ts",
+      "{projectRoot}/🧪️tests/⚡️cache-contracts/🟦️.ts",
+      "{projectRoot}/🧪️tests/🧱️command-source/🟦️.ts",
+      "{projectRoot}/🧬️schema/🧱️command-source/🔣️.json",
+      "{projectRoot}/🧫️fixtures/🧱️command-source/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+      "{workspaceRoot}/.vscode/launch.json"
+    ]
   }
 }

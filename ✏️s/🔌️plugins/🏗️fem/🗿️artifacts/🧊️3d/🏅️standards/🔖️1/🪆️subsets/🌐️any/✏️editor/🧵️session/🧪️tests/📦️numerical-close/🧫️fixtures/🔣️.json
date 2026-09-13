@@ -1,0 +1,85 @@
+{
+  "cases": [
+    {
+      "lane": 14,
+      "model": true,
+      "nodeIds": true,
+      "before": {
+        "lane": 14,
+        "complete": false
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/lane",
+          "value": 15
+        }
+      ],
+      "expected": {
+        "lane": 15,
+        "complete": false
+      }
+    },
+    {
+      "lane": 19,
+      "model": true,
+      "nodeIds": false,
+      "before": {
+        "lane": 19,
+        "complete": false
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/lane",
+          "value": 20
+        }
+      ],
+      "expected": {
+        "lane": 20,
+        "complete": false
+      }
+    },
+    {
+      "lane": 20,
+      "model": true,
+      "nodeIds": false,
+      "before": {
+        "lane": 20,
+        "complete": false
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/lane",
+          "value": 21
+        }
+      ],
+      "expected": {
+        "lane": 21,
+        "complete": false
+      }
+    },
+    {
+      "lane": 21,
+      "model": false,
+      "nodeIds": false,
+      "before": {
+        "lane": 21,
+        "complete": false
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/lane",
+          "value": 22
+        }
+      ],
+      "expected": {
+        "lane": 22,
+        "complete": false
+      }
+    }
+  ]
+}
+

@@ -8,7 +8,7 @@ import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/�
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runVitest(this.root, rest, "vitest.config.ts");
+    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -450,7 +450,7 @@ class GisMapInferencePortCheckScript extends BundleScript {
         .map(([key, value]) => `${key}=${value}`)
         .join(" ")}`,
     );
-    if (browser) await runVitest(this.root, ["--testNamePattern", "gis map inference port", ...rest], "vitest.config.ts");
+    if (browser) await runVitest(this.root, ["--testNamePattern", "gis map inference port", ...rest], "../../🧪️tests/🎚️config/🟦️.ts");
     console.log("gis-map-inference-port-check: no WGPU map rendering, no external model provider and no two-user process journey is run or claimed here.");
   }
 }
@@ -543,7 +543,7 @@ class DocumentOpeningAttemptCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("document-opening-attempt-check accepts no arguments");
     const checks = await proveDocumentOpeningAttempt(this.repoRoot);
-    await runVitest(this.root, ["--testNamePattern", "document opening attempt"], "vitest.config.ts");
+    await runVitest(this.root, ["--testNamePattern", "document opening attempt"], "../../🧪️tests/🎚️config/🟦️.ts");
     console.log(`document-opening-attempt-check: checks=${checks}`);
   }
 }
@@ -677,7 +677,7 @@ class ColdDocumentPairBrowserCheckScript extends BundleScript {
     await runVitest(
       this.root,
       ["--testNamePattern", "(?:mounted GIS map probe|browser document first open (?:verifies server assets without a prior installed target|rejects hostile assets and retired owners before socket authority)|browser document actor (?:reservation activates only after an exact current socket Session|transfers one verified cold pair only after lifecycle ACK and exact page receipts)|browser document peers refetch the same exact pair after scoped rebootstrap|browser actor patch handoff validates the neutral schema)", ...rest],
-      "vitest.config.ts",
+      "../../🧪️tests/🎚️config/🟦️.ts",
     );
     console.log(`cold-document-pair-browser-check: peer-checks=${checks}`);
   }

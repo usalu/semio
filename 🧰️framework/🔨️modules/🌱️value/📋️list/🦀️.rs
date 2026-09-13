@@ -213,6 +213,17 @@ impl<T, const N: usize> PagedList<T, N> {
         self.next_page_allocation_bytes()
     }
 
+    /// 🎟️ Returns the next single backing allocation needed to reach a requested logical capacity.
+    pub fn next_capacity_allocation_bytes(&self, capacity: usize) -> Result<Option<usize>, &'static str> {
+        if capacity > N {
+            return Err("fixed list logical capacity exhausted");
+        }
+        if capacity <= self.capacity {
+            return Ok(None);
+        }
+        self.next_page_allocation_bytes().map(Some)
+    }
+
     fn next_page_allocation_bytes(&self) -> Result<usize, &'static str> {
         if self.capacity == N {
             return Err("fixed list logical capacity exhausted");

@@ -52,8 +52,9 @@ describe("MapRenderer idle appearance updates", () => {
   it("returns to idle when a pan pointer is cancelled", async () => {
     vi.useFakeTimers();
     const renderFrame = vi.fn();
+    const pointerUpScreen = vi.fn();
     const session = {
-      renderFrame, visibleTilesRevision: () => 0, visibleVectorTilesRevision: () => 0,
+      renderFrame, pointerUpScreen, visibleTilesRevision: () => 0, visibleVectorTilesRevision: () => 0,
       visibleTilesJson: () => "[]", visibleVectorTilesJson: () => "[]",
       prefetchTilesJson: () => "[]", prefetchVectorTilesJson: () => "[]", free: vi.fn(),
     } as unknown as MapWasmSession;
@@ -69,7 +70,7 @@ describe("MapRenderer idle appearance updates", () => {
     const callback = ts.transpileModule(`const callback = ${initializer};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
     const pointer = { current: { leftDown: true, middleDown: true } };
     const panningRef = { current: true };
-    const cancel = new Function("rendererRef", "pointer", "panningRef", "resetMarquee", "canvas", "mirrorSessionCameraToReact", `${callback}\nreturn callback;`)({ current: renderer }, pointer, panningRef, vi.fn(), { hasPointerCapture: () => false }, vi.fn());
+    const cancel = new Function("rendererRef", "pointer", "panningRef", "resetMarquee", "canvas", "mirrorSessionCameraToReact", "clientToLocal", `${callback}\nreturn callback;`)({ current: renderer }, pointer, panningRef, vi.fn(), { hasPointerCapture: () => false }, vi.fn(), () => repaintFixture.cancelledPan.point);
     const target = new EventTarget();
     target.addEventListener(repaintFixture.cancelledPan.event, cancel);
     try {
@@ -82,6 +83,7 @@ describe("MapRenderer idle appearance updates", () => {
       await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
       expect(pointer.current.middleDown).toBe(false);
       expect(panningRef.current).toBe(false);
+      expect(pointerUpScreen).toHaveBeenCalledExactlyOnceWith(repaintFixture.cancelledPan.point.x, repaintFixture.cancelledPan.point.y);
       const frames = renderFrame.mock.calls.length;
       await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
       expect(renderFrame).toHaveBeenCalledTimes(frames);

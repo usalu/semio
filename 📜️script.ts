@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { NativeDependenciesScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";
 import { toolJobOwnerFactoryResolutionSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-owner-factory-resolution/🟦️.ts";
 import { toolJobFactoryProofJoinSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-factory-proof-join/🟦️.ts";
 import { toolJobCooperativeMaintenanceSelfTests } from "./🧰️framework/🔨️modules/⏳️async/🤝️cooperative/🧪️tests/🔬️tool-job-cooperative-maintenance/🟦️.ts";
@@ -105,7 +106,6 @@ import {
   orchestratorBudgetOpts,
   parseLcov,
   renderLcov,
-  wasmBindgenVersion,
   resolveCliBin,
   resolveMcpBin,
   resolveFrameworkOsPlaygroundPlugin,
@@ -179,6 +179,11 @@ import {
   type PathEmojiEntry,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { POLICY_SKIP_DIRS, policyReadFileSafe, policyReaddirSafe } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts";
+import { policyWalkRelFiles } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🚶️file-walk/🟦️.ts";
+import { policyLineOfIndex } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📍️source-coordinate/🟦️.ts";
+import { policySurfaceRoots } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗺️surface/🟦️.ts";
+import { policyListPluginArtifactDirs } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗿️artifact/🏠️roots/🟦️.ts";
+import { POLICY_STANDARDS_DIR, POLICY_SUBSETS_DIR, policyListArtifactDialectDirs, type PolicyArtifactDialect } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗿️artifact/🗣️dialects/🟦️.ts";
 import { verifyTaxonomy } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { taxonomyTicketDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🟦️.ts";
 import { POLICY_MUTATION_PLAN_DIR, POLICY_MUTATIONS_FACET, POLICY_RS_COMPONENT_LEAF_NAME, POLICY_TS_COMPONENT_LEAF, policyArtifactRootOfMutationsDir, policyLeadingEmojiPrefix, policyStripEmoji, policyStructuralRelativeLocator } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
@@ -197,6 +202,10 @@ import { policyExtractProtobufSchemaFields } from "./🧰️framework/🛍️pro
 import { policySchemaFieldDifferences } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/⚖️comparison/🟦️.ts";
 import { policyArtifactOwnershipFieldParity } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/⚖️laws/🪪️ownership-field-parity/🟦️.ts";
 import { policyArtifactSchemaBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts";
+import { policyAppSchemaBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/⚖️laws/📋️aggregate/🟦️.ts";
+import { policyInferenceFamilyBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/💡️inference/⚖️laws/📋️aggregate/🟦️.ts";
+import { abstractionOwnershipChecks } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/✅️verification/🟦️.ts";
+import { policyAbstractionOwnershipBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/⚖️law/🟦️.ts";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, linkSync, lstatSync, mkdirSync, chownSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
@@ -292,18 +301,18 @@ export class NativeOsScript extends Script {
 
 //#region 🔖️SetupScript
 export class SetupScript extends Script {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (!segments[0]) {
       this.runFull();
       return;
     }
-    dispatchSubcommand(
+    await dispatchSubcommand(
       segments,
       {
         postinstall: () => this.runPostinstall(),
         git: () => this.runGit(),
         native: (rest) => new NativeOsScript(this.root).run(rest),
-        deps: (rest) => this.runDependencies(rest[0] ?? ""),
+        deps: (rest) => new NativeDependenciesScript(this.root, this.repoRoot).run(rest),
         prepare: () => console.log("[prepare] Nx prerequisites completed"),
       },
       "bun ./📜️script.ts setup [postinstall|git|native]",
@@ -353,39 +362,6 @@ export class SetupScript extends Script {
     console.log("[setup] locked dependency environments are ready through the Nx prerequisite graph");
   }
 
-  private ensureCargoTool(crate: string, command: string[], version: string): void {
-    let current = "";
-    try { current = runProbe(command[0]!, [...command.slice(1), "--version"]).stdout; } catch {}
-    if (current.split(/\s+/).includes(version)) return;
-    runCmd("cargo", ["install", crate, "--version", version, "--locked"], { cwd: this.root, ...orchestratorBudgetOpts() });
-  }
-
-  private ensureRustTarget(target: string): void {
-    const installed = runProbe("rustup", ["target", "list", "--installed"]);
-    if (installed.status !== 0 || !installed.stdout.split(/\r?\n/).includes(target)) runCmd("rustup", ["target", "add", target], { cwd: this.root, ...orchestratorBudgetOpts() });
-  }
-
-  private runDependencies(kind: string): void {
-    const opts = { cwd: this.root, ...orchestratorBudgetOpts() };
-    if (kind === "python") runCmd("uv", ["sync", "--locked", "--all-packages", "--all-groups"], opts);
-    else if (kind === "cargo") runCmd("cargo", ["fetch", "--locked", "--manifest-path", "Cargo.toml"], opts);
-    else if (kind === "go") runCmd("go", ["mod", "download"], { ...opts, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
-    else if (kind === "dotnet") console.log("[deps-dotnet] Nx project restores completed");
-    else if (kind === "cpp") console.log("[deps-cpp] Nx native tooling prerequisite completed");
-    else if (kind === "browsers") runCmd("bun", [join(this.root, "node_modules/playwright/cli.js"), "install", "chromium"], { ...opts, env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(this.root, "tools", "ms-playwright") } });
-    else if (kind === "wasm") {
-      this.ensureCargoTool("wasm-pack", ["wasm-pack"], "0.15.0");
-      this.ensureCargoTool("wasm-bindgen-cli", ["wasm-bindgen"], wasmBindgenVersion(readFileSync(join(this.root, "Cargo.lock"), "utf8")));
-      this.ensureRustTarget("wasm32-wasip2");
-    } else if (kind === "trunk") {
-      this.ensureCargoTool("trunk", ["trunk"], "0.21.14");
-      this.ensureRustTarget("wasm32-unknown-unknown");
-      console.log("[deps-trunk] Pinned Trunk and the Rust WebAssembly target are ready");
-    } else if (kind === "tools") {
-      this.ensureCargoTool("cargo-nextest", ["cargo", "nextest"], "0.9.140");
-      this.ensureCargoTool("cargo-llvm-cov", ["cargo", "llvm-cov"], "0.8.7");
-    } else throw new Error(`Unknown dependency environment: ${kind}`);
-  }
 
 }
 //#endregion 🔖️SetupScript
@@ -786,7 +762,7 @@ export class LintScript extends Script {
       console.log("[lint] Nx completed the repository lint graph.");
       return;
     }
-    runCmd("bunx", ["dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd("bunx", ["dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
   }
 }
 //#endregion 🔖️LintScript
@@ -6943,7 +6919,7 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "browser-actor-host-context") {
       if (segments[1] === "worker") {
-        const result = Bun.spawn(["bun", join(this.root, "node_modules/vitest/vitest.mjs"), "run", "--config", join(this.root, "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/vitest.config.ts"), "-t", "browser document actor transfers one verified cold pair", "--maxWorkers=1", "--testTimeout=300000", "--silent=false", "--disableConsoleIntercept"], { cwd: this.root, stdout: "inherit", stderr: "inherit" });
+        const result = Bun.spawn(["bun", join(this.root, "node_modules/vitest/vitest.mjs"), "run", "--config", join(this.root, "🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts"), "-t", "browser document actor transfers one verified cold pair", "--maxWorkers=1", "--testTimeout=300000", "--silent=false", "--disableConsoleIntercept"], { cwd: this.root, stdout: "inherit", stderr: "inherit" });
         if (await result.exited !== 0) throw new Error("Browser actor host context worker test failed");
         return;
       }
@@ -6958,9 +6934,7 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "host-ownership") {
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      for (const filter of ["concrete_window_instances_round_trip_without_kind_collapse", "context_menu_point_resolves_the_exact_concrete_window_instance", "canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript", "build_os_commands_covers_every_wired_setting"]) {
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", filter, "--", "--nocapture"], this.root);
-      }
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", "--", "--nocapture", "--test-threads=1", ...["concrete_window_instances_round_trip_without_kind_collapse", "context_menu_point_resolves_the_exact_concrete_window_instance", "canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript", "build_os_commands_covers_every_wired_setting"]], this.root);
       return;
     }
     if (segments[0] === "wires-document-contract") {
@@ -7174,6 +7148,36 @@ export class VerifyScript extends Script {
       }
       return;
     }
+    if (segments[0] === "generation2d-window-camera-ownership") {
+      const editorRoot = join(this.root, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
+      const oracle = join(editorRoot, "🧪️tests/🪟️generation2d-window-camera-ownership/🟦️.ts");
+      const { testGeneration2dWindowCameraOwnershipOracle } = await import(oracle);
+      testGeneration2dWindowCameraOwnershipOracle();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(editorRoot, "🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🧬️schema/🟦️.ts"), join(editorRoot, "🎭️modes/✏️edit/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts"), join(editorRoot, "🎭️modes/🧬️generate/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts"), oracle], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--features", "component-app-assembly", "--lib", "generation2d_window_camera_ownership", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "window-config-provisioning-lifecycle") {
+      if (segments.length !== 1) throw new Error("window-config-provisioning-lifecycle accepts no arguments");
+      const testPath = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🚪️provisioning-lifecycle/🟦️.ts");
+      const { testWindowConfigProvisioningLifecycleOracle } = await import(testPath);
+      testWindowConfigProvisioningLifecycleOracle();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
+      return;
+    }
+    if (segments[0] === "window-config-retained-pack-load") {
+      if (segments.length !== 2 || segments[1] !== "native") throw new Error("window-config-retained-pack-load requires native");
+      const testPath = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🟦️.ts");
+      const { testWindowConfigRetainedPackLoadFixture } = await import(testPath);
+      testWindowConfigRetainedPackLoadFixture();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "window_config_retained_pack_load_", "--", "--nocapture", "--test-threads=1"], this.root);
+      return;
+    }
     if (segments[0] === "forms-try-window-ownership") {
       const configRoot = join(this.root, "✏️s/🔌️plugins/📋️forms/\u{1F5FF}\uFE0Fartifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🎚️config");
       const { testFormsTryWindowOwnership } = await import(`${configRoot}/🧪️tests/🔬️window-ownership/🟦️.ts`);
@@ -7308,6 +7312,32 @@ export class VerifyScript extends Script {
       }
       return;
     }
+    if (segments[0] === "home-host-panel-owner") {
+      const oracle = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧬️schema/📌️panel-state/🧪️tests/🔬️unit/🟦️.ts");
+      const { testHostPanelStateSchema } = await import(oracle);
+      testHostPanelStateSchema();
+      runCmd(
+        "bun",
+        [
+          join(this.root, "node_modules/typescript/bin/tsc"),
+          "--noEmit",
+          "--strict",
+          "--target",
+          "ESNext",
+          "--module",
+          "ESNext",
+          "--moduleResolution",
+          "bundler",
+          "--resolveJsonModule",
+          "--allowImportingTsExtensions",
+          "--esModuleInterop",
+          "--skipLibCheck",
+          oracle,
+        ],
+        { cwd: this.root },
+      );
+      return;
+    }
     if (segments[0] === "writer-window-state") {
       const { testWriterWindowStateOracle } = await import("./✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🟦️.ts");
       testWriterWindowStateOracle();
@@ -7425,7 +7455,7 @@ export class VerifyScript extends Script {
       runCmd("bun", [join(flowRoot, "📜️script.ts"), "declarations"], { cwd: flowRoot });
       const { runCargo, runVitest } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       process.env.SEMIO_TEST_LEVEL = "long";
-      await runVitest(reactRoot, ["--silent=false", "--reporter=verbose", "-t", "uses the live session viewport|matches the shared neutral viewport schema"], "vitest.config.ts");
+      await runVitest(reactRoot, ["--silent=false", "--reporter=verbose", "-t", "uses the live session viewport|matches the shared neutral viewport schema"], "../../🧪️tests/🎚️config/🟦️.ts");
       if (segments[1] === "native") {
         if (nativePhase === undefined || nativePhase === "renderer-host") {
           runCmd("bun", [join(surfaceRoot, "📜️script.ts"), "wasm"], { cwd: surfaceRoot, env: { ...process.env, NX_WORKSPACE_ROOT: this.root, REPO_ROOT: this.root } });
@@ -7438,8 +7468,8 @@ export class VerifyScript extends Script {
           }
         }
         if (nativePhase === undefined || nativePhase === "consumers") {
-          for (const [packageName, filters, features] of [
-          ["semio-s-artifact-procedural-generation2d", ["node_graph_viewport_sets_camera"], ["component-app-assembly"]],
+          const consumers = [
+          ["semio-s-artifact-procedural-generation2d", ["every_command_round_trips_through_text_and_binary"], ["component-app-assembly"]],
           ["semio-s-artifact-procedural-generation3d", ["every_command_round_trips_through_text_and_binary"], ["component-app-assembly"]],
           ["semio-s-artifact-architect-program", ["every_command_round_trips_text_and_binary_under_its_declared_wire_keyword"], []],
           ["semio-s-artifact-reasoning-wires", ["every_command_round_trips_through_text_and_binary"], []],
@@ -7449,9 +7479,10 @@ export class VerifyScript extends Script {
           ["semio-s-artifact-mathematical-equation", ["node_graph_viewport_writes_config_not_mutations"], []],
           ["semio-s-artifact-trinity-rewriting", ["trinity_rewriting_command_text_and_binary_round_trip"], ["component-app-assembly"]],
           ["semio-s-artifact-trinity-jack", ["trinity_jack_command_text_and_binary_round_trip"], ["component-app-assembly"]],
-          ] as const) {
-            for (const filter of filters) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, ...features.flatMap((feature) => ["--features", feature]), "--lib", filter, "--", "--nocapture"], this.root);
-          }
+          ] as const;
+          const features = consumers.flatMap(([packageName, , features]) => features.map((feature) => `${packageName}/${feature}`));
+          const filters = [...new Set(consumers.flatMap(([, filters]) => [...filters]))];
+          await runCargo(["test", "--manifest-path", "Cargo.toml", ...consumers.flatMap(([packageName]) => ["-p", packageName]), "--features", features.join(","), "--lib", "--", "--nocapture", "--test-threads=1", ...filters], this.root);
         }
       }
       return;
@@ -7463,9 +7494,9 @@ export class VerifyScript extends Script {
       const { runVitest } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       testRetainedCommandSchemaOwnership();
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", testPath], { cwd: this.root });
-      await runVitest(join(this.root, "🧰️framework/📦️packages/🟦️typescript"), ["-t", "organizeContextMenu"], "vitest.config.ts");
+      await runVitest(join(this.root, "🧰️framework/📦️packages/🟦️typescript"), ["-t", "organizeContextMenu"], "../../🧪️tests/🎚️config/🟦️.ts");
       process.env.SEMIO_TEST_LEVEL = "long";
-      await runVitest(join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"), ["-t", "world-3d paged scene carrier"], "vitest.config.ts");
+      await runVitest(join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"), ["-t", "world-3d paged scene carrier"], "../../🧪️tests/🎚️config/🟦️.ts");
       runCmd("bun", [join(this.root, "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📜️script.ts"), "interactive-job-catalog-check"], { cwd: this.root });
       return;
     }
@@ -7491,6 +7522,20 @@ export class VerifyScript extends Script {
       if (segments[1] === "catalog-native") {
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "retained_pack_catalog_", "--", "--nocapture"], this.root);
+        return;
+      }
+      if (segments[1] === "value") return;
+      if (segments[1] === "value-native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        for (const [packageName, filters] of [
+          ["semio-framework-replication", ["retained_paged_list_capacity_admission_and_exact_release_grants"]],
+          ["semio-framework-pack", ["retained_symbol_table_", "retained_pack_catalog_", "write_then_read_round_trip_with_compressed_segment_and_chunk"]],
+          ["semio-framework-os-kernel", ["retained_value_", "retained_record_body_"]],
+          ["semio-s-artifact-procedural-generation2d", ["every_fourteen_variant_decodes_through_retained_structural_grants", "retained_mounted_laws"]],
+          ["semio-s-artifact-procedural-generation3d", ["every_fourteen_variant_decodes_through_retained_structural_grants", "retained_mounted_laws"]],
+        ] as const) {
+          for (const filter of filters) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--lib", filter, "--", "--nocapture"], this.root);
+        }
         return;
       }
       if (segments[1] === "native") {
@@ -7542,6 +7587,30 @@ export class VerifyScript extends Script {
       }
       return;
     }
+    if (segments[0] === "fem-numerical-page-owners") {
+      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("fem-numerical-page-owners accepts only optional native");
+      const testPath = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📦️numerical-pages/🟦️.ts");
+      const { testNumericalPageOwners } = await import(testPath);
+      testNumericalPageOwners();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", "numerical_page_", "ldlt_job_checkpoint_resume_", "p6h_ldlt_", "subspace_job_resume_", "p6h_subspace_"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "fem-mesh-preparation-owners") {
+      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("fem-mesh-preparation-owners accepts only optional native");
+      const testPath = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧪️tests/📦️preparation-owners/🟦️.ts");
+      const { testMeshPreparationOwners } = await import(testPath);
+      testMeshPreparationOwners();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "mesh_preparation_", "--", "--nocapture", "--test-threads=1"], this.root);
+      }
+      return;
+    }
     if (segments[0] === "fem-scalar-owners-native") {
       if (segments.length !== 1) throw new Error("fem-scalar-owners-native accepts no arguments");
       const testPath = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🔢️scalar-owners/🟦️.ts");
@@ -7553,8 +7622,14 @@ export class VerifyScript extends Script {
       return;
     }
     if (segments[0] === "fem3d-numerical-child-native") {
+      const { testFem3dNumericalCloseOwners } = await import("./✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🧪️tests/📦️numerical-close/🟦️.ts");
+      testFem3dNumericalCloseOwners();
+      const { testFem3dMountedStiffnessOracle } = await import("./✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/🟦️.ts");
+      testFem3dMountedStiffnessOracle();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/🟦️.ts"), join(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🧪️tests/📦️numerical-close/🟦️.ts")], { cwd: this.root });
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-3d", "--features", "component-app-assembly", "--lib", "live_visual::tests::", "--", "--nocapture"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "mounted_3d_element_interfaces_", "--", "--nocapture", "--test-threads=1"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-3d", "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", "live_visual::tests::", "mounted_3d_element_interfaces_"], this.root);
       return;
     }
     if (segments[0] === "fem2d-window-config-contract" || segments[0] === "fem3d-window-config-contract") {
@@ -7563,7 +7638,7 @@ export class VerifyScript extends Script {
       const mountedStiffnessOracle = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/🟦️.ts");
       if (dimension === "3d") {
         const { runVitest } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runVitest(join(this.root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript"), ["-t", "story window ownership|story document replacement"], "vitest.config.ts");
+        await runVitest(join(this.root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript"), ["-t", "story window ownership|story document replacement"], "../../🧪️tests/🎚️config/🟦️.ts");
       }
       const contract = await import(`${testRoot}/🟦️.ts`);
       if (dimension === "2d") contract.testFem2dWindowConfigContract();
@@ -8186,7 +8261,7 @@ export class VerifyScript extends Script {
     // and framework-renderer-wgpu:lint has known pending color-literal violations (see spawn_task follow-ups) —
     // this gate must stay a meaningful, currently-green signal for refactor sessions, not inherit that noise.
     console.log("[verify] dependency-cruiser boundaries…");
-    runCmd("bunx", ["dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd("bunx", ["dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
     console.log("[verify] generated catalog freshness…");
     // nx orchestrators: exempt — leaves individually budgeted.
     runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -14404,7 +14479,7 @@ export class ExamplesScript extends Script {
 
 //#region 🔖️SchemaScript
 /** 🧪️ The tracked vitest project of `framework.schema`, which declares the module's own third-party oracle specs. */
-const SCHEMA_ORACLE_VITEST_CONFIG = "🧰️framework/🔨️modules/🧬️schema/vitest.config.ts";
+const SCHEMA_ORACLE_VITEST_CONFIG = "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts";
 
 /** 🦀️ The crate whose registered test binaries produce the Rust-side evidence the schema gate consumes. */
 const SCHEMA_RUST_CRATE = "semio-framework-schema";
@@ -14584,8 +14659,7 @@ export class SchemaScript extends Script {
    * `🧪️tests/<case>/🟦️.ts` rather than `*.test.ts`, so the run needs a config that names them. That config
    * is the module's own tracked vitest project, so adding an oracle spec to `framework.schema` needs no
    * edit here: the module declares its specs once, and this command only points vitest at that declaration.
-   * @see `🧰️framework/🔨️modules/🧬️schema/vitest.config.ts` — an emoji filename is unresolvable to the
-   * esbuild pass vitest loads its config through, which is why this one file carries an ASCII name.
+   * @see `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts` owns this module's explicit test configuration.
    */
   private oracleArguments(): string[] {
     return ["vitest", "run", "--config", join(this.root, SCHEMA_ORACLE_VITEST_CONFIG)];
@@ -15290,10 +15364,6 @@ function policyExtractFnBody(content: string, fromIdx: number): string {
     }
   }
   return content.slice(openIdx);
-}
-
-function policyLineOfIndex(content: string, idx: number): number {
-  return content.slice(0, idx).split("\n").length;
 }
 
 /** 🐫️PascalCase(app id) + "App", e.g. "gis2d-play" -> "Gis2dPlayApp". */
@@ -17139,29 +17209,6 @@ function policyReadRustPolicySource(repoRoot: string, sourcePath: string): strin
   return evidence.production.source + evidence.tests.map((entry) => `${POLICY_RUST_TEST_EVIDENCE_BOUNDARY}${entry.path}\n${entry.source}`).join("");
 }
 
-/**
- * 👁️✏️ Every `👁️viewer`/`✏️editor` surface root that actually exists under an owner's
- * `🗿️artifacts/<a>/🏅️standards/🔖️<s>/🪆️subsets/<sub>/` tree — the W3 dissolution replacement for the
- * old single `🎛️apps` root. Shared by every walker that used to start at `taxonomy.appsDirName`.
- */
-function policySurfaceRoots(repoRoot: string, ownerRoot: string, taxonomy: ReturnType<typeof loadTaxonomy>): string[] {
-  const roots: string[] = [];
-  const artifactsRoot = `${ownerRoot}/${taxonomy.artifactsDirName}`;
-  for (const artifact of policyReaddirSafe(repoRoot, artifactsRoot).filter((e) => e.isDirectory)) {
-    const standardsRoot = `${artifactsRoot}/${artifact.name}/${taxonomy.standardsDirName}`;
-    for (const standard of policyReaddirSafe(repoRoot, standardsRoot).filter((e) => e.isDirectory)) {
-      const subsetsRoot = `${standardsRoot}/${standard.name}/${taxonomy.subsetsDirName}`;
-      for (const subset of policyReaddirSafe(repoRoot, subsetsRoot).filter((e) => e.isDirectory)) {
-        for (const role of taxonomy.surfaceRoles) {
-          const dirName = taxonomy.surfaceDirNames[role];
-          const surfaceRoot = `${subsetsRoot}/${subset.name}/${dirName}`;
-          if (existsSync(join(repoRoot, surfaceRoot))) roots.push(surfaceRoot);
-        }
-      }
-    }
-  }
-  return roots;
-}
 
 /**
  * 📏️Taxonomy validator, discovery-contract clause 1: every `🗿️artifacts/<a>/` may only contain the known
@@ -19722,36 +19769,6 @@ function policyHashSpecContent(content: string): string {
 }
 
 /** 🔎️Walks `relRoots` for files matching `pred`, skipping `POLICY_SKIP_DIRS` / dotted dirs and directories matching `skipDir`. */
-function policyWalkRelFiles(
-  repoRoot: string,
-  relRoots: readonly string[],
-  pred: (relPath: string, name: string) => boolean,
-  skipDir?: (relDir: string, name: string) => boolean,
-): string[] {
-  const found: string[] = [];
-  const walk = (relDir: string): void => {
-    const abs = join(repoRoot, relDir);
-    let entries: ReturnType<typeof readdirSync>;
-    try {
-      entries = readdirSync(abs, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const ent of entries) {
-      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
-      if (ent.isDirectory()) {
-        if (POLICY_SKIP_DIRS.has(ent.name) || ent.name.startsWith(".")) continue;
-        if (skipDir && skipDir(childRel, ent.name)) continue;
-        walk(childRel);
-        continue;
-      }
-      if (pred(childRel, ent.name)) found.push(childRel);
-    }
-  };
-  for (const root of relRoots) walk(root);
-  return found.sort();
-}
-
 function policyDiscoverGrammarAndProtocolSpecs(repoRoot: string): string[] {
   return policyWalkRelFiles(repoRoot, POLICY_HANDCRAFTED_SPEC_ROOTS, (_p, name) => name.endsWith(".grammar.semio") || name.endsWith(".protocol.semio"));
 }
@@ -19896,19 +19913,7 @@ function policyDeclaredUseBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-function policyListPluginArtifactDirs(repoRoot: string): string[] {
-  const out: string[] = [];
-  const pluginsRoot = "✏️s/🔌️plugins";
-  for (const plugin of policyReaddirSafe(repoRoot, pluginsRoot)) {
-    if (!plugin.isDirectory) continue;
-    const artifactsRel = `${pluginsRoot}/${plugin.name}/🗿️artifacts`;
-    for (const art of policyReaddirSafe(repoRoot, artifactsRel)) {
-      if (!art.isDirectory) continue;
-      out.push(`${artifactsRel}/${art.name}`);
-    }
-  }
-  return out.sort();
-}
+
 
 function policyArtifactHasRegisterLanguage(repoRoot: string, artRel: string): boolean {
   const rsFiles = policyWalkRelFiles(repoRoot, [artRel], (_p, name) => name.endsWith(".rs"));
@@ -20947,977 +20952,10 @@ function policyMutationOutcomeMergePolicyBreaches(repoRoot: string): BreachRecor
 }
 //#endregion 🔧️PolicyRuleMutationOutcomeMergePolicy
 
-//#region 🔧️PolicyRuleInferenceFamily
-/**
- * 💡️ Wave P3 inference-family scanners (INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
- * Mirrors 🔧️PolicyRuleMutationArtifactEngines's structure and idioms one region up: `💡️inferences` is the
- * fourth schema family (alongside `📸️snapshot` / `🔺️diff` / `🧬️mutations`), with codecs owned by the
- * sibling `🚪️io/💡️inferences/` collection, same report-mode discipline. REPORT MODE IS LOAD-BEARING:
- * every breach below carries `priority: "medium"` or `"low"`, never `"high"` — registered only at
- * `VerifyScript.runGate`'s `dissolveBreaches` block (which filters to `priority === "high"` before
- * throwing), never the earlier `osBreaches` block (which throws on ANY breach regardless of priority).
- * All 112 owning subsets carry `💡️inferences/`; per-family completeness (root leaves and emoji hygiene)
- * still varies wave to wave as fan-out continues. None of that can gate:
- * every rule here walks only `💡️inferences` dirs that already exist on disk
- * (`policyFindAllInferencesDirs`), never requires the facet's presence, so an unauthored subset — were
- * one to exist — would produce zero breaches rather than a hard block; real incompleteness reports
- * honestly at `medium`/`low` instead.
- */
-const POLICY_INFERENCES_FACET = "💡️inferences";
-
-/** 🔎️Inference-specific slug dirs under `💡️inferences/` (skips leaf files and examples; codecs are I/O components). */
-function policyListInferenceDirs(repoRoot: string, inferencesRel: string): string[] {
-  const reserved = new Set<string>(["📚️examples"]);
-  return policyReaddirSafe(repoRoot, inferencesRel)
-    .filter((e) => e.isDirectory && !reserved.has(e.name) && !e.name.startsWith("."))
-    .map((e) => e.name)
-    .sort();
-}
-
-/**
- * 🔍️Every `💡️inferences` facet dir anywhere under `✏️s` — same deep-taxonomy walk
- * `policyFindAllMutationsDirs` uses for `🧬️mutations`, so a subset that has not fanned out yet is simply
- * absent from the result rather than reported missing.
- */
-function policyFindAllInferencesDirs(repoRoot: string): string[] {
-  const found: string[] = [];
-  const walk = (relDir: string): void => {
-    for (const ent of policyReaddirSafe(repoRoot, relDir)) {
-      if (!ent.isDirectory || ent.name.startsWith(".")) continue;
-      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
-      if (ent.name === POLICY_INFERENCES_FACET) {
-        found.push(childRel);
-        continue;
-      }
-      walk(childRel);
-    }
-  };
-  walk("✏️s");
-  return found.sort();
-}
-
-/** 🗿️Owning artifact root for a `💡️inferences` facet dir — same marker-based derivation `policyArtifactRootOfMutationsDir` uses, reused directly since the logic is generic to any `🧬️schema` child, not mutation-specific. */
-function policyArtifactRootOfInferencesDir(inferencesRel: string): string {
-  return policyArtifactRootOfMutationsDir(inferencesRel);
-}
-
-/**
- * 📏️Family-root leaf completeness: every existing `💡️inferences/` must carry the 5 `schemaFormats`
- * root leaves (`🔣️taxonomy.json`'s `schemaFormats` — same SSOT `policyArtifactSchemaFacetCompletenessBreaches`
- * reads for `🧬️schema`/`📸️snapshot`/`🔺️diff`). Format codecs have their own `🚪️io/💡️inferences/` semantic
- * collection and do not belong below the inference result collection.
- */
-function policyInferenceFamilyRootCompletenessBreaches(repoRoot: string): BreachRecord[] {
-  const taxonomy = loadTaxonomy();
-  const breaches: BreachRecord[] = [];
-  for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
-    const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
-    const rootLeaves = schemaFacetFormatEntries(inferencesRel, taxonomy).map(([, format]) => canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy));
-    for (const leaf of rootLeaves) {
-      const rel = `${inferencesRel}/${leaf}`;
-      if (existsSync(join(repoRoot, rel))) continue;
-      breaches.push({
-        id: `inference-family-root-leaf-missing-${rel}`,
-        summary: `"${inferencesRel}" is missing family-root leaf ${leaf}`,
-        kind: "inference-migration/family-root-completeness",
-        scope: artRel,
-        priority: "medium",
-        reason: "Every 💡️inferences facet root must carry all five schemaFormats leaves (🔣️taxonomy.json), same as 🧬️schema/📸️snapshot/🔺️diff.",
-        solution: `Add handcrafted ${rel}.`,
-      });
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️Slug-dir leaf presence: every concrete inference slug dir must carry a real `🦀️.rs`, and a
- * `🟦️.ts` that is present AND real — not a trivial `export {};`/empty stub (same bar
- * `policyMutationTsMirrorBreaches` holds triad `.ts` leaves to).
- */
-function policyInferenceSlugLeafPresenceBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
-    const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
-    for (const slug of policyListInferenceDirs(repoRoot, inferencesRel)) {
-      const slugRel = `${inferencesRel}/${slug}`;
-      const rsRel = `${slugRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
-      if (!existsSync(join(repoRoot, rsRel))) {
-        breaches.push({
-          id: `inference-slug-rs-missing-${slugRel}`,
-          summary: `"${slugRel}" has no ${POLICY_RS_COMPONENT_LEAF_NAME}`,
-          kind: "inference-migration/slug-leaf-presence",
-          scope: artRel,
-          priority: "medium",
-          reason: "Every 💡️inferences/<slug> dir must carry a real Rust derivation leaf.",
-          solution: `Add ${rsRel} with the derivation (impl …InferredField< or a plain pub fn reading the snapshot).`,
-        });
-      }
-      const tsRel = `${slugRel}/${POLICY_TS_COMPONENT_LEAF}`;
-      const tsAbs = join(repoRoot, tsRel);
-      if (!existsSync(tsAbs)) {
-        breaches.push({
-          id: `inference-slug-ts-missing-${slugRel}`,
-          summary: `"${slugRel}" has no ${POLICY_TS_COMPONENT_LEAF} mirror at all`,
-          kind: "inference-migration/slug-leaf-presence",
-          scope: artRel,
-          priority: "medium",
-          reason: ("Every 💡️inferences/<slug> dir must carry a " + POLICY_TS_COMPONENT_LEAF + " mirror beside its " + POLICY_RS_COMPONENT_LEAF_NAME + "."),
-          solution: `Create ${tsRel} mirroring its ${POLICY_RS_COMPONENT_LEAF_NAME} sibling.`,
-        });
-        continue;
-      }
-      const stripped = policyReadFileSafe(repoRoot, tsRel)
-        .replace(/\/\*[\s\S]*?\*\//g, "")
-        .replace(/\/\/.*$/gm, "")
-        .trim();
-      if (stripped === "" || stripped === "export {};") {
-        breaches.push({
-          id: `inference-slug-ts-stub-${slugRel}`,
-          summary: `"${tsRel}" is a trivial "export {};" stub, not a real mirror`,
-          kind: "inference-migration/slug-leaf-presence",
-          scope: artRel,
-          priority: "medium",
-          reason: "A slug leaf's TS mirror must be real, not an empty export {} stub — unlike constitutional facet stubs, 💡️inferences carries no structural stub exemption.",
-          solution: `Give ${tsRel} real content mirroring its ${POLICY_RS_COMPONENT_LEAF_NAME} sibling.`,
-        });
-      }
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️Impl presence: each slug's `🦀️.rs` must carry a real derivation — either
- * `impl …InferredField<` or a plain `pub fn` reading the snapshot. **Binding coordinator ruling: only
- * 4 of 112 families use `InferredField`; the other 108 are pure-fn folds and are correct** — a merkle
- * dep-chain over a flat whole-snapshot record costs more than the fold it caches, so `InferredField` is
- * required only where the derivation is genuinely per-entity and DAG-shaped (see the puzzle3d
- * `🎛flat-position/` pilot and trinity `🔌️jack/🎛flat-position/`), while a whole-snapshot scalar (e.g.
- * architect's `🧭topology/`) is the sanctioned pure-fn exemplar. Demanding `InferredField` universally
- * would flag 108 correct families — this rule accepts either shape deliberately.
- */
-function policyInferenceImplPresenceBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  const inferredFieldPattern = /\bimpl\b[^\n{]*\bInferredField\s*</;
-  const pubFnPattern = /\bpub\s+fn\s+\w+/;
-  for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
-    const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
-    for (const slug of policyListInferenceDirs(repoRoot, inferencesRel)) {
-      const rsRel = `${inferencesRel}/${slug}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
-      const abs = join(repoRoot, rsRel);
-      if (!existsSync(abs)) continue; // reported by policyInferenceSlugLeafPresenceBreaches
-      const content = policyReadFileSafe(repoRoot, rsRel);
-      if (inferredFieldPattern.test(content) || pubFnPattern.test(content)) continue;
-      breaches.push({
-        id: `inference-impl-missing-${rsRel}`,
-        summary: `"${rsRel}" has neither an InferredField impl nor a plain pub fn derivation`,
-        kind: "inference-migration/impl-presence",
-        scope: artRel,
-        priority: "medium",
-        reason: "Each concrete inference slug must implement InferredField<…> (per-entity DAG-shaped derivations) or expose a plain pub fn reading the snapshot (whole-snapshot pure-fn folds — the sanctioned shape for 108 of 112 families).",
-        solution: `Add impl …InferredField<…> for a per-entity derivation, or a plain pub fn compute_${policyStripEmoji(slug).replaceAll("-", "_")}(&Snapshot) -> … for a whole-snapshot fold, in ${rsRel}.`,
-      });
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️Emoji uniqueness (within one family tree only — inference slugs legitimately repeat the SAME emoji
- * across DIFFERENT families by design, e.g. `⏱duration` on animation/audio/mp3/wav/mp4/avi and
- * `🧭topology` on flow/graph/raster/jack; only a collision inside a single `💡️inferences/` tree is a
- * defect) and bare-emoji shape (no U+FE0F): inference slugs are bare by convention (see
- * `isEmojiPrefixedSlugDir`'s own docstring in 🔍️discovery/🟦️.ts, which cites `📦bounds`,
- * `🧭topology`, `⏱duration`, `🧾outline` as bare exemplars) — unlike most taxonomy dirs, which
- * `requireEmojiPrefixWithVs16`.
- */
-function policyInferenceEmojiUniquenessBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
-    const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
-    const seen = new Map<string, string>();
-    for (const slug of policyListInferenceDirs(repoRoot, inferencesRel)) {
-      const emoji = policyLeadingEmojiPrefix(slug);
-      if (!emoji) {
-        breaches.push({
-          id: `inference-emoji-missing-${inferencesRel}/${slug}`,
-          summary: `"${inferencesRel}/${slug}" has no leading emoji prefix`,
-          kind: "inference-migration/emoji-uniqueness",
-          scope: artRel,
-          priority: "medium",
-          reason: "Each concrete inference slug directory must pick a unique (within its family) emoji prefix.",
-          solution: `Rename ${slug} to include a leading emoji prefix (e.g. 🧭topology).`,
-        });
-        continue;
-      }
-      if (emoji.includes("️")) {
-        breaches.push({
-          id: `inference-emoji-vs16-${inferencesRel}/${slug}`,
-          summary: `"${inferencesRel}/${slug}" carries U+FE0F on its emoji prefix — inference slugs are bare by convention`,
-          kind: "inference-migration/emoji-uniqueness",
-          scope: artRel,
-          priority: "low",
-          reason: "Inference slug dirs are bare-emoji by established convention (📦bounds, 🧭topology, ⏱duration, 🧾outline all lack U+FE0F) — unlike most taxonomy dirs, which require it.",
-          solution: `Rename ${slug} to drop the U+FE0F variation selector after its leading emoji.`,
-        });
-      }
-      const prev = seen.get(emoji);
-      if (prev) {
-        breaches.push({
-          id: `inference-emoji-dup-${artRel}-${emoji}-${slug}`,
-          summary: `"${inferencesRel}/${slug}" reuses emoji "${emoji}" already used by "${prev}" within the same family`,
-          kind: "inference-migration/emoji-uniqueness",
-          scope: artRel,
-          priority: "medium",
-          reason: "Inference slug emojis must be unique WITHIN one artifact's 💡️inferences/ tree — reuse across different families/artifacts is fine and common by design.",
-          solution: `Give ${slug} a different emoji than ${prev} (scoped to this family only).`,
-        });
-        continue;
-      }
-      seen.set(emoji, slug);
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️kebab→camel assembly coverage: every `💡️inferences/<slug>` dir must correspond to a field on the
- * family-root `<Prefix>Inference` struct, and every field on that struct must correspond to a real slug
- * dir. Matching normalizes both the slug stem and the Rust field name/type by stripping separators and
- * casing (so `flat-position` ↔ `flat_position`/`FlatPosition`/`flatPosition` all collapse to the same
- * key) — real families mix snake_case field names, PascalCase field types, and camelCase serde/id output
- * for the same concept (see trinity `🔌️jack`'s `flat_position: JackFlatPosition` field, whose
- * `InferenceFieldSpec` id ends `...flatPosition`), so a single casing convention would false-positive.
- * Structurally mirrors `policyMutationDispatchCoverageBreaches` one region up (orphan/uncovered
- * diffing between a directory set and a Rust declaration), reuses `policyStripEmoji` from the same
- * mutation cluster, and reuses `policyExtractRustSchemaFields` from the artifact-schema cluster to
- * read the struct's real fields instead of re-deriving a Rust field parser.
- */
-function policyInferenceNormalizeToken(raw: string): string {
-  return raw.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function policyInferenceAssemblyCoverageBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
-    const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
-    const rootRsRel = `${inferencesRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
-    if (!existsSync(join(repoRoot, rootRsRel))) continue; // reported by policyInferenceFamilyRootCompletenessBreaches
-    const content = policyReadFileSafe(repoRoot, rootRsRel);
-    const structMatch = /\bpub\s+struct\s+(\w+Inference)\b/.exec(content);
-    if (!structMatch) continue; // no XInference struct yet — family-root completeness already flags the missing/incomplete root
-    const structName = structMatch[1]!;
-    const extract = policyExtractRustSchemaFields(content, structName);
-    if (extract.typeName !== structName) continue; // extractor could not isolate the struct body — avoid a false coverage report
-    const slugDirs = policyListInferenceDirs(repoRoot, inferencesRel);
-    const slugTokens = new Map(slugDirs.map((s) => [s, policyInferenceNormalizeToken(policyStripEmoji(s))]));
-    const fieldTokens = extract.fields.map((f) => ({ field: f, nameToken: policyInferenceNormalizeToken(f.name), scalarToken: policyInferenceNormalizeToken(f.scalar) }));
-    for (const slug of slugDirs) {
-      const token = slugTokens.get(slug)!;
-      const covered = fieldTokens.some((f) => f.nameToken === token || f.scalarToken.endsWith(token));
-      if (covered) continue;
-      breaches.push({
-        id: `inference-orphan-slug-${inferencesRel}/${slug}`,
-        summary: `"${inferencesRel}/${slug}" has no matching field on ${structName}`,
-        kind: "inference-migration/assembly-coverage",
-        scope: artRel,
-        priority: "medium",
-        reason: `Every 💡️inferences/<slug> dir must be assembled into a #[derived] field of ${structName} — a slug dir the family root never references is dead weight.`,
-        solution: `Add a field on ${structName} named or typed after "${policyStripEmoji(slug)}", or delete ${inferencesRel}/${slug} if it is stale.`,
-      });
-    }
-    for (const f of fieldTokens) {
-      const hasSlug = [...slugTokens.values()].some((token) => f.nameToken === token || f.scalarToken.endsWith(token));
-      if (hasSlug) continue;
-      breaches.push({
-        id: `inference-uncovered-field-${inferencesRel}-${f.field.name}`,
-        summary: `"${structName}.${f.field.name}" has no matching 💡️inferences/<slug> dir`,
-        kind: "inference-migration/assembly-coverage",
-        scope: artRel,
-        priority: "medium",
-        reason: `Every ${structName} field should be backed by a real 💡️inferences/<slug>/ derivation dir — a field with no matching dir is unassembled or the naming has drifted.`,
-        solution: `Rename a slug dir to match "${f.field.name}", or add the missing 💡️inferences/<slug>/ if the field is new.`,
-      });
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️`POLICY_DERIVED_MARKER`: `#[derived]` may appear only inside `💡️inferences/`, never in a
- * `📸️snapshot` facet — a snapshot field is persisted input; marking it derived would blur computed
- * values into stored state, which is exactly the escape hatch the dep-hash cache design closes.
- *
- * Derivation is its OWN axis, orthogonal to the four state lanes (`artifact`/`config`/`presence`/
- * `transient`) — it deliberately no longer rides on a `StateClass` variant, so this rule now watches
- * the `#[derived]` attribute (JSON Schema twin: `x-semio-derived: true`) instead of a state token.
- */
-const POLICY_DERIVED_MARKER = "#[derived]";
-
-function policyDerivedMarkerLeakBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  const files = policyWalkRelFiles(repoRoot, ["✏️s"], (relPath, name) => {
-    if (name !== POLICY_RS_COMPONENT_LEAF_NAME) return false;
-    const norm = relPath.replaceAll("\\", "/");
-    return norm.includes("/📸️snapshot/") && !norm.includes(`/${POLICY_INFERENCES_FACET}/`);
-  });
-  for (const relPath of files) {
-    const content = policyReadFileSafe(repoRoot, relPath);
-    const idx = content.indexOf(POLICY_DERIVED_MARKER);
-    if (idx < 0) continue;
-    breaches.push({
-      id: `derived-marker-leak-${relPath}`,
-      summary: `"${relPath}" declares ${POLICY_DERIVED_MARKER} inside a 📸️snapshot facet`,
-      kind: "inference-migration/state-leak",
-      scope: relPath,
-      line: policyLineOfIndex(content, idx),
-      priority: "medium",
-      reason: "#[derived] marks a field as computed-and-cached; that contract belongs exclusively to 💡️inferences/ — a snapshot facet field is persisted input and must never carry it.",
-      solution: `Move the derived field out of ${relPath} into a 💡️inferences/<slug>/${POLICY_RS_COMPONENT_LEAF_NAME} sibling.`,
-    });
-  }
-  return breaches;
-}
-
-/** ⚖️Aggregates the P3 inference-family scanners. */
-function policyInferenceFamilyBreaches(repoRoot: string): BreachRecord[] {
-  return [
-    ...policyInferenceFamilyRootCompletenessBreaches(repoRoot),
-    ...policyInferenceSlugLeafPresenceBreaches(repoRoot),
-    ...policyInferenceImplPresenceBreaches(repoRoot),
-    ...policyInferenceEmojiUniquenessBreaches(repoRoot),
-    ...policyInferenceAssemblyCoverageBreaches(repoRoot),
-    ...policyDerivedMarkerLeakBreaches(repoRoot),
-  ];
-}
-//#endregion 🔧️PolicyRuleInferenceFamily
-
-
-//#region 🔧️PolicyRuleAppSchemas
-/**
- * 🧬️Wave A2 surface-schema facet scanners (APP-SCHEMA-FACETS, retargeted W3 from `🎛️apps` to the two
- * per-subset surfaces). Two facets (config + presence) × five `schemaFormats` leaves; the five
- * per-format extractors from `PolicyRuleArtifactSchemas` are reused unchanged. Owners are derived from
- * each surface's `type Config = …` binding — never a hand-maintained prefix table.
- */
-
-/** 🎚️Canonical surface config dir (level-slider). */
-const POLICY_APP_CONFIG_DIR = "🎚️config";
-/** 🧮Legacy abacus config dir — forbidden by `app-schema/config-relocation`. */
-const POLICY_APP_CONFIG_LEGACY_DIR = "🧮️config";
-/** 👥️Surface presence dir, sibling of the config owner. */
-const POLICY_APP_PRESENCE_DIR = "👥️presence";
-/** 🕸️Legacy wasm dir — forbidden by `app-schema/config-relocation`. */
-const POLICY_APP_WASM_LEGACY_DIR = "🕸️wasm";
-/** 🧬️Schema facet folder under a config or presence owner. */
-const POLICY_APP_SCHEMA_FACET = "🧬️schema";
-
-/** 🪪One discovered surface-schema owner (deduped by owner path). */
-export type PolicyAppSchemaOwner = {
-  ownerRel: string;
-  configType: string;
-  presenceType: string;
-  presenceRel: string;
-  apps: string[];
-};
-
-/** 🏷️`XPresence` from `XConfig` by replacing the trailing `Config`. */
-function policyAppPresenceTypeName(configType: string): string {
-  return configType.endsWith("Config")
-    ? `${configType.slice(0, -"Config".length)}Presence`
-    : `${configType}Presence`;
-}
-
-/**
- * 🗂️Walk every plugin's `👁️viewer`/`✏️editor` surface `🦀️.rs`, parse `type Config = XConfig;`,
- * and resolve the config owner dir (surface `🎚️config`, else legacy `🧮️config`, else plugin-level
- * `🎚️config` that declares `pub struct XConfig`). Presence owner is the sibling `👥️presence` under the
- * same parent.
- */
-export function policyDiscoverAppSchemaOwners(repoRoot: string): PolicyAppSchemaOwner[] {
-  const pluginsRoot = "✏️s/🔌️plugins";
-  const taxonomy = loadTaxonomy();
-  const byOwner = new Map<string, PolicyAppSchemaOwner>();
-  for (const plugin of policyReaddirSafe(repoRoot, pluginsRoot)) {
-    if (!plugin.isDirectory) continue;
-    const pluginRel = `${pluginsRoot}/${plugin.name}`;
-    for (const surfaceRel of policySurfaceRoots(repoRoot, pluginRel, taxonomy)) {
-      const componentRel = `${surfaceRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
-      if (!existsSync(join(repoRoot, componentRel))) continue;
-      const text = policyReadFileSafe(repoRoot, componentRel);
-      const m = /\btype\s+Config\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*;/.exec(text);
-      if (!m) continue;
-      const configType = m[1]!;
-      const sliderRel = `${surfaceRel}/${POLICY_APP_CONFIG_DIR}`;
-      const legacyRel = `${surfaceRel}/${POLICY_APP_CONFIG_LEGACY_DIR}`;
-      const pluginConfigRel = `${pluginRel}/${POLICY_APP_CONFIG_DIR}`;
-      let ownerRel: string | null = null;
-      if (existsSync(join(repoRoot, sliderRel))) {
-        ownerRel = sliderRel;
-      } else if (existsSync(join(repoRoot, legacyRel))) {
-        ownerRel = legacyRel;
-      } else {
-        const pluginCfgRs = `${pluginConfigRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
-        if (
-          existsSync(join(repoRoot, pluginCfgRs)) &&
-          new RegExp(`\\bpub\\s+struct\\s+${configType}\\b`).test(policyReadFileSafe(repoRoot, pluginCfgRs))
-        ) {
-          ownerRel = pluginConfigRel;
-        }
-      }
-      if (!ownerRel) continue;
-      const presenceType = policyAppPresenceTypeName(configType);
-      const parentRel = ownerRel.split("/").slice(0, -1).join("/");
-      const presenceRel = `${parentRel}/${POLICY_APP_PRESENCE_DIR}`;
-      const [subsetName, roleDirName] = surfaceRel.split("/").slice(-2);
-      const surfaceId = `${plugin.name}/${subsetName}/${roleDirName}`;
-      const existing = byOwner.get(ownerRel);
-      if (existing) {
-        existing.apps.push(surfaceId);
-        continue;
-      }
-      byOwner.set(ownerRel, { ownerRel, configType, presenceType, presenceRel, apps: [surfaceId] });
-    }
-  }
-  return [...byOwner.values()].sort((a, b) => a.ownerRel.localeCompare(b.ownerRel));
-}
-
-/**
- * 🗂️Load every schemaFormats leaf for one app facet; reuses the five artifact extractors unchanged,
- * selecting the declared type by `expectedTypeName` via `policyFindSchemaDeclaration`.
- */
-function policyLoadAppSchemaFacetLeaves(
-  repoRoot: string,
-  facetAbs: string,
-  expectedTypeName: string | null,
-): { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] {
-  const taxonomy = loadTaxonomy();
-  const formats = taxonomy.schemaFormats ?? {};
-  const out: { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] = [];
-  for (const [formatId, format] of Object.entries(formats)) {
-    const leafFilename = canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy);
-    const relPath = `${facetAbs}/${leafFilename}`;
-    const abs = join(repoRoot, relPath);
-    if (!existsSync(abs)) {
-      out.push({ formatId, leafFilename, fieldCasing: format.fieldCasing, relPath, extract: null });
-      continue;
-    }
-    const text = readFileSync(abs, "utf8");
-    let extract: PolicySchemaLeafExtract;
-    switch (formatId) {
-      case "🦀️rust":
-        extract = policyExtractRustSchemaFields(text, expectedTypeName);
-        break;
-      case "🟦️typescript":
-        extract = policyExtractTypescriptSchemaFile(abs, text, expectedTypeName);
-        break;
-      case "🔗️graphql":
-        extract = policyExtractGraphqlSchemaFields(text, expectedTypeName);
-        break;
-      case "🔣️jsonschema":
-        extract = policyExtractJsonSchemaFields(text);
-        break;
-      case "🛰️protobuf":
-        extract = policyExtractProtobufSchemaFields(text, expectedTypeName);
-        break;
-      default:
-        extract = { typeName: "", fields: [] };
-        break;
-    }
-    out.push({ formatId, leafFilename, fieldCasing: format.fieldCasing, relPath, extract });
-  }
-  return out;
-}
-
-/** 🧭️Taxonomy `surfaceSchemaSpecFilenames` key for a config or presence facet. */
-function policyAppSchemaFacetRole(kind: "config" | "presence"): string {
-  return kind === "config"
-    ? `${POLICY_APP_CONFIG_DIR}/${POLICY_APP_SCHEMA_FACET}`
-    : `${POLICY_APP_PRESENCE_DIR}/${POLICY_APP_SCHEMA_FACET}`;
-}
-
-/**
- * 📏️Facet completeness + normative leaf: both config and presence schema facets, each with every
- * schemaFormats leaf and the `surfaceSchemaSpecFilenames` normative JSON Schema leaf.
- */
-function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecord[] {
-  const taxonomy = loadTaxonomy();
-  const normativeByFacet = taxonomy.surfaceSchemaSpecFileKinds ?? {};
-  const breaches: BreachRecord[] = [];
-  for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
-    const facets: { kind: "config" | "presence"; facetAbs: string }[] = [
-      { kind: "config", facetAbs: `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}` },
-      { kind: "presence", facetAbs: `${owner.presenceRel}/${POLICY_APP_SCHEMA_FACET}` },
-    ];
-    for (const { kind, facetAbs } of facets) {
-      if (!existsSync(join(repoRoot, facetAbs))) {
-        breaches.push({
-          id: `app-schema-facet-missing-${facetAbs}`,
-          summary: `"${owner.ownerRel}" is missing required ${kind} schema facet ${facetAbs}/`,
-          kind: "app-schema/facet-completeness",
-          scope: owner.ownerRel,
-          priority: "high",
-          reason: "Every app-schema owner must expose 🎚️config/🧬️schema and 👥️presence/🧬️schema facets.",
-          solution: `Create ${facetAbs}/ with all five schemaFormats leaves (and the normative ${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)}).`,
-        });
-        continue;
-      }
-      for (const [formatId, format] of schemaFacetFormatEntries(facetAbs, taxonomy)) {
-        const leafFilename = canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy);
-        const leafRel = `${facetAbs}/${leafFilename}`;
-        if (existsSync(join(repoRoot, leafRel))) continue;
-        breaches.push({
-          id: `app-schema-leaf-missing-${leafRel}`,
-          summary: `"${facetAbs}" is missing schemaFormats leaf ${leafFilename} (${formatId})`,
-          kind: "app-schema/facet-completeness",
-          scope: owner.ownerRel,
-          priority: "high",
-          reason: "Each schema facet must carry every schemaFormats leaf for its facet kind from 🔣️taxonomy.json.",
-          solution: `Add handcrafted ${leafRel}.`,
-        });
-      }
-      const normativeFileKindId = normativeByFacet[policyAppSchemaFacetRole(kind)];
-      if (!normativeFileKindId) throw new Error(`[taxonomy] no normative surface schema file kind for ${policyAppSchemaFacetRole(kind)}.`);
-      const normative = canonicalPrimaryFilenameForKind(normativeFileKindId, taxonomy);
-      const normativeRel = `${facetAbs}/${normative}`;
-      if (!existsSync(join(repoRoot, normativeRel))) {
-        breaches.push({
-          id: `app-schema-normative-missing-${normativeRel}`,
-          summary: `"${facetAbs}" is missing normative surfaceSchemaSpecFilenames leaf ${normative}`,
-          kind: "app-schema/facet-completeness",
-          scope: owner.ownerRel,
-          priority: "high",
-          reason: ("Within a facet the " + canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId) + " JSON Schema leaf is normative; the other four mirror it."),
-          solution: `Add ${normativeRel} as the source of truth for this facet's fields.`,
-        });
-      }
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️Field parity: all five leaves of one facet declare the identical canonical field set with identical
- * optionality and cardinality; JSON Schema is the truth when others disagree. Optionality of a `map`
- * field is exempt for protobuf only (proto3 rejects `optional` on a map entry field).
- * @see https://protobuf.dev/programming-guides/proto3/#maps
- */
-function policyAppSchemaFieldParityBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
-    const facets: { facetAbs: string; expectedTypeName: string }[] = [
-      { facetAbs: `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`, expectedTypeName: owner.configType },
-      { facetAbs: `${owner.presenceRel}/${POLICY_APP_SCHEMA_FACET}`, expectedTypeName: owner.presenceType },
-    ];
-    for (const { facetAbs, expectedTypeName } of facets) {
-      if (!existsSync(join(repoRoot, facetAbs))) continue;
-      const leaves = policyLoadAppSchemaFacetLeaves(repoRoot, facetAbs, expectedTypeName);
-      if (leaves.some((l) => l.extract === null)) continue;
-      const jsonLeaf = leaves.find((l) => l.formatId === "🔣️jsonschema");
-      if (!jsonLeaf?.extract) continue;
-      const truth = new Map(jsonLeaf.extract.fields.map((f) => [f.name, f]));
-      for (const leaf of leaves) {
-        if (leaf.formatId === "🔣️jsonschema" || !leaf.extract) continue;
-        const seen = new Map(leaf.extract.fields.map((f) => [f.name, f]));
-        for (const [name, truthField] of truth) {
-          const other = seen.get(name);
-          if (!other) {
-            breaches.push({
-              id: `app-schema-field-parity-missing-${leaf.relPath}-${name}`,
-              summary: `"${leaf.relPath}" is missing field "${name}" present in normative JSON Schema`,
-              kind: "app-schema/field-parity",
-              scope: owner.ownerRel,
-              priority: "high",
-              reason: `Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=${truthField.optional}, cardinality=${truthField.cardinality}).`,
-              solution: `Add field "${name}" to ${leaf.relPath} matching ${jsonLeaf.relPath} (optional=${truthField.optional}, cardinality=${truthField.cardinality}, scalar=${truthField.scalar}).`,
-            });
-            continue;
-          }
-          const optionalityComparable = !(leaf.formatId === "🛰️protobuf" && truthField.cardinality === "map");
-          const cardinalityComparable = !(
-            truthField.cardinality === "fixedList"
-            && other.cardinality === "list"
-            && (leaf.formatId === "🟦️typescript" || leaf.formatId === "🔗️graphql" || leaf.formatId === "🛰️protobuf")
-          );
-          if ((optionalityComparable && other.optional !== truthField.optional) || (cardinalityComparable && other.cardinality !== truthField.cardinality)) {
-            breaches.push({
-              id: `app-schema-field-parity-shape-${leaf.relPath}-${name}`,
-              summary: `"${leaf.relPath}" field "${name}" disagrees with normative JSON Schema optionality/cardinality`,
-              kind: "app-schema/field-parity",
-              scope: owner.ownerRel,
-              priority: "high",
-              reason: `Normative ${jsonLeaf.relPath} declares "${name}" as optional=${truthField.optional}, cardinality=${truthField.cardinality}; ${leaf.formatId} has optional=${other.optional}, cardinality=${other.cardinality}.`,
-              solution: `Change "${name}" in ${leaf.relPath} to match ${jsonLeaf.relPath} (optional=${truthField.optional}, cardinality=${truthField.cardinality}).`,
-            });
-          }
-        }
-        for (const name of seen.keys()) {
-          if (truth.has(name)) continue;
-          breaches.push({
-            id: `app-schema-field-parity-extra-${leaf.relPath}-${name}`,
-            summary: `"${leaf.relPath}" declares extra field "${name}" absent from normative JSON Schema`,
-            kind: "app-schema/field-parity",
-            scope: owner.ownerRel,
-            priority: "high",
-            reason: `JSON Schema at ${jsonLeaf.relPath} is normative; extra fields in other formats break cross-format identity.`,
-            solution: `Remove "${name}" from ${leaf.relPath}, or add it to ${jsonLeaf.relPath} if it is a real app field.`,
-          });
-        }
-      }
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️Config fidelity: the config facet's normative field set equals the fields of the owner's real
- * `XConfig` Rust struct in `🎚️config/🦀️.rs` (or legacy `🧮️config`).
- */
-function policyAppSchemaConfigFidelityBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
-    const cfgRs = `${owner.ownerRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
-    const facetAbs = `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`;
-    if (!existsSync(join(repoRoot, cfgRs)) || !existsSync(join(repoRoot, facetAbs))) continue;
-    const real = policyExtractRustSchemaFields(policyReadFileSafe(repoRoot, cfgRs), owner.configType);
-    const jsonLeaf = policyLoadAppSchemaFacetLeaves(repoRoot, facetAbs, owner.configType).find((l) => l.formatId === "🔣️jsonschema");
-    if (!jsonLeaf?.extract) continue;
-    const truth = new Map(real.fields.map((f) => [f.name, f]));
-    const seen = new Map(jsonLeaf.extract.fields.map((f) => [f.name, f]));
-    for (const [name, realField] of truth) {
-      const facetField = seen.get(name);
-      if (!facetField) {
-        breaches.push({
-          id: `app-schema-config-fidelity-missing-${owner.ownerRel}-${name}`,
-          summary: `Config facet is missing field "${name}" from real ${owner.configType}`,
-          kind: "app-schema/config-fidelity",
-          scope: owner.ownerRel,
-          priority: "high",
-          reason: `The config facet must document exactly the fields of ${owner.configType} in ${cfgRs}.`,
-          solution: `Add "${name}" to ${jsonLeaf.relPath} (and the other four leaves) matching ${cfgRs} (optional=${realField.optional}, cardinality=${realField.cardinality}).`,
-        });
-        continue;
-      }
-      if (facetField.optional !== realField.optional || facetField.cardinality !== realField.cardinality) {
-        breaches.push({
-          id: `app-schema-config-fidelity-shape-${owner.ownerRel}-${name}`,
-          summary: `Config facet field "${name}" disagrees with real ${owner.configType}`,
-          kind: "app-schema/config-fidelity",
-          scope: owner.ownerRel,
-          priority: "high",
-          reason: `Real ${owner.configType}.${name} is optional=${realField.optional}, cardinality=${realField.cardinality}; facet has optional=${facetField.optional}, cardinality=${facetField.cardinality}.`,
-          solution: `Align "${name}" in ${jsonLeaf.relPath} with ${cfgRs}.`,
-        });
-      }
-    }
-    for (const name of seen.keys()) {
-      if (truth.has(name)) continue;
-      breaches.push({
-        id: `app-schema-config-fidelity-extra-${owner.ownerRel}-${name}`,
-        summary: `Config facet declares extra field "${name}" absent from real ${owner.configType}`,
-        kind: "app-schema/config-fidelity",
-        scope: owner.ownerRel,
-        priority: "high",
-        reason: `The config facet may not invent fields beyond ${owner.configType} in ${cfgRs}.`,
-        solution: `Remove "${name}" from ${jsonLeaf.relPath}, or add it to ${cfgRs} if it belongs on the real struct.`,
-      });
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️State purity: every config-facet field is `config`; every presence-facet field is `presence`.
- */
-function policyAppSchemaStatePurityBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
-    const checks: { facetAbs: string; expectedState: string; expectedTypeName: string; label: string }[] = [
-      {
-        facetAbs: `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`,
-        expectedState: "config",
-        expectedTypeName: owner.configType,
-        label: "config",
-      },
-      {
-        facetAbs: `${owner.presenceRel}/${POLICY_APP_SCHEMA_FACET}`,
-        expectedState: "presence",
-        expectedTypeName: owner.presenceType,
-        label: "presence",
-      },
-    ];
-    for (const { facetAbs, expectedState, expectedTypeName, label } of checks) {
-      if (!existsSync(join(repoRoot, facetAbs))) continue;
-      const jsonLeaf = policyLoadAppSchemaFacetLeaves(repoRoot, facetAbs, expectedTypeName).find((l) => l.formatId === "🔣️jsonschema");
-      if (!jsonLeaf?.extract) continue;
-      for (const field of jsonLeaf.extract.fields) {
-        if (field.state === expectedState) continue;
-        breaches.push({
-          id: `app-schema-state-purity-${facetAbs}-${field.name}`,
-          summary: `${label} facet field "${field.name}" must be ${expectedState} (got ${field.state || "missing"})`,
-          kind: "app-schema/state-purity",
-          scope: owner.ownerRel,
-          priority: "high",
-          reason: `App ${label} facet fields are by definition ${expectedState}; other state classes belong elsewhere.`,
-          solution: `Set x-semio-state (and the matching per-format state annotation) for "${field.name}" in ${jsonLeaf.relPath} to ${expectedState}.`,
-        });
-      }
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️Type-name parity: `XConfig` / `XPresence` spelled identically across all five leaves of their facet;
- * `XPresence` is derived from the owner's `type Config` binding (trailing `Config` → `Presence`).
- */
-function policyAppSchemaTypeNameParityBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
-    const facets: { facetAbs: string; expected: string }[] = [
-      { facetAbs: `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`, expected: owner.configType },
-      { facetAbs: `${owner.presenceRel}/${POLICY_APP_SCHEMA_FACET}`, expected: owner.presenceType },
-    ];
-    for (const { facetAbs, expected } of facets) {
-      if (!existsSync(join(repoRoot, facetAbs))) continue;
-      const leaves = policyLoadAppSchemaFacetLeaves(repoRoot, facetAbs, expected);
-      for (const leaf of leaves) {
-        if (!leaf.extract) continue;
-        if (!leaf.extract.typeName) {
-          breaches.push({
-            id: `app-schema-type-name-missing-${leaf.relPath}`,
-            summary: `"${leaf.relPath}" does not declare top-level type ${expected}`,
-            kind: "app-schema/type-name-parity",
-            scope: owner.ownerRel,
-            priority: "high",
-            reason: `Every leaf of this facet must declare the same top-level type name ${expected}.`,
-            solution: `Declare ${expected} as the top-level type in ${leaf.relPath}.`,
-          });
-          continue;
-        }
-        if (leaf.extract.typeName !== expected) {
-          breaches.push({
-            id: `app-schema-type-name-${leaf.relPath}`,
-            summary: `"${leaf.relPath}" declares ${leaf.extract.typeName} but expects ${expected}`,
-            kind: "app-schema/type-name-parity",
-            scope: owner.ownerRel,
-            priority: "high",
-            reason: `Type-name parity requires ${expected} in all five leaves (from the app's type Config binding).`,
-            solution: `Rename the top-level type in ${leaf.relPath} to ${expected}.`,
-          });
-        }
-      }
-    }
-  }
-  return breaches;
-}
-
-/**
- * 📏️Config relocation: no `🧮️config` (abacus) and no `🕸️wasm` anywhere under `✏️s/🔌️plugins`.
- */
-function policyAppSchemaConfigRelocationBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  const banned = new Set([POLICY_APP_CONFIG_LEGACY_DIR, POLICY_APP_WASM_LEGACY_DIR]);
-  const walk = (relDir: string): void => {
-    const abs = join(repoRoot, relDir);
-    let entries: ReturnType<typeof readdirSync>;
-    try {
-      entries = readdirSync(abs, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const ent of entries) {
-      if (!ent.isDirectory()) continue;
-      if (POLICY_SKIP_DIRS.has(ent.name) || ent.name.startsWith(".")) continue;
-      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
-      if (banned.has(ent.name)) {
-        const kindLabel = ent.name === POLICY_APP_CONFIG_LEGACY_DIR ? "legacy abacus config" : "legacy spider-web wasm";
-        const replacement = ent.name === POLICY_APP_CONFIG_LEGACY_DIR ? POLICY_APP_CONFIG_DIR : "🌉️wasm";
-        breaches.push({
-          id: `app-schema-config-relocation-${childRel}`,
-          summary: `"${childRel}" must move to ${replacement}`,
-          kind: "app-schema/config-relocation",
-          scope: childRel,
-          priority: "high",
-          reason: `${kindLabel} dirs are forbidden under ✏️s/🔌️plugins; consolidate onto the canonical emoji.`,
-          solution: `Rename ${childRel}/ to use ${replacement}/ and update glue #[path] mounts.`,
-        });
-      }
-      walk(childRel);
-    }
-  };
-  walk("✏️s/🔌️plugins");
-  return breaches;
-}
-
-/** 🏛️ A language-independent declaration of configuration and command ownership. */
-export type AbstractionOwnership = { owner: "os" | "surface" | "artifact"; fields: readonly string[]; commands: readonly string[] };
-
-type AbstractionOwnershipSchema = { $defs: { OsField: { enum: string[] }; OsCommand: { enum: string[] }; ArtifactExcludedField: { enum: string[] } } };
-
-/** 📜️ Loads the normative OS versus surface ownership contract. */
-function abstractionOwnershipSchema(root: string): AbstractionOwnershipSchema {
-  return JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧬️schema/🔣️.json"), "utf8"));
-}
-
-/** ⚖️ Reports OS-owned declarations incorrectly stored or executed by a surface. */
-export function abstractionOwnershipViolations(declaration: AbstractionOwnership, schema: AbstractionOwnershipSchema): string[] {
-  if (declaration.owner === "artifact") return declaration.fields.filter((field) => schema.$defs.ArtifactExcludedField.enum.includes(field)).map((field) => `field:${field}`);
-  if (declaration.owner !== "surface") return [];
-  const fields = new Set(schema.$defs.OsField.enum), commands = new Set(schema.$defs.OsCommand.enum);
-  return [...declaration.fields.filter((field) => fields.has(field)).map((field) => `field:${field}`), ...declaration.commands.filter((command) => commands.has(command)).map((command) => `command:${command}`)];
-}
-
-/** 🧬️ Finds surface-owned declarations in authored schemas. */
-function abstractionOwnershipSchemaFields(schema: Record<string, unknown>): string[] {
-  const fields = new Set<string>();
-  const visit = (value: unknown): void => {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return;
-    const record = value as Record<string, unknown>;
-    if (record["x-semio-state"] === "artifact") return;
-    for (const [name, field] of Object.entries((record.properties ?? {}) as Record<string, unknown>)) {
-      if (field === false || (field && typeof field === "object" && (field as Record<string, unknown>)["x-semio-state"] === "artifact")) continue;
-      fields.add(name);
-      visit(field);
-    }
-    for (const key of ["$defs", "definitions", "patternProperties", "dependentSchemas"]) {
-      for (const field of Object.values((record[key] ?? {}) as Record<string, unknown>)) visit(field);
-    }
-    for (const key of ["allOf", "anyOf", "oneOf", "prefixItems"]) {
-      if (Array.isArray(record[key])) for (const field of record[key] as unknown[]) visit(field);
-    }
-    for (const key of ["items", "contains", "additionalProperties", "then", "else"]) visit(record[key]);
-  };
-  visit(schema);
-  return [...fields];
-}
-
-/** 🎮️ Discovers authored command and mutation variants independently of their leaf folders. */
-function abstractionOwnershipRustCommands(source: string): string[] {
-  return inspectRustStructure(source).enums.filter((item) => /(?:Command|Mutation)$/.test(item.name)).flatMap((item) => item.variants.map((variant) => variant.name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()));
-}
 
 
 
-/** 🧪️ Compares language-independent ownership vectors with the independent Ajv schema evaluator. */
-export function abstractionOwnershipChecks(root: string): number {
-  const schema = abstractionOwnershipSchema(root);
-  const fixture = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧫️fixtures/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { cases: (AbstractionOwnership & { name: string; expected: string[] })[]; artifactSchemas: string[]; schemaCases: { name: string; schema: Record<string, unknown>; expected: string[] }[]; sourceCases: { name: string; source: string; expected: string[] }[] };
-  const Ajv = createRequire(import.meta.url)("ajv");
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-  for (const row of fixture.cases) {
-    const declaration = { owner: row.owner, fields: row.fields, commands: row.commands };
-    const actual = abstractionOwnershipViolations(declaration, schema);
-    if (JSON.stringify(actual) !== JSON.stringify(row.expected)) throw new Error(`[verify abstraction-ownership] ${row.name}: expected ${JSON.stringify(row.expected)}, got ${JSON.stringify(actual)}.`);
-    if (validate(declaration) !== (actual.length === 0)) throw new Error(`[verify abstraction-ownership] ${row.name}: implementation disagrees with Ajv.`);
-  }
-  console.log(`[verify abstraction-ownership] ${fixture.cases.length} ownership vectors agree with Ajv.`);
-  for (const row of fixture.schemaCases) {
-    const declaration: AbstractionOwnership = { owner: "surface", fields: abstractionOwnershipSchemaFields(row.schema), commands: [] };
-    const actual = abstractionOwnershipViolations(declaration, schema);
-    if (JSON.stringify(actual) !== JSON.stringify(row.expected)) throw new Error(`[verify abstraction-ownership] ${row.name}: expected ${JSON.stringify(row.expected)}, got ${JSON.stringify(actual)}.`);
-    if (validate(declaration) !== (actual.length === 0)) throw new Error(`[verify abstraction-ownership] ${row.name}: schema discovery disagrees with Ajv.`);
-  }
-  console.log(`[verify abstraction-ownership] ${fixture.schemaCases.length} nested schema ownership vectors agree with Ajv.`);
-  for (const row of fixture.sourceCases) {
-    const declaration: AbstractionOwnership = { owner: "surface", fields: [], commands: abstractionOwnershipRustCommands(row.source) }, actual = abstractionOwnershipViolations(declaration, schema);
-    if (JSON.stringify(actual) !== JSON.stringify(row.expected)) throw new Error(`[verify abstraction-ownership] ${row.name}: expected ${JSON.stringify(row.expected)}, got ${JSON.stringify(actual)}.`);
-    if (validate(declaration) !== (actual.length === 0)) throw new Error(`[verify abstraction-ownership] ${row.name}: source declaration disagrees with Ajv.`);
-  }
-  console.log(`[verify abstraction-ownership] ${fixture.sourceCases.length} command source ownership vectors agree with Ajv.`);
-  const validateArtifactFields = new Ajv({ strict: true, allErrors: true }).compile({ type: "object", propertyNames: { not: { enum: schema.$defs.ArtifactExcludedField.enum } }, additionalProperties: { type: "object", required: ["x-semio-state"], properties: { "x-semio-state": { const: "artifact" } } } });
-  const artifactRepresentations = [["🦀️.rs", policyExtractRustSchemaFields], ["🟦️.ts", policyExtractTypescriptSchemaFields], ["🔗️.graphql", policyExtractGraphqlSchemaFields], ["🛰️.proto", policyExtractProtobufSchemaFields]] as const;
-  const typescript = new Bun.Transpiler({ loader: "ts" });
-  for (const path of fixture.artifactSchemas) {
-    const artifact = JSON.parse(readFileSync(join(root, path), "utf8"));
-    if (!validateArtifactFields(artifact.properties)) throw new Error(`[verify abstraction-ownership] ${path}: app/window state leaks into the artifact contract: ${JSON.stringify(validateArtifactFields.errors)}.`);
-    for (const [filename, extract] of artifactRepresentations) {
-      const source = join(dirname(path), filename), contents = readFileSync(join(root, source), "utf8");
-      const declaration = filename === "🟦️.ts" ? policyExtractTypescriptSchemaFile(join(root, source), contents, artifact.title) : extract(contents, artifact.title);
-      if (filename === "🟦️.ts") typescript.scan(contents);
-      if (!declaration.typeName) throw new Error(`[verify abstraction-ownership] ${source}: missing document declaration ${artifact.title}.`);
-      const misplaced = declaration.fields.filter((field) => field.state && field.state !== "artifact");
-      if (misplaced.length) throw new Error(`[verify abstraction-ownership] ${source}: non-document field ownership ${JSON.stringify(misplaced)}.`);
-      const excluded = abstractionOwnershipViolations({ owner: "artifact", fields: declaration.fields.map((field) => field.name), commands: [] }, schema);
-      if (excluded.length) throw new Error(`[verify abstraction-ownership] ${source}: live UI/computed state ${JSON.stringify(excluded)}.`);
-    }
-  }
-  console.log(`[verify abstraction-ownership] ${fixture.artifactSchemas.length} artifact contracts expose document state only across five schema formats.`);
-  return fixture.cases.length;
-}
 
-/** 🔎️ Checks every authored surface config schema and direct command/mutation owner. */
-export function policyAbstractionOwnershipBreaches(repoRoot: string): BreachRecord[] {
-  const schema = abstractionOwnershipSchema(repoRoot), taxonomy = loadTaxonomy(), breaches = new Map<string, BreachRecord>();
-  const report = (path: string, declaration: AbstractionOwnership): void => {
-    for (const violation of abstractionOwnershipViolations(declaration, schema)) {
-      const key = `${path}:${violation}`;
-      breaches.set(key, { id: `abstraction-ownership-${key}`, summary: `${violation} belongs to the OS or host window state`, kind: "app-schema/abstraction-ownership", scope: path, priority: "high", reason: "A surface must consume OS preferences and host control state without owning duplicate config or command contracts.", solution: "Remove the surface declaration and consume the shared OS preference or host window context." });
-    }
-  };
-  const scanCommands = (root: string): void => {
-    for (const entry of policyReaddirSafe(repoRoot, root).filter((entry) => entry.isDirectory)) report(`${root}/${entry.name}`, { owner: "surface", fields: [], commands: [policyStripEmoji(entry.name)] });
-  };
-  const scanSurfaceSchemas = (root: string): void => {
-    for (const entry of policyReaddirSafe(repoRoot, root)) {
-      const path = `${root}/${entry.name}`;
-      if (entry.isDirectory) {
-        if (!POLICY_SKIP_DIRS.has(entry.name) && !["🧪️tests", "🧫️fixtures", "📚️examples", "📦️packages"].includes(entry.name)) scanSurfaceSchemas(path);
-      } else if (entry.name === "🔣️.json") {
-        const authored = JSON.parse(policyReadFileSafe(repoRoot, path)) as Record<string, unknown>;
-        if (authored.$schema) report(path, { owner: "surface", fields: abstractionOwnershipSchemaFields(authored), commands: [] });
-      } else if (entry.name === "🦀️.rs") {
-        const source = policyReadFileSafe(repoRoot, path);
-        if (/\benum\s+\w*(?:Command|Mutation)\b/.test(source)) report(path, { owner: "surface", fields: [], commands: abstractionOwnershipRustCommands(source) });
-      }
-    }
-  };
-  for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
-    for (const leaf of policyLoadAppSchemaFacetLeaves(repoRoot, `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`, owner.configType)) {
-      if (leaf.extract) report(leaf.relPath, { owner: "surface", fields: leaf.extract.fields.map((field) => field.name), commands: [] });
-    }
-    const source = `${owner.ownerRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
-    report(source, { owner: "surface", fields: policyExtractRustSchemaFields(policyReadFileSafe(repoRoot, source), owner.configType).fields.map((field) => field.name), commands: [] });
-    scanCommands(`${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}/🧬️mutations`);
-  }
-  for (const plugin of policyReaddirSafe(repoRoot, "✏️s/🔌️plugins").filter((entry) => entry.isDirectory)) {
-    for (const surface of policySurfaceRoots(repoRoot, `✏️s/🔌️plugins/${plugin.name}`, taxonomy)) {
-      scanCommands(`${surface}/🎮️commands`);
-      scanSurfaceSchemas(surface);
-    }
-  }
-  const artifactRoots = new Set([...policyListPluginArtifactDirs(repoRoot), ...policyListArtifactDialectDirs(repoRoot).map((dialect) => dialect.subsetRel)]);
-  for (const root of artifactRoots) {
-    for (const facet of ["🧬️schema", "🧬️schema/🔺️diff"]) {
-      const path = `${root}/${facet}/🔣️.json`, text = policyReadFileSafe(repoRoot, path);
-      if (!text) continue;
-      const artifact = JSON.parse(text) as { properties?: Record<string, { "x-semio-state"?: string }> };
-      report(path, { owner: "artifact", fields: Object.keys(artifact.properties ?? {}), commands: [] });
-      for (const [field, definition] of Object.entries(artifact.properties ?? {})) {
-        const state = definition["x-semio-state"];
-        if (!state || state === "artifact") continue;
-        const key = `${path}:state:${field}`;
-        breaches.set(key, { id: `abstraction-ownership-${key}`, summary: `${field} belongs to ${state} state`, kind: "artifact-schema/abstraction-ownership", scope: path, priority: "high", reason: "An artifact contract and its document diffs must not duplicate app or window state.", solution: `Keep ${field} in its ${state} owner and remove the duplicate artifact declaration and diff member.` });
-      }
-    }
-  }
-  return [...breaches.values()].sort((left, right) => left.scope.localeCompare(right.scope) || left.id.localeCompare(right.id));
-}
-
-/** ⚖️Aggregates app-schema facet scanners (completeness, parity, fidelity, purity, relocation). */
-export function policyAppSchemaBreaches(repoRoot: string): BreachRecord[] {
-  return [
-    ...policyAbstractionOwnershipBreaches(repoRoot),
-    ...policyAppSchemaFacetCompletenessBreaches(repoRoot),
-    ...policyAppSchemaFieldParityBreaches(repoRoot),
-    ...policyAppSchemaConfigFidelityBreaches(repoRoot),
-    ...policyAppSchemaStatePurityBreaches(repoRoot),
-    ...policyAppSchemaTypeNameParityBreaches(repoRoot),
-    ...policyAppSchemaConfigRelocationBreaches(repoRoot),
-  ];
-}
-//#endregion 🔧️PolicyRuleAppSchemas
 
 //#region 🔧️PolicyRuleArtifactIo
 /** 🧾 Schema-derived stdio definition view for policy checks. */
@@ -22279,58 +21317,16 @@ export function policyArtifactDecomposerBreaches(repoRoot: string): BreachRecord
  * keeps the whole sweep additive: these rules are vacuous ([]) until the first
  * artifact actually grows a 🏅️standards/ dir.
  */
-const POLICY_STANDARDS_DIR = "🏅️standards";
-const POLICY_SUBSETS_DIR = "🪆️subsets";
+
+
 const POLICY_DERIVED_FACETS = [
   { dir: "🏗️builder", hook: "construction:", name: "builder" },
   { dir: "🧐️analyzer", hook: "analysis:", name: "analyzer" },
   { dir: "🎹️composer", hook: "composition:", name: "composer" },
 ] as const;
 
-type PolicyArtifactDialect = {
-  artRel: string;
-  standardRel: string;
-  standardSlug: string;
-  subsetsRel: string;
-  subsetRel: string;
-  /** 🪆️ Raw on-disk semantic dir name — kept for path-building. */
-  subsetDirName: string;
-  /** 🪆️ Logical subset id resolved through the exact owner-scoped roster. */
-  subsetId: string;
-};
 
-/** 🏅 One row per (migrated artifact, standard, subset) triple; empty until any artifact migrates. */
-function policyListArtifactDialectDirs(repoRoot: string): PolicyArtifactDialect[] {
-  const out: PolicyArtifactDialect[] = [];
-  const taxonomy = loadTaxonomy();
-  const standardsDirName = (taxonomy as any).standardsDirName ?? POLICY_STANDARDS_DIR;
-  const subsetsDirName = (taxonomy as any).subsetsDirName ?? POLICY_SUBSETS_DIR;
-  const standardPrefix = (taxonomy as any).standardDirPrefix ?? "🔖️";
-  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
-    const standardsRel = `${artRel}/${standardsDirName}`;
-    if (!existsSync(join(repoRoot, standardsRel))) continue;
-    for (const std of policyReaddirSafe(repoRoot, standardsRel)) {
-      if (!std.isDirectory || !std.name.startsWith(standardPrefix)) continue;
-      const standardRel = `${standardsRel}/${std.name}`;
-      const standardSlug = std.name.slice(standardPrefix.length);
-      const subsetsRel = `${standardRel}/${subsetsDirName}`;
-      if (!existsSync(join(repoRoot, subsetsRel))) continue;
-      for (const sub of policyReaddirSafe(repoRoot, subsetsRel)) {
-        if (!sub.isDirectory) continue;
-        out.push({
-          artRel,
-          standardRel,
-          standardSlug,
-          subsetsRel,
-          subsetRel: `${subsetsRel}/${sub.name}`,
-          subsetDirName: sub.name,
-          subsetId: subsetIdForDirectoryName(subsetsRel, sub.name, taxonomy) ?? sub.name,
-        });
-      }
-    }
-  }
-  return out;
-}
+
 
 /** ⚖️Every migrated standard/subset dir carries its required engine/schema/IO children. */
 export function policyStandardsCoverageBreaches(repoRoot: string): BreachRecord[] {

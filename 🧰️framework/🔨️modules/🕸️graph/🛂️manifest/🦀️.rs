@@ -10,9 +10,9 @@ pub mod generated {
 pub use generated::*;
 
 // 🌉️ Hand-written `ToValue`/`FromValue` for every `generated::*` manifest enum above — see that
-// file's own header docstring for why it lives here rather than as `#[derive(...)]` on the
+// conversion owner's header docstring for why it lives here rather than as `#[derive(...)]` on the
 // machine-generated sources themselves.
-include!("🌉️generated-value-bridge.rs");
+include!("🔄️value-conversion/🦀️.rs");
 
 pub use crate::manifest::Manifest as GraphManifest;
 

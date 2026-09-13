@@ -22,7 +22,8 @@ async function warnWhenHubIsUnreachable(): Promise<void> {
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await warnWhenHubIsUnreachable();
-    await runViteBunxDev(this.root, ["--config", "⚙️vite.config.ts", ...segments], {
+    await runViteBunxDev(this.root, segments, {
+      config: "../../🏗️builder/🌐️vite/🟦️.ts",
       portEnv: "OS_HUB_ADMIN_DEV_PORT",
       defaultPort: "8790",
       fixedPort: true,
@@ -33,7 +34,7 @@ class DevScript extends BundleScript {
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
     if (segments.some((arg) => /^(?:--outDir|--config|--root)(?:=|$)/.test(arg))) throw new Error("Build output and configuration are owned by this Nx target");
-    runViteBuild(this.root, segments, "⚙️vite.config.ts");
+    runViteBuild(this.root, segments, "../../🏗️builder/🌐️vite/🟦️.ts");
   }
 }
 
@@ -43,7 +44,7 @@ class TestScript extends BundleScript {
     const { verifyAdminEntryGraph, verifyAdminStylesheetGraph } = await import("../../🧪️tests/🕸️build-graph/🟦️.ts");
     verifyAdminEntryGraph(this.root);
     verifyAdminStylesheetGraph(this.root);
-    await runVitest(this.root, rest, "vitest.config.ts");
+    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

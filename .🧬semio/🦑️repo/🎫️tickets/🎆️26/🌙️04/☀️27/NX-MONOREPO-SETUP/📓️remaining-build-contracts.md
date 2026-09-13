@@ -422,3 +422,49 @@ The observed Trunk/Rust-target acquisition is now an explicit uncached `workspac
 Default playground discovery's repeated repository input views were another expensive path exposed by full validation. It now reuses one view, preserves explicit views, and matches the generated 61-playground projection. See `📓️playground-discovery.md`. The broader suite is running again; no complete pass is claimed at this checkpoint.
 
 The refreshed structural audit is 704 projects / 7,270 commands / 7,900 records / zero automated findings. Direct inspection found four cached compiler/packaging targets with empty outputs: WGPU wasm, OS Dev generic build, Python styling build and .NET styling build. Their implementations write real artifacts. See `📓️compiler-output-gaps.md`; these manual findings prevent treating the automated audit as complete. In particular, OS Dev's old generic build still calls the WGPU script directly and must be replaced with the explicit production graph.
+
+
+### 2026-09-13 Compiler Follow-Up
+
+The prior 3m33s suite reached the .NET bootstrap fixture and failed because its expected Compile Include was still the old package-local source. The fixture now names ../../🖥️host/🔷️.cs and additionally requires that file to exist. The next full run (compiler-output-suite-dotnet-path.log) stopped earlier after 46.3s on schema-entity-catalog taxonomy input/output ordering; it did not reach that repaired assertion. The live taxonomy was already reordered when inspected, so this task did not edit it.
+
+Styling Python/.NET build metadata had been changed concurrently to cache:false while retaining empty outputs. This prevents stale success replay but does not satisfy the intended cache restoration contract. A new .NET native fixture failed as expected on the uncached/empty contract (589ms), then executed the actual assembly publisher and direct MSBuild compiler. Their runtime values matched, but binary comparison exposed native intermediate path differences (19.5s); canonical state path mapping is under test. No shared styling compiler state was deleted.
+
+
+The .NET styling producer now has a dedicated script, native-state lease, canonical path mapping and owned final output. Native MSBuild/Nx restoration tests pass; its real second repository build reused the compiler cache. OS Dev generic build now depends on the explicit default production graph through a three-file completion command, with updated editor entries and native Vite/Nx restoration coverage. See `📓️styling-outputs.md` and `📓️production-completion.md`. Python wheel and finite WGPU Trunk ownership remain open.
+
+The current shared CachePruneScript takes an exclusive `cache-prune` lease, then deletes eligible units based on age/budget. Its writers use separate resource keys; the styling .NET state lease added here currently coordinates restore/build processes only. Producer/read leases still need integration with reclamation. The artifact registry marks native cleanup/coverage pending, but that does not disable this separate cache-prune implementation. No destructive prune was run during this inspection.
+
+The Python styling wheel now has an owned dist/build output and pinned backend tools. Native Nx/uv deletion, restoration, byte equality, changed-source and no-editable-preparation proofs pass; the actual repository test and next-run compiler/test cache hits also pass. See 📓️styling-outputs.md. Finite WGPU Trunk output ownership remains open: its HTML still copies active plugin/extension stores and the entire source asset tree, so simply declaring its shared output directory would be unsound.
+
+The fresh structural inventory is 704 projects / 7,279 commands / 7,902 artifact/storage entries / zero automated findings. It includes the new Python contract; the manual Trunk finding remains. The 3m47s full suite passed the repaired transitive generator assertion and both compiler-output proofs, then failed a stale extracted NxScript test harness that lacked nxChildEnvironment. The focused cancellation check now imports the actual pure environment helper and passes all four malformed/unavailable process-snapshot vectors (721 ms); it is a standalone test module called by the full suite. No coordinator production behavior changed. A fresh full run is in progress.
+
+WGPU live publication is now an explicit uncached activation operation; preparation is pure and cacheable, and activation no longer calls that prerequisite internally. The native Nx fixture confirms no duplicate publication and recreation of deleted live state. See 📓️wgpu-live-activation.md. This does not resolve the finite Trunk compiler output boundary, live-store concurrency/retention or full native application qualification.
+
+## Full Repository Validation — 2026-09-13
+
+The actual-root `repo:test` invocation completed successfully: 5m12s, both tasks executed (0/2 cache hits). Native inventory covered 704 projects and 6896 targets. Compiler output, Python/.NET wheel/assembly execution and native oracles, WGPU live publication, graph ownership, source-byte discovery, coordinator and materializer cancellation contracts all passed. The separate structural audit covered 7281 commands and 7902 artifact-storage entries with zero automated findings. This does not qualify the remaining Trunk output/serving, active retention, CI trust, or unexecuted platforms.
+
+## Finite WGPU Outputs — 2026-09-13
+
+Dev/release compiler publication, independent Trunk byte comparison, native JavaScript/WASM execution and Nx cold/warm/restoration/source-change contracts now pass. Native Vite HTTP routing to the restored profile outputs passes. Matching-profile playground activation dependencies and the separate browser generator boundaries pass their focused regressions. The extended repository suite and actual full renderer compilation remain in progress; concurrent Cargo builds are using the same native intermediate store. No shared process was stopped and no shared compiler cache was deleted. Live serving/composition, custom build-script input narrowing, active retention, CI isolation and unexecuted platforms remain outstanding.
+
+The refreshed structural audit reports 704 projects, 7290 commands, 7904 artifact-storage entries and zero automated findings. Manual follow-up confirms `.github/workflows` is currently an empty real directory (not a symlink); tested CI baseline selection helpers alone do not constitute an installed CI workflow. CI workflow wiring remains a concrete outstanding implementation item.
+
+The extended actual-root repo:test suite passed on 2026-09-13: 4m36s, 0/2 cache hits. It includes both native Trunk profiles, poisoned Trunk environment isolation, native Vite HTTP bytes, all compiler restoration proofs, graph/editor/lifecycle and cancellation contracts (704 projects, 6903 targets). The actual full renderer build remains running; it is not yet qualified.
+
+## WGPU Browser Host — 2026-09-13
+
+The live WGPU host now consumes completed outputs through an uncached, continuous Nx target. The public Nx launcher owns profile-specific activation watching; Trunk serving, occupied-port takeover, the old Cargo-package HTML/Trunk config and copy-route parser have been removed. Native Vite byte delivery, reload, cancellation and four route tests pass, including an actual HTTP run against the compiled repository renderer. Full suite revalidation is ongoing: the first rerun encountered a concurrently relocated Vite fixture path (fixed); the next failed the newly added duplicate-output regression before its compiler fix. Canonical-only compiler publication is under native fixture and actual-root verification.
+
+Outstanding work still includes isolated WGPU variant/profile extension installations (the current activation still publishes to the shared live store), native runner nested activation, custom build-script input narrowing, reclamation coordinated with producers/readers, installed CI workflow wiring and native Windows/Linux/devcontainer qualification. HTTP byte equality does not qualify WebGPU painting or complete playground interaction. The goal remains active.
+
+The latest native full suite passed canonical-only renderer restoration, both browser serving profiles, boot selection, native Vite lifecycle and production distribution/completion checks, then stopped at native preparation because current taxonomy references removed configuration contract IDs (2m46s). This is the same condition that stopped actual renderer republishing and frame-worker prerequisites. The refreshed structural inventory is 704 projects / 7292 commands / 7904 artifact/storage entries / zero automated findings; these manual issues remain. A direct cause is that Cargo/Trunk acquisition still loads the broad root application router and its taxonomy during tool synchronization, so unrelated source-policy edits can prevent tool preparation. This is an outstanding command-boundary issue as well as a transient shared-workspace failure.
+
+## Native Setup Import Boundary — 2026-09-13
+
+The native dependency import issue is resolved: nine uncached setup leaves now use the narrow implementation. Schema/native Cargo/esbuild proof and the actual workspace:deps-trunk target pass. See 📓️native-dependency-boundary.md. This removes application taxonomy from native provisioning; graph generation and the complete application/test pipeline still require separate qualification.
+
+## Canonical WGPU And Explicit Cleanup — 2026-09-13
+
+Actual WGPU wasm publication passed and retired the duplicate aliases; see 📓️trunk-output-boundary.md. The full contract run progressed past the repaired taxonomy and failed at an outdated Hub configuration reference; the focused corrected Hub contract passes. Cargo no longer launches detached cleanup after native tasks, with red/green native proof in 📓️cargo-cleanup-boundary.md. Active-use-safe retention, WGPU runtime extension isolation and other listed goal gaps remain open.

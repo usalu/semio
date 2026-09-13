@@ -51,7 +51,11 @@ enum LayoutNodeKind {
     /// measured a whole tree as the sum of its rows' padding.
     Tree { height: f32 },
     TreeSection { header: f32, height: f32 },
-    TreeRow { row: f32, height: f32 },
+    /// 🌳️ `row` is this row's own band (the y a nested row starts at) and `expanded` says whether
+    /// its nested rows are REACHED at all — the arena mounts a collapsed branch's children, and the
+    /// painter draws none of them, so an unreached row must measure zero rather than overlap the
+    /// row that visually follows it.
+    TreeRow { row: f32, height: f32, expanded: bool },
     Leaf,
 }
 
@@ -105,9 +109,14 @@ fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<LayoutNodeKind>,
             let section = owner.sections.iter().find(|section| &section.id == key)?;
             Some(LayoutNodeKind::TreeSection { header: tree_section_header_height(section, metrics), height: tree_section_height(section, metrics) })
         }
-        _ => {
+        parent_kind => {
             let item = owner.sections.iter().find_map(|section| find_tree_item(&section.items, key, 0))?;
-            Some(LayoutNodeKind::TreeRow { row: metrics.row_height, height: tree_item_height(item, metrics) })
+            if matches!(parent_kind, LayoutNodeKind::TreeRow { expanded: false, .. }) {
+                return Some(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false });
+            }
+            let height = tree_item_height(item, metrics);
+            let expanded = height > 0.0 && item.default_open.unwrap_or(false) && item.items.as_deref().is_some_and(|items| !items.is_empty());
+            Some(LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded })
         }
     }
 }
@@ -253,6 +262,7 @@ pub(crate) struct MountedLayoutJob {
     theme_revision: u64,
     viewport_revision: u64,
     theme: Theme,
+    row_metrics: TreeRowMetrics,
     width: f32,
     height: f32,
     admission: AdmissionPhase,
@@ -314,6 +324,7 @@ impl MountedLayoutJob {
             revision,
             theme_revision,
             viewport_revision,
+            row_metrics: TreeRowMetrics::from_theme(&theme),
             theme,
             width,
             height,
@@ -399,12 +410,10 @@ impl MountedLayoutJob {
             self.fault = Some(MountedLayoutFault::Stale);
             return (0, 0);
         };
-        let metrics = TreeRowMetrics::from_theme(&self.theme);
-        let parent_kind = parent.and_then(|index| self.nodes.get(index)).map(|input| input.kind);
         let kind = match &node.spec.0 {
             UiNode::Text(_) => LayoutNodeKind::Text,
-            UiNode::Tree(tree_node) => LayoutNodeKind::Tree { height: tree_node_height(tree_node, &metrics) },
-            UiNode::Stack(stack) => tree_row_kind(tree, id, parent_kind, &metrics).unwrap_or(LayoutNodeKind::Stack {
+            UiNode::Tree(tree_node) => LayoutNodeKind::Tree { height: tree_node_height(tree_node, &self.row_metrics) },
+            UiNode::Stack(stack) => tree_row_kind(tree, id, parent.and_then(|index| self.nodes.get(index)).map(|input| input.kind), &self.row_metrics).unwrap_or(LayoutNodeKind::Stack {
                 horizontal: stack.direction == "horizontal",
                 gap: gap_for_token(&self.theme, stack.gap.as_deref()),
                 padding: padding_for_token(&self.theme, stack.padding.as_deref()),
@@ -638,7 +647,7 @@ impl MountedLayoutJob {
                 LayoutNodeKind::TreeRow { row, .. } => match input.kind {
                     LayoutNodeKind::TreeRow { .. } => (0.0, row + parent.child_offset, parent_result.width, input.intrinsic.height),
                     _ => {
-                        let rect = tree_row_control_rect(parent_result.width, &TreeRowMetrics::from_theme(&self.theme));
+                        let rect = tree_row_control_rect(parent_result.width, &self.row_metrics);
                         (rect.x, rect.y, rect.w, rect.h)
                     }
                 },

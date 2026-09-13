@@ -2,6 +2,10 @@
 
 ## Scope and evidence
 
+Later root preparation acceptance: [fem-mesh-preparation-ownership-implementation.md](fem-mesh-preparation-ownership-implementation.md) records the repaired separate reservation stages, retained lookup handoff and native3 passing3/3 on2MiB. Source gap1 below is historical and repaired at that boundary. Logical-fill admission is a newly reproduced source gap with test-first cases pending native execution; insertion and the other gaps below remain open.
+
+Later root authority review: [fem3d-shared-watchdog-authority.md](fem3d-shared-watchdog-authority.md) identifies the current framework-owned per-session overrun ledger. The updated end-to-end test uses that existing authority while retaining the8ms deadline, individual overrun records and200000-opportunity bound. This supersedes the local unconditional elapsed assertion recommendation below; no source gap in this audit is waived.
+
 This is a read-only source and existing-artifact audit. No Cargo command or test was run for this report.
 
 The existing native artifact [fem3d-window-config-native-28.log](🗑️generated/fem3d-window-config-native-28.log) records one failure of `live_visual::tests::fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorized`: the elapsed-time condition at the session test's former line 291. It records 18 of 19 selected FEM3D tests passing. It does **not** identify the elapsed value, numerical stage, nested cursor, or allocation/control operation that took longer than 8 ms. It is therefore runtime proof of an over-budget iteration, not proof that any source candidate below caused it.

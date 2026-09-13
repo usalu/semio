@@ -592,14 +592,14 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 			},
 		},
 		{
-			name: "devcontainer builds the repo client from its canonical source",
-			path: filepath.Join(repoRoot, ".devcontainer", "post-create.sh"),
+			name: "devcontainer creation prepares dependencies through Nx",
+			path: filepath.Join(repoRoot, ".devcontainer", "devcontainer.json"),
 			requiredFragments: []string{
-				`🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client`,
-				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp`,
-				"bun nx run workspace:setup",
+				`"postCreateCommand": ["bun", "nx", "run", "workspace:deps-javascript"]`,
 			},
 			forbiddenFragments: []string{
+				"post-create.sh",
+				"workspace:setup",
 				"repo/client/client",
 				"./repo/client/mcp/go",
 			},
@@ -7761,7 +7761,7 @@ func TestAllEntityEmojisProjectsTheFrameworkCatalog(t *testing.T) {
 		t.Fatal("failed to resolve current test file path")
 	}
 	repoRoot := findTestRepoRoot(filepath.Dir(currentFile))
-	catalogPath := filepath.Join(repoRoot, "🧰️framework", "🔨️modules", "🧬️schema", "🔣️entity-kinds.json")
+	catalogPath := filepath.Join(repoRoot, "🧰️framework", "🔨️modules", "🧬️schema", "🏷️entity-kinds", "🔣️.json")
 	raw, err := os.ReadFile(catalogPath)
 	if err != nil {
 		t.Fatalf("failed to read the framework entity-kind catalog at %s: %v", catalogPath, err)

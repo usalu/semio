@@ -5,9 +5,10 @@
     "default": [
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts",
+      "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🏗️builder/🌐️vite/🟦️.ts",
       "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/**/*.ts",
       "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/**/*"
-    ]
+    , "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
     "dev": {

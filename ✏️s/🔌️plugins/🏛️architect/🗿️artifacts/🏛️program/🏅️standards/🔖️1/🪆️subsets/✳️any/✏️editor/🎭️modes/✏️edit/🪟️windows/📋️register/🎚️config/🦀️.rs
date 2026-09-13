@@ -17,7 +17,7 @@ impl Default for ArchitectRegisterWindowConfig {
 
 /// 🔁️ Changes the selected register of one addressed Register window.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(tag = "kind", rename_all = "kebab-case")]
+#[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum ArchitectRegisterWindowConfigMutation {
     SetActiveRegister { active_register: String },
 }

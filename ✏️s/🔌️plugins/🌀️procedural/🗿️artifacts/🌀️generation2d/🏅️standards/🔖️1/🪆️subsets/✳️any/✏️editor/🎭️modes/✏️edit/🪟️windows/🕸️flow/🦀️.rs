@@ -4,7 +4,8 @@ use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
 use crate::standards::v1::subsets::any::schema::{fixture_to_workflow, with_host};
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, Viewport2d, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_os_kernel::Viewport2d;
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;

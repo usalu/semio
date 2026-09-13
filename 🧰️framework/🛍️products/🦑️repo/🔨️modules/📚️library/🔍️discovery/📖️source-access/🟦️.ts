@@ -26,7 +26,7 @@ export const POLICY_SOURCE_OPERATIONS: PolicySourceOperations = {
 
 export function policySourceUnavailableState(error: unknown): "missing" | "unreadable" {
   const code = error && typeof error === "object" && "code" in error ? String(error.code) : "";
-  return code === "ENOENT" || code === "ENOTDIR" ? "missing" : "unreadable";
+  return code === "ENOENT" ? "missing" : "unreadable";
 }
 
 export function policySourceAncestry(repoRoot: string, relPath: string, operations: PolicySourceOperations = POLICY_SOURCE_OPERATIONS): "clear" | "missing" | "unreadable" | "symlink" | "not-directory" {

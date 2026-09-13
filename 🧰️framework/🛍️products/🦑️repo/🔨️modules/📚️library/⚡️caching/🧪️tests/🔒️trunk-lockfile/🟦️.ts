@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { runInNewContext } from "node:vm";
+import { pathToFileURL } from "node:url";
 
 /** 🔒️ Keeps Trunk's build/serve Cargo invocation on the committed dependency lock. */
 export async function testTrunkLockfile(workspace: string, native = false): Promise<void> {
@@ -15,38 +15,50 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
   assert.deepEqual(tooling.outputs, []);
   assert.equal(tooling.options.command, fixture.tooling.command);
   assert.ok(workspaceProject.targets["deps-wasm"].dependsOn.includes(fixture.tooling.target));
-  const ts = require("typescript"), setupSource = ts.createSourceFile("setup.ts", readFileSync(join(workspace, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
-  const setup = setupSource.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "SetupScript");
-  const members = ["ensureCargoTool", "ensureRustTarget", "runDependencies"].map(name => {
-    const method = setup.members.find((node: any) => node.name?.text === name); assert.ok(method, name); return method.getText(setupSource);
-  });
-  const code = ts.transpileModule(`class Preparation { root="fixture"; ${members.join("\n")} }`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-  for (const row of fixture.tooling.cases) {
-    const commands: string[][] = [];
-    const preparation = runInNewContext(`${code}; new Preparation();`, {
-      orchestratorBudgetOpts: () => ({}), console: { log: () => {} },
-      runProbe: (command: string) => ({ status: 0, stdout: command === "trunk" ? row.version : row.targets }),
-      runCmd: (command: string, args: string[]) => { commands.push([command, ...args]); }
-    });
-    preparation.runDependencies("trunk");
-    assert.deepEqual(commands, row.commands, "Preparation must be pinned and avoid reinstalling ready tooling");
-  }
+  const ts = require("typescript"), implementation = join(workspace, fixture.tooling.implementation);
+  const { prepareDependencies } = await import(pathToFileURL(implementation).href);
+  const bundle = await require("esbuild").build({ entryPoints: [implementation], bundle: true, platform: "node", format: "esm", packages: "external", write: false, metafile: true, logLevel: "silent" });
+  const closure = Object.keys(bundle.metafile.inputs).map(path => resolve(path));
+  assert.ok(!closure.includes(join(workspace, "📜️script.ts")), "Native preparation must not load the root application router");
+  assert.ok(closure.every(path => !path.includes("/🔍️discovery/") && !path.includes("/🎮️playground/")), "Native setup must not load application taxonomy");
+  const temporary = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "native-dependencies-"));
+  try {
+    writeFileSync(join(temporary, "Cargo.lock"), `[[package]]\nname = "wasm-bindgen"\nversion = "${fixture.tooling.bindgenVersion}"\n`);
+    for (const row of fixture.tooling.cases) {
+      const commands: string[][] = [];
+      await prepareDependencies("trunk", temporary, new AbortController().signal, async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean) => {
+        assert.equal(cwd, temporary); assert.equal(signal.aborted, false);
+        if (capture) return command === "trunk" ? row.version : command === "wasm-bindgen" ? row.bindgen : row.targets;
+        commands.push([command, ...args]); return "";
+      });
+      assert.deepEqual(commands, row.commands, "Preparation must be pinned and avoid reinstalling ready tooling");
+    }
+    const controller = new AbortController(), failure = new Error("Cancelled dependency probe"), calls: string[][] = [];
+    await assert.rejects(prepareDependencies("trunk", temporary, controller.signal, async (command: string, args: string[]) => {
+      calls.push([command, ...args]); controller.abort(failure); throw failure;
+    }), error => error === failure);
+    assert.deepEqual(calls, [["trunk", "--version"]], "Cancelling a probe must never start an installation");
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
   for (const config of fixture.configs) {
-    const path = config.trunk;
-    const source = readFileSync(join(workspace, path), "utf8"), parsed = Bun.TOML.parse(source) as { build: Record<string, unknown>; hooks?: { stage: string; command: string; command_arguments: string[] }[] };
+    const path = config.compiler, compiler = readFileSync(join(workspace, path), "utf8"), syntax = ts.createSourceFile(path, compiler, ts.ScriptTarget.Latest, true);
+    let template: any;
+    const visit = (node: any): void => {
+      if (ts.isCallExpression(node) && node.expression.getText(syntax) === "writeFileSync" && node.arguments[0]?.getText(syntax).includes('"Trunk.toml"')) template = node.arguments[1];
+      ts.forEachChild(node, visit);
+    };
+    visit(syntax);
+    assert.ok(template, "The finite compiler must supply its private Trunk configuration");
+    const source = new Function("profile", "bindgen", "return " + template.getText(syntax))("dev", [fixture.tooling.bindgenVersion]);
+    const parsed = Bun.TOML.parse(source) as { build: Record<string, unknown> };
     assert.deepEqual(parsed, require("smol-toml").parse(source));
     for (const [key, value] of Object.entries(fixture.build)) assert.equal(parsed.build[key], value, `${path}: build.${key}`);
-    const hook = parsed.hooks?.find((value) => value.stage === fixture.hook.stage);
-    assert.ok(hook, `${path}: locked Cargo metadata must precede every Trunk pipeline`);
-    assert.equal(hook.command, fixture.hook.command);
-    assert.deepEqual(hook.command_arguments.slice(1, -1), fixture.hook.command_arguments);
-    assert.equal(resolve(dirname(join(workspace, path)), hook.command_arguments[0]), resolve(import.meta.dir, "../../🦀️cargo/📜️script.ts"));
-    assert.equal(resolve(workspace, hook.command_arguments.at(-1)!), join(dirname(join(workspace, path)), "Cargo.toml"));
+    const metadata = compiler.indexOf('runTool("cargo", ["metadata"'), compile = compiler.indexOf('runTool("trunk", ["build"');
+    assert.ok(metadata >= 0 && compile > metadata && compiler.slice(metadata, compile).includes('"--locked"') && compiler.slice(metadata, compile).includes('"--offline"'), "Locked offline Cargo metadata must precede finite compilation");
     const projectPath = join(workspace, config.project), project = JSON.parse(readFileSync(projectPath, "utf8")), target = project.targets[fixture.target];
     for (const consumer of fixture.tooling.consumers) assert.ok(project.targets[consumer].dependsOn.includes(`workspace:${fixture.tooling.target}`), `${consumer} must schedule Trunk preparation before execution`);
     const routerSource = readFileSync(join(dirname(projectPath), "📜️script.ts"), "utf8");
     assert.doesNotMatch(routerSource, /\bensure(?:Trunk|WasmTarget)\s*\(/, "Trunk build and serve must consume the Nx preparation");
-    const graph = { nodes: { workspace: { name: "workspace", type: "app", data: { root: ".", targets: { [fixture.tooling.target]: tooling } } }, renderer: { name: "renderer", type: "lib", data: { root: "renderer", targets: { wasm: project.targets.wasm, "generate-browser-boot": { ...project.targets["generate-browser-boot"], dependsOn: [] }, "generate-frame-worker": { ...project.targets["generate-frame-worker"], dependsOn: [] } } } } }, dependencies: { workspace: [], renderer: [] } };
+    const graph = { nodes: { workspace: { name: "workspace", type: "app", data: { root: ".", targets: { [fixture.tooling.target]: tooling, "deps-wasm-opt": workspaceProject.targets["deps-wasm-opt"], "deps-cargo": workspaceProject.targets["deps-cargo"] } } }, renderer: { name: "renderer", type: "lib", data: { root: "renderer", targets: { wasm: project.targets.wasm, "generate-browser-boot": { ...project.targets["generate-browser-boot"], dependsOn: [] }, "generate-frame-worker": { ...project.targets["generate-frame-worker"], dependsOn: [] } } } } }, dependencies: { workspace: [], renderer: [] } };
     const tasks = require("nx/src/tasks-runner/create-task-graph").createTaskGraph(graph, {}, ["renderer"], ["wasm"], undefined, {}, false);
     assert.ok(tasks.dependencies["renderer:wasm"].includes(`workspace:${fixture.tooling.target}`));
     assert.equal(project.name, fixture.project);
@@ -66,23 +78,23 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
     }
     if (native) {
       const env = { ...process.env }; delete env.NO_COLOR; delete env.FORCE_COLOR;
-      const result = spawnSync("trunk", ["config", "--config", join(workspace, path), "--skip-version-check", "show"], { cwd: workspace, env, encoding: "utf8", timeout: 15000 });
+      const temporary = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "trunk-config-"));
+      writeFileSync(join(temporary, "Trunk.toml"), source);
+      const result = spawnSync("trunk", ["config", "--config", join(temporary, "Trunk.toml"), "--skip-version-check", "show"], { cwd: workspace, env, encoding: "utf8", timeout: 15000 });
+      rmSync(temporary, { recursive: true, force: true });
       assert.equal(result.status, 0, result.stderr);
       assert.match(result.stdout, /\bbuild: Build \{[\s\S]*?\blocked: true,/);
     }
   }
-  console.log(`[DEBUG] Trunk locked metadata hook matches Bun/smol-toml${native ? " and native Trunk config" : ""} PASS`);
+  console.log(`[DEBUG] Finite Trunk locked configuration matches Bun/smol-toml${native ? " and native Trunk config" : ""} PASS`);
   console.log("[DEBUG] Trunk prerequisite graph is explicit; ready, stale and missing tooling follow the pinned preparation contract PASS");
 }
 
 /** 🔬️ Proves stale-lock rejection before compilation, including subsequent native watch rebuilds. */
 export async function testNativeTrunkLockfile(workspace: string, generated: string): Promise<void> {
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8")), root = mkdtempSync(join(generated, "trunk-lockfile-"));
-  const trunkPath = fixture.configs[0].trunk, config = Bun.TOML.parse(readFileSync(join(workspace, trunkPath), "utf8")) as any;
-  const hook = config.hooks.find((value: any) => value.stage === fixture.hook.stage);
-  const args = [...hook.command_arguments];
-  args[0] = resolve(dirname(join(workspace, trunkPath)), args[0]);
-  args[args.length - 1] = join(root, "Cargo.toml");
+  const hook = fixture.hook;
+  const args = [resolve(import.meta.dir, "../../🦀️cargo/📜️script.ts"), ...hook.command_arguments, join(root, "Cargo.toml")];
   for (const [path, contents] of Object.entries(fixture.probe.files)) writeFileSync(join(root, path), contents as string);
   writeFileSync(join(root, "Trunk.toml"), fixture.probe.files["Trunk.toml"] + `\n[[hooks]]\nstage=${JSON.stringify(hook.stage)}\ncommand=${JSON.stringify(hook.command)}\ncommand_arguments=${JSON.stringify(args)}\n`);
   const env = { ...process.env, CARGO_TARGET_DIR: join(root, "target") }; delete env.NO_COLOR; delete env.FORCE_COLOR;

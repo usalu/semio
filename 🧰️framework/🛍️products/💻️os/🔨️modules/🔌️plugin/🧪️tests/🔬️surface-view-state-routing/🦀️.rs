@@ -63,11 +63,17 @@ async fn surface_routing_render(runtime: &super::PluginRuntime<VcsArtifactApp<Te
 
 /// 🪟️ THE route the browser renders every body through and no law ever covered:
 /// `Event::SurfaceVisible` → `plugin_mount_surface` → `SurfaceContexts` → `plugin_render_surface`.
-/// Mounts the four surfaces a split puzzle3d session mounts — two panes of the SAME window kind, the
-/// Inspection panel, and the leftover `1:window` alias bound to the last pane
-/// (`DEFAULT_LEFTOVER_WINDOW_SURFACE`, `🔌️PluginRuntime/🟦️.tsx`) — each with the host view of the
-/// refresh generation that mounted it, dispatches one browser-shaped `interactionSelect`, and then
-/// renders every body.
+/// Mounts the three surfaces a split puzzle3d session mounts — two panes of the SAME window kind and the
+/// Inspection panel — each with the host view of the refresh generation that mounted it, dispatches one
+/// browser-shaped `interactionSelect`, renders every body, and then requires the SYNTHETIC `1:window`
+/// surface to be refused by name.
+///
+/// 🚫️ WAVE B56 LAW: no surface named `window` is ever mounted for an app with window instances. The
+/// host used to mint exactly that fourth surface, bound to the last pane
+/// (`windowHostContextBindings`, `🔌️PluginRuntime/🟦️.tsx`, wave W-G3 §8.29), and its reconcile
+/// reservation refusal left every real surface deferred with the reactor answering `more-work` for ever
+/// (`reserve_refusal=1:window:registry-reservation-unavailable`, wave B54 §6.4). A mount request for that
+/// name is now a named fault, not an alias.
 ///
 /// 🎯️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B25: `SurfaceContexts` kept ONE `view_state` that
 /// every mount overwrote, so a body's `ViewModel` was rebuilt from whichever sibling surface mounted
@@ -112,9 +118,14 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
         surface_routing_render(&runtime, surface["id"].as_str().expect("surface id"), &expected[surface["id"].as_str().expect("surface id")], node_key).await;
     }
 
-    let alias = fixture["aliasSurface"].as_str().expect("alias surface");
-    let aliased_window = fixture["aliasWindowSurface"].as_str().expect("aliased window surface");
-    assert_eq!(serde_json::to_value(&expected[alias]).unwrap(), serde_json::to_value(&expected[aliased_window]).unwrap(), "the leftover window alias resolves to the window it was bound to");
+    let synthetic = &fixture["syntheticSurface"];
+    let synthetic_id = synthetic["id"].as_str().expect("synthetic surface id");
+    let synthetic_view = surface_routing_view(&fixture["base"], &synthetic["view"]);
+    let refused = super::plugin_mount_surface(&runtime, 1, synthetic_id.into(), synthetic["bodyKey"].as_str().expect("body key").into(), &super::encode_wire_serialized(&synthetic_view))
+        .await
+        .expect_err("the synthetic `window` surface must never mount for an app with window instances");
+    assert!(refused.message.contains(fixture["syntheticRefusal"].as_str().expect("refusal")), "the refusal must name the synthetic surface rule: {}", refused.message);
+    assert!(super::plugin_render_surface(&runtime, 1, synthetic_id).await.is_err(), "a refused synthetic surface must have no host context to render from");
     surface_routing_render(&runtime, fixture["pickedSurface"].as_str().expect("picked surface"), &expected[fixture["pickedSurface"].as_str().expect("picked surface")], node_key).await;
     surface_routing_render(&runtime, fixture["inspectionSurface"].as_str().expect("inspection surface"), &expected[fixture["inspectionSurface"].as_str().expect("inspection surface")], node_key).await;
 
@@ -129,6 +140,6 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
         };
         surface_routing_render(&runtime, id, &rebound, node_key).await;
     }
-    eprintln!("[DEBUG] four mounted surfaces each rendered against their own view state, one pick reached every body, and a host refresh rebound every surface without losing its identity");
+    eprintln!("[DEBUG] three mounted surfaces each rendered against their own view state, one pick reached every body, and a host refresh rebound every surface without losing its identity");
 }
 //#endregion 🪟️SurfaceViewStateRouting

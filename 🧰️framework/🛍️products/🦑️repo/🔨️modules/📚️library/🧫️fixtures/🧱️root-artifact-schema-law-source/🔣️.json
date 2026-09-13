@@ -26,7 +26,7 @@
       "directoryName": "🔍️owner-discovery",
       "parentKindId": "repo-schema-artifact",
       "kindId": "repo-schema-artifact-owner-discovery",
-      "declarations": ["policyDiscoverArtifactSchemaOwners"]
+      "declarations": ["PolicyArtifactSchemaOwnerDiscovery", "PolicyArtifactSchemaOwnerDiscoveryIssue", "policyDiscoverArtifactSchemaOwners"]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/🏷️export-identity/🟦️.ts",
@@ -124,6 +124,10 @@
     { "name": "symbolic link is not followed", "stat": "symlink", "read": "text", "expected": "symlink" },
     { "name": "unreadable source remains evidence", "stat": "file", "read": "unreadable", "expected": "unreadable" }
   ],
+  "ancestorSymlink": {
+    "ancestor": "linked-parent",
+    "path": "linked-parent/nested/leaf.txt"
+  },
   "discovery": {
     "owner": "✏️s/🔌️plugins/🧪️fixture/🗿️artifacts/🧪️document/🏅️standards/🔖️1/🪆️subsets/✳️any",
     "symlink": "✏️s/🔌️plugins/🪤️linked"
@@ -141,6 +145,7 @@
     "target": "test-root-artifact-schema-law-source",
     "command": "bun ./📜️script.ts test root-artifact-schema-law-source",
     "launchName": "🧬schema🗿artifact🧪root-artifact-schema-law-source",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-artifact-schema-law-source"
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-artifact-schema-law-source",
+    "inputs": ["{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/**/*.ts"]
   }
 }

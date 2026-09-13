@@ -22,7 +22,8 @@
     "hidden": "An item whose presence is not visible contributes no row and no rect.",
     "collapsed": "A collapsed item's nested rows contribute nothing.",
     "width": "A row spans its tree's full width; x is 0 in its parent's space.",
-    "y": "A row's y is its parent's own header band (a section) or own row (an item), plus the heights of the preceding sibling rows."
+    "y": "A row's y is its parent's own header band (a section) or own row (an item), plus the heights of the preceding sibling rows.",
+    "unreachedRows": "A collapsed branch's nested rows are still MOUNTED (the arena holds every authored row) and are never painted, so they measure zero and occupy no band — a row that is not drawn must never take the pointer from the row drawn beneath it."
   },
   "cases": [
     {
@@ -350,6 +351,28 @@
           "y": 24.0,
           "width": 200.0,
           "height": 24.0
+        },
+        {
+          "path": [
+            "outline",
+            "branch",
+            "leaf-a"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 200.0,
+          "height": 0.0
+        },
+        {
+          "path": [
+            "outline",
+            "branch",
+            "leaf-b"
+          ],
+          "x": 0.0,
+          "y": 0.0,
+          "width": 200.0,
+          "height": 0.0
         }
       ]
     },
@@ -446,6 +469,15 @@
       },
       "expects": "outline/branch/leaf-a",
       "why": "A nested row wins over the branch row that contains it."
+    },
+    {
+      "case": "a-collapsed-row-hides-its-nested-rows",
+      "point": {
+        "x": 10.0,
+        "y": 36.0
+      },
+      "expects": "outline/after",
+      "why": "The row beneath a collapsed branch keeps the pointer — the branch's unpainted nested rows measure zero and cannot intercept it."
     }
   ]
 }

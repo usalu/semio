@@ -1,6 +1,9 @@
 {
   "name": "@semio-tech/cad-js-module-aec-building-structure",
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🎚️config/🟦️.ts"]
+  },
   "targets": {
     "test": {
       "executor": "nx:run-commands",

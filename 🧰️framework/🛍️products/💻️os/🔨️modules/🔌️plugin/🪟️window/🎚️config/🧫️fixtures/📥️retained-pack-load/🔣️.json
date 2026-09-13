@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "budgets": {
+    "threadStackBytes": 2097152,
+    "typedMutationBytes": 4096,
+    "storeDecodePageConstant": "ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES",
+    "jobPayloadPageConstant": "JOB_PAYLOAD_PAGE_BYTES"
+  },
+  "owners": [
+    {
+      "kind": "retained-load-a",
+      "schema": "test.window.retained-load.a",
+      "windowIds": ["left", "right"]
+    },
+    {
+      "kind": "retained-load-b",
+      "schema": "test.window.retained-load.b",
+      "windowIds": ["other"]
+    }
+  ],
+  "candidateProtocol": {
+    "phases": [
+      "ingress",
+      "decoding",
+      "validating-identity",
+      "preparing-store",
+      "ready",
+      "cancelling",
+      "retiring-rejected-candidate",
+      "retiring-displaced-store",
+      "complete"
+    ],
+    "typedReplayInput": "retained-value-tokens",
+    "diagnosticOwnership": "first-fault-owned-until-terminal-close",
+    "authorityBoundary": "ready-current-generation-commit-only",
+    "identityChecks": [
+      "state-envelope",
+      "pack-component",
+      "version-one",
+      "owner-schema",
+      "spr-document-id",
+      "spr-document-schema",
+      "outer-inner-partition-id",
+      "current-lifetime-generation"
+    ],
+    "closeOrder": ["pending-event", "logical-owners", "allocation-demands", "terminal-empty"]
+  },
+  "requiredScenarios": [
+    {"id": "missing-envelope", "phase": "decode", "outcome": "rejected-before-authority-change"},
+    {"id": "wrong-component", "phase": "decode", "outcome": "rejected-before-authority-change"},
+    {"id": "wrong-state-schema", "phase": "decode", "outcome": "rejected-before-authority-change"},
+    {"id": "wrong-version", "phase": "decode", "outcome": "rejected-before-authority-change"},
+    {"id": "cancel-during-decode", "phase": "decode", "outcome": "retained-until-bounded-close"},
+    {"id": "cancel-ready-candidate", "phase": "ready", "outcome": "retained-until-bounded-close"},
+    {"id": "publication-load-race", "phase": "commit-race", "outcome": "one-current-generation-commits"},
+    {"id": "same-kind-and-cross-kind-reopen", "phase": "reopen", "outcome": "exact-packs-restored"},
+    {"id": "app-close", "phase": "close", "outcome": "terminal-empty"}
+  ]
+}

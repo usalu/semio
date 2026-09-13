@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧊️ `@semio-tech/framework-renderer-wgpu` task router. */
 import { strict as assert } from "node:assert";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import Ajv from "ajv";
 import {
@@ -9,18 +9,14 @@ import {
   ScriptRouter,
   SEMIO_ASSET_SERVER_PORT,
   SEMIO_ASSET_BASE_URL_ENV,
-  buildBudgetMs,
   daemonBudgetOpts,
   getWorkspaceRoot,
   orchestratorBudgetOpts,
   resolveTestLevel,
-  runBundleScriptMain,
   runCargoTestBudgeted,
   runExactCargoLaws,
   runCmdStatus,
   runVitest,
-  spawnDaemon,
-  frameworkOsPlaygroundDefaultPort,
   loadFrameworkOsPlaygroundCatalog,
 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { startAssetServer } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
@@ -28,21 +24,23 @@ import { nativeRendererBinary } from "../../🏗️compiler/🦀️native/📜�
 import { pluginModulesRoot } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import type { PlaygroundAssetSpec } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
-import { assertBundleModuleRoutes, checkBrowserBoot, renderBrowserEntry } from "../../⚙️browser-build/🟦️.ts";
+import { checkBrowserBoot, renderBrowserEntry } from "../../⚙️browser-build/🟦️.ts";
 import { checkFrameWorker, generateFrameWorker, renderFrameWorker } from "../../🎞️frame-worker/🏗️builder/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 const rustPackageRoot = resolve(import.meta.dir, "../🦀️rust");
 const crateName = "semio-framework-os-renderer-wgpu";
-const outDir = join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules/🧊️wgpu");
 const NATIVE_RUNNER_BENIGN_ENV_KEY = "SEMIO_DIRECT_CHILD_BENIGN";
 const NATIVE_RUNNER_BENIGN_ENV_VALUE = "preserved";
 
-function assertRendererCacheHome(): number {
-  const configuredOutDir = relative(rustPackageRoot, outDir).replaceAll(sep, "/");
-  const config = readFileSync(join(rustPackageRoot, "Trunk.toml"), "utf8");
-  assert.equal(/^dist = "([^"]+)"$/mu.exec(config)?.[1], configuredOutDir, "Trunk must emit WGPU renderer modules inside .🧬semio/🦑️repo");
-  return 1;
+function assertRendererOutputOwnership(): number {
+  const project = JSON.parse(readFileSync(join(import.meta.dir, "📋️project.json"), "utf8"));
+  for (const profile of ["dev", "release"]) {
+    const target = project.targets[profile === "dev" ? "wasm" : "wasm-release"];
+    assert.equal(target.cache, true);
+    assert.deepEqual(target.outputs, ["{workspaceRoot}/" + relative(repoRoot, join(rustPackageRoot, "dist", "wasm-" + profile)).replaceAll(sep, "/")]);
+  }
+  return 2;
 }
 
 function nativeRunnerEnvironmentKeyIsProtected(key: string): boolean {
@@ -97,51 +95,7 @@ process.exit(keys.some(protectedKey) || process.env.SEMIO_DIRECT_CHILD_BENIGN !=
   console.log("native-environment-check: poisoned ordinary runner sanitized and binary fail-closed guard precedes credential/plugin activation");
 }
 
-//#region 🌐️ DevServer
-/** @emoji 👥️ Full `process.env` passthrough for the spawned `trunk` child — raw (unprefixed)
- * `S_HUB_URL`/`S_USER`/`S_DATA_DIR` reach it exactly as set by the launching `dev` process (the wgpu
- * user launchers in `.vscode/🧩️launch.seed.jsonc`'s `devLaunchers.s.users`), since native/wasm-in-trunk
- * code reads `std::env` directly rather than through a `import.meta.env.VITE_*` compile-time define. */
-function trunkEnv(): NodeJS.ProcessEnv {
-  const env = { ...process.env };
-  delete env.NO_COLOR;
-  delete env.FORCE_COLOR;
-  if (env.SEMIO_PARITY_QUIET_CARGO === "1") env.RUSTFLAGS = [env.RUSTFLAGS, "-Awarnings"].filter(Boolean).join(" ");
-  return env;
-}
-
-/** 🌐️ Runs a long-lived child without blocking Bun's asset-server event loop. */
-async function runInteractiveCommand(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv): Promise<number> {
-  const daemon = spawnDaemon(command, args, { cwd, env });
-  const terminate = () => daemon.kill();
-  process.once("SIGINT", terminate);
-  process.once("SIGTERM", terminate);
-  try {
-    return await new Promise<number>((resolve, reject) => {
-      daemon.child.once("error", reject);
-      daemon.child.once("exit", (code) => resolve(code ?? 1));
-    });
-  } finally {
-    process.off("SIGINT", terminate);
-    process.off("SIGTERM", terminate);
-    daemon.kill();
-  }
-}
-
-/** @emoji 🔁️ Publishes Trunk's wasm-bindgen pair under the stable names the React shell's
- * `🎬️renderer-boot` requests (`/renderer-modules/wgpu/semio_framework_renderer_wgpu.js`). `Trunk.toml`
- * pins `filehash = false`, so both emitted names ARE the crate id and are addressed by name; the
- * previous scan for a `<crate>-` prefix could only ever match the content-hashed names Trunk no longer
- * emits, and failed every non-serving build with "missing trunk wgpu renderer js artifact" after Trunk
- * itself reported success. */
-function syncStableRendererArtifacts(): void {
-  const js = join(outDir, `${crateName}.js`);
-  const wasm = join(outDir, `${crateName}_bg.wasm`);
-  for (const artifact of [js, wasm]) if (!existsSync(artifact)) throw new Error(`missing trunk wgpu renderer artifact ${relative(repoRoot, artifact)}`);
-  copyFileSync(js, join(outDir, "semio_framework_renderer_wgpu.js"));
-  copyFileSync(wasm, join(outDir, "semio-framework-renderer-wgpu_bg.wasm"));
-}
-
+//#region 🌐️ NativeAssets
 function assetServerBaseUrl(): string {
   return `http://127.0.0.1:${SEMIO_ASSET_SERVER_PORT}`;
 }
@@ -168,39 +122,7 @@ function resolveNativeAppArgs(catalog: ReturnType<typeof loadFrameworkOsPlaygrou
   return row?.app ? ["--app", row.app] : [];
 }
 
-class TrunkBuildScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    await checkBrowserBoot(this.root);
-    await checkFrameWorker(this.root);
-    assertBundleModuleRoutes(this.root);
-    mkdirSync(outDir, { recursive: true });
-    const release = segments.includes("--release") || segments.includes("--dist");
-    const args = ["build", "--config", "Trunk.toml"];
-    if (release) args.push("--release");
-    if (runCmdStatus("trunk", args, { cwd: rustPackageRoot, env: trunkEnv(), budgetMs: buildBudgetMs() }) !== 0) throw new Error("trunk build failed for wgpu renderer");
-    syncStableRendererArtifacts();
-    console.log(`trunk built wgpu renderer -> ${outDir}`);
-  }
-}
-
-class TrunkServeScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    await checkBrowserBoot(this.root);
-    await checkFrameWorker(this.root);
-    assertBundleModuleRoutes(this.root);
-    const program = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
-    ensureAssetServer(program);
-    const catalog = loadFrameworkOsPlaygroundCatalog();
-    const defaultPort = String(frameworkOsPlaygroundDefaultPort(catalog, program, "wgpu"));
-    const port = process.env.S_OS_PORT ?? defaultPort;
-    const extra = segments.filter((segment, index, all) => segment !== "--port" && all[index - 1] !== "--port");
-    const args = ["serve", "--config", "Trunk.toml", "--port", port, ...extra];
-    const profile = process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
-    if (process.env.SEMIO_PARITY_QUIET_CARGO === "1") args.push("--ignore", pluginModulesRoot(profile));
-    if ((await runInteractiveCommand("trunk", args, rustPackageRoot, trunkEnv())) !== 0) throw new Error("trunk serve failed for wgpu renderer");
-  }
-}
-//#endregion 🌐️ DevServer
+//#endregion 🌐️ NativeAssets
 
 /** ⚖️ Reads one option for the headless native scale benchmark. */
 function scaleModeArgValue(segments: readonly string[], flag: string): string | undefined {
@@ -252,10 +174,10 @@ class NativeRunScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    assertRendererCacheHome();
+    assertRendererOutputOwnership();
     const { rest } = resolveTestLevel(segments);
     await runCargoTestBudgeted([crateName], this.repoRoot, rest);
-    await runVitest(this.root, rest, "vitest.config.ts");
+    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -460,7 +382,7 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
 /** @emoji 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
 class BrowserWorkerTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts", ...segments], "vitest.config.ts");
+    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts", ...segments], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -471,7 +393,7 @@ class BrowserWorkerTestScript extends BundleScript {
 class PreviewGeneratedTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "long");
-    await runVitest(this.root, ["🧪️tests/🧩️package-integration/🟦️.ts", ...rest], "vitest.config.ts");
+    await runVitest(this.root, ["🧪️tests/🧩️package-integration/🟦️.ts", ...rest], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -527,7 +449,7 @@ function collectWgpuColorLiteralViolations(bundleRoot: string): string[] {
 
 class LintScript extends BundleScript {
   run(_segments: string[]): void {
-    const artifactChecks = assertRendererCacheHome();
+    const artifactChecks = assertRendererOutputOwnership();
     const violations = collectWgpuColorLiteralViolations(this.root);
     if (violations.length === 0) {
       console.log(`framework-renderer-wgpu: color-literal and artifact-home lint passed (${artifactChecks} checks)`);
@@ -542,10 +464,6 @@ class LintScript extends BundleScript {
 //#endregion 🔖️LintScript
 
 const router = new ScriptRouter(import.meta.dir)
-  .register("wasm", TrunkBuildScript)
-  .register("build", TrunkBuildScript)
-  .register("serve", TrunkServeScript)
-  .register("dev", TrunkServeScript)
   .register("native", NativeRunScript)
   .register(
     "native-environment-check",
@@ -570,5 +488,5 @@ const router = new ScriptRouter(import.meta.dir)
   .register("lint", LintScript);
 
 if (import.meta.main) {
-  await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });
+  await router.run(process.argv.slice(2));
 }

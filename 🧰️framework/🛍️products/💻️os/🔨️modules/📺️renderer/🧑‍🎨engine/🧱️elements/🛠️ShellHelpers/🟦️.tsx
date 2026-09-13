@@ -388,6 +388,10 @@ export type LeftoverInteractionViewV1 = {
   readonly activeGranularity: Readonly<Record<string, string>>;
   readonly activeUtility?: string | null;
   readonly brushPreviewJson?: string | null;
+  /** 🪟️ The window INSTANCE the action that produced this leftover addressed, straight from the
+   * guest's own encode (`leftover_interaction_view_from`, `🔌️plugin/🦀️.rs`). `null` is a windowless,
+   * document-scoped action — never a synthetic window surface (wave B56). */
+  readonly windowId: string | null;
 };
 
 function leftoverStringRecord(value: unknown): Record<string, string> {
@@ -448,6 +452,7 @@ export function interactionViewFromLeftoverOutput(output: unknown): LeftoverInte
     locked: leftoverLockedRecord(view.locked),
     gumballActive: gumball.active === true || selectedIds.length > 0,
     gumballAnchorId: typeof gumball.anchorId === "string" ? gumball.anchorId : selectedIds[0] ?? null,
+    windowId: typeof view.windowId === "string" && view.windowId.length > 0 ? view.windowId : null,
     selection: leftoverSelectionRecord(view.selection),
     hover: leftoverHoverRecord(view.hover),
     activeMode: leftoverStringRecord(view.activeMode),
@@ -484,7 +489,7 @@ export function leftoverWorldGumballPoseV1(
     inst?.position ??
     (inst && inst.x != null && inst.y != null && inst.z != null ? ([inst.x, inst.y, inst.z] as const) : undefined);
   return {
-    transformMode: leftover.gumballActive || leftover.ids.length > 0 ? "move" : undefined,
+    transformMode: leftover.gumballActive || leftover.ids.length > 0 ? "transform" : undefined,
     gumballTarget,
   };
 }
@@ -1317,7 +1322,7 @@ export function appWindowLabel(app: Pick<AppDefinition, "label" | "breadcrumb" |
 // 📌️ The panel carriage moved to its own cycle-free module (`📌️panel/🟦️.ts`) so a law can drive
 // it — importing this file from a test hits the `ShellHelpers → Shell → ShellHost` cycle. Re-exported
 // here so every existing call site keeps one import.
-export { buildSpacePanelState, panelJsonFromState, parsePanelState, studioPanelFocusingSpawned, viewStateWithSpacePanel } from "./📌️panel/🟦️.ts";
+export { buildSpacePanelState, isSpacePanelState, panelJsonFromState, parsePanelState, studioPanelFocusingSpawned, viewStateWithSpacePanel } from "./📌️panel/🟦️.ts";
 
 /** @emoji 🧭️ Default anchor a plugin-declared panel-tab `group` docks into — groups only ever map to the four corners; the four edge-middle anchors start empty and are user-populated via drag-and-drop or a dock skeleton override. */
 export function panelAnchorForGroup(group: string): Anchor {
@@ -2001,27 +2006,22 @@ export function uiIntentToActionDescriptor(intent: UiIntent): ActionDescriptor {
 export function uiNodeToTreePanelConfig(node: BuiltNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
   const store = new UiDocumentStore(`panel:${node.key}`);
   store.loadSnapshot(builtNodeToSnapshot(`panel:${node.key}`, node));
+  // 🧭️ Never park the interpreted body on an empty-label `TreeDataItem.control` — property-layout rows
+  // split every row into a wide label column plus a fixed value column, which parked the lone default
+  // `file-text` icon in the left column and squeezed the whole inspector/document/catalogue tree into
+  // the value column (ticket 26/08/01 FIX-INSPECTOR-TREES-TO-MATCH-DOCUMENT, remeasured 2026-09-13).
+  // Host the body as the tree's full-width `emptyState` instead; the inner document still renders its
+  // own `Tree` when the snapshot root is `component.type === "tree"`.
   return {
-    sections: [
-      {
-        id: `${node.key}.section`,
-        label: "",
-        defaultOpen: true,
-        items: [
-          {
-            id: node.key,
-            label: "",
-            control: (
-              <ShellFaultBoundary boundaryId={`panel-${node.key}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                <div className="min-h-0 min-w-0 w-full flex-1">
-                  <InterpretedUiNode store={store} onAction={onAction} onIntent={(intent) => onAction(uiIntentToActionDescriptor(intent))} />
-                </div>
-              </ShellFaultBoundary>
-            ),
-          },
-        ],
-      },
-    ],
+    sections: [],
+    emptyState: (
+      <ShellFaultBoundary boundaryId={`panel-${node.key}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+        <div className="min-h-0 min-w-0 w-full flex-1">
+          <InterpretedUiNode store={store} onAction={onAction} onIntent={(intent) => onAction(uiIntentToActionDescriptor(intent))} />
+        </div>
+      </ShellFaultBoundary>
+    ),
+    className: "min-w-0 w-full",
     sortableSections: false,
   };
 }

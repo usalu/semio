@@ -1,0 +1,41 @@
+{
+  "schema": "semio.wgpu.browser-serving/v1",
+  "profiles": [
+    "dev",
+    "release"
+  ],
+  "routes": [
+    {
+      "url": "/🚀️boot.js/🟨️.js",
+      "root": "boot",
+      "file": "🟨️.js",
+      "content": "export const boot = 1;"
+    },
+    {
+      "url": "/🎞️frame-worker.js/🟨️.js",
+      "root": "worker",
+      "file": "🟨️.js",
+      "content": "export const worker = 1;"
+    },
+    {
+      "url": "/renderer-modules/wgpu/semio-framework-os-renderer-wgpu.js",
+      "root": "compiler",
+      "file": "semio-framework-os-renderer-wgpu.js",
+      "content": "export const renderer = 1;"
+    },
+    {
+      "url": "/🔌️plugin-modules/sample/🟨️.js",
+      "root": "modules",
+      "file": "sample/🟨️.js",
+      "content": "export const plugin = 1;"
+    },
+    {
+      "url": "/🧩️extension-modules/sample/🔣️.json",
+      "root": "extensions",
+      "file": "sample/🔣️.json",
+      "content": "{\"manifest\":{\"pluginId\":\"sample\"}}"
+    }
+  ],
+  "missing": "/🔌️plugin-modules/missing/🔣️.json",
+  "reload": "export const renderer = 2;"
+}

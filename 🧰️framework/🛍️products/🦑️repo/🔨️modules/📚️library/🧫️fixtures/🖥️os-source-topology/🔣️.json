@@ -147,7 +147,7 @@
       "kind": "typescript",
       "anchor": "EXTENSION_INSTALL_PATH",
       "consumers": [
-        "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
+        "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📋️project.json"
       ],
       "sourceDisposition": "removed"
@@ -188,8 +188,8 @@
       "kind": "typescript",
       "anchor": "semioBackboneVitePlugin",
       "consumers": [
-        "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts"
+        "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
       ],
       "sourceDisposition": "removed"
     },
@@ -249,7 +249,7 @@
       "kind": "typescript",
       "anchor": "Renderer package adapter",
       "consumers": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
       ],
       "sourceDisposition": "removed"
     },
@@ -299,7 +299,7 @@
       "kind": "typescript",
       "anchor": "stripExecutableShebang",
       "consumers": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/vitest.config.ts"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎚️config/🟦️.ts"
       ],
       "sourceDisposition": "removed"
     }

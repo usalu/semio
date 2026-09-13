@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "vectors"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "destination",
+          "role"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "pattern": "^\\.cursor/[^/]+\\.ts$"
+          },
+          "destination": {
+            "type": "string",
+            "pattern": "^📋️cursor-intake/[^/]+/🟦️\\.ts$"
+          },
+          "role": {
+            "const": "preserved-input"
+          }
+        }
+      }
+    }
+  }
+}

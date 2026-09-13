@@ -1,6 +1,9 @@
 {
   "name": "@semio-tech/framework-async",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🧪️tests/🎚️config/🟦️.ts"]
+  },
   "targets": {
     "info": {
       "executor": "nx:run-commands",

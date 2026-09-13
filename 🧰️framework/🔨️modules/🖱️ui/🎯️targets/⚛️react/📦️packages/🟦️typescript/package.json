@@ -17,13 +17,11 @@
     "./🧵️.css": "../../../../🧵️styles/🎨️.css",
     "./🌐️globals-ui.css": "../../../../🌐️globals/🎨️.css",
     "./🌓️theme.css": "../../../../🎨️styling/🌓️theme/🎨️.css",
-    "./tailwind.config": "./tailwind.config.ts",
-    "./postcss.config": "./postcss.config.ts",
-    "./eslint.config": "./eslint.config.ts"
+    "./postcss.config": "./postcss.config.ts"
   },
   "targets": {
     "lint": {
-      "command": "bunx eslint --max-warnings 0 --config eslint.config.ts .",
+      "command": "bun ./📜️script.ts lint",
       "cwd": "."
     }
   },

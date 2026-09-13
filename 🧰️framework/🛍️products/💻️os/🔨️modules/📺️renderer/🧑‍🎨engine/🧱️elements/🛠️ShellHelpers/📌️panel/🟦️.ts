@@ -14,29 +14,60 @@
  * the payload that put 248 635 characters against a 65 536-character bound
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 
-import { packValueFromBase64, packValueToBase64 } from "@semio-tech/framework-os";
-import type { SpacePanelState, SpaceProgramEntry, SpawnedAppEntry } from "../../🐚️Shell/🟦️.tsx";
+import type { SpacePanelState, SpawnedAppEntry } from "../../🐚️Shell/🟦️.tsx";
 import type { PluginViewState as ViewModel } from "@semio-tech/framework";
 
-/** 📌️ Builds a panel. `programs` is the roster the shell never fills — it is kept as an explicit,
- * always-empty parameter so a caller that tries to fill it is visible at the call site. */
-export function buildSpacePanelState(programs: readonly SpaceProgramEntry[], spawnedApps: readonly SpawnedAppEntry[], activePanelTab = "s-play-catalogue", activeSpawnedId?: string): SpacePanelState {
-  return { activePanelTab, programs, spawnedApps, activeSpawnedId };
+const PANEL_JSON_CAPACITY = 65_536;
+const PANEL_IDENTIFIER_CAPACITY = 256;
+const SPAWNED_APP_CAPACITY = 64;
+const CONTROL = /[\u0000-\u001f\u007f]/u;
+
+function isIdentifier(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0 && Array.from(value).length <= PANEL_IDENTIFIER_CAPACITY && !CONTROL.test(value);
+}
+
+function isCarriedText(value: unknown): value is string {
+  return typeof value === "string" && Array.from(value).length <= PANEL_JSON_CAPACITY;
+}
+
+/** 📌️ Validates the strict host-owned panel carriage independently of its JSON parser. */
+export function isSpacePanelState(value: unknown): value is SpacePanelState {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const state = value as Record<string, unknown>;
+  if (Object.keys(state).some((key) => !["activePanelTab", "spawnedApps", "activeSpawnedId"].includes(key))) return false;
+  if (!isIdentifier(state.activePanelTab) || !Array.isArray(state.spawnedApps) || state.spawnedApps.length > SPAWNED_APP_CAPACITY) return false;
+  const ids = new Set<string>();
+  for (const value of state.spawnedApps) {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+    const entry = value as Record<string, unknown>;
+    if (Object.keys(entry).sort().join("|") !== "appId|breadcrumb|id|instanceId|label|pluginId") return false;
+    if (!isIdentifier(entry.id) || ids.has(entry.id) || !isIdentifier(entry.pluginId) || !isIdentifier(entry.appId)) return false;
+    if (!Number.isInteger(entry.instanceId) || (entry.instanceId as number) < 0 || (entry.instanceId as number) > 0xffff_ffff) return false;
+    if (!isCarriedText(entry.label) || !Array.isArray(entry.breadcrumb) || entry.breadcrumb.length > SPAWNED_APP_CAPACITY || entry.breadcrumb.some((part) => !isCarriedText(part))) return false;
+    ids.add(entry.id);
+  }
+  if (state.activeSpawnedId !== undefined && (!isIdentifier(state.activeSpawnedId) || !ids.has(state.activeSpawnedId))) return false;
+  return Array.from(JSON.stringify(value)).length <= PANEL_JSON_CAPACITY;
+}
+
+/** 📌️ Builds a host panel state without duplicating the installed app catalogue. */
+export function buildSpacePanelState(spawnedApps: readonly SpawnedAppEntry[], activePanelTab: string, activeSpawnedId?: string): SpacePanelState {
+  return { activePanelTab, spawnedApps, activeSpawnedId };
 }
 
 /** 📦️ Encodes a panel for `ViewModel.panelJson`. */
 export function panelJsonFromState(state: SpacePanelState): string {
-  return packValueToBase64(state);
+  if (!isSpacePanelState(state)) throw new Error("host panel state violates its strict carriage contract");
+  return JSON.stringify(state);
 }
 
-/** 📦️ Decodes the panel a view state carries; an absent or unreadable payload is no panel. */
+/** 📦️ Decodes the strict JSON panel a view state carries; only an absent payload is no panel. */
 export function parsePanelState(viewState: ViewModel): SpacePanelState | null {
   if (!viewState.panelJson) return null;
-  try {
-    return packValueFromBase64(viewState.panelJson) as SpacePanelState;
-  } catch {
-    return null;
-  }
+  if (Array.from(viewState.panelJson).length > PANEL_JSON_CAPACITY) throw new Error("host panel JSON exceeds its carriage capacity");
+  const state: unknown = JSON.parse(viewState.panelJson);
+  if (!isSpacePanelState(state)) throw new Error("host panel JSON violates its strict carriage contract");
+  return state;
 }
 
 /**
@@ -48,7 +79,7 @@ export function parsePanelState(viewState: ViewModel): SpacePanelState | null {
  */
 export function studioPanelFocusingSpawned(panel: SpacePanelState, spawned: SpawnedAppEntry): SpacePanelState {
   const spawnedApps = panel.spawnedApps.some((entry) => entry.id === spawned.id) ? panel.spawnedApps.map((entry) => (entry.id === spawned.id ? spawned : entry)) : [...panel.spawnedApps, spawned];
-  return buildSpacePanelState(panel.programs, spawnedApps, panel.activePanelTab, spawned.id);
+  return buildSpacePanelState(spawnedApps, panel.activePanelTab, spawned.id);
 }
 
 /** @emoji 🐚️ Commits a studio panel into a view state's `panelJson` for a single host-effect session write. */

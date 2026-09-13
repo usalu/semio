@@ -3,8 +3,7 @@ use crate::editor::architect::modes::edit::windows::{adjacency, graph, report};
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use store::{ArtifactDsl, ArtifactPack};
 
-fn block_on_architect_windows<F: std::future::Future>(future: F) -> F::Output {
-    let mut future = std::pin::pin!(future);
+fn block_on_architect_windows<F: std::future::Future>(mut future: std::pin::Pin<Box<F>>) -> F::Output {
     let waker = std::task::Waker::noop();
     let mut context = std::task::Context::from_waker(waker);
     loop {
@@ -18,6 +17,17 @@ fn block_on_architect_windows<F: std::future::Future>(future: F) -> F::Output {
 #[test]
 fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-ownership/🔣️.json")).expect("neutral Architect window fixture");
+    let app_config = crate::editor::architect::config::ArchitectConfig::default();
+    assert_eq!(<crate::editor::architect::config::ArchitectConfig as ArtifactDsl>::envelope_id(), "architect.config");
+    assert_eq!(crate::editor::architect::config::ArchitectConfig::parse_dsl(&app_config.print_dsl()).expect("Architect app-config DSL"), app_config);
+    assert_eq!(crate::editor::architect::config::ArchitectConfig::decode_pack(&app_config.encode_pack()).expect("Architect app-config Pack"), app_config);
+    let app_schema = crate::editor::architect::config::schema::app_schema_descriptor();
+    assert_eq!(app_schema.id, "s.architect.architect");
+    assert!(app_schema.config.rust.contains("s.architect.architect.config"));
+    assert!(app_schema.config.typescript.contains("interface ArchitectConfig"));
+    assert!(app_schema.config.graphql.contains("type ArchitectConfig"));
+    assert!(app_schema.config.json_schema.contains("/app/architect/architect/config/schema.json"));
+    assert!(app_schema.config.proto.contains("package semio.app.architect.architect;"));
     let register_base: ArchitectRegisterWindowConfig = dsl::json::from_json_str(&fixture["windows"]["register"]["left"]["config"].to_string()).expect("Register base");
     let register_expected: ArchitectRegisterWindowConfig = dsl::json::from_json_str(&fixture["expectedLeft"]["register"].to_string()).expect("Register expected");
     let register_mutation: ArchitectRegisterWindowConfigMutation = dsl::json::from_json_str(&fixture["leftMutations"]["register"].to_string()).expect("Register mutation");
@@ -65,19 +75,129 @@ fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
 }
 
 #[test]
-fn architect_window_ownership_runtime_isolates_renders_reloads_and_report_selection() {
+fn architect_window_ownership_interactive_classification_matches_retained_owners() {
+    use crate::editor::architect::{create_architect_app, ArchitectPlayApp, ArchitectWindowCommandJobFactory, ARCHITECT_WINDOW_TOOL_IDS};
+    use semio_framework_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory, InteractiveJobClassification};
+
+    let definition = create_architect_app();
+    let actions = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).collect::<Vec<_>>();
+    let batch_expected = [
+        "addElement",
+        "addRegisterItem",
+        "applyTemplate",
+        "exportProgram",
+        "exportRegistersCsv",
+        "importProgram",
+        "importRegistersCsv",
+        "nodeGraphEdit",
+        "patchRegisterItem",
+        "removeElement",
+        "removeRegisterItem",
+        "runAnalysis",
+        "runReport",
+        "runValidation",
+        "search",
+        "setAdjacencyField",
+        "setAdjacencyKind",
+    ]
+    .into_iter()
+    .collect::<std::collections::BTreeSet<_>>();
+    let retained = ARCHITECT_WINDOW_TOOL_IDS.iter().copied().collect::<std::collections::BTreeSet<_>>();
+    let declared = retained.union(&batch_expected).copied().collect::<std::collections::BTreeSet<_>>();
+    let domain_actions = actions.iter().filter(|action| declared.contains(action.id.as_str())).collect::<Vec<_>>();
+    assert_eq!(domain_actions.iter().map(|action| action.id.as_str()).collect::<std::collections::BTreeSet<_>>(), declared);
+    let migrated = actions
+        .iter()
+        .filter(|action| declared.contains(action.id.as_str()))
+        .filter(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated)
+        .map(|action| action.id.as_str())
+        .collect::<std::collections::BTreeSet<_>>();
+    let proofs = <ArchitectPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().into_iter().map(|proof| proof.tool_id()).collect::<std::collections::BTreeSet<_>>();
+    let publications = <ArchitectWindowCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(migrated, retained);
+    assert_eq!(proofs, retained);
+    assert_eq!(publications, retained);
+    let batch = actions
+        .iter()
+        .filter(|action| declared.contains(action.id.as_str()))
+        .filter(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .map(|action| action.id.as_str())
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(batch, batch_expected);
+    assert!(domain_actions.iter().all(|action| action.semantics.execution.interactive_job != InteractiveJobClassification::Unclassified));
+    eprintln!("[DEBUG] Architect interactive catalog has three bounded retained WindowConfig actions and seventeen truthful batch-only pending rewrites");
+}
+
+#[test]
+fn architect_window_ownership_report_handler_preserves_exact_invocation_identity() {
+    use crate::editor::architect::commands::analysis::run_report;
+    use crate::op::ProgramMutation;
+    use semio_framework_plugin::{ArtifactView, HistoryView, ViewModel, ViewWindowInstance, WindowConfigOwner};
+
+    fn authored_id(emit: &semio_framework_plugin::Emit<crate::op::ProgramMutation, crate::editor::architect::config::ArchitectConfigMutation>) -> crate::EntityId {
+        let Some(ProgramMutation::CreateReportRecord(payload)) = emit.artifact_mutations.first() else { panic!("one authored ReportRecord") };
+        assert_eq!(emit.artifact_mutations.len(), 1);
+        payload.report_record.header.id.clone()
+    }
+
+    let program = crate::sample_plugin();
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&program, &history);
+    let all = ViewModel {
+        window_instances: [
+            ("architect-report-left", report::config::ArchitectReportWindowConfigOwner::WINDOW_KIND_ID),
+            ("architect-report-right", report::config::ArchitectReportWindowConfigOwner::WINDOW_KIND_ID),
+            ("architect-graph-left", graph::config::ArchitectGraphWindowConfigOwner::WINDOW_KIND_ID),
+        ]
+        .into_iter()
+        .map(|(id, window_kind_id)| ViewWindowInstance { id: id.into(), window_kind_id: window_kind_id.into() })
+        .collect(),
+        ..Default::default()
+    };
+    let left = all.for_window_instance("architect-report-left").expect("left Report");
+    let right = all.for_window_instance("architect-report-right").expect("right Report");
+    let graph = all.for_window_instance("architect-graph-left").expect("Graph");
+    let payload = run_report::RunReport { report_kind: "executiveSummary".into() };
+
+    let unscoped = run_report::handle_with_view(&payload, &doc, None).expect("unscoped Report authoring");
+    let unscoped_id = authored_id(&unscoped);
+    assert!(unscoped.window_config_mutations.is_empty());
+    let wrong_kind = run_report::handle_with_view(&payload, &doc, Some(&graph)).expect("Graph-scoped Report authoring");
+    let wrong_kind_id = authored_id(&wrong_kind);
+    assert!(wrong_kind.window_config_mutations.is_empty());
+
+    let stale = ViewModel { window_id: Some("architect-report-gone".into()), window_instances: all.window_instances.clone(), ..Default::default() };
+    assert!(run_report::handle_with_view(&payload, &doc, Some(&stale)).is_err());
+    let right_emit = run_report::handle_with_view(&payload, &doc, Some(&right)).expect("right Report authoring");
+    let right_id = authored_id(&right_emit);
+    assert_eq!(right_emit.window_config_mutations.len(), 1);
+    assert_eq!(right_emit.window_config_mutations[0].window_id(), "architect-report-right");
+    assert_eq!(right_emit.window_config_mutations[0].window_kind_id(), report::config::ArchitectReportWindowConfigOwner::WINDOW_KIND_ID);
+    let left_emit = run_report::handle_with_view(&payload, &doc, Some(&left)).expect("left Report authoring");
+    let left_id = authored_id(&left_emit);
+    assert_eq!(left_emit.window_config_mutations.len(), 1);
+    assert_eq!(left_emit.window_config_mutations[0].window_id(), "architect-report-left");
+    assert_eq!(left_emit.window_config_mutations[0].window_kind_id(), report::config::ArchitectReportWindowConfigOwner::WINDOW_KIND_ID);
+    assert_eq!([unscoped_id, wrong_kind_id, right_id, left_id].into_iter().collect::<std::collections::HashSet<_>>().len(), 4);
+    eprintln!("[DEBUG] Architect Report handler authored exact records without a window and from Graph, rejected stale identity, and addressed only each exact invoking Report window");
+}
+
+#[test]
+fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
     std::thread::Builder::new()
         .name("architect-window-ownership-law".into())
         .stack_size(2 * 1024 * 1024)
         .spawn(|| {
-            block_on_architect_windows(async {
+            eprintln!("[DEBUG] Architect window ownership runtime entered the 2 MiB thread");
+            block_on_architect_windows(Box::pin(async {
                 use crate::editor::architect::commands::adjacency::set_adjacency_filter;
-                use crate::editor::architect::commands::analysis::run_report;
                 use crate::editor::architect::commands::graph::node_graph_viewport;
                 use crate::editor::architect::commands::register::select_register;
                 use crate::editor::architect::{create_architect_app, ArchitectCommand, ArchitectPlayApp};
                 use semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt;
                 use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
+
+                eprintln!("[DEBUG] Architect window ownership runtime began its heap-pinned future");
 
                 type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>>;
 
@@ -145,7 +265,9 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_report_select
                 let graph_right = all.for_window_instance("architect-graph-right").expect("right Graph");
                 let report_left = all.for_window_instance("architect-report-left").expect("left Report");
                 let report_right = all.for_window_instance("architect-report-right").expect("right Report");
+                eprintln!("[DEBUG] Architect window ownership runtime is constructing the first registered app");
                 let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<ArchitectPlayApp>>(manifest).await);
+                eprintln!("[DEBUG] Architect window ownership runtime constructed the first registered app");
                 app.bind_instance_id(93).await;
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -182,70 +304,12 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_report_select
                         return Err("Architect exact window commands changed document bytes".into());
                     }
 
-                    let reports_before = app.snapshot().map_err(|error| format!("{error:?}"))?.reports.len();
-                    let no_window = dispatch(
-                        &mut app,
-                        ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }),
-                        None,
-                    )
-                    .await?;
-                    if no_window.lanes.iter().any(|lane| *lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig) {
-                        return Err("Architect unscoped report run selected a Report window".into());
-                    }
-                    let other_window = dispatch(
-                        &mut app,
-                        ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }),
-                        Some(&graph_left),
-                    )
-                    .await?;
-                    if other_window.lanes.iter().any(|lane| *lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig) {
-                        return Err("Architect report run from Graph selected a Report window".into());
-                    }
-                    let stale_report = ViewModel { window_id: Some("architect-report-gone".into()), window_instances: all.window_instances.clone(), ..Default::default() };
-                    let stale_meta = ActionMeta { instance_id: 93, view_state: Some(stale_report), ..artifact_app_laws::meta("architect-window-ownership-stale-report") };
-                    if app
-                        .dispatch_typed(
-                            ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }),
-                            &stale_meta,
-                        )
-                        .await
-                        .is_ok()
-                    {
-                        return Err("Architect report run accepted stale concrete window identity".into());
-                    }
-                    let right_report = dispatch(
-                        &mut app,
-                        ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }),
-                        Some(&report_right),
-                    )
-                    .await?;
-                    if right_report.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count() != 1 {
-                        return Err("Architect exact Report run did not publish one Report WindowConfig lane".into());
-                    }
-                    let right_selected = report_config(&mut app, &report_right).await?.selected_report_id.ok_or_else(|| "right Report window did not select its authored record".to_string())?;
-                    if report_config(&mut app, &report_left).await? != report::config::ArchitectReportWindowConfig::default() {
-                        return Err("Architect right Report run changed the left Report selection".into());
-                    }
-                    dispatch(
-                        &mut app,
-                        ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }),
-                        Some(&report_left),
-                    )
-                    .await?;
-                    let left_selected = report_config(&mut app, &report_left).await?.selected_report_id.ok_or_else(|| "left Report window did not select its authored record".to_string())?;
-                    if left_selected == right_selected || report_config(&mut app, &report_right).await?.selected_report_id.as_ref() != Some(&right_selected) {
-                        return Err("Architect Report selections lost exact authored-record identity".into());
-                    }
-                    let program = app.snapshot().map_err(|error| format!("{error:?}"))?;
-                    if program.reports.len() != reports_before + 4
-                        || !program.reports.iter().any(|item| item.header.id == left_selected)
-                        || !program.reports.iter().any(|item| item.header.id == right_selected)
-                    {
-                        return Err("Architect report commands did not persist every authored ReportRecord".into());
-                    }
-                    let rendered_left = render(&mut app, report::ARCHITECT_BODY_REPORT, &report_left).await?;
-                    if !rendered_left.contains(&left_selected.to_string()) && !rendered_left.contains("Overview") {
-                        return Err("Architect Report render did not resolve the selected authored record".into());
+                    let rendered_register = render(&mut app, crate::editor::architect::modes::edit::windows::register::ARCHITECT_BODY_REGISTER, &register_left).await?;
+                    let rendered_adjacency = render(&mut app, adjacency::ARCHITECT_BODY_ADJACENCY, &adjacency_left).await?;
+                    let rendered_graph = render(&mut app, graph::ARCHITECT_BODY_GRAPH, &graph_left).await?;
+                    let rendered_report = render(&mut app, report::ARCHITECT_BODY_REPORT, &report_left).await?;
+                    if rendered_register.is_empty() || rendered_adjacency.is_empty() || rendered_graph.is_empty() || !rendered_report.contains("Generate a report in this window") {
+                        return Err("Architect exact windows did not render their owned state".into());
                     }
                     let app_config_after = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
                     if app_config_before.pack != app_config_after.pack || app_config_before.spr != app_config_after.spr {
@@ -273,8 +337,8 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_report_select
                         || restored_right_adjacency != adjacency::config::ArchitectAdjacencyWindowConfig::default()
                         || restored_left_graph.viewport != (semio_framework_os_kernel::Viewport2d { x: -20.0, y: 12.5, zoom: 1.75 })
                         || restored_right_graph != graph::config::ArchitectGraphWindowConfig::default()
-                        || restored_left_report.selected_report_id.as_ref() != Some(&left_selected)
-                        || restored_right_report.selected_report_id.as_ref() != Some(&right_selected)
+                        || restored_left_report != report::config::ArchitectReportWindowConfig::default()
+                        || restored_right_report != report::config::ArchitectReportWindowConfig::default()
                     {
                         return Err("Architect exact window configs changed during reopen".into());
                     }
@@ -293,8 +357,8 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_report_select
                 }
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
                 outcome.expect("Architect exact-window ownership runtime law");
-                eprintln!("[DEBUG] Architect runtime isolated eight exact windows, authored four reports, restored all owner packs, rendered the selected record, preserved non-report document bytes and app-cache bytes, and closed terminal-empty");
-            })
+                eprintln!("[DEBUG] Architect runtime dispatched three bounded retained window commands, isolated eight exact windows, rendered all four owner kinds, restored every owner pack, preserved document and app-cache bytes, and closed terminal-empty");
+            }))
         })
         .expect("spawn Architect window ownership law")
         .join()

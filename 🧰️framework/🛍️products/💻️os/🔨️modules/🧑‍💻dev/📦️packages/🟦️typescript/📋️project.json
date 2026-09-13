@@ -1,11 +1,13 @@
 {
   "name": "@semio-tech/framework-os-dev",
   "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/**/*",
-      "{projectRoot}/**/*"
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎚️config/🟦️.ts"
     ]
   },
   "targets": {
@@ -14,8 +16,8 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts canonical-bootstrap-folder-mirror-check source"
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts canonical-bootstrap-folder-mirror-check source"
       }
     },
     "canonical-bootstrap-folder-mirror-process-check": {
@@ -23,8 +25,8 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts canonical-bootstrap-folder-mirror-check process"
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts canonical-bootstrap-folder-mirror-check process"
       }
     },
     "browser-host-staging-check": {
@@ -32,8 +34,8 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test quick --testNamePattern='ticket-owned browser host staging'"
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test quick --testNamePattern='ticket-owned browser host staging'"
       }
     },
     "closed-browser-component-factory-check": {
@@ -41,68 +43,75 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts closed-browser-component-factory-check"
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts closed-browser-component-factory-check"
       }
     },
     "dev": {
       "executor": "nx:run-commands",
-      "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev",
-        "forwardAllArgs": true
-      },
       "cache": false,
-      "continuous": true
+      "continuous": true,
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/framework-os-dev:activate-s-wgpu-dev"
+      ],
+      "options": {
+        "command": "bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve s dev",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      }
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts build",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ../../🚚️distribution/🏁completion/📜️script.ts complete",
         "forwardAllArgs": true
       },
       "dependsOn": [
-        "@semio-tech/assets:build"
-      ]
+        "build-s-react-release"
+      ],
+      "cache": true,
+      "outputs": [],
+      "inputs": []
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test quick",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test quick",
         "forwardAllArgs": true
       }
     },
     "test-long": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test long",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test long",
         "forwardAllArgs": true
       }
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test exhaustive",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
       }
     },
     "verify": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify",
         "forwardAllArgs": true
       }
     },
@@ -111,8 +120,8 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts bench",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts bench",
         "forwardAllArgs": true
       }
     },
@@ -120,16 +129,16 @@
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts plugin",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts plugin",
         "forwardAllArgs": true
       }
     },
     "parity": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts parity",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts parity",
         "forwardAllArgs": true
       }
     },
@@ -137,8 +146,8 @@
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts layer-lint",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts layer-lint",
         "forwardAllArgs": true
       }
     },
@@ -146,8 +155,8 @@
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts index-lint",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts index-lint",
         "forwardAllArgs": true
       }
     },
@@ -155,8 +164,8 @@
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts host-handle-lint",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts host-handle-lint",
         "forwardAllArgs": true
       }
     },
@@ -164,8 +173,8 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify collab",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify collab",
         "forwardAllArgs": true
       }
     },
@@ -173,8 +182,8 @@
       "executor": "nx:run-commands",
       "cache": true,
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify catalog",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify catalog",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -182,8 +191,8 @@
     "generate-distribution": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts distribution generate",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts distribution generate",
         "forwardAllArgs": true
       }
     },
@@ -191,16 +200,16 @@
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts distribution preview",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts distribution preview",
         "forwardAllArgs": true
       }
     },
     "check-distribution": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts distribution check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts distribution check",
         "forwardAllArgs": true
       }
     },
@@ -242,8 +251,8 @@
     "generate-scale-fixture": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts generate scale-fixture",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate scale-fixture",
         "forwardAllArgs": true
       }
     },
@@ -251,8 +260,8 @@
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts preview-generated",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated",
         "forwardAllArgs": true
       }
     },
@@ -260,8 +269,8 @@
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts scale-fixture check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts scale-fixture check",
         "forwardAllArgs": true
       }
     },
@@ -274,8 +283,8 @@
         "@semio-tech/framework-renderer-wgpu:native-build"
       ],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts bench plugins native",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts bench plugins native",
         "forwardAllArgs": true
       }
     },
@@ -287,8 +296,8 @@
         "workspace:deps-browsers"
       ],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts bench plugins react",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts bench plugins react",
         "forwardAllArgs": true
       }
     },
@@ -300,8 +309,8 @@
         "workspace:deps-browsers"
       ],
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts bench plugins wgpu",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts bench plugins wgpu",
         "forwardAllArgs": true
       }
     },
@@ -310,7 +319,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ../../\ud83d\ude9a\ufe0fdistribution/\ud83d\udcdc\ufe0fscript.ts inputs",
+        "command": "bun ../../🚚️distribution/📜️script.ts inputs",
         "forwardAllArgs": true
       }
     }

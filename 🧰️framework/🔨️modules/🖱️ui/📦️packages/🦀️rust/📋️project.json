@@ -2,7 +2,23 @@
   "name": "@semio-tech/ui-rs",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/*"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/📥️source/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/📽️projection/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/📋️plan/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/📤️publication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️axes/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕹️interaction/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts"
+    ]
   },
   "targets": {
     "test": {

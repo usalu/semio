@@ -135,8 +135,30 @@ Two laws added, `⚛️reactor/🩹️patches/🧪️tests/🔬️unit/🦀️.r
 
 | run | result |
 | --- | --- |
-| baseline, HEAD + B48 (`🗑️generated/wave-B52-laws-baseline.txt`) | 4 × `patches::tests` FAILED (`issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner`, `mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes`, `mounted_output_admission_direct_receiver_preserves_captured_lifetime_generation_and_callback_roots`, `mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner`), then `a_nakagin_scale_mixed_surface_turn_retires_every_ladder_within_a_handful_of_reactor_turns` **spinning past the 600 s budget** |
-| with the fix (`🗑️generated/wave-B52-laws-final.txt`) | `test result: ok. 42 passed; 0 failed; 0 ignored; 0 measured; 649 filtered out; finished in 0.59s` |
+| baseline, HEAD + B48 (`🗑️generated/wave-B52-laws-baseline.txt`) | `test result: FAILED. 35 passed; 5 failed; 0 ignored; 0 measured; 649 filtered out; finished in 18383.47s` |
+| with the fix (`🗑️generated/wave-B52-laws-final.txt`) | `test result: ok. 42 passed; 0 failed; 0 ignored; 0 measured; 649 filtered out; finished in 0.61s` |
+
+The baseline's five, by name — the brief's four plus B2's:
+
+```
+component::reactor::patches::tests::issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner
+component::reactor::patches::tests::mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes
+component::reactor::patches::tests::mounted_output_admission_direct_receiver_preserves_captured_lifetime_generation_and_callback_roots
+component::reactor::patches::tests::mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner
+component::reactor::reconcile_budget_tests::a_nakagin_scale_mixed_surface_turn_retires_every_ladder_within_a_handful_of_reactor_turns
+```
+
+B2's law states the defect in one line, and it needed **5 hours and 6 minutes** to reach its own ceiling —
+the ladder is not slow, it does not terminate at all:
+
+```
+panicked at …/⚛️reactor/🧪️tests/🔬️reconcile-budget/🦀️.rs:227:9:
+mixed-surface retirement never completed after 100000 turns
+```
+
+Against the same law's `assert!(turns < 10, …)` bound, the fixed run retires every ladder of that mixed
+world-3d + retained-table turn inside the single-digit turn count B2 priced it at (18 383.47 s → 0.61 s for
+the whole 42-law set).
 
 The three `did not reach terminal empty` failures and the fourth (`UiResidentSnapshot … used_slots: 4`
 against `1`) are ONE defect: the first three leave their document slot's resident permit held, and the

@@ -2772,7 +2772,7 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
 export function semanticDescendantNodeRelativePath(node: SemanticDescendantNode, taxonomy: Taxonomy = loadTaxonomy()): string {
   const parent = ("configurableEntry" in node ? node.destinationPathSegments : node.pathSegments).map((segment) => segment.literal);
   if (node.nodeType === "directory") return parent.join("/");
-  if ("kindId" in node) return [...parent, canonicalFilenameForKind(node.kindId, taxonomy)].join("/");
+  if ("kindId" in node) return [...parent, canonicalPrimaryFilenameForKind(node.kindId, taxonomy)].join("/");
   if ("fixedFilenameContractId" in node) {
     const contract = taxonomy.fixedFilenameContracts[node.fixedFilenameContractId];
     if (!contract) throw new Error(`Unknown fixed filename contract ${JSON.stringify(node.fixedFilenameContractId)}.`);
@@ -4855,7 +4855,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if (!expected.has(id)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] does not name a source-format fixed/configurable contract.`);
       else if (expected.get(id) !== disposition.contractKind) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].contractKind does not match its registry.`);
       if (!["adapter-source", "tool-metadata"].includes(disposition.disposition)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].disposition is invalid.`);
-      const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-vitest": "vitest-config", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config", "vscode-test-configuration": "vscode-test-cli-config" };
+      const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config", "vscode-test-configuration": "vscode-test-cli-config" };
       const configValidatorOwner = TOOL_CONFIG_VALIDATORS[disposition.validator];
       if (!["package-glue", "command-router", ...Object.keys(TOOL_CONFIG_VALIDATORS)].includes(disposition.validator) || (disposition.disposition === "adapter-source") !== (disposition.validator === "package-glue") || (configValidatorOwner !== undefined && id !== configValidatorOwner)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] disposition/validator pair is invalid.`);
       if (disposition.grammarId !== undefined && !taxonomy.packageGlueGrammar[disposition.grammarId]) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].grammarId is missing.`);

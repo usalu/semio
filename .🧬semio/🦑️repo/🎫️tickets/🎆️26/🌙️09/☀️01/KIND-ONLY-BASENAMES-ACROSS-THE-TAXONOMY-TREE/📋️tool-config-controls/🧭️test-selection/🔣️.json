@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "hub-admin",
+      "config": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/vitest.config.ts",
+      "testFiles": [
+        "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🛡️admin/🟦️.tsx",
+        "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🧪️command-routing/🟦️.ts"
+      ],
+      "sourceFiles": [
+        "🌎️hub/🔨️modules/🛡️admin/🧱️elements/📚️I18n/🟦️.tsx"
+      ],
+      "setupFiles": [
+        "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🧹️environment/🟦️.ts"
+      ]
+    },
+    {
+      "id": "os-mcp",
+      "config": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/vitest.config.ts",
+      "testFiles": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🏛️legacy-conformance/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🌅️modern-era/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧹️hygiene/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🔄️end-to-end/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🔐️authenticated-hub-workspace/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💡️inference-bridge/🟦️.ts"
+      ],
+      "sourceFiles": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts"
+      ],
+      "setupFiles": []
+    },
+    {
+      "id": "remodel",
+      "config": "✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript/vitest.config.ts",
+      "testFiles": [
+        "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts",
+        "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🧪️tests/🧩️example/🟦️.ts",
+        "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts",
+        "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🧩️suite/🟦️.ts"
+      ],
+      "sourceFiles": [],
+      "setupFiles": []
+    }
+  ]
+}

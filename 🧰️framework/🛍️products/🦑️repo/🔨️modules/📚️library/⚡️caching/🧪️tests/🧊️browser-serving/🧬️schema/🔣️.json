@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "profiles",
+    "routes",
+    "missing",
+    "reload"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.wgpu.browser-serving/v1"
+    },
+    "profiles": {
+      "const": [
+        "dev",
+        "release"
+      ]
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "root",
+          "file",
+          "content"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "pattern": "^/"
+          },
+          "root": {
+            "enum": [
+              "boot",
+              "worker",
+              "compiler",
+              "modules",
+              "extensions"
+            ]
+          },
+          "file": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "missing": {
+      "type": "string"
+    },
+    "reload": {
+      "type": "string"
+    }
+  }
+}

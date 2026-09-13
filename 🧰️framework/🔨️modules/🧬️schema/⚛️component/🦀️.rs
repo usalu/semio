@@ -66,7 +66,7 @@ impl ValidationDiagnostic {
 //#endregion 🔖️Errors
 
 //#region 🔖️EntityCatalog
-include!("../🤖️generated.rs");
+include!("../🤖️generated/🏷️entity-kinds/🦀️.rs");
 //#endregion 🔖️EntityCatalog
 
 //#region 🔖️SchemaCatalog
@@ -861,7 +861,7 @@ const FRAMEWORK_SCHEMA_VALIDATION_LEAVES: FacetLeaves = FacetLeaves {
 
 /// 🍃 Leaves of the two exports whose Rust definition is the generated entity-catalog projection.
 const FRAMEWORK_SCHEMA_ENTITY_CATALOG_LEAVES: FacetLeaves = FacetLeaves {
-    rust: include_str!("../🤖️generated.rs"),
+    rust: include_str!("../🤖️generated/🏷️entity-kinds/🦀️.rs"),
     typescript: include_str!("../🟦️.ts"),
     graphql: "",
     json_schema: include_str!("../🔣️.json"),
@@ -869,9 +869,9 @@ const FRAMEWORK_SCHEMA_ENTITY_CATALOG_LEAVES: FacetLeaves = FacetLeaves {
 };
 
 /// 📚️ The single instance document of [`FRAMEWORK_SCHEMA_ENTITY_CATALOG_LEAVES`]'s `EntityKindCatalog`
-/// export — the source every projection in `🤖️generated.rs`, `🤖️generated/🏷️entity-kinds/🟦️.ts` and
+/// export — the source every projection in `🤖️generated/🏷️entity-kinds/🦀️.rs`, `🤖️generated/🏷️entity-kinds/🟦️.ts` and
 /// `⌨️cli/🏷️entity-kinds/🐹️.go` is emitted from by the `schema-entity-catalog` generator.
-pub const ENTITY_KIND_CATALOG_JSON: &str = include_str!("../🔣️entity-kinds.json");
+pub const ENTITY_KIND_CATALOG_JSON: &str = include_str!("../🏷️entity-kinds/🔣️.json");
 
 /// 🏷️ The named exports of `framework.schema`, one per `$defs` key of the module's `🔣️.json`.
 pub const FRAMEWORK_SCHEMA_EXPORTS: [SchemaExport; 10] = [

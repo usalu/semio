@@ -1150,7 +1150,10 @@ impl Generation3dMountedPackSession {
             )
             .map_err(|_| "generation3d-mounted.catalog-preflight")?,
         );
-        *self.value = Some(mounted::RetainedValueCursor::try_new(limits()).map_err(|_| "generation3d-mounted.value-preflight")?);
+        *self.value = Some(
+            mounted::RetainedValueCursor::try_new(limits(), store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES)
+                .map_err(|_| "generation3d-mounted.value-preflight")?,
+        );
         *self.typed = Some(Generation3dMountedTypedSnapshotOwner::new()?);
         self.phase = Generation3dMountedPackPhase::Ingress;
         Ok(())
@@ -1312,7 +1315,10 @@ impl Generation3dMountedPackSession {
             let Some(source) = self.source.as_ref() else { return Ok(None) };
             if source.has_reserved_page() { None } else { Some(source.next_allocation_bytes()?) }
         } else if self.phase == Generation3dMountedPackPhase::Drive {
-            self.catalog.as_mut().ok_or("generation3d-mounted.catalog-owner")?.next_allocation_bytes().map_err(|fault| fault.code)?
+            match self.value.as_mut().ok_or("generation3d-mounted.value-owner")?.next_allocation_bytes().map_err(|_| "generation3d-mounted.value-allocation")? {
+                Some(requested) => Some(requested),
+                None => self.catalog.as_mut().ok_or("generation3d-mounted.catalog-owner")?.next_allocation_bytes().map_err(|fault| fault.code)?,
+            }
         } else {
             None
         };
@@ -1336,6 +1342,20 @@ impl Generation3dMountedPackSession {
                 .reserve_page(maximum_bytes.min(remaining));
         }
         if self.phase == Generation3dMountedPackPhase::Drive {
+            let value = self
+                .value
+                .as_mut()
+                .ok_or(mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason: "generation3d-mounted.value-owner" })?;
+            if value
+                .next_allocation_bytes()
+                .map_err(|_| mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason: "generation3d-mounted.value-allocation" })?
+                .is_some()
+            {
+                return value
+                    .reserve_allocation(maximum_bytes.min(remaining))
+                    .map(|step| mounted::RetainedPackSourceAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
+                    .map_err(|error| mounted::RetainedPackSourceAllocationError { allocated_bytes: error.allocated_bytes, reason: "generation3d-mounted.value-allocation" });
+            }
             return self
                 .catalog
                 .as_mut()
@@ -1350,6 +1370,7 @@ impl Generation3dMountedPackSession {
     pub fn retained_allocated_bytes(&self) -> usize {
         self.source.as_ref().map_or(0, mounted::RetainedPackSourceCursor::allocated_bytes)
             + self.catalog.as_ref().map_or(0, mounted::RetainedPackCatalogCursor::allocated_bytes)
+            + self.value.as_ref().map_or(0, mounted::RetainedValueCursor::allocated_bytes)
     }
 
     #[cfg(test)]
@@ -1382,9 +1403,8 @@ impl Generation3dMountedPackSession {
             self.page_len = 0;
             return Ok(Generation3dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        if let Some(catalog) = self.catalog_value.as_mut() {
-            let _ = catalog;
-            drop(self.catalog_value.take());
+        if self.catalog_value.is_some() {
+            let _ = self.catalog_value.take();
             return Ok(Generation3dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(typed) = self.typed.as_mut() {
@@ -1395,8 +1415,11 @@ impl Generation3dMountedPackSession {
             return Ok(Generation3dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(value) = self.value.as_mut() {
-            if value.close_step(1) != mounted::RetainedPackCloseStep::Complete {
-                return Ok(Generation3dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            match value.close_step(1, maximum_bytes)? {
+                mounted::RetainedPackCloseStep::Pending { released_items, released_bytes } => {
+                    return Ok(Generation3dMountedPackCloseStep::Pending { released_items, released_bytes });
+                }
+                mounted::RetainedPackCloseStep::Complete => {}
             }
             drop(self.value.take());
             return Ok(Generation3dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
@@ -1440,11 +1463,11 @@ impl Generation3dMountedPackSession {
             || self.page_len != 0
             || self.catalog_value.is_some()
             || self.typed.is_some()
-            || self.value.is_some()
-            || self.segment.is_some()
-            || self.anchor.is_some()
         {
             return None;
+        }
+        if let Some(value) = self.value.as_ref() {
+            return value.next_release_allocation_bytes();
         }
         if let Some(catalog) = self.catalog.as_ref() {
             return catalog.next_release_allocation_bytes().ok().flatten();

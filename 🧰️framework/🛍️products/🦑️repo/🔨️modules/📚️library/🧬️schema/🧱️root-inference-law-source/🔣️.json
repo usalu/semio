@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "owners", "contexts", "consumers", "sourceData", "lawKinds", "route"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "owners": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "directoryName", "parentKindId", "kindId", "declarations"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "/🟦️\\.ts$"
+          },
+          "directoryName": {
+            "type": "string"
+          },
+          "parentKindId": {
+            "type": "string"
+          },
+          "kindId": {
+            "type": "string"
+          },
+          "declarations": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "contexts": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["directoryName", "parentKindId", "kindId"],
+        "properties": {
+          "directoryName": {
+            "type": "string"
+          },
+          "parentKindId": {
+            "type": "string"
+          },
+          "kindId": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "consumers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "owners"],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "owners": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "sourceData": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "lawKinds": {
+      "type": "array",
+      "minItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "command", "launchName", "launchCommand"],
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        },
+        "launchName": {
+          "type": "string"
+        },
+        "launchCommand": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

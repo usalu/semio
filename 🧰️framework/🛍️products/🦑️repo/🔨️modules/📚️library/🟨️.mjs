@@ -572,17 +572,17 @@ function nativePreparation(root, workspaceRoot, contracts, tests = false, cache 
 
 /** 🏗️ Attaches generation to native leaves in the outer task graph, including transitive Cargo consumers. */
 function withNativePreparation(project, workspaceRoot, contracts, cache = new Map(), projectsByRoot = new Map(), closures = new Map()) {
-  const manifest = join(workspaceRoot, project.root, "Cargo.toml");
+  const nativeRoot = project.metadata?.nativeRoot ?? project.root, manifest = join(workspaceRoot, nativeRoot, "Cargo.toml");
   if (!existsSync(manifest) || !readToml(manifest).package) return project;
   const generatorTargets = new Set(Object.values(contracts).flatMap((contract) => [contract.target, contract.previewTarget, contract.checkTarget]));
   const plans = new Map();
   for (const [name, target] of Object.entries(project.targets)) {
     if (!/^(?:build|check|lint|test|wasm|native|component|extension-package|package|font-tool|bench)(?:-|$)/.test(name) || generatorTargets.has(`${project.name}:${name}`)) continue;
     const tests = /^(?:test|bench)(?:-|$)/.test(name);
-    if (!plans.has(tests)) plans.set(tests, nativePreparation(project.root, workspaceRoot, contracts, tests, cache, closures));
+    if (!plans.has(tests)) plans.set(tests, nativePreparation(nativeRoot, workspaceRoot, contracts, tests, cache, closures));
     const selected = plans.get(tests);
     if (projectsByRoot.size && target.inputs?.some((input) => input === "^nativeSources" || input === "^nativeTestSources")) {
-      const dependencies = nativeDependencyRoots(project.root, workspaceRoot, tests, cache, closures).filter((root) => root !== project.root).map((root) => {
+      const dependencies = nativeDependencyRoots(nativeRoot, workspaceRoot, tests, cache, closures).filter((root) => root !== nativeRoot).map((root) => {
         const name = projectsByRoot.get(root);
         if (!name) throw new Error(`Native dependency has no Nx project owner: ${root}`);
         return name;
@@ -638,6 +638,7 @@ function declaredSourceInputs(json, workspaceRoot) {
 
 /** 📥️ Shared command implementation and host identity are inputs of every script-backed task. */
 function projectInputs(json, root, workspaceRoot, facts, scripts) {
+  const nativeRoot = json.metadata?.nativeRoot ?? root;
   const tools = ["javascript"];
   if (existsSync(join(workspaceRoot, root, "Cargo.toml")) || json.targets?.wasm) tools.push("cargo");
   if (json.targets?.wasm || json.targets?.["extension-package"] || (tools.includes("cargo") && json.targets?.package)) tools.push("wasm");
@@ -645,8 +646,8 @@ function projectInputs(json, root, workspaceRoot, facts, scripts) {
   if (existsSync(join(workspaceRoot, root, "pyproject.toml"))) tools.push("python");
   if (readdirSync(join(workspaceRoot, root)).some((file) => /\.[cfv]sproj$/.test(file))) tools.push("dotnet");
   if (existsSync(join(workspaceRoot, root, "CMakeLists.txt"))) tools.push("cmake");
-  const nativeSources = tools.includes("cargo") ? cargoSourceInputs(root, workspaceRoot, facts, false) : undefined;
-  const nativeTests = tools.includes("cargo") ? cargoSourceInputs(root, workspaceRoot, facts, true) : undefined;
+  const nativeSources = tools.includes("cargo") ? cargoSourceInputs(nativeRoot, workspaceRoot, facts, false) : undefined;
+  const nativeTests = tools.includes("cargo") ? cargoSourceInputs(nativeRoot, workspaceRoot, facts, true) : undefined;
   const runner = nxPath(relative(workspaceRoot, LIBRARY_ROOT));
   const inputs = [
     "{projectRoot}/**/*",
@@ -686,7 +687,7 @@ function projectInputs(json, root, workspaceRoot, facts, scripts) {
       exclusions.push(`!{projectRoot}/${local}`, `!{projectRoot}/${local}/**/*`);
     }
   }
-  const native = (sources, productionOnly = false) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${root}/Cargo.toml`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...(productionOnly ? ["!{projectRoot}/**/🧪️tests/**/*", "!{projectRoot}/**/🧫️fixtures/**/*", "!{workspaceRoot}/**/🧫️fixtures/**/*", ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`] : [])] : []), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...exclusions];
+  const native = (sources, productionOnly = false) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${nativeRoot}/Cargo.toml`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...(productionOnly ? ["!{projectRoot}/**/🧪️tests/**/*", "!{projectRoot}/**/🧫️fixtures/**/*", "!{workspaceRoot}/**/🧫️fixtures/**/*", ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`] : [])] : []), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...exclusions];
   const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript") && owner !== root && existsSync(join(workspaceRoot, root, SCRIPT_BASENAME));
   const artifactSource = join(workspaceRoot, owner, "🟦️.ts");
   const artifactSources = artifactTypeScript ? [...relativeScriptInputs([artifactSource], workspaceRoot, scripts), "{projectRoot}/package.json", ...exclusions] : [];
@@ -737,7 +738,9 @@ function withLeveledTestTargets(targets) {
  */
 function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = {}, facts, commandInputs, scripts) {
   const ownsScript = existsSync(join(projectDir, SCRIPT_BASENAME));
-  const nativeProject = existsSync(join(projectDir, "Cargo.toml"));
+  const nativeRoot = json.metadata?.nativeRoot ?? root;
+  if (json.metadata?.nativeRoot && (typeof nativeRoot !== "string" || isAbsolute(nativeRoot) || nativeRoot.split(/[\\/]/).some(part => ["", ".", ".."].includes(part)) || !existsSync(join(workspaceRoot, nativeRoot, "Cargo.toml")))) throw new Error(`Invalid native package root for ${json.name}: ${nativeRoot}`);
+  const nativeProject = existsSync(join(workspaceRoot, nativeRoot, "Cargo.toml"));
   const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript");
   const declared = withWasmTooling({ ...(root === "." && ownsScript ? rootCommandTargets(join(projectDir, SCRIPT_BASENAME)) : {}), ...cargoTargets(root, workspaceRoot, commandInputs), ...json.targets, ...componentTargets(root, workspaceRoot, commandInputs), ...printDocumentTargets(json, root, workspaceRoot, scripts) }, ownsScript && json.targets?.wasm ? readFileSync(join(projectDir, SCRIPT_BASENAME), "utf8") : "");
   for (const contract of Object.values(contracts)) {
@@ -885,21 +888,9 @@ function playgroundSessionTargets(configFiles, workspaceRoot) {
   }]));
 }
 
-/**
- * 🎮️ Declares the runtime component closure and browser producers before any catalog is generated.
- * React's `prepare` only validates already Nx-materialized bytes (no write), so it caches on its
- * `dependsOn` closure with no outputs. WGPU's `prepare` copies NO module either: the trunk bundle's
- * `copy-dir` and the native runner's `SEMIO_PLUGIN_MODULES` both read the ONE staging root
- * `pluginModulesRoot(profile)` (`🧑‍💻dev/♻️activation/🟦️.ts`) its `dependsOn` closure just wrote, so it
- * only publishes that lane's extensions and font asset and caches on the same closure with no outputs —
- * a per-variant mirror was a third tree to drift. `activate-*-react-*` publishes into
- * `developmentRuntimeRoot`, itself already
- * scoped per variant/profile, so it caches the same way with that directory as its output; its
- * wall-clock-bearing receipt bookkeeping (`nextActivationReceipt`) only ever runs for real on a cache
- * miss, and a miss means the inputs — hence the cache key — actually changed, so restores of a given key
- * stay byte-identical. `activate-*-wgpu-*` does no work beyond `prepare` (activation IS preparation for
- * that renderer), so it stays a thin, cacheable no-output confirmation.
- */
+/** 🎮️ Declares completed runtime prerequisites, cacheable validation and profile-specific browser producers.
+ * React activation owns its restorable runtime directory. WGPU activation publishes live extensions,
+ * fonts and reload notifications, so it must execute after every cacheable preparation. */
 function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
   const components = new Map(), playgrounds = [];
   const projectAt = (root) => {
@@ -919,8 +910,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
   const baseline = ["🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"];
   const linked = (composition.semio?.browserSessionFactories ?? []).map((row) => row.engine);
   const wgpuRoot = nxPath("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"), wgpuProject = projectAt(wgpuRoot);
-  if (!wgpuProject?.name || !wgpuProject.targets?.wasm) throw new Error(`WGPU renderer must name an authored wasm producer: ${wgpuRoot}`);
-  const wgpuEngine = `${wgpuProject.name}:wasm`;
+  if (!wgpuProject?.name || !wgpuProject.targets?.wasm || !wgpuProject.targets?.["wasm-release"]) throw new Error(`WGPU renderer must name both authored wasm profile producers: ${wgpuRoot}`);
   const result = {};
   for (const playground of playgrounds) {
     const own = components.get(playground.pluginId), selected = runtimeComponentClosure([...components].map(([pluginId, row]) => ({ ...row, pluginId, dependsOn: [...(row.extends ? [row.extends] : []), ...(row["depends-on"] ?? [])] })), [playground.pluginId]);
@@ -946,9 +936,9 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", ...engines, ...[...selected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} react ${profile}` },
       };
-      for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `bun ./📜️script.ts dev ${playground.variant} served`, env: { SEMIO_RENDERER: "wgpu" } } };
+      for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile}` } };
       result[`activate-${playground.variant}-wgpu-${profile}`] = {
-      cache: true,
+      cache: false,
       parallelism: false,
       outputs: [],
       inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
@@ -959,7 +949,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       cache: true,
       outputs: [],
       inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", wgpuEngine, ...[...selected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", `${wgpuProject.name}:${profile === "release" ? "wasm-release" : "wasm"}`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, ...[...selected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} wgpu ${profile}` },
       };
     }

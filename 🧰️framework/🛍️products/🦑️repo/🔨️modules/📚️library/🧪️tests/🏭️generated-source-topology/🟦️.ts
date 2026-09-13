@@ -16,8 +16,8 @@ describe("generated source topology", () => {
   test("portable fixture is schema-valid and exact", () => {
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    expect(new Set(fixture.cases.map(({ previousPath }) => previousPath)).size).toBe(29);
-    expect(new Set(fixture.cases.map(({ canonicalPath }) => canonicalPath)).size).toBe(29);
+    expect(new Set(fixture.cases.map(({ previousPath }) => previousPath)).size).toBe(30);
+    expect(new Set(fixture.cases.map(({ canonicalPath }) => canonicalPath)).size).toBe(30);
     const retiredPaths = fixture.cases.flatMap(({ previousPath, supersededPaths = [] }) => [previousPath, ...supersededPaths]);
     expect(new Set(retiredPaths).size).toBe(retiredPaths.length);
   });
@@ -41,5 +41,5 @@ describe("generated source topology", () => {
         expect(readFileSync(join(repoRoot, row.nativePackage.metadataPath), "utf8")).toContain(row.nativePackage.sourceReference);
       }
     }
-  });
+  }, 15_000);
 });

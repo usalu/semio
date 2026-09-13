@@ -2,6 +2,13 @@
   "name": "@semio-tech/repo-vscode",
   "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧩️extension/🎚️config/🟨️.mjs",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs"
+    ]
+  },
   "targets": {
     "dev": {
       "executor": "nx:run-commands",

@@ -59,6 +59,10 @@ if (args[0] === "verify-abstraction-ownership") {
   runCmd("bun", [root + "/📜️script.ts", "verify", "framework-retained-pack-ownership", ...args.slice(1)], { cwd: root });
 } else if (args[0] === "window-config-pack-identity") {
   runCmd("bun", [root + "/📜️script.ts", "verify", "window-config-pack-identity", ...args.slice(1)], { cwd: root });
+} else if (args[0] === "window-config-provisioning-lifecycle") {
+  runCmd("bun", [root + "/📜️script.ts", "verify", "window-config-provisioning-lifecycle", ...args.slice(1)], { cwd: root });
+} else if (args[0] === "window-config-retained-pack-load") {
+  runCmd("bun", [root + "/📜️script.ts", "verify", "window-config-retained-pack-load", ...args.slice(1)], { cwd: root });
 } else if (args[0] === "node-graph-viewport-ownership") {
   runCmd("bun", [root + "/📜️script.ts", "verify", "node-graph-viewport-ownership", ...args.slice(1)], { cwd: root });
 } else if (args[0] === "framework-variant-field-casing") {
@@ -69,15 +73,19 @@ if (args[0] === "verify-abstraction-ownership") {
   testFrameworkEmptyStateContract();
   runCmd("bun", [root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: root });
   if (args[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "framework_empty_state_contract_", "--", "--nocapture"], root);
+} else if (args[0] === "fem-numerical-page-owners") {
+  runCmd("bun", [root + "/📜️script.ts", "verify", ...args], { cwd: root });
+} else if (args[0] === "fem-mesh-preparation-owners") {
+  runCmd("bun", [root + "/📜️script.ts", "verify", ...args], { cwd: root });
 } else if (args[0] === "fem-scalar-owners-native") {
   runCmd("bun", [root + "/📜️script.ts", "verify", ...args], { cwd: root });
 } else if (args[0] === "fem3d-numerical-child-native") {
-  await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-3d", "--features", "component-app-assembly", "--lib", "live_visual::tests::", "--", "--nocapture"], root);
+  runCmd("bun", [root + "/📜️script.ts", "verify", ...args], { cwd: root });
 } else if (args[0] === "fem2d-window-config-contract" || args[0] === "fem3d-window-config-contract") {
   const dimension = args[0].startsWith("fem2d") ? "2d" : "3d";
   const testRoot = root + "/✏️s/🔌️plugins/🏗️fem/🧪️tests/🪟️window-config-contract";
   const mountedStiffnessOracle = root + "/✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/🟦️.ts";
-  if (dimension === "3d") await runVitest(root + "/✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript", ["-t", "story window ownership|story document replacement"], "vitest.config.ts");
+  if (dimension === "3d") await runVitest(root + "/✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript", ["-t", "story window ownership|story document replacement"], "../../🧪️tests/🎚️config/🟦️.ts");
   const contract = await import(`${testRoot}/🟦️.ts`);
   if (dimension === "2d") contract.testFem2dWindowConfigContract();
   else {
@@ -117,9 +125,7 @@ if (args[0] === "verify-abstraction-ownership") {
 } else if (args[0] === "trinity-rewriting" && args[1] === "test") {
   await runCargo(["test", "--manifest-path", "Cargo.toml", "--features", "component-app-assembly", ...args.slice(2)], `${root}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust`);
 } else if (args[0] === "host-ownership" && args[1] === "native") {
-  for (const filter of ["concrete_window_instances_round_trip_without_kind_collapse", "context_menu_point_resolves_the_exact_concrete_window_instance", "canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript", "build_os_commands_covers_every_wired_setting"]) {
-    await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", filter, "--", "--nocapture"], root);
-  }
+  await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", "--", "--nocapture", "--test-threads=1", ...["concrete_window_instances_round_trip_without_kind_collapse", "context_menu_point_resolves_the_exact_concrete_window_instance", "canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript", "build_os_commands_covers_every_wired_setting"]], root);
 } else if (args[0] === "plugin-host" && args[1] === "check") {
   await runCargo(["check", "--manifest-path", "Cargo.toml"], `${root}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust`);
 } else if (args[0] === "ui-preferences" && args[1] === "fixture") {
@@ -369,6 +375,13 @@ if (args[0] === "verify-abstraction-ownership") {
   testDrawingCanvasWindowOwnershipOracle();
   runCmd("bun", [`${root}/node_modules/typescript/bin/tsc`, "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${configRoot}/🧬️schema/🟦️.ts`, `${transientRoot}/🧬️schema/🟦️.ts`, `${presenceRoot}/🧬️schema/🟦️.ts`, oracle], { cwd: root });
   if (args[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-draw-drawing", "--lib", "drawing_canvas_window_ownership_", "--", "--nocapture"], root);
+} else if (args[0] === "generation2d-window-camera-ownership") {
+  const editorRoot = `${root}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor`;
+  const oracle = `${editorRoot}/🧪️tests/🪟️generation2d-window-camera-ownership/🟦️.ts`;
+  const { testGeneration2dWindowCameraOwnershipOracle } = await import(oracle);
+  testGeneration2dWindowCameraOwnershipOracle();
+  runCmd("bun", [`${root}/node_modules/typescript/bin/tsc`, "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${editorRoot}/🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🧬️schema/🟦️.ts`, `${editorRoot}/🎭️modes/✏️edit/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts`, `${editorRoot}/🎭️modes/🧬️generate/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts`, oracle], { cwd: root });
+  if (args[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--features", "component-app-assembly", "--lib", "generation2d_window_camera_ownership", "--", "--nocapture"], root);
 } else {
   const { VerifyScript } = await import("../../../../../../../../📜️script.ts");
   await new VerifyScript(root, root).run(args);

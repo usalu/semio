@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "wire", "admission", "physicalOwnership", "retainedCatalog", "multiByteChunk", "outerCancellation", "anchors", "segments", "registries", "hostile", "valueTags"],
+  "required": ["schema", "wire", "admission", "physicalOwnership", "retainedCatalog", "retainedValue", "multiByteChunk", "outerCancellation", "anchors", "segments", "registries", "hostile", "valueTags"],
   "properties": {
     "schema": {"const": "semio.retained-canonical-pack-laws.v1"},
     "wire": {"const": "SPK/1.0"},
@@ -146,14 +146,131 @@
         "terminal": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["pending", "partialSymbolBytes", "partialSymbolScalars", "logicalItems", "allocatedBytes", "receiptClosed"],
+          "required": ["pending", "partialSymbolBytes", "partialSymbolScalars", "logicalItems", "allocatedBytes", "catalogCursorClosed"],
           "properties": {
             "pending": {"const": false},
             "partialSymbolBytes": {"const": 0},
             "partialSymbolScalars": {"const": 0},
             "logicalItems": {"const": 0},
             "allocatedBytes": {"const": 0},
-            "receiptClosed": {"const": true}
+            "catalogCursorClosed": {"const": true}
+          }
+        }
+      }
+    },
+    "retainedValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["constructionAllocates", "diagnostic", "stack", "recordBody", "consumers", "terminal"],
+      "properties": {
+        "constructionAllocates": {"const": false},
+        "diagnostic": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["hotVariant", "storage", "heapBytes", "publicStepAllocates", "sticky", "coldStringConversion"],
+          "properties": {
+            "hotVariant": {"const": "retained-malformed-static"},
+            "storage": {"const": "inline"},
+            "heapBytes": {"const": 0},
+            "publicStepAllocates": {"const": false},
+            "sticky": {"const": true},
+            "coldStringConversion": {"const": "display-or-explicit-owned-conversion"}
+          }
+        },
+        "stack": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maxDepth", "framesPerDepth", "maximumFrames", "initialFrames", "limits", "allocationBeforeInput", "zeroOrSubexactMutates", "partialInitializationSurvivesCancel", "actualBackingAccounted", "overgrantFaultSticky"],
+          "properties": {
+            "maxDepth": {"const": 8},
+            "framesPerDepth": {"const": 8},
+            "maximumFrames": {"const": 64},
+            "initialFrames": {"const": 2},
+            "limits": {"const": ["depth", "stack-frames", "allocation-bytes"]},
+            "allocationBeforeInput": {"const": true},
+            "zeroOrSubexactMutates": {"const": false},
+            "partialInitializationSurvivesCancel": {"const": true},
+            "actualBackingAccounted": {"const": true},
+            "overgrantFaultSticky": {"const": true}
+          }
+        },
+        "recordBody": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["storage", "limits", "allocationOrder", "symbols", "directIndexedScalars", "multiLeaf", "coordinateModel", "eventHandoff", "unopenedCancellation", "closeOrder", "pendingInputPreserved"],
+          "properties": {
+            "storage": {"const": ["scalar-pages", "symbol-span-pages", "value-stack"]},
+            "limits": {"const": ["symbol-count", "symbol-utf8-bytes", "symbol-scalars", "value-stack-frames", "allocation-bytes"]},
+            "allocationOrder": {"const": ["symbol-spans", "symbol-scalars", "value-stack"]},
+            "symbols": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["text", "utf8", "scalars"],
+                "properties": {
+                  "text": {"type": "string"},
+                  "utf8": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 255}},
+                  "scalars": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 1114111}}
+                }
+              }
+            },
+            "directIndexedScalars": {"const": true},
+            "multiLeaf": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["symbols", "positiveDemandBeyondFirstLeaf"],
+              "properties": {
+                "symbols": {"type": "integer", "minimum": 2},
+                "positiveDemandBeyondFirstLeaf": {"const": true}
+              }
+            },
+            "coordinateModel": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["pointerBits", "firstUnrepresentableSymbol", "checkedConversion"],
+              "properties": {
+                "pointerBits": {"const": 32},
+                "firstUnrepresentableSymbol": {"const": 4294967296},
+                "checkedConversion": {"const": true}
+              }
+            },
+            "eventHandoff": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["finalScalarAndCatalogSameByte", "preserveCatalogCompleteAcrossAllocation", "blockIngressUntilObserved"],
+              "properties": {
+                "finalScalarAndCatalogSameByte": {"const": true},
+                "preserveCatalogCompleteAcrossAllocation": {"const": true},
+                "blockIngressUntilObserved": {"const": true}
+              }
+            },
+            "unopenedCancellation": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["zeroItemZeroByteMutates", "bytesOnlyMetadataTransition"],
+              "properties": {
+                "zeroItemZeroByteMutates": {"const": false},
+                "bytesOnlyMetadataTransition": {"const": true}
+              }
+            },
+            "closeOrder": {"const": ["value-logical", "symbol-logical", "value-physical", "symbol-physical"]},
+            "pendingInputPreserved": {"const": true}
+          }
+        },
+        "consumers": {"const": ["generation2-snapshot", "generation3-snapshot", "generation2-mutation", "generation3-mutation"]},
+        "terminal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pending", "stackFrames", "symbols", "scalars", "allocatedBytes", "closed"],
+          "properties": {
+            "pending": {"const": false},
+            "stackFrames": {"const": 0},
+            "symbols": {"const": 0},
+            "scalars": {"const": 0},
+            "allocatedBytes": {"const": 0},
+            "closed": {"const": true}
           }
         }
       }

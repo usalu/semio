@@ -52,22 +52,15 @@ impl Element for Bar2 {
     }
 
     fn close_mounted_string_step(&mut self) -> Option<usize> {
-        for owner in [&mut self.id, &mut self.start, &mut self.end] {
-            if !owner.is_empty() || owner.capacity() != 0 {
-                let bytes = owner.capacity();
-                *owner = String::new();
-                return Some(bytes);
-            }
-        }
-        None
+        crate::model::close_mounted_strings([&mut self.id, &mut self.start, &mut self.end])
     }
 
     fn mounted_next_string_bytes(&self) -> Option<usize> {
-        [&self.id, &self.start, &self.end].into_iter().find(|owner| !owner.is_empty() || owner.capacity() != 0).map(|owner| owner.capacity())
+        crate::model::mounted_string_bytes([&self.id, &self.start, &self.end])
     }
 
     fn mounted_strings_terminal_is_empty(&self) -> bool {
-        self.id.capacity() == 0 && self.start.capacity() == 0 && self.end.capacity() == 0
+        self.mounted_next_string_bytes().is_none()
     }
 
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
@@ -313,22 +306,15 @@ impl Element for BeamEb2 {
     }
 
     fn close_mounted_string_step(&mut self) -> Option<usize> {
-        for owner in [&mut self.id, &mut self.start, &mut self.end] {
-            if !owner.is_empty() || owner.capacity() != 0 {
-                let bytes = owner.capacity();
-                *owner = String::new();
-                return Some(bytes);
-            }
-        }
-        None
+        crate::model::close_mounted_strings([&mut self.id, &mut self.start, &mut self.end])
     }
 
     fn mounted_next_string_bytes(&self) -> Option<usize> {
-        [&self.id, &self.start, &self.end].into_iter().find(|owner| !owner.is_empty() || owner.capacity() != 0).map(|owner| owner.capacity())
+        crate::model::mounted_string_bytes([&self.id, &self.start, &self.end])
     }
 
     fn mounted_strings_terminal_is_empty(&self) -> bool {
-        self.id.capacity() == 0 && self.start.capacity() == 0 && self.end.capacity() == 0
+        self.mounted_next_string_bytes().is_none()
     }
 
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
@@ -559,27 +545,15 @@ impl Tri3Cst {
 
 impl Element for Tri3Cst {
     fn close_mounted_string_step(&mut self) -> Option<usize> {
-        if !self.id.is_empty() || self.id.capacity() != 0 {
-            let bytes = self.id.capacity();
-            self.id = String::new();
-            return Some(bytes);
-        }
-        for owner in &mut self.nodes {
-            if !owner.is_empty() || owner.capacity() != 0 {
-                let bytes = owner.capacity();
-                *owner = String::new();
-                return Some(bytes);
-            }
-        }
-        None
+        crate::model::close_mounted_strings(std::iter::once(&mut self.id).chain(self.nodes.iter_mut()))
     }
 
     fn mounted_next_string_bytes(&self) -> Option<usize> {
-        std::iter::once(&self.id).chain(self.nodes.iter()).find(|owner| !owner.is_empty() || owner.capacity() != 0).map(|owner| owner.capacity())
+        crate::model::mounted_string_bytes(std::iter::once(&self.id).chain(self.nodes.iter()))
     }
 
     fn mounted_strings_terminal_is_empty(&self) -> bool {
-        self.id.capacity() == 0 && self.nodes.iter().all(|owner| owner.capacity() == 0)
+        self.mounted_next_string_bytes().is_none()
     }
 
     fn id(&self) -> &str {

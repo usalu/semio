@@ -1,0 +1,27 @@
+{
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu",
+  "project": "@semio-tech/framework-renderer-wgpu",
+  "profiles": [
+    {
+      "profile": "dev",
+      "target": "wasm",
+      "output": "dist/wasm-dev"
+    },
+    {
+      "profile": "release",
+      "target": "wasm-release",
+      "output": "dist/wasm-release"
+    }
+  ],
+  "values": [
+    42,
+    43
+  ],
+  "crate": "trunk-output-fixture",
+  "rust": "use wasm_bindgen::prelude::*;\n#[wasm_bindgen] pub fn answer() -> u32 { VALUE }\n",
+  "consumer": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+  "deliverables": [
+    ".js",
+    "_bg.wasm"
+  ]
+}

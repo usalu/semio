@@ -1,0 +1,66 @@
+{
+  "format": "semio.generation3d.mode-panel-publication",
+  "version": 1,
+  "note": "Panels are framework-injected tabs, not windows of a mode layout: the Artifact / Catalogue / Inspection bodies must publish identically in EVERY play mode. The wgpu shell boots straight into `generate` while its focused pane is still the edit-mode `procedural-main`, so the panel projection carried a focused window the generate roster does not list and every app panel faulted before its body key was ever matched (`wgpu-ui.surface-not-published:framework.panel.*`). Each case below is one host roster; every case must publish every panel, and every case must publish the SAME body — panels have no mode-specific projection.",
+  "panels": [
+    {
+      "tab": "framework.panel.artifact",
+      "bodyKey": "procedural.play.document",
+      "root": "procedural-play-document",
+      "contains": ["procedural-play-document.widgets"]
+    },
+    {
+      "tab": "framework.panel.catalogue",
+      "bodyKey": "procedural.play.catalogue",
+      "root": "procedural-play-catalogue",
+      "contains": ["procedural-play-catalogue.widgets"]
+    },
+    {
+      "tab": "framework.panel.inspection",
+      "bodyKey": "procedural.play.inspection",
+      "root": "procedural-play-inspector",
+      "contains": ["procedural-play-inspector.schema", "procedural-play-inspector.widgets"]
+    }
+  ],
+  "cases": [
+    {
+      "id": "edit",
+      "mode": "edit",
+      "windows": [
+        { "id": "procedural-main", "kind": "procedural-main" },
+        { "id": "procedural-preview", "kind": "procedural-preview" }
+      ],
+      "focusedWindow": "procedural-main",
+      "focusedWindowInRoster": true
+    },
+    {
+      "id": "generate",
+      "mode": "generate",
+      "windows": [
+        { "id": "generation3d-generations", "kind": "generation3d-generations" },
+        { "id": "generation3d-generate-form", "kind": "generation3d-generate-form" },
+        { "id": "generation3d-generate-preview", "kind": "generation3d-generate-preview" }
+      ],
+      "focusedWindow": "generation3d-generations",
+      "focusedWindowInRoster": true
+    },
+    {
+      "id": "generate-stale-focus",
+      "mode": "generate",
+      "windows": [
+        { "id": "generation3d-generations", "kind": "generation3d-generations" },
+        { "id": "generation3d-generate-form", "kind": "generation3d-generate-form" },
+        { "id": "generation3d-generate-preview", "kind": "generation3d-generate-preview" }
+      ],
+      "focusedWindow": "procedural-main",
+      "focusedWindowInRoster": false
+    },
+    {
+      "id": "no-windows",
+      "mode": "generate",
+      "windows": [],
+      "focusedWindow": "procedural-main",
+      "focusedWindowInRoster": false
+    }
+  ]
+}

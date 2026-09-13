@@ -1,0 +1,33 @@
+# FEM Numerical Page Owner Implementation
+
+## Current Verified State — 13 September
+
+Restore green1 now passes5/5 on2MiB in9m16s Nx/.03s native: both writer laws, admitted40-row LDLT, five paged-f64 restore sequences and nine hostile vectors with exact backing conservation. The shared retained reader implementation is applied. Matrix-shape and nested-close physical-accounting tests are now queued in restore-close-red1 alongside the existing LDLT/subspace resume laws; no whole checkpoint/cleanup acceptance is claimed yet. See numerical-checkpoint-shared-restore-owner-plan.md for the current source and exact execution scope.
+
+Writer native4 passed both laws, 964 filtered, .01s execution and 7m44s Nx duration at 2MiB stack. Four original scalar cases and twenty exact/subexact entry cases have actual native cursor/page/release evidence. The shared writer preflight is applied. Fuel/deadline admission belongs to the parent StepContext operation; these direct helper tests claim cursor and physical page continuity only.
+
+The proposed 64-row LDLT integration counterexample was invalid: current LDLT_MAXIMUM_ORDER is 40. Restore-red1 passed the two writer laws but the integration case was rejected before checkpointing. It is not restore-failure evidence. The corrected integration exercises the full admitted 40-row triangular matrix, and a separate real paged-f64 restore helper law exercises five neutral page sequences including 2048 and4092 values. Restore-red2 is pending. The neutral oracle reconstructs every scalar with DataView and validates the same page coordinates with Ajv/JSONPatch. No restore production change is applied yet.
+
+The single-page restore assumption still exists in both parent cursors and shared helpers. Under the current 40-row limit, canonical dense matrix/vector checkpoints stay within one page; broader shared helper continuation acceptance and hostile coordinate validation remain under test. A 16KiB backing alone is not proof that a corresponding matrix input is admitted by the production algorithm.
+
+The shared sparse numerical checkpoint helpers currently write whole scalar fields without a full-page continuation transition. Their32-byte header already carries field, owner and item, so a continuation should retain that exact cursor before writing the next scalar. The f64 length prefix takes8 bytes:2043 scalars fill the first16384-byte JobPayload page exactly; subsequent pages hold2044 scalars without a repeated length prefix.
+
+A strict schema and four neutral fixtures now cover empty,2043,2044 and4092 scalars. The earlier independent Ajv/JSONPatch/DataView oracle passed in7.4s but used an incorrect4096-byte page assumption; it is historical model evidence only. Native1 caught the test's4096-byte close grant refusing the real16384-byte backing before reaching the counterexample. Root checked both current source and git HEAD:16KiB is already the committed framework JobPayload size, not a concurrent new change. The fixture is corrected, and the native test asserts its page size against JOB_PAYLOAD_PAGE_BYTES and uses that constant for actual close/accounting. Native2 is running.
+
+The native law drives the real shared advance_f64_owner with RetainedJobPayloadWriter, reads every actual page header/scalar, and closes all admitted pages before final assertions. It is expected to expose write_staged failure on the2044th scalar before the correction. No numerical writer production change has been applied.
+
+Registering the test uses only root/ticket 📜️script.ts branches, root/ticket project targets and launch/seed entries311.238/.239. Targets are fem-numerical-page-owners and fem-numerical-page-owners-native. The later correction belongs to the shared numerical write-capacity preflight and must preserve field/owner/item across page commit, leave allocation to the next admitted opportunity and cover sibling scalar/pair/matrix helper widths before claiming them fixed. PCG retained serialization remains a separate required slice.
+
+Native2 stopped before tests on a concurrent reactor helper's private PluginApp trait path. Root applied the compiler-directed public crate::PluginApp bound, preserving the surrounding work. Native3 is running against the corrected16KiB fixture. An additional test-first corpus now covers20 exact/subexact entries across length,u32,usize,u64,f64,paged-u32,paged-f64,pair,matrix-shape andmatrix-scalar writers, with independent DataView bytes and JSONPatch cursor outcomes. The native law checks unchanged cursors and exhausted/expired allocation opportunities at continuation, then physically closes every committed page before aggregate assertions. Its current native inclusion depends on whether Cargo reached the test source before the edit; the executed count will be recorded explicitly.
+
+## Actual Boundary RED and Applied Writer Repair
+
+Native3 executes both new laws on2MiB:0/2 passing,964 filtered,.01s runtime. All ten exact-width cases succeed; every subexact case returns StreamBytes without continuation. The f64 empty/exact-page cases succeed and2044/4092-scalar cases fail at item2043. Every admitted16KiB backing is physically retired before aggregate assertions. This is the actual writer RED.
+
+The shared write_numerical_entry preflight now commits a page before an entry that cannot fit and returns without advancing the owner/item cursor. All ten entry sites use it; the parent owns the next page admission and header. Native4 is running, and its fresh registered neutral stage passes the four corrected page cases and20 DataView/JSONPatch entry cases plus strict TypeScript.
+
+Root inspected RetainedJobPayloadWriter::admit_page and removed an invalid direct-helper test assumption: the writer owns a per-context page permit; its caller checks operation fuel/deadline before invoking it. The entry-width law therefore claims cursor and physical-page continuation only. Existing actual LDLT/subspace step tests own zero-fuel/deadline behavior; no shared JobPayload policy was changed.
+
+## Required Matching Restore Slice
+
+Both actual restore cursors reject nonzero page.owner/page.item and every scalar/matrix reader assumes its entire owner is in one page. The writer repair alone cannot establish multi-page checkpoint round trips. Required next work is a shared retained owner-restore cursor with declared length, exact continuation coordinates, checked integer narrowing, bounded allocation and scalar append; parent decoders must distinguish page completion from field completion. Actual maximum16KiB f64 owners can cross a JobPayload page because of headers. A real LDLT checkpoint/restore counterexample and equivalent helper/hostile continuation cases must pass before accepting the composed serialization path.

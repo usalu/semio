@@ -48,7 +48,7 @@ class ServeScript extends BundleScript {
     const interrupt = (): void => { process.exitCode = 130; controller.abort(); }, terminate = (): void => { process.exitCode = 143; controller.abort(); };
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
-      await serveVite({ root, config: join(root, "⚙️vite.config.ts"), host: process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1", port: Number(process.env.MIT_BESTAND_DEMONSTRATOR_PORT ?? 6029), signal: controller.signal, ready: url => console.log(`Demonstrator ready: ${url}`) });
+      await serveVite({ root, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), host: process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1", port: Number(process.env.MIT_BESTAND_DEMONSTRATOR_PORT ?? 6029), signal: controller.signal, ready: url => console.log(`Demonstrator ready: ${url}`) });
     } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
   }
 }
@@ -73,7 +73,7 @@ class ServeTestScript extends BundleScript {
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
       readDemonstratorActivation(this.repoRoot);
-      await serveVite({ root, config: join(root, "⚙️vite.config.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session, ready: async url => { await publishServiceReady(sessionRoot, session, url, controller.signal); console.log(`Demonstrator E2E ready: ${url}`); } });
+      await serveVite({ root, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session, ready: async url => { await publishServiceReady(sessionRoot, session, url, controller.signal); console.log(`Demonstrator E2E ready: ${url}`); } });
     } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); await closeServiceSession(sessionRoot, session); }
   }
 }

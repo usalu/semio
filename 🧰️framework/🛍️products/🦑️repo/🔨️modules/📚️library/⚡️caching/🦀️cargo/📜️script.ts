@@ -10,24 +10,7 @@ import { BundleScript, ScriptRouter } from "../../🏃️process/🧭️routing/
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 import { buildBudgetMs, runCmdStatus } from "../../🏃️process/🟦️.ts";
 import { stageArtifacts } from "../📦️artifacts/🟦️.ts";
-import { repoCacheDirectory } from "../🟦️.ts";
 const slash = (path: string): string => path.split(sep).join("/");
-const MODULE_ROOT = dirname(fileURLToPath(import.meta.url));
-const CACHE_PRUNE_THROTTLE_MS = 3_600_000;
-
-/** 🧹️ Bounds the one shared cache root after a successful native build, at most once per hour, detached so the prune never delays or fails the build. */
-function scheduleThrottledCachePrune(repoRoot: string): void {
-  try {
-    const stamp = repoCacheDirectory(repoRoot, "🧭️prune-stamp.json");
-    mkdirSync(dirname(stamp), { recursive: true });
-    let lastMs = 0;
-    if (existsSync(stamp)) { try { lastMs = JSON.parse(readFileSync(stamp, "utf8")).lastMs ?? 0; } catch {} }
-    if (Date.now() - lastMs < CACHE_PRUNE_THROTTLE_MS) return;
-    writeFileSync(stamp, JSON.stringify({ lastMs: Date.now() }));
-    const script = join(MODULE_ROOT, "..", "📜️script.ts");
-    spawn(process.execPath, [script, "cache-prune"], { cwd: repoRoot, detached: true, stdio: "ignore" }).unref();
-  } catch {}
-}
 
 /** ⏱️ Keeps long native queue waits observable until the owning operation completes. */
 export function startNativeProgress(label: string, intervalMs = 10_000, output: (line: string) => void = (line) => console.log(line)): () => void {
@@ -180,16 +163,14 @@ class NativeScript extends BundleScript {
           assert.deepEqual([...readFileSync(path).subarray(0, 8)], [0, 97, 115, 109, 13, 0, 1, 0], "Invalid WASI component header");
         },
       });
-      scheduleThrottledCachePrune(this.repoRoot);
       return;
     }
     if (tool !== "cargo" || operation !== "build" && operation !== "check" && operation !== "test" || !manifest) throw new Error("native cargo build|check|test --manifest <Cargo.toml>");
     const extra = args.slice(index + 2);
     validateNativeCargoArguments(operation, extra);
-    if (operation === "build") { await buildCargoArtifacts(manifest, extra, this.repoRoot); scheduleThrottledCachePrune(this.repoRoot); return; }
+    if (operation === "build") { await buildCargoArtifacts(manifest, extra, this.repoRoot); return; }
     const status = runCmdStatus("cargo", [operation, "--locked", "--manifest-path", resolve(this.repoRoot, manifest), ...extra], { cwd: this.repoRoot });
     if (status) throw new Error(`cargo ${operation} failed (${status})`);
-    scheduleThrottledCachePrune(this.repoRoot);
   }
 }
 

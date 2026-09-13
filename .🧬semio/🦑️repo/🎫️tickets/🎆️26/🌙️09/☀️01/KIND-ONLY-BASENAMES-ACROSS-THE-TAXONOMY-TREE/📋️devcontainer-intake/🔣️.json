@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "source": ".devcontainer/compose-entrypoint.sh",
+      "destination": "📋️devcontainer-intake/🚀️command-forwarding/🐚️.sh",
+      "role": "preserved-input"
+    },
+    {
+      "source": ".devcontainer/neo4j-host-forward.sh",
+      "destination": "📋️devcontainer-intake/🔌️bolt-readiness/🐚️.sh",
+      "role": "preserved-input"
+    },
+    {
+      "source": ".devcontainer/neo4j-mcp-run.sh",
+      "destination": "📋️devcontainer-intake/🧩️mcp-delegation/🐚️.sh",
+      "role": "preserved-input"
+    }
+  ],
+  "lifecycle": {
+    "create": [
+      "bun",
+      "nx",
+      "run",
+      "workspace:deps-javascript"
+    ],
+    "start": "bash .devcontainer/post-start.sh",
+    "attach": "bash .devcontainer/post-attach.sh",
+    "containerCommand": [
+      "sleep",
+      "infinity"
+    ],
+    "containerEntrypoint": null
+  }
+}

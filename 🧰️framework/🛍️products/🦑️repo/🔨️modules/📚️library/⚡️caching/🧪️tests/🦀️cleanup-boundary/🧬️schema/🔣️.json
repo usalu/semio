@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "implementation",
+    "operations",
+    "cleanupStamp",
+    "cleanupMarker",
+    "entrypoints",
+    "rootTarget"
+  ],
+  "properties": {
+    "implementation": {
+      "type": "string"
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "build",
+          "check",
+          "test"
+        ]
+      }
+    },
+    "cleanupStamp": {
+      "type": "string"
+    },
+    "cleanupMarker": {
+      "type": "string"
+    },
+    "entrypoints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rootTarget": {
+      "type": "string"
+    }
+  }
+}
+

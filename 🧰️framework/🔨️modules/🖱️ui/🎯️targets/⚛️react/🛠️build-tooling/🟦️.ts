@@ -64,7 +64,7 @@ export type OwnedBuildOptions = {
 export type OwnedBuildConfig = {
   readonly root?: string;
   readonly base?: string;
-  readonly publicDir?: string;
+  readonly publicDir?: string | false;
   readonly assetsInclude?: readonly string[];
   readonly plugins?: readonly (OwnedBuildPlugin | readonly OwnedBuildPlugin[])[];
   readonly worker?: Readonly<Record<string, unknown>>;
@@ -72,7 +72,7 @@ export type OwnedBuildConfig = {
   readonly build?: OwnedBuildOptions;
   readonly server?: {
     readonly fs?: { readonly allow?: readonly string[] };
-    readonly watch?: Readonly<Record<string, unknown>>;
+    readonly watch?: Readonly<Record<string, unknown>> | null;
     readonly [key: string]: unknown;
   };
   readonly resolve?: {

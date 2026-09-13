@@ -2429,11 +2429,12 @@ async fn hover_after_first_pick_keeps_the_object_and_its_lock_row() {
     assert!(hovered.contains("puzzle3d-play-inspector.object.locked"), "hover after first pick must keep the lock flag_row: {hovered}");
 }
 
-/// 🕹️ Wave B15: empty-target `interactionSelect` leftover `selectedIds` must name the hovered object.
+/// 🕹️ Background click: empty-target `interactionSelect` with `replace` clears selection; hover may remain.
 #[semio_framework_async_macros::async_test]
-async fn empty_target_interaction_select_leftover_selected_ids_name_the_hovered_object() {
+async fn empty_target_interaction_select_clears_selection_while_hover_remains() {
     let mut app = app().await;
     let object_id = first_object_id(&app);
+    select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select");
     hover_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, Some(object_id.as_str())).await.expect("hover names the object");
     let admitted = dispatch_reserved_unsettled(
         &mut app,
@@ -2446,16 +2447,51 @@ async fn empty_target_interaction_select_leftover_selected_ids_name_the_hovered_
     let settled = settle_reserved(&mut app, admitted).await.expect("empty-target interactionSelect leftover");
     let view = settled.output.get("interactionView").expect("leftover InteractionView");
     let ids = view.get("selectedIds").and_then(dsl::DslValue::as_array).expect("selectedIds");
-    assert!(
-        ids.iter().any(|id| id.as_str() == Some(object_id.as_str())),
-        "empty-target interactionSelect leftover selectedIds must name the hovered object {object_id}, got {ids:?} hover={:?}",
-        view.get("hoverTarget")
-    );
+    assert!(ids.is_empty(), "empty-target interactionSelect must clear selectedIds, got {ids:?} hover={:?}", view.get("hoverTarget"));
     let hover = view.get("hoverTarget").expect("hoverTarget on leftover");
     assert_eq!(hover.get("id").and_then(dsl::DslValue::as_str), Some(object_id.as_str()));
+    assert!(
+        app.interaction_state().await.selection.get(PUZZLE3D_INTERACTION_DOMAIN).is_none_or(|selection| selection.ids.is_empty()),
+        "empty-target interactionSelect must clear the interaction store"
+    );
     let picked = render_body(&mut app, inspection::BODY_KEY).await.to_string();
-    assert!(!picked.contains("puzzle3d-play-inspector.empty"), "Inspection must populate from leftover selectedIds: {picked}");
-    assert!(picked.contains(object_id.as_str()), "Inspection must name the hovered object: {picked}");
+    assert!(picked.contains("puzzle3d-play-inspector.empty"), "Inspection must fold to the empty summary after background deselect: {picked}");
+}
+
+/// 🪟️ WAVE B56 LAW: a window-addressed `interactionSelect` leftover encode carries the window
+/// INSTANCE it was dispatched for, and a windowless dispatch carries none — never a synthetic window.
+///
+/// 🐛️ The leftover encode named no window at all, so the host had to infer the pane the overlay belonged
+/// to; when it could not, the guest's own dirty fell back to the bare surface name `window` and the host
+/// mounted a synthetic alias to give that name a context (wave W-G3 §8.29). That alias is the surface whose
+/// reconcile reservation refusal starved every real one
+/// (`reserve_refusal=1:window:registry-reservation-unavailable`, wave B54 §6.4). The instance rides the
+/// encode now, so `publishLeftoverWorldSelectionV1` addresses a real pane and nothing has to be inferred
+/// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
+#[semio_framework_async_macros::async_test]
+async fn interaction_select_leftover_window_instance_rides_the_encode() {
+    let mut app = app().await;
+    let object_id = first_object_id(&app);
+    let targets = to_json_string(&vec![InteractionTarget { granularity: PUZZLE3D_GRANULARITY_OBJECT.into(), id: object_id.clone() }]);
+    for window in [main::WINDOW_INSTANCE_PERSPECTIVE, main::WINDOW_INSTANCE_TOP] {
+        let admitted = dispatch_reserved_unsettled(
+            &mut app,
+            "interactionSelect",
+            Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets.clone(), "merge": "replace", "method": "pick" })),
+            Some(window),
+        )
+        .await
+        .expect("window-addressed interactionSelect admit");
+        let settled = settle_reserved(&mut app, admitted).await.expect("window-addressed interactionSelect leftover");
+        let view = settled.output.get("interactionView").expect("leftover InteractionView");
+        assert_eq!(
+            view.get("windowId").and_then(dsl::DslValue::as_str),
+            Some(window),
+            "the leftover encode must name the window instance the pick addressed, got {:?}",
+            view.get("windowId")
+        );
+        eprintln!("[DEBUG] leftover encode for {window} carries windowId={:?}", view.get("windowId").and_then(dsl::DslValue::as_str));
+    }
 }
 
 /// 🎮 Wave B23: leftover.ids that name an object must reach the snapshot `inspection::render` reads
@@ -5267,7 +5303,14 @@ async fn world_pick_null_clears_without_reselecting_first_object() {
     let object_id = first_object_id(&app);
     select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select");
     assert!(app.interaction_state().await.selection.get(PUZZLE3D_INTERACTION_DOMAIN).is_some_and(|selection| !selection.ids.is_empty()));
-    dispatch(&mut app, semio_framework_plugin::CLEAR_SELECTION_ACTION_ID, None, None).await.expect("clear");
+    dispatch(
+        &mut app,
+        "interactionSelect",
+        Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": "[]", "merge": "replace", "method": "pick" })),
+        None,
+    )
+    .await
+    .expect("empty-target interactionSelect");
     assert!(app.interaction_state().await.selection.get(PUZZLE3D_INTERACTION_DOMAIN).is_none_or(|selection| selection.ids.is_empty()), "clicking empty background must clear, never fall back to reselecting the first object");
 }
 
@@ -6699,6 +6742,41 @@ async fn outliner_hide_reaches_the_world_instance_lane_and_flips_the_row_control
     eprintln!("[DEBUG] outliner hide world lane scale={:?} rowIcon={after_icon:?}", instance_scale(&hidden, &object_id));
 }
 
+/// 👁️ The RESTORE half of the law above, in the SAME settle: the row's Show control must put the object's
+/// real scale back into the world instance lane, not merely flip the row's label back. The lane is served
+/// from [`Puzzle3dInstanceResidency`], which re-serializes only the records whose own
+/// `instance_record_fingerprint` moved and caches every other record verbatim — so a key that failed to
+/// read `hidden` would leave an un-hidden object at `[0,0,0]` for the rest of the session while the row,
+/// the projection and the history all read `hidden=false`, and nothing but the world would disagree.
+/// Browser battery #64 reported `outliner-show-restores restored=false` while the `seed-left-001` row had
+/// already come back to `Hide` (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B57), and no row-text verdict
+/// can tell those two apart.
+#[semio_framework_async_macros::async_test]
+async fn outliner_show_restores_the_world_instance_scale_in_the_same_settle() {
+    fn instance_scale(world: &Value, object_id: &str) -> Vec<f64> {
+        let instances: Value = parse(world.pointer("/world3d/instancesJson").and_then(Value::as_str).expect("the world body publishes an instances lane")).expect("instances lane is json");
+        instances
+            .as_array()
+            .expect("instances lane is an array")
+            .iter()
+            .find(|instance| instance.get("id").and_then(Value::as_str) == Some(object_id))
+            .and_then(|instance| instance.get("scale").and_then(Value::as_array))
+            .map(|scale| scale.iter().filter_map(Value::as_f64).collect())
+            .unwrap_or_default()
+    }
+    let flag_args = |object_id: &str, value: bool| json!({ "entity": "object", "flag": "hidden", "ids": [object_id], "value": value });
+    let mut app = app().await;
+    let object_id = first_object_id(&app);
+    assert_eq!(instance_scale(&render_body(&mut app, main::BODY_KEY).await, &object_id), vec![1.0, 1.0, 1.0], "a visible object publishes its real scale");
+    dispatch(&mut app, "setSelectionFlag", Some(&flag_args(&object_id, true)), None).await.expect("setSelectionFlag hidden=true");
+    assert_eq!(instance_scale(&render_body(&mut app, main::BODY_KEY).await, &object_id), vec![0.0, 0.0, 0.0], "the hide half must still reach the world lane");
+    dispatch(&mut app, "setSelectionFlag", Some(&flag_args(&object_id, false)), None).await.expect("setSelectionFlag hidden=false");
+    let shown = render_body(&mut app, main::BODY_KEY).await;
+    assert_eq!(object_flag(&app, &object_id, "hidden"), Some(false), "the show write must reach the document");
+    assert_eq!(instance_scale(&shown, &object_id), vec![1.0, 1.0, 1.0], "un-hiding must republish the object's real scale — a residency that cached the zero-scale record would leave it invisible for good");
+    eprintln!("[DEBUG] outliner show world lane scale={:?}", instance_scale(&shown, &object_id));
+}
+
 /// 🎯️ An outliner row's flag write names its OWN entity, so the live selection must not decide what it
 /// hits. `set_selection_flag` chooses between the explicit `{entity, ids}` the row declares and the whole
 /// live selection, and the browser only ever exercised the branch with NOTHING selected: with a sibling
@@ -7053,6 +7131,35 @@ async fn exported_fixture_bytes_reimport_as_a_distinct_document_and_then_as_an_i
     let again = dispatch(&mut app, "importFixture", Some(&json!({ "payload": two_objects.as_str(), "name": "puzzle-3d-distinct.json" })), None).await.expect("re-import the same file");
     assert!(notices(&again).is_empty(), "re-importing the same file must not refuse: {:?}", notices(&again));
     assert_eq!(object_cores(&projection_of(&app)), after_distinct, "re-importing the file the document already IS is an identity on the document");
+}
+
+/// 🔢️ The payload an import actually receives was written by a BROWSER, not by this crate's own writer:
+/// the file chooser hands back whatever `JSON.stringify` produced, which spells a whole float as `1` (no
+/// `.0`), a tiny one in exponent form (`-5.551115123125783e-17`), an absent optional as `null`, and a
+/// non-ASCII label as a `\u` escape. The law above only ever fed `import_fixture` this crate's own export
+/// text, so none of those spellings was under test — and the browser's `import-distinct` read
+/// `effects:0 historyUpserts:0` with NO refusal notice, which is exactly what `import_fixture`'s
+/// `ctx.abort` path looks like when `parse` rejects the text it was handed (ticket
+/// 26/09/02/PUZZLE-3D-END-TO-END wave B57 §2). One unreadable spelling is a silently dropped document.
+#[semio_framework_async_macros::async_test]
+async fn a_browser_serialized_fixture_payload_imports_every_json_number_spelling() {
+    let mut app = app().await;
+    let payload = r#"{"schema":"puzzle.3d.fixture","domain":"architecture","objects":[{"id":"browser-clone","label":"Distinct Capsule J · cs_sl1","objectKind":"Object","origin":[-16.75,-3.6499999999999986,0],"orientation":[-5.551115123125783e-17,5.551115123125783e-17,0.7071067811865475,0.7071067811865475],"scale":null,"vortices":[{"id":"browser-clone:v0","position":[1,0,2]}],"hidden":false,"locked":false}],"attractions":[],"targetVolumes":[],"references":[]}"#;
+    let (imported, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": payload, "name": "browser-stringify.json" })), None).await;
+    let imported = imported.expect("import a browser-serialized payload");
+    let notices: Vec<String> = imported
+        .requested_effects
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::Notify { message } => Some(message.clone()),
+            _ => None,
+        })
+        .collect();
+    assert!(notices.is_empty(), "a browser-serialized payload must not be refused: {notices:?}");
+    assert_eq!(history_rows(&settled), 1, "a browser-serialized payload must record one history row");
+    let objects = object_cores(&projection_of(&app));
+    assert_eq!(objects.len(), 1, "the imported document is exactly the payload's objects: {objects:?}");
+    assert_eq!(objects.first().map(|(id, ..)| id.as_str()), Some("browser-clone"), "the payload's own object id survives the import: {objects:?}");
 }
 
 /// 📥️ Wave B16: leftover `exportFixture` must emit `DownloadMediaExport`.

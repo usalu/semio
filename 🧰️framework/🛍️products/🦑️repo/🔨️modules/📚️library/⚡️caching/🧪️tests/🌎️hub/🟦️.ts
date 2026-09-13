@@ -29,7 +29,7 @@ export async function testHubBuild(workspace: string): Promise<void> {
   assert.ok(!source.statements.some((node: any) => ts.isClassDeclaration(node) && node.name?.text === "BuildScript"), "Hub must not retain a second build implementation");
   const imports = await require("esbuild").build({ absWorkingDir: workspace, entryPoints: [fixture.entry], bundle: true, write: false, metafile: true, platform: "node", format: "esm", packages: "external", logLevel: "silent" });
   assert.ok(!Object.keys(imports.metafile.inputs).some(path => path.startsWith("🌎️hub/")), "The native producer must not eagerly import the Hub application/test script");
-  const config = ts.createSourceFile("⚙️vite.config.ts", readFileSync(join(workspace, fixture.prerequisiteRoot, "⚙️vite.config.ts"), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const config = ts.createSourceFile(fixture.prerequisiteConfig, readFileSync(join(workspace, fixture.prerequisiteConfig), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const definition = config.statements.find((node: any) => ts.isExportAssignment(node))?.expression.arguments?.[0];
   const properties = definition?.properties?.find((node: any) => node.name?.text === "define")?.initializer.properties ?? [];
   const define = Object.fromEntries(properties.map((node: any) => [node.name.text, node.initializer.text]));

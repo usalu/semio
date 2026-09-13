@@ -24,6 +24,7 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
   assert.equal(generator.cache, true); assert.deepEqual(generator.outputs, [fixture.generator.output]);
   assert.deepEqual(generator.dependsOn.toSorted(), fixture.generator.prerequisites.toSorted());
   for (const target of fixture.generator.consumers) assert.ok(project.targets[target].dependsOn.includes(fixture.generator.target), target);
+  for (const target of ["wasm", "wasm-release"]) assert.ok(!project.targets[target].dependsOn.includes(fixture.generator.target), "Rust compilation must not regenerate the separate browser entry");
   const sourceInputs = cacheInternals.declaredSourceInputs(project, workspace).browserBootSources;
   const sourceFiles = sourceInputs.filter((input: unknown) => typeof input === "string").map((input: string) => input.replace("{workspaceRoot}/", ""));
   assert.ok(sourceFiles.includes(entry.slice(workspace.length + 1)));
@@ -36,7 +37,7 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
   assert.equal(statements.length, names.size);
   const runtime = ts.transpileModule(statements.map((node: any) => node.getText(source)).join("\n"), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText;
   const output = mkdtempSync(join(generated, "wgpu-boot-inputs-"));
-  const consumer = `const vm = require("node:vm"); const fixture = ${JSON.stringify(fixture)}; const runtime = ${JSON.stringify(runtime + "\nJSON.stringify(bootDescriptor())")}; const rows = fixture.cases.map(row => vm.runInNewContext(runtime, {URLSearchParams, DEFAULT_HOST_VARIANT: fixture.defaultVariant, PLAYGROUND_SESSION: {variant: fixture.ambientVariants[0]}, window: {location: {search: row.search}}})).map(JSON.parse); console.log(JSON.stringify(rows));`;
+  const consumer = `const vm = require("node:vm"); const fixture = ${JSON.stringify(fixture)}; const runtime = ${JSON.stringify(runtime + "\nJSON.stringify(bootDescriptor())")}; const rows = fixture.cases.map(row => vm.runInNewContext(runtime, {URLSearchParams, DEFAULT_HOST_VARIANT: fixture.defaultVariant, PLAYGROUND_SESSION: {variant: fixture.ambientVariants[0]}, window: {location: {search: row.search}}, document: {querySelector: () => row.serverVariant ? {content: row.serverVariant} : null}})).map(JSON.parse); console.log(JSON.stringify(rows));`;
   const result = spawnSync("node", ["-e", consumer], { cwd: workspace, encoding: "utf8", timeout: 10000 });
   writeFileSync(join(output, "selection.log"), result.stdout + result.stderr); assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(JSON.parse(result.stdout), fixture.cases.map((row: any) => row.expected));

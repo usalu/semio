@@ -24,12 +24,23 @@ Close demand selects the exact catalog backing while the catalog is the active c
 
 The Pack schema and fixture now specify empty, ASCII and multibyte symbols with exact UTF-8 bytes and scalar values; cumulative byte refusal after individually valid symbols; maximum and maximum-plus-one symbol and chunk counts; a multibyte scalar crossing a 4 KiB input-page boundary; malformed and truncated UTF-8 after valid prefixes; allocation and close refusal; partial-symbol cancellation; sticky first fault; and the terminal ledger.
 
-The registered neutral target passed Ajv 2020 validation, strict TypeScript, independent `TextEncoder`/fatal `TextDecoder` agreement and fast-json-patch cleanup in 17.8s. Its durable output is `🗑️generated/retained-pack-catalog-neutral-1.log`; the first line records an initial wrong absolute Nx module path, followed by the successful canonical `nx/dist/bin/nx.js` run.
+The registered neutral target passed Ajv 2020 validation, strict TypeScript, independent `TextEncoder`/fatal `TextDecoder` agreement and fast-json-patch cleanup. The final fixture names the cursor, rather than the inline receipt, as the terminal owner. Its clean rerun passed in 16.2s and is preserved in `🗑️generated/retained-pack-catalog-neutral-2.log`. The earlier `retained-pack-catalog-neutral-1.log` preserves the initial wrong Nx module-path attempt followed by its successful correction.
 
 ## Native Acceptance
 
-Native execution is pending the coordinated source switch. Acceptance requires actual cursor allocation refusal and pointer/capacity preservation, exact UTF-8/scalar access, cumulative/count/page-boundary/hostile cases, cancellation during a partial symbol, first-fault preservation through cleanup, and aggregate catalog allocation equal to aggregate physical release. The complete retained output must match the existing full-verification `PackFile` result. Existing multi-byte chunk, codec 1 and both mounted laws must remain green.
+The final registered native run passed:
+
+- five shared PagedList laws;
+- eleven Pack source/catalog laws, including empty/ASCII/multibyte scalar access, zero and subexact allocation/close refusal, sticky physical/logical/UTF-8/count faults with pending-input preservation, maximum-plus-one observed and table chunk counts, partial-symbol cleanup, actual backing pointers/capacities, a multibyte scalar crossing source byte 4095, and all-zero terminal ledgers;
+- the existing compressed codec 1 PackFile/PackWriter law;
+- two Generation2d mounted laws, two Generation2d outer-cancellation laws and two Generation3d mounted laws.
+
+The three-symbol native catalog admitted and exactly released 18,928 physical bytes. The long-symbol/page-boundary case admitted and exactly released 32,368 physical bytes and matched the cold full-verification `PackFile` symbol. The multi-byte chunk retained one observed header for its five raw bytes and matched the full Pack reader.
+
+`retained-pack-catalog-coherence-1.log` first exposed a mounted cleanup stall after Pack 11/11 and codec 1 were green. `retained-pack-catalog-coherence-2.log` records the diagnostic witness: the catalog had zero logical items but retained 18,928 physical bytes while later segment/anchor owners incorrectly hid its release demand. The mounted close-demand order was corrected in Generation2d and Generation3d. `retained-pack-catalog-coherence-3.log` is the exit-zero full source/consumer coherence run.
+
+The sharper `retained-pack-catalog-native-3.log` then reproduced a second ordering defect: after logical scalar retirement, the cursor advertised the scalar backing while the later symbol-span list was still logically nonempty, so the same close step spent its item grant and could not release the advertised allocation. The query now waits for every logical catalog list to empty before exposing physical backing in the exact order used by close. `retained-pack-catalog-native-4.log` is the final focused exit-zero run: all three catalog laws pass, including item-only/byte-only refusal, subexact close refusal, exact 18,928-byte and 32,368-byte release, sticky faults and all-zero terminal ledgers.
 
 ## Remaining Ownership
 
-This slice does not retain the value stack, deflate inflater, typed Generation collections, archive ingress or common Store hydration/factory boundary. It does not claim that the whole mounted or recursive document route is physically retained.
+This slice does not retain the value stack, deflate inflater, typed Generation collections, archive ingress or common Store hydration/factory boundary. The cold PackFile still owns String/Vec backings by design. This result does not claim that the whole mounted or recursive document route is physically retained.

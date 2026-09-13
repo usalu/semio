@@ -2554,3 +2554,12 @@ mod work_capacity;
 #[path = "🧪️tests/🔬️example-switch/🦀️.rs"]
 mod example_switch;
 //#endregion 🧪️ExampleSwitch
+
+//#region 🧪️ModePanels
+/// 📌️ Panel publication across play modes — its own module because the law is about the panel
+/// PROJECTION (which host view a panel body is rendered from), not about any one panel's content
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[cfg(test)]
+#[path = "🧪️tests/🔬️mode-panels/🦀️.rs"]
+mod mode_panels;
+//#endregion 🧪️ModePanels

@@ -110,8 +110,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     });
   });
   describe("surface render ViewModel", () => {
-    it("binds two instances of one body to distinct surfaces, the leftover default window alias, and packed window projections", () => {
-      const { DEFAULT_LEFTOVER_WINDOW_SURFACE } = dependencies;
+    it("binds two instances of one body to distinct surfaces and mints no synthetic window alias", () => {
       const events = uiRefreshSurfaceEvents(7, {
         viewState: {
           locale: "de",
@@ -132,17 +131,15 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       expect(events.map((event: { payload: { surface: { surface: string }; bodyKey: string } }) => [event.payload.surface.surface, event.payload.bodyKey])).toEqual([
         ["first", "canvas-body"],
         ["second", "canvas-body"],
-        [DEFAULT_LEFTOVER_WINDOW_SURFACE, "canvas-body"],
         ["details", "details-body"],
       ]);
       const views = events.map((event: { payload: { viewState: Uint8Array } }) => decodePackValue(event.payload.viewState));
       expect(views).toMatchObject([
         { locale: "de", terminology: "reuse", windowId: "first", activeWindowKindId: "canvas", activeUtilityId: "inspect" },
         { locale: "de", terminology: "reuse", windowId: "second", activeWindowKindId: "canvas", activeUtilityId: "measure" },
-        { locale: "de", terminology: "reuse", windowId: "second", activeWindowKindId: "canvas", activeUtilityId: "measure" },
         { locale: "de", terminology: "reuse" },
       ]);
-      expect((views[3] as { windowId?: string | null }).windowId == null).toBe(true);
+      expect((views[2] as { windowId?: string | null }).windowId == null).toBe(true);
       console.info("[DEBUG] concrete render surfaces received packed locale, terminology, and per-window utility context");
     });
   });

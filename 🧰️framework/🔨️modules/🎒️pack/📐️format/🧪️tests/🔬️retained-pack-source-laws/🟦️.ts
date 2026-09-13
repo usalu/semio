@@ -55,9 +55,42 @@ export function testRetainedPackPhysicalOwnership(): void {
     { op: "replace", path: "/partialSymbolScalars", value: 0 },
     { op: "replace", path: "/logicalItems", value: 0 },
     { op: "replace", path: "/allocatedBytes", value: 0 },
-    { op: "replace", path: "/receiptClosed", value: true },
+    { op: "replace", path: "/catalogCursorClosed", value: true },
   ];
-  const catalogTerminal = applyPatch({ pending: true, partialSymbolBytes: 2, partialSymbolScalars: 1, logicalItems: 3, allocatedBytes: 8192, receiptClosed: false }, catalogRelease, true).newDocument;
+  const catalogTerminal = applyPatch({ pending: true, partialSymbolBytes: 2, partialSymbolScalars: 1, logicalItems: 3, allocatedBytes: 8192, catalogCursorClosed: false }, catalogRelease, true).newDocument;
   assert.deepEqual(catalogTerminal, corpus.retainedCatalog.terminal);
-  console.log("[DEBUG] Retained Pack physical source and catalog fixtures agree with Ajv 2020, fast-json-patch and platform UTF-8; catalog symbols=3 pending-preserved=true terminal-ledgers=zero");
+  assert.equal(corpus.retainedValue.constructionAllocates, false);
+  assert.equal(corpus.retainedValue.diagnostic.storage, "inline");
+  assert.equal(corpus.retainedValue.diagnostic.heapBytes, 0);
+  assert.equal(corpus.retainedValue.diagnostic.publicStepAllocates, false);
+  assert.equal(corpus.retainedValue.diagnostic.sticky, true);
+  assert.equal(corpus.retainedValue.stack.maximumFrames, corpus.retainedValue.stack.maxDepth * corpus.retainedValue.stack.framesPerDepth);
+  assert(corpus.retainedValue.stack.initialFrames <= corpus.retainedValue.stack.maximumFrames);
+  assert.equal(corpus.retainedValue.stack.allocationBeforeInput, true);
+  assert.equal(corpus.retainedValue.stack.zeroOrSubexactMutates, false);
+  for (const symbol of corpus.retainedValue.recordBody.symbols) {
+    assert.deepEqual([...encoder.encode(symbol.text)], symbol.utf8);
+    assert.deepEqual([...symbol.text].map((scalar) => scalar.codePointAt(0)), symbol.scalars);
+    assert.equal(decoder.decode(Uint8Array.from(symbol.utf8)), symbol.text);
+  }
+  assert(corpus.retainedValue.recordBody.multiLeaf.symbols > 1);
+  assert.equal(corpus.retainedValue.recordBody.multiLeaf.positiveDemandBeyondFirstLeaf, true);
+  assert.equal(corpus.retainedValue.recordBody.coordinateModel.firstUnrepresentableSymbol, 2 ** corpus.retainedValue.recordBody.coordinateModel.pointerBits);
+  assert.equal(corpus.retainedValue.recordBody.coordinateModel.checkedConversion, true);
+  assert.equal(corpus.retainedValue.recordBody.eventHandoff.finalScalarAndCatalogSameByte, true);
+  assert.equal(corpus.retainedValue.recordBody.eventHandoff.preserveCatalogCompleteAcrossAllocation, true);
+  assert.equal(corpus.retainedValue.recordBody.eventHandoff.blockIngressUntilObserved, true);
+  assert.equal(corpus.retainedValue.recordBody.unopenedCancellation.zeroItemZeroByteMutates, false);
+  assert.equal(corpus.retainedValue.recordBody.unopenedCancellation.bytesOnlyMetadataTransition, true);
+  const valueRelease: Operation[] = [
+    { op: "replace", path: "/pending", value: false },
+    { op: "replace", path: "/stackFrames", value: 0 },
+    { op: "replace", path: "/symbols", value: 0 },
+    { op: "replace", path: "/scalars", value: 0 },
+    { op: "replace", path: "/allocatedBytes", value: 0 },
+    { op: "replace", path: "/closed", value: true },
+  ];
+  const valueTerminal = applyPatch({ pending: true, stackFrames: 2, symbols: 3, scalars: 7, allocatedBytes: 32768, closed: false }, valueRelease, true).newDocument;
+  assert.deepEqual(valueTerminal, corpus.retainedValue.terminal);
+  console.log("[DEBUG] Retained Pack physical source, catalog and value fixtures agree with Ajv 2020, fast-json-patch and platform UTF-8; value consumers=4 allocation-before-input=true terminal-ledgers=zero");
 }

@@ -47,6 +47,18 @@ pub struct Bar3 {
 }
 
 impl Element for Bar3 {
+    fn close_mounted_string_step(&mut self) -> Option<usize> {
+        crate::model::close_mounted_strings([&mut self.id, &mut self.node_a, &mut self.node_b])
+    }
+
+    fn mounted_next_string_bytes(&self) -> Option<usize> {
+        crate::model::mounted_string_bytes([&self.id, &self.node_a, &self.node_b])
+    }
+
+    fn mounted_strings_terminal_is_empty(&self) -> bool {
+        self.mounted_next_string_bytes().is_none()
+    }
+
     fn id(&self) -> &str {
         &self.id
     }
@@ -359,6 +371,18 @@ fn local_udl(l: f64, t: &MatD, udl: &MemberUdl) -> VecD {
 }
 
 impl Element for Frame3 {
+    fn close_mounted_string_step(&mut self) -> Option<usize> {
+        crate::model::close_mounted_strings([&mut self.id, &mut self.node_a, &mut self.node_b])
+    }
+
+    fn mounted_next_string_bytes(&self) -> Option<usize> {
+        crate::model::mounted_string_bytes([&self.id, &self.node_a, &self.node_b])
+    }
+
+    fn mounted_strings_terminal_is_empty(&self) -> bool {
+        self.mounted_next_string_bytes().is_none()
+    }
+
     fn id(&self) -> &str {
         &self.id
     }
@@ -578,6 +602,18 @@ impl Tet4 {
 }
 
 impl Element for Tet4 {
+    fn close_mounted_string_step(&mut self) -> Option<usize> {
+        crate::model::close_mounted_strings(std::iter::once(&mut self.id).chain(self.nodes.iter_mut()))
+    }
+
+    fn mounted_next_string_bytes(&self) -> Option<usize> {
+        crate::model::mounted_string_bytes(std::iter::once(&self.id).chain(self.nodes.iter()))
+    }
+
+    fn mounted_strings_terminal_is_empty(&self) -> bool {
+        self.mounted_next_string_bytes().is_none()
+    }
+
     fn id(&self) -> &str {
         &self.id
     }

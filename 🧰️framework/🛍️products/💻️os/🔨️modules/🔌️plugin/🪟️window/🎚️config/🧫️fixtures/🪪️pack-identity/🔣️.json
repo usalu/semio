@@ -6,18 +6,35 @@
       "id": "same-window",
       "sourceWindowId": "source",
       "targetWindowId": "source",
+      "targetExists": true,
       "accepted": true
     },
     {
       "id": "same-kind-foreign-window",
       "sourceWindowId": "source",
       "targetWindowId": "target",
+      "targetExists": true,
+      "accepted": false
+    },
+    {
+      "id": "same-kind-foreign-absent-window",
+      "sourceWindowId": "source",
+      "targetWindowId": "target",
+      "targetExists": false,
       "accepted": false
     },
     {
       "id": "same-kind-foreign-colon-window",
       "sourceWindowId": "scene:one",
       "targetWindowId": "scene:two",
+      "targetExists": true,
+      "accepted": false
+    },
+    {
+      "id": "same-kind-foreign-absent-colon-window",
+      "sourceWindowId": "scene:one",
+      "targetWindowId": "scene:two",
+      "targetExists": false,
       "accepted": false
     }
   ]

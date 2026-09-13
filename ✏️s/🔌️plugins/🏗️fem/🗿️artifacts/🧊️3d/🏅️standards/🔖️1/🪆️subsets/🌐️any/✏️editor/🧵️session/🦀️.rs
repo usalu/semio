@@ -425,6 +425,10 @@ impl<T, const N: usize> FixedSlots<T, N> {
         }
         true
     }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.admitted == 0
+    }
 }
 
 struct Fem3dMeshedSolid {
@@ -1729,7 +1733,40 @@ impl Fem3dNumericalChild {
         }
     }
 
+    fn terminal_is_empty(&self) -> bool {
+        self.close_lane > 21
+            && self.child_outcome.is_none()
+            && self.model.is_none()
+            && self.pending_support.is_none()
+            && self.pending_element.is_none()
+            && self.pending_tet.is_none()
+            && self.pending_node_id.is_none()
+            && self.mesh.is_none()
+            && self.assembly_build.is_none()
+            && self.assembly.is_none()
+            && self.csr_build.is_none()
+            && self.pcg_build.is_none()
+            && self.rejected_pcg_matrix.is_none()
+            && self.rejected_pcg_rhs.is_none()
+            && self.pcg.is_none()
+            && self.modal_build.is_none()
+            && self.ldlt.is_none()
+            && self.subspace.is_none()
+            && self.modal_mass.is_none()
+            && self.solid_domain.is_none()
+            && self.analysis_node_ids.terminal_is_empty()
+            && self.meshed_solids.terminal_is_empty()
+            && self.solid_points.terminal_is_empty()
+            && self.solid_tris.terminal_is_empty()
+            && self.solid_node_ids.terminal_is_empty()
+            && self.solid_node_analysis_indices.terminal_is_empty()
+            && self.rhs.terminal_is_empty()
+            && self.modal_free_mass.terminal_is_empty()
+    }
+
     fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if self.terminal_is_empty() { return (true, 0, 0); }
+        if maximum_bytes == 0 { return (false, 0, 0); }
         if let Some(step) = self.close_child_outcome(maximum_bytes) { return step; }
         if let Some(matrix) = self.rejected_pcg_matrix.as_mut() {
             let step = matrix.close_step(maximum_bytes);
@@ -1942,7 +1979,10 @@ impl Fem3dNumericalChild {
                 (true, 0, 0)
             }
             14 => {
-                let Some(support) = self.pending_support.as_mut() else { return (true, 0, 0) };
+                let Some(support) = self.pending_support.as_mut() else {
+                    self.close_lane += 1;
+                    return (false, 0, 0);
+                };
                 let step = support.close_step(maximum_bytes);
                 if step.0 {
                     self.pending_support = None;
@@ -1976,7 +2016,10 @@ impl Fem3dNumericalChild {
             17 => (self.rhs.close_step(), 1, 0),
             18 => (self.modal_free_mass.close_step(), 1, 0),
             19 => {
-                let Some(element) = self.pending_element.as_mut() else { return (true, 0, 0) };
+                let Some(element) = self.pending_element.as_mut() else {
+                    self.close_lane += 1;
+                    return (false, 0, 0);
+                };
                 if let Some(bytes) = element.mounted_next_string_bytes() {
                     if bytes > maximum_bytes {
                         return (false, 0, 0);
@@ -1988,7 +2031,10 @@ impl Fem3dNumericalChild {
                 (true, 1, 0)
             }
             20 => {
-                let Some(element) = self.pending_tet.as_mut() else { return (true, 0, 0) };
+                let Some(element) = self.pending_tet.as_mut() else {
+                    self.close_lane += 1;
+                    return (false, 0, 0);
+                };
                 if let Some(bytes) = element.mounted_next_string_bytes() {
                     if bytes > maximum_bytes {
                         return (false, 0, 0);
@@ -2000,14 +2046,17 @@ impl Fem3dNumericalChild {
                 (true, 1, 0)
             }
             21 => {
-                let Some(model) = self.model.as_mut() else { return (true, 0, 0) };
+                let Some(model) = self.model.as_mut() else {
+                    self.close_lane += 1;
+                    return (false, 0, 0);
+                };
                 let step = model.close_step(maximum_bytes);
                 if step.0 {
                     self.model = None;
                 }
                 step
             }
-            _ => return (true, 0, 0),
+            _ => return (self.terminal_is_empty(), 0, 0),
         };
         if step.0 {
             self.close_lane += 1;

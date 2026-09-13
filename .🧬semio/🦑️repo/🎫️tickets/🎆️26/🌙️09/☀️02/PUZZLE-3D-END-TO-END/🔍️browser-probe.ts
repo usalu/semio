@@ -461,8 +461,8 @@ if (booted && interact) {
     const tabButtonState = async () =>
       evalSafe(
         (id) => {
-          const button = (document.querySelector(`[data-slot="panel-tab-button"][data-tab-id="${id}"]`) ??
-            document.querySelector(`[data-slot="panel-tab-button"][id="${id}"]`) ??
+          const button = (document.querySelector(`[data-slot="panel-tab-button"][id="${id}"]`) ??
+            document.querySelector(`[data-slot="panel-tab-button"][data-tab-id="${id}"]`) ??
             document.getElementById(id)) as HTMLElement | null;
           if (!button) return null;
           const read = (name: string) => (button.getAttribute(name) ?? "").trim().toLowerCase();
@@ -489,7 +489,20 @@ if (booted && interact) {
     // own console reading `history patch applied {"labels":["Toggle Panel"],"upserts":1}` — the shell
     // received the press and CLOSED the panel. An empty body is a publication question, never an
     // open/closed one.
-    const isOpen = (state: { active: boolean | null; body: number }) => state.active === true || (body ? state.body > 0 : false);
+    // 🪧️ When a caller names the panel's BODY, that body is the only truth — the tab's own flags cannot
+    // stand in for it and cannot veto it.
+    //
+    // 🧾️ Wave B55: `aria-pressed="true"` and `data-active="true"` stay on a tab whose panel is NOT the one
+    // the dock renders; only `data-state="on"` tracks that. Battery #63 measured
+    // `ensurePanel framework.panel.artifact already-open active=true body=0 tab={pressed:"true",state:"",active:"true"}`
+    // and the step then read the HISTORY panel's rows
+    // (`outliner rows before=[{"id":"framework.history.entry.1", …}]`, `outliner row controls=[]`), and the
+    // same disagreement made `inspection-object-fields`/`inspection-locked-flag-row` measure `fields=[]`
+    // against an Inspection tab that reported itself pressed. The old disjunction let the flag substitute
+    // for the body, so a press that would have switched the dock was skipped. The published-late worry the
+    // previous reading defended against is handled where it belongs: the press is followed by a 20 s poll of
+    // the body, and a press that TOGGLED an open-but-unpublished panel shut is pressed once more.
+    const isOpen = (state: { active: boolean | null; body: number }) => (body ? state.body > 0 : state.active === true);
     const present = await evalSafe((id) => Boolean(document.getElementById(id)), false, tabId);
     const before = { active: await tabActive(), body: await bodyCount() };
     if (isOpen(before)) {
@@ -580,6 +593,19 @@ if (booted && interact) {
             .slice(-14),
         ).slice(0, 2000)}`,
       );
+    // 🔁️ One more press when the body never arrived: a tab that reported itself pressed while another
+    // panel was rendered answers the first press by CLOSING (`Toggle Panel`), and the second re-opens it.
+    if (!isOpen(settled.value)) {
+      const retry = await page
+        .locator(`[data-slot="panel-tab-button"][id="${tabId}"], [id="${tabId}"]`)
+        .first()
+        .click({ force: true, timeout: 4000 })
+        .then(() => "ok")
+        .catch((error) => `failed ${String(error).split("\n")[0].slice(0, 110)}`);
+      const again = await settleFor(async () => ({ active: await tabActive(), body: await bodyCount() }), isOpen, 20000);
+      log(`ensurePanel ${tabId} retry-click=${retry} active=${String(again.value.active)} body=${again.value.body} waitedMs=${again.waitedMs}`);
+      return { opened: again.ok, clicked: true, present, body: again.value.body, waitedMs: settled.waitedMs + again.waitedMs };
+    }
     return { opened: settled.ok, clicked: true, present, body: settled.value.body, waitedMs: settled.waitedMs };
   };
   add("activate-perspective", "§1", "read", true, async () => {
@@ -608,66 +634,118 @@ if (booted && interact) {
     const picker = page.locator('[id="playground.navbar.fixture"]');
     const native = picker.locator("select").or(page.locator('select[id="playground.navbar.fixture"]')).first();
     const wanted = exampleArg ? new RegExp(exampleArg, "i") : /nakagin/i;
-    if (await countSafe(native)) {
-      await native.selectOption({ label: (await native.locator("option").allTextContents()).find((label) => wanted.test(label)) ?? "" }).catch(() => {});
-    } else {
-      const combo = (await countSafe(picker)) ? picker.first() : page.locator('[role="combobox"]').first();
-      const options = page.locator('[role="option"]');
-      // 🕰️ Wave B47 §5: `force: true` and a POLL, for the two reasons B44 §1.0 measured on this very
-      // control — a hit-tested click on it times out while nothing covers it, and the listbox portals in
-      // later than the fixed 400 ms sample this used to take. A miss here is silent and expensive: the
-      // step logged `example options=[] pickerPresent=1`, never dispatched `setActiveExample`, left the
-      // document on the 1-object Concrete Forest and still scored `example-switch-instances` green — so
-      // every later step measured the SMALL document while the report said Nakagin.
-      let opened = { ok: false, waitedMs: 0 };
-      for (let attempt = 0; attempt < 2 && !opened.ok; attempt++) {
-        await combo.click({ force: true, timeout: 3000 }).catch(() => {});
-        opened = await settleFor(async () => (await options.count()) > 0, (open) => open, 8000, 250);
-      }
-      log(
-        `example picker shape=${JSON.stringify(
-          await evalSafe(
-            () => {
-              const el = document.getElementById("playground.navbar.fixture");
-              if (!el) return null;
-              const box = el.getBoundingClientRect();
-              const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) as HTMLElement | null;
-              const chain: string[] = [];
-              for (let node = hit; node && chain.length < 6; node = node.parentElement) {
-                const style = getComputedStyle(node);
-                const nodeBox = node.getBoundingClientRect();
-                chain.push(`${node.tagName}#${node.id || "-"}[${node.getAttribute("data-slot") ?? "-"}]{${(node.className || "").toString().slice(0, 70)}}@${Math.round(nodeBox.x)},${Math.round(nodeBox.y)},${Math.round(nodeBox.width)},${Math.round(nodeBox.height)}:${style.position}/${style.zIndex}/pe=${style.pointerEvents}`);
-              }
-              return { rect: [Math.round(box.x), Math.round(box.y), Math.round(box.width), Math.round(box.height)], slot: el.getAttribute("data-slot"), state: el.getAttribute("data-state"), expanded: el.getAttribute("aria-expanded"), disabled: (el as HTMLButtonElement).disabled ?? null, mine: Boolean(hit && (hit === el || el.contains(hit))), chain };
-            },
-            null as null | Record<string, unknown>,
-          ),
-        )}`,
-      );
-      log(`example options=${JSON.stringify(await options.allTextContents()).slice(0, 300)} pickerPresent=${await countSafe(picker)} opened=${opened.ok} waitedMs=${opened.waitedMs}`);
-      const target = options.filter({ hasText: wanted }).first();
-      await ((await countSafe(target)) ? target : options.nth(1)).click({ timeout: 3000 }).catch(() => {});
-    }
-    const settleArg = process.argv.find((a) => a.startsWith("--settle="))?.slice(9);
-    await page.waitForTimeout(settleArg ? Number(settleArg) * 1000 : 20000);
+    const options = page.locator('[role="option"]');
     const readExample = async () =>
       evalSafe(() => {
         const picker = (document.getElementById("playground.navbar.fixture") ?? document.querySelector('[role="combobox"]')) as HTMLElement | null;
         return (picker?.innerText || "").replace(/\n/g, " ").slice(0, 80);
       }, "");
-    let afterExample = await readExample();
-    log(`example after switch: ${afterExample}`);
-    if (wantUndo) verdict("example-switch", /nakagin/i.test(afterExample), `example=${afterExample}`);
-    if (wantUndo && !/nakagin/i.test(afterExample)) {
-      const combo = ((await countSafe(page.locator('[id="playground.navbar.fixture"]'))) ? page.locator('[id="playground.navbar.fixture"]') : page.locator('[role="combobox"]')).first();
-      await combo.click({ timeout: 3000 }).catch(() => {});
-      const nakagin = page.locator('[role="option"]').filter({ hasText: /nakagin/i }).first();
-      if (await nakagin.count()) await nakagin.click({ timeout: 3000 }).catch(() => {});
-      await page.waitForTimeout(8000);
+    const pickerShape = async () =>
+      evalSafe(
+        () => {
+          const el = document.getElementById("playground.navbar.fixture");
+          if (!el) return null;
+          const box = el.getBoundingClientRect();
+          const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) as HTMLElement | null;
+          const chain: string[] = [];
+          for (let node = hit; node && chain.length < 6; node = node.parentElement) {
+            const style = getComputedStyle(node);
+            const nodeBox = node.getBoundingClientRect();
+            chain.push(`${node.tagName}#${node.id || "-"}[${node.getAttribute("data-slot") ?? "-"}]{${(node.className || "").toString().slice(0, 70)}}@${Math.round(nodeBox.x)},${Math.round(nodeBox.y)},${Math.round(nodeBox.width)},${Math.round(nodeBox.height)}:${style.position}/${style.zIndex}/pe=${style.pointerEvents}`);
+          }
+          return { rect: [Math.round(box.x), Math.round(box.y), Math.round(box.width), Math.round(box.height)], slot: el.getAttribute("data-slot"), state: el.getAttribute("data-state"), expanded: el.getAttribute("aria-expanded"), disabled: (el as HTMLButtonElement).disabled ?? null, mine: Boolean(hit && (hit === el || el.contains(hit))), chain };
+        },
+        null as null | Record<string, unknown>,
+      );
+    /** 🎛️ Opens the navbar example listbox and names the route that got it open, POINTER first and
+     * KEYBOARD second. Wave B47 §5 already polled two forced pointer presses; battery #64 still read
+     * `example options=[] pickerPresent=1 opened=false waitedMs=8048` with `mine:true` — nothing covers
+     * the trigger, the presses simply did not open it — and the old post-verdict retry's THIRD press then
+     * opened it and switched the document. A control a keyboard user can open must not depend on that
+     * third press, so `focus()` + `Enter` (how a `select-trigger` opens without a pointer) is tried too. */
+    const openExampleList = async () => {
+      for (const route of ["pointer", "pointer", "keyboard", "keyboard"] as const) {
+        const combo = (await countSafe(picker)) ? picker.first() : page.locator('[role="combobox"]').first();
+        if (route === "pointer") {
+          await combo.click({ force: true, timeout: 4000 }).catch(() => {});
+        } else {
+          await combo.focus({ timeout: 4000 }).catch(() => {});
+          await page.keyboard.press("Enter").catch(() => {});
+        }
+        const opened = await settleFor(async () => (await options.count()) > 0, (open) => open, 8000, 250);
+        log(`example listbox route=${route} opened=${opened.ok} waitedMs=${opened.waitedMs} options=${JSON.stringify(await options.allTextContents()).slice(0, 300)}`);
+        if (opened.ok) return route;
+      }
+      log(`example picker shape=${JSON.stringify(await pickerShape())}`);
+      return "shut";
+    };
+    /** ⌨️ Commits the wanted option, POINTER first and KEYBOARD second: `ArrowDown` walks the listbox's own
+     * `data-highlighted` and `Enter` commits it, so an option row that cannot be hit still switches the
+     * document. Never `options.nth(1)` as a consolation pick — that is how a lane "switched" to whatever
+     * happened to be second and every later step measured a document nobody asked for. */
+    const pickExampleOption = async () => {
+      const target = options.filter({ hasText: wanted }).first();
+      if (await countSafe(target)) {
+        const clicked = await target
+          .click({ timeout: 5000 })
+          .then(() => true)
+          .catch(() => false);
+        if (clicked) return "pointer";
+      }
+      for (let step = 0; step < 40; step++) {
+        const highlighted = await evalSafe(() => ((document.querySelector('[role="option"][data-highlighted]') as HTMLElement | null)?.innerText || "").replace(/\s+/g, " ").trim(), "");
+        if (wanted.test(highlighted)) {
+          await page.keyboard.press("Enter").catch(() => {});
+          return "keyboard";
+        }
+        await page.keyboard.press("ArrowDown").catch(() => {});
+        await page.waitForTimeout(90);
+      }
+      return "missed";
+    };
+    const settleArg = process.argv.find((a) => a.startsWith("--settle="))?.slice(9);
+    const settleMs = settleArg ? Number(settleArg) * 1000 : 20000;
+    const labelBefore = await readExample();
+    const censusBefore = await dumpInstances();
+    log(`example before switch: label=${labelBefore} census=${JSON.stringify(censusBefore).slice(0, 200)}`);
+    let afterExample = labelBefore;
+    let census = censusBefore;
+    let route = "none";
+    // 🔁️ The RETRY lives in front of the verdict, not behind it. Battery #64 scored `example-switch FAIL
+    // example=Concrete Forest` and then, 60 s later, logged `example after nakagin retry: Nakagin Capsule
+    // Tower` — the lane was already fixed by its own retry when the red was written, so the red named the
+    // probe's ordering and nothing about the product.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (await countSafe(native)) {
+        route = "native";
+        await native.selectOption({ label: (await native.locator("option").allTextContents()).find((label) => wanted.test(label)) ?? "" }).catch(() => {});
+      } else {
+        route = `${await openExampleList()}/${await pickExampleOption()}`;
+      }
+      await page.waitForTimeout(settleMs);
       afterExample = await readExample();
-      log(`example after nakagin retry: ${afterExample}`);
+      census = await dumpInstances();
+      log(`example after switch attempt=${attempt} route=${route} label=${afterExample} census=${JSON.stringify(census).slice(0, 200)}`);
+      if (wanted.test(afterExample) && (census.bytes !== censusBefore.bytes || census.count !== censusBefore.count || wanted.test(labelBefore))) break;
     }
-    verdict("example-switch-instances", (await dumpInstances()).count > 0, `instances=${JSON.stringify(await dumpInstances())} example=${afterExample}`);
+    // 🧾️ TWO observables, because either one alone has already lied here: the trigger's own label (B48's
+    // blind switch scored green off a document that never moved) and the GUEST's census — the
+    // `data-instances-json` bytes B53 hop 0 measured going 266 → 54 254 across this switch. A label that
+    // moved with no census move is a chrome-only switch, and a census that moved under the old label is a
+    // switch the navbar did not render.
+    // 🚩️ Gated on `wantExample`, not `wantUndo`: `--only=example-switch,export-import` asks for THIS step
+    // by name, switches the document, and used to emit no `example-switch` verdict at all because the flag
+    // that published it belonged to the undo family — the exact lane/flag mismatch the `family` comment
+    // above was written about. A step that ran on request reports on request.
+    if (wantExample) {
+      const guestMoved = census.bytes !== censusBefore.bytes || census.count !== censusBefore.count;
+      verdict(
+        "example-switch",
+        wanted.test(afterExample) && (guestMoved || wanted.test(labelBefore)),
+        `example=${afterExample} labelBefore=${labelBefore} route=${route} guestMoved=${guestMoved} bytes=${censusBefore.bytes}→${census.bytes} count=${censusBefore.count}→${census.count}`,
+      );
+    }
+    verdict("example-switch-instances", census.count > 0, `instances=${JSON.stringify(census).slice(0, 200)} example=${afterExample}`);
   });
   {
     const fillState = async () =>
@@ -1172,9 +1250,12 @@ if (booted && interact) {
         // 🧮️ EVERY id, not the first sixteen: `catalogue-add-selects-new-object` asks whether the selection
         // names one of these, and on a 180-object document the object just added sits well past index 16 —
         // a cap here made that verdict unfalsifiable, and made a census diff name the wrong arrival.
-        return { count: parsed.length, ids: parsed.map((o) => o.id ?? "?") };
+        // 📏️ `bytes` is the GUEST census `example-switch` needs: the published `data-instances-json` went
+        // 266 → 54 254 across the Nakagin switch (B53 hop 0), which is the one reading that cannot be
+        // faked by a navbar label.
+        return { count: parsed.length, bytes: raw.length, ids: parsed.map((o) => o.id ?? "?") };
       },
-      { count: 0, ids: [] as string[] },
+      { count: 0, bytes: 0, ids: [] as string[] },
     );
   const waitBrushVortices = async () => {
     let last = { count: 0, ids: [] as string[], rawLen: 0 };
@@ -1324,7 +1405,17 @@ if (booted && interact) {
     }
     return last;
   };
-  const dragGumballMoveX = async (box: { x: number; y: number; width: number; height: number }) => {
+  /** 🎯️ Presses and drags the gumball's moveX handle, walking the projected origin→tip segment until one
+   * press is taken (`__gumballDragEntered`).
+   *
+   * 🧷️ `reselect` re-establishes the SELECTION between candidates, and a caller that has one must pass it:
+   * a press that misses the handle lands on the canvas, which is a pick that CLEARS the selection — and a
+   * cleared selection takes the gumball with it, so every remaining candidate presses empty space. Battery
+   * #62 measured exactly that in `locked-refusal`: handles at 610.8 s and 632.3 s, then
+   * `gumball hits {"hits":[],"entered":false}` three times, no `gumball grabbed` line at all, and
+   * `locked-refusal-notice FAIL locked=true flag="locked true" notices=[]` — a refusal reported missing for
+   * a translate that was never dispatched. */
+  const dragGumballMoveX = async (box: { x: number; y: number; width: number; height: number }, reselect?: () => Promise<void>) => {
     await page.evaluate(() => {
       (window as unknown as { __gumballDragEntered?: boolean }).__gumballDragEntered = false;
     });
@@ -1376,7 +1467,12 @@ if (booted && interact) {
       await page.mouse.up();
       await page.waitForTimeout(700);
       const after = await gumballHits();
-      tried.push(`${candidate.f}@${Math.round(candidate.x)},${Math.round(candidate.y)}=${after.entered}`);
+      tried.push(`${candidate.f}@${Math.round(candidate.x)},${Math.round(candidate.y)}=${after.entered}${after.hits.length === 0 ? " selection-lost" : ""}`);
+      if (!after.entered && after.hits.length === 0 && reselect) {
+        await reselect();
+        const back = await settleFor(gumballHits, (hits) => hits.hits.length > 0, 15000);
+        log(`gumball reselect after miss@${candidate.f} handlesBack=${back.value.hits.length} waitedMs=${back.waitedMs}`);
+      }
       if (after.entered) {
         log(`gumball grabbed tried=${JSON.stringify(tried)} stride=${Math.round(stride.dx)},${Math.round(stride.dy)}`);
         return { handle, entered: true };
@@ -1416,10 +1512,21 @@ if (booted && interact) {
       () => {
         const root = document.getElementById("framework.window.puzzle3dMainPerspective.engagement");
         const rows = Array.from(document.querySelectorAll<HTMLElement>('[id^="action."]')).map((row) => `${row.id}|${row.innerText.replace(/\s+/g, " ").trim().slice(0, 28)}`);
-        return { rootPresent: Boolean(root), folded: root?.getAttribute("data-folded") ?? null, rootText: root?.innerText.replace(/\n/g, " | ").slice(0, 200) ?? null, rows: rows.slice(0, 24) };
+        // 🔢️ `rowCount` beside the slice. The dump was sliced at 24 while `action.exportFixture` sat at
+        // row 79 of 96 (B53 §5), so five waves read "Export is absent" off a rail that carried it.
+        return { rootPresent: Boolean(root), folded: root?.getAttribute("data-folded") ?? null, rootText: root?.innerText.replace(/\n/g, " | ").slice(0, 200) ?? null, rowCount: rows.length, rows: rows.slice(0, 24) };
       },
-      { rootPresent: false, folded: null as string | null, rootText: null as string | null, rows: [] as string[] },
+      { rootPresent: false, folded: null as string | null, rootText: null as string | null, rowCount: 0, rows: [] as string[] },
     );
+  /** 🔢️ The GUEST's own object census, read off the Actions pane's header (`"180 Objects · 0 Attractions"`,
+   * rendered from the fixture, not from the world lane). `-1` when the pane is folded or the header is not
+   * rendered. It is the second witness `import-distinct` needs: `data-instances-json` alone cannot tell "the
+   * import never applied" from "it applied and the world never republished", and those are two different
+   * products. */
+  const paneObjectCount = async () => {
+    const match = /([0-9]+)\s+Objects/.exec((await actionPaneState()).rootText ?? "");
+    return match ? Number(match[1]) : -1;
+  };
   /** 🫥️ Whether a pane-chrome toggle is reachable by a real pointer, and what covers it when it is not.
    * The perspective window's Actions/Search pane chrome and the mode dock's own tab bar occupy the SAME
    * viewport band, so `elementFromPoint` at the toggle's centre answers a `mode-dock-tab-*` button — a
@@ -1478,12 +1585,61 @@ if (booted && interact) {
     await page.keyboard.press("Escape").catch(() => {});
     const row = page.locator(`[id="action.${actionId}"]`);
     let unfold: Awaited<ReturnType<typeof unfoldWindowPane>> | null = null;
-    if ((await countSafe(row)) === 0) {
-      unfold = await unfoldWindowPane("framework.window.puzzle3dMainPerspective.engagement");
-      for (let attempt = 0; attempt < 10 && (await countSafe(row)) === 0; attempt++) await page.waitForTimeout(600);
+    let appeared = { value: 0, waitedMs: 0, ok: true };
+    const paneId = "framework.window.puzzle3dMainPerspective.engagement";
+    // ⏳️🔁️ Wave B57: the pane is opened in ROUNDS, and the row's arrival gets 45 s per round instead of
+    // 10 × 600 ms. Two readings forced this. (1) The toggle press times out on the Nakagin document
+    // (B45's obstruction lineage, `covered:false` — nothing is over it, the renderer just does not
+    // acknowledge within the budget) and the pane then opens tens of seconds LATER: in run 1 of this wave
+    // `exportFixture` gave up at `folded="true" rowCount=0` and the very next call — 16 s on, same pane,
+    // same toggle — read `unfolded:true rowCount=81` and pressed its row. (2) In run 2 the pointer press
+    // was simply never delivered and 122 s of waiting changed nothing, so waiting LONGER is not the fix
+    // either — the press has to be repeated, and the keyboard route (`focus()` + `Enter` on the pane's own
+    // `<button>`) tried, which is a real route for a keyboard user and asks nothing of hit-testing.
+    // `unfoldWindowPane` re-reads `data-folded` before it presses, so a round is a no-op on an open pane
+    // and this can never fold the pane it needs.
+    for (let round = 0; round < 3 && (await countSafe(row)) === 0; round++) {
+      if (round === 0) {
+        unfold = await unfoldWindowPane(paneId);
+      } else {
+        const toggle = page.locator(`[id="${paneId}.toggle"]`).first();
+        await toggle.focus({ timeout: 4000 }).catch(() => {});
+        await page.keyboard.press("Enter").catch(() => {});
+        log(`action-pane ${actionId} keyboard-unfold round=${round} folded=${await evalSafe((id: string) => document.getElementById(id)?.getAttribute("data-folded") ?? "absent", "eval-failed", paneId)}`);
+      }
+      appeared = await settleFor(async () => countSafe(row), (rows) => rows > 0, 45000, 1500);
+      log(`action-pane ${actionId} rowArrival round=${round} rows=${appeared.value} waitedMs=${appeared.waitedMs}`);
     }
-    log(`action-pane ${actionId} rows=${await countSafe(row)} unfold=${JSON.stringify(unfold).slice(0, 320)} pane=${JSON.stringify(await actionPaneState()).slice(0, 700)}`);
-    await row.first().click({ force: true, timeout: 6000 }).catch((error) => log(`action-pane ${actionId} click failed ${String(error).slice(0, 120)}`));
+    // 🧾️ The toggle press's OWN outcome first, never buried behind the obstruction chain: run 2's
+    // `unfold={…}` was sliced at 320 chars by the chain and the one field that says whether the press
+    // landed — `click` — fell off the end of the line.
+    log(`action-pane ${actionId} rows=${await countSafe(row)} unfold=${JSON.stringify(unfold && { unfolded: unfold.unfolded, click: unfold.click, waitedMs: unfold.waitedMs, covered: unfold.obstruction.covered })} chain=${JSON.stringify(unfold?.obstruction.chain ?? []).slice(0, 240)} pane=${JSON.stringify(await actionPaneState()).slice(0, 700)}`);
+    if ((await countSafe(row)) === 0) {
+      log(`action-pane ${actionId} unreachable — the Actions pane never rendered the row, so no press was attempted`);
+      return;
+    }
+    // 📜️ Wave B57 (B53 §5): SCROLL first. The Actions rail is an `overflow-y:auto` scroller
+    // (`scrollHeight=2365 clientHeight=807`) and `action.exportFixture` sits at `y≈1750`, ~885 px below
+    // the fold. `force: true` waives the actionability CHECKS, never Playwright's scroll-and-hold, so
+    // every press of that row timed out with no dispatch while the whole segmented export lane was green
+    // (B53 §0: the same gesture with a scroll in front of it produced `nakagin-capsule-tower.json`,
+    // 145 714 B, 3.7 s after the press).
+    await row
+      .first()
+      .scrollIntoViewIfNeeded({ timeout: 8000 })
+      .catch((error) => log(`action-pane ${actionId} scroll failed ${String(error).split("\n")[0].slice(0, 140)}`));
+    // 📐️ Hit-tested, NOT forced, and on a budget above the renderer's stall. B53 §7 measured every
+    // actionability check passing and the press still timing out INSIDE `performing click action`: the
+    // Nakagin document's main thread does not acknowledge input within 8 s. The press is DELIVERED anyway
+    // (`[DEBUG] performInvocation {"actionId":"exportFixture"}` follows a timed-out click), so the timeout
+    // is tolerated and only logged — the caller's own observable (a `download` event, a file chooser)
+    // decides the verdict, never Playwright's budget.
+    const pressed = await row
+      .first()
+      .click({ timeout: 25000 })
+      .then(() => "ok")
+      .catch((error) => `timeout-tolerated ${String(error).split("\n")[0].slice(0, 140)}`);
+    log(`action-pane ${actionId} press=${pressed}`);
   };
 
   const historyState = async () =>
@@ -1828,7 +1984,14 @@ if (booted && interact) {
       // sibling gesture step uses is declared here instead.
       const canvas = page.locator("canvas").last();
       const box = await canvas.boundingBox();
-      if (box) await dragGumballMoveX(box);
+      // 🧾️ Wave B55: the two observables that separate the three worlds a bare `notices=[]` cannot —
+      // the guest refused and the shell did not render it, the guest never saw the lock (the object MOVES),
+      // or no translate was dispatched at all. Battery #63 grabbed the handle
+      // (`gumball grabbed tried=["1@455,442=false","0.8@462,437=false","0.6@469,432=true"]`) with
+      // `flag="locked true"` and still measured `notices=[] waitedMs=30837`.
+      const refusalMark = consoleCursor();
+      const poseBefore = await evalSafe(() => document.querySelector("#puzzle3d-main-perspective [data-instances-json]")?.getAttribute("data-instances-json") ?? "", "");
+      const grab = box ? await dragGumballMoveX(box, async () => void (await ensureWorldSelection("locked-regrab", framed.table))) : { handle: null, entered: false };
       // 🔔️ The refusal notice auto-dismisses after 4000 ms (`🏛️ShellHost/🟦️.tsx` SET_TRANSIENT_NOTICE), so
       // this polls the notice list rather than the elapsed time: the round trip that produces it is the
       // same `translateSelection` commit the gumball lane measures at up to 18 s, and the old fixed 1.5 s
@@ -1838,8 +2001,21 @@ if (booted && interact) {
         (rows) => rows.some((n) => /locked/i.test(n)),
       );
       const notices = noticeSettle.value;
+      const poseAfter = await evalSafe(() => document.querySelector("#puzzle3d-main-perspective [data-instances-json]")?.getAttribute("data-instances-json") ?? "", "");
+      log(
+        `locked refusal hops grabbed=${grab.entered} poseChanged=${poseBefore !== poseAfter} poseLen=${poseBefore.length}/${poseAfter.length} console=${JSON.stringify(
+          consoleSince(refusalMark)
+            .filter((row) => /translateSelection|selection.is.locked|refus|notice|notify|transient/i.test(row) && !/setCamera|interactionHover|interactionSelect|job-completed|worldPick/.test(row))
+            .slice(-16),
+        ).slice(0, 2200)}`,
+      );
       log(`locked after: ${JSON.stringify(await chromeState()).slice(0, 1000)} waitedMs=${noticeSettle.waitedMs}`);
-      verdict("locked-refusal-notice", noticeSettle.ok, `locked=${lockSettle.ok} flag="${lockSettle.value}" notices=${JSON.stringify(notices).slice(0, 200)} waitedMs=${noticeSettle.waitedMs}`, noticeSettle.ok ? undefined : 42);
+      verdict(
+        "locked-refusal-notice",
+        noticeSettle.ok,
+        `locked=${lockSettle.ok} flag="${lockSettle.value}" grabbed=${grab.entered} poseChanged=${poseBefore !== poseAfter} notices=${JSON.stringify(notices).slice(0, 200)} waitedMs=${noticeSettle.waitedMs}`,
+        noticeSettle.ok ? undefined : 42,
+      );
     });
   }
   {
@@ -1857,7 +2033,7 @@ if (booted && interact) {
       const poseBefore = await page.evaluate(() => document.querySelector("#puzzle3d-main-perspective [data-instances-json]")?.getAttribute("data-instances-json") ?? "");
       log(`gumball pose before len=${poseBefore.length}`);
       const box = await c.boundingBox();
-      const drag = box ? await dragGumballMoveX(box) : { handle: null, entered: false };
+      const drag = box ? await dragGumballMoveX(box, async () => void (await ensureWorldSelection("gumball-regrab", framed.table))) : { handle: null, entered: false };
       const poseSettle = await settleFor(
         () => page.evaluate(() => document.querySelector("#puzzle3d-main-perspective [data-instances-json]")?.getAttribute("data-instances-json") ?? ""),
         (pose) => pose.length > 0 && pose !== poseBefore,
@@ -2025,10 +2201,16 @@ if (booted && interact) {
       const activeExample = String((await chromeState()).example ?? "").replace(/\s+/g, " ").trim();
       const exampleSlug = activeExample.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
       const expectedExportName = exampleSlug ? `${exampleSlug}.json` : null;
+      // ⏳️ Wave B57 (B53 §7): 90 s, not 20 s. The listener arming was never the defect, the BUDGET was —
+      // the same 145 714 B Nakagin export measured 3.7 s from press to `download` on an idle machine and
+      // 21-35 s under a loaded one (two peer probes plus cargo checks). A budget below the document's own
+      // latency reads `download=none` off a lane that delivered the file.
+      const exportMark = consoleCursor();
       const [download] = await Promise.all([
-        page.waitForEvent("download", { timeout: 20000 }).catch(() => null),
+        page.waitForEvent("download", { timeout: 90000 }).catch(() => null),
         activateWindowFileAction("exportFixture"),
       ]);
+      log(`export invocation taps=${JSON.stringify(consoleSince(exportMark).filter((line) => /performInvocation|exportFixture|download|segment/i.test(line)).slice(-10)).slice(0, 1400)}`);
       log(`export download=${download ? download.suggestedFilename() : "none"} example=${activeExample} expected=${expectedExportName}`);
       if (download) {
         await download.saveAs(dest);
@@ -2047,8 +2229,11 @@ if (booted && interact) {
           : `download=${download ? download.suggestedFilename() : "none"} expected=${expectedExportName} — exporting Concrete Forest and Nakagin must not both land as one constant name`,
       );
       await page.waitForTimeout(600);
+      // ⏳️ Wave B57: 75 s on BOTH chooser waits. `openImportFixture` is the export row's neighbour in the
+      // same overflowing rail and pays the same delivered-but-slow press (up to 25 s inside
+      // `activateWindowFileAction` alone), so a 25 s chooser budget expired before the press landed.
       let [chooser] = await Promise.all([
-        page.waitForEvent("filechooser", { timeout: 25000 }).catch(() => null),
+        page.waitForEvent("filechooser", { timeout: 75000 }).catch(() => null),
         activateWindowFileAction("openImportFixture"),
       ]);
       const fileOpenFx = consoleBuf.filter((l) => /requestFileOpen|RequestFileOpen|openImportFixture|importFixture|unmapped effect|request-file-open|import-picker/.test(l)).slice(-24);
@@ -2092,14 +2277,19 @@ if (booted && interact) {
       } else {
         log("import missed the file chooser — `openImportFixture` never reached `requestFileOpen`");
       }
-      // 🕰️ Settle on the GUEST's own apply tap, not on a fixed 2 s. `import-same-file-idempotent`
+      // 🕰️ Settle on the invocation's OWN settlement, not on a fixed 2 s. `import-same-file-idempotent`
       // compares two instance censuses, and a census read before the import has landed compares the
       // pre-import document with itself — which is how it went green while the document was being
       // replaced (wave B47 §5).
+      // 🧟️ Wave B57: the tap this watched — `[DEBUG] puzzle3d.import.apply` — no longer exists anywhere in
+      // the guest (B51's debug sweep removed it), so the settle could only ever burn its whole 15 s budget
+      // and then report `applied=false` on an import that had landed. A probe must never wait on a log line
+      // the product does not emit: the observable is the host's own `performInvocation settled` for
+      // `importFixture`, which IS live (`frames:2 frameKinds:["Invocation","Ephemeral"]`).
       const sameFileApplied = await settleFor(
-        async () => consoleSince(sameFileMark).filter((line) => /\[DEBUG\] puzzle3d\.import\.apply/.test(line)),
+        async () => consoleSince(sameFileMark).filter((line) => /performInvocation settled/.test(line) && /"actionId":"importFixture"/.test(line)),
         (taps) => taps.length > 0,
-        15000,
+        20000,
       );
       log(`import same-file applied=${sameFileApplied.ok} waitedMs=${sameFileApplied.waitedMs} taps=${JSON.stringify(sameFileApplied.value).slice(0, 300)}`);
       await openHistory();
@@ -2142,11 +2332,12 @@ if (booted && interact) {
         log(`distinct fixture objects=${(src.objects ?? []).length} dest=${distinct}`);
       }
       const instancesBeforeDistinct = await dumpInstances();
+      const paneObjectsBeforeDistinct = await paneObjectCount();
       const historyBeforeDistinct = (await historyState()).entryCount;
       const distinctMark = consoleCursor();
       if (distinctReady) {
         let [chooser2] = await Promise.all([
-          page.waitForEvent("filechooser", { timeout: 25000 }).catch(() => null),
+          page.waitForEvent("filechooser", { timeout: 75000 }).catch(() => null),
           activateWindowFileAction("openImportFixture"),
         ]);
         if (!chooser2) {
@@ -2165,27 +2356,34 @@ if (booted && interact) {
         }
         // 🕰️ POLLED: the ingress, the guest fold and the world republication are three round trips, so a
         // single fixed sample cannot tell "the fold was an identity no-op" from "it had not landed yet".
-        for (let attempt = 0; attempt < 10 && (await dumpInstances()).count === instancesBeforeDistinct.count; attempt++) await page.waitForTimeout(1000);
+        // 🔢️ EITHER witness ends the poll: the world lane or the guest's own pane census. A poll that
+        // watches only the world keeps waiting on a document that already grew, and then reports the wait
+        // as the finding.
+        for (let attempt = 0; attempt < 10 && (await dumpInstances()).count === instancesBeforeDistinct.count && (await paneObjectCount()) === paneObjectsBeforeDistinct; attempt++) await page.waitForTimeout(1000);
         await openHistory();
       }
       // 🧾️ Wave B47 §5: the whole route named hop by hop, from the console MARK taken before the picker
       // (never `consoleBuf` in full — the ring drops a long run's older lines and a dropped tap is
       // indistinguishable from a command that never dispatched, B33 §7.1). `hostIngress` is the
       // renderer's own `performInvocation` tap with the payload length, `hostSettled` is the frame the
-      // guest answered with, `guestTaps` are the guest's `puzzle3d.import.*` eprintlns. A red that shows
-      // host ingress and NO guest tap is a payload that never crossed, not an import that did nothing.
+      // guest answered with, `documentTaps` are the document's own history patches. A red that shows host
+      // ingress and NO document tap is a payload that crossed and changed nothing.
       const distinctLines = consoleSince(distinctMark);
       const hostIngress = distinctLines.filter((line) => /\[DEBUG\] importFixture ingress/.test(line)).slice(-2);
       const hostSettled = distinctLines.filter((line) => /performInvocation settled/.test(line) && /"actionId":"importFixture"/.test(line)).slice(-2);
-      const distinctIngress = distinctLines.filter((line) => /\[DEBUG\] puzzle3d\.import\./.test(line)).slice(-8);
-      log(`distinct ingress hostIngress=${JSON.stringify(hostIngress).slice(0, 700)} hostSettled=${JSON.stringify(hostSettled).slice(0, 700)} guestTaps=${JSON.stringify(distinctIngress).slice(0, 900)}`);
+      // 🧾️ Wave B57: `history patch applied` is what the document ANSWERS with — the guest's old
+      // `puzzle3d.import.*` eprintlns are gone from the source, so a filter that watched only those printed
+      // `guestTaps=[]` on every run and read as "the payload never crossed" when it had.
+      const distinctIngress = distinctLines.filter((line) => /\[DEBUG\] (puzzle3d\.import\.|history patch applied)/.test(line)).slice(-8);
+      log(`distinct ingress hostIngress=${JSON.stringify(hostIngress).slice(0, 700)} hostSettled=${JSON.stringify(hostSettled).slice(0, 700)} documentTaps=${JSON.stringify(distinctIngress).slice(0, 900)}`);
       {
         const afterDistinct = await dumpInstances();
-        log(`distinct instances before=${JSON.stringify(instancesBeforeDistinct)} after=${JSON.stringify(afterDistinct)}`);
+        const paneObjectsAfterDistinct = await paneObjectCount();
+        log(`distinct instances before=${JSON.stringify(instancesBeforeDistinct)} after=${JSON.stringify(afterDistinct)} paneObjects=${paneObjectsBeforeDistinct}→${paneObjectsAfterDistinct}`);
         verdict(
           "import-distinct",
           afterDistinct.count !== instancesBeforeDistinct.count || JSON.stringify(afterDistinct.ids) !== JSON.stringify(instancesBeforeDistinct.ids),
-          `before=${instancesBeforeDistinct.count} after=${afterDistinct.count} hostIngress=${JSON.stringify(hostIngress).slice(0, 300)} hostSettled=${JSON.stringify(hostSettled).slice(0, 300)} guestTaps=${JSON.stringify(distinctIngress).slice(0, 400)}`,
+          `before=${instancesBeforeDistinct.count} after=${afterDistinct.count} paneObjects=${paneObjectsBeforeDistinct}→${paneObjectsAfterDistinct} hostIngress=${JSON.stringify(hostIngress).slice(0, 300)} hostSettled=${JSON.stringify(hostSettled).slice(0, 300)} documentTaps=${JSON.stringify(distinctIngress).slice(0, 400)}`,
           41,
         );
         const historyAfterDistinct = await historyState();
@@ -2564,6 +2762,29 @@ if (booted && interact) {
               rect: [Math.round(rect.x), Math.round(rect.y), Math.round(rect.width), Math.round(rect.height)],
               hit: top ? `${top.tagName}#${top.id || "-"}[${top.getAttribute("data-slot") ?? "-"}]` : null,
               mine: top ? el.contains(top) : null,
+              // 🧱️ Wave B55: WHERE the cover is and what owns it. `mine=false` alone says the press landed on
+              // something else; battery #62 read `hit=SPAN#-[tree-label] mine=false` for `volumeBrush` at
+              // `rect=[642,817,105,22]` and `volume-brush-arm` then reported a dropped round trip
+              // (`activeUtility=select waitedMs=20347`) for a click that never reached the toggle. The
+              // covering element's own rect plus the owning ribbon's rect turn that into a measurable
+              // overlap instead of an inference.
+              cover: top && !el.contains(top)
+                ? (() => {
+                    const coverRect = top.getBoundingClientRect();
+                    const owner = top.closest('[data-slot="ribbon"], [data-slot="panel-body"], [data-slot="tree"], [id^="panel:"], [role="menu"]');
+                    return {
+                      rect: [Math.round(coverRect.x), Math.round(coverRect.y), Math.round(coverRect.width), Math.round(coverRect.height)],
+                      owner: owner ? `${owner.tagName}#${owner.id || "-"}[${owner.getAttribute("data-slot") ?? "-"}]` : null,
+                      text: (top as HTMLElement).innerText?.replace(/\s+/g, " ").trim().slice(0, 40) ?? null,
+                    };
+                  })()
+                : null,
+              ribbon: (() => {
+                const ribbon = el.closest('[data-slot="ribbon"]');
+                if (!ribbon) return null;
+                const ribbonRect = ribbon.getBoundingClientRect();
+                return { id: ribbon.id || null, rect: [Math.round(ribbonRect.x), Math.round(ribbonRect.y), Math.round(ribbonRect.width), Math.round(ribbonRect.height)] };
+              })(),
             };
           },
           null as unknown,
@@ -3800,9 +4021,16 @@ if (booted && interact) {
     const opened = await openPanel(/document|artifact|outliner|puzzle3d-play-document/i, '[id^="panel:puzzle3d-play-document/"]');
     verdict("outliner-panel-opens", opened.opened, `tab=${opened.id} tabs=${JSON.stringify(opened.tabs).slice(0, 400)}`);
     if (!opened.opened) return;
+    /** 🌳️ The OUTLINER's own rows, keyed by the document panel's id space — never every tree item in the
+     * document. The old dump swept `[role="treeitem"]` page-wide, so it carried the History panel's
+     * `framework.history.entry.*` rows, which grow on their own while this step runs (`noteShellCommand`
+     * upserts one per press). `outliner-show-restores` asks whether the dump came BACK to its pre-hide
+     * value, and a dump containing rows that never come back cannot answer yes: battery #64 read
+     * `restored=false waitedMs=30131` with the `seed-left-001` row already reading `Hide` again. */
     const rowDump = async () =>
       page.evaluate(() =>
         Array.from(document.querySelectorAll('[data-slot="tree-item"], [role="treeitem"]'))
+          .filter((r) => r.id === "puzzle3d-play-document" || r.id.startsWith("panel:puzzle3d-play-document/"))
           .map((r) => ({ id: r.id || null, text: (r as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 80) }))
           .slice(0, 40),
       );
@@ -3890,16 +4118,27 @@ if (booted && interact) {
       verdict("outliner-show-restores", false, "no Show row action rendered after hiding");
       return;
     }
+    const showMark = consoleCursor();
     await showButton.click({ force: true, timeout: 4000 }).catch(() => {});
     // 🕰️ Polled like the Hide half above: B27 §5.2 measured this restore at 864 ms on an idle page and the
     // Hide half at 9.2 s under load, so the fixed 3 s sample scored the machine, not the restore. The old
     // note's `flag_args hardcodes value:true` guess is gone — B10 §6's law proves the row asks for the
     // inverse of the state it renders.
-    const showSettle = await settleFor(rowDump, (rows) => JSON.stringify(rows) === JSON.stringify(before));
+    // 🌍️ BOTH observables, symmetric with `outliner-hide-applies`: the row text AND the world's own
+    // `scale`. The row alone passed a verdict about un-hiding on a world that still published
+    // `[0,0,0]` for the object, which is the same asymmetry that let the Hide half go green on an
+    // unmoved world before wave B45.
+    const showSettle = await settleFor(
+      async () => ({ rows: await rowDump(), world: await hiddenScales() }),
+      (state) => JSON.stringify(state.rows) === JSON.stringify(before) && !worldHides(state.world),
+    );
+    const rowsRestored = JSON.stringify(showSettle.value.rows) === JSON.stringify(before);
+    const worldRestored = !worldHides(showSettle.value.world);
+    log(`outliner show console tail=${JSON.stringify(consoleSince(showMark).filter((row) => /selectionFlag|performInvocation|command ingress|change-object-hidden|instances|refreshUi/i.test(row)).slice(-20)).slice(0, 3000)}`);
     verdict(
       "outliner-show-restores",
       showSettle.ok,
-      `restored=${showSettle.ok} afterShowHead=${JSON.stringify(showSettle.value.slice(0, 3))} waitedMs=${showSettle.waitedMs}`,
+      `restored=${showSettle.ok} rowsRestored=${rowsRestored} worldRestoresRowObject=${worldRestored} rowObject=${rowObjectId} afterShowHead=${JSON.stringify(showSettle.value.rows.slice(0, 3))} worldHidden=${JSON.stringify(showSettle.value.world)} waitedMs=${showSettle.waitedMs}`,
     );
   });
 

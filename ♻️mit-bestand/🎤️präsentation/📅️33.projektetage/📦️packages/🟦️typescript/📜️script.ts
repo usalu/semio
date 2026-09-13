@@ -4,7 +4,8 @@ import { BundleScript, ScriptRouter, playPollingEnv, playgroundDevPortString, pl
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    runViteBunxDev(this.root, ["--config", "⚙️vite.config.ts", ...segments], {
+    runViteBunxDev(this.root, segments, {
+      config: "../../🏗️builder/🌐️vite/🟦️.ts",
       portEnv: playgroundPortEnv("projektetage"),
       defaultPort: playgroundDevPortString("projektetage"),
       fixedPort: true,
@@ -15,7 +16,7 @@ class DevScript extends BundleScript {
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
     if (segments.some((arg) => /^(?:--outDir|--config|--root)(?:=|$)/.test(arg))) throw new Error("Build output and configuration are owned by this Nx target");
-    runBun(["run", "vite", "build", "--config", "⚙️vite.config.ts", ...segments], this.root, playPollingEnv());
+    runBun(["run", "vite", "build", "--config", "../../🏗️builder/🌐️vite/🟦️.ts", ...segments], this.root, playPollingEnv());
   }
 }
 

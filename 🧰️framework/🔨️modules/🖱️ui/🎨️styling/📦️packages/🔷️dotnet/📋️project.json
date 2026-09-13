@@ -18,9 +18,17 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "parallelism": false,
-      "outputs": [],
+      "outputs": ["{projectRoot}/dist/build"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🔷️.cs",
+        { "dependentTasksOutputFiles": "**/*" },
+        { "runtime": "dotnet --version" },
+        { "runtime": "node -p \"process.platform.concat(process.arch)\"" }
+      ],
       "dependsOn": [
         "deps",
         "@semio-tech/ui-styling-tokens:generate"

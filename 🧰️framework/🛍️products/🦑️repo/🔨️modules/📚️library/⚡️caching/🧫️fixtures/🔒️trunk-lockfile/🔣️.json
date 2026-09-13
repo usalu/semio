@@ -1,8 +1,8 @@
 {
   "configs": [
     {
-      "trunk": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Trunk.toml",
-      "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json"
+      "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "compiler": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts"
     }
   ],
   "build": {
@@ -34,12 +34,71 @@
   "target": "lockfile-check",
   "tooling": {
     "target": "deps-trunk",
-    "command": "bun ./📜️script.ts setup deps trunk",
-    "consumers": ["wasm", "serve", "dev"],
+    "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync trunk",
+    "consumers": [
+      "wasm",
+      "wasm-release"
+    ],
     "cases": [
-      { "version": "trunk 0.21.14", "targets": "wasm32-unknown-unknown\n", "commands": [] },
-      { "version": "trunk 0.21.13", "targets": "wasm32-unknown-unknown\n", "commands": [["cargo", "install", "trunk", "--version", "0.21.14", "--locked"]] },
-      { "version": "", "targets": "", "commands": [["cargo", "install", "trunk", "--version", "0.21.14", "--locked"], ["rustup", "target", "add", "wasm32-unknown-unknown"]] }
-    ]
+      {
+        "version": "trunk 0.21.14",
+        "targets": "wasm32-unknown-unknown\n",
+        "commands": [],
+        "bindgen": "wasm-bindgen 0.2.126"
+      },
+      {
+        "version": "trunk 0.21.13",
+        "targets": "wasm32-unknown-unknown\n",
+        "commands": [
+          [
+            "cargo",
+            "install",
+            "trunk",
+            "--version",
+            "0.21.14",
+            "--locked"
+          ]
+        ],
+        "bindgen": "wasm-bindgen 0.2.126"
+      },
+      {
+        "version": "",
+        "targets": "",
+        "commands": [
+          [
+            "cargo",
+            "install",
+            "trunk",
+            "--version",
+            "0.21.14",
+            "--locked"
+          ],
+          [
+            "rustup",
+            "target",
+            "add",
+            "wasm32-unknown-unknown"
+          ]
+        ],
+        "bindgen": "wasm-bindgen 0.2.126"
+      },
+      {
+        "version": "trunk 0.21.14",
+        "targets": "wasm32-unknown-unknown\n",
+        "bindgen": "wasm-bindgen 0.2.100",
+        "commands": [
+          [
+            "cargo",
+            "install",
+            "wasm-bindgen-cli",
+            "--version",
+            "0.2.126",
+            "--locked"
+          ]
+        ]
+      }
+    ],
+    "bindgenVersion": "0.2.126",
+    "implementation": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts"
   }
 }

@@ -1206,7 +1206,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       const pluginSource = ts.createSourceFile("🟦️.ts", readFileSync(join(dirname(fileURLToPath(source.url)), "../../🔌️vite-plugins/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
       const node = pluginSource.statements.find((item) => ts.isFunctionDeclaration(item) && item.name?.text === "semioProductionTestBoundaryVitePlugin");
       const emitted = node ? ts.transpileModule(node.getText(pluginSource).replace("export function", "function"), { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText : "";
-      const config = readFileSync(join(dirname(fileURLToPath(source.url)), "⚙️vite.config.ts"), "utf8");
+      const config = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"), "utf8");
       const active = config.includes("semioProductionTestBoundaryVitePlugin(),");
       const result = JSON.parse(execFileSync("node", ["--input-type=module", "--eval", `
         import { build } from 'vite';
@@ -1254,7 +1254,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       const ticketRoot = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets");
       expect(relative(ticketRoot, outputPath).replace(/\\/g, "/")).toMatch(/^[^/]+\/[^/]+\/[^/]+\/[^/]+\/🗑️generated\/[^/]+\/[^/]+\.json$/u);
       expect(existsSync(outputPath)).toBe(false);
-      const configPath = join(dirname(fileURLToPath(source.url)), "⚙️vite.config.ts");
+      const configPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts");
       const primaryDist = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/dist");
       const snapshot = () => {
         const result: Record<string, string> = {};
@@ -1314,7 +1314,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       const ts = await import("typescript"), { execFileSync } = await import("node:child_process");
       const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🧹️production-tests.json");
       const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
-      const config = ts.createSourceFile("vite.config.ts", readFileSync(join(dirname(fileURLToPath(source.url)), "⚙️vite.config.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+      const config = ts.createSourceFile("🟦️.ts", readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
       let definition: string | undefined;
       const visit = (node: import("typescript").Node) => {
         if (ts.isPropertyAssignment(node) && ts.isStringLiteral(node.name) && node.name.text === "vitest" && ts.isStringLiteral(node.initializer)) definition = node.initializer.text;

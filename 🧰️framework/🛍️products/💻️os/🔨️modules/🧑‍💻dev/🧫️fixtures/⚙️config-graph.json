@@ -1,6 +1,6 @@
 {
-  "reason": "Vite loads ⚙️vite.config.ts with --configLoader bundle, so every module the config statically imports is parsed on every boot AND watched: one edit anywhere in the graph restarts the dev server. These bounds keep the graph config-shaped.",
-  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
+  "reason": "Vite loads the semantic configuration owner with --configLoader native, so every module the config statically imports is parsed on every boot AND watched: one edit anywhere in the graph restarts the dev server. These bounds keep the graph config-shaped.",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
   "deny": [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",

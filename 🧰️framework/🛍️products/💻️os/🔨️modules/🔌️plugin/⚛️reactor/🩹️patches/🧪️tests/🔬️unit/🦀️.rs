@@ -97,6 +97,52 @@ fn finish(tracker: &PatchTracker) -> Option<ui_contract::UiPatch> {
     None
 }
 
+/// 🚰️ Pumps the reconcile and close ladders until one surface's slot has handed its output slot back
+/// and holds its reconciler again — the state the NEXT dirty render of that surface reserves from. A real
+/// turn does this in `reconcile_step_opportunities` and `close_step`; a law that publishes the same surface
+/// twice has to do it explicitly (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
+fn drain_released_output(tracker: &PatchTracker, surface: &str, round: u32) {
+    for _ in 0..65_536 {
+        let ready = tracker
+            .state
+            .borrow()
+            .slots
+            .iter()
+            .flatten()
+            .find(|slot| slot.surface.as_ref() == surface)
+            .is_some_and(|slot| slot.output_index.is_none() && slot.job.is_none() && slot.reconciler.is_some());
+        if ready {
+            return;
+        }
+        tracker.drive_one();
+        tracker.close_step(1, 4096);
+    }
+    panic!("round {round} never released its output slot: {}", tracker.debug_state());
+}
+
+/// 🤝️ Drives one publication all the way through the host's own acknowledgement, so the surface's slot
+/// releases its output and the NEXT publication of the same surface is admissible — what a real session
+/// does every refresh, and what a repeat-publication law needs (ticket 26/09/02/PUZZLE-3D-END-TO-END wave
+/// B56).
+fn acknowledge_one_publication(tracker: &PatchTracker, surface: &str) -> Option<ui_contract::UiPatch> {
+    for _ in 0..65_536 {
+        tracker.drive_one();
+        if let Some(owner) = tracker.take_ready_patch() {
+            let (patch, authority) = publish_test(owner);
+            let mut authority = Some(authority);
+            let mut acknowledgement = None;
+            assert!(semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(&mut authority, &mut acknowledgement, surface, patch.revision.0, semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes()).unwrap());
+            assert!(tracker.mark_published_ack(acknowledgement.as_ref().unwrap()).unwrap());
+            close_ack(acknowledgement.take().unwrap());
+            return Some(patch);
+        }
+        if !tracker.has_work() {
+            return None;
+        }
+    }
+    None
+}
+
 fn published(tracker: &PatchTracker, surface: &str) -> semio_framework_ui_runtime::SurfaceReconcilePublishedPatch {
     tracker.begin(surface.to_owned(), leaf("root", "published")).expect("admitted publication");
     for _ in 0..4_096 {
@@ -1252,6 +1298,81 @@ fn an_alias_window_surface_the_host_never_acknowledges_does_not_block_the_retire
     close_instance_to_empty(&tracker, 21);
 }
 
+/// 🎫️ WAVE B56 LAW: the reconcile registry that refuses a render reservation NAMES itself, and the
+/// table that runs out first is the aggregate resident CREDIT ledger — not the handback registry.
+///
+/// 🦾️ This is the reading wave B48 residual 1 asked for and wave B54 §6.4 could not take: its census
+/// carried the single opaque word `registry-reservation-unavailable`, so the refusal that left six surfaces
+/// deferred and the reactor answering `more-work` 1 008 turns in a row could have been any of three
+/// different defects. The arithmetic is the point: one reservation asks for
+/// `SurfaceReconcileLimits::default().max_bytes` (`UI_RESIDENT_SURFACE_BYTES`, 8 MiB) of a
+/// `UI_RESIDENT_AGGREGATE_BYTES` (32 MiB) budget, so only a HANDFUL of surfaces can reconcile at once while
+/// a puzzle3d instance mounts thirteen — and the handback registry has `UI_RESIDENT_SLOTS * 6` slots, which
+/// is an order of magnitude more headroom. Every surface beyond the credit ceiling is refused, deferred and
+/// re-dirtied for ever, which is why one surface too many (the retired `<instance>:window` alias) could
+/// starve a whole session. Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56.
+#[test]
+fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_handback_registry() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    let ceiling = (ui_contract::UI_RESIDENT_AGGREGATE_BYTES - baseline.resident_bytes) / ui_contract::UI_RESIDENT_SURFACE_BYTES;
+    assert!(ceiling > 0 && ceiling < ui_contract::UI_RESIDENT_SLOTS, "the credit ceiling must be a handful of surfaces, not the slot count: {ceiling}");
+    let tracker = PatchTracker::new();
+    let mut grants = Vec::new();
+    for index in 0..ceiling {
+        let surface = ui_contract::SurfaceId::try_from(format!("51:surface-{index}")).expect("bounded surface");
+        grants.push(reserve(&tracker, surface).unwrap_or_else(|surface| panic!("surface {} is within the credit ceiling {ceiling}: {}", surface.as_ref(), tracker.debug_state())));
+    }
+    let over = ui_contract::SurfaceId::try_from(format!("51:surface-{ceiling}")).expect("bounded surface");
+    assert!(reserve(&tracker, over).is_err(), "the reservation past the credit ceiling must be refused: {}", tracker.debug_state());
+    let state = tracker.debug_state();
+    assert!(state.contains("reserve_refusal=unmounted:registry-resident-credit-exhausted"), "the refusal must name the resident credit ledger, not an opaque registry — and a surface refused before it ever mounted has no slot to name: {state}");
+    assert!(state.contains(&format!("of {}B", ui_contract::UI_RESIDENT_AGGREGATE_BYTES)), "the census must price the refusal against the aggregate budget: {state}");
+    let refused_census = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    assert!(refused_census.handback_free > 0, "the handback registry must still have headroom when credit runs out: {refused_census:?}");
+    eprintln!("[DEBUG] credit ceiling={ceiling} surfaces; refusal={state}");
+    for grant in grants {
+        grant.cancel();
+    }
+}
+
+/// 🎫️ WAVE B56 LAW: after two hundred leftover-producing publications the process-wide reconcile
+/// registries hold NOTHING — neither resident credit nor a handback slot.
+///
+/// 🐛️ Every render reservation takes one 8 MiB slice of a 32 MiB aggregate resident budget
+/// (`UI_RESIDENT_AGGREGATE_BYTES` / `SurfaceReconcileLimits::default().max_bytes`), so at most a handful of
+/// surfaces can hold one at a time while a puzzle3d instance mounts thirteen. A publication that leaks its
+/// credit therefore does not slow the guest down, it STOPS it: the next reservation is refused
+/// `registry-resident-credit-exhausted`, `reserve_mounted` hands the surface back, the turn defers the
+/// render, `redirty_acknowledged_deferred_surfaces` re-dirties it, and the reactor answers `more-work` for
+/// ever with `effects=0` — wave B54 §6.4 measured a streak of 1 008 with every slot clean and every
+/// command's settled count 0. One leak is unobservable in a single-publication law and fatal in a session,
+/// so the count is the session's, not the unit's (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
+#[test]
+fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    let tracker = PatchTracker::new();
+    for round in 0..200u32 {
+        tracker.begin("41:puzzle3d-main".into(), tree_with_owned_child(&round.to_string())).unwrap_or_else(|_| panic!("round {round} admits its publication: {}", tracker.debug_state()));
+        let patch = acknowledge_one_publication(&tracker, "41:puzzle3d-main").unwrap_or_else(|| panic!("round {round} publishes: {}", tracker.debug_state()));
+        close_test_patch(patch);
+        drain_released_output(&tracker, "41:puzzle3d-main", round);
+        let census = semio_framework_ui_runtime::surface_reconcile_registry_census();
+        assert!(
+            census.resident_bytes <= baseline.resident_bytes + ui_contract::UI_RESIDENT_SURFACE_BYTES,
+            "round {round} left more than one live reservation's credit held: {census:?} against baseline {baseline:?} — {}",
+            tracker.debug_state()
+        );
+    }
+    close_instance_to_empty(&tracker, 41);
+    let after = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    assert_eq!(after.resident_slots, baseline.resident_slots, "resident slots leaked across 200 publications: {after:?} against {baseline:?}");
+    assert_eq!(after.resident_bytes, baseline.resident_bytes, "resident credit leaked across 200 publications: {after:?} against {baseline:?}");
+    assert_eq!(after.handback_free, baseline.handback_free, "handback slots leaked across 200 publications: {after:?} against {baseline:?}");
+    eprintln!("[DEBUG] 200 publications returned every reservation: {after:?}");
+}
+
 /// 🧮️ WAVE B52 LAW: the retirement ladder of a published surface must not be priced by a grant
 /// narrower than one indivisible allocation of the value it retires.
 ///
@@ -1277,4 +1398,61 @@ fn a_node_record_wider_than_the_copy_grant_still_retires_its_document_to_termina
     close_test_patch(patch);
     close_instance_to_empty(&tracker, 22);
     assert!(!tracker.has_work(), "one node record is {record} bytes and its document ladder still holds work: {}", tracker.debug_state());
+}
+
+/// 📐️ A body of roughly `bytes` of authored text, spread over as many bounded `UiText` rows as the fixed
+/// document node ceiling admits — the shape of a real pane body rather than a one-node fixture.
+fn sized_body(key: &str, bytes: usize) -> TreeNode {
+    let filler = "n".repeat(480);
+    let mut root = leaf(key, "body").root;
+    for row in 0..bytes.div_ceil(480).min(120) {
+        root.children.try_push(leaf(&format!("{key}-{row}"), &filler).root).expect("bounded fixture row");
+    }
+    root
+}
+
+/// 🎫️ WAVE B58 LAW: every surface a session mounts must hold a reconcile reservation AT ONCE, priced by
+/// the body it is actually reconciling.
+///
+/// 🐛️ One reservation asked for `SurfaceReconcileLimits::default().max_bytes` — the per-surface CEILING
+/// `UI_RESIDENT_SURFACE_BYTES`, 8 MiB — of a 32 MiB `UI_RESIDENT_AGGREGATE_BYTES`, so exactly THREE
+/// surfaces could reconcile process-wide while a puzzle3d session mounts THIRTEEN (three panes carrying a
+/// ~54 KB world body, ten panels of a few KB). Every fourth surface was refused
+/// `registry-resident-credit-exhausted`, `reserve_mounted` handed it back, the turn deferred it,
+/// `redirty_acknowledged_deferred_surfaces` re-dirtied it, and the reactor answered `more-work` with
+/// `effects=0` for ever — so a mutation's world, document and panel bodies never all landed and
+/// `deleteSelection` measured 135 s with the object census unchanged at 180 (ticket
+/// 26/09/02/PUZZLE-3D-END-TO-END wave B54 §8.2, wave B56 §1.1 and §6). The ceiling is a per-surface
+/// MAXIMUM, never a price, and this law fixes the aggregate to the session's real occupancy.
+#[test]
+fn thirteen_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_at_once() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    let tracker = PatchTracker::new();
+    let panes = ["puzzle3d-main", "puzzle3d-main-top", "puzzle3d-main-perspective"];
+    let panels = ["framework.panel.artifact", "framework.panel.catalogue", "framework.panel.inspection", "puzzle3d.panel.settings", "framework.panel.history", "framework.section.engagements", "framework.section.measures", "framework.section.tools", "framework.section.catalogue", "framework.panel.document"];
+    let mut mounted = Vec::new();
+    for (index, body) in panes.iter().map(|name| (*name, 54 * 1024)).chain(panels.iter().enumerate().map(|(index, name)| (*name, 1024 + index * 768))).enumerate() {
+        let (name, bytes) = body;
+        let surface = format!("58:{name}");
+        reserve(&tracker, ui_contract::SurfaceId::try_from(surface.clone()).expect("bounded surface"))
+            .unwrap_or_else(|_| panic!("surface {index} of a thirteen-surface session must hold a reservation priced by its own {bytes}-byte body: {}", tracker.debug_state()))
+            .commit_source(sized_body(name, bytes))
+            .unwrap_or_else(|_| panic!("surface {surface} commits its rendered body: {}", tracker.debug_state()));
+        mounted.push(surface);
+    }
+    let state = tracker.debug_state();
+    assert!(state.contains("reserve_refusal=none"), "no surface of a mounted session may be refused its reconcile reservation: {state}");
+    let census = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    assert_eq!(census.resident_slots, baseline.resident_slots + mounted.len(), "every mounted surface must hold its own reservation at once: {census:?} against {baseline:?} — {state}");
+    assert!(
+        census.resident_bytes - baseline.resident_bytes < mounted.len() * ui_contract::UI_RESIDENT_SURFACE_BYTES,
+        "thirteen reservations priced at the per-surface ceiling cannot fit the aggregate, so they must be priced by their bodies: {census:?} against {baseline:?}"
+    );
+    for surface in &mounted {
+        let patch = acknowledge_one_publication(&tracker, surface).unwrap_or_else(|| panic!("surface {surface} publishes its body: {}", tracker.debug_state()));
+        close_test_patch(patch);
+    }
+    eprintln!("[DEBUG] thirteen surfaces admitted: {census:?} against baseline {baseline:?}");
+    close_instance_to_empty(&tracker, 58);
 }

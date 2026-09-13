@@ -1,0 +1,9 @@
+# Repository Test Command Ownership Review
+
+Root fully read the final Sol extraction report and corrected Terra acceptance audit. The bounded16-owner split is accepted:29contexts,17acyclic owner edges, no owner-to-command import,75-line mandatory router with real orchestration imports and required policy metadata. Exact source-as-data/compiler and project/launch/cache consumers are bound to those owners.
+
+Final ordinary direct10/219in4.07s and actual isolated registered Nx10/219,target5.6s,cache skipped pass. Existing source compiler1/6passes (0.58sselected/64.77sprocess). Safe extracted fixture verifier8fixtures/0problems15.96s and discovery251rows/251uniqueprojectidentities9.10s pass. One discovered row has noadapter; this is recorded discovery data, not a claim all251testcontracts pass.
+
+The generic Python local-source repair has explicit ordered --local-source arguments projected by pythonHostArguments and used by materializePythonHost. The native host validates and prioritizes declared roots before its own script directory. Its component control proves a same-basename fixture; root’s separate real65-scenario EN1991 CLI run proves actual argparse/run_main dispatch. Norm’s fixture-coordinate correction and current799identity/800row limit belong to the coordinator Norm report. No provisioning, general parity, live cleanup, native Rust build or fixture publication is inferred.
+
+Root parsed the final exact-attribution section:30unique paths,all present. This consists of29product paths plus the authored Sol report; shared project/taxonomy/launch/host hunks are limited to their declared ownership. Keep the exact list in 📓️sol-repo-test-command-composition-extraction-2026-09-13.md and union it by path with root Norm/HTML work. Own executor scratch is removed. No root product mutation belongs to this review. Sol now owns the next cache audit/artifact command slice, with Cargo API and library transaction/Go extraction still queued.

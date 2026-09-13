@@ -204,8 +204,12 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     const release = demonstrator[1] === "build" || demonstrator[2] === "release";
     return { args: segments, env: { SEMIO_BUILD_MODE: release ? "ship" : "dev", SEMIO_RENDERER: "react" }, ...(demonstrator[1] === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/mit-bestand-demonstrator:activate-dev" } : {}) };
   }
-  const preparation = target?.match(/^@semio-tech\/framework-os-dev:(prepare|activate|serve|dev|build)-(.+)-react-(dev|release)$/);
-  if (preparation) return { args: segments, env: { SEMIO_BUILD_MODE: preparation[3] === "release" ? "ship" : "dev", SEMIO_PLUGIN: preparation[2], SEMIO_RENDERER: "react" }, ...(preparation[1] === "dev" && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${preparation[2]}-react-${preparation[3]}` } : {}) };
+  if (["@semio-tech/framework-renderer-wgpu:dev", "@semio-tech/framework-renderer-wgpu:serve"].includes(target)) {
+    const command = target.endsWith(":dev") ? "dev" : "serve", variant = process.env.SEMIO_PLUGIN ?? "s", profile = process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
+    return { args: ["run", `@semio-tech/framework-os-dev:${command}-${variant}-wgpu-${profile}`, ...options, ...(selected.length ? ["--", ...selected] : [])], env: { SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev" }, ...(command === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${variant}-wgpu-${profile}` } : {}) };
+  }
+  const preparation = target?.match(/^@semio-tech\/framework-os-dev:(prepare|activate|serve|dev|build)-(.+)-(react|wgpu)-(dev|release)$/);
+  if (preparation) return { args: segments, env: { SEMIO_BUILD_MODE: preparation[4] === "release" ? "ship" : "dev", SEMIO_PLUGIN: preparation[2], SEMIO_RENDERER: preparation[3] }, ...(preparation[1] === "dev" && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${preparation[2]}-${preparation[3]}-${preparation[4]}` } : {}) };
   if (["@semio-tech/framework-renderer-wgpu:native", "@semio-tech/framework-renderer-wgpu:native-build"].includes(target) && selected.some((argument) => argument === "--release" || argument === "--dist")) {
     const args = selected.filter((argument) => argument !== "--release" && argument !== "--dist");
     return { args: ["run", `${target}-release`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
@@ -258,12 +262,12 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     const app = resolveFrameworkOsPlaygroundPlugin(catalog, selected.length ? selected : ["s"]);
     if (!app) throw new Error(`Unknown development selection: ${selected.join(" ")}`);
     const served = app.rest.includes("served"), env = frameworkOsPlaygroundDevEnv(catalog, app.plugin, served ? { SEMIO_RENDERER: "react" } : {});
-    if (env.SEMIO_RENDERER === "react") {
+    if (["react", "wgpu"].includes(env.SEMIO_RENDERER!)) {
       const profile = process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev", command = served ? "serve" : "dev";
       const remaining = app.rest.filter((segment) => segment !== "served");
-      return { args: ["run", `@semio-tech/framework-os-dev:${command}-${app.plugin}-react-${profile}`, ...options, ...(remaining.length ? ["--", ...remaining] : [])], env: { ...env, SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev" }, ...(!served && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${app.plugin}-react-${profile}` } : {}) };
+      return { args: ["run", `@semio-tech/framework-os-dev:${command}-${app.plugin}-${env.SEMIO_RENDERER}-${profile}`, ...options, ...(remaining.length ? ["--", ...remaining] : [])], env: { ...env, SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev" }, ...(!served && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${app.plugin}-${env.SEMIO_RENDERER}-${profile}` } : {}) };
     }
-    return { args: ["run", "@semio-tech/framework-os-dev:dev", ...options, "--", app.plugin, ...app.rest], env };
+    throw new Error(`Unknown development renderer: ${env.SEMIO_RENDERER}`);
   }
   if (target === "workspace:build" && selected.length) {
     const targets: Record<string, string> = { assets: "@semio-tech/assets:build", storybook: "workspace:build-storybook", "repo-cli": "@semio-tech/repo-client:build", "repo-server": "@semio-tech/repo-coordinator:build", "repo-vscode": "@semio-tech/repo-vscode:build-vsix" };

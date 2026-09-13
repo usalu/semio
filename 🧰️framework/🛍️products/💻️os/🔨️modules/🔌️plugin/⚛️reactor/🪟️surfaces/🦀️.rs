@@ -66,10 +66,20 @@ impl SurfaceContexts {
     /// shared field that every mount overwrote, and [`Self::get`] rebuilt a body's `ViewModel` from
     /// whichever sibling mounted LAST — so the Inspection panel rendered against the last pane's
     /// projection (wrong `focusedWindowId`/`panelJson`/`locale`) and the first pane rendered against
-    /// the leftover `window` alias's. The shell already sends a distinct context per surface
+    /// the synthetic `window` alias's. The shell already sends a distinct context per surface
     /// (`windowViewContext`/`panelViewContext`/`sectionViewContext`, `🛂️manifest/🟦️.ts`) and mounts
     /// them across refresh generations; nothing but this type ever conflated them.
+    ///
+    /// 🚫️ WAVE B56: the synthetic surface named `window` is REFUSED for an app whose host view
+    /// carries window instances. It existed only so a guest dirty addressed to the bare `window` name
+    /// would find a host context (wave W-G3 §8.29); every such dirty now names the real instance, and
+    /// admitting the synthetic name again would remount the surface whose reconcile reservation refusal
+    /// starved every real one (wave B54 §6.4). An app that genuinely authors a window instance called
+    /// `window` still mounts it — the refusal is about a name no instance claims.
     pub(crate) fn insert(&mut self, surface: String, body_key: String, view_state: ViewModel) -> Result<(), &'static str> {
+        if synthetic_window_surface(&surface, &view_state) {
+            return Err("a surface named `window` is synthetic: an app with window instances is addressed by instance");
+        }
         let role = if UiRefreshSection::from_body_key(&body_key).is_some() {
             SurfaceRole::Section
         } else {
@@ -127,6 +137,22 @@ impl SurfaceContexts {
         }
     }
 
+    /// 🪟️ The concrete surfaces background work addresses when it owns no surface of its own — a
+    /// spawned job's progress or completion, and a document-backbone message.
+    ///
+    /// 🐛️ WAVE B56: those three reactor sites used to mint `"<instance>:window"` and dirty THAT, which
+    /// re-rendered the last-mounted window's body under a surface no pane reads while the real panes
+    /// never saw the update at all. Every mounted window instance is dirtied now; an instance with no
+    /// mounted window falls back to its app-level panels, which is the document scope such work belongs
+    /// to when there is no window to address (ticket 26/09/02/PUZZLE-3D-END-TO-END).
+    pub(crate) fn background_surfaces(&self) -> Vec<String> {
+        let windows: Vec<String> = self.slots.iter().flatten().filter(|binding| binding.role.window_id().is_some()).map(|binding| binding.surface.clone()).collect();
+        if !windows.is_empty() {
+            return windows;
+        }
+        self.slots.iter().flatten().filter(|binding| matches!(binding.role, SurfaceRole::Panel)).map(|binding| binding.surface.clone()).collect()
+    }
+
     pub(crate) fn remove(&mut self, surface: &str) {
         if let Some(slot) = self.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|context| context.surface == surface)) {
             *slot = None;
@@ -142,10 +168,26 @@ impl SurfaceContexts {
     }
 
     #[cfg(test)]
+    fn is_window(&self, surface: &str) -> bool {
+        self.slots.iter().flatten().any(|binding| binding.surface == surface && binding.role.window_id().is_some())
+    }
+
+    #[cfg(test)]
     fn is_section(&self, surface: &str) -> bool {
         self.slots.iter().flatten().any(|binding| binding.surface == surface && matches!(binding.role, SurfaceRole::Section))
     }
 }
+
+/// 🪟️ Whether one mounted surface name is the synthetic `window` alias rather than a real window
+/// instance: the name is exactly `window` after the instance prefix, the host view carries window
+/// instances, and none of them is itself called `window`.
+fn synthetic_window_surface(surface: &str, view_state: &ViewModel) -> bool {
+    let body = surface.rsplit_once(':').map_or(surface, |(_, body)| body);
+    body == SYNTHETIC_WINDOW_SURFACE && !view_state.window_instances.is_empty() && !view_state.window_instances.iter().any(|window| window.id == SYNTHETIC_WINDOW_SURFACE)
+}
+
+/// 🪟️ The surface name no app may mount while it has window instances — see [`synthetic_window_surface`].
+pub(crate) const SYNTHETIC_WINDOW_SURFACE: &str = "window";
 
 #[cfg(test)]
 #[path = "🧪️tests/🪟️surface-context-lifecycle/🦀️.rs"]

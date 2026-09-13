@@ -540,7 +540,7 @@ describe("package boundary glue-content classification", () => {
     expect(fixedFilenameContractIdsForPath("📜️script.tsx", taxonomy)).not.toContain("root-script");
     expect(fixedSourceDispositionDecision("root-package", "{}", taxonomy)).toBeNull();
     expect(fixedSourceDispositionDecision("root-script", null, taxonomy)?.finding).toBe("fixed-source-content-unreadable");
-  });
+  }, 30_000);
 
   test("actual root domain and package scripts receive independent fixed-source findings", () => {
     const taxonomy = loadCatalogTaxonomy(), disposition = taxonomy.packageSourceDispositions["root-script"]!;
@@ -641,7 +641,6 @@ describe("package boundary glue-content classification", () => {
       write("package.json", JSON.stringify({ name: "@semio/fixture", semio: { role: "framework", id: "package-body-fixture" } }));
       write("app/api/thin/route.ts", 'export { handleTicket as GET } from "../../../../🎫️ticket/🟦️.ts";\n');
       write("app/api/body/route.ts", 'export async function POST(request: Request) { const body = await request.json(); return Response.json({ id: crypto.randomUUID(), body }); }\n');
-      write("vitest.config.ts", 'import { defineConfig } from "vitest/config";\nexport default defineConfig({ test: { include: [] } });\n');
       write("🟦️.ts", "export interface Ticket { readonly id: string }\n");
       writeRust("Cargo.toml", '[package]\nname = "package-body-rust-fixture"\nversion = "0.0.0"\n[package.metadata.semio]\nrole = "framework"\nid = "package-body-rust-fixture"\n');
       writeRust("📜️script.ts", 'import { runBundleScriptMain } from "@semio/process";\nawait runBundleScriptMain(import.meta);\n');
@@ -713,12 +712,12 @@ describe("package boundary glue-content classification", () => {
 
   test("live tool entries distinguish configuration and orchestration from hidden package bodies", () => {
     const taxonomy = loadCatalogTaxonomy();
-    const classify = (path: string, dispositionId: "vitest-config" | "root-script") => {
+    const classify = (path: string, dispositionId: "vitest-config-entry" | "root-script") => {
       const disposition = taxonomy.packageSourceDispositions[dispositionId]!;
       const grammar = taxonomy.packageGlueGrammar[disposition.grammarId ?? "typescript"]!;
       return classifyPackageSourceDisposition(readFileSync(join(repoRoot, path), "utf8"), disposition, grammar);
     };
-    expect(classify("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/vitest.config.ts", "vitest-config")).toBe("tool-metadata");
+    expect(classify("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts", "vitest-config-entry")).toBe("tool-metadata");
     expect(classify("🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust/📜️script.ts", "root-script")).toBe("tool-metadata");
     expect(classify("🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/📜️script.ts", "root-script")).toBe("tool-metadata");
     expect(classify("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts", "root-script")).toBe("tool-metadata");

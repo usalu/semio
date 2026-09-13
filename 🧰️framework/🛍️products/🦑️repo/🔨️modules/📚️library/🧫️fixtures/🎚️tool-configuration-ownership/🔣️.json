@@ -1,0 +1,299 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "id": "presentation-vite",
+      "tool": "vite",
+      "previousPath": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/⚙️vite.config.ts",
+      "ownerPath": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🏗️builder/🌐️vite/🟦️.ts",
+      "effectiveRoot": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+      "loader": "vite-native",
+      "mode": "serve"
+    },
+    {
+      "id": "demonstrator-vite",
+      "tool": "vite",
+      "previousPath": "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
+      "ownerPath": "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
+      "effectiveRoot": "♻️mit-bestand/🧺️demonstrator",
+      "loader": "vite-native",
+      "mode": "build"
+    },
+    {
+      "id": "hub-admin-vite",
+      "tool": "vite",
+      "previousPath": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/⚙️vite.config.ts",
+      "ownerPath": "🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts",
+      "effectiveRoot": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
+      "loader": "vite-native",
+      "mode": "serve"
+    },
+    {
+      "id": "os-dev-vite",
+      "tool": "vite",
+      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+      "effectiveRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+      "loader": "vite-native",
+      "mode": "build"
+    },
+    {
+      "id": "wgpu-server-vite",
+      "tool": "vite",
+      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/⚙️vite.config.ts",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts",
+      "effectiveRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server",
+      "loader": "vite-native",
+      "mode": "serve"
+    },
+    {
+      "id": "demonstrator-playwright",
+      "tool": "playwright",
+      "previousPath": "♻️mit-bestand/🧺️demonstrator/🎭️playwright.config.ts",
+      "ownerPath": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🎚️config/🟦️.ts",
+      "effectiveRoot": "♻️mit-bestand/🧺️demonstrator",
+      "loader": "module",
+      "mode": "test"
+    },
+    {
+      "id": "styling-tailwind",
+      "tool": "tailwind",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🎨️tailwind.config.ts",
+      "ownerPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🟦️.ts",
+      "effectiveRoot": "🧰️framework/🔨️modules/🖱️ui/🎨️styling",
+      "loader": "module",
+      "mode": "build"
+    },
+    {
+      "id": "root-eslint",
+      "tool": "eslint",
+      "previousPath": "eslint.config.mjs",
+      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs",
+      "effectiveRoot": ".",
+      "loader": "eslint",
+      "mode": "lint"
+    },
+    {
+      "id": "ui-react-eslint",
+      "tool": "eslint",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/eslint.config.ts",
+      "ownerPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧹️lint/🟦️.ts",
+      "effectiveRoot": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "loader": "eslint",
+      "mode": "lint"
+    },
+    {
+      "id": "dependency-boundaries",
+      "tool": "dependency-cruiser",
+      "previousPath": ".dependency-cruiser.cjs",
+      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
+      "effectiveRoot": ".",
+      "loader": "dependency-cruiser",
+      "mode": "verify"
+    },
+    {
+      "id": "vscode-extension-test",
+      "tool": "vscode-test",
+      "previousPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/.vscode-test.mjs",
+      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧩️extension/🎚️config/🟨️.mjs",
+      "effectiveRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+      "loader": "vscode-test",
+      "mode": "test"
+    }
+  ],
+  "removedShims": [
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/tailwind.config.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/tailwind.config.ts"
+  ],
+  "fixedContractIds": [
+    "dependency-cruiser-config",
+    "eslint-config",
+    "root-eslint-config",
+    "tailwind-config",
+    "vscode-test-cli-config"
+  ],
+  "registration": {
+    "name": "🧹clean🧩️taxonomy🎚️tool-configuration-ownership",
+    "command": "bun nx run @semio-tech/repo-lib:test-tool-configuration-ownership",
+    "target": "test-tool-configuration-ownership"
+  },
+  "consumers": [
+    {
+      "path": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📜️script.ts",
+      "tokens": [
+        "config: \"../../🏗️builder/🌐️vite/🟦️.ts\""
+      ]
+    },
+    {
+      "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/📦️site/📜️script.ts",
+      "tokens": [
+        "🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📜️script.ts",
+      "tokens": [
+        "🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/📜️script.ts",
+      "tokens": [
+        "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📜️script.ts",
+      "tokens": [
+        "config: \"../../🏗️builder/🌐️vite/🟦️.ts\""
+      ]
+    },
+    {
+      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "tokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+        "🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+      "tokens": [
+        "config: \"../../🏗️builder/🌐️vite/🟦️.ts\"",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts",
+      "tokens": [
+        "🎚️config/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts",
+      "tokens": [
+        "../💨️tailwind/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+      "tokens": [
+        "../../🧹️lint/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "tokens": [
+        "bun ./📜️script.ts lint"
+      ]
+    },
+    {
+      "path": "📜️script.ts",
+      "tokens": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+      "tokens": [
+        "config: string;",
+        "\"--config\", opts.config"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts",
+      "tokens": [
+        "../../🧪️tests/🧩️extension/🎚️config/🟨️.mjs",
+        "../../../../🧹️lint/📐️source-policy/🟨️.mjs"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+      "tokens": [
+        "/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+      "tokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/⚙️config-graph.json",
+      "tokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🔌️staging-root.json",
+      "tokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/🎮️playground-session/🔣️.json",
+      "tokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": ".vscode/settings.json",
+      "tokens": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs",
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🟦️.ts"
+      ]
+    }
+  ],
+  "projectInputs": [
+    {
+      "path": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "presentation-vite"
+      ]
+    },
+    {
+      "path": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+      "owners": [
+        "demonstrator-vite",
+        "demonstrator-playwright"
+      ]
+    },
+    {
+      "path": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "hub-admin-vite"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "os-dev-vite"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "wgpu-server-vite"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "styling-tailwind"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "ui-react-eslint"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "vscode-extension-test",
+        "root-eslint"
+      ]
+    }
+  ]
+}

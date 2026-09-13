@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🧩️metabolism.rs",
+  "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🌱️metabolism/🦀️.rs",
+  "parentModule": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🦀️.rs",
+  "memberKind": "metabolism-icon-catalog",
+  "entries": [
+    {
+      "key": "metabolism",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🌱️metabolism.svg"
+    },
+    {
+      "key": "capital",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🏛️capitals/▫️square/🖋️capital.svg"
+    },
+    {
+      "key": "cylindric-capital",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🏛️capitals/🔘️cylindric/🖋️cylindric-capital.svg"
+    },
+    {
+      "key": "capsule_slash",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/↗️slash/🖋️capsule_slash.svg"
+    },
+    {
+      "key": "capsule_backslash",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/↘️backslash/🖋️capsule_backslash.svg"
+    },
+    {
+      "key": "capsule_z",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/⚡️z/🖋️capsule_z.svg"
+    },
+    {
+      "key": "capsule_p",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/🅿️p/🖋️capsule_p.svg"
+    },
+    {
+      "key": "capsule_s",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/🐍️s/🖋️capsule_s.svg"
+    },
+    {
+      "key": "capsule_L",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/📐️l/🖋️capsule_L.svg"
+    },
+    {
+      "key": "capsule_q",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/🔎️q/🖋️capsule_q.svg"
+    },
+    {
+      "key": "capsule_J",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/🪝️j/🖋️capsule_J.svg"
+    },
+    {
+      "key": "cylindric-tambour_first-storey",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🔋️cylindric-tambours/🌱️first-storey/🖋️cylindric-tambour_first-storey.svg"
+    },
+    {
+      "key": "cylindric-tambour_last-storey",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🔋️cylindric-tambours/🏁️last-storey/🖋️cylindric-tambour_last-storey.svg"
+    },
+    {
+      "key": "cylindric-tambour_single-storey",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🔋️cylindric-tambours/🏠️single-storey/🖋️cylindric-tambour_single-storey.svg"
+    },
+    {
+      "key": "cylindric-tambour",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🔋️cylindric-tambours/🧱️standard/🖋️cylindric-tambour.svg"
+    },
+    {
+      "key": "tambour_first-storey",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥁️tambours/🌱️first-storey/🖋️tambour_first-storey.svg"
+    },
+    {
+      "key": "tambour_last-storey",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥁️tambours/🏁️last-storey/🖋️tambour_last-storey.svg"
+    },
+    {
+      "key": "tambour_single-storey",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥁️tambours/🏠️single-storey/🖋️tambour_single-storey.svg"
+    },
+    {
+      "key": "tambour",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥁️tambours/🧱️standard/🖋️tambour.svg"
+    },
+    {
+      "key": "ellipsoid-capsule_slash",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/↗️slash/🖋️ellipsoid-capsule_slash.svg"
+    },
+    {
+      "key": "ellipsoid-capsule_backslash",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/↘️backslash/🖋️ellipsoid-capsule_backslash.svg"
+    },
+    {
+      "key": "ellipsoid-capsule_z",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/⚡️z/🖋️ellipsoid-capsule_z.svg"
+    },
+    {
+      "key": "ellipsoid-capsule_p",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/🅿️p/🖋️ellipsoid-capsule_p.svg"
+    },
+    {
+      "key": "ellipsoid-capsule_s",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/🐍️s/🖋️ellipsoid-capsule_s.svg"
+    },
+    {
+      "key": "ellipsoid-capsule_L",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/📐️l/🖋️ellipsoid-capsule_L.svg"
+    },
+    {
+      "key": "ellipsoid-capsule_q",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/🔎️q/🖋️ellipsoid-capsule_q.svg"
+    },
+    {
+      "key": "ellipsoid-capsule_J",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/🪝️j/🖋️ellipsoid-capsule_J.svg"
+    },
+    {
+      "key": "base",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🧱️bases/⬛️base/🖋️base.svg"
+    },
+    {
+      "key": "base_blob",
+      "asset": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🧱️bases/🫧️blob/🖋️base_blob.svg"
+    }
+  ],
+  "queries": [
+    "metabolism",
+    "capital",
+    "cylindric-capital",
+    "capsule_slash",
+    "capsule_backslash",
+    "capsule_z",
+    "capsule_p",
+    "capsule_s",
+    "capsule_L",
+    "capsule_q",
+    "capsule_J",
+    "cylindric-tambour_first-storey",
+    "cylindric-tambour_last-storey",
+    "cylindric-tambour_single-storey",
+    "cylindric-tambour",
+    "tambour_first-storey",
+    "tambour_last-storey",
+    "tambour_single-storey",
+    "tambour",
+    "ellipsoid-capsule_slash",
+    "ellipsoid-capsule_backslash",
+    "ellipsoid-capsule_z",
+    "ellipsoid-capsule_p",
+    "ellipsoid-capsule_s",
+    "ellipsoid-capsule_L",
+    "ellipsoid-capsule_q",
+    "ellipsoid-capsule_J",
+    "base",
+    "base_blob",
+    "  capsule_J\t",
+    "\nmetabolism\r",
+    " base ",
+    "",
+    "unknown-icon",
+    "Capsule_J"
+  ],
+  "nativeTestModule": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🧪️tests/🔬️unit/🦀️.rs"
+}

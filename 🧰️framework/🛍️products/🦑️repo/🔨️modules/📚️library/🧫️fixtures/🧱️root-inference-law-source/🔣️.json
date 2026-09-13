@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🚶️file-walk/🟦️.ts",
+      "directoryName": "🚶️file-walk",
+      "parentKindId": "discovery",
+      "kindId": "repo-discovery-file-walk",
+      "declarations": ["PolicySourceWalkIssue", "PolicySourceWalk", "policyWalkRelFileSources", "policyWalkRelFiles"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📍️source-coordinate/🟦️.ts",
+      "directoryName": "📍️source-coordinate",
+      "parentKindId": "discovery",
+      "kindId": "repo-discovery-source-coordinate",
+      "declarations": ["policyLineOfIndex"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/💡️inference/🧱️contract/🟦️.ts",
+      "directoryName": "🧱️contract",
+      "parentKindId": "repo-schema-inference",
+      "kindId": "repo-schema-inference-contract",
+      "declarations": ["POLICY_INFERENCES_FACET", "POLICY_DERIVED_MARKER", "PolicyInferenceSourceIssue", "PolicyInferenceFamilySource", "PolicyInferenceDiscovery"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/💡️inference/🔍️family-discovery/🟦️.ts",
+      "directoryName": "🔍️family-discovery",
+      "parentKindId": "repo-schema-inference",
+      "kindId": "repo-schema-inference-family-discovery",
+      "declarations": ["PolicyInferenceSlugListing", "policyListInferenceDirs", "policyFindAllInferencesDirs", "policyArtifactRootOfInferencesDir", "policyDiscoverInferenceFamilies"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/💡️inference/⚖️laws/🚧️source-admission/🟦️.ts",
+      "directoryName": "🚧️source-admission",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-source-admission-law",
+      "declarations": ["policyInferenceSourceBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/💡️inference/⚖️laws/🧩️family-root-completeness/🟦️.ts",
+      "directoryName": "🧩️family-root-completeness",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-family-root-completeness-law",
+      "declarations": ["policyInferenceFamilyRootCompletenessBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/💡️inference/⚖️laws/🍃️slug-leaf-presence/🟦️.ts",
+      "directoryName": "🍃️slug-leaf-presence",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-slug-leaf-presence-law",
+      "declarations": ["policyInferenceSlugLeafPresenceBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/💡️inference/⚖️laws/⚙️derivation-presence/🟦️.ts",
+      "directoryName": "⚙️derivation-presence",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-derivation-presence-law",
+      "declarations": ["policyInferenceImplPresenceBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/💡️inference/⚖️laws/😀️emoji-uniqueness/🟦️.ts",
+      "directoryName": "😀️emoji-uniqueness",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-emoji-uniqueness-law",
+      "declarations": ["policyInferenceEmojiUniquenessBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/💡️inference/⚖️laws/🧶️assembly-coverage/🟦️.ts",
+      "directoryName": "🧶️assembly-coverage",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-assembly-coverage-law",
+      "declarations": ["policyInferenceNormalizeToken", "policyInferenceAssemblyCoverageBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/💡️inference/⚖️laws/💾️state-separation/🟦️.ts",
+      "directoryName": "💾️state-separation",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-state-separation-law",
+      "declarations": ["policyDerivedMarkerLeakBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/💡️inference/⚖️laws/📋️aggregate/🟦️.ts",
+      "directoryName": "📋️aggregate",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-law-aggregate",
+      "declarations": ["policyInferenceFamilyBreaches"]
+    }
+  ],
+  "contexts": [
+    {
+      "directoryName": "🚶️file-walk",
+      "parentKindId": "discovery",
+      "kindId": "repo-discovery-file-walk"
+    },
+    {
+      "directoryName": "📍️source-coordinate",
+      "parentKindId": "discovery",
+      "kindId": "repo-discovery-source-coordinate"
+    },
+    {
+      "directoryName": "💡️inference",
+      "parentKindId": "schema",
+      "kindId": "repo-schema-inference"
+    },
+    {
+      "directoryName": "🧱️contract",
+      "parentKindId": "repo-schema-inference",
+      "kindId": "repo-schema-inference-contract"
+    },
+    {
+      "directoryName": "🔍️family-discovery",
+      "parentKindId": "repo-schema-inference",
+      "kindId": "repo-schema-inference-family-discovery"
+    },
+    {
+      "directoryName": "⚖️laws",
+      "parentKindId": "repo-schema-inference",
+      "kindId": "repo-schema-inference-laws"
+    },
+    {
+      "directoryName": "🚧️source-admission",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-source-admission-law"
+    },
+    {
+      "directoryName": "🧩️family-root-completeness",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-family-root-completeness-law"
+    },
+    {
+      "directoryName": "🍃️slug-leaf-presence",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-slug-leaf-presence-law"
+    },
+    {
+      "directoryName": "⚙️derivation-presence",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-derivation-presence-law"
+    },
+    {
+      "directoryName": "😀️emoji-uniqueness",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-emoji-uniqueness-law"
+    },
+    {
+      "directoryName": "🧶️assembly-coverage",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-assembly-coverage-law"
+    },
+    {
+      "directoryName": "💾️state-separation",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-state-separation-law"
+    },
+    {
+      "directoryName": "📋️aggregate",
+      "parentKindId": "repo-schema-inference-laws",
+      "kindId": "repo-schema-inference-law-aggregate"
+    }
+  ],
+  "consumers": [
+    {
+      "path": "📜️script.ts",
+      "owners": ["🔍️discovery/🚶️file-walk/🟦️.ts", "🔍️discovery/📍️source-coordinate/🟦️.ts", "🧬️schema/💡️inference/⚖️laws/📋️aggregate/🟦️.ts"]
+    }
+  ],
+  "sourceData": [
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛️flat-position/🦀️.rs",
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛️flat-position/🧪️tests/🔬️unit/🦀️.rs"
+  ],
+  "lawKinds": [
+    "inference-migration/source-unreadable",
+    "inference-migration/family-root-completeness",
+    "inference-migration/slug-leaf-presence",
+    "inference-migration/impl-presence",
+    "inference-migration/emoji-uniqueness",
+    "inference-migration/assembly-coverage",
+    "inference-migration/state-leak"
+  ],
+  "route": {
+    "target": "test-root-inference-law-source",
+    "command": "bun ./📜️script.ts test root-inference-law-source",
+    "launchName": "🧬schema💡️inference🧪source-ownership",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-inference-law-source"
+  }
+}

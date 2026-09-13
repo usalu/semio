@@ -45,3 +45,13 @@ The extracted aggregate must be a direct import for root report/enforce consumer
 ## Limits
 
 This report records current sources and fixture opportunities only. The 192-owner/2,000-finding artifact diagnostic is a separate artifact-law observation and is not an inference expected-value snapshot.
+
+## Current Extraction Audit
+
+The live slice has 12 anonymous TypeScript owners across 14 registered contexts: shared `🚶️file-walk` and `📍️source-coordinate`; inference contract and family discovery; six separate family/source laws; state separation; and the aggregate. Root now directly imports the shared walk, source coordinate, and aggregate owners at `📜️script.ts:182-206`. My pre-format static pass counted 44 raw owner-to-owner import declarations, including distinct type/value clauses; it was not a deduplicated dependency-edge count. The final executor graph establishes 23 internal edges, no cycle, and no owner import or export back into root.
+
+The aggregate captures `policyDiscoverInferenceFamilies` once and passes that result to source admission, family root, leaf presence, derivation, emoji, and assembly laws. State separation deliberately has a separate no-follow walk over snapshot components; it is a distinct source concern rather than a second family-discovery epoch. Assembly directly imports the accepted Rust field extractor; no field parser is copied or re-exported through root.
+
+I independently ran the ordinary package route `bun ./📜️script.ts test root-inference-law-source` from the repo-library TypeScript package: **8 pass, 0 fail, 122 assertions, 5.99 seconds**. It covered Ajv fixture/schema, 12-owner declaration/type checks, root removal/direct consumer bindings, owner acyclicity, virtual missing/wrong-kind/symlink/unreadable outcomes, a private native ancestor-symlink and chmod-unreadable control, derivation/assembly/emoji/state laws, source-data bindings, and package/Nx/seed/generated-launch registration.
+
+The executor's pre-format isolated Nx result was 8/122 with a 5.2-second target and cache skipped. Its later retry stopped before target startup because an Nx plugin worker exited under concurrent graph load; that is not product evidence. A selected Trinity native attempt likewise did not reach Cargo. The direct gate does not claim a native Rust derivation law. It does establish the TypeScript source-admission and aggregate boundaries.

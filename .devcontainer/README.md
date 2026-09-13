@@ -56,10 +56,6 @@ CALL apoc.export.cypher.query(
 );
 ```
 
-## compose-entrypoint.sh
-
-Legacy helper kept for existing callers. The current setup does not need entrypoint startup logic because **`post-start.sh`** starts Neo4j inside **`compose`**.
-
 ## Dependency Preparation
 
 The image provides Bun 1.3.14 and Node 24.15.0 from pinned, checksum-verified Linux x64/arm64 archives. Nx comes from the repository's locked tooling bootstrap. Container creation invokes `bun nx run workspace:deps-javascript`, which synchronizes the frozen Bun lockfile without building applications. Select additional dependency environments and project builds through their Nx launch configurations. Post-start and post-attach remain separate lifecycle hooks.

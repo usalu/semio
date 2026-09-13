@@ -472,7 +472,10 @@ impl PatchTracker {
         let Some(rejected_index) = state.rejected.iter().enumerate().find_map(|(index, slot)| (slot.is_none() && state.rejected_reserved[index].is_none()).then_some(index)) else {
             return Err(refuse(&mut state, surface, "rejected-full"));
         };
-        let Some(reservation) = SurfaceReconcileReservation::try_new(generation) else { return Err(refuse(&mut state, surface, "registry-reservation-unavailable")) };
+        let reservation = match SurfaceReconcileReservation::try_new(generation) {
+            Ok(reservation) => reservation,
+            Err(refusal) => return Err(refuse(&mut state, surface, refusal.reason())),
+        };
         let Some(output_index) = state.ready.iter().position(Option::is_none) else { return Err(refuse(&mut state, surface, "ready-full")) };
         let mut outputs = SurfaceReconcileOutputs::default();
         let output_reservation = match outputs.try_reserve(generation, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES) {
@@ -614,6 +617,9 @@ impl PatchTracker {
     }
 
     /// 🐞️ Temporary trace summary of every retained slot family, read by the reactor's more-work streak trace.
+    /// 📊️ WHAT the two process-wide reconcile tables hold, printed beside every refusal so a
+    /// `registry-*` refusal can be read against the occupancy that caused it rather than guessed at
+    /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
     pub fn debug_state(&self) -> String {
         let state = self.state.borrow();
         let slots: Vec<String> = state
@@ -639,7 +645,7 @@ impl PatchTracker {
         let producer_terminals: Vec<String> = state.producer_terminals.iter().flatten().map(|terminal| format!("{}:{}{}{}{}", terminal.surface.as_ref(), if terminal.close { "c" } else { "-" }, if terminal.authority.is_some() { "A" } else { "-" }, if terminal.reconciler.is_some() { "R" } else { "-" }, if terminal.reservation.is_some() { "V" } else { "-" })).collect();
         let deferred: Vec<String> = state.deferred.iter().flatten().map(|surface| surface.as_ref().to_owned()).collect();
         format!(
-            "slots=[{}] ready=[{}] terminals=[{}] producer_terminals=[{}] deferred=[{}] rejected={} unadmitted={} closing={} output_fault={} reserve_refusal={} generation_exhausted={} close_cursor={}",
+            "slots=[{}] ready=[{}] terminals=[{}] producer_terminals=[{}] deferred=[{}] rejected={} unadmitted={} closing={} output_fault={} reserve_refusal={} registry={} generation_exhausted={} close_cursor={}",
             slots.join(","),
             ready.join(","),
             terminals.join(","),
@@ -653,6 +659,7 @@ impl PatchTracker {
                 || "none".to_string(),
                 |(index, reason)| format!("{}:{reason}", state.slots.get(usize::from(*index)).and_then(Option::as_ref).map_or("unmounted", |slot| slot.surface.as_ref())),
             ),
+            registry_census_line(),
             state.generation_exhausted,
             state.close_cursor
         )
@@ -1204,6 +1211,17 @@ fn commit_generation(state: &mut PatchTrackerState, generation: u64) {
     debug_assert_eq!(state.next_generation.checked_add(1), Some(generation));
     state.next_generation = generation;
     state.generation_exhausted = generation == u64::MAX;
+}
+
+/// 📊️ One line of both reconcile registries' live occupancy: `resident=<slots>s/<bytes>B of
+/// <aggregate>B` and `handback=<free>/<slots>`. A `registry-resident-credit-exhausted` refusal beside
+/// `resident=4s/33550336B of 33554432B` is a credit accounting fact, not a guess.
+fn registry_census_line() -> String {
+    let census = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    format!(
+        "resident={}s/{}i/{}B of {}B handback={}/{}",
+        census.resident_slots, census.resident_items, census.resident_bytes, census.resident_aggregate_bytes, census.handback_free, census.handback_slots
+    )
 }
 
 fn surface_instance(surface: &str) -> Option<u32> {

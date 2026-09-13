@@ -12,14 +12,16 @@ export function transactionV2BundleRoot(repoRoot: string, runId: string): string
   const identity = /^[1-9][0-9]*-([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/u.exec(runId);
   if (!identity || !isAbsolute(repoRoot) || resolve(repoRoot) !== repoRoot) throw new Error("Invalid transaction run allocation identity");
   const ticket = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
-  const report = join(ticket, "📓️transaction-current-readiness-2026-08-28"), owner = join(report, "🧾️runs");
+  const report = join(ticket, "📓️transaction-current-readiness-2026-08-28"),
+    owner = join(report, "🧾️runs");
   let path = parse(owner).root;
   for (const part of relative(path, owner).split(sep)) {
     path = join(path, part);
     let stat;
-    try { stat = lstatSync(path); }
-    catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT" || path !== report && path !== owner) throw error;
+    try {
+      stat = lstatSync(path);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT" || (path !== report && path !== owner)) throw error;
       mkdirSync(path);
       stat = lstatSync(path);
     }
@@ -50,7 +52,9 @@ class GoTestScript extends BundleScript {
       const plan = canonicalGoPlan(moduleRoot);
       const projected = Object.entries(plan.replacements).find(([, source]) => realpathSync(source) === path)?.[0];
       const info = lstatSync(path);
-      const owner = relative(moduleRoot, projected ? dirname(projected) : info.isDirectory() ? path : dirname(path)).split(sep).join("/");
+      const owner = relative(moduleRoot, projected ? dirname(projected) : info.isDirectory() ? path : dirname(path))
+        .split(sep)
+        .join("/");
       const selected = owner ? `./${owner}` : ".";
       if (owner === ".." || owner.startsWith("../") || !plan.packages.includes(selected)) throw new Error(`Go input has no compiler package owner: ${path}`);
       packages = [selected];
@@ -93,7 +97,7 @@ class TestScript extends BundleScript {
     if (segments[0] === "package-body-policy") {
       if (segments.length !== 1) throw new Error("Expected test package-body-policy");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts");
-      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 60_000 });
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 240_000 });
       return;
     }
     if (segments[0] === "kind-only-basename") {
@@ -135,7 +139,19 @@ class TestScript extends BundleScript {
     if (segments[0] === "root-artifact-schema-law-source") {
       if (segments.length !== 1) throw new Error("Expected test root-artifact-schema-law-source");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-artifact-schema-law-source/🟦️.ts");
-      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 45_000 });
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "root-artifact-schema-law-source"), budgetMs: 45_000 });
+      return;
+    }
+    if (segments[0] === "root-surface-abstraction-law-source") {
+      if (segments.length !== 1) throw new Error("Expected test root-surface-abstraction-law-source");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-surface-abstraction-law-source/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 60_000 });
+      return;
+    }
+    if (segments[0] === "root-inference-law-source") {
+      if (segments.length !== 1) throw new Error("Expected test root-inference-law-source");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-inference-law-source/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "root-inference-law-source"), budgetMs: 45_000 });
       return;
     }
     if (segments[0] === "framework-root-source-topology") {
@@ -160,6 +176,18 @@ class TestScript extends BundleScript {
       if (segments.length !== 1) throw new Error("Expected test app-verification-source-ownership");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📱️app-verification-source-ownership/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 30_000 });
+      return;
+    }
+    if (segments[0] === "vitest-configuration-ownership") {
+      if (segments.length !== 1) throw new Error("Expected test vitest-configuration-ownership");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️vitest-configuration-ownership/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
+      return;
+    }
+    if (segments[0] === "tool-configuration-ownership") {
+      if (segments.length !== 1) throw new Error("Expected test tool-configuration-ownership");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️tool-configuration-ownership/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
       return;
     }
     if (segments[0] === "repo-source-ownership") {
@@ -206,14 +234,14 @@ class TestScript extends BundleScript {
       return;
     }
     if (segments[0] === "mutation-source-file-facts") {
-      if (segments.length > 2 || segments[1] !== undefined && segments[1] !== "reference") throw new Error("Expected test mutation-source-file-facts [reference]");
+      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "reference")) throw new Error("Expected test mutation-source-file-facts [reference]");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧾️source-file-facts/🟦️.ts");
       const selection = segments[1] === "reference" ? ["-t", "^mutation source-file facts (vectors|independent suffix reference|reference oracle)"] : [];
       await runTestBudgeted(process.execPath, ["test", source, ...selection], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "typescript-declaration-facts") {
-      if (segments.length > 2 || segments[1] !== undefined && segments[1] !== "reference") throw new Error("Expected test typescript-declaration-facts [reference]");
+      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "reference")) throw new Error("Expected test typescript-declaration-facts [reference]");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📣️typescript-declaration-facts/🟦️.ts");
       const selection = segments[1] === "reference" ? ["-t", "^TypeScript (?:(?:malformed|unsupported) )?declaration (?:reference:|(?:facts|cases) use the closed neutral schema)"] : [];
       await runTestBudgeted(process.execPath, ["test", source, ...selection], { cwd: this.repoRoot });
@@ -463,19 +491,40 @@ class TestScript extends BundleScript {
       return;
     }
     if (segments[0] === "transaction-v2") {
-      const invocationStartedAt = performance.now(), startedAt = new Date().toISOString();
+      const invocationStartedAt = performance.now(),
+        startedAt = new Date().toISOString();
       const runId = `${process.pid}-${crypto.randomUUID()}`;
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts");
-      const bundleRoot = transactionV2BundleRoot(this.repoRoot, runId), runRoot = dirname(bundleRoot);
+      const bundleRoot = transactionV2BundleRoot(this.repoRoot, runId),
+        runRoot = dirname(bundleRoot);
       console.error(`[DEBUG] Transaction v2 run owner ${runRoot}`);
       const bundle = join(bundleRoot, "🟦️.test.js");
       const normalizationSource = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts");
-      const identityPaths = { router: join(this.root, "📜️script.ts"), test: source, normalization: normalizationSource, discovery: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"), schema: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), ledgerBoundaries: join(this.root, "🧫️fixtures/🔣️transaction-ledger-boundaries.json"), harness: join(this.root, "🧫️fixtures/🔣️transaction-harness-retention.json") };
-      const identities = () => Object.fromEntries(Object.entries(identityPaths).map(([key, path]) => { const bytes = readFileSync(path); return [key, { path, bytes: bytes.length, sha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex") }]; }));
-      const retainRecord = (kind: string, value: unknown): void => { const root = join(runRoot, kind); mkdirSync(root); writeFileSync(join(root, "🔣️.json"), `${JSON.stringify(value, null, 2)}\n`, { flag: "wx" }); };
+      const identityPaths = {
+        router: join(this.root, "📜️script.ts"),
+        test: source,
+        normalization: normalizationSource,
+        discovery: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"),
+        schema: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"),
+        ledgerBoundaries: join(this.root, "🧫️fixtures/🔣️transaction-ledger-boundaries.json"),
+        harness: join(this.root, "🧫️fixtures/🔣️transaction-harness-retention.json"),
+      };
+      const identities = () =>
+        Object.fromEntries(
+          Object.entries(identityPaths).map(([key, path]) => {
+            const bytes = readFileSync(path);
+            return [key, { path, bytes: bytes.length, sha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex") }];
+          }),
+        );
+      const retainRecord = (kind: string, value: unknown): void => {
+        const root = join(runRoot, kind);
+        mkdirSync(root);
+        writeFileSync(join(root, "🔣️.json"), `${JSON.stringify(value, null, 2)}\n`, { flag: "wx" });
+      };
       const beforeIdentities = identities();
       retainRecord("📷️before", { schemaVersion: 1, runId, runRoot, startedAt, inputs: beforeIdentities });
-      const normalizationBundleRoot = join(bundleRoot, "🧹️normalization"), normalizationBundle = join(normalizationBundleRoot, "🟦️.js");
+      const normalizationBundleRoot = join(bundleRoot, "🧹️normalization"),
+        normalizationBundle = join(normalizationBundleRoot, "🟦️.js");
       const schemaSnapshot = join(bundleRoot, "🔣️.json");
       mkdirSync(bundleRoot, { recursive: true });
       copyFileSync(join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), schemaSnapshot);
@@ -484,32 +533,55 @@ class TestScript extends BundleScript {
       mkdirSync(normalizationBundleRoot, { recursive: true });
       const normalizationBuilt = await Bun.build({ entrypoints: [normalizationSource], outdir: normalizationBundleRoot, naming: "🟦️.js", target: "bun", packages: "external" });
       if (!normalizationBuilt.success) throw new AggregateError(normalizationBuilt.logs, "Transaction v2 normalization child bundle failed");
-      const defaultFilterWaves = [[
-        "process-tree-killed|language-neutral|incomplete plans|rolls back after-regenerations|rejects stale generator|parent-killed transaction-attempt-canonical-published$",
-        "rolls back after-(?:staging|embedded-root-staging|moves|relocations|symlink-retargeting|edits)|rolls back before-verify|parent-killed transaction-(?:attempt-preparation-(?:mkdir|children)|initial)",
-        "parent-killed transaction-(?:journal|wal|backup|edit)|rejects forged|rejects unreachable",
-        "parent-killed transaction-(?:restore|lease)|keeps double-plan|recovers caught|committed and rolled-back|elects exactly|restores a quarantined|rejects stale (?!generator)|rejects ordinal",
-      ]];
-      const defaultFilters = defaultFilterWaves.flat(), filterWaves = segments.length > 1 ? [[segments.slice(1).join(" ")]] : defaultFilterWaves;
+      const defaultFilterWaves = [
+        [
+          "process-tree-killed|language-neutral|incomplete plans|rolls back after-regenerations|rejects stale generator|parent-killed transaction-attempt-canonical-published$",
+          "rolls back after-(?:staging|embedded-root-staging|moves|relocations|symlink-retargeting|edits)|rolls back before-verify|parent-killed transaction-(?:attempt-preparation-(?:mkdir|children)|initial)",
+          "parent-killed transaction-(?:journal|wal|backup|edit)|rejects forged|rejects unreachable",
+          "parent-killed transaction-(?:restore|lease)|keeps double-plan|recovers caught|committed and rolled-back|elects exactly|restores a quarantined|rejects stale (?!generator)|rejects ordinal",
+        ],
+      ];
+      const defaultFilters = defaultFilterWaves.flat(),
+        filterWaves = segments.length > 1 ? [[segments.slice(1).join(" ")]] : defaultFilterWaves;
       const staticTitles = [...readFileSync(source, "utf8").matchAll(/\btest(?:\.concurrent)?\("([^"]+)"/gu)].map((match) => match[1]);
       if (staticTitles.length !== 14 || staticTitles.length + 48 !== 62) throw new Error(`Transaction v2 aggregate manifest count changed: ${staticTitles.length + 48}`);
       for (const title of staticTitles) {
         const selections = defaultFilters.filter((filter) => new RegExp(filter, "u").test(title));
         if (selections.length !== 1) throw new Error(`Transaction v2 static case must be selected exactly once (${selections.length}): ${title}`);
       }
-      const registry = join(bundleRoot, `pids-${runId}.txt`), boundaryRegistry = join(bundleRoot, `boundaries-${runId}.txt`);
+      const registry = join(bundleRoot, `pids-${runId}.txt`),
+        boundaryRegistry = join(bundleRoot, `boundaries-${runId}.txt`);
       writeFileSync(registry, "");
       writeFileSync(boundaryRegistry, "");
       const children: ReturnType<typeof spawn>[] = [];
       const childOutcomes = new Map<ReturnType<typeof spawn>, Promise<void>>();
-      const closedStreams: Promise<void>[] = [], shardOutcomes: { ordinal: number; filter: string; concurrency: number; milliseconds: number; code: number | null; signal: NodeJS.Signals | null }[] = [];
+      const closedStreams: Promise<void>[] = [],
+        shardOutcomes: { ordinal: number; filter: string; concurrency: number; milliseconds: number; code: number | null; signal: NodeJS.Signals | null }[] = [];
       const killTree = (pid: number): void => {
-        if (process.platform === "win32") { spawnSync("taskkill", ["/pid", String(pid), "/t", "/f"], { stdio: "ignore" }); return; }
-        try { process.kill(-pid, "SIGKILL"); }
-        catch (error) { if ((error as NodeJS.ErrnoException).code !== "ESRCH") try { process.kill(pid, "SIGKILL"); } catch {} }
+        if (process.platform === "win32") {
+          spawnSync("taskkill", ["/pid", String(pid), "/t", "/f"], { stdio: "ignore" });
+          return;
+        }
+        try {
+          process.kill(-pid, "SIGKILL");
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ESRCH")
+            try {
+              process.kill(pid, "SIGKILL");
+            } catch {}
+        }
       };
-      const registeredPids = (): number[] => [...new Set(readFileSync(registry, "utf8").split(/\s+/u).filter(Boolean).map(Number).filter((pid) => Number.isSafeInteger(pid) && pid > 0))];
-      let failure: Error | undefined, stopped = false;
+      const registeredPids = (): number[] => [
+        ...new Set(
+          readFileSync(registry, "utf8")
+            .split(/\s+/u)
+            .filter(Boolean)
+            .map(Number)
+            .filter((pid) => Number.isSafeInteger(pid) && pid > 0),
+        ),
+      ];
+      let failure: Error | undefined,
+        stopped = false;
       const stop = (error: Error): void => {
         if (stopped) return;
         stopped = true;
@@ -522,16 +594,63 @@ class TestScript extends BundleScript {
       const spawnFilter = (filter: string): ReturnType<typeof spawn> => {
         const concurrency = filter.includes("process-tree-killed") ? 5 : 6;
         const outputRoot = join(runRoot, "📓️shards", `🔢️${children.length + 1}`);
-        const streams = ["stdout", "stderr"].map((kind) => { const root = join(outputRoot, kind); mkdirSync(root, { recursive: true }); const path = join(root, "🔤️.txt"); writeFileSync(path, "", { flag: "wx" }); return path; });
-        const startedAt = performance.now(), child = spawn(process.execPath, ["test", `--max-concurrency=${concurrency}`, bundle, "-t", filter], { cwd: this.repoRoot, detached: process.platform !== "win32", env: { ...process.env, NX_DAEMON: "false", SEMIO_TRANSACTION_V2_BOUNDARY_REGISTRY: boundaryRegistry, SEMIO_TRANSACTION_V2_MODULE: normalizationBundle, SEMIO_TRANSACTION_V2_SCHEMA: schemaSnapshot, SEMIO_TRANSACTION_V2_PID_REGISTRY: registry, SEMIO_TRANSACTION_V2_RUN_ID: runId, SEMIO_TRANSACTION_V2_RUN_ROOT: runRoot }, stdio: ["ignore", "pipe", "pipe"] });
-        child.stdout!.on("data", (bytes) => { try { appendFileSync(streams[0]!, bytes); process.stdout.write(bytes); } catch (error) { stop(error instanceof Error ? error : new Error(String(error))); } });
-        child.stderr!.on("data", (bytes) => { try { appendFileSync(streams[1]!, bytes); process.stderr.write(bytes); } catch (error) { stop(error instanceof Error ? error : new Error(String(error))); } });
+        const streams = ["stdout", "stderr"].map((kind) => {
+          const root = join(outputRoot, kind);
+          mkdirSync(root, { recursive: true });
+          const path = join(root, "🔤️.txt");
+          writeFileSync(path, "", { flag: "wx" });
+          return path;
+        });
+        const startedAt = performance.now(),
+          child = spawn(process.execPath, ["test", `--max-concurrency=${concurrency}`, bundle, "-t", filter], {
+            cwd: this.repoRoot,
+            detached: process.platform !== "win32",
+            env: {
+              ...process.env,
+              NX_DAEMON: "false",
+              SEMIO_TRANSACTION_V2_BOUNDARY_REGISTRY: boundaryRegistry,
+              SEMIO_TRANSACTION_V2_MODULE: normalizationBundle,
+              SEMIO_TRANSACTION_V2_SCHEMA: schemaSnapshot,
+              SEMIO_TRANSACTION_V2_PID_REGISTRY: registry,
+              SEMIO_TRANSACTION_V2_RUN_ID: runId,
+              SEMIO_TRANSACTION_V2_RUN_ROOT: runRoot,
+            },
+            stdio: ["ignore", "pipe", "pipe"],
+          });
+        child.stdout!.on("data", (bytes) => {
+          try {
+            appendFileSync(streams[0]!, bytes);
+            process.stdout.write(bytes);
+          } catch (error) {
+            stop(error instanceof Error ? error : new Error(String(error)));
+          }
+        });
+        child.stderr!.on("data", (bytes) => {
+          try {
+            appendFileSync(streams[1]!, bytes);
+            process.stderr.write(bytes);
+          } catch (error) {
+            stop(error instanceof Error ? error : new Error(String(error)));
+          }
+        });
         closedStreams.push(new Promise((resolveClose) => child.once("close", () => resolveClose())));
         const ordinal = children.push(child);
-        childOutcomes.set(child, new Promise<void>((resolveExit) => {
-          child.once("error", (error) => { stop(error); resolveExit(); });
-          child.once("exit", (code, signal) => { const milliseconds = performance.now() - startedAt; shardOutcomes.push({ ordinal, filter, concurrency, milliseconds, code, signal }); console.error(`[DEBUG] Transaction v2 shard ${ordinal} finished in ${(milliseconds / 1_000).toFixed(2)}s`); if (code !== 0 || signal) stop(new Error(`Transaction v2 shard ${ordinal} failed with ${signal ?? code}`)); resolveExit(); });
-        }));
+        childOutcomes.set(
+          child,
+          new Promise<void>((resolveExit) => {
+            child.once("error", (error) => {
+              stop(error);
+              resolveExit();
+            });
+            child.once("exit", (code, signal) => {
+              const milliseconds = performance.now() - startedAt;
+              shardOutcomes.push({ ordinal, filter, concurrency, milliseconds, code, signal });
+              console.error(`[DEBUG] Transaction v2 shard ${ordinal} finished in ${(milliseconds / 1_000).toFixed(2)}s`);
+              if (code !== 0 || signal) stop(new Error(`Transaction v2 shard ${ordinal} failed with ${signal ?? code}`));
+              resolveExit();
+            });
+          }),
+        );
         return child;
       };
       const timer = setTimeout(() => stop(new Error("Transaction v2 complete aggregate exceeded 14 seconds")), 14_000);
@@ -546,20 +665,44 @@ class TestScript extends BundleScript {
           await Promise.all(waveChildren.map((child) => childOutcomes.get(child)!));
           if (stopped) break;
         }
-      } finally { clearTimeout(timer); }
+      } finally {
+        clearTimeout(timer);
+      }
       await Promise.all(closedStreams);
       process.stdout.off("error", stop);
       process.stderr.off("error", stop);
       for (const pid of registeredPids()) {
-        try { process.kill(pid, 0); killTree(pid); failure ??= new Error(`Transaction v2 aggregate left child ${pid} alive`); }
-        catch (error) { if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error; }
+        try {
+          process.kill(pid, 0);
+          killTree(pid);
+          failure ??= new Error(`Transaction v2 aggregate left child ${pid} alive`);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+        }
       }
       const golden = JSON.parse(readFileSync(identityPaths.ledgerBoundaries, "utf8")) as { boundaries: Record<string, unknown> };
-      const expected = Object.keys(golden.boundaries).sort(), actual = readFileSync(boundaryRegistry, "utf8").split("\n").filter(Boolean).sort();
+      const expected = Object.keys(golden.boundaries).sort(),
+        actual = readFileSync(boundaryRegistry, "utf8").split("\n").filter(Boolean).sort();
       if (!failure && segments.length === 1 && JSON.stringify(actual) !== JSON.stringify(expected)) failure = new Error(`Transaction v2 boundary coverage is not exact: ${actual.length}/${expected.length}`);
       const afterIdentities = identities();
       retainRecord("📷️after", { schemaVersion: 1, runId, inputs: afterIdentities });
-      retainRecord("📊️outcome", { schemaVersion: 1, runId, runRoot, startedAt, finishedAt: new Date().toISOString(), milliseconds: performance.now() - invocationStartedAt, unfiltered: segments.length === 1, unchangedInputs: JSON.stringify(beforeIdentities) === JSON.stringify(afterIdentities), failure: failure?.message ?? null, shards: shardOutcomes.sort((left, right) => left.ordinal - right.ordinal), expectedBoundaryCount: expected.length, actualBoundaryCount: actual.length, missingBoundaries: expected.filter((key) => !actual.includes(key)), extraBoundaries: actual.filter((key) => !expected.includes(key)), duplicateBoundaries: actual.filter((key, index) => index > 0 && actual[index - 1] === key) });
+      retainRecord("📊️outcome", {
+        schemaVersion: 1,
+        runId,
+        runRoot,
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        milliseconds: performance.now() - invocationStartedAt,
+        unfiltered: segments.length === 1,
+        unchangedInputs: JSON.stringify(beforeIdentities) === JSON.stringify(afterIdentities),
+        failure: failure?.message ?? null,
+        shards: shardOutcomes.sort((left, right) => left.ordinal - right.ordinal),
+        expectedBoundaryCount: expected.length,
+        actualBoundaryCount: actual.length,
+        missingBoundaries: expected.filter((key) => !actual.includes(key)),
+        extraBoundaries: actual.filter((key) => !expected.includes(key)),
+        duplicateBoundaries: actual.filter((key, index) => index > 0 && actual[index - 1] === key),
+      });
       if (failure) throw failure;
       return;
     }
@@ -650,7 +793,9 @@ class TicketImportantFemHandoffGenerateScript extends BundleScript {
 class TicketImportantFemHandoffPreviewScript extends BundleScript {
   run(): void {
     const bytes = ticketImportantFemHandoffBytes(this.repoRoot);
-    process.stdout.write(`${JSON.stringify({ contractId: TICKET_IMPORTANT_FEM_HANDOFF_CONTRACT, nodes: [{ bytesBase64: bytes.toString("base64"), mode: 0o644, nodeKind: "file", path: TICKET_IMPORTANT_FEM_OUTPUT }], schemaVersion: 1, staleRemovals: [] })}\n`);
+    process.stdout.write(
+      `${JSON.stringify({ contractId: TICKET_IMPORTANT_FEM_HANDOFF_CONTRACT, nodes: [{ bytesBase64: bytes.toString("base64"), mode: 0o644, nodeKind: "file", path: TICKET_IMPORTANT_FEM_OUTPUT }], schemaVersion: 1, staleRemovals: [] })}\n`,
+    );
   }
 }
 

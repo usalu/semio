@@ -4,6 +4,16 @@
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
   "projectType": "application",
   "targets": {
+    "test-command-composition-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test command-composition-source",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "inputs": ["commandCompositionSources"],
+      "outputs": []
+    },
     "test-discover": {
       "executor": "nx:run-commands",
       "options": {
@@ -36,7 +46,8 @@
       "options": {
         "command": "bun ./📜️script.ts oracle",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": ["default", "^default", "normOracleSources"]
     },
     "test-subject": {
       "executor": "nx:run-commands",
@@ -50,7 +61,8 @@
       "options": {
         "command": "bun ./📜️script.ts parity",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": ["default", "^default", "normOracleSources"]
     },
     "test-report": {
       "executor": "nx:run-commands",
@@ -62,7 +74,9 @@
       "inputs": [
         "default",
         "^default",
-        { "runtime": "node -e \"const c=require('crypto'),f=require('fs'),p=require('path'),r=process.argv[1],h=c.createHash('sha256');(function walk(x){if(!f.existsSync(x))return;const s=f.lstatSync(x);if(s.isDirectory())for(const e of f.readdirSync(x).sort())walk(p.join(x,e));else if(s.isFile()){h.update(p.relative(r,x).split(p.sep).join('/')+String.fromCharCode(0));h.update(f.readFileSync(x));}})(r);process.stdout.write(h.digest('hex'));\" .🧬semio/🦑️repo/⚡️cache/tests/reports/latest/📤️results.jsonl" }
+        {
+          "runtime": "node -e \"const c=require('crypto'),f=require('fs'),p=require('path'),r=process.argv[1],h=c.createHash('sha256');(function walk(x){if(!f.existsSync(x))return;const s=f.lstatSync(x);if(s.isDirectory())for(const e of f.readdirSync(x).sort())walk(p.join(x,e));else if(s.isFile()){h.update(p.relative(r,x).split(p.sep).join('/')+String.fromCharCode(0));h.update(f.readFileSync(x));}})(r);process.stdout.write(h.digest('hex'));\" .🧬semio/🦑️repo/⚡️cache/tests/reports/latest/📤️results.jsonl"
+        }
       ],
       "outputs": ["{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/tests/reports/latest/📋️junit.xml"]
     },
@@ -111,7 +125,8 @@
       "options": {
         "command": "bun ./📜️script.ts fixture verify",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": ["default", "^default", "htmlSourcePairs"]
     },
     "test-fixture-audit": {
       "executor": "nx:run-commands",
@@ -165,7 +180,81 @@
       "options": {
         "command": "bun ./📜️script.ts run",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": ["default", "^default", "normOracleSources"]
     }
+  },
+  "namedInputs": {
+    "commandCompositionSources": [
+      "{projectRoot}/📋️project.json",
+      "{projectRoot}/📜️script.ts",
+      "{projectRoot}/🧱️contract/🟦️.ts",
+      "{projectRoot}/🔍️discovery/🎛️selection/🟦️.ts",
+      "{projectRoot}/🖥️host/🏗️materialization/🟦️.ts",
+      "{projectRoot}/🏃️execution/🎬️scenario/🟦️.ts",
+      "{projectRoot}/⚖️parity/📋️orchestration/🟦️.ts",
+      "{projectRoot}/🧾️contracts/📋️orchestration/🟦️.ts",
+      "{projectRoot}/📊️reporting/📋️orchestration/🟦️.ts",
+      "{projectRoot}/🕸️dependencies/📋️orchestration/🟦️.ts",
+      "{projectRoot}/🏭️inventory/📋️orchestration/🟦️.ts",
+      "{projectRoot}/🧾️provenance/📋️orchestration/🟦️.ts",
+      "{projectRoot}/📊️coverage/📋️orchestration/🟦️.ts",
+      "{projectRoot}/🧾️provenance/🏗️authoring/🟦️.ts",
+      "{projectRoot}/🧹️retention/📋️orchestration/🟦️.ts",
+      "{projectRoot}/🧬️schema/📋️orchestration/🟦️.ts",
+      "{projectRoot}/🩺️environment/📋️inspection/🟦️.ts",
+      "{projectRoot}/⚖️policy/🧹️domain/🟦️.ts",
+      "{projectRoot}/🧪️tests/🧱️command-composition-source/🟦️.ts",
+      "{projectRoot}/🧬️schema/🧱️command-composition-source/🔣️.json",
+      "{projectRoot}/🧫️fixtures/🧱️command-composition-source/🔣️.json",
+      "{projectRoot}/🧫️fixtures/🧱️command-composition-source/🐍️.py",
+      "{projectRoot}/🧪️tests/🧪️test-platform/🟦️.ts",
+      "{projectRoot}/🖥️host/🐍️.py",
+      "{projectRoot}/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+      "{workspaceRoot}/.vscode/launch.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/🟨️.mjs",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+    ],
+    "htmlSourcePairs": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/⌨️set-raw-text-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/⌨️set-raw-text-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/✍️set-text-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/✍️set-text-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➕️insert-node-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➕️insert-node-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➖️remove-node-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➖️remove-node-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🏷️set-element-name-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🏷️set-element-name-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/💬️set-comment-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/💬️set-comment-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/📜️set-doctype-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/📜️set-doctype-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/⬅️before/🌐️.html"
+    ],
+    "normOracleSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🔮️oracles/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚖️mutate-en1990-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚡️mutate-din18599-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌍️mutate-en1997-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌬️mutate-din16798-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏋️mutate-en1991-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️mutate-en1992-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏭️mutate-vdi3805-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📇️mutate-iso16757-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔩️mutate-en1993-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-en1994-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧱️mutate-din4108-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪨️mutate-en1996-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪵️mutate-en1995-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪶️mutate-en1999-1/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫨️mutate-en1998-1/🐍️.py"
+    ]
   }
 }

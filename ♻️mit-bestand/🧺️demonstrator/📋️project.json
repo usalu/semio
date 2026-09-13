@@ -1,6 +1,9 @@
 {
   "name": "@semio-tech/mit-bestand-demonstrator",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts", "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🎚️config/🟦️.ts", "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🧪️tests/🎚️config/🟦️.ts"]
+  },
   "targets": {
     "prepare-dev": {
       "executor": "nx:run-commands",

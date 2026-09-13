@@ -61,3 +61,12 @@ Use structured fixture/schema values and parser/Ajv outcomes. Do not create sour
 The packet’s current app aggregate observation—278 discovered owners and 601 findings—is diagnostic debt, not an acceptance count. The surface extraction must preserve its findings and severity rather than make them disappear through taxonomy movement.
 
 **Status:** pre-extraction audit complete. The extraction needs a direct shared artifact-inventory import, complete fixture/source-data registration, and the focused hostile controls above before acceptance. No product file changed.
+
+## Inventory Provenance Correction
+
+The surface and abstraction slice must **not** consume or substitute artifact-schema owner discovery. Current source keeps two distinct inventories:
+
+- policyListPluginArtifactDirs at root line 19923 lists plugin artifact roots.
+- policyListArtifactDialectDirs at root line 22327 derives standard/subset dialect rows; surface config-fidelity at line 21914 consumes the dialect subsetRel values alongside plugin artifact roots.
+
+Those inventories carry different reachability and scope semantics from artifact-schema owner discovery, which lists only standard/subset document owners for the artifact schema laws. The surface extraction must preserve/import the actual lower artifact-root and dialect-discovery owners for its own semantics; it must not reuse the artifact-schema discovery API merely because both traverse artifact paths. This corrects the earlier wording that called artifact-schema inventory a direct surface dependency.

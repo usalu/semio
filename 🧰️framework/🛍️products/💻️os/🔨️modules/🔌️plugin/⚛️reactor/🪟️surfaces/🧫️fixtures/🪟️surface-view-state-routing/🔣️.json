@@ -8,8 +8,14 @@
     "terminology": "native",
     "activeModeId": "edit",
     "windowInstances": [
-      { "id": "puzzle3d-main-perspective", "windowKindId": "main" },
-      { "id": "puzzle3d-main-top", "windowKindId": "main" }
+      {
+        "id": "puzzle3d-main-perspective",
+        "windowKindId": "main"
+      },
+      {
+        "id": "puzzle3d-main-top",
+        "windowKindId": "main"
+      }
     ],
     "activeUtilityByWindowId": {
       "puzzle3d-main-perspective": "brush",
@@ -49,25 +55,10 @@
         "terminology": "reuse",
         "panelJson": "{\"world\":\"top\"}"
       }
-    },
-    {
-      "id": "1:window",
-      "bodyKey": "graph",
-      "view": {
-        "windowId": "puzzle3d-main-top",
-        "activeWindowKindId": "main",
-        "activeUtilityId": "measure",
-        "focusedWindowId": "puzzle3d-main-top",
-        "locale": "de",
-        "terminology": "reuse",
-        "panelJson": "{\"world\":\"top\"}"
-      }
     }
   ],
   "inspectionSurface": "1:inspection",
   "pickedSurface": "1:puzzle3d-main-perspective",
-  "aliasSurface": "1:window",
-  "aliasWindowSurface": "1:puzzle3d-main-top",
   "refreshedView": {
     "locale": "de",
     "terminology": "reuse",
@@ -77,5 +68,19 @@
     "focusedWindowId": "puzzle3d-main-top",
     "activeToolId": "fill",
     "panelJson": "{\"refresh\":true}"
-  }
+  },
+  "syntheticSurface": {
+    "id": "1:window",
+    "bodyKey": "graph",
+    "view": {
+      "windowId": "puzzle3d-main-top",
+      "activeWindowKindId": "main",
+      "activeUtilityId": "measure",
+      "focusedWindowId": "puzzle3d-main-top",
+      "locale": "de",
+      "terminology": "reuse",
+      "panelJson": "{\"world\":\"top\"}"
+    }
+  },
+  "syntheticRefusal": "a surface named `window` is synthetic: an app with window instances is addressed by instance"
 }

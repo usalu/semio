@@ -1451,7 +1451,7 @@ impl ArtifactEditor for Generation2dPlayApp {
             }
             "nodeGraphViewport" => {
                 let value = args.get("viewport").cloned().ok_or_else(|| Fault::from("nodeGraphViewport requires viewport"))?;
-                let viewport = dsl::from_dsl_value::<semio_framework::Viewport2d>(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
+                let viewport = dsl::from_dsl_value::<semio_framework_os_kernel::Viewport2d>(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
                 Ok(Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport }))
             }
             "setShowMode" => Ok(Generation2dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode"]).unwrap_or_default() })),
@@ -1697,7 +1697,7 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .mutation("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"))
         .mutation("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"))
         .mutation("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"))
-        // 👁️ Ephemeral view actions — camera, the show-mode display toggle, and evaluation scratch
+        // 👁️ View actions — exact-window viewport, app show-mode display toggle, and evaluation scratch
         // (emit no operations). Selection/hover are the framework's `graph` interaction domain now
         // (`.interaction(...)` below) — the six framework verbs auto-inject.
         .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"), ActionKind::View, "camera"))
@@ -1809,6 +1809,10 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪟️generation2d-window-camera-ownership/🦀️.rs"]
+mod generation2d_window_camera_ownership;
 //#endregion 🧪️UnitTests
 
 

@@ -883,9 +883,10 @@ export type RetainedSurface = UiDocumentState;
  */
 export function applyUiPatchToRetained(
   previous: RetainedSurface | null,
-  patch: { readonly surface?: string; readonly revision: number | bigint; readonly baseRevision: number | bigint; readonly ops: readonly UiPatchOp[] },
+  patch: { readonly surface: string; readonly revision: number | bigint; readonly baseRevision: number | bigint; readonly ops: readonly UiPatchOp[] },
 ): { readonly surface: RetainedSurface | null; readonly desynced: boolean } {
-  const surfaceId = patch.surface ?? previous?.surface ?? "window";
+  const surfaceId = patch.surface || previous?.surface;
+  if (!surfaceId) return { surface: previous, desynced: true };
   if (previous && previous.surface !== surfaceId) return { surface: previous, desynced: true };
   const state = previous ?? emptyUiDocumentState(surfaceId);
   const applied = applyUiPatch(state, {
@@ -1410,8 +1411,17 @@ function teardownPluginActor(actorId: string): void {
   hostContinuations.schedule(() => tearingDownPluginActors.delete(actorId), 0);
 }
 
+/** 🪟️ A patch's surface IS its mounted identity: the guest addresses one concrete window
+ * instance, app panel or reserved section, and there is no fallback name for a patch that names none.
+ *
+ * 🐛️ This used to default a missing body to `window` (ticket 26/09/02/PUZZLE-3D-END-TO-END wave
+ * B56), which minted the synthetic `<instance>:window` surface the host then had to bind a host context
+ * for — a surface no pane reads, competing for the process-wide reconcile credit with every real one
+ * and holding the reservation that starved the whole reactor (wave B54 §6.4). A patch with no body key
+ * is now refused by its caller (`plugin-ui.projection-surface-required`) instead of routed to an alias. */
 function wirePatchSurfaceId(patch: WireUiPatch): string | null {
-  return patch.surface ? retainedSurfaceId(wireNatural(patch.surface.instance), patch.surface.surface ?? "window") : null;
+  const body = patch.surface?.surface;
+  return patch.surface && body ? retainedSurfaceId(wireNatural(patch.surface.instance), body) : null;
 }
 
 function hasRequiredUiPatches(results: readonly WireTurnResult[], requiredSurfaceIds?: ReadonlySet<string>): boolean {
@@ -1576,9 +1586,6 @@ function pluginSurfaceRef(instance: number, bodyKey: string): { readonly instanc
   return { instance, surface: bodyKey };
 }
 
-/** 🪟 Leftover Viewport patches omit a window instance and default the guest dirty surface to `window`. */
-export const DEFAULT_LEFTOVER_WINDOW_SURFACE = "window";
-
 /** 📌️ Full chrome refresh once leftover InteractionView carries a selection the Inspection body must re-render. */
 export function leftoverInspectionRefreshScope(selectedIds: readonly string[]): { readonly kind: "full" } | null {
   return selectedIds.length > 0 ? { kind: "full" } : null;
@@ -1607,21 +1614,27 @@ export function leftoverBrushPreviewRefreshReady(actionId: string | null | undef
   return actionId === "suggestionsTick";
 }
 
-/** 🪟 Binds each authored window plus the leftover default `window` surface to a host view. */
+/** 🪟 Binds each authored window instance the host view actually carries to its own host view.
+ *
+ * 🐛️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56: this also appended a synthetic
+ * `<instance>:window` binding carrying the LAST bound window's body, so that a guest dirty addressed to
+ * the bare `window` name would find a host context (wave W-G3 §8.29). That alias mounted a fourteenth
+ * surface no pane ever reads, republished the 180-object world body a fourth time per refresh, and —
+ * because the reconcile credit ledger admits only a handful of concurrent reservations process-wide —
+ * held the reservation whose refusal (`reserve_refusal=1:window:registry-reservation-unavailable`) left
+ * every real surface deferred and the reactor answering `more-work` for ever (wave B54 §6.4). Every
+ * guest dirty now names a real window instance, so no alias is needed and none is minted. */
 export function windowHostContextBindings(
   instanceId: number,
   windows: readonly { readonly key: string; readonly bodyKey?: string }[],
   viewState: Parameters<typeof windowViewContext>[0],
 ): ReadonlyArray<{ readonly surface: { readonly instance: number; readonly surface: string }; readonly bodyKey: string; readonly windowKey: string }> {
   const bindings: Array<{ readonly surface: { readonly instance: number; readonly surface: string }; readonly bodyKey: string; readonly windowKey: string }> = [];
-  let alias: (typeof bindings)[number] | undefined;
   for (const target of windows) {
     if (!target.bodyKey) continue;
     if (!windowViewContext(viewState, target.key)) continue;
     bindings.push({ surface: pluginSurfaceRef(instanceId, target.key), bodyKey: target.bodyKey, windowKey: target.key });
-    alias = { surface: pluginSurfaceRef(instanceId, DEFAULT_LEFTOVER_WINDOW_SURFACE), bodyKey: target.bodyKey, windowKey: target.key };
   }
-  if (alias) bindings.push(alias);
   return bindings;
 }
 
@@ -2800,7 +2813,11 @@ function applyRetainedWindowPatches(actorId: string, uiPatches: readonly WireUiP
   const accepted: WireUiPatch[] = [];
   for (const patch of uiPatches) {
     const ops = decodeWirePatchOps(patch.ops ?? []);
-    const surfaceId = wirePatchSurfaceId(patch) ?? "window";
+    const surfaceId = wirePatchSurfaceId(patch);
+    if (!surfaceId) {
+      console.warn(`[DEBUG] applyRetainedWindowPatches: actor ${actorId} published a patch naming no surface body — refused`);
+      continue;
+    }
     const previous = retained.get(surfaceId) ?? null;
     const { surface, desynced } = applyUiPatchToRetained(previous, { surface: surfaceId, revision: patch.revision ?? 0, baseRevision: patch.baseRevision ?? 0, ops });
     if (desynced) {
@@ -3654,7 +3671,7 @@ function pluginRuntimeTestDependenciesV1() {
     get sharedShardClient() { return sharedShardClient; },
     set sharedShardClient(value: typeof sharedShardClient) { sharedShardClient = value; },
   };
-  return { testState, leftoverShellInvocationFrames, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, DEFAULT_LEFTOVER_WINDOW_SURFACE, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
+  return { testState, leftoverShellInvocationFrames, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
 }
 
 export type PluginRuntimeTestDependenciesV1 = ReturnType<typeof pluginRuntimeTestDependenciesV1>;

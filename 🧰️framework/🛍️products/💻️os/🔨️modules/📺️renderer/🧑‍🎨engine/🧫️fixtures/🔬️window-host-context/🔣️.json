@@ -51,14 +51,6 @@
       },
       "bodyKey": "world",
       "windowKey": "puzzle3d-main-perspective"
-    },
-    {
-      "surface": {
-        "instance": 1,
-        "surface": "window"
-      },
-      "bodyKey": "world",
-      "windowKey": "puzzle3d-main-perspective"
     }
   ],
   "inspectionRefresh": [

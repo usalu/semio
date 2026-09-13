@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-server",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🟦️.ts", "{projectRoot}/**/*"]
+    "default": ["{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🟦️.ts", "{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
     "test": {

@@ -114,7 +114,9 @@ export function testArtifactFieldParityOracle(): void {
   }
   const root = resolve(import.meta.dir, "../../../../../../../../");
   const owners = glob.sync(fixture.discovery.pattern, { cwd: root, onlyDirectories: true, ignore: fixture.discovery.ignore }).sort();
-  assert.deepEqual(policyDiscoverArtifactSchemaOwners(root), owners);
+  const discovery = policyDiscoverArtifactSchemaOwners(root);
+  assert.deepEqual(discovery.owners, owners);
+  assert.deepEqual(discovery.issues, []);
   const breaches = policyArtifactSchemaBreaches(root);
   assert.equal(
     breaches.some((breach) => breach.id.startsWith("artifact-schema-diff-artifact-entry-")),

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """🧪️ Python native host of the repository test platform.
 
-Invoked as ``python3 🐍️.py --plan <plan.json> --out <results.jsonl> --adapter <🐍️component.py>``.
+Invoked as ``python3 🐍️.py [--local-source <directory>] --plan <plan.json> --out <results.jsonl> --adapter <🐍️component.py>``.
 
 The repository's root ``pyproject.toml`` is compose-scoped, so non-compose Python tests are NOT
 discovered through it. This host owns its own configuration: it loads exactly the adapter the
@@ -178,6 +178,19 @@ def _repo_root_from(start: str) -> str:
     return os.getcwd()
 
 
+def _prioritize_local_source_paths(paths: List[str]) -> None:
+    ordered: List[str] = []
+    for path in paths:
+        absolute = os.path.abspath(path)
+        if not os.path.isdir(absolute):
+            raise NotADirectoryError("declared local Python source is not a directory: %s" % path)
+        if os.path.normcase(absolute) not in [os.path.normcase(entry) for entry in ordered]:
+            ordered.append(absolute)
+    declared = {os.path.normcase(path) for path in ordered}
+    remainder = [path for path in sys.path if os.path.normcase(os.path.abspath(path or os.getcwd())) not in declared]
+    sys.path[:] = ordered + remainder
+
+
 def _load_adapter(adapter_path: str) -> Adapter:
     sys.modules["semio_repo_test"] = sys.modules[__name__]
     spec = importlib.util.spec_from_file_location("semio_test_adapter", adapter_path)
@@ -197,6 +210,7 @@ def run_main(argv: List[str]) -> int:
     parser.add_argument("--plan", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--adapter", required=True)
+    parser.add_argument("--local-source", action="append", default=[])
     args = parser.parse_args(argv)
 
     with open(args.plan, "r", encoding="utf-8") as handle:
@@ -204,6 +218,7 @@ def run_main(argv: List[str]) -> int:
     repo_root = _repo_root_from(plan["workDir"])
     os.makedirs(plan["workDir"], exist_ok=True)
     os.makedirs(plan["outputDir"], exist_ok=True)
+    _prioritize_local_source_paths(args.local_source)
     adapter = _load_adapter(args.adapter)
 
     lines: List[str] = []

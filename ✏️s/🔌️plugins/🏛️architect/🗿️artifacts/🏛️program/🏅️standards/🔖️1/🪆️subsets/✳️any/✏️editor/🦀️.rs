@@ -27,10 +27,12 @@ use crate::{sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 // 🚧️ `Dialect`/`InteractionView` are only reachable through `app`, not yet in the crate-root
 // re-export list (see the identical note in the sibling viewer surface's root `🦀️.rs`).
 use dsl::DslValue as Value;
-use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest, Dialect, InteractionView};
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label,
-    LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp,
+    Emit, Fault, GranularityDefinition, HierarchyProvider, HistoryView, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
+    SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError,
 };
 use store::EngineHandles;
 
@@ -1022,6 +1024,118 @@ semio_framework_plugin::app_commands! {
 }
 //#endregion 🔖️Commands
 
+//#region 🧵️RetainedWindowCommands
+pub(crate) const ARCHITECT_WINDOW_TOOL_IDS: &[&str] = &["selectRegister", "setAdjacencyFilter", "nodeGraphViewport"];
+const ARCHITECT_WINDOW_PAYLOAD_SCHEMA: &str = "architect.program.window-command.v1";
+const ARCHITECT_WINDOW_RAW_BYTES: usize = 4_096;
+
+fn architect_window_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(ARCHITECT_WINDOW_RAW_BYTES, 32, 1, 4_096, 7_500)
+}
+
+fn architect_window_extent(command: &ArchitectCommand, _snapshot: &ProgramSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    match command {
+        ArchitectCommand::SelectRegister(payload) if payload.register_id.len() <= 256 => Some(1),
+        ArchitectCommand::SetAdjacencyFilter(payload) if payload.kind.as_ref().is_none_or(|kind| kind.len() <= 256) => Some(1),
+        ArchitectCommand::NodeGraphViewport(payload) if payload.viewport.validate().is_ok() => Some(1),
+        _ => None,
+    }
+}
+
+fn architect_window_emit(command: &ArchitectCommand, view: Option<&semio_framework_plugin::ViewModel>) -> Result<Option<Emit<ProgramMutation, ArchitectConfigMutation, NoDraftMutation>>, Fault> {
+    let emit = match command {
+        ArchitectCommand::SelectRegister(payload) => {
+            let view = view.ok_or_else(|| Fault::from("architect-register-window-context-required"))?;
+            Emit { window_config_mutations: vec![register_window::config::addressed(view, payload.register_id.clone())?], ..Default::default() }
+        }
+        ArchitectCommand::SetAdjacencyFilter(payload) => {
+            let view = view.ok_or_else(|| Fault::from("architect-adjacency-window-context-required"))?;
+            let filter = payload.kind.as_deref().and_then(adjacency_kind_from_id);
+            Emit { window_config_mutations: vec![adjacency_window::config::addressed(view, filter)?], ..Default::default() }
+        }
+        ArchitectCommand::NodeGraphViewport(payload) => {
+            let view = view.ok_or_else(|| Fault::from("architect-graph-window-context-required"))?;
+            Emit { window_config_mutations: vec![graph_window::config::addressed(view, payload.viewport)?], ..Default::default() }
+        }
+        _ => return Ok(None),
+    };
+    Ok(Some(emit))
+}
+
+#[expect(clippy::too_many_arguments, reason = "Implements the framework retained command reducer callback signature.")]
+fn architect_window_reduce(
+    command: &ArchitectCommand,
+    _snapshot: &ProgramSnapshot,
+    _config: &ArchitectConfig,
+    _history: &HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    context: Option<&ArtifactOwnedToolJobContext<EditorApp<ArchitectPlayApp>>>,
+    _operation: &AppOperationContext,
+) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, NoDraftMutation>, Fault> {
+    architect_window_emit(command, context.and_then(|context| context.view_state.as_ref()))?.ok_or_else(|| Fault::from("architect-window-command-route-mismatch"))
+}
+
+pub(crate) struct ArchitectWindowCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl ArchitectWindowCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: ARCHITECT_WINDOW_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for ArchitectWindowCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<ArchitectPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<ArchitectPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        ARCHITECT_WINDOW_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        architect_window_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > ARCHITECT_WINDOW_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Architect window command rejects oversized wire or a checkpoint"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for ArchitectWindowCommandJobFactory {
+    type Owner = EditorApp<ArchitectPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = ARCHITECT_WINDOW_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "selectRegister", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "setAdjacencyFilter", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ];
+}
+//#endregion 🧵️RetainedWindowCommands
+
 //#region 🔖️ArchitectPlayApp
 /// 🧪️ B1: unit struct — every former `RefCell<ArchitectPlayRuntime>` field now lives in
 /// `crate::editor::architect::config::ArchitectConfig`, written through `ArchitectConfigMutation`s.
@@ -1044,6 +1158,103 @@ impl ArtifactEditor for ArchitectPlayApp {
 
     const DIALECT: Dialect = crate::ARCHITECT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;
+
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(
+            semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default())
+                .expect("default Architect presence is the exact empty terminal"),
+        ))
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<ArchitectPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.architect.program@1/*#editor",
+        document_schema: "architect.program",
+        factory: "ArchitectWindowCommandJobFactory",
+        factory_type: ArchitectWindowCommandJobFactory,
+        contract: ToolExecutionContract::bounded_first_step(4_096, 32, 1, 4_096, 7_500),
+        tools: ["selectRegister", "setAdjacencyFilter", "nodeGraphViewport"]
+    }
+
+    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        registry.register(ArchitectWindowCommandJobFactory::new(registry.controller_id()))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolOperationSpec>, Fault> {
+        if !ARCHITECT_WINDOW_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if Self::command_id(&request.command) != request.tool_id || architect_window_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+            return Err(Fault::from("architect-window-command-mismatch-or-capacity"));
+        }
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(Self::command_id(&request.command), architect_window_reduce, architect_window_extent));
+        let operation = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation,
+                completion: request.completion,
+            },
+            Self::command_id,
+            ARCHITECT_WINDOW_RAW_BYTES,
+            1,
+            work,
+        )?;
+        Ok(Some(semio_framework_plugin::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::architect::config::schema::app_schema_descriptor())
@@ -1136,26 +1347,10 @@ impl ArtifactEditor for ArchitectPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
+        if let Some(emit) = architect_window_emit(command, view_state)? {
+            return Ok(emit);
+        }
         match command {
-            ArchitectCommand::SelectRegister(payload) => {
-                let view = view_state.ok_or_else(|| Fault::from("architect-register-window-context-required"))?;
-                let mut emit = Emit::default();
-                emit.window_config_mutations.push(register_window::config::addressed(view, payload.register_id.clone())?);
-                Ok(emit)
-            }
-            ArchitectCommand::SetAdjacencyFilter(payload) => {
-                let view = view_state.ok_or_else(|| Fault::from("architect-adjacency-window-context-required"))?;
-                let filter = payload.kind.as_deref().and_then(adjacency_kind_from_id);
-                let mut emit = Emit::default();
-                emit.window_config_mutations.push(adjacency_window::config::addressed(view, filter)?);
-                Ok(emit)
-            }
-            ArchitectCommand::NodeGraphViewport(payload) => {
-                let view = view_state.ok_or_else(|| Fault::from("architect-graph-window-context-required"))?;
-                let mut emit = Emit::default();
-                emit.window_config_mutations.push(graph_window::config::addressed(view, payload.viewport.clone())?);
-                Ok(emit)
-            }
             ArchitectCommand::RunReport(payload) => run_report::handle_with_view(payload, doc, view_state),
             _ => command.dispatch(doc, cfg),
         }
@@ -1216,6 +1411,26 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::new("exportProgram", LocalizedLabel::native("Export ProgramSnapshot", "Programm exportieren"), ActionKind::Shell, "download"))
             .action_with(ActionDefinition::new("exportRegistersCsv", LocalizedLabel::native("Export Registers CSV", "Register CSV exportieren"), ActionKind::Shell, "download"))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setAdjacencyFilter", LocalizedLabel::native("Set Adjacency Filter", "Adjazenzfilter setzen"), ActionKind::View) })
+            .action_interactive_job("addElement", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addRegisterItem", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("applyTemplate", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("exportProgram", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("exportRegistersCsv", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("importProgram", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("importRegistersCsv", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchRegisterItem", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeElement", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeRegisterItem", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("runAnalysis", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("runReport", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("runValidation", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("search", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("selectRegister", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setAdjacencyField", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setAdjacencyFilter", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setAdjacencyKind", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_args("selectRegister", vec![ActionArgDef::select("registerId", LocalizedLabel::native("Register", "Register"), REGISTER_IDS.iter().map(|register| ActionArgOption::new(*register, LocalizedLabel::data(*register))).collect())])
             .action_args(
                 "addRegisterItem",

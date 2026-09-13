@@ -813,6 +813,8 @@ fn prepare_owned_input(domain: &PlanarDomain, opts: &MeshOpts) -> Result<(Vec<[f
 
 #[derive(Debug)]
 struct MeshInputPreparation {
+    maximum_points: usize,
+    maximum_constraints: usize,
     points: Vec<[f64; 2]>,
     constraints: Vec<Edge>,
     point_indices: Vec<((u64, u64), usize)>,
@@ -840,8 +842,18 @@ struct MeshInputPreparation {
 }
 
 impl MeshInputPreparation {
-    fn new() -> Self {
+    fn reserve_owner<T>(owner: &mut Vec<T>, maximum: usize) -> Result<(), ()> {
+        if maximum.checked_mul(size_of::<T>()).is_none_or(|bytes| bytes > 4_096) {
+            return Err(());
+        }
+        owner.try_reserve_exact(maximum).map_err(|_| ())?;
+        if owner.capacity().checked_mul(size_of::<T>()).is_none_or(|bytes| bytes > 4_096) { Err(()) } else { Ok(()) }
+    }
+
+    fn new(maximum_points: usize, maximum_constraints: usize) -> Self {
         Self {
+            maximum_points,
+            maximum_constraints,
             points: Vec::new(),
             constraints: Vec::new(),
             point_indices: Vec::new(),
@@ -869,7 +881,7 @@ impl MeshInputPreparation {
         }
     }
 
-    fn advance_pending_point(&mut self) {
+    fn advance_pending_point(&mut self) -> Result<(), &'static str> {
         let point = self.pending_point.expect("pending preparation point retained");
         let key = (point[0].to_bits(), point[1].to_bits());
         if let Some((current, index)) = self.point_indices.get(self.point_lookup_cursor) {
@@ -880,7 +892,10 @@ impl MeshInputPreparation {
             } else {
                 self.point_lookup_cursor += 1;
             }
-            return;
+            return Ok(());
+        }
+        if self.points.len() >= self.maximum_points || self.point_indices.len() >= self.maximum_points {
+            return Err("mesh-fixed-input-capacity");
         }
         let index = self.points.len();
         self.points.push(point);
@@ -888,6 +903,7 @@ impl MeshInputPreparation {
         self.pending_index = Some(index);
         self.pending_point = None;
         self.point_lookup_cursor = 0;
+        Ok(())
     }
 
     fn advance_grid_cell(&mut self) {
@@ -898,8 +914,12 @@ impl MeshInputPreparation {
         }
     }
 
-    fn accept_pending_index(&mut self) {
-        let index = self.pending_index.take().expect("resolved preparation index retained");
+    fn accept_pending_index(&mut self) -> Result<(), &'static str> {
+        let index = self.pending_index.expect("resolved preparation index retained");
+        if self.pending_boundary && self.previous.is_some_and(|previous| previous != index) && self.constraints.len() >= self.maximum_constraints {
+            return Err("mesh-fixed-input-capacity");
+        }
+        self.pending_index = None;
         if self.pending_boundary {
             let point = self.points[index];
             if self.polygon == 0 {
@@ -926,6 +946,7 @@ impl MeshInputPreparation {
         } else {
             self.advance_grid_cell();
         }
+        Ok(())
     }
 
     fn advance_grid_classification(&mut self, domain: &MeshDomainOwner) {
@@ -971,13 +992,13 @@ impl MeshInputPreparation {
         }
     }
 
-    fn advance(&mut self, domain: &MeshDomainOwner, opts: &MeshOpts) -> Result<bool, MeshError> {
+    fn advance(&mut self, domain: &MeshDomainOwner, opts: &MeshOpts) -> Result<bool, &'static str> {
         if self.pending_index.is_some() {
-            self.accept_pending_index();
+            self.accept_pending_index()?;
             return Ok(false);
         }
         if self.pending_point.is_some() {
-            self.advance_pending_point();
+            self.advance_pending_point()?;
             return Ok(false);
         }
         let polygon_count = 1 + domain.holes_len();
@@ -989,7 +1010,7 @@ impl MeshInputPreparation {
                     self.grid_columns = ((self.bounds[1] - self.bounds[0]) / spacing).ceil() as usize;
                     self.grid_rows = ((self.bounds[3] - self.bounds[2]) / spacing).ceil() as usize;
                     if self.grid_columns.saturating_mul(self.grid_rows) > 1_000_000 {
-                        return Err(MeshError::TriangulationFailed("refinement grid exceeds one million points".to_string()));
+                        return Err("mesh-preparation-grid-capacity");
                     }
                     if self.grid_columns > 0 && self.grid_rows > 0 {
                         self.grid_step = [(self.bounds[1] - self.bounds[0]) / self.grid_columns as f64, (self.bounds[3] - self.bounds[2]) / self.grid_rows as f64];
@@ -997,10 +1018,13 @@ impl MeshInputPreparation {
                 }
                 return Ok(false);
             }
-            let polygon = if self.polygon == 0 { domain.outer() } else { domain.hole(self.polygon - 1).ok_or(MeshError::DegenerateDomain)? };
+            let polygon = if self.polygon == 0 { domain.outer() } else { domain.hole(self.polygon - 1).ok_or("mesh-preparation-degenerate-domain")? };
             if self.edge == polygon.len() {
                 if let (Some(previous), Some(first)) = (self.previous, self.first) {
                     if previous != first {
+                        if self.constraints.len() >= self.maximum_constraints {
+                            return Err("mesh-fixed-input-capacity");
+                        }
                         self.constraints.push(Edge::new(previous, first));
                     }
                 }
@@ -1096,6 +1120,9 @@ pub struct MeshJobPreview {
 enum MeshJobStage {
     Validate,
     ReservePreparation,
+    ReservePreparationIndex,
+    ReservePreparationConstraints,
+    PreparationFailed,
     PrepareInput,
     CountInput,
     Initialize,
@@ -1971,7 +1998,10 @@ impl InteractiveJob for MeshJob {
         }
         context.set_stage(match self.stage {
             MeshJobStage::Validate => "validate-references",
-            MeshJobStage::ReservePreparation => "reserve-preparation",
+            MeshJobStage::ReservePreparation => "reserve-preparation-points",
+            MeshJobStage::ReservePreparationIndex => "reserve-preparation-index",
+            MeshJobStage::ReservePreparationConstraints => "reserve-preparation-constraints",
+            MeshJobStage::PreparationFailed => "preparation-failed",
             MeshJobStage::PrepareInput => "prepare-input",
             MeshJobStage::CountInput => "count-input",
             MeshJobStage::Initialize => "initialize-triangulation",
@@ -2016,39 +2046,45 @@ impl InteractiveJob for MeshJob {
                     self.validation_hole_cursor += 1;
                     return StepOutcome::Yield;
                 }
-                self.preparation = Some(MeshInputPreparation::new());
+                let maximum_constraints = if self.maximum_triangles == usize::MAX {
+                    usize::MAX
+                } else {
+                    let Some(maximum) = self.maximum_triangles.checked_mul(3) else {
+                        self.stage = MeshJobStage::PreparationFailed;
+                        return Self::fail(b"mesh-fixed-constraint-capacity".as_slice());
+                    };
+                    maximum
+                };
+                self.preparation = Some(MeshInputPreparation::new(self.maximum_points, maximum_constraints));
                 self.stage = MeshJobStage::ReservePreparation;
                 StepOutcome::Yield
             }
-            MeshJobStage::ReservePreparation => {
+            MeshJobStage::ReservePreparation | MeshJobStage::ReservePreparationIndex | MeshJobStage::ReservePreparationConstraints => {
                 let preparation = self.preparation.as_mut().expect("input preparation initialized");
-                if self.maximum_points != usize::MAX {
-                    let maximum_constraints = self.maximum_triangles.saturating_mul(3);
-                    if preparation.points.try_reserve_exact(self.maximum_points).is_err()
-                        || preparation.point_indices.try_reserve_exact(self.maximum_points).is_err()
-                        || preparation.constraints.try_reserve_exact(maximum_constraints).is_err()
-                        || preparation.points.capacity().checked_mul(size_of::<[f64; 2]>()).is_none_or(|bytes| bytes > 4_096)
-                        || preparation.point_indices.capacity().checked_mul(size_of::<((u64, u64), usize)>()).is_none_or(|bytes| bytes > 4_096)
-                        || preparation.constraints.capacity().checked_mul(size_of::<Edge>()).is_none_or(|bytes| bytes > 4_096)
-                    {
-                        return Self::fail(b"mesh-fixed-preparation-backing".to_vec());
-                    }
+                let (admitted, next) = match self.stage {
+                    MeshJobStage::ReservePreparation => (self.maximum_points == usize::MAX || MeshInputPreparation::reserve_owner(&mut preparation.points, self.maximum_points).is_ok(), MeshJobStage::ReservePreparationIndex),
+                    MeshJobStage::ReservePreparationIndex => (self.maximum_points == usize::MAX || MeshInputPreparation::reserve_owner(&mut preparation.point_indices, self.maximum_points).is_ok(), MeshJobStage::ReservePreparationConstraints),
+                    _ => (self.maximum_triangles == usize::MAX || MeshInputPreparation::reserve_owner(&mut preparation.constraints, preparation.maximum_constraints).is_ok(), MeshJobStage::PrepareInput),
+                };
+                if !admitted {
+                    self.stage = MeshJobStage::PreparationFailed;
+                    return Self::fail(b"mesh-fixed-preparation-backing".as_slice());
                 }
-                self.stage = MeshJobStage::PrepareInput;
+                self.stage = next;
                 StepOutcome::Yield
             }
+            MeshJobStage::PreparationFailed => Self::fail(b"mesh-fixed-preparation-backing".as_slice()),
             MeshJobStage::PrepareInput => {
                 let complete = match self.preparation.as_mut().expect("input preparation initialized").advance(&self.domain, &self.options) {
                     Ok(complete) => complete,
-                    Err(error) => return Self::fail(error.to_string().into_bytes()),
+                    Err(error) => {
+                        self.stage = MeshJobStage::PreparationFailed;
+                        return Self::fail(error.as_bytes());
+                    }
                 };
-                let preparation = self.preparation.as_ref().expect("input preparation retained");
-                if preparation.points.len() > self.maximum_points || preparation.constraints.len() > self.maximum_triangles.saturating_mul(3) {
-                    return Self::fail(b"mesh-fixed-input-capacity".to_vec());
-                }
                 if complete {
-                    let preparation = self.preparation.take().expect("input preparation complete");
-                    self.prepared_input = Some((preparation.points, preparation.constraints));
+                    let preparation = self.preparation.as_mut().expect("input preparation complete");
+                    self.prepared_input = Some((std::mem::take(&mut preparation.points), std::mem::take(&mut preparation.constraints)));
                     self.input_count = self.domain.outer().len();
                     self.input_count_hole = 0;
                     self.stage = MeshJobStage::CountInput;

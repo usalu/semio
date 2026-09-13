@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "vectors",
+    "lifecycle"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "destination",
+          "role"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "pattern": "^\\.devcontainer/[^/]+\\.sh$"
+          },
+          "destination": {
+            "type": "string",
+            "pattern": "^📋️devcontainer-intake/[^/]+/🐚️\\.sh$"
+          },
+          "role": {
+            "const": "preserved-input"
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "create",
+        "start",
+        "attach",
+        "containerCommand",
+        "containerEntrypoint"
+      ],
+      "properties": {
+        "create": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "start": {
+          "type": "string"
+        },
+        "attach": {
+          "type": "string"
+        },
+        "containerCommand": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "containerEntrypoint": {
+          "type": "null"
+        }
+      }
+    }
+  }
+}

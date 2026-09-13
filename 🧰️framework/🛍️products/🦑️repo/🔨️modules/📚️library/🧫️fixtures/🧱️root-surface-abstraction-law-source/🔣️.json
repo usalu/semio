@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗺️surface/🟦️.ts", "directoryName": "🗺️surface", "parentKindId": "discovery", "kindId": "repo-discovery-surface-roots", "declarations": ["policySurfaceRoots"] },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗿️artifact/🏠️roots/🟦️.ts",
+      "directoryName": "🏠️roots",
+      "parentKindId": "repo-discovery-artifact",
+      "kindId": "repo-discovery-artifact-roots",
+      "declarations": ["policyListPluginArtifactDirs"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗿️artifact/🗣️dialects/🟦️.ts",
+      "directoryName": "🗣️dialects",
+      "parentKindId": "repo-discovery-artifact",
+      "kindId": "repo-discovery-artifact-dialects",
+      "declarations": ["POLICY_STANDARDS_DIR", "POLICY_SUBSETS_DIR", "PolicyArtifactDialect", "policyListArtifactDialectDirs"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/🧱️contract/🟦️.ts",
+      "directoryName": "🧱️contract",
+      "parentKindId": "repo-schema-surface",
+      "kindId": "repo-schema-surface-contract",
+      "declarations": ["POLICY_APP_CONFIG_DIR", "POLICY_APP_CONFIG_LEGACY_DIR", "POLICY_APP_PRESENCE_DIR", "POLICY_APP_SCHEMA_FACET", "POLICY_APP_WASM_LEGACY_DIR", "PolicyAppSchemaOwner", "policyAppPresenceTypeName", "policyAppSchemaFacetRole"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/🔍️owner-discovery/🟦️.ts",
+      "directoryName": "🔍️owner-discovery",
+      "parentKindId": "repo-schema-surface",
+      "kindId": "repo-schema-surface-owner-discovery",
+      "declarations": ["policyDiscoverAppSchemaOwners"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/📚️facet-leaves/🟦️.ts",
+      "directoryName": "📚️facet-leaves",
+      "parentKindId": "repo-schema-surface",
+      "kindId": "repo-schema-surface-facet-leaves",
+      "declarations": ["PolicyAppSchemaFacetLeaf", "policyLoadAppSchemaFacetLeaves"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/⚖️laws/🧩️facet-completeness/🟦️.ts",
+      "directoryName": "🧩️facet-completeness",
+      "parentKindId": "repo-schema-surface-laws",
+      "kindId": "repo-schema-surface-facet-completeness-law",
+      "declarations": ["policyAppSchemaFacetCompletenessBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/⚖️laws/📏️field-parity/🟦️.ts",
+      "directoryName": "📏️field-parity",
+      "parentKindId": "repo-schema-surface-laws",
+      "kindId": "repo-schema-surface-field-parity-law",
+      "declarations": ["policyAppSchemaFieldParityBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/⚖️laws/🪞️config-fidelity/🟦️.ts",
+      "directoryName": "🪞️config-fidelity",
+      "parentKindId": "repo-schema-surface-laws",
+      "kindId": "repo-schema-surface-config-fidelity-law",
+      "declarations": ["policyAppSchemaConfigFidelityBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/⚖️laws/💧️state-purity/🟦️.ts",
+      "directoryName": "💧️state-purity",
+      "parentKindId": "repo-schema-surface-laws",
+      "kindId": "repo-schema-surface-state-purity-law",
+      "declarations": ["policyAppSchemaStatePurityBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/⚖️laws/🏷️type-name-parity/🟦️.ts",
+      "directoryName": "🏷️type-name-parity",
+      "parentKindId": "repo-schema-surface-laws",
+      "kindId": "repo-schema-surface-type-name-parity-law",
+      "declarations": ["policyAppSchemaTypeNameParityBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/⚖️laws/🚚️config-relocation/🟦️.ts",
+      "directoryName": "🚚️config-relocation",
+      "parentKindId": "repo-schema-surface-laws",
+      "kindId": "repo-schema-surface-config-relocation-law",
+      "declarations": ["policyAppSchemaConfigRelocationBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/🧱️contract/🟦️.ts",
+      "directoryName": "🧱️contract",
+      "parentKindId": "repo-ownership-abstraction",
+      "kindId": "repo-ownership-abstraction-contract",
+      "declarations": ["AbstractionOwnership", "AbstractionOwnershipSchema", "abstractionOwnershipSchema", "abstractionOwnershipViolations"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/🔍️source-projection/🟦️.ts",
+      "directoryName": "🔍️source-projection",
+      "parentKindId": "repo-ownership-abstraction",
+      "kindId": "repo-ownership-abstraction-source-projection",
+      "declarations": ["abstractionOwnershipRustCommands", "abstractionOwnershipSchemaFields"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/✅️verification/🟦️.ts",
+      "directoryName": "✅️verification",
+      "parentKindId": "repo-ownership-abstraction",
+      "kindId": "repo-ownership-abstraction-verification",
+      "declarations": ["abstractionOwnershipChecks"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/⚖️law/🟦️.ts",
+      "directoryName": "⚖️law",
+      "parentKindId": "repo-ownership-abstraction",
+      "kindId": "repo-ownership-abstraction-law",
+      "declarations": ["policyAbstractionOwnershipBreaches"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/⚖️laws/📋️aggregate/🟦️.ts",
+      "directoryName": "📋️aggregate",
+      "parentKindId": "repo-schema-surface-laws",
+      "kindId": "repo-schema-surface-law-aggregate",
+      "declarations": ["policyAppSchemaBreaches"]
+    }
+  ],
+  "contexts": [
+    { "directoryName": "🗺️surface", "parentKindId": "discovery", "kindId": "repo-discovery-surface-roots" },
+    { "directoryName": "🗿️artifact", "parentKindId": "discovery", "kindId": "repo-discovery-artifact" },
+    { "directoryName": "🏠️roots", "parentKindId": "repo-discovery-artifact", "kindId": "repo-discovery-artifact-roots" },
+    { "directoryName": "🗣️dialects", "parentKindId": "repo-discovery-artifact", "kindId": "repo-discovery-artifact-dialects" },
+    { "directoryName": "🗺️surface", "parentKindId": "schema", "kindId": "repo-schema-surface" },
+    { "directoryName": "🧱️contract", "parentKindId": "repo-schema-surface", "kindId": "repo-schema-surface-contract" },
+    { "directoryName": "🔍️owner-discovery", "parentKindId": "repo-schema-surface", "kindId": "repo-schema-surface-owner-discovery" },
+    { "directoryName": "📚️facet-leaves", "parentKindId": "repo-schema-surface", "kindId": "repo-schema-surface-facet-leaves" },
+    { "directoryName": "⚖️laws", "parentKindId": "repo-schema-surface", "kindId": "repo-schema-surface-laws" },
+    { "directoryName": "🧩️facet-completeness", "parentKindId": "repo-schema-surface-laws", "kindId": "repo-schema-surface-facet-completeness-law" },
+    { "directoryName": "📏️field-parity", "parentKindId": "repo-schema-surface-laws", "kindId": "repo-schema-surface-field-parity-law" },
+    { "directoryName": "🪞️config-fidelity", "parentKindId": "repo-schema-surface-laws", "kindId": "repo-schema-surface-config-fidelity-law" },
+    { "directoryName": "💧️state-purity", "parentKindId": "repo-schema-surface-laws", "kindId": "repo-schema-surface-state-purity-law" },
+    { "directoryName": "🏷️type-name-parity", "parentKindId": "repo-schema-surface-laws", "kindId": "repo-schema-surface-type-name-parity-law" },
+    { "directoryName": "🚚️config-relocation", "parentKindId": "repo-schema-surface-laws", "kindId": "repo-schema-surface-config-relocation-law" },
+    { "directoryName": "📋️aggregate", "parentKindId": "repo-schema-surface-laws", "kindId": "repo-schema-surface-law-aggregate" },
+    { "directoryName": "🏛️abstraction", "parentKindId": "ownership", "kindId": "repo-ownership-abstraction" },
+    { "directoryName": "🧱️contract", "parentKindId": "repo-ownership-abstraction", "kindId": "repo-ownership-abstraction-contract" },
+    { "directoryName": "🔍️source-projection", "parentKindId": "repo-ownership-abstraction", "kindId": "repo-ownership-abstraction-source-projection" },
+    { "directoryName": "✅️verification", "parentKindId": "repo-ownership-abstraction", "kindId": "repo-ownership-abstraction-verification" },
+    { "directoryName": "⚖️law", "parentKindId": "repo-ownership-abstraction", "kindId": "repo-ownership-abstraction-law" }
+  ],
+  "consumers": [
+    {
+      "path": "📜️script.ts",
+      "owners": ["🔍️discovery/🗺️surface/🟦️.ts", "🔍️discovery/🗿️artifact/🏠️roots/🟦️.ts", "🔍️discovery/🗿️artifact/🗣️dialects/🟦️.ts", "📏️ownership/🏛️abstraction/✅️verification/🟦️.ts", "🧬️schema/🗺️surface/⚖️laws/📋️aggregate/🟦️.ts"]
+    }
+  ],
+  "sourceData": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧬️schema/🔣️.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧫️fixtures/🧪️abstraction-ownership/🔣️.json"],
+  "lawKinds": [
+    "app-schema/abstraction-ownership",
+    "app-schema/facet-completeness",
+    "app-schema/field-parity",
+    "app-schema/config-fidelity",
+    "app-schema/state-purity",
+    "app-schema/type-name-parity",
+    "app-schema/config-relocation",
+    "app-schema/source-unreadable",
+    "artifact-schema/abstraction-ownership"
+  ],
+  "route": {
+    "target": "test-root-surface-abstraction-law-source",
+    "command": "bun ./📜️script.ts test root-surface-abstraction-law-source",
+    "launchName": "🧬schema🗺️surface🏛️abstraction🧪source-ownership",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-surface-abstraction-law-source"
+  }
+}

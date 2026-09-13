@@ -4,7 +4,7 @@
 pub use schema::*;
 
 impl Default for Generation2dEditPreviewWindowConfig {
-    fn default() -> Self { Self { viewport: semio_framework::Viewport2d::default() } }
+    fn default() -> Self { Self { viewport: semio_framework_os_kernel::Viewport2d::default() } }
 }
 
 impl store::ArtifactDsl for Generation2dEditPreviewWindowConfig {
@@ -40,6 +40,7 @@ impl store::ArtifactPack for Generation2dEditPreviewWindowConfig {
 store::impl_whole_record_config!(Generation2dEditPreviewWindowConfig);
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::DslOps)]
+#[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum Generation2dEditPreviewWindowConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot { #[dsl(block)] config: Box<Generation2dEditPreviewWindowConfig> },

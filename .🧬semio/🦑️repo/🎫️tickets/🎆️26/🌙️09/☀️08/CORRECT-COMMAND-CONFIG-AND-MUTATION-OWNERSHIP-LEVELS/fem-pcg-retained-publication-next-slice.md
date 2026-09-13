@@ -14,7 +14,7 @@ The checkpoint writer must cover the actual CSR owner, all seven scalar vectors,
 
 Output writer state is a distinct owner from numerical state. Zero fuel, expired deadline and pre-cancel preserve numerical cursors, due flags, writer cursor, staged bytes and physical backing. Completion consumes the due state only after the retained output can transfer. Faults preserve the first fault and retain every partial writer/input/decoded owner until close. begin_close, close_step and terminal_is_empty must include checkpoint, preview, terminal and restore owners.
 
-Do not change the native full-child200,000 opportunity limit or8ms wall ceiling just to accommodate a broken cursor. If the correct paged publication adds bounded work, measure and report the resulting complete trace before making a separate evidence-based scheduler-budget decision.
+Preserve the shared8ms per-step deadline and watchdog policy. The original full-child200000-opportunity harness exhausted at genuine modal iteration6/30 before any PCG publication replacement. Its separate, source-dimension-derived completion allowance is documented in fem3d-shared-watchdog-authority.md; it is not a change to a production scheduler grant or an excuse for broken cursor progress.
 
 ## Required Evidence
 
@@ -23,3 +23,11 @@ Use strict Ajv and an independent existing byte/numeric reference for the same n
 Drive actual PcgJob::step and retained restore from native tests. Preserve batch-equivalent convergence, exact checkpoint resume, coarse preview semantics, initial search-direction backing preservation and the publication grant corpus. Update old helper-based tests to explicitly close all retained outcomes and job owners. The full FEM3D route must still publish displacement, reaction and actual subspace eigen fields before exact bounded close.
 
 The source belongs in sparse/🦀️.rs and its colocated schema/fixtures/tests. Existing root/ticket FEM routes and launch entries should include the new law, using Bun/Nx. No new script file or runtime library is needed.
+
+## Root Source Refinement
+
+PCG's actual state has one CSR plus seven scalar vectors: b, x, diag, r, z, p and ap. Its 31 checkpoint fields include numerical cursors, convergence accumulators and preview/checkpoint flags. The only direct PcgPreview decoding found under s is the sparse coarse-preview native test; FEM3D reads scalar views and later transfers the completed CSR. A new explicit numerical page envelope can replace the old generic Value envelope coherently, with no legacy decoder. Existing checkpoint-resume and preview tests must be updated together.
+
+The shared NumericalPageCursor already encodes field, owner and item into a32-byte page header. However, advance_f64_owner and its u32/u64/paged/pair/matrix siblings write until a field ends without first committing a full page. The actual JobPayload page is16384 bytes:2043 f64 values plus length/header fill it, and the2044th requires continuation. The earlier4096-byte assumption confused this owner with PagedList/mesh backing and is corrected in fem-numerical-page-owner-implementation.md. Before reusing these helpers for PCG, complete the neutral2043/2044/4092-scalar and20 entry-width laws plus native byte/header/cursor observations, then make the shared helpers commit a full page before any next scalar or metadata write. The next header must describe the unchanged field/owner/item cursor. This is a shared numerical serialization boundary, not a PCG-specific workaround. Existing LDLT and subspace checkpoint owners are affected by source and need focused continuation coverage.
+
+The current PCG preview_due and checkpoint_due flags are cleared before materializing their output; the retained replacement should freeze numerical work while its independent writer owns the due publication and clear that due flag only on successful transfer. The current Complete stage republishes on repeated step calls; the replacement needs an explicit terminal-publication witness. All writer states must be included in begin_close/close_step/terminal_is_empty, and diagnostic test helpers must close both the original and restored PCG owners.

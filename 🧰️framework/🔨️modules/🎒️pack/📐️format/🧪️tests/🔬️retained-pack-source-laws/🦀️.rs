@@ -55,6 +55,18 @@ fn close_catalog(cursor: &mut RetainedPackCatalogCursor) -> usize {
     released
 }
 
+fn close_symbol_table(table: &mut RetainedPackSymbolTable) -> usize {
+    let mut released = 0;
+    loop {
+        let grant = table.next_release_allocation_bytes().expect("symbol-table release query").unwrap_or(0);
+        match table.close_step(1, grant).expect("symbol-table close") {
+            RetainedPackCloseStep::Pending { released_bytes, .. } => released += released_bytes,
+            RetainedPackCloseStep::Complete => break,
+        }
+    }
+    released
+}
+
 async fn canonical_pack(codec: CodecId) -> (Vec<u8>, Vec<u8>) {
     let options = WriteOptions { required_flags: 0, optional_flags: OPTIONAL_CANONICAL, codec };
     let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).await.expect("writer");
@@ -272,6 +284,8 @@ fn language_neutral_retained_law_ledger_is_complete() {
     assert_eq!(fixture["retainedCatalog"]["constructionAllocates"], false);
     assert_eq!(fixture["retainedCatalog"]["symbols"].as_array().expect("catalog symbols").len(), 3);
     assert_eq!(fixture["retainedCatalog"]["grants"]["pendingInputPreserved"], true);
+    assert_eq!(fixture["retainedValue"]["recordBody"]["multiLeaf"]["symbols"], 512);
+    assert_eq!(fixture["retainedValue"]["recordBody"]["coordinateModel"]["firstUnrepresentableSymbol"], 4_294_967_296u64);
     assert_eq!(fixture["valueTags"].as_array().expect("tags").len(), 24);
     assert!(fixture["hostile"].as_array().expect("hostile laws").iter().any(|law| law == "terminal-empty"));
 }
@@ -288,8 +302,10 @@ fn retained_pack_catalog_exact_utf8_allocation_refusal_and_release_are_conserved
     cursor.admit(RetainedPackSegmentEvent::RawByte { segment, index: 0, value: payload[0] }).expect("symbol count event");
     let exact = cursor.next_allocation_bytes().expect("symbol-span allocation query").expect("symbol-span allocation");
     let before = cursor.progress();
+    assert_eq!(cursor.retained_symbol_scalar_ptr(), None);
     assert_eq!(cursor.reserve_allocation(exact - 1).expect("subexact allocation refusal"), RetainedPackCatalogAllocationStep::default());
     assert_eq!(cursor.progress(), before);
+    assert_eq!(cursor.retained_symbol_scalar_ptr(), None);
     while let Some(exact) = cursor.next_allocation_bytes().expect("symbol-span allocation query") {
         let step = cursor.reserve_allocation(exact).expect("symbol-span exact allocation");
         assert!(step.progressed);
@@ -313,10 +329,92 @@ fn retained_pack_catalog_exact_utf8_allocation_refusal_and_release_are_conserved
     assert_eq!(cursor.close_step(0, usize::MAX).expect("bytes-only close refusal"), RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
     assert_eq!(cursor.progress(), before);
     assert_eq!(cursor.retained_symbol_scalar_ptr(), Some(pointer));
+    let physical_release = loop {
+        if let Some(exact) = cursor.next_release_allocation_bytes().expect("catalog release query") {
+            break exact;
+        }
+        assert!(matches!(cursor.close_step(1, 0).expect("logical catalog retirement"), RetainedPackCloseStep::Pending { released_bytes: 0, .. }));
+    };
+    let before = cursor.progress();
+    assert_eq!(cursor.close_step(1, physical_release - 1).expect("subexact catalog release"), RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(cursor.progress(), before);
+    assert_eq!(cursor.retained_symbol_scalar_ptr(), Some(pointer));
     let released = close_catalog(&mut cursor);
     assert_eq!(released, allocated);
     assert!(cursor.terminal_is_empty());
+    let terminal = cursor.progress();
+    assert_eq!((terminal.symbols, terminal.symbol_capacity, terminal.symbol_utf8_bytes, terminal.symbol_scalars, terminal.symbol_scalar_capacity), (0, 0, 0, 0, 0));
+    assert_eq!((terminal.chunks, terminal.chunk_capacity, terminal.observed_chunks, terminal.observed_chunk_capacity, terminal.allocated_bytes, terminal.partial_symbol_bytes), (0, 0, 0, 0, 0, 0));
     eprintln!("[DEBUG] retained-pack-catalog symbols=3 utf8-bytes=12 scalars=7 subexact-allocation-preserved=true bytes-only-close-preserved=true allocated-bytes={allocated} released-bytes={released}");
+}
+
+#[test]
+fn retained_symbol_table_crosses_a_leaf_with_target_aware_demands_and_checked_coordinates() {
+    let mut table = RetainedPackSymbolTable::try_new(1_024, 16, 4, 256 * 1024).expect("symbol-table credits");
+    assert_eq!(table.allocated_bytes(), 0);
+    let mut allocated = 0;
+    while table.symbol_capacity() == 0 {
+        let exact = table.next_symbol_allocation_bytes(1, 0).expect("first span demand").expect("first span backing");
+        let before = (table.symbol_capacity(), table.allocated_bytes());
+        assert_eq!(table.reserve_symbol_capacity(1, exact - 1, 0).expect("subexact span refusal"), RetainedPackCatalogAllocationStep::default());
+        assert_eq!((table.symbol_capacity(), table.allocated_bytes()), before);
+        let step = table.reserve_symbol_capacity(1, exact, 0).expect("first span backing admission");
+        assert!(step.progressed);
+        allocated += step.allocated_bytes;
+    }
+    let first_leaf_capacity = table.symbol_capacity();
+    let target = first_leaf_capacity + 1;
+    assert!(target <= table.maximum_symbols());
+    while table.symbol_capacity() < target {
+        let exact = table.next_symbol_allocation_bytes(target, 1).expect("next span demand").expect("target remains above capacity");
+        assert!(exact > 0);
+        let step = table.reserve_symbol_capacity(target, exact, 1).expect("next span backing admission");
+        assert!(step.progressed);
+        allocated += step.allocated_bytes;
+    }
+    for index in 0..target {
+        assert_eq!(
+            table.push_symbol_reserved(RetainedPackSymbolSpan { scalar_start: 0, scalar_len: 0, utf8_len: 0 }, index as u64),
+            Ok(index as u64)
+        );
+    }
+    assert_eq!(table.symbol_chars(u64::MAX).expect_err("unrepresentable or out-of-range symbol id").code, "retained-pack.symbol-reference");
+    assert_eq!(table.symbol_char(u64::MAX, 0).expect_err("unrepresentable or out-of-range scalar lookup").code, "retained-pack.symbol-reference");
+    let pointer = table.symbols.backing_ptr(first_leaf_capacity).expect("second leaf span pointer");
+    let before = (table.len(), table.symbol_capacity(), table.allocated_bytes());
+    assert_eq!(table.close_step(0, usize::MAX).expect("bytes-only close refusal"), RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!((table.len(), table.symbol_capacity(), table.allocated_bytes()), before);
+    assert_eq!(table.symbols.backing_ptr(first_leaf_capacity), Some(pointer));
+    let released = close_symbol_table(&mut table);
+    assert_eq!(released, allocated);
+    assert!(table.terminal_is_empty());
+    eprintln!("[DEBUG] retained-symbol-table first-leaf-capacity={first_leaf_capacity} target={target} checked-u64=true allocated-bytes={allocated} released-bytes={released}");
+}
+
+#[test]
+fn retained_symbol_table_preserves_the_first_span_fault_and_every_admitted_backing() {
+    let mut table = RetainedPackSymbolTable::try_new(2, 4, 2, 64 * 1024).expect("symbol-table credits");
+    let mut allocated = 0;
+    while let Some(exact) = table.next_scalar_allocation_bytes(1, 7).expect("scalar allocation demand") {
+        let step = table.reserve_scalar_capacity(1, exact, 7).expect("scalar allocation");
+        assert!(step.progressed);
+        allocated += step.allocated_bytes;
+    }
+    table.push_scalar_reserved('a', 7).expect("first scalar");
+    while let Some(exact) = table.next_symbol_allocation_bytes(1, 8).expect("span allocation demand") {
+        let step = table.reserve_symbol_capacity(1, exact, 8).expect("span allocation");
+        assert!(step.progressed);
+        allocated += step.allocated_bytes;
+    }
+    let first = table
+        .push_symbol_reserved(RetainedPackSymbolSpan { scalar_start: 1, scalar_len: 0, utf8_len: 1 }, 8)
+        .expect_err("nonconsecutive span");
+    assert_eq!(first.code, "retained-pack.symbol-span");
+    assert_eq!(table.push_scalar_reserved('b', 9).expect_err("first fault remains sticky"), first);
+    assert_eq!(table.next_symbol_allocation_bytes(2, 10).expect_err("allocation query preserves first fault"), first);
+    assert_eq!(close_symbol_table(&mut table), allocated);
+    assert!(table.terminal_is_empty());
+    eprintln!("[DEBUG] retained-symbol-table sticky-first-fault={} admitted-bytes={allocated} exact-release=true", first.code);
 }
 
 #[test]
@@ -332,6 +430,19 @@ fn retained_pack_catalog_limit_and_utf8_faults_are_sticky_until_exact_close() {
     assert_eq!(excessive.grant().expect_err("sticky count fault"), count_fault);
     assert_eq!(excessive.fault(), Some(count_fault));
     assert_eq!(close_catalog(&mut excessive), allocated);
+    assert_eq!(excessive.fault(), Some(count_fault));
+
+    let mut physical_credit = RetainedPackCatalogCursor::try_new(catalog_limits(1, 1), 1, 1, 1, 0, 1).expect("separate physical catalog credit");
+    let symbols = catalog_segment(crate::KIND_SYMBOLS, 2);
+    let mut physical_allocated = 0;
+    admit_catalog_event(&mut physical_credit, RetainedPackSegmentEvent::Begin(symbols), &mut physical_allocated).expect("physical credit begin");
+    physical_credit.admit(RetainedPackSegmentEvent::RawByte { segment: symbols, index: 0, value: 1 }).expect("physical credit pending count");
+    let physical_fault = physical_credit.next_allocation_bytes().expect_err("physical catalog allocation credit");
+    assert_eq!(physical_fault.code, "retained-pack.catalog-allocation-credits");
+    assert!(physical_credit.progress().pending_input);
+    assert_eq!(physical_credit.grant().expect_err("sticky physical credit fault"), physical_fault);
+    assert_eq!(close_catalog(&mut physical_credit), 0);
+    assert_eq!(physical_credit.fault(), Some(physical_fault));
 
     let mut cumulative = RetainedPackCatalogCursor::try_new(catalog_limits(2, 1), 2, 7, 7, 0, 64 * 1024).expect("cumulative credits");
     let payload = [2, 4, b'a', b'b', b'c', b'd', 4];
@@ -389,7 +500,18 @@ fn retained_pack_catalog_limit_and_utf8_faults_are_sticky_until_exact_close() {
     assert_eq!(chunk_fault.code, "retained-pack.catalog-observed-count");
     assert!(chunks.progress().pending_input);
     assert_eq!(close_catalog(&mut chunks), chunk_allocated);
-    eprintln!("[DEBUG] retained-pack-catalog sticky-faults=symbol-count,cumulative-utf8,malformed-utf8,truncated-utf8,chunk-count pending-input-preserved=true");
+
+    let mut table_count = RetainedPackCatalogCursor::try_new(catalog_limits(0, 2), 0, 0, 0, 2, 64 * 1024).expect("chunk-table count credits");
+    let table = catalog_segment(crate::KIND_CHUNK_TABLE, 1);
+    let mut table_allocated = 0;
+    admit_catalog_event(&mut table_count, RetainedPackSegmentEvent::Begin(table), &mut table_allocated).expect("chunk-table begin");
+    table_count.admit(RetainedPackSegmentEvent::RawByte { segment: table, index: 0, value: 3 }).expect("maximum plus one chunk-table count pending");
+    let table_fault = table_count.next_allocation_bytes().expect_err("maximum plus one chunk-table count");
+    assert_eq!(table_fault.code, "retained-pack.catalog-chunk-count");
+    assert!(table_count.progress().pending_input);
+    assert_eq!(table_count.grant().expect_err("sticky chunk-table count fault"), table_fault);
+    assert_eq!(close_catalog(&mut table_count), table_allocated);
+    eprintln!("[DEBUG] retained-pack-catalog sticky-faults=symbol-count,physical-credit,cumulative-utf8,malformed-utf8,truncated-utf8,observed-chunk-count,chunk-table-count pending-input-preserved=true");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -486,7 +608,7 @@ async fn multi_byte_chunk_is_observed_once_at_begin_and_matches_pack_file() {
     let catalog = catalog_cursor.take(anchor.take().expect("anchor handback")).expect("catalog result").expect("catalog handback");
     assert_eq!(catalog.manifest.chunk_count, 1);
     assert_eq!(catalog_cursor.chunk(0).expect("retained chunk entry").raw_len, chunk.len() as u64);
-    drop(catalog);
+    let _ = catalog;
     anchor.close_step();
     segment.close_step();
     assert!(close_catalog(&mut catalog_cursor) > 0);

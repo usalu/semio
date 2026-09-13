@@ -5,5 +5,5 @@
 #[dsl(id = "procedural.generation2d.generatepreviewwindowconfig", layout = "lines")]
 pub struct Generation2dGeneratePreviewWindowConfig {
     #[dsl(block)]
-    pub viewport: semio_framework::Viewport2d,
+    pub viewport: semio_framework_os_kernel::Viewport2d,
 }

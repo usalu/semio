@@ -16,28 +16,81 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test"
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "htmlSourcePairs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      ]
     },
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test quick"
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "htmlSourcePairs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      ]
     },
     "test-long": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test long"
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "htmlSourcePairs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      ]
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive"
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "htmlSourcePairs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      ]
     }
+  },
+  "namedInputs": {
+    "htmlSourcePairs": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/⌨️set-raw-text-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/⌨️set-raw-text-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/✍️set-text-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/✍️set-text-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➕️insert-node-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➕️insert-node-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➖️remove-node-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➖️remove-node-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🏷️set-element-name-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🏷️set-element-name-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/💬️set-comment-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/💬️set-comment-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/📜️set-doctype-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/📜️set-doctype-applied/📸️snapshot/⬅️before/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/➡️after/🌐️.html",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/⬅️before/🌐️.html"
+    ]
   }
 }

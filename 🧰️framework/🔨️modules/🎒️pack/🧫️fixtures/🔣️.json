@@ -55,7 +55,42 @@
       "partialSymbolScalars": [97],
       "aggregateAllocationEqualsRelease": true
     },
-    "terminal": {"pending": false, "partialSymbolBytes": 0, "partialSymbolScalars": 0, "logicalItems": 0, "allocatedBytes": 0, "receiptClosed": true}
+    "terminal": {"pending": false, "partialSymbolBytes": 0, "partialSymbolScalars": 0, "logicalItems": 0, "allocatedBytes": 0, "catalogCursorClosed": true}
+  },
+  "retainedValue": {
+    "constructionAllocates": false,
+    "diagnostic": {"hotVariant": "retained-malformed-static", "storage": "inline", "heapBytes": 0, "publicStepAllocates": false, "sticky": true, "coldStringConversion": "display-or-explicit-owned-conversion"},
+    "stack": {
+      "maxDepth": 8,
+      "framesPerDepth": 8,
+      "maximumFrames": 64,
+      "initialFrames": 2,
+      "limits": ["depth", "stack-frames", "allocation-bytes"],
+      "allocationBeforeInput": true,
+      "zeroOrSubexactMutates": false,
+      "partialInitializationSurvivesCancel": true,
+      "actualBackingAccounted": true,
+      "overgrantFaultSticky": true
+    },
+    "recordBody": {
+      "storage": ["scalar-pages", "symbol-span-pages", "value-stack"],
+      "limits": ["symbol-count", "symbol-utf8-bytes", "symbol-scalars", "value-stack-frames", "allocation-bytes"],
+      "allocationOrder": ["symbol-spans", "symbol-scalars", "value-stack"],
+      "symbols": [
+        {"text": "", "utf8": [], "scalars": []},
+        {"text": "axis", "utf8": [97, 120, 105, 115], "scalars": [97, 120, 105, 115]},
+        {"text": "A€𐍈", "utf8": [65, 226, 130, 172, 240, 144, 141, 136], "scalars": [65, 8364, 66376]}
+      ],
+      "directIndexedScalars": true,
+      "multiLeaf": {"symbols": 512, "positiveDemandBeyondFirstLeaf": true},
+      "coordinateModel": {"pointerBits": 32, "firstUnrepresentableSymbol": 4294967296, "checkedConversion": true},
+      "eventHandoff": {"finalScalarAndCatalogSameByte": true, "preserveCatalogCompleteAcrossAllocation": true, "blockIngressUntilObserved": true},
+      "unopenedCancellation": {"zeroItemZeroByteMutates": false, "bytesOnlyMetadataTransition": true},
+      "closeOrder": ["value-logical", "symbol-logical", "value-physical", "symbol-physical"],
+      "pendingInputPreserved": true
+    },
+    "consumers": ["generation2-snapshot", "generation3-snapshot", "generation2-mutation", "generation3-mutation"],
+    "terminal": {"pending": false, "stackFrames": 0, "symbols": 0, "scalars": 0, "allocatedBytes": 0, "closed": true}
   },
   "multiByteChunk": {
     "bytes": [17, 34, 51, 68, 85],

@@ -3,7 +3,7 @@
 //! per SVG, keyed by the bare stem after the repo's emoji filename prefix. The board's icon codec
 //! reaches it through [`puzzle_themed_icon_lookup`].
 
-#[path = "🧩️metabolism.rs"]
+#[path = "🌱️metabolism/🦀️.rs"]
 mod board_metabolism_icons;
 
 /// 🔣️ Resolves a board catalog icon key to its SVG source, or `None` when the key is not a

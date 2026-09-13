@@ -16,7 +16,7 @@
     "ownerDirectory": "🎮️playground-session",
     "sourceLeaf": "🟦️.ts",
     "artifactKey": "🎮️playground-session/🟦️.ts",
-    "viteConfigPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
+    "viteConfigPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
     "viteSpecifier": "virtual:semio-playground-session",
     "variants": [
       {

@@ -1785,6 +1785,8 @@ impl Generation2dMutationSession {
 
     fn ingress_ready(&self) -> bool {
         self.pending.is_none()
+            && (self.phase != Generation2dMutationSessionPhase::Body
+                || self.body.as_ref().is_some_and(store::mounted_pack_rt::RetainedRecordBodyCursor::ingress_ready))
     }
 
     fn seal(&mut self) -> Result<(), &'static str> {
@@ -1834,7 +1836,16 @@ impl Generation2dMutationSession {
                         max_items: self.maximum_items.min(GENERATION2D_MAXIMUM_DOMAIN_ITEMS) as u64,
                         max_total_alloc: GENERATION2D_MAXIMUM_DOMAIN_BYTES as u64,
                     };
-                    *self.body = Some(store::mounted_pack_rt::RetainedRecordBodyCursor::try_new(limits).map_err(|_| "generation2d-mutation.body-preflight")?);
+                    *self.body = Some(
+                        store::mounted_pack_rt::RetainedRecordBodyCursor::try_new(
+                            limits,
+                            self.maximum_items.min(GENERATION2D_MAXIMUM_DOMAIN_ITEMS),
+                            self.expected_bytes,
+                            self.expected_bytes,
+                            store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,
+                        )
+                        .map_err(|_| "generation2d-mutation.body-preflight")?,
+                    );
                     *self.owner = Some(Generation2dRetainedMutationOwner::new(ordinal)?);
                     self.phase = Generation2dMutationSessionPhase::Body;
                 }
@@ -1869,28 +1880,64 @@ impl Generation2dMutationSession {
         Some(value)
     }
 
-    fn close_step(&mut self, maximum_items: usize) -> bool {
+    fn next_retained_allocation_bytes(&mut self) -> Result<Option<usize>, &'static str> {
+        let Some(body) = self.body.as_mut() else { return Ok(None) };
+        body.next_allocation_bytes().map_err(|_| "generation2d-mutation.body-allocation")
+    }
+
+    fn reserve_retained_allocation(&mut self, maximum_bytes: usize) -> Result<(bool, usize), &'static str> {
+        let body = self.body.as_mut().ok_or("generation2d-mutation.body-owner")?;
+        body.reserve_allocation(maximum_bytes)
+            .map(|step| (step.progressed, step.allocated_bytes))
+            .map_err(|_| "generation2d-mutation.body-allocation")
+    }
+
+    fn retained_allocated_bytes(&self) -> usize {
+        self.body.as_ref().map_or(0, store::mounted_pack_rt::RetainedRecordBodyCursor::allocated_bytes)
+    }
+
+    fn next_retained_release_allocation_bytes(&self) -> Option<usize> {
+        if self.pending.is_some() || self.owner.is_some() {
+            return None;
+        }
+        self.body.as_ref()?.next_release_allocation_bytes().ok().flatten()
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::mounted_pack_rt::RetainedPackCloseStep, &'static str> {
+        use store::mounted_pack_rt::RetainedPackCloseStep;
+        if self.phase == Generation2dMutationSessionPhase::Closed {
+            return Ok(RetainedPackCloseStep::Complete);
+        }
+        if maximum_items == 0 && (self.pending.is_some() || self.owner.is_some() || self.body.is_none()) {
+            return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
         self.phase = Generation2dMutationSessionPhase::Closing;
-        self.pending = None;
-        if maximum_items == 0 {
-            return false;
+        if maximum_items != 0 && self.pending.take().is_some() {
+            return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(owner) = self.owner.as_mut() {
             if !owner.close_step() {
-                return false;
+                return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             drop(self.owner.take());
-            return false;
+            return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(body) = self.body.as_mut() {
-            if body.close_step(1) != store::mounted_pack_rt::RetainedPackCloseStep::Complete {
-                return false;
+            match body.close_step(maximum_items, maximum_bytes)? {
+                RetainedPackCloseStep::Pending { released_items, released_bytes } => {
+                    return Ok(RetainedPackCloseStep::Pending { released_items, released_bytes });
+                }
+                RetainedPackCloseStep::Complete => {
+                    if maximum_items == 0 {
+                        return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                }
             }
             drop(self.body.take());
-            return false;
+            return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         self.phase = Generation2dMutationSessionPhase::Closed;
-        true
+        Ok(RetainedPackCloseStep::Complete)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -2245,6 +2292,19 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
                 return Err(self.diagnostic("generation2d-envelope.mutation-token-replayed", token.start));
             }
             if self.drive_ingress {
+                if let Some(exact) = self.session.as_mut().expect("P2 retained mutation session").next_retained_allocation_bytes().map_err(|_| self.diagnostic("generation2d-envelope.mutation-retained-allocation", retained.start + self.relative as u64))? {
+                    let (progressed, _) = self
+                        .session
+                        .as_mut()
+                        .expect("P2 retained mutation session")
+                        .reserve_retained_allocation(exact)
+                        .map_err(|_| self.diagnostic("generation2d-envelope.mutation-retained-allocation", retained.start + self.relative as u64))?;
+                    if !progressed {
+                        return Err(self.diagnostic("generation2d-envelope.mutation-retained-allocation-stalled", retained.start + self.relative as u64));
+                    }
+                    cx.consume_fuel(1);
+                    return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                }
                 self.session.as_mut().expect("P2 retained mutation session").grant().map_err(|_| self.diagnostic("generation2d-envelope.mutation-ingress-malformed", retained.start + self.relative as u64))?;
                 self.drive_ingress = !self.session.as_ref().expect("P2 retained mutation session").ingress_ready();
                 cx.consume_fuel(1);
@@ -2275,6 +2335,19 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
         }
         if self.state == Generation2dMutationDecodeState::Drive {
             cx.set_stage("generation2d-retained-mutation");
+            if let Some(exact) = self.session.as_mut().expect("P2 retained mutation session").next_retained_allocation_bytes().map_err(|_| self.diagnostic("generation2d-envelope.mutation-retained-allocation", token.start))? {
+                let (progressed, _) = self
+                    .session
+                    .as_mut()
+                    .expect("P2 retained mutation session")
+                    .reserve_retained_allocation(exact)
+                    .map_err(|_| self.diagnostic("generation2d-envelope.mutation-retained-allocation", token.start))?;
+                if !progressed {
+                    return Err(self.diagnostic("generation2d-envelope.mutation-retained-allocation-stalled", token.start));
+                }
+                cx.consume_fuel(1);
+                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            }
             cx.consume_fuel(1);
             if !self.session.as_mut().expect("P2 retained mutation session").grant().map_err(|_| self.diagnostic("generation2d-envelope.mutation-malformed", token.start))? {
                 return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
@@ -2285,8 +2358,16 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
         }
         if self.state == Generation2dMutationDecodeState::CloseSession {
             cx.consume_fuel(1);
-            if !self.session.as_mut().expect("P2 retained mutation session").close_step(1) {
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            let maximum_bytes = self.session.as_ref().expect("P2 retained mutation session").next_retained_release_allocation_bytes().unwrap_or(0);
+            match self
+                .session
+                .as_mut()
+                .expect("P2 retained mutation session")
+                .close_step(1, maximum_bytes)
+                .map_err(|_| self.diagnostic("generation2d-envelope.mutation-session-close", token.start))?
+            {
+                store::mounted_pack_rt::RetainedPackCloseStep::Pending { .. } => return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending),
+                store::mounted_pack_rt::RetainedPackCloseStep::Complete => {}
             }
             drop(self.session.take());
             self.token = None;
@@ -2316,9 +2397,20 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(session) = self.session.as_mut() {
-            if !session.close_step(1) {
-                self.state = Generation2dMutationDecodeState::Closing;
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            match session.close_step(maximum_items.min(1), maximum_bytes).map_err(|_| {
+                store::OwnedSchemaDecodeDiagnostic {
+                    code: "generation2d-envelope.mutation-session-close",
+                    offset: 0,
+                    line: 0,
+                    column: 0,
+                    path: self.path,
+                }
+            })? {
+                store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items, released_bytes } => {
+                    self.state = Generation2dMutationDecodeState::Closing;
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes });
+                }
+                store::mounted_pack_rt::RetainedPackCloseStep::Complete => {}
             }
             drop(self.session.take());
             self.token = None;

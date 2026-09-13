@@ -24,7 +24,7 @@ class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { level } = resolveTestLevel(segments);
     if (TEST_LEVELS.indexOf(level) < TEST_LEVELS.indexOf("long")) return;
-    runBunx(["vscode-test"], this.root);
+    runBunx(["vscode-test", "--config", "../../🧪️tests/🧩️extension/🎚️config/🟨️.mjs"], this.root);
   }
 }
 
@@ -36,7 +36,7 @@ class BuildScript extends BundleScript {
 
 class LintScript extends BundleScript {
   run(): void {
-    runBunx(["eslint", "--max-warnings", "0", "--config", "🟦️eslint.config.ts", "."], this.root);
+    runBunx(["eslint", "--max-warnings", "0", "--config", "../../../../🧹️lint/📐️source-policy/🟨️.mjs", "."], this.root);
   }
 }
 

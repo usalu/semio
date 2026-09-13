@@ -43,6 +43,6 @@
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*",
       "sharedGlobals"
-    ]
+    , "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧪️tests/🎚️config/🟦️.ts"]
   }
 }

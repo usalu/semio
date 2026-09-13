@@ -15,7 +15,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see
 /// `create_generation2d_app`'s `.interaction(...)` declaration.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[dsl(extension = "generation2dcfg")]
 #[dsl(id = "procedural.generation2dcfg")]
 #[dsl(layout = "lines")]

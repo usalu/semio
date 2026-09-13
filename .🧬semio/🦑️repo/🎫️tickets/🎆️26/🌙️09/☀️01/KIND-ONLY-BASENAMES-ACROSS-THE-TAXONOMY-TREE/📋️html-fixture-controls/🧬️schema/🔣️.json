@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "artifact",
+    "standard",
+    "subset",
+    "manifestPath",
+    "moves"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "artifact": {
+      "const": "s.stdio.html"
+    },
+    "standard": {
+      "const": "5"
+    },
+    "subset": {
+      "const": "any"
+    },
+    "manifestPath": {
+      "type": "string"
+    },
+    "moves": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fixture",
+          "role",
+          "source",
+          "destination",
+          "manifestPath"
+        ],
+        "properties": {
+          "fixture": {
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "expected-before-html",
+              "expected-after-html"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string",
+            "pattern": "/📸️snapshot/(⬅️before|➡️after)/🌐️\\.html$"
+          },
+          "manifestPath": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

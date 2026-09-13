@@ -5,7 +5,7 @@
     "default": [
       "{projectRoot}/**/*",
       "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/**/*.rs"
-    ]
+    , "{workspaceRoot}/🌎️hub/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
     "test": {

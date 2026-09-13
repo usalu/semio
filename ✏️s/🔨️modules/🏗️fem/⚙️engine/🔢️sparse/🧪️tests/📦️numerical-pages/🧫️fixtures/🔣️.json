@@ -1,0 +1,644 @@
+{
+  "workControlEntries": 12,
+  "workRetirementLanes": [0, 11],
+  "stickyFaultCases": [
+    { "first": "Admission", "later": "Truncated", "expected": "Admission" },
+    { "first": "Stale", "later": "Truncated", "expected": "Stale" }
+  ],
+  "matrixRestoreCases": [
+  {
+    "id": "full-matrix",
+    "rows": 32,
+    "cols": 64,
+    "length": 2048,
+    "pageItems": [
+      0,
+      2041
+    ]
+  },
+  {
+    "id": "empty-matrix",
+    "rows": 32,
+    "cols": 0,
+    "length": 0,
+    "pageItems": [
+      0
+    ]
+  },
+  {
+    "id": "partial-matrix",
+    "rows": 64,
+    "cols": 32,
+    "length": 3,
+    "pageItems": [
+      0
+    ]
+  }
+],
+  "closeCases": [
+  {
+    "id": "zero",
+    "grant": "zero",
+    "expectedRetiredOwners": 0
+  },
+  {
+    "id": "subexact",
+    "grant": "subexact",
+    "expectedRetiredOwners": 0
+  },
+  {
+    "id": "exact",
+    "grant": "exact",
+    "expectedRetiredOwners": 1
+  }
+],
+  "restoreFaultCases": [
+  {
+    "id": "foreign-first-owner",
+    "continuation": false,
+    "owner": 2,
+    "item": 0,
+    "length": 1,
+    "bodyBytes": 16,
+    "fault": "Field"
+  },
+  {
+    "id": "first-item-is-nonzero",
+    "continuation": false,
+    "owner": 0,
+    "item": 1,
+    "length": 1,
+    "bodyBytes": 16,
+    "fault": "Field"
+  },
+  {
+    "id": "continuation-has-no-owner",
+    "continuation": false,
+    "owner": 1,
+    "item": 0,
+    "length": 1,
+    "bodyBytes": 8,
+    "fault": "Field"
+  },
+  {
+    "id": "declared-length-exceeds-bound",
+    "continuation": false,
+    "owner": 0,
+    "item": 0,
+    "length": 8193,
+    "bodyBytes": 8,
+    "fault": "Envelope"
+  },
+  {
+    "id": "truncated-scalar",
+    "continuation": false,
+    "owner": 0,
+    "item": 0,
+    "length": 1,
+    "bodyBytes": 15,
+    "fault": "Truncated"
+  },
+  {
+    "id": "trailing-scalar",
+    "continuation": false,
+    "owner": 0,
+    "item": 0,
+    "length": 0,
+    "bodyBytes": 16,
+    "fault": "Truncated"
+  },
+  {
+    "id": "duplicate-first-page",
+    "continuation": true,
+    "owner": 0,
+    "item": 0,
+    "length": 2044,
+    "bodyBytes": 16,
+    "fault": "Field"
+  },
+  {
+    "id": "skipped-continuation-item",
+    "continuation": true,
+    "owner": 1,
+    "item": 2044,
+    "length": 2044,
+    "bodyBytes": 8,
+    "fault": "Field"
+  },
+  {
+    "id": "foreign-continuation-owner",
+    "continuation": true,
+    "owner": 2,
+    "item": 2043,
+    "length": 2044,
+    "bodyBytes": 8,
+    "fault": "Field"
+  }
+],
+  "pageBytes": 16384,
+  "headerBytes": 32,
+  "lengthBytes": 8,
+  "scalarBytes": 8,
+  "cases": [
+    {
+      "id": "empty",
+      "count": 0,
+      "pages": [
+        {
+          "owner": 0,
+          "item": 0,
+          "bytes": 40,
+          "scalars": 0
+        }
+      ]
+    },
+    {
+      "id": "exact-page",
+      "count": 2043,
+      "pages": [
+        {
+          "owner": 0,
+          "item": 0,
+          "bytes": 16384,
+          "scalars": 2043
+        }
+      ]
+    },
+    {
+      "id": "one-over-page",
+      "count": 2044,
+      "pages": [
+        {
+          "owner": 0,
+          "item": 0,
+          "bytes": 16384,
+          "scalars": 2043
+        },
+        {
+          "owner": 1,
+          "item": 2043,
+          "bytes": 40,
+          "scalars": 1
+        }
+      ]
+    },
+    {
+      "id": "maximum-scalar-owner",
+      "count": 2048,
+      "pages": [
+        { "owner": 0, "item": 0, "bytes": 16384, "scalars": 2043 },
+        { "owner": 1, "item": 2043, "bytes": 72, "scalars": 5 }
+      ]
+    },
+    {
+      "id": "three-pages",
+      "count": 4092,
+      "pages": [
+        {
+          "owner": 0,
+          "item": 0,
+          "bytes": 16384,
+          "scalars": 2043
+        },
+        {
+          "owner": 1,
+          "item": 2043,
+          "bytes": 16384,
+          "scalars": 2044
+        },
+        {
+          "owner": 1,
+          "item": 4087,
+          "bytes": 72,
+          "scalars": 5
+        }
+      ]
+    }
+  ],
+  "boundaryCases": [
+    {
+      "kind": "length",
+      "width": 8,
+      "remaining": 8,
+      "expected": {
+        "committed": false,
+        "owner": 1,
+        "item": 0,
+        "entry": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "kind": "length",
+      "width": 8,
+      "remaining": 7,
+      "expected": {
+        "committed": true,
+        "owner": 1,
+        "item": 0,
+        "entry": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "kind": "u32",
+      "width": 4,
+      "remaining": 4,
+      "expected": {
+        "committed": false,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          7,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "kind": "u32",
+      "width": 4,
+      "remaining": 3,
+      "expected": {
+        "committed": true,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          7,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "kind": "usize",
+      "width": 8,
+      "remaining": 8,
+      "expected": {
+        "committed": false,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "kind": "usize",
+      "width": 8,
+      "remaining": 7,
+      "expected": {
+        "committed": true,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "kind": "u64",
+      "width": 8,
+      "remaining": 8,
+      "expected": {
+        "committed": false,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "kind": "u64",
+      "width": 8,
+      "remaining": 7,
+      "expected": {
+        "committed": true,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "kind": "f64",
+      "width": 8,
+      "remaining": 8,
+      "expected": {
+        "committed": false,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          248,
+          63
+        ]
+      }
+    },
+    {
+      "kind": "f64",
+      "width": 8,
+      "remaining": 7,
+      "expected": {
+        "committed": true,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          248,
+          63
+        ]
+      }
+    },
+    {
+      "kind": "paged-u32",
+      "width": 4,
+      "remaining": 4,
+      "expected": {
+        "committed": false,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          7,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "kind": "paged-u32",
+      "width": 4,
+      "remaining": 3,
+      "expected": {
+        "committed": true,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          7,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "kind": "paged-f64",
+      "width": 8,
+      "remaining": 8,
+      "expected": {
+        "committed": false,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          248,
+          63
+        ]
+      }
+    },
+    {
+      "kind": "paged-f64",
+      "width": 8,
+      "remaining": 7,
+      "expected": {
+        "committed": true,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          248,
+          63
+        ]
+      }
+    },
+    {
+      "kind": "pair",
+      "width": 12,
+      "remaining": 12,
+      "expected": {
+        "committed": false,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          248,
+          63
+        ]
+      }
+    },
+    {
+      "kind": "pair",
+      "width": 12,
+      "remaining": 11,
+      "expected": {
+        "committed": true,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          248,
+          63
+        ]
+      }
+    },
+    {
+      "kind": "matrix-shape",
+      "width": 24,
+      "remaining": 24,
+      "expected": {
+        "committed": false,
+        "owner": 1,
+        "item": 0,
+        "entry": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "kind": "matrix-shape",
+      "width": 24,
+      "remaining": 23,
+      "expected": {
+        "committed": true,
+        "owner": 1,
+        "item": 0,
+        "entry": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "kind": "matrix-scalar",
+      "width": 8,
+      "remaining": 8,
+      "expected": {
+        "committed": false,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          248,
+          63
+        ]
+      }
+    },
+    {
+      "kind": "matrix-scalar",
+      "width": 8,
+      "remaining": 7,
+      "expected": {
+        "committed": true,
+        "owner": 1,
+        "item": 1,
+        "entry": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          248,
+          63
+        ]
+      }
+    }
+  ]
+}

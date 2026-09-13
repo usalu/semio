@@ -4,7 +4,7 @@
  * `taskManagerRows`/`buildTaskManagerTableScene`/`taskManagerRowAction`) plus a render +
  * action-dispatch test for the standalone `TaskManagerPanel`. Run directly the same way
  * `🤖️AgentApprovals/🧪️component.test.tsx` documents (see `📓️terra-T1-report.md`) — not (yet) picked
- * up by `@semio-tech/framework-renderer-react:test`'s `vitest.config.ts` `test.include`, same
+ * up by `@semio-tech/framework-renderer-react:test`'s semantic Vitest owner `test.include`, same
  * pre-existing gap that packet's own report already flagged.
  */
 // #endregion 🧲️Header

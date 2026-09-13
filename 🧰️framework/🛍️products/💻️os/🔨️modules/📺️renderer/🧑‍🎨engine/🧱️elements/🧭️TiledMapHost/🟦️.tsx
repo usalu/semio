@@ -1159,9 +1159,12 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       resetMarquee();
     };
     const onPointerCancel = (event: PointerEvent): void => {
+      const point = clientToLocal(event.clientX, event.clientY);
+      rendererRef.current?.session.pointerUpScreen(point.x, point.y);
       pointer.current.leftDown = false;
       pointer.current.middleDown = false;
       panningRef.current = false;
+      rendererRef.current?.endContinuousInteraction("pan");
       resetMarquee();
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       mirrorSessionCameraToReact();

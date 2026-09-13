@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/framework/schema/schema.json",
   "title": "FrameworkSchema",
-  "description": "🧬️ The `framework.schema` scope: the `(scope id, export id, format id)` resolution contract every scope and every catalog tool speaks, plus the entity-kind catalog the `schema-entity-catalog` generator projects into TypeScript, Rust and Go. The root is a `oneOf` of the two instance documents this scope serializes to disk — the `schema-export-registry-entries-v1` dump (an object) and `🔣️entity-kinds.json` (an array) — which are disjoint by JSON type, so exactly one branch can ever match.",
+  "description": "🧬️ The `framework.schema` scope: the `(scope id, export id, format id)` resolution contract every scope and every catalog tool speaks, plus the entity-kind catalog the `schema-entity-catalog` generator projects into TypeScript, Rust and Go. The root is a `oneOf` of the two instance documents this scope serializes to disk — the `schema-export-registry-entries-v1` dump (an object) and `🏷️entity-kinds/🔣️.json` (an array) — which are disjoint by JSON type, so exactly one branch can ever match.",
   "oneOf": [
     {
       "$ref": "#/$defs/SchemaExportEntries"
@@ -272,7 +272,7 @@
     },
     "EntityKindCatalog": {
       "title": "EntityKindCatalog",
-      "description": "📚️ The ordered entity-kind catalog, the single source `🔣️entity-kinds.json` carries and the `schema-entity-catalog` generator projects into `🤖️generated/🏷️entity-kinds/🟦️.ts`, `🤖️generated.rs` and `⌨️cli/🏷️entity-kinds/🐹️.go`. Declaration order is contract twice over: `id` is unique catalog-wide, `emoji` is NOT, and every projection's emoji index keeps the FIRST entry of a repeated emoji (`technology-mono` wins 🌱️ over `interaction-started`, `draft` wins 📝️ over `todo`). `uniqueItems` only forbids two byte-identical entries; uniqueness of `id` and of `label` alone is not expressible in draft-07 and is asserted against the data by the owning tests instead.",
+      "description": "📚️ The ordered entity-kind catalog, the single source `🏷️entity-kinds/🔣️.json` carries and the `schema-entity-catalog` generator projects into `🤖️generated/🏷️entity-kinds/🟦️.ts`, `🤖️generated/🏷️entity-kinds/🦀️.rs` and `⌨️cli/🏷️entity-kinds/🐹️.go`. Declaration order is contract twice over: `id` is unique catalog-wide, `emoji` is NOT, and every projection's emoji index keeps the FIRST entry of a repeated emoji (`technology-mono` wins 🌱️ over `interaction-started`, `draft` wins 📝️ over `todo`). `uniqueItems` only forbids two byte-identical entries; uniqueness of `id` and of `label` alone is not expressible in draft-07 and is asserted against the data by the owning tests instead.",
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,

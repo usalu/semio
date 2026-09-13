@@ -1,5 +1,4 @@
 use super::*;
-use crate::editor::generation2d::commands::node_graph_viewport;
 use crate::editor::generation2d::unit_tests::context::{app, close, dispatch, snapshot_read};
 use crate::editor::generation2d::Generation2dCommand;
 
@@ -14,11 +13,4 @@ async fn reorganize_emits_operations() {
     let after = placements(&app);
     close(app);
     assert_ne!(before, after);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn node_graph_viewport_sets_camera() {
-    let mut app = app().await;
-    dispatch(&mut app, Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 1.0, y: 2.0, zoom: 3.0 } })).await;
-    close(app);
 }

@@ -1,3 +1,7 @@
+import { testWgpuBrowserServing } from "../🧊️browser-serving/🟦️.ts";
+import { inventory } from "../../📇️inventory/🧮️composition/🟦️.ts";
+import { slash } from "../../🔍️discovery/📂️source/🟦️.ts";
+import { ticketOutput } from "../../🎫️output/🟦️.ts";
 import assert from "node:assert/strict";
 import { chmodSync, lstatSync, readFileSync, mkdirSync, writeFileSync, mkdtempSync, readdirSync, rmSync, symlinkSync, utimesSync } from "node:fs";
 import { delimiter, dirname, join, resolve, relative } from "node:path";
@@ -20,6 +24,8 @@ import { testDevcontainerContext } from "../../📦️artifacts/🐳️container
 import { testContainerRuntimeBootstrap } from "../../📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap/🟦️.ts";
 import { testCommandImportClosure } from "../🔗️command-imports/🟦️.ts";
 import { testTrunkLockfile } from "../🔒️trunk-lockfile/🟦️.ts";
+import { testNativeDependencies } from "../📦️native-dependencies/🟦️.ts";
+import { testCargoCleanupBoundary } from "../🦀️cleanup-boundary/🟦️.ts";
 import { testContainerPersistentState } from "../../📦️artifacts/🐳️containers/🧪️tests/🔒️persistent-state/🟦️.ts";
 import { testExtensionAttach } from "../../📦️artifacts/🐳️containers/🧪️tests/🧩️extension-attach/🟦️.ts";
 import { testBinaryenToolchain } from "../../🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts";
@@ -45,6 +51,11 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testExtensionPackage(output);
   await testCommandImportClosure(workspace, output);
   await testTrunkLockfile(workspace);
+  await testNativeDependencies(workspace, output);
+  await testCargoCleanupBoundary(workspace, output);
+  const { testWgpuWasmOutputs } = await import("../🧊️wasm-outputs/🟦️.ts");
+  await testWgpuWasmOutputs(workspace, output);
+  await testWgpuBrowserServing(workspace, output);
   const { testWgpuBootInputs } = await import("../../../../../../💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts");
   await testWgpuBootInputs(workspace, output);
   const { testTypeScriptSourceInputs } = await import("../../../🕸️dependencies/🟦️typescript/🧪️tests/⚡️inputs/🟦️.ts");
@@ -80,6 +91,12 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testWgpuGeneratorPublication(workspace, output);
   const { testNativeRendererOutputs } = await import("../🧊️native-renderer-outputs/🟦️.ts");
   await testNativeRendererOutputs(workspace, output);
+  const { testStylingOutputs } = await import("../🎨️styling-outputs/🟦️.ts");
+  await testStylingOutputs(workspace, output);
+  const { testStylingPythonOutputs } = await import("../🎨️styling-outputs/🐍️python/🟦️.ts");
+  await testStylingPythonOutputs(workspace, output);
+  const { testWgpuLiveActivation } = await import("../🧊️live-activation/🟦️.ts");
+  await testWgpuLiveActivation(workspace, output);
   const { testPlaygroundInputView } = await import("../🎮️playground-input-view/🟦️.ts");
   await testPlaygroundInputView(workspace);
   const { testInferredNativeInputs } = await import("../../../../🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts");
@@ -599,7 +616,7 @@ export function testNxDaemonRetention(workspace: string, output: string): void {
 }
 
 export function createCachePolicyTests(dependencies: Record<string, any>, testSource: { directory: string; url: string }) {
-  const { assert, cacheInternals, chmodSync, copyFileSync, createRequire, devToolingEnv, dirname, EventEmitter, existsSync, getWorkspaceRoot, inventory, join, lstatSync, mkdirSync, mkdtempSync, plugin, readFileSync, relative, resolve, rmSync, SCRIPT_ROOT, slash, spawn, stageArtifacts, ticketOutput, utimesSync, wasmBindgenVersion, wasmBuildArguments, wasmBuildEnvironment, writeFileSync } = dependencies;
+  const { assert, cacheInternals, chmodSync, copyFileSync, createRequire, devToolingEnv, dirname, EventEmitter, existsSync, getWorkspaceRoot, join, lstatSync, mkdirSync, mkdtempSync, plugin, readFileSync, relative, resolve, rmSync, SCRIPT_ROOT, spawn, stageArtifacts, utimesSync, wasmBindgenVersion, wasmBuildArguments, wasmBuildEnvironment, writeFileSync } = dependencies;
 
   /** 🧪️ Executes language-neutral policy examples against the Nx project plugin. */
   async function testCacheContracts(): Promise<void> {
@@ -800,7 +817,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         assert.ok(preparation.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*" && input.transitive), `${targetName} must hash its whole transitive dependency closure`);
         const wgpuTargetName = `prepare-${playground.variant}-wgpu-${profile}`, wgpuPreparation = preparationProject.targets[wgpuTargetName];
         assert.ok(wgpuPreparation, `${wgpuTargetName} needs declared prerequisites`);
-        assert.equal(wgpuPreparation.cache, true, `${wgpuTargetName} only publishes this lane's extensions out of the ONE staging root its closure wrote and is safe to replay`);
+        assert.ok(wgpuPreparation.dependsOn.includes(`@semio-tech/framework-renderer-wgpu:${profile === "release" ? "wasm-release" : "wasm"}`));
+        assert.equal(wgpuPreparation.cache, true, `${wgpuTargetName} validates completed prerequisites without publishing live state`);
         assert.deepEqual(wgpuPreparation.outputs, [], `${wgpuTargetName} must mirror no module: the trunk bundle and the native runner both read pluginModulesRoot(profile)`);
         assert.ok(wgpuPreparation.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*" && input.transitive), `${wgpuTargetName} must hash its whole transitive dependency closure`);
         const activationName = `activate-${playground.variant}-react-${profile}`, activationTarget = preparationProject.targets[activationName];
@@ -811,7 +829,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${activationName}`).length, 1);
         const wgpuActivationName = `activate-${playground.variant}-wgpu-${profile}`, wgpuActivationTarget = preparationProject.targets[wgpuActivationName];
         assert.ok(wgpuActivationTarget, `${wgpuActivationName} must follow completed preparation`);
-        assert.equal(wgpuActivationTarget.cache, true, `${wgpuActivationName} does no work beyond prepare (activation IS preparation for wgpu) and is safe to replay`);
+        assert.equal(wgpuActivationTarget.cache, false, `${wgpuActivationName} publishes live extensions and reload notifications on every activation`);
         assert.deepEqual(wgpuActivationTarget.outputs, []);
         assert.deepEqual(wgpuActivationTarget.dependsOn, [wgpuTargetName]);
         for (const command of ["serve", "dev"]) {
@@ -912,13 +930,19 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.ok(workspace.targets["deps-dotnet"].dependsOn.includes(`${bootstrap.dotnetProject}:deps`));
     assert.ok(readFileSync(join(root, "Monorepo.sln"), "utf8").includes(bootstrap.dotnetPath.replaceAll("/", "\\")));
     assert.ok(readFileSync(join(root, bootstrap.dotnetPath, "🧪️Semio.Repo.Test.csproj"), "utf8").includes(`Include="${bootstrap.compile}"`));
+    assert.ok(existsSync(join(root, bootstrap.dotnetPath, bootstrap.compile)), "The .NET compile item must resolve to its current source file");
     const python = createRequire(testSource.url)("@iarna/toml").parse(readFileSync(join(root, "pyproject.toml"), "utf8"));
     assert.deepEqual(python.tool.uv.workspace.members, bootstrap.pythonMembers);
     assert.deepEqual(workspace.targets["deps-python"].dependsOn, bootstrap.pythonDependencies);
     const styling = contracts.find((project) => project.name === bootstrap.stylingProject)!;
     assert.ok(styling.targets.generate.dependsOn.includes(bootstrap.stylingGenerator));
     assert.deepEqual(styling.targets.generate.outputs, []);
-    for (const target of Object.values(styling.targets) as any[]) if (target.options.command.includes(" test")) assert.ok(target.dependsOn.includes(bootstrap.stylingGenerator));
+    const nativeGraph = createRequire(testSource.url)("@nx/devkit").readCachedProjectGraph();
+    const { createTaskGraph } = createRequire(testSource.url)("nx/src/tasks-runner/create-task-graph");
+    for (const [name, target] of Object.entries(styling.targets) as [string, any][]) if (target.options.command.includes(" test")) {
+      const tasks = createTaskGraph(nativeGraph, {}, [styling.name], [name], undefined, {}, false);
+      assert.ok(tasks.tasks[bootstrap.stylingGenerator], `${styling.name}:${name} must schedule the styling generator through its prerequisites`);
+    }
     assert.ok(!/compose|topologic|vcpkg/i.test(readFileSync(join(root, "CMakeLists.txt"), "utf8") + readFileSync(join(root, "CMakePresets.json"), "utf8")));
     const ts = createRequire(testSource.url)("typescript");
     for (const row of vectors.engineOutputs) {
@@ -938,27 +962,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     }
     const source = ts.createSourceFile("📜️script.ts", readFileSync(join(root, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
     const nxSource = ts.createSourceFile("nx.ts", readFileSync(join(SCRIPT_ROOT, "🚀️bootstrap/📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
-    const coordinator = nxSource.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "NxScript");
-    const coordinatorCode = ts.transpileModule(coordinator.getText(nxSource).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-    const coordinatorFixture = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/🛑️cancellation.json"), "utf8"));
-    assert.equal(validate(coordinatorFixture, schema.$defs.NxCoordinatorFixture).valid, true);
-    for (const vector of coordinatorFixture.cases) {
-      const killed: number[] = [], child = Object.assign(new EventEmitter(), { pid: 1234 });
-      const runtime = Object.assign(new EventEmitter(), { env: vector.environment, platform: vector.platform, exitCode: 0, kill: (pid: number, signal: number | string) => { if (!signal) throw new Error("No process"); killed.push(pid); } });
-      let launchEnvironment: Record<string, string | undefined> = {};
-      const Coordinator = new Function("Script", "process", "createRequire", "join", "existsSync", "resolveNxInvocation", "devToolingEnv", "orchestratorBudgetOpts", "spawnNxProcess", "stopNxProcessTree", coordinatorCode + "; return NxScript;")(
-        class { root = root; }, runtime, () => ({ resolve: (name: string) => name }), join, (path: string) => path.endsWith("node_modules/nx/package.json"), (args: string[]) => ({ args, env: {} }), (env: unknown) => env, () => ({}), (_command: string, _args: string[], options: { env: Record<string, string | undefined> }) => { launchEnvironment = options.env; return child; },
-        (command: string) => { if (command === "taskkill") { killed.push(child.pid); return { status: 0 }; } if (vector.throws) throw new Error("Snapshot unavailable"); return { status: 0, stdout: vector.stdout }; });
-      const done = new Coordinator().run(["run", "fixture:build"]);
-      assert.doesNotThrow(() => runtime.emit("SIGTERM"), vector.name);
-      child.emit("close", null);
-      await done;
-      assert.equal(launchEnvironment.NX_WORKSPACE_DATA_DIRECTORY, vector.environment.NX_WORKSPACE_DATA_DIRECTORY ?? pathOracle.join(root, ".nx", "workspace-data"), vector.name);
-      assert.equal(runtime.exitCode, vector.expectedExit, vector.name);
-      assert.ok(killed.length > 0, `${vector.name}: owned launch process must still be stopped`);
-      assert.equal(runtime.listenerCount("SIGTERM"), 0);
-    }
-    console.log("[DEBUG] Nx coordinator preserves explicit workspace data paths and stops owned launch processes after malformed or unavailable snapshots PASS");
+    const { testNxCoordinator } = await import("../🛑️coordinator/🟦️.ts");
+    await testNxCoordinator(root);
     const invocation = nxSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "resolveNxInvocation");
     const route = ts.transpileModule(invocation.getText(nxSource).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
     const resolveInvocation = new Function("process", `${route}; return resolveNxInvocation;`)({ env: {} });
@@ -1048,7 +1053,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.ok(sourceCache.bytes <= discovery.limitBytes);
     }
     assert.ok(sourceCache.entries.size < 100);
-    const materializerSource = ts.createSourceFile("materializer.ts", readFileSync(join(root, vectors.materialization.root, "🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+    const materializerSource = ts.createSourceFile("materializer.ts", readFileSync(join(root, vectors.materialization.source), "utf8"), ts.ScriptTarget.Latest, true);
     const spawnDeclaration = materializerSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "spawnAsync");
     const spawnCode = ts.transpileModule(spawnDeclaration.getText(materializerSource), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
     const materializerSpawn = new Function("spawn", `${spawnCode}; return spawnAsync;`)(spawn);
@@ -1156,7 +1161,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const rootTest = source.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "TestScript").getText(source);
     assert.ok(!rootTest.includes("run-many"), "The root test target cannot schedule a second Nx graph");
     for (const level of ["fundamental", "quick", "long", "exhaustive"]) assert.ok(workspace.targets[`test-${level}`].dependsOn.length > 0);
-    assert.equal(resolveNxInvocation(["run", "workspace:dev", "--", "s"]).args[1], "@semio-tech/framework-os-dev:dev");
+    assert.equal(resolveNxInvocation(["run", "workspace:dev", "--", "s"]).args[1], "@semio-tech/framework-os-dev:dev-s-wgpu-dev");
     assert.ok(invocation.getText(nxSource).includes("loadFrameworkOsPlaygroundSelections()"));
     assert.ok(!invocation.getText(nxSource).includes("loadFrameworkOsPlaygroundCatalog()"));
     assert.equal(root.length > 0, true);

@@ -1,0 +1,16 @@
+{
+  "implementation": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
+  "operations": [
+    "build",
+    "check",
+    "test"
+  ],
+  "cleanupStamp": ".🧬semio/🦑️repo/⚡️cache/🧭️prune-stamp.json",
+  "cleanupMarker": "cleanup-started.txt",
+  "entrypoints": [
+    "cache-prune",
+    "disk-prune"
+  ],
+  "rootTarget": "repo:cache-prune"
+}
+

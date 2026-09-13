@@ -83,3 +83,46 @@ fn property_value_dsl_field_round_trips_nested_array_and_object() {
         assert_eq!(round_tripped, value, "PropertyValue dsl_core::DslField round trip diverged for a nested Object/Array/Object value");
     });
 }
+
+#[test]
+fn generated_manifest_enum_value_mappings_are_exact_and_total() {
+    macro_rules! assert_mapping {
+        ($kind:ty, $rows:expr) => {{
+            let source_ids: Vec<String> = ($rows).iter().map(|row| row.id.clone()).collect();
+            let wire_ids: Vec<String> = <$kind>::ALL.iter().map(|variant| variant.as_str().to_string()).collect();
+            assert_eq!(wire_ids, source_ids);
+            let mut wires = std::collections::BTreeSet::new();
+            for variant in <$kind>::ALL {
+                let wire = variant.as_str();
+                assert!(wires.insert(wire), "duplicate wire identity {wire}");
+                assert_eq!(dsl_core::ToValue::to_value(variant), dsl_core::DslValue::String(wire.to_string()));
+                let decoded = <$kind as dsl_core::FromValue>::from_value(dsl_core::DslValue::String(wire.to_string())).expect("declared wire must decode");
+                assert_eq!(&decoded, variant);
+            }
+            assert_eq!(wires.len(), <$kind>::ALL.len());
+            assert!(<$kind as dsl_core::FromValue>::from_value(dsl_core::DslValue::String("unknown-wire".to_string())).is_err());
+            assert!(<$kind as dsl_core::FromValue>::from_value(dsl_core::DslValue::Bool(false)).is_err());
+        }};
+    }
+    assert_mapping!(flow_dag::FlowDagNodeKind, flow_dag::flow_dag_manifest().node_kinds);
+    assert_mapping!(rewrite_lhs::RewriteLhsNodeKind, rewrite_lhs::rewrite_lhs_manifest().node_kinds);
+    assert_mapping!(rewrite_lhs::RewriteLhsEdgeKind, rewrite_lhs::rewrite_lhs_manifest().edge_kinds);
+    assert_mapping!(rewrite_lhs::RewriteLhsPortKind, rewrite_lhs::rewrite_lhs_manifest().port_kinds);
+    assert_mapping!(rewrite_lhs::RewriteLhsWireKind, rewrite_lhs::rewrite_lhs_manifest().wire_kinds);
+    assert_mapping!(puzzle2d_default::Puzzle2dDefaultEdgeKind, puzzle2d_default::puzzle2d_default_manifest().edge_kinds);
+    assert_mapping!(puzzle2d_default::Puzzle2dDefaultPortKind, puzzle2d_default::puzzle2d_default_manifest().port_kinds);
+    assert_mapping!(puzzle2d_default::Puzzle2dDefaultWireKind, puzzle2d_default::puzzle2d_default_manifest().wire_kinds);
+    assert_mapping!(nakagin::NakaginNodeKind, nakagin::nakagin_manifest().node_kinds);
+    assert_mapping!(nakagin::NakaginEdgeKind, nakagin::nakagin_manifest().edge_kinds);
+    assert_mapping!(nakagin::NakaginPortKind, nakagin::nakagin_manifest().port_kinds);
+    assert_mapping!(nakagin::NakaginWireKind, nakagin::nakagin_manifest().wire_kinds);
+    assert_mapping!(puzzle5d_default::Puzzle5dDefaultEdgeKind, puzzle5d_default::puzzle5d_default_manifest().edge_kinds);
+    assert_mapping!(puzzle5d_default::Puzzle5dDefaultPortKind, puzzle5d_default::puzzle5d_default_manifest().port_kinds);
+    assert_mapping!(puzzle5d_default::Puzzle5dDefaultWireKind, puzzle5d_default::puzzle5d_default_manifest().wire_kinds);
+    assert_mapping!(writer_languages::WriterLanguagesLanguageKind, writer_languages::writer_languages_manifest().language_kinds);
+    assert_mapping!(wires::WiresEdgeKind, wires::wires_manifest().edge_kinds);
+    assert_mapping!(drawing_layers::DrawingLayersLayerKind, drawing_layers::drawing_layers_manifest().layer_kinds);
+    assert_mapping!(puzzle3d_default::Puzzle3dDefaultEdgeKind, puzzle3d_default::puzzle3d_default_manifest().edge_kinds);
+    assert_mapping!(puzzle3d_default::Puzzle3dDefaultPortKind, puzzle3d_default::puzzle3d_default_manifest().port_kinds);
+    assert_mapping!(puzzle3d_default::Puzzle3dDefaultWireKind, puzzle3d_default::puzzle3d_default_manifest().wire_kinds);
+}

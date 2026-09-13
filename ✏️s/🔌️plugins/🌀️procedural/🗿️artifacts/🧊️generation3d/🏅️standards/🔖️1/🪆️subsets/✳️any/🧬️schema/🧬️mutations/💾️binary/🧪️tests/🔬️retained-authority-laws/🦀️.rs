@@ -223,10 +223,28 @@ fn close_outcome(outcome: &mut semio_framework_job::StepOutcome) {
 //#endregion ⏱️BoundedInitializer
 
 fn close_session(session: &mut Generation3dMutationSession) {
+    let admitted = session.retained_allocated_bytes();
+    let mut released = 0;
+    let mut refused_subexact = false;
     for _ in 0..GENERATION3D_MAXIMUM_DOMAIN_ITEMS {
-        if session.close_step(1) {
-            assert!(session.terminal_is_empty());
-            return;
+        let maximum_bytes = session.next_retained_release_allocation_bytes().unwrap_or(0);
+        if maximum_bytes > 0 && !refused_subexact {
+            let before = session.retained_allocated_bytes();
+            assert_eq!(
+                session.close_step(1, maximum_bytes - 1).expect("P3 subexact retained mutation close"),
+                store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }
+            );
+            assert_eq!(session.retained_allocated_bytes(), before);
+            refused_subexact = true;
+        }
+        match session.close_step(1, maximum_bytes).expect("P3 retained mutation close") {
+            store::mounted_pack_rt::RetainedPackCloseStep::Complete => {
+                assert!(session.terminal_is_empty());
+                assert_eq!(released, admitted);
+                assert!(refused_subexact || admitted == 0);
+                return;
+            }
+            store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_bytes, .. } => released += released_bytes,
         }
     }
     panic!("P3 retained mutation session did not close");
@@ -239,21 +257,37 @@ fn every_fourteen_variant_decodes_through_retained_structural_grants() {
     for mutation in mutations {
         let bytes = encode_op(&mutation).expect("P3 retained mutation fixture encode");
         let mut session = Generation3dMutationSession::new(bytes.len(), GENERATION3D_MAXIMUM_DOMAIN_ITEMS).expect("P3 retained mutation preflight");
+        let mut refused_subexact = false;
         for byte in bytes {
             assert!(session.ingress_ready());
             session.admit_byte(byte).expect("one retained mutation byte");
             for _ in 0..GENERATION3D_OWNER_BYTES {
-                session.grant().expect("one retained mutation ingress grant");
+                if let Some(exact) = session.next_retained_allocation_bytes().expect("P3 retained mutation allocation query") {
+                    if exact > 0 && !refused_subexact {
+                        let before = session.retained_allocated_bytes();
+                        assert_eq!(session.reserve_retained_allocation(exact - 1).expect("P3 subexact retained mutation allocation"), (false, 0));
+                        assert_eq!(session.retained_allocated_bytes(), before);
+                        refused_subexact = true;
+                    }
+                    let (progressed, _) = session.reserve_retained_allocation(exact).expect("P3 retained mutation allocation");
+                    assert!(progressed);
+                } else {
+                    session.grant().expect("one retained mutation ingress grant");
+                }
                 if session.ingress_ready() {
                     break;
                 }
             }
             assert!(session.ingress_ready(), "symbol expansion must hand input ownership back before the next byte");
         }
+        assert!(refused_subexact, "every retained mutation must pre-admit real record-body backing");
         session.seal().expect("exact retained mutation seal");
         let mut ready = false;
         for _ in 0..100_000 {
-            if session.grant().expect("one retained semantic grant") {
+            if let Some(exact) = session.next_retained_allocation_bytes().expect("P3 retained mutation allocation query") {
+                let (progressed, _) = session.reserve_retained_allocation(exact).expect("P3 retained mutation allocation");
+                assert!(progressed);
+            } else if session.grant().expect("one retained semantic grant") {
                 ready = true;
                 break;
             }

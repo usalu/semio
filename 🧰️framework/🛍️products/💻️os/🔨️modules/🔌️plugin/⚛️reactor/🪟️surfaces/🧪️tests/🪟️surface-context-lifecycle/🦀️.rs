@@ -104,15 +104,59 @@ fn reserved_section_surfaces_keep_the_unnarrowed_view_and_outlive_their_windows(
     eprintln!("[DEBUG] reserved section surfaces retained the unnarrowed host view across sibling mounts and window closure");
 }
 
+/// 🪟️ WAVE B56 LAW: the app's DEFAULT window surface is a real window INSTANCE and has host context;
+/// the synthetic surface named `window` is refused outright.
+///
+/// 🦾️ This law used to pin the opposite for its second half: it mounted `7:window` and required a host
+/// context for it, because leftover Viewport dirty defaulted the guest surface to the bare name
+/// (wave W-G3 §8.29) and `windowHostContextBindings` aliased the last bound window onto it. That alias was
+/// a fourteenth resident surface no pane reads, and the reconcile reservation it could not obtain left
+/// every real surface deferred with the reactor answering `more-work` for ever
+/// (`reserve_refusal=1:window:registry-reservation-unavailable`, wave B54 §6.4). The DEFAULT-window
+/// semantics are kept exactly — a real default still resolves, projects and retains its own host view —
+/// only the synthetic name is gone. Ticket 26/09/02/PUZZLE-3D-END-TO-END.
 #[semio_framework_async_macros::async_test]
-async fn default_window_surface_has_host_context() {
+async fn default_window_surface_has_host_context_and_the_synthetic_name_is_refused() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
     let view: semio_framework::ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
-    let alias = &fixture["defaultWindowSurface"];
+    let default = &fixture["defaultWindowSurface"];
     let mut contexts = SurfaceContexts::default();
-    let projected = view.for_window_instance(alias["windowId"].as_str().unwrap()).unwrap();
-    contexts.insert(alias["id"].as_str().unwrap().into(), alias["bodyKey"].as_str().unwrap().into(), projected).unwrap();
-    let actual = contexts.get(alias["id"].as_str().unwrap()).expect("leftover default window surface must retain host context");
-    assert_eq!(actual.body_key, alias["bodyKey"].as_str().unwrap());
-    assert_eq!(actual.view_state.window_id.as_deref(), alias["windowId"].as_str());
+    let projected = view.for_window_instance(default["windowId"].as_str().unwrap()).unwrap();
+    contexts.insert(default["id"].as_str().unwrap().into(), default["bodyKey"].as_str().unwrap().into(), projected.clone()).unwrap();
+    let actual = contexts.get(default["id"].as_str().unwrap()).expect("the app's default window surface must retain host context");
+    assert_eq!(actual.body_key, default["bodyKey"].as_str().unwrap());
+    assert_eq!(actual.view_state.window_id.as_deref(), default["windowId"].as_str());
+    assert!(contexts.is_window(default["id"].as_str().unwrap()));
+    let synthetic = default["syntheticId"].as_str().unwrap();
+    let refused = contexts.insert(synthetic.into(), default["bodyKey"].as_str().unwrap().into(), projected).expect_err("the synthetic `window` surface must never mount for an app with window instances");
+    assert_eq!(refused, default["syntheticRefusal"].as_str().unwrap());
+    assert!(contexts.get(synthetic).is_none());
+    assert_eq!(contexts.background_surfaces(), vec![default["id"].as_str().unwrap().to_owned()]);
+    eprintln!("[DEBUG] default window surface {} retains host context; synthetic {synthetic} refused", default["id"].as_str().unwrap());
+}
+
+/// 🪟️ WAVE B56 LAW: background work addresses EVERY mounted window instance, and an instance with no
+/// window falls back to its app-level panels rather than a synthetic window.
+///
+/// 🦾️ The reactor's three background dirty sites (a job's progress, its completion, a document-backbone
+/// message) minted `"<instance>:window"`, so the real panes never received the update at all. Ticket
+/// 26/09/02/PUZZLE-3D-END-TO-END wave B56.
+#[semio_framework_async_macros::async_test]
+async fn background_surfaces_name_every_window_then_fall_back_to_panels() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+    let view: semio_framework::ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
+    let mut contexts = SurfaceContexts::default();
+    let windows: Vec<String> = view.window_instances.iter().map(|window| format!("7:{}", window.id)).collect();
+    for window in &view.window_instances {
+        let projected = view.for_window_instance(&window.id).unwrap();
+        contexts.insert(format!("7:{}", window.id), fixture["defaultWindowSurface"]["bodyKey"].as_str().unwrap().into(), projected).unwrap();
+    }
+    contexts.insert("7:panel".into(), "properties".into(), view.clone()).unwrap();
+    assert_eq!(contexts.background_surfaces(), windows);
+    for window in &windows {
+        contexts.remove(window);
+    }
+    assert_eq!(contexts.background_surfaces(), vec!["7:panel".to_owned()]);
+    assert!(!contexts.background_surfaces().iter().any(|surface| surface.ends_with(":window")));
+    eprintln!("[DEBUG] background surfaces windows={:?} then panels={:?}", windows, contexts.background_surfaces());
 }

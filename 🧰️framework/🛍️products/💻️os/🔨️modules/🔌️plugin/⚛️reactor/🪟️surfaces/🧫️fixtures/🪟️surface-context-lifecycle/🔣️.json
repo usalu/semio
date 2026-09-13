@@ -73,8 +73,10 @@
     "actor": "user:alice#s1"
   },
   "defaultWindowSurface": {
-    "id": "7:window",
+    "id": "7:right",
     "bodyKey": "graph",
-    "windowId": "right"
+    "windowId": "right",
+    "syntheticId": "7:window",
+    "syntheticRefusal": "a surface named `window` is synthetic: an app with window instances is addressed by instance"
   }
 }

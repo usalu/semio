@@ -15,7 +15,7 @@ fn mounted_3d_element_interfaces_match_numpy_fixture() {
         let kind = case["kind"].as_str().expect("element kind");
         let ids = case["nodeIds"].as_array().expect("node ids").iter().map(|value| value.as_str().expect("node id")).collect::<Vec<_>>();
         let properties = &case["properties"];
-        let element: Elements = match kind {
+        let mut element: Elements = match kind {
             "bar3" => Bar3 { id: "bar-fixture".into(), node_a: ids[0].into(), node_b: ids[1].into(), e: fixture_number(properties, "e"), a: fixture_number(properties, "a"), density: 0.0 }.into(),
             "frame3" => Frame3 {
                 id: "frame-fixture".into(),
@@ -65,6 +65,18 @@ fn mounted_3d_element_interfaces_match_numpy_fixture() {
         assert_eq!(element.mounted_stiffness_cell(&context, side, 0), None, "{kind} row bound");
         assert_eq!(element.mounted_stiffness_cell(&context, 0, side), None, "{kind} column bound");
         assert_eq!(element.mounted_stiffness_cell(&ElementContext { positions: Vec::new() }, 0, 0), None, "{kind} context bound");
+        let expected_owners = fixture["closeStringCounts"][kind].as_u64().unwrap() as usize;
+        let mut released = Vec::new();
+        let mut next = Vec::new();
+        for _ in 0..expected_owners + 1 {
+            next.push(element.mounted_next_string_bytes());
+            if let Some(bytes) = element.close_mounted_string_step() { released.push(bytes); }
+        }
+        eprintln!("[DEBUG] mounted {kind} close expected={expected_owners}, next={next:?}, released={released:?}, terminal={}", element.mounted_strings_terminal_is_empty());
+        assert!(element.mounted_strings_terminal_is_empty(), "{kind} string owners retire");
+        assert_eq!(released.len(), expected_owners, "{kind} exact string count");
+        assert_eq!(next[..expected_owners], released.iter().copied().map(Some).collect::<Vec<_>>());
+        assert_eq!(element.mounted_next_string_bytes(), None);
     }
     eprintln!("[DEBUG] Bar3, Frame3, and Tet4 borrowed exact node ids and matched every allocation-free mounted cell to cold and NumPy matrices");
 }

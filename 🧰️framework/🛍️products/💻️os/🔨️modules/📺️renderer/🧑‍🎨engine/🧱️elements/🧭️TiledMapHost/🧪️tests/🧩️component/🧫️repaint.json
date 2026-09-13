@@ -1,6 +1,6 @@
 {
   "settleMs": 1000,
-  "cancelledPan": { "event": "pointercancel", "reason": "pan", "pointerId": 7 },
+  "cancelledPan": { "event": "pointercancel", "reason": "pan", "pointerId": 7, "point": { "x": 48, "y": 64 } },
   "cases": [
     { "name": "render mode", "method": "setRenderMode", "args": ["image"] },
     { "name": "vector style", "method": "setVectorStyle", "args": ["figureGround"] },

@@ -651,6 +651,22 @@ function flattenPanelTabNodeLeaves(tabs: readonly PanelTabNode[]): readonly Pane
     return children && children.length > 0 ? flattenPanelTabNodeLeaves(children) : [tab];
   });
 }
+
+function panelDefinitionPath(tabs: AppDefinition["panelTabs"], targetId: string): readonly string[] | null {
+  for (const tab of tabs) {
+    const id = panelTabKindId(tab.kind);
+    if (id === targetId && tab.children.length === 0) return [id];
+    const childPath = panelDefinitionPath(tab.children, targetId);
+    if (childPath) return [id, ...childPath];
+  }
+  return null;
+}
+
+function requiredHostPanelLeafId(app: AppDefinition | undefined): string {
+  const leaf = app ? flattenPanelTabLeaves(app.panelTabs)[0] : undefined;
+  if (!leaf) throw new Error("configured host app has no panel leaf");
+  return panelTabKindId(leaf.kind);
+}
 //#endregion 🔖️BuiltNodeReconciler
 
 //#region FrameworkOsShell
@@ -1991,8 +2007,9 @@ function FrameworkOsShellInner({
   // state (hover, the armed utility, its brush preview), so it is published under THAT pane and never
   // over every pane's record (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B39); a windowless action
   // publishes the document's shared fields only and leaves every pane's own fields untouched.
-  const applyLeftoverInteractionView = useCallback((output: unknown, actionId?: string, windowId?: string) => {
+  const applyLeftoverInteractionView = useCallback((output: unknown, actionId?: string, addressedWindowId?: string) => {
     const published = interactionViewFromLeftoverOutput(output);
+    const windowId = addressedWindowId ?? published?.windowId ?? undefined;
     const armLeftoverBrushPreview = (utility: string | null | undefined, hoverVortex: string | null, previewJson?: string | null) => {
       if (leftoverBrushPreviewRefreshReady(actionId, utility, hoverVortex, previewJson)) leftoverBrushTickSettledRef.current = true;
       else if (leftoverBrushPreviewWindowHash(utility, hoverVortex, "cached") !== undefined) leftoverBrushTickSettledRef.current = false;
@@ -2060,7 +2077,21 @@ function FrameworkOsShellInner({
   const hostAppId = hostApp?.id;
   const hostControllerId = hostApp?.controllerId;
   const landingControllerId = landingApp?.controllerId;
-  const hostCatalogueTabId = hostApp?.panelTabs[0] ? panelTabKindId(hostApp.panelTabs[0].kind) : undefined;
+  const hostCatalogueTabId = hostApp ? requiredHostPanelLeafId(hostApp) : undefined;
+  const spacePrograms = useMemo<readonly SpaceProgramEntry[]>(
+    () =>
+      loadedPlugins.flatMap((entry) =>
+        entry.manifest.apps.map((app) => ({
+          pluginId: entry.handle.pluginId,
+          workflowStepId: app.id,
+          appId: app.id,
+          label: resolveManifestLabel(app.label as LocalizedLabel | string, uiTerminology, uiLocale),
+          breadcrumb: app.breadcrumb,
+          yields: "",
+        })),
+      ),
+    [loadedPlugins, uiLocale, uiTerminology],
+  );
   useEffect(() => {
     if (!hostAppsResolution.error) return;
     dispatch({ type: "SET_SESSION", value: null });
@@ -3430,11 +3461,7 @@ function FrameworkOsShellInner({
       const manifest = handle.manifest;
       if (hostConfig) {
         const sApp = resolveRequiredHostApps(manifest.apps, hostConfig).landing;
-        // 🪦️ `manifest.workflows` (the source `buildSpacePrograms` used to read) was deleted from the
-        // Rust `PluginManifest` — the studio catalogue is now registry-driven (see `SpaceCommand::SetAppRegistrations`),
-        // so `SpacePanelState.programs` is permanently empty; `spawnedApps`/`activePanelTab`/`activeSpawnedId` are
-        // still real, live state, so `SpacePanelState` itself stays.
-        const panelState = buildSpacePanelState([], []);
+        const panelState = buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
         const instanceId = await handle.createApp(sApp.id);
         const viewState: ViewModel = { activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id, panelJson: panelJsonFromState(panelState) };
         // 🪟️ Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
@@ -5126,10 +5153,9 @@ function FrameworkOsShellInner({
               return handle.createApp(app.id);
             },
             retire: retireSessionInstance,
-            // 🪦️ See `establishPrimarySession`'s comment above — `programs` is permanently empty now, and
-            // the empty studio panel belongs to `hostMode` only: a non-host playground's boot session
+            // 🪶️ The empty studio panel belongs to `hostMode` only: a non-host playground's boot session
             // carries no `panelJson` at all, so a role switch must not invent one either.
-            defaultViewState: (app) => ({ activeModeId: app.defaultModeId ?? app.modes[0]?.id, ...(hostMode ? { panelJson: panelJsonFromState(buildSpacePanelState([], [])) } : {}) }),
+            defaultViewState: (app) => ({ activeModeId: app.defaultModeId ?? app.modes[0]?.id, ...(hostMode ? { panelJson: panelJsonFromState(buildSpacePanelState([], requiredHostPanelLeafId(hostApp))) } : {}) }),
             publish: (next) => dispatch({ type: "SET_SESSION", value: next }),
             seedLayout: (app) => {
               const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
@@ -5180,7 +5206,7 @@ function FrameworkOsShellInner({
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
       if (!pluginEntry || !session) return null;
       const app = pluginEntry.manifest.apps.find((candidate) => candidate.id === program.appId);
-      const currentPanel = parsePanelState(sourceViewState ?? session.viewState) ?? buildSpacePanelState([], []);
+      const currentPanel = parsePanelState(sourceViewState ?? session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
       const existing = osInstanceId ? currentPanel.spawnedApps.find((entry) => entry.id === osInstanceId) : currentPanel.spawnedApps.find((entry) => entry.appId === program.appId && entry.pluginId === program.pluginId);
       if (existing) {
         if (documentJson && app) {
@@ -5610,10 +5636,7 @@ function FrameworkOsShellInner({
         }
         if ("spawnPluginInstance" in effect) {
           const { pluginId, appId, osInstanceId, label, documentJson } = effect.spawnPluginInstance;
-          const currentPanel = parsePanelState(nextViewState) ?? buildSpacePanelState([], []);
-          // 🪦️ See `establishPrimarySession`'s comment above — the `manifest.workflows` fallback source is dead; `catalog` is `currentPanel.programs` or empty.
-          const catalog = currentPanel.programs.length > 0 ? currentPanel.programs : [];
-          const program = catalog.find((entry) => entry.pluginId === pluginId && entry.appId === appId) ?? catalog.find((entry) => entry.pluginId === pluginId);
+          const program = spacePrograms.find((entry) => entry.pluginId === pluginId && entry.appId === appId) ?? spacePrograms.find((entry) => entry.pluginId === pluginId);
           if (program) {
             // 🪟️ Fold spawn into `nextViewState` — a separate SET_SESSION would be clobbered by the
             // final write below and leave the shell stuck on the studio surface.
@@ -5625,10 +5648,7 @@ function FrameworkOsShellInner({
         }
         if ("openPluginInstance" in effect) {
           const { pluginId, appId, osInstanceId } = effect.openPluginInstance;
-          const currentPanel = parsePanelState(nextViewState) ?? buildSpacePanelState([], []);
-          // 🪦️ See `establishPrimarySession`'s comment above — the `manifest.workflows` fallback source is dead; `catalog` is `currentPanel.programs` or empty.
-          const catalog = currentPanel.programs.length > 0 ? currentPanel.programs : [];
-          const program = catalog.find((entry) => entry.pluginId === pluginId && entry.appId === appId) ?? catalog.find((entry) => entry.pluginId === pluginId);
+          const program = spacePrograms.find((entry) => entry.pluginId === pluginId && entry.appId === appId) ?? spacePrograms.find((entry) => entry.pluginId === pluginId);
           if (program) {
             // 🪟️ Fold focus into `nextViewState` so the final SET_SESSION keeps `activeSpawnedId`
             // (opening a workflow node depends on this — otherwise nothing appears to happen).
@@ -5702,7 +5722,7 @@ function FrameworkOsShellInner({
         if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] applyHostEffects skipped refresh: session not current", JSON.stringify({ spawned: isSpawnedPluginSession, scope: refreshScope }));
       }
     },
-    [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, requestInferenceProposal, resolvedTargetViewState, session, setActiveUtilityForWindow, hostMode],
+    [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, requestInferenceProposal, resolvedTargetViewState, session, setActiveUtilityForWindow, spacePrograms, hostMode],
   );
   // 🔁️ What the ui-refresh lane applies for a pass that asked for effects of its own, outside that pass.
   applyHostEffectsRef.current = applyHostEffects;
@@ -5829,8 +5849,8 @@ function FrameworkOsShellInner({
           await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope), routeOwner);
         } else {
           const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
-          const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState([], []);
-          updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
+          const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
+          updateSpacePanel(buildSpacePanelState(currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
           await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope), routeOwner);
         }
       } finally {
@@ -6103,7 +6123,7 @@ function FrameworkOsShellInner({
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
       if (!pluginEntry || !session) return;
       const instanceId = await pluginEntry.handle.createApp(program.appId);
-      const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], []);
+      const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
       const spawnedId = `${program.pluginId}-${instanceId}`;
       updateSpacePanel(
         studioPanelFocusingSpawned(currentPanel, {
@@ -6375,16 +6395,28 @@ function FrameworkOsShellInner({
 
       if (hostMode && action.action === "spawnApp" && action.controllerId !== hostControllerId) {
         const pluginId = typeof action.args === "object" && action.args != null && "pluginId" in action.args ? String((action.args as { pluginId?: string }).pluginId ?? "") : "";
-        const currentPanel = parsePanelState(session.viewState);
-        const program = currentPanel?.programs.find((entry) => entry.pluginId === pluginId);
+        const program = spacePrograms.find((entry) => entry.pluginId === pluginId);
         if (program) void spawnProgram(program);
         return;
       }
 
-      if (hostMode && action.controllerId === hostControllerId && action.action === "setActivePanelTab") {
-        const tabId = typeof action.args === "object" && action.args != null && "tabId" in action.args ? String((action.args as { tabId?: string }).tabId ?? hostCatalogueTabId ?? "") : (hostCatalogueTabId ?? "");
-        const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], []);
-        updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, tabId, currentPanel.activeSpawnedId));
+      if (hostMode && action.action === "setActivePanelTab" && (action.controllerId === hostControllerId || action.controllerId === session.app.controllerId)) {
+        const tabId = typeof action.args === "object" && action.args != null && typeof (action.args as { tabId?: unknown }).tabId === "string" ? (action.args as { tabId: string }).tabId : "";
+        const targetApp = action.controllerId === session.app.controllerId ? session.app : hostApp;
+        if (!targetApp || tabId.length === 0 || Array.from(tabId).length > 256 || /[\u0000-\u001f\u007f]/u.test(tabId)) return;
+        const leaf = flattenPanelTabLeaves(targetApp.panelTabs).find((tab) => panelTabKindId(tab.kind) === tabId);
+        const path = panelDefinitionPath(targetApp.panelTabs, tabId);
+        if (!leaf || !path) return;
+        const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], hostCatalogueTabId);
+        updateSpacePanel(buildSpacePanelState(currentPanel.spawnedApps, tabId, currentPanel.activeSpawnedId));
+        if (mobile) {
+          dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
+          dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
+        } else {
+          const anchor = panelAnchorForGroup(leaf.group);
+          dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
+          dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: true });
+        }
         return;
       }
 
@@ -6609,6 +6641,7 @@ function FrameworkOsShellInner({
       syncDraftPath,
       updateSpacePanel,
       hostControllerId,
+      hostApp,
       landingControllerId,
       hostCatalogueTabId,
       historyProjection.canUndo,
@@ -6618,6 +6651,8 @@ function FrameworkOsShellInner({
       reloadPlugin,
       uninstallPlugin,
       pluginSupervisorById,
+      spacePrograms,
+      mobile,
       uiLocale,
     ],
   );
@@ -9886,7 +9921,7 @@ function FrameworkOsShellInner({
       });
     }
     if (hostMode && panel) {
-      for (const program of panel.programs) {
+      for (const program of spacePrograms) {
         items.push({
           id: `spawn.${program.pluginId}`,
           label: `${shellLabel("ui.palette.spawnPrefix")} ${appBreadcrumb(resolveArtifactByAppId(loadedPlugins, program.appId, program.breadcrumb, uiTerminology))}`,
@@ -9918,7 +9953,7 @@ function FrameworkOsShellInner({
       );
     }
     return items;
-  }, [activeWindowId, appLabelsOverlay, loadedPlugins, mobile, onAction, onCommand, panel, resolvedCommands, session, hostMode, uiLocale, uiTerminology, hostControllerId]);
+  }, [activeWindowId, appLabelsOverlay, loadedPlugins, mobile, onAction, onCommand, panel, resolvedCommands, session, spacePrograms, hostMode, uiLocale, uiTerminology, hostControllerId]);
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
@@ -10242,7 +10277,7 @@ function FrameworkOsShellInner({
                 if (hostMode && panel?.spawnedApps.some((entry) => entry.id === windowId)) {
                   const closedSpawned = panel.spawnedApps.find((entry) => entry.id === windowId);
                   const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== windowId);
-                  updateSpacePanel(buildSpacePanelState(panel.programs, nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
+                  updateSpacePanel(buildSpacePanelState(nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
                   // 🪶️ Closing a spawned app's window used to leave its plugin instance running forever
                   // (see REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT's documented teardown gap) — the panel
                   // entry was dropped from the UI, but nothing ever told the guest to free it.
@@ -10427,13 +10462,13 @@ function FrameworkOsShellInner({
       shellPluginId: pluginFilter ?? "unknown",
       ready: !!session && !error,
       plugins: shellCatalogProbePlugins(registry, pluginStatusById, appRouter),
-      programs: (panel?.programs ?? []).map((program) => ({ pluginId: program.pluginId, appId: program.appId, label: program.label })),
+      programs: spacePrograms.map((program) => ({ pluginId: program.pluginId, appId: program.appId, label: program.label })),
       spawned: (panel?.spawnedApps ?? []).map((entry) => ({ id: entry.id, pluginId: entry.pluginId, appId: entry.appId })),
     };
     return () => {
       delete host.__semioOsCatalogProbe;
     };
-  }, [session, error, pluginFilter, registry, pluginStatusById, panel, appRouter]);
+  }, [session, error, pluginFilter, registry, pluginStatusById, panel, spacePrograms, appRouter]);
 
   /** 🔬️ Dev/test-only read seam over the actual acknowledged Shell store. The caller supplies only
    * a scope; the returned closed projection contains no capability or mutation surface. */

@@ -3,7 +3,7 @@
 // THIS crate (semio-framework-os-infinite) separately from any other crate that also mounts
 // the same source file, so a `ToValue` impl elsewhere does not cover this crate's own copy of
 // the type. Each variant carries an explicit per-variant `#[serde(rename = "...")]` wire
-// string, matched here byte for byte — see 🕸️graph's `generated-value-bridge.rs` for the twin
+// string, matched here byte for byte — see 🕸️graph's `🛂️manifest/🔄️value-conversion/🦀️.rs` for the twin
 // pattern. RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01/02), additive
 // phase: ADDITIVE ONLY — both enums keep their existing `Serialize`/`Deserialize` untouched.
 

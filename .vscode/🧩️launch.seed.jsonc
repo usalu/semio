@@ -2,7 +2,18 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-    {"name":"🧪️framework-retained-pack-catalog-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:framework-retained-pack-catalog-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.229}},
+    {"name":"🧪️window-config-provisioning-lifecycle-oracle","type":"node-terminal","request":"launch","command":"bun nx run workspace:window-config-provisioning-lifecycle-oracle","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.240}},
+    {"name":"🧪️window-config-retained-pack-load-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:window-config-retained-pack-load-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.241}},
+    {"name":"🧪️fem-numerical-page-owners","type":"node-terminal","request":"launch","command":"bun nx run workspace:fem-numerical-page-owners","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.238}},
+    {"name":"🧪️fem-numerical-page-owners-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:fem-numerical-page-owners-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.239}},
+    {"name":"🧪️home-host-panel-owner-oracle","type":"node-terminal","request":"launch","command":"bun nx run workspace:home-host-panel-owner-oracle","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.236}},
+    {"name":"🧪️generation2d-window-camera-ownership-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:generation2d-window-camera-ownership-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.227}},
+    {"name":"🧪️generation2d-window-camera-ownership-oracle","type":"node-terminal","request":"launch","command":"bun nx run workspace:generation2d-window-camera-ownership-oracle","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.226}},
+    {"name":"🧪️fem-mesh-preparation-owners","type":"node-terminal","request":"launch","command":"bun nx run workspace:fem-mesh-preparation-owners","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.229}},
+    {"name":"🧪️fem-mesh-preparation-owners-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:fem-mesh-preparation-owners-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.23}},
+    {"name":"🧪️framework-retained-pack-catalog-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:framework-retained-pack-catalog-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.231}},
+    {"name":"🧪️framework-retained-pack-value","type":"node-terminal","request":"launch","command":"bun nx run workspace:framework-retained-pack-value","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.232}},
+    {"name":"🧪️framework-retained-pack-value-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:framework-retained-pack-value-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.233}},
     {"name":"🧪️fem-scalar-owners-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:fem-scalar-owners-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.228}},
     {"name":"🧪️architect-window-ownership-native","type":"node-terminal","request":"launch","command":"bun nx run workspace:architect-window-ownership-native","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.225}},
     {"name":"🧪️architect-window-ownership-oracle","type":"node-terminal","request":"launch","command":"bun nx run workspace:architect-window-ownership-oracle","cwd":"${workspaceFolder}","presentation":{"group":"3_test","order":311.224}},
@@ -871,6 +882,61 @@
       }
     },
     {
+      "name": "📦️generate🐍️styling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-styling-py:generate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": -18
+      }
+    },
+    {
+      "name": "🧪️test🐍️styling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-styling-py:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_test",
+        "order": -17.9
+      }
+    },
+    {
+      "name": "🧪️test-quick🐍️styling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-styling-py:test-quick",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_test",
+        "order": -17.8
+      }
+    },
+    {
+      "name": "🧪️test-long🐍️styling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-styling-py:test-long",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_test",
+        "order": -17.7
+      }
+    },
+    {
+      "name": "🧪️test-exhaustive🐍️styling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-styling-py:test-exhaustive",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_test",
+        "order": -17.6
+      }
+    },
+    {
       "name": "📥️styling .NET dependencies",
       "type": "node-terminal",
       "request": "launch",
@@ -1251,6 +1317,17 @@
       },
       "env": {
         "SEMIO_TICKET_DIR": "${input:nxCacheTicket}"
+      }
+    },
+    {
+      "name": "🧪️test⚡️cache-command-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run repo:test-cache-command-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": -11.5
       }
     },
     {
@@ -8046,6 +8123,28 @@
       }
     },
     {
+      "name": "🧬schema🗺️surface🏛️abstraction🧪source-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-root-surface-abstraction-law-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.2096269
+      }
+    },
+    {
+      "name": "🧬schema💡️inference🧪source-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-root-inference-law-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.20962695
+      }
+    },
+    {
       "name": "🧹clean🧩️taxonomy🧪️manifestless-source-closure",
       "type": "node-terminal",
       "request": "launch",
@@ -8076,6 +8175,28 @@
       "presentation": {
         "group": "4_gate",
         "order": 410.2096281
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🎚️tool-configuration-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-tool-configuration-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.20962815
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🎚️vitest-configuration-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-vitest-configuration-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.2096282
       }
     },
     {
@@ -8754,10 +8875,21 @@
       }
     },
     {
-      "name": "📦️build📐️cad🎛️concrete🌲️forest",
+      "name": "📦️build✏️s",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:build -- cad fixture concrete",
+      "command": "bun nx run @semio-tech/framework-os-dev:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 9
+      }
+    },
+    {
+      "name": "📦️build📐️cad",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-cad-react-release",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -9308,10 +9440,10 @@
       }
     },
     {
-      "name": "📦️build🧩️puzzle🏙️3d🎛️concrete",
+      "name": "📦️build🧩️puzzle🏙️3d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:build -- puzzle3d fixture concrete",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-puzzle3d-react-release",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -9319,25 +9451,14 @@
       }
     },
     {
-      "name": "📦️build🧩️puzzle👯️5d🎛️concrete",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:build -- puzzle5d fixture concrete",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 150
-      }
-    },
-    {
-      "name": "📦️build🧩️puzzle👯️5d🎛️capsule",
+      "name": "📦️build🧩️puzzle👯️5d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:build-puzzle5d-react-release",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 151
+        "order": 150
       }
     },
     {
@@ -9363,10 +9484,10 @@
       }
     },
     {
-      "name": "📦️build📸️shooting🎛️base",
+      "name": "📦️build📸️shooting",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:build -- shooting fixture base-icon",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-shooting-react-release",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -10016,6 +10137,28 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.48
+      }
+    },
+    {
+      "name": "🧪️test📕️norm🔮️oracle-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-js:test-oracle-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.985
+      }
+    },
+    {
+      "name": "🧪️test🧭️command-composition-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:test-command-composition-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.99
       }
     },
     {
@@ -11119,14 +11262,25 @@
       }
     },
     {
-      "name": "📦️build🦀️@semio-tech/framework-renderer-wgpu",
+      "name": "📦️wasm🧊️wgpu",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-renderer-wgpu:build",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
         "order": 500.81
+      }
+    },
+    {
+      "name": "📦️wasm-release🧊️wgpu",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:wasm-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 500.811
       }
     },
     {

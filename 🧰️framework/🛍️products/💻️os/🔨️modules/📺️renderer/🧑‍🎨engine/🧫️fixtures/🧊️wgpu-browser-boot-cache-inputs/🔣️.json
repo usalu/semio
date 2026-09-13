@@ -65,6 +65,24 @@
         "appRole": "viewer",
         "appMode": "view"
       }
+    },
+    {
+      "search": "",
+      "serverVariant": "note",
+      "expected": {
+        "pluginVariant": "note",
+        "appRole": "editor",
+        "appMode": ""
+      }
+    },
+    {
+      "search": "?plugin=puzzle3d",
+      "serverVariant": "note",
+      "expected": {
+        "pluginVariant": "puzzle3d",
+        "appRole": "editor",
+        "appMode": ""
+      }
     }
   ],
   "generator": {
@@ -73,11 +91,7 @@
     "prerequisites": [
       "@semio-tech/plugin-registry:generate"
     ],
-    "consumers": [
-      "wasm",
-      "serve",
-      "dev"
-    ],
+    "consumers": [],
     "inputs": [
       "browserBootSources"
     ],

@@ -7,13 +7,9 @@ import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics } from "../⏱️turn-budget/�
 import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
 import { DEFAULT_HOST_VARIANT } from "../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
-/** 🚏️ Trunk's `copy-file` `data-target-path` names a DIRECTORY, so the two generated `🤖️generated/🟨️.js`
- * artifacts are served at `/🚀️boot.js/🟨️.js` and `/🎞️frame-worker.js/🟨️.js` while the wasm-bindgen pair
- * stays at the dist ROOT. This module IS the first of those, so every sibling it reaches for is one
- * level up (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Relative, not absolute, so the bundle keeps
- * working under a non-root `public_url`. */
-const RENDERER_MODULE_URL = new URL("../semio-framework-os-renderer-wgpu.js", import.meta.url).href;
-const RENDERER_WASM_URL = new URL("../semio-framework-os-renderer-wgpu_bg.wasm", import.meta.url).href;
+/** 🚏️ Resolves completed renderer artifacts and the generated frame worker through the browser host. */
+const RENDERER_MODULE_URL = new URL("../renderer-modules/wgpu/semio-framework-os-renderer-wgpu.js", import.meta.url).href;
+const RENDERER_WASM_URL = new URL("../renderer-modules/wgpu/semio-framework-os-renderer-wgpu_bg.wasm", import.meta.url).href;
 const FRAME_WORKER_URL = new URL("../🎞️frame-worker.js/🟨️.js", import.meta.url);
 const BOOT_FIELD_CAPACITY = 2048;
 const LOCATION_SEARCH_CAPACITY = 8192;
@@ -51,7 +47,7 @@ function bootDescriptor(): { pluginVariant: string; appRole: string; appMode: st
   const params = new URLSearchParams(window.location.search);
   const hubUrl = params.get("hub");
   return {
-    pluginVariant: bounded(params.get("plugin") ?? DEFAULT_HOST_VARIANT, "plugin"),
+    pluginVariant: bounded(params.get("plugin") ?? document.querySelector<HTMLMetaElement>('meta[name="semio-plugin"]')?.content ?? DEFAULT_HOST_VARIANT, "plugin"),
     appRole: params.get("role") === "viewer" ? "viewer" : "editor",
     appMode: bounded(params.get("mode") ?? "", "mode"),
     ...(hubUrl ? { hub: { hubUrl: bounded(hubUrl, "hub"), user: bounded(params.get("user") ?? "", "user"), dataDir: bounded(params.get("dataDir") ?? "", "dataDir") } } : {}),

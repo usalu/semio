@@ -16,10 +16,16 @@ LOG="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26
 exec > "$LOG" 2>&1
 export NX_DAEMON=false SEMIO_RENDERER=wgpu SEMIO_PLUGIN=generation3d S_OS_PORT=6118 CARGO_PROFILE_WASM_DEV_DEBUG=false
 date
-cd "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"
-bun ./📜️script.ts dev generation3d served
-echo "DEV_EXIT=$?"
-date
+# 🧊️ 2026-09-13: the dev path is SKIPPED by default — it has refused on every start since the peer
+# localstorage census landed (measured again this session: DEV_EXIT=1 after ~10 minutes of build),
+# and each attempt holds the shared cargo locks for that whole time. Set SEMIO_SERVE_TRY_DEV=1 to
+# restore it once that peer lane lands.
+if [ "${SEMIO_SERVE_TRY_DEV:-0}" = "1" ]; then
+  cd "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"
+  bun ./📜️script.ts dev generation3d served
+  echo "DEV_EXIT=$?"
+  date
+fi
 cd "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
 echo "[DEBUG] falling back to trunk serve directly (see header)"
 trunk serve --config Trunk.toml --port 6118

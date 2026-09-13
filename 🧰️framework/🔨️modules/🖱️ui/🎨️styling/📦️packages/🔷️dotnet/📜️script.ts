@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { ScriptRouter, runBundleScriptMain } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { StylingDotnetBuildScript, StylingDotnetDepsScript } from "../../🏗️builder/🟦️.ts";
+import { ScriptRouter } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
+import { StylingDotnetBuildScript, StylingDotnetDepsScript } from "../../🏗️builder/🔷️dotnet/📜️script.ts";
 
-await runBundleScriptMain(new ScriptRouter(import.meta.dir).register("deps", StylingDotnetDepsScript).register("build", StylingDotnetBuildScript), import.meta.url);
+if (import.meta.main) await new ScriptRouter(import.meta.dir).register("deps", StylingDotnetDepsScript).register("build", StylingDotnetBuildScript).run(process.argv.slice(2));

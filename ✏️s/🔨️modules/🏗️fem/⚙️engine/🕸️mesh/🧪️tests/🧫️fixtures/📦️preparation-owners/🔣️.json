@@ -1,0 +1,116 @@
+{
+  "maximumBackingBytes": 4096,
+  "ownerOrder": [
+    "points",
+    "pointIndices",
+    "constraints"
+  ],
+  "slotWidths": [
+    [
+      16,
+      24,
+      8
+    ],
+    [
+      16,
+      24,
+      16
+    ]
+  ],
+  "fillCases": [
+    { "id": "point-before-paired-append", "outer": [[0,0],[1,0],[1,1],[0,1]], "maximumPoints": 3, "maximumTriangles": 8, "expected": { "points": 3, "constraints": 2, "pendingPoint": true, "pendingIndex": false } },
+    { "id": "closing-edge-before-append", "outer": [[0,0],[1,0],[1,1],[0,1]], "maximumPoints": 8, "maximumTriangles": 1, "expected": { "points": 4, "constraints": 3, "pendingPoint": false, "pendingIndex": false } },
+    { "id": "pending-edge-before-append", "outer": [[0,0],[1,0],[2,1],[1,2],[0,1]], "maximumPoints": 8, "maximumTriangles": 1, "expected": { "points": 5, "constraints": 3, "pendingPoint": false, "pendingIndex": true } }
+  ],
+  "cases": [
+    {
+      "id": "three-independent-reservations",
+      "maximumPoints": 8,
+      "maximumTriangles": 8,
+      "expected": {
+        "reservations": [
+          [
+            true,
+            false,
+            false
+          ],
+          [
+            true,
+            true,
+            false
+          ],
+          [
+            true,
+            true,
+            true
+          ]
+        ],
+        "fault": false,
+        "preservesIndexOnHandoff": true
+      }
+    },
+    {
+      "id": "points-refusal",
+      "maximumPoints": 257,
+      "maximumTriangles": 8,
+      "expected": {
+        "reservations": [
+          [
+            false,
+            false,
+            false
+          ]
+        ],
+        "fault": true,
+        "preservesIndexOnHandoff": false
+      }
+    },
+    {
+      "id": "index-refusal-retains-points",
+      "maximumPoints": 200,
+      "maximumTriangles": 8,
+      "expected": {
+        "reservations": [
+          [
+            true,
+            false,
+            false
+          ],
+          [
+            true,
+            false,
+            false
+          ]
+        ],
+        "fault": true,
+        "preservesIndexOnHandoff": false
+      }
+    },
+    {
+      "id": "constraints-refusal-retains-earlier-owners",
+      "maximumPoints": 8,
+      "maximumTriangles": 300,
+      "expected": {
+        "reservations": [
+          [
+            true,
+            false,
+            false
+          ],
+          [
+            true,
+            true,
+            false
+          ],
+          [
+            true,
+            true,
+            false
+          ]
+        ],
+        "fault": true,
+        "preservesIndexOnHandoff": false
+      }
+    }
+  ]
+}

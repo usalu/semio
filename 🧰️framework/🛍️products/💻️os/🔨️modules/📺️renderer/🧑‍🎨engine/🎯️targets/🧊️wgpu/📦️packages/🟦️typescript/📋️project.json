@@ -7,8 +7,10 @@
     "default": [
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/**/*",
-      "nativeAssets"
+      "nativeAssets",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🎚️config/🟦️.ts"
     ],
     "nativeAssets": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/**/*.svg",
@@ -363,45 +365,53 @@
     },
     "wasm": {
       "executor": "nx:run-commands",
+      "cache": true,
+      "parallelism": false,
+      "inputs": [
+        "nativeSources",
+        "^nativeSources"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-dev"
+      ],
       "dependsOn": [
+        "workspace:deps-cargo",
         "workspace:deps-trunk",
-        "generate-browser-boot",
-        "generate-frame-worker"
+        "workspace:deps-wasm-opt"
       ],
       "options": {
-        "command": "bun ./📜️script.ts wasm",
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+        "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build dev",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
       }
     },
     "serve": {
       "executor": "nx:run-commands",
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
       "dependsOn": [
-        "workspace:deps-trunk",
-        "generate-browser-boot",
-        "generate-frame-worker"
+        "@semio-tech/framework-os-dev:activate-s-wgpu-dev"
       ],
       "options": {
-        "command": "bun ./📜️script.ts serve",
+        "command": "bun ../../🌐️server/📜️script.ts serve s dev",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
-      },
-      "cache": false,
-      "continuous": true
+      }
     },
     "dev": {
       "executor": "nx:run-commands",
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
       "dependsOn": [
-        "workspace:deps-trunk",
-        "generate-browser-boot",
-        "generate-frame-worker"
+        "@semio-tech/framework-os-dev:activate-s-wgpu-dev"
       ],
       "options": {
-        "command": "bun ./📜️script.ts dev",
+        "command": "bun ../../🌐️server/📜️script.ts serve s dev",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
-      },
-      "cache": false,
-      "continuous": true
+      }
     },
     "native": {
       "executor": "nx:run-commands",
@@ -478,6 +488,28 @@
         "command": "bun ./📜️script.ts lint",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       }
+    },
+    "wasm-release": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "parallelism": false,
+      "inputs": [
+        "nativeSources",
+        "^nativeSources"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-release"
+      ],
+      "dependsOn": [
+        "workspace:deps-cargo",
+        "workspace:deps-trunk",
+        "workspace:deps-wasm-opt"
+      ],
+      "options": {
+        "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build release",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      }
     }
   },
   "tags": [
@@ -487,6 +519,7 @@
   "metadata": {
     "sourceInputs": {
       "browserBootSources": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/🔣️.json"
-    }
+    },
+    "nativeRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
   }
 }

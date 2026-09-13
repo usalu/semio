@@ -1,0 +1,9 @@
+# HTML Primary-Leaf Normalization Reader Repair
+
+This is an active repair following the accepted HTML source-pair relocation. It corrects a missed normalization reader; the earlier native fixture and discovery checks did not exercise this reader.
+
+The coordinator reran all 121 package-boundary tests with private temporary and artifact roots. The result was 117 passing and four failing tests, 508 assertions, 27.10 seconds. Three failures were caused by `normalization/🟦️.ts` rejecting the valid `stdio-html-source-pair-v1` contract because the HTML kind owns both `.html` and `.htm`. The discovery renderer already selects the schema-ordered primary `.html` leaf, but the normalization parser still required exactly one extension. The cancellation assertion received the taxonomy error before it could check cancellation; the source-inventory and captured-read tests threw before their row assertions. The fourth failure was the fixed-script compiler-vector test exceeding Bun's default five-second timeout at 5.52 seconds.
+
+A new durable regression test uses the existing language-neutral, Ajv-validated HTML source-pair fixture and actual normalization inventory of all sixteen native source files. Before the repair it failed with the same normalization error in 4.17 seconds, with no assertions reached. The test expects the exact declared source identities, HTML kind, unchanged normalized paths, and no violations. The parser now delegates primary filename rendering to the existing shared renderer. The fixed-script compiler-vector test has an explicit bounded 30-second budget.
+
+Final validation, cache closure, independent review and exact attribution will be recorded here before this repair is accepted. Raw output is private under `🗑️generated/coordinator/package-policy-recheck` and will be removed after the evidence is retained.

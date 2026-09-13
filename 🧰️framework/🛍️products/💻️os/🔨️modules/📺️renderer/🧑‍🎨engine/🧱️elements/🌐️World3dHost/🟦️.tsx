@@ -1421,7 +1421,7 @@ export function leftoverTreeItemSelectedV1(itemId: string, leftoverIds: readonly
   return leftoverIds.some((id) => id === itemId || itemId.endsWith(`/${id}`) || itemId.endsWith(`.${id}`));
 }
 
-/** 🕹️ Wave B15: leftover after interactionSelect must include hoverTarget.id in selectedIds. */
+/** 🕹️ True when a leftover wrongly treats hover as selection (empty background pick must not do this). */
 export function leftoverSelectIdsMustNameHoverPickV1(selectedIds: readonly string[] | undefined, hoverId: string | null | undefined): boolean {
   return Boolean(hoverId) && (selectedIds ?? []).includes(hoverId);
 }
@@ -1467,7 +1467,7 @@ export function mergeWorldSelectionWithLeftoverV1(base: WorldSelectionRecord, le
     hoveredId: leftover.hoveredId ?? base.hoveredId,
     gumballActive: leftover.gumballActive || Boolean(base.gumballActive),
     gumballTarget: pose.gumballTarget ?? base.gumballTarget,
-    transformMode: pose.transformMode ?? base.transformMode,
+    transformMode: base.transformMode ?? pose.transformMode,
   };
 }
 
@@ -2272,7 +2272,7 @@ export function isWorldTransformGumballMode(mode: string | undefined): boolean {
 }
 
 function gumballKindForTransformMode(transformMode: string | undefined, handleKind?: GumballHandleKind): "translate" | "rotate" | "scale" {
-  if (transformMode === "transform" && handleKind != null) {
+  if ((transformMode === "transform" || transformMode === "move") && handleKind != null) {
     return gumballHandleKindToTransformMode(handleKind);
   }
   if (transformMode === "rotate") return "rotate";
@@ -2410,6 +2410,44 @@ export function applyGumballLivePreviewPoseToObject3D(target: Object3D, pose: Wo
   target.quaternion.set(pose.quaternion[0], pose.quaternion[1], pose.quaternion[2], pose.quaternion[3]);
   target.scale.set(pose.scale[0], pose.scale[1], pose.scale[2]);
   target.updateMatrixWorld(true);
+}
+
+/** @emoji 🌀 Applies the same gumball preview delta a selected instance root receives onto one world-space point (vortex markers, attraction endpoints). */
+export function gumballPreviewWorldPoint(
+  pivot: readonly [number, number, number],
+  transformMode: string | undefined,
+  before: GumballPose,
+  after: GumballPose,
+  handleKind: GumballHandleKind | null | undefined,
+  worldPoint: readonly [number, number, number],
+): readonly [number, number, number] {
+  const delta = gumballLivePreviewDeltaBetweenPoses(transformMode, before, after, handleKind ?? undefined);
+  if (!delta) return worldPoint;
+  if (delta.kind === "translate") {
+    return [worldPoint[0] + delta.dx, worldPoint[1] + delta.dy, worldPoint[2] + delta.dz];
+  }
+  if (delta.kind === "rotate") {
+    const rotation = new Quaternion(delta.qx, delta.qy, delta.qz, delta.qw);
+    const offset = new Vector3(worldPoint[0] - pivot[0], worldPoint[1] - pivot[1], worldPoint[2] - pivot[2]);
+    offset.applyQuaternion(rotation);
+    return [pivot[0] + offset.x, pivot[1] + offset.y, pivot[2] + offset.z];
+  }
+  return worldPoint;
+}
+
+/** @emoji 🌀 Applies gumball preview rotation to a world-space direction vector. */
+export function gumballPreviewWorldDirection(
+  transformMode: string | undefined,
+  before: GumballPose,
+  after: GumballPose,
+  handleKind: GumballHandleKind | null | undefined,
+  direction: readonly [number, number, number],
+): readonly [number, number, number] {
+  const delta = gumballLivePreviewDeltaBetweenPoses(transformMode, before, after, handleKind ?? undefined);
+  if (!delta || delta.kind !== "rotate") return direction;
+  const rotation = new Quaternion(delta.qx, delta.qy, delta.qz, delta.qw);
+  const vector = new Vector3(direction[0], direction[1], direction[2]).applyQuaternion(rotation).normalize();
+  return [vector.x, vector.y, vector.z];
 }
 
 export function gumballConfigForTransformMode(mode: string, plane?: GumballConfig["plane"]): GumballConfig {
@@ -2894,6 +2932,9 @@ function WorldInstancesLayer({
   onComponentHover,
   onPaintAt,
   gumballDragActive,
+  controllerId,
+  gumballPreviewSourceId,
+  sharedGumballPreview,
   onGumballDraggingChanged,
   onGumballDragStart,
   onGumballDrag,
@@ -2918,6 +2959,9 @@ function WorldInstancesLayer({
   readonly onComponentHover: (args: { objectId: string; mode: string; id: number } | null) => void;
   readonly onPaintAt?: (objectId: string, u: number, v: number) => void;
   readonly gumballDragActive: boolean;
+  readonly controllerId: string;
+  readonly gumballPreviewSourceId: string;
+  readonly sharedGumballPreview: WorldGumballTransformPreview | null;
   readonly onGumballDraggingChanged: (dragging: boolean) => void;
   readonly onGumballDragStart?: (kind: GumballHandleKind, before: GumballPose) => void;
   readonly onGumballDrag?: (kind: GumballHandleKind, pose: GumballPose) => void;
@@ -3005,6 +3049,23 @@ function WorldInstancesLayer({
   const gumballLiveStartPoseRef = useRef<GumballPose | null>(null);
   const gumballLivePoseRef = useRef<GumballPose | null>(null);
   const gumballLiveKindRef = useRef<GumballHandleKind | null>(null);
+  const gumballPreviewPivotRef = useRef<readonly [number, number, number]>([0, 0, 0]);
+
+  const publishGumballPreview = useCallback(
+    (before: GumballPose, after: GumballPose, handleKind: GumballHandleKind | null, instanceIds: readonly string[]) => {
+      if (!controllerId || instanceIds.length === 0) return;
+      setWorldGumballTransformPreview(controllerId, {
+        sourceId: gumballPreviewSourceId,
+        transformMode,
+        handleKind,
+        before,
+        after,
+        instanceIds,
+        pivot: gumballPreviewPivotRef.current,
+      });
+    },
+    [controllerId, gumballPreviewSourceId, transformMode],
+  );
 
   const registerInstanceRoot = useCallback((id: string, group: Group | null) => {
     if (group) instanceRootsRef.current.set(id, group);
@@ -3065,16 +3126,63 @@ function WorldInstancesLayer({
         poses.set(id, delta ? applyGumballLivePreviewDeltaToPose(base, delta) : base);
       }
       writeGumballPreviewPoses(poses);
+      publishGumballPreview(before, after, handleKind, [...gumballLiveBasesRef.current.keys()]);
       return poses;
     },
-    [transformMode, writeGumballPreviewPoses],
+    [publishGumballPreview, transformMode, writeGumballPreviewPoses],
   );
+
+  const applySharedGumballPreview = useCallback(
+    (preview: WorldGumballTransformPreview) => {
+      const delta = gumballLivePreviewDeltaBetweenPoses(preview.transformMode, preview.before, preview.after, preview.handleKind ?? undefined);
+      const poses = new Map<string, WorldGumballLivePose>();
+      for (const id of preview.instanceIds) {
+        const instance = instances.find((entry) => entry.id === id);
+        if (!instance) continue;
+        const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
+        const scale = instance.scale ?? [1, 1, 1];
+        const rotation = instance.rotation ?? [0, 0, 0, 1];
+        const base: WorldGumballLivePose = {
+          position: [position[0], position[1], position[2]],
+          quaternion: [rotation[0], rotation[1], rotation[2], rotation[3]],
+          scale: [scale[0], scale[1], scale[2]],
+        };
+        poses.set(id, delta ? applyGumballLivePreviewDeltaToPose(base, delta) : base);
+      }
+      writeGumballPreviewPoses(poses);
+    },
+    [instances, writeGumballPreviewPoses],
+  );
+
+  const resetGumballPreviewPosesFromInstances = useCallback(() => {
+    for (const instance of instances) {
+      const root = instanceRootsRef.current.get(instance.id);
+      if (!root) continue;
+      const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
+      const scale = instance.scale ?? [1, 1, 1];
+      const rotation = instance.rotation ?? [0, 0, 0, 1];
+      applyGumballLivePreviewPoseToObject3D(root, {
+        position: [position[0], position[1], position[2]],
+        quaternion: [rotation[0], rotation[1], rotation[2], rotation[3]],
+        scale: [scale[0], scale[1], scale[2]],
+      });
+    }
+    invalidate();
+  }, [instances, invalidate]);
 
   useLayoutEffect(() => {
     const before = gumballLiveStartPoseRef.current;
     const after = gumballLivePoseRef.current;
     if (gumballDragActive && before && after) {
       applyGumballLivePreview(before, after, gumballLiveKindRef.current);
+      return;
+    }
+    if (!gumballDragActive && sharedGumballPreview && sharedGumballPreview.sourceId !== gumballPreviewSourceId) {
+      applySharedGumballPreview(sharedGumballPreview);
+      return;
+    }
+    if (!gumballDragActive && !sharedGumballPreview && gumballCommitHoldRef.current.size === 0) {
+      resetGumballPreviewPosesFromInstances();
       return;
     }
     const hold = gumballCommitHoldRef.current;
@@ -3106,7 +3214,14 @@ function WorldInstancesLayer({
       }
     }
     if (allMatch) hold.clear();
-  }, [applyGumballLivePreview, gumballDragActive, instances, writeGumballPreviewPoses]);
+  }, [applyGumballLivePreview, applySharedGumballPreview, gumballDragActive, gumballPreviewSourceId, instances, resetGumballPreviewPosesFromInstances, sharedGumballPreview, writeGumballPreviewPoses]);
+
+  useEffect(
+    () => () => {
+      clearWorldGumballTransformPreview(controllerId, gumballPreviewSourceId);
+    },
+    [controllerId, gumballPreviewSourceId],
+  );
 
   const handleGumballDraggingChanged = useCallback(
     (dragging: boolean) => {
@@ -3118,6 +3233,7 @@ function WorldInstancesLayer({
 
   const handleGumballDragStart = useCallback(
     (kind: GumballHandleKind, before: GumballPose) => {
+      gumballPreviewPivotRef.current = selection.gumballTarget ?? [before.position[0], before.position[1], before.position[2]];
       const bases = new Map<string, WorldGumballLivePose>();
       for (const id of selectedIds) {
         const root = instanceRootsRef.current.get(id);
@@ -3133,9 +3249,10 @@ function WorldInstancesLayer({
       gumballLiveStartPoseRef.current = before;
       gumballLivePoseRef.current = before;
       gumballLiveKindRef.current = kind;
+      publishGumballPreview(before, before, kind, selectedIds);
       onGumballDragStart?.(kind, before);
     },
-    [onGumballDragStart, selectedIds],
+    [onGumballDragStart, publishGumballPreview, selectedIds, selection.gumballTarget],
   );
 
   const handleGumballDrag = useCallback(
@@ -3159,9 +3276,10 @@ function WorldInstancesLayer({
       gumballLiveStartPoseRef.current = null;
       gumballLivePoseRef.current = null;
       gumballLiveKindRef.current = null;
+      clearWorldGumballTransformPreview(controllerId, gumballPreviewSourceId);
       onGumballDragEnd(kind, before, after);
     },
-    [applyGumballLivePreview, onGumballDragEnd],
+    [applyGumballLivePreview, controllerId, gumballPreviewSourceId, onGumballDragEnd],
   );
 
   const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentPickMergeMode(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
@@ -4469,13 +4587,15 @@ export function worldCatalogueDropHostContainsPoint(controllerId: string, client
 
 function CatalogueDropGhost({ preview, meshes, palette }: { readonly preview: Puzzle3dCatalogueDropPreview; readonly meshes: readonly WorldMeshRecord[]; readonly palette: MeshStylePalette }) {
   const style = palette.highlighted;
-  const meshRecord = preview.meshUrl ? meshes.find((mesh) => mesh.url === preview.meshUrl) : undefined;
-  const url = meshRecord?.url ?? preview.meshUrl;
+  const url = brushPreviewGhostMeshUrl(preview, meshes);
+  const position = preview.origin as [number, number, number];
+  const invalidateToken = `${preview.objectKind}:${url ?? ""}:${position.join(",")}`;
   return (
-    <group position={preview.origin as [number, number, number]} raycast={() => null}>
+    <group position={position} raycast={() => null}>
+      <DemandInvalidateOnToken token={invalidateToken} />
       {url ? (
         <Suspense fallback={null}>
-          <GlbInstanceMesh url={url} color={style.meshColor} emissive={style.meshColor} emissiveIntensity={0.6} opacity={0.88} borderColor={palette.neutral.lineColor} revision="highlighted" />
+          <GlbInstanceMesh url={url} color={style.meshColor} emissive={style.meshColor} emissiveIntensity={0.6} opacity={0.88} borderColor={palette.neutral.lineColor} revision="highlighted" pickEnabled={false} />
         </Suspense>
       ) : (
         <mesh raycast={() => null}>
@@ -4544,6 +4664,122 @@ export function clearWorldSelectionPreview(controllerId: string, sourceId?: stri
   setWorldSelectionPreview(controllerId, null);
 }
 //#endregion WorldSelectionPreviewStore
+
+//#region WorldGumballTransformPreviewStore
+export type WorldGumballTransformPreview = {
+  readonly sourceId: string;
+  readonly transformMode: string | undefined;
+  readonly handleKind: GumballHandleKind | null;
+  readonly before: GumballPose;
+  readonly after: GumballPose;
+  readonly instanceIds: readonly string[];
+  readonly pivot: readonly [number, number, number];
+};
+
+/** @emoji 🧲️ Live gumball transform previews keyed by controller so every sibling World3d pane paints the same in-progress move/rotate before the plugin round-trip commits it. */
+const worldGumballTransformPreviewByController = new Map<string, WorldGumballTransformPreview>();
+const worldGumballTransformPreviewListeners = new Set<() => void>();
+
+function gumballPosesEqual(a: GumballPose, b: GumballPose): boolean {
+  return (
+    a.position.every((value, index) => Math.abs(value - b.position[index]!) < GUMBALL_TRANSFORM_EPSILON) &&
+    a.quaternion.every((value, index) => Math.abs(value - b.quaternion[index]!) < GUMBALL_TRANSFORM_EPSILON) &&
+    a.scale.every((value, index) => Math.abs(value - b.scale[index]!) < GUMBALL_TRANSFORM_EPSILON)
+  );
+}
+
+function worldGumballTransformPreviewsEqual(a: WorldGumballTransformPreview | null | undefined, b: WorldGumballTransformPreview | null | undefined): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.sourceId !== b.sourceId || a.transformMode !== b.transformMode || a.handleKind !== b.handleKind) return false;
+  if (a.instanceIds.length !== b.instanceIds.length || a.instanceIds.some((id, index) => id !== b.instanceIds[index])) return false;
+  if (a.pivot.some((value, index) => Math.abs(value - b.pivot[index]!) > GUMBALL_TRANSFORM_EPSILON)) return false;
+  return gumballPosesEqual(a.before, b.before) && gumballPosesEqual(a.after, b.after);
+}
+
+function notifyWorldGumballTransformPreviewListeners(): void {
+  for (const listener of worldGumballTransformPreviewListeners) listener();
+}
+
+/** @emoji 🧲️ Subscribes a World3d pane to live gumball previews from sibling panes. */
+export function subscribeWorldGumballTransformPreview(listener: () => void): () => void {
+  worldGumballTransformPreviewListeners.add(listener);
+  return () => {
+    worldGumballTransformPreviewListeners.delete(listener);
+  };
+}
+
+/** @emoji 🧲️ Returns the live gumball preview for `controllerId`, or `null` outside an in-progress gesture. */
+export function getWorldGumballTransformPreview(controllerId: string): WorldGumballTransformPreview | null {
+  return worldGumballTransformPreviewByController.get(controllerId) ?? null;
+}
+
+/** @emoji 🧲️ SSR snapshot for {@link useSyncExternalStore}; gumball gestures never hydrate in progress. */
+export function getWorldGumballTransformPreviewServerSnapshot(_controllerId: string): WorldGumballTransformPreview | null {
+  return null;
+}
+
+/** @emoji 🧲️ Publishes an in-progress gumball transform to every World3d pane using the same controller. */
+export function setWorldGumballTransformPreview(controllerId: string, preview: WorldGumballTransformPreview | null): void {
+  const previous = worldGumballTransformPreviewByController.get(controllerId) ?? null;
+  if (worldGumballTransformPreviewsEqual(previous, preview)) return;
+  if (preview) worldGumballTransformPreviewByController.set(controllerId, preview);
+  else worldGumballTransformPreviewByController.delete(controllerId);
+  notifyWorldGumballTransformPreviewListeners();
+}
+
+/** @emoji 🧲️ Clears a preview only when `sourceId` still owns it, preventing an idle sibling pane from cancelling the active pane's gesture. */
+export function clearWorldGumballTransformPreview(controllerId: string, sourceId?: string): void {
+  const current = worldGumballTransformPreviewByController.get(controllerId);
+  if (!current || (sourceId && current.sourceId !== sourceId)) return;
+  setWorldGumballTransformPreview(controllerId, null);
+}
+
+/** @emoji 🌀 Maps committed vortex markers through an active gumball preview when they belong to a transformed instance. */
+export function worldVorticesWithGumballPreview(
+  vortices: readonly WorldVortexRecord[],
+  preview: WorldGumballTransformPreview | null,
+): readonly WorldVortexRecord[] {
+  if (!preview || preview.instanceIds.length === 0) return vortices;
+  const selected = new Set(preview.instanceIds);
+  return vortices.map((vortex) => {
+    const objectId = vortex.objectId ?? vortex.fullId.split(":")[0];
+    if (!objectId || !selected.has(objectId)) return vortex;
+    const position = gumballPreviewWorldPoint(preview.pivot, preview.transformMode, preview.before, preview.after, preview.handleKind, vortex.position);
+    const direction = vortex.direction
+      ? gumballPreviewWorldDirection(preview.transformMode, preview.before, preview.after, preview.handleKind, vortex.direction)
+      : vortex.direction;
+    return direction === vortex.direction && position.every((value, index) => Math.abs(value - vortex.position[index]!) < GUMBALL_TRANSFORM_EPSILON)
+      ? vortex
+      : { ...vortex, position, direction };
+  });
+}
+
+/** @emoji 🌀 Maps committed attraction endpoints through an active gumball preview when they touch a transformed instance's vortices. */
+export function worldAttractionsWithGumballPreview(
+  attractions: readonly WorldAttractionRecord[],
+  vortices: readonly WorldVortexRecord[],
+  preview: WorldGumballTransformPreview | null,
+): readonly WorldAttractionRecord[] {
+  if (!preview || preview.instanceIds.length === 0) return attractions;
+  const selected = new Set(preview.instanceIds);
+  const endpointMap = new Map<string, readonly [number, number, number]>();
+  for (const vortex of vortices) {
+    const objectId = vortex.objectId ?? vortex.fullId.split(":")[0];
+    if (!objectId || !selected.has(objectId)) continue;
+    const key = vortex.position.join(",");
+    endpointMap.set(
+      key,
+      gumballPreviewWorldPoint(preview.pivot, preview.transformMode, preview.before, preview.after, preview.handleKind, vortex.position),
+    );
+  }
+  const remap = (point: readonly [number, number, number]) => endpointMap.get(point.join(",")) ?? point;
+  return attractions.map((attraction) => {
+    const from = remap(attraction.from);
+    const to = remap(attraction.to);
+    return from === attraction.from && to === attraction.to ? attraction : { ...attraction, from, to };
+  });
+}
+//#endregion WorldGumballTransformPreviewStore
 
 //#region WorldInstanceChromeStore
 type WorldInstanceChromeSnapshot = {
@@ -5112,6 +5348,20 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     () => getWorldSelectionPreview(node.controllerId),
     () => getWorldSelectionPreviewServerSnapshot(node.controllerId),
   );
+  const sharedGumballTransformPreview = useSyncExternalStore(
+    subscribeWorldGumballTransformPreview,
+    () => getWorldGumballTransformPreview(node.controllerId),
+    () => getWorldGumballTransformPreviewServerSnapshot(node.controllerId),
+  );
+  const previewVortices = useMemo(
+    () => worldVorticesWithGumballPreview(displayVortices, sharedGumballTransformPreview),
+    [displayVortices, sharedGumballTransformPreview],
+  );
+  const previewAttractions = useMemo(
+    () => worldAttractionsWithGumballPreview(attractions, displayVortices, sharedGumballTransformPreview),
+    [attractions, displayVortices, sharedGumballTransformPreview],
+  );
+  const gumballTransformPreviewSourceId = windowInstanceId ?? node.surfaceId;
   const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.scene");
   const cameraRef = useRef<import("three").Camera | null>(null);
@@ -6680,7 +6930,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             {fit?.enabled ? <WorldAutoFit groupRef={instancesGroupRef} fitKey={`${fit.revision ?? 0}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`} padding={fit.padding ?? 1.25} camera={cameraState} onFitted={handleAutoFitCameraChange} /> : null}
             <CameraRefBridge cameraRef={cameraRef} />
             <RaycasterPickTuning />
-            <WorldVortexHitStamp vortices={displayVortices} hostRef={hostRef} />
+            <WorldVortexHitStamp vortices={previewVortices} hostRef={hostRef} />
             <WorldGumballHitStamp target={selection.gumballTarget} active={Boolean(selection.gumballActive) && isWorldTransformGumballMode(selection.transformMode)} hostRef={hostRef} />
             {windowInstanceId ? (
               <IntroductionWorldResolverBridge windowInstanceId={windowInstanceId} vortices={vortices} instances={instances} attractions={attractions} />
@@ -6706,6 +6956,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
                 onComponentHover={handleComponentHover}
                 onPaintAt={paintMode ? handlePaintAt : undefined}
                 gumballDragActive={gumballDragActive}
+                controllerId={node.controllerId}
+                gumballPreviewSourceId={gumballTransformPreviewSourceId}
+                sharedGumballPreview={sharedGumballTransformPreview}
                 onGumballDraggingChanged={setGumballDragActive}
                 onGumballDragStart={handleGumballDragStart}
                 onGumballDrag={handleGumballDrag}
@@ -6719,7 +6972,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
               />
             </group>
             <WorldVortexMarkers
-              vortices={displayVortices}
+              vortices={previewVortices}
               palette={meshStylePalette}
               brushMode={brushMode}
               selectionMode={selectionMode}
@@ -6734,9 +6987,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
               onConnectDragDrop={handleConnectDragDrop}
             />
             {connectDragSource && connectDragHoverPosition ? <WorldConnectRubberBand from={connectDragSource.position} to={connectDragHoverPosition} /> : null}
-            <WorldAttractionLines attractions={attractions} />
-            {visibleBrushPreview ? <BrushPreviewGhost preview={visibleBrushPreview} meshes={meshes} palette={meshStylePalette} /> : null}
-            {!visibleBrushPreview && catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : null}
+            <WorldAttractionLines attractions={previewAttractions} />
+            {catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : visibleBrushPreview ? <BrushPreviewGhost preview={visibleBrushPreview} meshes={meshes} palette={meshStylePalette} /> : null}
             {engagementPreview.length > 0 ? <EngagementPreviewLayer items={engagementPreview} color={colors.hover} /> : null}
             <WorldVolumeLayer
               volumes={targetVolumes

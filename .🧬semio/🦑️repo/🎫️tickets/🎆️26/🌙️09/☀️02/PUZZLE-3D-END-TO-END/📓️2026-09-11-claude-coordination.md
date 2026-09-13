@@ -802,3 +802,40 @@ A3 also re-verified `worldRelocate` on Nakagin as NOT a live defect (extent ≈1
 | B53 | 20:55 (09-13) | Nakagin export in the full run (segmented lane end to end on #61) + import chain | `📓️2026-09-13-wave-B53-nakagin-export-full-run.md` |
 | B54 | 20:55 (09-13) | mutation latency on the brush-painted document round 2 (turn count per mutation, one-item publication grant) | `📓️2026-09-13-wave-B54-mutation-latency-2.md` |
 | B55 | 20:55 (09-13) | context-menu hand rows/zoom camera, locked refusal, outliner hide control, volume-brush arm, clipboard in the long run | `📓️2026-09-13-wave-B55-full-run-bisect-4.md` |
+- 01:10 (09-14) B54 landed (`📓️2026-09-13-wave-B54-mutation-latency-2.md`): unit census splits B44's "104–235 turns" —
+  publication ladder 17 turns (document-independent), page 3, retirement 1, worker 520–5 353 units (busy-wait poll
+  count, not round trips). Fixes: the publication ladder runs a bounded slice per turn (21 → 4/5 turns, size-
+  independent, store grant untouched), `Puzzle3dSceneInvalidation` per changed object (was a whole-document rebuild
+  re-paid every 120 ms tick), `build_history_view` O(n²) → id index + op-line reuse; 3 laws + 1 rewritten; framework
+  publication laws 20/3 vs baseline 18/5. Repaired a peer's uncompilable kernel hunk (borrow split, ledger kept).
+  BROWSER CEILING on #61: after a selection on Nakagin, `deleteSelection` never lands in 196 s —
+  `reserve_refusal=1:window:registry-reservation-unavailable`, six surfaces deferred, `sources=["reconcile"]`,
+  settled=0 → the `1:window` ALIAS surface wedges the registry again (B48 residual 1/2). → wave B56: retire the alias
+  (leftover patches must address the real window instance) so no synthetic surface can hold the registry.
+| B56 | 01:15 (09-14) | `1:window` alias surface wedges the reconcile registry after a Nakagin selection: address leftover patches to the real instance and retire the alias | `📓️2026-09-14-wave-B56-window-alias-retirement.md` |
+- 02:20 (09-14) B53 landed (`📓️2026-09-13-wave-B53-nakagin-export-full-run.md`): the segmented export lane is GREEN live
+  (145 714 B `nakagin-capsule-tower.json`, one blob, 180 objects re-parsed); the failing hop was the PRESS — the Export
+  row sits at y=1990 in a 58…865 band and the probe never scrolled the rail; the click then stalls on the Nakagin
+  main thread and the file lands 21–35 s later past the 20 s budget. Product fixes: `windowActionPaneNode` now filters
+  `inPalette` (96 → 81 rows); the peer's `semioSourceWatchVitePlugin` mapped every macOS `fs.watch` `rename` to `add`
+  while vite invalidates only on `change` → EVERY edited source module was served pre-edit for the life of the server
+  ("host-live" was not live since the 04:37 recycle unless touched) — fixed to replay `add`+`change`. Probe recipe
+  (scroll, click budget, 60 s download wait) → B55. → the serve gets recycled before #62 so the watcher fix is in.
+- 03:25 (09-14) B55 landed (`📓️2026-09-13-wave-B55-full-run-bisect-4.md`): ONE product fix cleared six reds — the stylesheet
+  carrying `@import "tailwindcss"` declared no `@source` for its own module, so `.z-menu/.z-dialog/.z-pane/.z-base/
+  .z-navbar` and `max-h-layout-command` were never emitted: the context menu painted UNDER the world canvas
+  (`elementFromPoint` → CANVAS), forced clicks hit the canvas, the paste form's Execute was unreachable. Probe: fill
+  steps trail their group (ribbon reachable), `ensurePanel` makes the body the authority, gumball grab re-selects,
+  every mutate verdict carries `instances=<n>`. B55's own full battery on #61 + host-live: **PASS=89 FAIL=10 FAULTS=0**.
+  Remaining: `translateSelection` dispatched but never settles on the large document (B54/B56 lane), outliner-show-
+  restores (row label restores, world scale does not — unowned), a `worldPick` dropped-action error per canvas press.
+| B57 | 03:35 (09-14) | port B53's export recipe (scroll, click budget, 60 s download wait) + import chain, example-switch verdict, outliner Show not restoring world scale | `📓️2026-09-14-wave-B57-export-recipe-show-restore.md` |
+- 05:10 (09-14) B56 landed (`📓️2026-09-14-wave-B56-window-alias-retirement.md`): `registry-reservation-unavailable` was never a
+  property of `1:window` — it is whichever surface asks FOURTH: one reconcile reservation asks 8 MiB
+  (`UI_RESIDENT_SURFACE_BYTES`) of a 32 MiB aggregate → exactly THREE concurrent reconciles process-wide while a
+  puzzle3d session mounts thirteen surfaces (`registry=resident=3s/…/25 875 744 B of 33 554 432 B`, handback 378/384
+  free). The alias is retired anyway (4 host + 3 guest sites, body-less patches refused by name, job progress now
+  reaches the real panes, 25 % of every world publication gone); 25/25 laws. Peer breakages: react vitest lane and the
+  repo-root `📜️script.ts` currently broken. → wave B58: size the reconcile reservation to the tree actually reconciled
+  (`try_shrink` runs AFTER reservation today) so thirteen surfaces fit — the last convergent blocker for mutations.
+| B58 | 05:15 (09-14) | reconcile reservation 8 MiB × 3 of 32 MiB starves every fourth surface: size reservations to the tree, all mounted surfaces reconcile | `📓️2026-09-14-wave-B58-reconcile-reservation-ceiling.md` |

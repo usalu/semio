@@ -862,7 +862,18 @@ export function unwatchedRepositoryPathMatcher(): RegExp {
  * Watching the source roots directly keeps the kernel from ever reporting cache, package-store or
  * generated-output writes, and reduces the per-event cost to one regular-expression test. Events are
  * replayed on Vite's own (no-op) watcher emitter, so module invalidation, HMR boundary computation and
- * config-dependency restarts behave exactly as they did with chokidar. */
+ * config-dependency restarts behave exactly as they did with chokidar.
+ *
+ * 🛰️ An existing FILE is replayed as `add` AND `change`, because macOS reports every write to it —
+ * in place and atomic (temp + rename) alike — as `eventType: "rename"`, while Vite invalidates a
+ * transformed module only from its `change` handler (`moduleGraph.onFileChange`); its `add` handler
+ * recovers previously failed resolves and never touches the module graph. Chokidar told the two apart
+ * from its own directory snapshots, which this watcher deliberately does not keep — so it states both
+ * facts, which are both true of an atomic save (a new inode appeared, and the module changed) and
+ * idempotent for a genuinely new file (nothing imports it yet, so the `change` finds no module).
+ * Emitting only `add` served the pre-edit transform for the life of the server, and
+ * `SEMIO_VITE_HMR=0` (`hmr: false`) removes the HMR pass that would otherwise have hidden it
+ * (`📓️2026-09-13-wave-B53-nakagin-export-full-run.md` §4.2). */
 export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string }) {
   return {
     name: "semio-source-watch",
@@ -880,7 +891,12 @@ export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string 
           server.watcher.emit("unlink", path);
           return;
         }
-        server.watcher.emit(statSync(path).isDirectory() ? "addDir" : "add", path);
+        if (statSync(path).isDirectory()) {
+          server.watcher.emit("addDir", path);
+          return;
+        }
+        server.watcher.emit("add", path);
+        server.watcher.emit("change", path);
       }));
       server.httpServer?.once("close", () => {
         for (const handle of handles) handle.close();

@@ -3,7 +3,7 @@
 use crate::editor::generation2d::terminology::Generation2dLabels;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
 use crate::standards::v1::subsets::any::schema::generation_preview_layers;
-use semio_framework_plugin::{built_text_node, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, TextEditorScene, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{built_text_node, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -42,10 +42,6 @@ pub fn render(config: &config::Generation2dGeneratePreviewWindowConfig, preview_
         return built_text_node(semio_framework_plugin::Label::data(labels.preview_hint.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-preview.hint", "fixed UI hint admission failed"));
     }
     let layers = generation_preview_layers(eval_json);
-    if layers == "[]" {
-        let scene = TextEditorScene::base(eval_json.to_string(), Some("json".into()), None);
-        return crate::scene_surface(GENERATION2D_PLAY_SURFACE_GENERATE_PREVIEW, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::TextEditor, &scene);
-    }
     let _ = GENERATION2D_PLAY_APP_ID;
     crate::scene_surface(
         GENERATION2D_PLAY_SURFACE_GENERATE_PREVIEW,

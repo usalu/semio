@@ -4,8 +4,14 @@
   "title": "FEM 3D mounted stiffness reference matrices",
   "type": "object",
   "additionalProperties": false,
-  "required": ["oracle", "tolerance", "cases"],
+  "required": ["oracle", "tolerance", "cases", "closeStringCounts"],
   "properties": {
+    "closeStringCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bar3", "frame3", "tet4"],
+      "properties": { "bar3": { "const": 3 }, "frame3": { "const": 3 }, "tet4": { "const": 5 } }
+    },
     "oracle": {
       "type": "object",
       "additionalProperties": false,

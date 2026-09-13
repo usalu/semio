@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "owner",
+    "project",
+    "profiles",
+    "values",
+    "crate",
+    "rust",
+    "consumer",
+    "deliverables"
+  ],
+  "properties": {
+    "owner": {
+      "type": "string"
+    },
+    "project": {
+      "type": "string"
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "profile",
+          "target",
+          "output"
+        ],
+        "properties": {
+          "profile": {
+            "enum": [
+              "dev",
+              "release"
+            ]
+          },
+          "target": {
+            "type": "string"
+          },
+          "output": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "values": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "crate": {
+      "type": "string"
+    },
+    "rust": {
+      "type": "string"
+    },
+    "consumer": {
+      "type": "string"
+    },
+    "deliverables": {
+      "const": [
+        ".js",
+        "_bg.wasm"
+      ]
+    }
+  }
+}

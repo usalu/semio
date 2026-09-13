@@ -599,6 +599,10 @@ impl MountedScalarSlots {
         self.len == 0
     }
 
+    pub fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.admitted == 0
+    }
+
     pub fn close_step(&mut self) -> bool {
         if self.len != 0 {
             self.len -= 1;
@@ -664,9 +668,20 @@ pub enum NumericalCheckpointFault {
     Admission,
 }
 
+fn write_numerical_entry(writer: &mut RetainedJobPayloadWriter, bytes: &[u8]) -> Result<bool, JobPayloadAdmissionFault> {
+    if writer.staged_page_remaining() < bytes.len() {
+        writer.commit_staged_page()?;
+        return Ok(false);
+    }
+    writer.write_staged(bytes)?;
+    Ok(true)
+}
+
 fn advance_owner_length(writer: &mut RetainedJobPayloadWriter, length: usize, cursor: &mut NumericalPageCursor) -> Result<bool, JobPayloadAdmissionFault> {
     if cursor.owner == 0 {
-        writer.write_staged(&(length as u64).to_le_bytes())?;
+        if !write_numerical_entry(writer, &(length as u64).to_le_bytes())? {
+            return Ok(false);
+        }
         cursor.owner = 1;
         return Ok(false);
     }
@@ -678,7 +693,9 @@ fn advance_u32_owner(writer: &mut RetainedJobPayloadWriter, values: &[u32], curs
         return Ok(false);
     }
     if let Some(value) = values.get(cursor.item) {
-        writer.write_staged(&value.to_le_bytes())?;
+        if !write_numerical_entry(writer, &value.to_le_bytes())? {
+            return Ok(false);
+        }
         cursor.item += 1;
         return Ok(false);
     }
@@ -690,7 +707,9 @@ fn advance_u64_owner(writer: &mut RetainedJobPayloadWriter, values: &[usize], cu
         return Ok(false);
     }
     if let Some(value) = values.get(cursor.item) {
-        writer.write_staged(&(*value as u64).to_le_bytes())?;
+        if !write_numerical_entry(writer, &(*value as u64).to_le_bytes())? {
+            return Ok(false);
+        }
         cursor.item += 1;
         return Ok(false);
     }
@@ -702,7 +721,9 @@ fn advance_u64_values(writer: &mut RetainedJobPayloadWriter, values: &[u64], cur
         return Ok(false);
     }
     if let Some(value) = values.get(cursor.item) {
-        writer.write_staged(&value.to_le_bytes())?;
+        if !write_numerical_entry(writer, &value.to_le_bytes())? {
+            return Ok(false);
+        }
         cursor.item += 1;
         return Ok(false);
     }
@@ -714,7 +735,9 @@ fn advance_f64_owner(writer: &mut RetainedJobPayloadWriter, values: &[f64], curs
         return Ok(false);
     }
     if let Some(value) = values.get(cursor.item) {
-        writer.write_staged(&value.to_bits().to_le_bytes())?;
+        if !write_numerical_entry(writer, &value.to_bits().to_le_bytes())? {
+            return Ok(false);
+        }
         cursor.item += 1;
         return Ok(false);
     }
@@ -726,7 +749,9 @@ fn advance_paged_u32_owner<const N: usize>(writer: &mut RetainedJobPayloadWriter
         return Ok(false);
     }
     if let Some(value) = values.get(cursor.item) {
-        writer.write_staged(&value.to_le_bytes())?;
+        if !write_numerical_entry(writer, &value.to_le_bytes())? {
+            return Ok(false);
+        }
         cursor.item += 1;
         return Ok(false);
     }
@@ -738,7 +763,9 @@ fn advance_paged_f64_owner<const N: usize>(writer: &mut RetainedJobPayloadWriter
         return Ok(false);
     }
     if let Some(value) = values.get(cursor.item) {
-        writer.write_staged(&value.to_bits().to_le_bytes())?;
+        if !write_numerical_entry(writer, &value.to_bits().to_le_bytes())? {
+            return Ok(false);
+        }
         cursor.item += 1;
         return Ok(false);
     }
@@ -753,7 +780,9 @@ fn advance_pair_owner(writer: &mut RetainedJobPayloadWriter, values: &[(u32, f64
         let mut bytes = [0; 12];
         bytes[..4].copy_from_slice(&index.to_le_bytes());
         bytes[4..].copy_from_slice(&value.to_bits().to_le_bytes());
-        writer.write_staged(&bytes)?;
+        if !write_numerical_entry(writer, &bytes)? {
+            return Ok(false);
+        }
         cursor.item += 1;
         return Ok(false);
     }
@@ -766,12 +795,16 @@ fn advance_matrix_owner(writer: &mut RetainedJobPayloadWriter, matrix: &MatD, cu
         bytes[..8].copy_from_slice(&(matrix.rows as u64).to_le_bytes());
         bytes[8..16].copy_from_slice(&(matrix.cols as u64).to_le_bytes());
         bytes[16..].copy_from_slice(&(matrix.data.len() as u64).to_le_bytes());
-        writer.write_staged(&bytes)?;
+        if !write_numerical_entry(writer, &bytes)? {
+            return Ok(false);
+        }
         cursor.owner = 1;
         return Ok(false);
     }
     if let Some(value) = matrix.data.get(cursor.item) {
-        writer.write_staged(&value.to_bits().to_le_bytes())?;
+        if !write_numerical_entry(writer, &value.to_bits().to_le_bytes())? {
+            return Ok(false);
+        }
         cursor.item += 1;
         return Ok(false);
     }
@@ -785,6 +818,19 @@ pub struct LdltJob {
     output_page_cursor: usize,
     checkpoint_writer: Option<RetainedJobPayloadWriter>,
     checkpoint_cursor: NumericalPageCursor,
+}
+
+fn close_ldlt_checkpoint_step(state: &mut LdltCheckpoint, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
+    if let Some(step) = close_nested_vec_owner_step(&mut state.row_lists, maximum_bytes)? { return Ok(Some(step)); }
+    if let Some(step) = close_nested_vec_owner_step(&mut state.l_cols, maximum_bytes)? { return Ok(Some(step)); }
+    if let Some(step) = close_vec_owner_step(&mut state.workspace.candidate, maximum_bytes)? { return Ok(Some(step)); }
+    for owner in [&mut state.d, &mut state.a.vals, &mut state.workspace.values] {
+        if let Some(step) = close_vec_owner_step(owner, maximum_bytes)? { return Ok(Some(step)); }
+    }
+    for owner in [&mut state.a.rowind, &mut state.a.colptr, &mut state.workspace.marks] {
+        if let Some(step) = close_vec_owner_step(owner, maximum_bytes)? { return Ok(Some(step)); }
+    }
+    Ok(None)
 }
 
 impl LdltJob {
@@ -1204,40 +1250,11 @@ impl LdltJob {
     }
 
     fn close_retained_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        for step in [close_nested_vec_owner_step(&mut self.state.row_lists, maximum_bytes), close_nested_vec_owner_step(&mut self.state.l_cols, maximum_bytes)] {
-            match step {
-                Ok(Some((items, bytes))) => return (false, items, bytes),
-                Err(()) => return (false, 0, 0),
-                Ok(None) => {}
-            }
+        match close_ldlt_checkpoint_step(&mut self.state, maximum_bytes) {
+            Ok(Some((items, bytes))) => (false, items, bytes),
+            Ok(None) => (true, 0, 0),
+            Err(()) => (false, 0, 0),
         }
-        for owner in [&mut self.state.workspace.candidate] {
-            match close_vec_owner_step(owner, maximum_bytes) {
-                Ok(Some((items, bytes))) => return (false, items, bytes),
-                Err(()) => return (false, 0, 0),
-                Ok(None) => {}
-            }
-        }
-        for owner in [&mut self.state.d, &mut self.state.a.vals, &mut self.state.workspace.values] {
-            match close_vec_owner_step(owner, maximum_bytes) {
-                Ok(Some((items, bytes))) => return (false, items, bytes),
-                Err(()) => return (false, 0, 0),
-                Ok(None) => {}
-            }
-        }
-        for owner in [&mut self.state.a.rowind, &mut self.state.a.colptr] {
-            match close_vec_owner_step(owner, maximum_bytes) {
-                Ok(Some((items, bytes))) => return (false, items, bytes),
-                Err(()) => return (false, 0, 0),
-                Ok(None) => {}
-            }
-        }
-        match close_vec_owner_step(&mut self.state.workspace.marks, maximum_bytes) {
-            Ok(Some((items, bytes))) => return (false, items, bytes),
-            Err(()) => return (false, 0, 0),
-            Ok(None) => {}
-        }
-        (true, 0, 0)
     }
 
     fn close_terminal_is_empty(&self) -> bool {
@@ -1264,18 +1281,22 @@ struct NumericalPageView<'a> {
 }
 
 fn read_checkpoint_u16(bytes: &[u8], offset: usize) -> Result<u16, NumericalCheckpointFault> {
-    let value = bytes.get(offset..offset + 2).ok_or(NumericalCheckpointFault::Truncated)?;
+    let value = bytes.get(offset..offset.checked_add(2).ok_or(NumericalCheckpointFault::Truncated)?).ok_or(NumericalCheckpointFault::Truncated)?;
     Ok(u16::from_le_bytes([value[0], value[1]]))
 }
 
 fn read_checkpoint_u32(bytes: &[u8], offset: usize) -> Result<u32, NumericalCheckpointFault> {
-    let value = bytes.get(offset..offset + 4).ok_or(NumericalCheckpointFault::Truncated)?;
+    let value = bytes.get(offset..offset.checked_add(4).ok_or(NumericalCheckpointFault::Truncated)?).ok_or(NumericalCheckpointFault::Truncated)?;
     Ok(u32::from_le_bytes([value[0], value[1], value[2], value[3]]))
 }
 
 fn read_checkpoint_u64(bytes: &[u8], offset: usize) -> Result<u64, NumericalCheckpointFault> {
-    let value = bytes.get(offset..offset + 8).ok_or(NumericalCheckpointFault::Truncated)?;
+    let value = bytes.get(offset..offset.checked_add(8).ok_or(NumericalCheckpointFault::Truncated)?).ok_or(NumericalCheckpointFault::Truncated)?;
     Ok(u64::from_le_bytes([value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7]]))
+}
+
+fn read_checkpoint_usize(bytes: &[u8], offset: usize) -> Result<usize, NumericalCheckpointFault> {
+    usize::try_from(read_checkpoint_u64(bytes, offset)?).map_err(|_| NumericalCheckpointFault::Envelope)
 }
 
 fn parse_numerical_page<'a>(bytes: &'a [u8], magic: &[u8; 8]) -> Result<NumericalPageView<'a>, NumericalCheckpointFault> {
@@ -1288,14 +1309,14 @@ fn parse_numerical_page<'a>(bytes: &'a [u8], magic: &[u8; 8]) -> Result<Numerica
     Ok(NumericalPageView {
         kind: read_checkpoint_u16(bytes, 10)?,
         field: read_checkpoint_u16(bytes, 12)?,
-        owner: read_checkpoint_u64(bytes, 16)? as usize,
-        item: read_checkpoint_u64(bytes, 24)? as usize,
+        owner: read_checkpoint_usize(bytes, 16)?,
+        item: read_checkpoint_usize(bytes, 24)?,
         bytes: &bytes[NUMERICAL_CHECKPOINT_HEADER_BYTES..],
     })
 }
 
 fn declared_owner_length(page: &NumericalPageView<'_>, maximum: usize) -> Result<usize, NumericalCheckpointFault> {
-    let length = read_checkpoint_u64(page.bytes, 0)? as usize;
+    let length = read_checkpoint_usize(page.bytes, 0)?;
     (length <= maximum).then_some(length).ok_or(NumericalCheckpointFault::Envelope)
 }
 
@@ -1304,165 +1325,173 @@ fn validate_restored_owner<T>(owner: &Vec<T>) -> Result<(), NumericalCheckpointF
     (bytes <= NUMERICAL_OWNER_PAGE_BYTES).then_some(()).ok_or(NumericalCheckpointFault::Envelope)
 }
 
-fn restore_u32_entry(owner: &mut Vec<u32>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
-    let length = declared_owner_length(page, maximum)?;
-    if page.item != 0 || page.bytes.len() != 8usize.saturating_add(length.saturating_mul(4)) {
-        return Err(NumericalCheckpointFault::Truncated);
-    }
-    if *entry == 0 {
-        if !owner.is_empty() {
-            return Err(NumericalCheckpointFault::Field);
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct NumericalOwnerShape {
+    length: usize,
+    capacity: usize,
+    rows: usize,
+    cols: usize,
+}
+
+#[derive(Default, Debug)]
+struct NumericalOwnerRestoreCursor {
+    shape: Option<NumericalOwnerShape>,
+    next_item: usize,
+    page_item: usize,
+    page_owner: usize,
+    page_values: usize,
+    page_open: bool,
+}
+
+impl NumericalOwnerRestoreCursor {
+    fn begin_page(&mut self, page: &NumericalPageView<'_>, maximum: usize, width: usize, matrix: bool) -> Result<NumericalOwnerShape, NumericalCheckpointFault> {
+        if self.page_open {
+            if page.item != self.page_item || page.owner != self.page_owner { return Err(NumericalCheckpointFault::Field); }
+            return self.shape.ok_or(NumericalCheckpointFault::Field);
         }
-        owner.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
-        validate_restored_owner(owner)?;
-        *entry = 1;
+        let prefix = if page.owner == 0 { if matrix { 24 } else { 8 } } else { 0 };
+        let shape = match self.shape {
+            Some(shape) if page.owner == 1 && page.item == self.next_item => shape,
+            Some(_) => return Err(NumericalCheckpointFault::Field),
+            None if page.owner == 0 && page.item == 0 => {
+                if matrix {
+                    let rows = read_checkpoint_usize(page.bytes, 0)?;
+                    let cols = read_checkpoint_usize(page.bytes, 8)?;
+                    let capacity = rows.checked_mul(cols).ok_or(NumericalCheckpointFault::Envelope)?;
+                    let length = read_checkpoint_usize(page.bytes, 16)?;
+                    if capacity > maximum || length > capacity { return Err(NumericalCheckpointFault::Envelope); }
+                    NumericalOwnerShape { length, capacity, rows, cols }
+                } else {
+                    let length = declared_owner_length(page, maximum)?;
+                    NumericalOwnerShape { length, capacity: length, rows: 0, cols: 0 }
+                }
+            }
+            None => return Err(NumericalCheckpointFault::Field),
+        };
+        let remaining = shape.length.checked_sub(self.next_item).ok_or(NumericalCheckpointFault::Field)?;
+        let page_values = remaining.min((semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - NUMERICAL_CHECKPOINT_HEADER_BYTES - prefix) / width);
+        if page.bytes.len() != prefix + page_values * width { return Err(NumericalCheckpointFault::Truncated); }
+        self.shape = Some(shape);
+        self.page_item = page.item;
+        self.page_owner = page.owner;
+        self.page_values = page_values;
+        self.page_open = true;
+        Ok(shape)
+    }
+
+    fn finish_page(&mut self) {
+        if self.shape.is_some_and(|shape| self.next_item == shape.length) { *self = Self::default(); }
+        else { self.page_open = false; }
+    }
+}
+
+trait NumericalRestoreScalar: Sized {
+    const WIDTH: usize;
+    fn decode(bytes: &[u8], offset: usize) -> Result<Self, NumericalCheckpointFault>;
+}
+
+impl NumericalRestoreScalar for u32 {
+    const WIDTH: usize = 4;
+    fn decode(bytes: &[u8], offset: usize) -> Result<Self, NumericalCheckpointFault> { read_checkpoint_u32(bytes, offset) }
+}
+
+impl NumericalRestoreScalar for usize {
+    const WIDTH: usize = 8;
+    fn decode(bytes: &[u8], offset: usize) -> Result<Self, NumericalCheckpointFault> { read_checkpoint_usize(bytes, offset) }
+}
+
+impl NumericalRestoreScalar for f64 {
+    const WIDTH: usize = 8;
+    fn decode(bytes: &[u8], offset: usize) -> Result<Self, NumericalCheckpointFault> { Ok(f64::from_bits(read_checkpoint_u64(bytes, offset)?)) }
+}
+
+impl NumericalRestoreScalar for (u32, f64) {
+    const WIDTH: usize = 12;
+    fn decode(bytes: &[u8], offset: usize) -> Result<Self, NumericalCheckpointFault> {
+        Ok((read_checkpoint_u32(bytes, offset)?, f64::from_bits(read_checkpoint_u64(bytes, offset.checked_add(4).ok_or(NumericalCheckpointFault::Truncated)?)?)))
+    }
+}
+
+trait NumericalRestoreOwner<T> {
+    fn restored_len(&self) -> usize;
+    fn reserve_restore(&mut self, capacity: usize) -> Result<bool, NumericalCheckpointFault>;
+    fn append_restore(&mut self, value: T) -> Result<(), NumericalCheckpointFault>;
+}
+
+impl<T> NumericalRestoreOwner<T> for Vec<T> {
+    fn restored_len(&self) -> usize { self.len() }
+    fn reserve_restore(&mut self, capacity: usize) -> Result<bool, NumericalCheckpointFault> {
+        let bytes = capacity.checked_mul(size_of::<T>()).ok_or(NumericalCheckpointFault::Envelope)?;
+        if bytes > NUMERICAL_OWNER_PAGE_BYTES { return Err(NumericalCheckpointFault::Envelope); }
+        if self.capacity() < capacity { self.try_reserve_exact(capacity - self.len()).map_err(|_| NumericalCheckpointFault::Admission)?; }
+        validate_restored_owner(self)?;
+        Ok(true)
+    }
+    fn append_restore(&mut self, value: T) -> Result<(), NumericalCheckpointFault> {
+        if self.len() == self.capacity() { return Err(NumericalCheckpointFault::Admission); }
+        self.push(value);
+        Ok(())
+    }
+}
+
+impl<T, const N: usize> NumericalRestoreOwner<T> for PagedList<T, N> {
+    fn restored_len(&self) -> usize { self.len() }
+    fn reserve_restore(&mut self, capacity: usize) -> Result<bool, NumericalCheckpointFault> {
+        if self.capacity() < capacity { self.reserve_capacity_one(capacity, SPARSE_PAGE_BYTES).map_err(|_| NumericalCheckpointFault::Admission)?; }
+        Ok(self.capacity() >= capacity)
+    }
+    fn append_restore(&mut self, value: T) -> Result<(), NumericalCheckpointFault> { self.push_reserved(value).map_err(|_| NumericalCheckpointFault::Admission) }
+}
+
+fn restore_numerical_owner<T: NumericalRestoreScalar>(
+    owner: &mut impl NumericalRestoreOwner<T>,
+    page: &NumericalPageView<'_>,
+    maximum: usize,
+    entry: &mut usize,
+    cursor: &mut NumericalOwnerRestoreCursor,
+    matrix: bool,
+) -> Result<bool, NumericalCheckpointFault> {
+    let shape = cursor.begin_page(page, maximum, T::WIDTH, matrix)?;
+    if owner.restored_len() != cursor.next_item { return Err(NumericalCheckpointFault::Field); }
+    if *entry == 0 {
+        if owner.reserve_restore(shape.capacity)? { *entry = 1; }
         return Ok(false);
     }
-    let item = *entry - 1;
-    if owner.len() != item {
-        return Err(NumericalCheckpointFault::Field);
-    }
-    if item < length {
-        owner.push(read_checkpoint_u32(page.bytes, 8 + item * 4)?);
+    let item = entry.checked_sub(1).ok_or(NumericalCheckpointFault::Field)?;
+    if item > cursor.page_values || cursor.page_item.checked_add(item) != Some(cursor.next_item) { return Err(NumericalCheckpointFault::Field); }
+    if item < cursor.page_values {
+        let prefix = if page.owner == 0 { if matrix { 24 } else { 8 } } else { 0 };
+        owner.append_restore(T::decode(page.bytes, prefix + item * T::WIDTH)?)?;
+        cursor.next_item += 1;
         *entry += 1;
         return Ok(false);
     }
+    cursor.finish_page();
     Ok(true)
 }
 
-fn restore_usize_entry(owner: &mut Vec<usize>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
-    let length = declared_owner_length(page, maximum)?;
-    if page.item != 0 || page.bytes.len() != 8usize.saturating_add(length.saturating_mul(8)) {
-        return Err(NumericalCheckpointFault::Truncated);
-    }
-    if *entry == 0 {
-        if !owner.is_empty() {
-            return Err(NumericalCheckpointFault::Field);
-        }
-        owner.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
-        validate_restored_owner(owner)?;
-        *entry = 1;
-        return Ok(false);
-    }
-    let item = *entry - 1;
-    if owner.len() != item {
-        return Err(NumericalCheckpointFault::Field);
-    }
-    if item < length {
-        owner.push(read_checkpoint_u64(page.bytes, 8 + item * 8)? as usize);
-        *entry += 1;
-        return Ok(false);
-    }
-    Ok(true)
+fn restore_u32_entry(owner: &mut Vec<u32>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize, cursor: &mut NumericalOwnerRestoreCursor) -> Result<bool, NumericalCheckpointFault> {
+    restore_numerical_owner(owner, page, maximum, entry, cursor, false)
 }
 
-fn restore_f64_entry(owner: &mut Vec<f64>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
-    let length = declared_owner_length(page, maximum)?;
-    if page.item != 0 || page.bytes.len() != 8usize.saturating_add(length.saturating_mul(8)) {
-        return Err(NumericalCheckpointFault::Truncated);
-    }
-    if *entry == 0 {
-        if !owner.is_empty() {
-            return Err(NumericalCheckpointFault::Field);
-        }
-        owner.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
-        validate_restored_owner(owner)?;
-        *entry = 1;
-        return Ok(false);
-    }
-    let item = *entry - 1;
-    if owner.len() != item {
-        return Err(NumericalCheckpointFault::Field);
-    }
-    if item < length {
-        owner.push(f64::from_bits(read_checkpoint_u64(page.bytes, 8 + item * 8)?));
-        *entry += 1;
-        return Ok(false);
-    }
-    Ok(true)
+fn restore_usize_entry(owner: &mut Vec<usize>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize, cursor: &mut NumericalOwnerRestoreCursor) -> Result<bool, NumericalCheckpointFault> {
+    restore_numerical_owner(owner, page, maximum, entry, cursor, false)
 }
 
-fn restore_paged_u32_entry<const N: usize>(owner: &mut PagedList<u32, N>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
-    let length = declared_owner_length(page, maximum)?;
-    if page.item != 0 || page.bytes.len() != 8usize.saturating_add(length.saturating_mul(4)) {
-        return Err(NumericalCheckpointFault::Truncated);
-    }
-    if *entry == 0 {
-        if !owner.is_empty() {
-            return Err(NumericalCheckpointFault::Field);
-        }
-        owner.reserve_capacity_one(length, SPARSE_PAGE_BYTES).map_err(|_| NumericalCheckpointFault::Admission)?;
-        if owner.capacity() < length {
-            return Ok(false);
-        }
-        *entry = 1;
-        return Ok(false);
-    }
-    let item = *entry - 1;
-    if owner.len() != item {
-        return Err(NumericalCheckpointFault::Field);
-    }
-    if item < length {
-        owner.push_reserved(read_checkpoint_u32(page.bytes, 8 + item * 4)?).map_err(|_| NumericalCheckpointFault::Admission)?;
-        *entry += 1;
-        return Ok(false);
-    }
-    Ok(true)
+fn restore_f64_entry(owner: &mut Vec<f64>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize, cursor: &mut NumericalOwnerRestoreCursor) -> Result<bool, NumericalCheckpointFault> {
+    restore_numerical_owner(owner, page, maximum, entry, cursor, false)
 }
 
-fn restore_paged_f64_entry<const N: usize>(owner: &mut PagedList<f64, N>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
-    let length = declared_owner_length(page, maximum)?;
-    if page.item != 0 || page.bytes.len() != 8usize.saturating_add(length.saturating_mul(8)) {
-        return Err(NumericalCheckpointFault::Truncated);
-    }
-    if *entry == 0 {
-        if !owner.is_empty() {
-            return Err(NumericalCheckpointFault::Field);
-        }
-        owner.reserve_capacity_one(length, SPARSE_PAGE_BYTES).map_err(|_| NumericalCheckpointFault::Admission)?;
-        if owner.capacity() < length {
-            return Ok(false);
-        }
-        *entry = 1;
-        return Ok(false);
-    }
-    let item = *entry - 1;
-    if owner.len() != item {
-        return Err(NumericalCheckpointFault::Field);
-    }
-    if item < length {
-        owner.push_reserved(f64::from_bits(read_checkpoint_u64(page.bytes, 8 + item * 8)?)).map_err(|_| NumericalCheckpointFault::Admission)?;
-        *entry += 1;
-        return Ok(false);
-    }
-    Ok(true)
+fn restore_paged_u32_entry<const N: usize>(owner: &mut PagedList<u32, N>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize, cursor: &mut NumericalOwnerRestoreCursor) -> Result<bool, NumericalCheckpointFault> {
+    restore_numerical_owner(owner, page, maximum, entry, cursor, false)
 }
 
-fn restore_pair_entry(owner: &mut Vec<(u32, f64)>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
-    let length = declared_owner_length(page, maximum)?;
-    if page.item != 0 || page.bytes.len() != 8usize.saturating_add(length.saturating_mul(12)) {
-        return Err(NumericalCheckpointFault::Truncated);
-    }
-    if *entry == 0 {
-        if !owner.is_empty() {
-            return Err(NumericalCheckpointFault::Field);
-        }
-        owner.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
-        validate_restored_owner(owner)?;
-        *entry = 1;
-        return Ok(false);
-    }
-    let item = *entry - 1;
-    if owner.len() != item {
-        return Err(NumericalCheckpointFault::Field);
-    }
-    if item < length {
-        let offset = 8 + item * 12;
-        owner.push((read_checkpoint_u32(page.bytes, offset)?, f64::from_bits(read_checkpoint_u64(page.bytes, offset + 4)?)));
-        *entry += 1;
-        return Ok(false);
-    }
-    Ok(true)
+fn restore_paged_f64_entry<const N: usize>(owner: &mut PagedList<f64, N>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize, cursor: &mut NumericalOwnerRestoreCursor) -> Result<bool, NumericalCheckpointFault> {
+    restore_numerical_owner(owner, page, maximum, entry, cursor, false)
+}
+
+fn restore_pair_entry(owner: &mut Vec<(u32, f64)>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize, cursor: &mut NumericalOwnerRestoreCursor) -> Result<bool, NumericalCheckpointFault> {
+    restore_numerical_owner(owner, page, maximum, entry, cursor, false)
 }
 
 pub struct LdltRestoreCursor {
@@ -1473,6 +1502,7 @@ pub struct LdltRestoreCursor {
     close_due: bool,
     expected_field: u16,
     page_entry: usize,
+    owner_cursor: NumericalOwnerRestoreCursor,
     control: [u64; 32],
     state: Option<LdltCheckpoint>,
     fault: Option<NumericalCheckpointFault>,
@@ -1481,12 +1511,12 @@ pub struct LdltRestoreCursor {
 impl LdltRestoreCursor {
     pub fn new(operation: Operation, payload: RetainedJobPayload) -> Self {
         let total_pages = payload.page_count();
-        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, page_entry: 0, control: [0; 32], state: None, fault: None }
+        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, page_entry: 0, owner_cursor: NumericalOwnerRestoreCursor::default(), control: [0; 32], state: None, fault: None }
     }
 
     fn decode_page_entry(&mut self, bytes: &[u8]) -> Result<bool, NumericalCheckpointFault> {
         let page = parse_numerical_page(bytes, b"FEMLCP1\0")?;
-        if page.kind != 11 || page.field != self.expected_field || page.owner != 0 || page.item != 0 {
+        if page.kind != 11 || page.field != self.expected_field || (self.owner_cursor.shape.is_none() && (page.owner != 0 || page.item != 0)) {
             return Err(NumericalCheckpointFault::Field);
         }
         if page.field == 0 {
@@ -1563,9 +1593,9 @@ impl LdltRestoreCursor {
         let n = state.a.n;
         let row_base = 520u16;
         let complete = match page.field {
-            1 => restore_u32_entry(&mut state.a.colptr, &page, n + 1, &mut self.page_entry)?,
-            2 => restore_u32_entry(&mut state.a.rowind, &page, n.saturating_mul(n), &mut self.page_entry)?,
-            3 => restore_f64_entry(&mut state.a.vals, &page, n.saturating_mul(n), &mut self.page_entry)?,
+            1 => restore_u32_entry(&mut state.a.colptr, &page, n + 1, &mut self.page_entry, &mut self.owner_cursor)?,
+            2 => restore_u32_entry(&mut state.a.rowind, &page, n.saturating_mul(n), &mut self.page_entry, &mut self.owner_cursor)?,
+            3 => restore_f64_entry(&mut state.a.vals, &page, n.saturating_mul(n), &mut self.page_entry, &mut self.owner_cursor)?,
             4 => {
                 let length = declared_owner_length(&page, n)?;
                 if page.bytes.len() != 8 {
@@ -1584,8 +1614,8 @@ impl LdltRestoreCursor {
                 }
                 true
             }
-            field if field >= 5 && field < 5 + state.l_cols.len() as u16 => restore_pair_entry(&mut state.l_cols[(field - 5) as usize], &page, n, &mut self.page_entry)?,
-            517 => restore_f64_entry(&mut state.d, &page, n, &mut self.page_entry)?,
+            field if field >= 5 && field < 5 + state.l_cols.len() as u16 => restore_pair_entry(&mut state.l_cols[(field - 5) as usize], &page, n, &mut self.page_entry, &mut self.owner_cursor)?,
+            517 => restore_f64_entry(&mut state.d, &page, n, &mut self.page_entry, &mut self.owner_cursor)?,
             518 => {
                 let length = declared_owner_length(&page, n)?;
                 if page.bytes.len() != 8 {
@@ -1604,13 +1634,13 @@ impl LdltRestoreCursor {
                 }
                 true
             }
-            field if field >= row_base && field < row_base + state.row_lists.len() as u16 => restore_usize_entry(&mut state.row_lists[(field - row_base) as usize], &page, n, &mut self.page_entry)?,
-            1032 => restore_f64_entry(&mut state.workspace.values, &page, n, &mut self.page_entry)?,
-            1033 => restore_u32_entry(&mut state.workspace.marks, &page, n, &mut self.page_entry)?,
-            1034 => restore_pair_entry(&mut state.workspace.candidate, &page, n, &mut self.page_entry)?,
+            field if field >= row_base && field < row_base + state.row_lists.len() as u16 => restore_usize_entry(&mut state.row_lists[(field - row_base) as usize], &page, n, &mut self.page_entry, &mut self.owner_cursor)?,
+            1032 => restore_f64_entry(&mut state.workspace.values, &page, n, &mut self.page_entry, &mut self.owner_cursor)?,
+            1033 => restore_u32_entry(&mut state.workspace.marks, &page, n, &mut self.page_entry, &mut self.owner_cursor)?,
+            1034 => restore_pair_entry(&mut state.workspace.candidate, &page, n, &mut self.page_entry, &mut self.owner_cursor)?,
             _ => return Err(NumericalCheckpointFault::Field),
         };
-        if complete {
+        if complete && self.owner_cursor.shape.is_none() {
             self.expected_field = match page.field {
                 4 if state.l_cols.is_empty() => 517,
                 4 => 5,
@@ -1630,6 +1660,13 @@ impl LdltRestoreCursor {
     }
 
     pub fn step(&mut self, context: &mut StepContext<'_>) -> Result<Option<LdltJob>, NumericalCheckpointFault> {
+        if let Some(fault) = self.fault { return Err(fault); }
+        let outcome = self.advance(context);
+        if let Err(fault) = outcome { self.fault = Some(fault); }
+        outcome
+    }
+
+    fn advance(&mut self, context: &mut StepContext<'_>) -> Result<Option<LdltJob>, NumericalCheckpointFault> {
         if context.is_cancelled() {
             return Err(NumericalCheckpointFault::Cancelled);
         }
@@ -1662,10 +1699,7 @@ impl LdltRestoreCursor {
         match decoded {
             Ok(true) => self.close_due = true,
             Ok(false) => {}
-            Err(fault) => {
-                self.fault = Some(fault);
-                return Err(fault);
-            }
+            Err(fault) => return Err(fault),
         }
         Ok(None)
     }
@@ -1685,23 +1719,10 @@ impl LdltRestoreCursor {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         let Some(state) = self.state.as_mut() else { return semio_framework_job::InteractiveJobCloseStep::Complete };
-        for step in [close_nested_vec_owner_step(&mut state.row_lists, maximum_bytes), close_nested_vec_owner_step(&mut state.l_cols, maximum_bytes)] {
-            if let Ok(Some((released_items, released_bytes))) = step {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-            }
-        }
-        if let Ok(Some((released_items, released_bytes))) = close_vec_owner_step(&mut state.workspace.candidate, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-        }
-        for owner in [&mut state.d, &mut state.a.vals, &mut state.workspace.values] {
-            if let Ok(Some((released_items, released_bytes))) = close_vec_owner_step(owner, maximum_bytes) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-            }
-        }
-        for owner in [&mut state.a.rowind, &mut state.a.colptr, &mut state.workspace.marks] {
-            if let Ok(Some((released_items, released_bytes))) = close_vec_owner_step(owner, maximum_bytes) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-            }
+        match close_ldlt_checkpoint_step(state, maximum_bytes) {
+            Ok(Some((released_items, released_bytes))) => return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            Err(()) => return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
+            Ok(None) => {}
         }
         self.state = None;
         semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
@@ -4258,38 +4279,10 @@ impl SubspaceIterationJob {
     }
 }
 
-fn restore_matrix_entry(matrix: &mut MatD, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
-    let rows = read_checkpoint_u64(page.bytes, 0)? as usize;
-    let cols = read_checkpoint_u64(page.bytes, 8)? as usize;
-    let capacity = rows.checked_mul(cols).ok_or(NumericalCheckpointFault::Envelope)?;
-    let length = read_checkpoint_u64(page.bytes, 16)? as usize;
-    if capacity > maximum || length > capacity || page.item != 0 || page.bytes.len() != 24usize.saturating_add(length.saturating_mul(8)) {
-        return Err(NumericalCheckpointFault::Envelope);
-    }
-    if *entry == 0 {
-        if !matrix.data.is_empty() {
-            return Err(NumericalCheckpointFault::Field);
-        }
-        matrix.data.try_reserve_exact(capacity).map_err(|_| NumericalCheckpointFault::Admission)?;
-        validate_restored_owner(&matrix.data)?;
-        matrix.rows = rows;
-        matrix.cols = cols;
-        *entry = 1;
-        return Ok(false);
-    }
-    if matrix.rows != rows || matrix.cols != cols {
-        return Err(NumericalCheckpointFault::Field);
-    }
-    let item = *entry - 1;
-    if matrix.data.len() != item {
-        return Err(NumericalCheckpointFault::Field);
-    }
-    if item < length {
-        matrix.data.push(f64::from_bits(read_checkpoint_u64(page.bytes, 24 + item * 8)?));
-        *entry += 1;
-        return Ok(false);
-    }
-    Ok(true)
+fn restore_matrix_entry(matrix: &mut MatD, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize, cursor: &mut NumericalOwnerRestoreCursor) -> Result<bool, NumericalCheckpointFault> {
+    let complete = restore_numerical_owner(&mut matrix.data, page, maximum, entry, cursor, true)?;
+    if let Some(shape) = cursor.shape { matrix.rows = shape.rows; matrix.cols = shape.cols; }
+    Ok(complete)
 }
 
 fn decode_subspace_stage(value: u64) -> Result<SubspaceStage, NumericalCheckpointFault> {
@@ -4331,7 +4324,7 @@ fn apply_work_control(work: &mut SubspaceWork, values: &[u64; 24]) -> Result<(),
     Ok(())
 }
 
-fn restore_work_entry(work: &mut SubspaceWork, page: &NumericalPageView<'_>, base: u16, n: usize, m: usize, entry: &mut usize, control: &mut [u64; 24]) -> Result<bool, NumericalCheckpointFault> {
+fn restore_work_entry(work: &mut SubspaceWork, page: &NumericalPageView<'_>, base: u16, n: usize, m: usize, entry: &mut usize, control: &mut [u64; 24], cursor: &mut NumericalOwnerRestoreCursor) -> Result<bool, NumericalCheckpointFault> {
     match page.field - base {
         0 => {
             let count = declared_owner_length(page, 13)?;
@@ -4351,17 +4344,17 @@ fn restore_work_entry(work: &mut SubspaceWork, page: &NumericalPageView<'_>, bas
             apply_work_control(work, control)?;
             Ok(true)
         }
-        1 => restore_matrix_entry(&mut work.rhs, page, n.saturating_mul(m), entry),
-        2 => restore_matrix_entry(&mut work.solved, page, n.saturating_mul(m), entry),
-        3 => restore_matrix_entry(&mut work.b_basis, page, n.saturating_mul(m), entry),
-        4 => restore_matrix_entry(&mut work.projected, page, m.saturating_mul(m), entry),
-        5 => restore_matrix_entry(&mut work.jacobi, page, m.saturating_mul(m), entry),
-        6 => restore_matrix_entry(&mut work.jacobi_vectors, page, m.saturating_mul(m), entry),
-        7 => restore_matrix_entry(&mut work.ordered_vectors, page, m.saturating_mul(m), entry),
-        8 => restore_matrix_entry(&mut work.candidate_x, page, n.saturating_mul(m), entry),
-        9 => restore_f64_entry(&mut work.mu, page, m, entry),
-        10 => restore_f64_entry(&mut work.theta, page, m, entry),
-        11 => restore_usize_entry(&mut work.order, page, m, entry),
+        1 => restore_matrix_entry(&mut work.rhs, page, n.saturating_mul(m), entry, cursor),
+        2 => restore_matrix_entry(&mut work.solved, page, n.saturating_mul(m), entry, cursor),
+        3 => restore_matrix_entry(&mut work.b_basis, page, n.saturating_mul(m), entry, cursor),
+        4 => restore_matrix_entry(&mut work.projected, page, m.saturating_mul(m), entry, cursor),
+        5 => restore_matrix_entry(&mut work.jacobi, page, m.saturating_mul(m), entry, cursor),
+        6 => restore_matrix_entry(&mut work.jacobi_vectors, page, m.saturating_mul(m), entry, cursor),
+        7 => restore_matrix_entry(&mut work.ordered_vectors, page, m.saturating_mul(m), entry, cursor),
+        8 => restore_matrix_entry(&mut work.candidate_x, page, n.saturating_mul(m), entry, cursor),
+        9 => restore_f64_entry(&mut work.mu, page, m, entry, cursor),
+        10 => restore_f64_entry(&mut work.theta, page, m, entry, cursor),
+        11 => restore_usize_entry(&mut work.order, page, m, entry, cursor),
         _ => Err(NumericalCheckpointFault::Field),
     }
 }
@@ -4374,6 +4367,7 @@ pub struct SubspaceRestoreCursor {
     close_due: bool,
     expected_field: u16,
     page_entry: usize,
+    owner_cursor: NumericalOwnerRestoreCursor,
     control: [u64; 24],
     state: Option<SubspaceCheckpoint>,
     fault: Option<NumericalCheckpointFault>,
@@ -4382,12 +4376,12 @@ pub struct SubspaceRestoreCursor {
 impl SubspaceRestoreCursor {
     pub fn new(operation: Operation, payload: RetainedJobPayload) -> Self {
         let total_pages = payload.page_count();
-        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, page_entry: 0, control: [0; 24], state: None, fault: None }
+        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, page_entry: 0, owner_cursor: NumericalOwnerRestoreCursor::default(), control: [0; 24], state: None, fault: None }
     }
 
     fn decode_page_entry(&mut self, bytes: &[u8]) -> Result<bool, NumericalCheckpointFault> {
         let page = parse_numerical_page(bytes, b"FEMSCP1\0")?;
-        if page.kind != 12 || page.field != self.expected_field || page.owner != 0 || page.item != 0 {
+        if page.kind != 12 || page.field != self.expected_field || (self.owner_cursor.shape.is_none() && (page.owner != 0 || page.item != 0)) {
             return Err(NumericalCheckpointFault::Field);
         }
         if page.field == 0 {
@@ -4468,16 +4462,16 @@ impl SubspaceRestoreCursor {
                 }
                 true
             }
-            field if field >= 2 && field < 2 + n as u16 => restore_pair_entry(&mut state.k_factor.l_cols[(field - 2) as usize], &page, n, &mut self.page_entry)?,
-            514 => restore_f64_entry(&mut state.k_factor.d, &page, n, &mut self.page_entry)?,
-            515 => restore_paged_u32_entry(&mut state.b.indptr, &page, n + 1, &mut self.page_entry)?,
-            516 => restore_paged_u32_entry(&mut state.b.indices, &page, n.saturating_mul(n), &mut self.page_entry)?,
-            517 => restore_paged_f64_entry(&mut state.b.vals, &page, n.saturating_mul(n), &mut self.page_entry)?,
-            518 => restore_matrix_entry(&mut state.x, &page, n.saturating_mul(m), &mut self.page_entry)?,
-            519 => restore_f64_entry(&mut state.prev_theta, &page, state.p, &mut self.page_entry)?,
-            520 => restore_f64_entry(&mut state.final_theta, &page, m, &mut self.page_entry)?,
-            521 => restore_f64_entry(&mut state.residuals, &page, state.p, &mut self.page_entry)?,
-            field if (522..=533).contains(&field) => restore_work_entry(&mut state.work, &page, 522, n, m, &mut self.page_entry, &mut self.control)?,
+            field if field >= 2 && field < 2 + n as u16 => restore_pair_entry(&mut state.k_factor.l_cols[(field - 2) as usize], &page, n, &mut self.page_entry, &mut self.owner_cursor)?,
+            514 => restore_f64_entry(&mut state.k_factor.d, &page, n, &mut self.page_entry, &mut self.owner_cursor)?,
+            515 => restore_paged_u32_entry(&mut state.b.indptr, &page, n + 1, &mut self.page_entry, &mut self.owner_cursor)?,
+            516 => restore_paged_u32_entry(&mut state.b.indices, &page, n.saturating_mul(n), &mut self.page_entry, &mut self.owner_cursor)?,
+            517 => restore_paged_f64_entry(&mut state.b.vals, &page, n.saturating_mul(n), &mut self.page_entry, &mut self.owner_cursor)?,
+            518 => restore_matrix_entry(&mut state.x, &page, n.saturating_mul(m), &mut self.page_entry, &mut self.owner_cursor)?,
+            519 => restore_f64_entry(&mut state.prev_theta, &page, state.p, &mut self.page_entry, &mut self.owner_cursor)?,
+            520 => restore_f64_entry(&mut state.final_theta, &page, m, &mut self.page_entry, &mut self.owner_cursor)?,
+            521 => restore_f64_entry(&mut state.residuals, &page, state.p, &mut self.page_entry, &mut self.owner_cursor)?,
+            field if (522..=533).contains(&field) => restore_work_entry(&mut state.work, &page, 522, n, m, &mut self.page_entry, &mut self.control, &mut self.owner_cursor)?,
             534 => {
                 let present = read_checkpoint_u64(page.bytes, 0)?;
                 if self.page_entry == 0 {
@@ -4511,11 +4505,11 @@ impl SubspaceRestoreCursor {
             }
             field if (535..=545).contains(&field) => {
                 let work = state.retiring_work.as_mut().ok_or(NumericalCheckpointFault::Field)?;
-                restore_work_entry(work, &page, 534, n, m, &mut self.page_entry, &mut self.control)?
+                restore_work_entry(work, &page, 534, n, m, &mut self.page_entry, &mut self.control, &mut self.owner_cursor)?
             }
             _ => return Err(NumericalCheckpointFault::Field),
         };
-        if complete {
+        if complete && self.owner_cursor.shape.is_none() {
             self.expected_field = match page.field {
                 1 if n == 0 => 514,
                 1 => 2,
@@ -4533,6 +4527,13 @@ impl SubspaceRestoreCursor {
     }
 
     pub fn step(&mut self, context: &mut StepContext<'_>) -> Result<Option<SubspaceIterationJob>, NumericalCheckpointFault> {
+        if let Some(fault) = self.fault { return Err(fault); }
+        let outcome = self.advance(context);
+        if let Err(fault) = outcome { self.fault = Some(fault); }
+        outcome
+    }
+
+    fn advance(&mut self, context: &mut StepContext<'_>) -> Result<Option<SubspaceIterationJob>, NumericalCheckpointFault> {
         if context.is_cancelled() {
             return Err(NumericalCheckpointFault::Cancelled);
         }
@@ -4574,10 +4575,7 @@ impl SubspaceRestoreCursor {
         match decoded {
             Ok(true) => self.close_due = true,
             Ok(false) => {}
-            Err(fault) => {
-                self.fault = Some(fault);
-                return Err(fault);
-            }
+            Err(fault) => return Err(fault),
         }
         Ok(None)
     }

@@ -1142,11 +1142,7 @@ class TestScript extends BundleScript {
       runCargo(["test", "--manifest-path", "Cargo.toml", ...rest.slice(1)], this.root);
       return;
     }
-    const legacyTs = join(
-      this.repoRoot,
-      "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/vitest.config.ts",
-    );
-    await runVitest(this.root, rest, legacyTs);
+    await runVitest(this.root, rest, "../../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

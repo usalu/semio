@@ -1,4 +1,5 @@
 {
+  "closeStringCounts": { "bar3": 3, "frame3": 3, "tet4": 5 },
   "oracle": {
     "package": "numpy",
     "version": "2.0.2",

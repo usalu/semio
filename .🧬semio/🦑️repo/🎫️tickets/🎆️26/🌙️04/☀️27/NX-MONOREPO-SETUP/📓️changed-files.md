@@ -888,3 +888,68 @@ Playground discovery: changed registry `🎮️playground/🔎️discovery/🟦�
 Projected session follow-up: registry `🔎️discovery/🟦️.ts` now resolves supplied catalog IDs without live discovery. The playground input-view test covers bare IDs, aliases and unknown IDs using existing runtime-component vectors and a guard against live reads; the ticket probe also compares every real default/explicit session projection.
 
 - Follow-up bootstrap correction: inferred-test plugin command inputs are deferred until a canonical case exists; the dependency-bootstrap neutral fixture includes `🧪️test/🕸️dependencies/🟨️.mjs`; CORE validates physical producer bindings only for contracts with discovered participants. Added ticket probe `🔬️native-inventory/🛠️tooling/📜️script.ts` and empty-project regression alongside invalid producer rejection.
+
+
+### Styling .NET Output Contract — 2026-09-13
+
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🟦️.ts` — removed .NET commands from the Python command module.
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🔷️dotnet/📜️script.ts` — new leased, cancellable native producer with canonical path mapping and owned publication.
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet/📜️script.ts` — narrow command router.
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet/📋️project.json` — cacheable final output and explicit generator/toolchain inputs.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎨️styling-outputs/🔣️.json`, `🧬️schema/🔣️.json`, `🟦️.ts` — new language-neutral fixture, Ajv/esbuild/native MSBuild/Nx proof.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts` — test registration and resolved .NET Compile source check.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/nx-contract/🔣️.json` — corrected support-library Compile source.
+- Ticket `🔬️native-inventory/🎨️styling/📜️script.ts`, `📓️styling-outputs.md`, `📓️compiler-output-gaps.md`, `📓️remaining-build-contracts.md`, `📓️changed-files.md`.
+
+
+### OS Dev Production Completion — 2026-09-13
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts`, `📋️project.json`, `package.json` — removed recursive generic build and routed it through explicit production prerequisites.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏁completion/📜️script.ts` — narrow completion command.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🧫️fixtures/🌐️production-browser-artifacts/🔣️.json` and `🧪️tests/🌐️production-browser-artifacts/🟦️.ts` — generic entry, editor and native Vite/Nx restoration coverage.
+- `.vscode/🧩️launch.seed.jsonc` — canonical default/variant build entries; `.vscode/launch.json` is being regenerated.
+- Ticket `🔬️native-inventory/🏁production/📜️script.ts`, `📓️production-completion.md` and follow-up reports.
+
+## Python Wheel Follow-Up — 2026-09-13
+
+- Updated styling Python pyproject.toml and uv.lock with the pinned build-only backend group.
+- Added 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📜️script.ts for leased dependency preparation and finite wheel publication.
+- Updated styling 🏗️builder/🟦️.ts, 📦️packages/🐍️python/📜️script.ts and 📋️project.json to separate build/deps from tests, consume dist/build wheels and hash generated prerequisite outputs.
+- Added caching/🧪️tests/🎨️styling-outputs/🐍️python/🔣️.json, 🧬️schema/🔣️.json and 🟦️.ts for native Nx/uv wheel behavior; registered in cache-contracts/🟦️.ts.
+- Repaired the styling prerequisite assertion in cache-contracts/🟦️.ts to use native Nx transitive task reachability.
+- Added Python generator/test editor seed entries and regenerated .vscode/launch.json.
+- Added ticket probes 🔬️native-inventory/🐍️styling/📜️script.ts and 🐍️lock/📜️script.ts; generated probe configuration and logs remain under 🗑️generated while this ticket is open.
+- Updated 📓️styling-outputs.md, 📓️remaining-build-contracts.md, 📓️compiler-output-gaps.md and this file with validation scope and remaining work.
+
+- Added caching/🧪️tests/🛑️coordinator/🟦️.ts and ticket 🔬️native-inventory/🛑️coordinator/📜️script.ts; moved the existing cancellation vectors into the focused harness and supplied the production nxChildEnvironment helper.
+
+## WGPU Live Publication Follow-Up
+
+- Updated library/🟨️.mjs to infer uncached WGPU activation and document the pure preparation boundary.
+- Updated OS Dev 📦️packages/🟦️typescript/📜️script.ts to move live WGPU publication into activation and remove nested PreparationScript execution.
+- Added caching/🧪️tests/🧊️live-activation/{🔣️.json,🧬️schema/🔣️.json,🟦️.ts}, registered it in cache-contracts and aligned graph assertions with the live-state classification.
+- Added ticket 🔬️native-inventory/🧊️live-activation/📜️script.ts, 📓️wgpu-live-activation.md and 📓️trunk-output-boundary.md.
+- Updated nx-contract fixture/schema and cache-contracts to read the actual materializer source after package extraction.
+
+## WGPU Finite Compiler Follow-Up — 2026-09-13
+
+- Added WGPU `🏗️compiler/🌐️wasm/📜️script.ts` and caching `🧪️tests/🧊️wasm-outputs/{🔣️.json,🧬️schema/🔣️.json,🟦️.ts}`.
+- Updated WGPU TypeScript project/router and OS Vite renderer alias.
+- Updated root `📜️script.ts` pinned bindgen preparation, narrow process tool environment/output options, Nx core native manifest selection and matching-profile playground prerequisites.
+- Updated Trunk lockfile fixture/test, live activation test, browser boot dependency fixture/test, and full cache contract registration.
+- Updated `.vscode/🧩️launch.seed.jsonc` and regenerated `.vscode/launch.json`.
+- Added ticket `🔬️native-inventory/🧊️wasm-outputs/📜️script.ts`; updated private verification configuration and retained Markdown evidence.
+
+## WGPU Browser Serving (2026-09-13)
+
+Created the WGPU 🌐️server command, configuration factory, document and configuration (now 🎚️config/🟦️.ts); created neutral ⚡️caching/🧪️tests/🧊️browser-serving fixture/schema/test and ticket probe. Updated CORE playground server targets, public bootstrap WGPU profile/watch routing, generic Vite service config-loader option, OwnedBuildConfig optional false publicDir/null watch, WGPU/OS Dev routers and authored default dev/serve targets, browser boot URLs/server selection, browser boot fixture/test, compiler consumer fixture path, Trunk fixture/tests and full test registration. Retired WGPU Cargo-package Trunk.toml/🌐️.html, copier-specific browser-build helpers and replaced the engine module-route fixture/test. Generated browser boot and editor artifacts through Nx.
+
+Canonical renderer output follow-up: updated the narrow WGPU compiler to publish only native JS/WASM names, changed the renderer library default module URL, and added exact-file fixture/schema/native assertions to 🧊️wasm-outputs. Root publication is pending the taxonomy prerequisite repair; the native isolated proof passed.
+
+## Native Dependency Boundary (2026-09-13)
+
+Created caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts, caching/🧫️fixtures/📦️native-dependencies fixture/schema, caching/🧪️tests/📦️native-dependencies/🟦️.ts and the corresponding ticket probe/report. Updated root project commands and SetupScript, moved the shared wasm-bindgen lock parser into caching/🦀️cargo/🟦️.ts with an explicit library export, and updated Trunk contracts and full test registration.
+
+## Cargo Cleanup Boundary And Hub Contract (2026-09-13)
+
+Removed detached pruning from caching/🦀️cargo/📜️script.ts. Added caching/🧪️tests/🦀️cleanup-boundary fixture/schema/native test and its ticket probe/report; registered it in cache-contracts. Corrected the concurrency docstring in the relocated caching/🧹️pruning/📋️orchestration/🟦️.ts. Updated the Hub fixture/schema/test to its current builder configuration and added a focused ticket probe.

@@ -1724,7 +1724,7 @@ import {
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
-import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverOverlayArmedUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, retainWorldBrushPreviewJsonV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverOverlayArmedUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, retainWorldBrushPreviewJsonV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, gumballPreviewWorldPoint, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
@@ -1830,6 +1830,10 @@ import {
   getWorldCatalogueDropPreview,
   clearWorldSelectionPreview,
   getWorldSelectionPreview,
+  clearWorldGumballTransformPreview,
+  getWorldGumballTransformPreview,
+  setWorldGumballTransformPreview,
+  subscribeWorldGumballTransformPreview,
   pushPuzzle2dFixtureDropPreview,
   registerWorldCatalogueDropHost,
   setWorldCatalogueDropPreview,
@@ -5400,6 +5404,48 @@ describe("framework renderer hosts", () => {
     unsubscribe();
   });
 
+  it("shares live gumball transform previews across sibling panes without allowing an idle pane to clear the active gesture", () => {
+    clearWorldGumballTransformPreview("puzzle3d-play");
+    const notifications: Array<ReturnType<typeof getWorldGumballTransformPreview>> = [];
+    const unsubscribe = subscribeWorldGumballTransformPreview(() => notifications.push(getWorldGumballTransformPreview("puzzle3d-play")));
+    const preview = {
+      sourceId: "pane.top",
+      transformMode: "transform",
+      handleKind: "moveX" as const,
+      before: { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+      after: { position: [2, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+      instanceIds: ["object-a"],
+      pivot: [0, 0, 0] as const,
+    };
+
+    setWorldGumballTransformPreview("puzzle3d-play", preview);
+    clearWorldGumballTransformPreview("puzzle3d-play", "pane.perspective");
+    expect(getWorldGumballTransformPreview("puzzle3d-play")).toEqual(preview);
+
+    clearWorldGumballTransformPreview("puzzle3d-play", "pane.top");
+    expect(getWorldGumballTransformPreview("puzzle3d-play")).toBeNull();
+    expect(notifications).toEqual([preview, null]);
+    unsubscribe();
+  });
+
+  it("mergeWorldSelectionWithLeftoverV1 keeps guest transformMode when leftover still stamps move-era gumball pose", () => {
+    const merged = mergeWorldSelectionWithLeftoverV1(
+      { method: "click", ids: ["object-a"], transformMode: "transform", gumballActive: true, gumballTarget: [1, 2, 3] },
+      { ids: ["object-a"], hoveredId: null, gumballActive: true, gumballAnchorId: "object-a" },
+      [{ id: "object-a", position: [1, 2, 3] }],
+    );
+    expect(merged.transformMode).toBe("transform");
+  });
+
+  it("gumball rotate handles commit rotateSelection under transform mode even when transformMode was move", () => {
+    const base = { mode: "object", ids: ["obj-1"] };
+    const before = { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] };
+    const after = { position: [0, 0, 0], quaternion: [0, 0.7071067811865476, 0, 0.7071067811865476], scale: [1, 1, 1] };
+    expect(gumballTransformDeltaBetweenPoses("move", before, after, base, "rotateY")?.action).toBe("rotateSelection");
+    const translateAfter = { position: [2, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] };
+    expect(gumballPreviewWorldPoint([0, 0, 0], "transform", before, translateAfter, "moveX", [1, 0, 0])).toEqual([3, 0, 0]);
+  });
+
   it("pushes fixture-drop previews to every board2d peer on the same controller", () => {
     const scope = flowSessionLoader.createBoardPeerScope();
     const calls: { pane: string; method: string; arg: string }[] = [];
@@ -7277,6 +7323,15 @@ describe("s workflow flow routing", () => {
   });
 
   // 🔍️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave N — the inspection panel "shows nothing" defect
+  const panelTreePanelHost = (config: ReturnType<typeof uiNodeToTreePanelConfig>): ReactElement => config.emptyState as ReactElement;
+
+  it("hosts semantic panel bodies full-width via tree emptyState, not a property-layout control wrapper", () => {
+    const config = uiNodeToTreePanelConfig(pendingPanelUiNode(), noopAction);
+    expect(config.sections).toEqual([]);
+    expect(config.emptyState).toBeTruthy();
+    expect(config.className).toContain("w-full");
+  });
+
   // (measured 2026-09-09 21:05). The guest cannot render an empty inspection body
   // (`selected_object_inspector_renders_that_object_field_group` in the puzzle3d crate proves a pick
   // yields the object field group, and `render` always falls back to the document summary), and the
@@ -7285,8 +7340,7 @@ describe("s workflow flow routing", () => {
   // and no children — and `<Tree sections={[]}/>` drew literally nothing for it. Loading, empty and
   // dropped were one and the same blank rectangle.
   it("renders a panel body that has not arrived yet as a loading surface, never as a silently empty panel", () => {
-    const control = uiNodeToTreePanelConfig(pendingPanelUiNode(), noopAction).sections[0]?.items?.[0]?.control as ReactElement;
-    const rendered = render(control);
+    const rendered = render(panelTreePanelHost(uiNodeToTreePanelConfig(pendingPanelUiNode(), noopAction)));
     expect(rendered.container.querySelector("[data-ui-status=\"loading\"]")).toBeTruthy();
     expect(rendered.container.querySelector("[aria-busy=\"true\"]")).toBeTruthy();
   });
@@ -7298,7 +7352,7 @@ describe("s workflow flow routing", () => {
   // reaching this state at all means something upstream lost the body.
   it("renders an idle tree body with no sections as an explicit empty state, distinct from loading", () => {
     const idleEmpty = { ...pendingPanelUiNode(), activity: "idle" as const };
-    const empty = render(uiNodeToTreePanelConfig(idleEmpty, noopAction).sections[0]?.items?.[0]?.control as ReactElement);
+    const empty = render(panelTreePanelHost(uiNodeToTreePanelConfig(idleEmpty, noopAction)));
     expect(empty.container.querySelector("[data-ui-status=\"loading\"]")).toBeNull();
     expect(empty.container.textContent?.replace(/\u2026/g, "").trim()).not.toBe("");
     expect(empty.container.textContent).toContain(resolveTranslationLabel(uiI18n.t("ui.common.noData")));
@@ -7341,8 +7395,7 @@ describe("s workflow flow routing", () => {
       }),
       noopAction,
     );
-    const control = config.sections[0]?.items?.[0]?.control as ReactElement;
-    const rendered = render(control);
+    const rendered = render(panelTreePanelHost(config));
     expect(rendered.getByText("Draw")).toBeTruthy();
   });
 
@@ -7375,7 +7428,7 @@ describe("s workflow flow routing", () => {
       }),
       (action) => dispatched.push(action),
     );
-    const rendered = render(config.sections[0]?.items?.[0]?.control as ReactElement);
+    const rendered = render(panelTreePanelHost(config));
     const row = rendered.container.querySelector("#panel\\:puzzle3d-play-kinds\\/Hexagonal\\ Cut\\ Concrete\\ Forest\\ Left");
     expect(row).toBeTruthy();
     // 🖱️ The row must announce its own activation in the DOM, so a red says WHICH hop broke rather than
@@ -7462,8 +7515,8 @@ describe("s workflow flow routing", () => {
     for (const presence of [undefined, { "seed-left-001": { selected: true }, "object-1": { selected: true } }]) {
       const dispatched: ActionDescriptor[] = [];
       const config = uiNodeToTreePanelConfig(documentNode, (action) => dispatched.push(action));
-      const control = config.sections[0]?.items?.[0]?.control as ReactElement;
-      const rendered = render(presence ? createElement(UiPresenceOverlayContext.Provider, { value: { byKey: new Map(Object.entries(presence)) as ReadonlyMap<string, UiPresenceOverlayEntry> } }, control) : control);
+      const host = panelTreePanelHost(config);
+      const rendered = render(presence ? createElement(UiPresenceOverlayContext.Provider, { value: { byKey: new Map(Object.entries(presence)) as ReadonlyMap<string, UiPresenceOverlayEntry> } }, host) : host);
       const hide = Array.from(rendered.container.querySelectorAll('[data-slot="action"]')).find((candidate) => (candidate.textContent ?? "").includes("Hide"));
       expect(hide).toBeTruthy();
       fireEvent.click(hide as Element);
@@ -8242,8 +8295,7 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(node.id).toBe("framework.panel.history");
     const source = node.trees[0].tree;
     const config = "resolveTree" in source ? source.resolveTree() : source;
-    const control = config.sections[0]?.items?.[0]?.control as ReactElement;
-    const rendered = render(control);
+    const rendered = render(panelTreePanelHost(config));
     expect(rendered.getByText("Increment")).toBeTruthy();
   });
 
@@ -8692,7 +8744,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(leftoverInteractionStateV1(published!).selection.vortex?.ids).toEqual(["seed-left-001"]);
     expect(interactionViewFromLeftoverOutput(null)).toBeNull();
     const pose = leftoverWorldGumballPoseV1({ gumballActive: true, gumballAnchorId: "seed-left-001", ids: ["seed-left-001"] }, [{ id: "seed-left-001", position: [1, 2, 3] }]);
-    expect(pose.transformMode).toBe("move");
+    expect(pose.transformMode).toBe("transform");
     expect(pose.gumballTarget).toEqual([1, 2, 3]);
     const gumballArgs = world3dGumballSelectionArgsV1({ ids: ["seed-left-001"], gumballActive: true, componentIds: [9] });
     expect(gumballArgs.ids).toEqual(["seed-left-001"]);
@@ -8895,7 +8947,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     console.warn("[DEBUG] leftover first-pick Inspection hash bust", JSON.stringify({ selectedIds: carried.ids, omitHash: leftoverInspectionPanelHash(carried.ids, "abc") === undefined }));
   });
 
-  it("empty-target interactionSelect leftover selectedIds names the hovered object; hover leftover does not invent a pick", () => {
+  it("empty-target interactionSelect clears selectedIds while hover may remain; hover leftover does not invent a pick", () => {
     const emptyWhileHover = leftoverSelectIdsMustNameHoverPickV1([], "seed-left-001");
     expect(emptyWhileHover).toBe(false);
     const published = interactionViewFromLeftoverOutput({

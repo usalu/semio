@@ -158,7 +158,6 @@ export type SpawnedAppEntry = {
 
 export type SpacePanelState = {
   readonly activePanelTab: string;
-  readonly programs: readonly SpaceProgramEntry[];
   readonly spawnedApps: readonly SpawnedAppEntry[];
   readonly activeSpawnedId?: string;
 };

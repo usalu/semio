@@ -28,6 +28,7 @@ import {
   writeSync,
 } from "node:fs";
 import type { Stats } from "node:fs";
+import { canonicalPrimaryFilenameForKind } from "../🔍️discovery/🟦️.ts";
 import { generatorPreviewResourceLimits, generatorPreviewScriptArguments, registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type GeneratorProjectionActivation, type RegistryCatalogInputDiscovery, type RegistryCatalogInputView, type SemanticPackageGeneration, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️.ts";
 import { tmpdir } from "node:os";
 import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../🔍️discovery/🟦️.ts";
@@ -1253,9 +1254,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
       if (node.nodeType === "file") {
         if ("configurableEntry" in node) segments.push(configurableEntryContracts[node.configurableEntry.contractId].filename);
         else if ("kindId" in node) {
-          const kind = fileKinds[node.kindId];
-          if (kind.extensionChains.length !== 1) throw new Error(`Taxonomy v7 semanticDescendantContracts.${id} file kind ${node.kindId} must have one physical extension chain`);
-          segments.push(`${kind.emoji}${kind.extensionChains[0]}`);
+          segments.push(canonicalPrimaryFilenameForKind(node.kindId, root as unknown as DiscoveryTaxonomy));
         } else if ("fixedFilenameContractId" in node) segments.push(posix.basename(fixedFilenameContracts[node.fixedFilenameContractId].pathPattern));
         else throw new Error(`Taxonomy v7 semanticDescendantContracts.${id} file authority is invalid`);
       }
@@ -1614,7 +1613,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
   }
   if (Object.keys(packageBoundaryProfiles).length === 0) throw new Error("Taxonomy v7 packageBoundaryProfiles must not be empty");
   /** 🔖️ Each externally-mandated tool-config validator token is reserved for exactly one contract id, mirroring the pre-existing vitest-configuration/vitest-config-entry pinning. */
-  const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-vitest": "vitest-config", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config", "vscode-test-configuration": "vscode-test-cli-config" };
+  const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config", "vscode-test-configuration": "vscode-test-cli-config" };
   const packageSourceDispositions: Record<string, PackageSourceDisposition> = {};
   for (const [id, value] of Object.entries(sourceDispositionRows)) {
     const spec = record(value, `packageSourceDispositions.${id}`);
@@ -3802,7 +3801,7 @@ function typescriptCommentPathReferenceAuthority(content: string): readonly Read
   return rows;
 }
 
-/** 🚧️ Resolves quoted repository-relative path literals inside `.dependency-cruiser.cjs`'s own boundary arrays (e.g. `allowed…Targets`/`forbidden…Targets`) — a closed, purpose-built carve-out (matched by exact basename, never generalized to arbitrary TypeScript/JS arrays) since these arrays exist ONLY to enumerate real repo paths for architectural-boundary comparison, not to be read from disk, so no naming or trailing-usage heuristic like {@link typescriptPathCollectionReferenceAuthority} applies. Every element without a `/` (`"fs"`, `"node:path"`, bare package names) is skipped so only genuinely path-shaped literals become candidates; a value that never resolves to a real repo path is simply never rewritten. */
+/** 🚧️ Resolves quoted repository-relative path literals inside the dependency-boundary policy owner's arrays. */
 function dependencyCruiserBoundaryReferenceAuthority(content: string): ReferenceToken[] {
   const rows: ReferenceToken[] = [];
   for (const array of content.matchAll(/\bconst\s+[A-Za-z_$][\w$]*\s*=\s*\[([\s\S]*?)\]/gu)) {
@@ -4085,14 +4084,14 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
   return rows.sort((left, right) => left.start - right.start);
 }
 
-/** 🧪️ `runVitest(bundleRoot, segments, config?)`'s optional third argument names a config file
+/** 🧪️ `runVitest(bundleRoot, segments, config)`'s required third argument names a configuration owner
  * resolved relative to `bundleRoot` at runtime (every `📜️script.ts` router's own `cwd`), not to
  * whatever else the call happens to quote first — `segments` is very often a literal array of
- * quoted canonical case paths (e.g. `runVitest(this.root, ["../../🧪️tests/🧩️case/🟦️.ts", …], "vitest.config.ts")`), so
+ * quoted canonical case paths (e.g. `runVitest(this.root, ["../../🧪️tests/🧩️case/🟦️.ts", …], "../../🧪️tests/🎚️config/🟦️.ts")`), so
  * the generic first-quoted-string scanners this file otherwise uses would misidentify a segment
  * name as the config path. This takes the LAST quoted string in the call instead, matching the
- * parameter's trailing position; a call with no quoted config argument (the common, default-using
- * case) yields no token. */
+ * parameter's trailing position; a call with no quoted configuration argument yields no token and
+ * is rejected by the configuration ownership gate. */
 function runVitestConfigArgumentTokens(content: string): ReferenceToken[] {
   const rows: ReferenceToken[] = [];
   for (const match of content.matchAll(/\brunVitest\s*\(([^;\r\n]*)\)/gu)) {
@@ -4145,7 +4144,7 @@ function typescriptTokens(path: string, content: string): ReferenceToken[] {
   ]);
   rows.push(...runVitestConfigArgumentTokens(content));
   if (basename(path) === "🟦️.ts" && basename(dirname(path)) === "🧪️tests") rows.push(...vitestConfigIncludeArrayTokens(content));
-  if (basename(path) === ".dependency-cruiser.cjs") rows.push(...dependencyCruiserBoundaryReferenceAuthority(content));
+  if (path.replaceAll("\\", "/").endsWith("/🧹️lint/🕸️dependency-boundaries/🟨️.cjs")) rows.push(...dependencyCruiserBoundaryReferenceAuthority(content));
   rows.push(...ticketImportantProseReferenceAuthority(content).map((entry) => ({ ...entry, adapter: "typescript" as const })));
   rows.push(...typescriptLeadingDocumentationReferenceAuthority(content).map((entry) => ({ ...entry, adapter: "typescript" as const })));
   rows.push(...typescriptCommentPathReferenceAuthority(content).map((entry) => ({ ...entry, adapter: "typescript" as const })));

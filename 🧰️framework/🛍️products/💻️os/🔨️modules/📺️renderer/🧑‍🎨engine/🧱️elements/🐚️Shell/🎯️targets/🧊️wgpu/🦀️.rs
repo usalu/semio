@@ -693,8 +693,8 @@ pub struct SpaceProgramEntry {
     pub yields: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SpawnedAppEntry {
     pub id: String,
     pub plugin_id: String,
@@ -712,8 +712,8 @@ pub struct SpawnedAppEntry {
 /// actually needed), so it was pure inflation of the one long string a view context may carry
 /// (65 536 characters, `🪟️view-context/🧬️schema/🔣️.json`). What remains is bounded by the open
 /// spawned instances (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SpacePanelState {
     pub active_panel_tab: String,
     pub spawned_apps: Vec<SpawnedAppEntry>,
@@ -3114,7 +3114,7 @@ impl ShellState {
     }
 
     fn host_catalogue_tab_id(&self) -> Option<String> {
-        self.host_app().and_then(|app| app.panel_tabs.first().map(|tab| tab.id().to_string()))
+        self.host_app().and_then(|app| Self::flatten_panel_tab_leaves(&app.panel_tabs).first().map(|tab| tab.id().to_string()))
     }
     //#endregion 🏠️🧳️PluginHostConfig
 
@@ -3140,12 +3140,61 @@ impl ShellState {
             .collect()
     }
 
-    pub fn panel_state_from_view(view_state: &ViewModel) -> Option<SpacePanelState> {
-        view_state.panel_json.as_ref().and_then(|json| serde_json::from_str(json).ok())
+    fn panel_identifier(value: &str) -> bool {
+        !value.is_empty() && value.chars().count() <= 256 && !value.chars().any(|character| character <= '\u{1f}' || character == '\u{7f}')
     }
 
-    pub fn panel_json(state: &SpacePanelState) -> String {
-        serde_json::to_string(state).unwrap_or_default()
+    fn validate_panel_state(state: &SpacePanelState) -> Result<(), String> {
+        if !Self::panel_identifier(&state.active_panel_tab) {
+            return Err("host-panel.invalid-active-tab".into());
+        }
+        if state.spawned_apps.len() > 64 {
+            return Err("host-panel.spawned-capacity".into());
+        }
+        let mut ids = std::collections::BTreeSet::new();
+        for spawned in &state.spawned_apps {
+            if !Self::panel_identifier(&spawned.id) || !Self::panel_identifier(&spawned.plugin_id) || !Self::panel_identifier(&spawned.app_id) {
+                return Err("host-panel.invalid-spawned-identity".into());
+            }
+            if !ids.insert(spawned.id.as_str()) {
+                return Err("host-panel.duplicate-spawned-identity".into());
+            }
+            if spawned.label.chars().count() > 65_536 || spawned.breadcrumb.len() > 64 || spawned.breadcrumb.iter().any(|part| part.chars().count() > 65_536) {
+                return Err("host-panel.spawned-text-capacity".into());
+            }
+        }
+        if state.active_spawned_id.as_ref().is_some_and(|id| !Self::panel_identifier(id) || !ids.contains(id.as_str())) {
+            return Err("host-panel.invalid-active-spawned".into());
+        }
+        Ok(())
+    }
+
+    pub fn panel_state_from_view(view_state: &ViewModel) -> Result<Option<SpacePanelState>, String> {
+        let Some(json) = view_state.panel_json.as_ref() else {
+            return Ok(None);
+        };
+        if json.chars().count() > 65_536 {
+            return Err("host-panel.json-capacity".into());
+        }
+        let state: SpacePanelState = serde_json::from_str(json).map_err(|_| "host-panel.invalid-json".to_string())?;
+        Self::validate_panel_state(&state)?;
+        Ok(Some(state))
+    }
+
+    pub fn panel_json(state: &SpacePanelState) -> Result<String, String> {
+        Self::validate_panel_state(state)?;
+        let json = serde_json::to_string(state).map_err(|_| "host-panel.encode".to_string())?;
+        if json.chars().count() > 65_536 {
+            return Err("host-panel.json-capacity".into());
+        }
+        Ok(json)
+    }
+
+    fn default_host_panel_state(&self) -> Result<SpacePanelState, String> {
+        let active_panel_tab = self.host_catalogue_tab_id().ok_or_else(|| "host-panel.missing-configured-leaf".to_string())?;
+        let state = SpacePanelState { active_panel_tab, spawned_apps: vec![], active_spawned_id: None };
+        Self::validate_panel_state(&state)?;
+        Ok(state)
     }
 
     pub fn prepare_hot_reload(&mut self, plugins: Vec<ProgramBridgeEntry>) {
@@ -3299,7 +3348,7 @@ impl ShellState {
             let host_plugin_id = cfg.plugin_id.to_string();
             let semio_s_plugin_space = self.plugins.iter().find(|p| p.plugin_id == host_plugin_id).ok_or("host program missing")?;
             let s_app = semio_s_plugin_space.manifest.apps.iter().find(|app| app.id == cfg.landing_app_id).or_else(|| semio_s_plugin_space.manifest.apps.first()).ok_or("host program missing landing app")?.clone();
-            let panel_state = SpacePanelState { active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(), spawned_apps: vec![], active_spawned_id: None };
+            let panel_state = self.default_host_panel_state()?;
             let Some(instance_id) = self.open_boot_instance(&host_plugin_id, &s_app.id).await else {
                 return self.settle_boot().await;
             };
@@ -3307,7 +3356,7 @@ impl ShellState {
                 active_mode_id: Some(s_app.default_mode_id.clone()),
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
                 active_utility_id: None,
-                panel_json: Some(Self::panel_json(&panel_state)),
+                panel_json: Some(Self::panel_json(&panel_state)?),
                 locale: self.active_locale(),
                 terminology: self.active_terminology(),
                 window_id: None,
@@ -3531,6 +3580,76 @@ impl ShellState {
         tabs.iter().flat_map(|tab| if tab.children.is_empty() { vec![tab] } else { Self::flatten_panel_tab_leaves(&tab.children) }).collect()
     }
 
+    fn apply_host_panel_selection(&mut self, action: &ActionDescriptor) -> Option<Result<(), String>> {
+        if self.host_config().is_none() || action.action != "setActivePanelTab" {
+            return None;
+        }
+        let target_app = self
+            .session
+            .as_ref()
+            .filter(|session| session.app.controller_id == action.controller_id)
+            .map(|session| &session.app)
+            .or_else(|| self.host_app().filter(|app| app.controller_id == action.controller_id));
+        let Some(target_app) = target_app else {
+            return None;
+        };
+        let tab_id = match action.args.as_ref().and_then(|args| args.get("tabId")).and_then(DslValue::as_str) {
+            Some(tab_id) if Self::panel_identifier(tab_id) => tab_id.to_string(),
+            _ => return Some(Err("host-panel.invalid-tab-id".into())),
+        };
+        let Some(group) = Self::flatten_panel_tab_leaves(&target_app.panel_tabs).into_iter().find(|tab| tab.id() == tab_id).map(|tab| tab.group) else {
+            return Some(Err("host-panel.tab-is-not-configured-leaf".into()));
+        };
+        let Some(current) = self.session.as_ref() else {
+            return Some(Err("host-panel.session-missing".into()));
+        };
+        let mut panel = match Self::panel_state_from_view(&current.view_state) {
+            Ok(Some(panel)) => panel,
+            Ok(None) => match self.default_host_panel_state() {
+                Ok(panel) => panel,
+                Err(error) => return Some(Err(error)),
+            },
+            Err(error) => return Some(Err(error)),
+        };
+        panel.active_panel_tab = tab_id.clone();
+        let panel_json = match Self::panel_json(&panel) {
+            Ok(panel_json) => panel_json,
+            Err(error) => return Some(Err(error)),
+        };
+        let current_identity = (current.plugin_id.clone(), current.instance_id);
+        if let Some(session) = self.session.as_mut() {
+            session.view_state.panel_json = Some(panel_json.clone());
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(home) = self.directory_home.as_mut().filter(|home| home.is_instance(&current_identity.0, current_identity.1)) {
+            home.view_state.panel_json = Some(panel_json);
+        }
+        match group {
+            PanelGroup::Workbench => {
+                self.active_left_kind = LeftPanelKind::Workbench;
+                self.active_left_tab = Some(tab_id);
+                self.left_panel_open = true;
+            }
+            PanelGroup::Display => {
+                self.active_left_kind = LeftPanelKind::Display;
+                self.active_left_tab = Some(tab_id);
+                self.left_panel_open = true;
+            }
+            PanelGroup::Details => {
+                self.active_right_kind = RightPanelKind::Details;
+                self.active_right_tab = Some(tab_id);
+                self.right_panel_open = true;
+            }
+            PanelGroup::Settings => {
+                self.active_right_kind = RightPanelKind::Settings;
+                self.active_right_tab = Some(tab_id);
+                self.right_panel_open = true;
+            }
+        }
+        self.sync_session_chrome();
+        Some(Ok(()))
+    }
+
     fn sync_dock(&mut self) {
         if let Some(session) = &self.session {
             if let Some(layout) = self.layout_override.clone() {
@@ -3654,7 +3773,7 @@ impl ShellState {
         self.window_engagements = program.window_engagements(session.instance_id, &view_state).await.unwrap_or_default();
         self.window_measures = program.window_measures(session.instance_id, &view_state).await.unwrap_or_default();
         if self.space_mode {
-            if let Some(panel) = Self::panel_state_from_view(&session.view_state) {
+            if let Some(panel) = Self::panel_state_from_view(&session.view_state)? {
                 if let Some(spawned) = panel.active_spawned_id.as_ref().and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id)) {
                     if let Some(spawn_plugin) = self.plugins.iter().find(|p| p.plugin_id == spawned.plugin_id).cloned() {
                         let spawned_app = spawn_plugin.manifest.apps.iter().find(|app| app.id == spawned.app_id).cloned();
@@ -4792,6 +4911,9 @@ impl ShellState {
         if !self.chrome_build.tutorial_dispatch_internal {
             self.tutorial_note_real_dispatch(&action);
         }
+        if let Some(result) = self.apply_host_panel_selection(&action) {
+            return result;
+        }
         // 🔁️ An `Effect::DispatchAction` whose id is an APP COMMAND crosses as a command, never as an
         // action — React's `makeEffectDispatchOne` picks `handleCommand` on exactly this predicate
         // (`🛠️ShellHelpers/🟦️.tsx`, `isAppCommand`). The guest's re-arm chain is `flowEvalTick`, an
@@ -5870,12 +5992,12 @@ impl ShellState {
             }
         }
         let instance_id = semio_s_plugin_space.create_app(&app.id).await?;
-        let panel_state = SpacePanelState { active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(), spawned_apps: vec![], active_spawned_id: None };
-        let next_view_state = view_state.unwrap_or_else(|| ViewModel {
+        let panel_state = self.default_host_panel_state()?;
+        let default_view_state = ViewModel {
             active_mode_id: Some(app.default_mode_id.clone()),
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
             active_utility_id: None,
-            panel_json: Some(Self::panel_json(&panel_state)),
+            panel_json: Some(Self::panel_json(&panel_state)?),
             locale: self.active_locale(),
             terminology: self.active_terminology(),
             window_id: None,
@@ -5883,7 +6005,8 @@ impl ShellState {
             window_instances: Vec::new(),
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
-        });
+        };
+        let next_view_state = view_state.unwrap_or(default_view_state);
         self.active_window_id = Some(app.window_kinds.first().id.clone());
         if app_id == cfg.landing_app_id {
             self.open_space_id = None;
@@ -6001,12 +6124,11 @@ impl ShellState {
         };
         let bridge = self.plugins.iter().find(|entry| entry.plugin_id == workflow.plugin_id).ok_or("spawn program missing")?;
         let instance_id = bridge.create_app(&workflow.app_id).await?;
-        let default_catalogue_tab_id = self.host_catalogue_tab_id().unwrap_or_default();
-        let mut panel = Self::panel_state_from_view(&view_state).unwrap_or(SpacePanelState { active_panel_tab: default_catalogue_tab_id, spawned_apps: vec![], active_spawned_id: None });
+        let mut panel = Self::panel_state_from_view(&view_state)?.unwrap_or(self.default_host_panel_state()?);
         let spawned_id = format!("{}-{}", bridge.plugin_id, instance_id);
         panel.spawned_apps.push(SpawnedAppEntry { id: spawned_id.clone(), plugin_id: bridge.plugin_id.clone(), instance_id, app_id: workflow.app_id.clone(), label: workflow.label.clone(), breadcrumb: workflow.breadcrumb.clone() });
         panel.active_spawned_id = Some(spawned_id);
-        view_state.panel_json = Some(Self::panel_json(&panel));
+        view_state.panel_json = Some(Self::panel_json(&panel)?);
         if let Some(session) = self.session.as_mut() {
             session.view_state = view_state;
         }
@@ -6654,7 +6776,7 @@ impl ShellState {
                 return Ok(true);
             }
             "space.canvas.back" => {
-                let has_focused_instance = self.session.as_ref().and_then(|session| Self::panel_state_from_view(&session.view_state)).is_some_and(|panel| panel.active_spawned_id.is_some());
+                let has_focused_instance = if let Some(session) = self.session.as_ref() { Self::panel_state_from_view(&session.view_state)?.is_some_and(|panel| panel.active_spawned_id.is_some()) } else { false };
                 if has_focused_instance {
                     let controller_id = self.host_controller_id().unwrap_or_default();
                     self.dispatch_action(ActionDescriptor { controller_id, action: "closeFocusedInstance".into(), args: None }).await?;
@@ -6709,9 +6831,10 @@ impl ShellState {
             }
             id if id.starts_with("shell.panel.tab.right.") => {
                 let tab_id = id.trim_start_matches("shell.panel.tab.right.");
-                self.active_right_tab = Some(tab_id.to_string());
-                if let Some(controller_id) = self.host_controller_id() {
+                if let Some(controller_id) = self.session.as_ref().filter(|_| self.host_config().is_some()).map(|session| session.app.controller_id.clone()) {
                     self.dispatch_action(ActionDescriptor { controller_id, action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": tab_id }) }).await?;
+                } else {
+                    self.active_right_tab = Some(tab_id.to_string());
                 }
                 return Ok(true);
             }
@@ -7032,13 +7155,11 @@ impl ShellState {
     }
 
     async fn select_left_panel_tab(&mut self, tab_id: &str) -> Result<(), String> {
-        self.active_left_tab = Some(tab_id.to_string());
-        // 🏠️🧳️ Once `session.app.id` matches the host app id, `session.app` *is* the host app, so its own
-        // self-declared `controller_id` is the right value — no separate app-identity lookup needed.
-        let host_app_id = self.host_config().map(|cfg| cfg.host_app_id);
-        let controller_id = self.session.as_ref().filter(|session| Some(session.app.id.as_str()) == host_app_id).map(|session| session.app.controller_id.clone());
+        let controller_id = self.session.as_ref().filter(|_| self.host_config().is_some()).map(|session| session.app.controller_id.clone());
         if let Some(controller_id) = controller_id {
             self.dispatch_action(ActionDescriptor { controller_id, action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": tab_id }) }).await?;
+        } else {
+            self.active_left_tab = Some(tab_id.to_string());
         }
         Ok(())
     }
@@ -7292,7 +7413,7 @@ impl ShellState {
         let Some(session) = &self.session else {
             return items;
         };
-        for tab in &session.app.panel_tabs {
+        for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
             items.push(SearchPaletteItem {
                 id: format!("panel.{}", tab.id()),
                 label: tab.label.resolve(self.active_terminology(), self.active_locale()).to_string(),
@@ -11038,7 +11159,7 @@ impl ShellState {
         self.window_content_rects = bodies.iter().map(|(_, body, window_id)| (window_id.clone(), *body)).collect();
         self.window_silhouettes = silhouettes;
         self.dock_drop_bodies = bodies;
-        let plan = self.dock_window_plan.iter().map(|(id, body)| format!("{id}@{}x{}+{}", body.w.round(), body.h.round(), body.x.round())).collect::<Vec<_>>().join(" ");
+        let plan = self.dock_window_plan.iter().map(|(id, body)| format!("{id}@{}x{}+{},{}", body.w.round(), body.h.round(), body.x.round(), body.y.round())).collect::<Vec<_>>().join(" ");
         if self.dock_plan_trace.as_deref() != Some(plan.as_str()) {
             Self::debug_log(&format!("[DEBUG] wgpu-shell dock plan canvas={}x{} windows={} {plan}", rect.w.round(), rect.h.round(), self.dock_window_plan.len()));
             self.dock_plan_trace = Some(plan);
@@ -12094,23 +12215,21 @@ impl ShellState {
     /// hit handler exactly (including their differing `setActivePanelTab` dispatch conditions) so the
     /// tour's programmatic reveal behaves identically to the user clicking the tab themselves.
     fn chrome_tour_reveal_panel_tab(&mut self, session: &ActiveSession, tab_id: &str) {
-        let is_left = session.app.panel_tabs.iter().any(|tab| tab.id() == tab_id && group_side(tab.group) == "left");
-        let is_right = !is_left && session.app.panel_tabs.iter().any(|tab| tab.id() == tab_id && group_side(tab.group) == "right");
+        let leaf = Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().find(|tab| tab.id() == tab_id);
+        let is_left = leaf.is_some_and(|tab| group_side(tab.group) == "left");
+        let is_right = leaf.is_some_and(|tab| group_side(tab.group) == "right");
+        if self.host_config().is_some() && (is_left || is_right) {
+            self.deferred_actions.push(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": tab_id }) });
+            return;
+        }
         if is_left {
             self.left_panel_open = true;
             self.active_left_kind = LeftPanelKind::Workbench;
             self.active_left_tab = Some(tab_id.to_string());
-            let host_app_id = self.host_config().map(|cfg| cfg.host_app_id);
-            if Some(session.app.id.as_str()) == host_app_id {
-                self.deferred_actions.push(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": tab_id }) });
-            }
         } else if is_right {
             self.right_panel_open = true;
             self.active_right_kind = RightPanelKind::Details;
             self.active_right_tab = Some(tab_id.to_string());
-            if let Some(controller_id) = self.host_controller_id() {
-                self.deferred_actions.push(ActionDescriptor { controller_id, action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": tab_id }) });
-            }
         }
     }
 

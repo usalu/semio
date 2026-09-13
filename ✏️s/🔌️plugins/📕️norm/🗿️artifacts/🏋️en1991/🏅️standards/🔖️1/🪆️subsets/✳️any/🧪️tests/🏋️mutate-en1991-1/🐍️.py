@@ -20,7 +20,7 @@ from __future__ import annotations
 # region 🔖️Imports
 from importlib import import_module
 
-_vocabulary = import_module("🗣️vocabulary")
+_vocabulary = import_module("🐍️")
 Subset = _vocabulary.Subset
 build_adapter = _vocabulary.build_adapter
 
